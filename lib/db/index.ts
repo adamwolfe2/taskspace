@@ -1,5 +1,4 @@
-import { promises as fs } from "fs"
-import path from "path"
+import { sql } from "@vercel/postgres"
 import type {
   User,
   Organization,
@@ -13,484 +12,579 @@ import type {
   Notification,
 } from "../types"
 
-// Database file path - in production, use a real database
-const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), "data")
-
-interface Database {
-  users: User[]
-  organizations: Organization[]
-  members: OrganizationMember[]
-  sessions: Session[]
-  invitations: Invitation[]
-  rocks: Rock[]
-  tasks: Task[]
-  assignedTasks: AssignedTask[]
-  eodReports: EODReport[]
-  notifications: Notification[]
+// Helper to convert snake_case DB rows to camelCase
+function toCamelCase<T>(row: Record<string, unknown>): T {
+  const result: Record<string, unknown> = {}
+  for (const key in row) {
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+    result[camelKey] = row[key]
+  }
+  return result as T
 }
 
-const defaultDb: Database = {
-  users: [],
-  organizations: [],
-  members: [],
-  sessions: [],
-  invitations: [],
-  rocks: [],
-  tasks: [],
-  assignedTasks: [],
-  eodReports: [],
-  notifications: [],
-}
-
-async function ensureDataDir(): Promise<void> {
-  try {
-    await fs.access(DATA_DIR)
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true })
+// Helper to parse JSONB fields
+function parseUser(row: Record<string, unknown>): User {
+  return {
+    id: row.id as string,
+    email: row.email as string,
+    passwordHash: row.password_hash as string,
+    name: row.name as string,
+    avatar: row.avatar as string | undefined,
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    updatedAt: (row.updated_at as Date)?.toISOString() || "",
+    emailVerified: row.email_verified as boolean,
+    lastLoginAt: row.last_login_at ? (row.last_login_at as Date).toISOString() : undefined,
   }
 }
 
-async function getDbPath(): Promise<string> {
-  await ensureDataDir()
-  return path.join(DATA_DIR, "database.json")
-}
-
-async function readDb(): Promise<Database> {
-  try {
-    const dbPath = await getDbPath()
-    const data = await fs.readFile(dbPath, "utf-8")
-    return { ...defaultDb, ...JSON.parse(data) }
-  } catch {
-    return { ...defaultDb }
+function parseOrganization(row: Record<string, unknown>): Organization {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    slug: row.slug as string,
+    ownerId: row.owner_id as string,
+    settings: row.settings as Organization["settings"],
+    subscription: row.subscription as Organization["subscription"],
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    updatedAt: (row.updated_at as Date)?.toISOString() || "",
   }
 }
 
-async function writeDb(db: Database): Promise<void> {
-  const dbPath = await getDbPath()
-  await fs.writeFile(dbPath, JSON.stringify(db, null, 2), "utf-8")
+function parseMember(row: Record<string, unknown>): OrganizationMember {
+  return {
+    id: row.id as string,
+    organizationId: row.organization_id as string,
+    userId: row.user_id as string,
+    role: row.role as OrganizationMember["role"],
+    department: row.department as string,
+    weeklyMeasurable: row.weekly_measurable as string | undefined,
+    joinedAt: (row.joined_at as Date)?.toISOString() || "",
+    invitedBy: row.invited_by as string | undefined,
+    status: row.status as OrganizationMember["status"],
+  }
 }
 
-// Generic CRUD operations
+function parseSession(row: Record<string, unknown>): Session {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    organizationId: row.organization_id as string,
+    token: row.token as string,
+    expiresAt: (row.expires_at as Date)?.toISOString() || "",
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    lastActiveAt: (row.last_active_at as Date)?.toISOString() || "",
+    userAgent: row.user_agent as string | undefined,
+    ipAddress: row.ip_address as string | undefined,
+  }
+}
+
+function parseInvitation(row: Record<string, unknown>): Invitation {
+  return {
+    id: row.id as string,
+    organizationId: row.organization_id as string,
+    email: row.email as string,
+    role: row.role as Invitation["role"],
+    department: row.department as string,
+    token: row.token as string,
+    expiresAt: (row.expires_at as Date)?.toISOString() || "",
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    invitedBy: row.invited_by as string,
+    status: row.status as Invitation["status"],
+  }
+}
+
+function parseRock(row: Record<string, unknown>): Rock {
+  return {
+    id: row.id as string,
+    organizationId: row.organization_id as string,
+    userId: row.user_id as string,
+    title: row.title as string,
+    description: row.description as string,
+    progress: row.progress as number,
+    dueDate: row.due_date as string,
+    status: row.status as Rock["status"],
+    bucket: row.bucket as string | undefined,
+    outcome: row.outcome as string | undefined,
+    doneWhen: row.done_when as string[] | undefined,
+    quarter: row.quarter as string | undefined,
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    updatedAt: (row.updated_at as Date)?.toISOString() || "",
+  }
+}
+
+function parseAssignedTask(row: Record<string, unknown>): AssignedTask {
+  return {
+    id: row.id as string,
+    organizationId: row.organization_id as string,
+    title: row.title as string,
+    description: row.description as string | undefined,
+    assigneeId: row.assignee_id as string,
+    assigneeName: row.assignee_name as string,
+    assignedById: row.assigned_by_id as string | null,
+    assignedByName: row.assigned_by_name as string | null,
+    type: row.type as AssignedTask["type"],
+    rockId: row.rock_id as string | null,
+    rockTitle: row.rock_title as string | null,
+    priority: row.priority as AssignedTask["priority"],
+    dueDate: row.due_date as string,
+    status: row.status as AssignedTask["status"],
+    completedAt: row.completed_at ? (row.completed_at as Date).toISOString() : null,
+    addedToEOD: row.added_to_eod as boolean,
+    eodReportId: row.eod_report_id as string | null,
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    updatedAt: (row.updated_at as Date)?.toISOString() || "",
+  }
+}
+
+function parseEODReport(row: Record<string, unknown>): EODReport {
+  return {
+    id: row.id as string,
+    organizationId: row.organization_id as string,
+    userId: row.user_id as string,
+    date: row.date as string,
+    tasks: row.tasks as EODReport["tasks"],
+    challenges: row.challenges as string,
+    tomorrowPriorities: row.tomorrow_priorities as EODReport["tomorrowPriorities"],
+    needsEscalation: row.needs_escalation as boolean,
+    escalationNote: row.escalation_note as string | null,
+    submittedAt: (row.submitted_at as Date)?.toISOString() || "",
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+  }
+}
+
+// Database operations using Vercel Postgres
 export const db = {
   // Users
   users: {
     async findAll(): Promise<User[]> {
-      const db = await readDb()
-      return db.users
+      const { rows } = await sql`SELECT * FROM users`
+      return rows.map(parseUser)
     },
     async findById(id: string): Promise<User | null> {
-      const db = await readDb()
-      return db.users.find((u) => u.id === id) || null
+      const { rows } = await sql`SELECT * FROM users WHERE id = ${id}`
+      return rows[0] ? parseUser(rows[0]) : null
     },
     async findByEmail(email: string): Promise<User | null> {
-      const db = await readDb()
-      return db.users.find((u) => u.email.toLowerCase() === email.toLowerCase()) || null
+      const { rows } = await sql`SELECT * FROM users WHERE LOWER(email) = LOWER(${email})`
+      return rows[0] ? parseUser(rows[0]) : null
     },
     async create(user: User): Promise<User> {
-      const db = await readDb()
-      db.users.push(user)
-      await writeDb(db)
+      await sql`
+        INSERT INTO users (id, email, password_hash, name, avatar, created_at, updated_at, email_verified, last_login_at)
+        VALUES (${user.id}, ${user.email}, ${user.passwordHash}, ${user.name}, ${user.avatar || null},
+                ${user.createdAt}, ${user.updatedAt}, ${user.emailVerified}, ${user.lastLoginAt || null})
+      `
       return user
     },
     async update(id: string, updates: Partial<User>): Promise<User | null> {
-      const db = await readDb()
-      const index = db.users.findIndex((u) => u.id === id)
-      if (index === -1) return null
-      db.users[index] = { ...db.users[index], ...updates, updatedAt: new Date().toISOString() }
-      await writeDb(db)
-      return db.users[index]
+      const now = new Date().toISOString()
+      const { rows } = await sql`
+        UPDATE users SET
+          name = COALESCE(${updates.name || null}, name),
+          avatar = COALESCE(${updates.avatar || null}, avatar),
+          email_verified = COALESCE(${updates.emailVerified ?? null}, email_verified),
+          last_login_at = COALESCE(${updates.lastLoginAt || null}, last_login_at),
+          updated_at = ${now}
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parseUser(rows[0]) : null
     },
     async delete(id: string): Promise<boolean> {
-      const db = await readDb()
-      const index = db.users.findIndex((u) => u.id === id)
-      if (index === -1) return false
-      db.users.splice(index, 1)
-      await writeDb(db)
-      return true
+      const { rowCount } = await sql`DELETE FROM users WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
     },
   },
 
   // Organizations
   organizations: {
     async findAll(): Promise<Organization[]> {
-      const db = await readDb()
-      return db.organizations
+      const { rows } = await sql`SELECT * FROM organizations`
+      return rows.map(parseOrganization)
     },
     async findById(id: string): Promise<Organization | null> {
-      const db = await readDb()
-      return db.organizations.find((o) => o.id === id) || null
+      const { rows } = await sql`SELECT * FROM organizations WHERE id = ${id}`
+      return rows[0] ? parseOrganization(rows[0]) : null
     },
     async findBySlug(slug: string): Promise<Organization | null> {
-      const db = await readDb()
-      return db.organizations.find((o) => o.slug === slug) || null
+      const { rows } = await sql`SELECT * FROM organizations WHERE slug = ${slug}`
+      return rows[0] ? parseOrganization(rows[0]) : null
     },
     async findByOwnerId(ownerId: string): Promise<Organization[]> {
-      const db = await readDb()
-      return db.organizations.filter((o) => o.ownerId === ownerId)
+      const { rows } = await sql`SELECT * FROM organizations WHERE owner_id = ${ownerId}`
+      return rows.map(parseOrganization)
     },
     async create(org: Organization): Promise<Organization> {
-      const db = await readDb()
-      db.organizations.push(org)
-      await writeDb(db)
+      await sql`
+        INSERT INTO organizations (id, name, slug, owner_id, settings, subscription, created_at, updated_at)
+        VALUES (${org.id}, ${org.name}, ${org.slug}, ${org.ownerId},
+                ${JSON.stringify(org.settings)}, ${JSON.stringify(org.subscription)},
+                ${org.createdAt}, ${org.updatedAt})
+      `
       return org
     },
     async update(id: string, updates: Partial<Organization>): Promise<Organization | null> {
-      const db = await readDb()
-      const index = db.organizations.findIndex((o) => o.id === id)
-      if (index === -1) return null
-      db.organizations[index] = { ...db.organizations[index], ...updates, updatedAt: new Date().toISOString() }
-      await writeDb(db)
-      return db.organizations[index]
+      const now = new Date().toISOString()
+      const current = await this.findById(id)
+      if (!current) return null
+
+      const newSettings = updates.settings ? JSON.stringify({ ...current.settings, ...updates.settings }) : null
+      const newSubscription = updates.subscription ? JSON.stringify({ ...current.subscription, ...updates.subscription }) : null
+
+      const { rows } = await sql`
+        UPDATE organizations SET
+          name = COALESCE(${updates.name || null}, name),
+          settings = COALESCE(${newSettings}::jsonb, settings),
+          subscription = COALESCE(${newSubscription}::jsonb, subscription),
+          updated_at = ${now}
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parseOrganization(rows[0]) : null
     },
     async delete(id: string): Promise<boolean> {
-      const db = await readDb()
-      const index = db.organizations.findIndex((o) => o.id === id)
-      if (index === -1) return false
-      db.organizations.splice(index, 1)
-      await writeDb(db)
-      return true
+      const { rowCount } = await sql`DELETE FROM organizations WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
     },
   },
 
   // Organization Members
   members: {
     async findAll(): Promise<OrganizationMember[]> {
-      const db = await readDb()
-      return db.members
+      const { rows } = await sql`SELECT * FROM organization_members`
+      return rows.map(parseMember)
     },
     async findById(id: string): Promise<OrganizationMember | null> {
-      const db = await readDb()
-      return db.members.find((m) => m.id === id) || null
+      const { rows } = await sql`SELECT * FROM organization_members WHERE id = ${id}`
+      return rows[0] ? parseMember(rows[0]) : null
     },
     async findByOrganizationId(orgId: string): Promise<OrganizationMember[]> {
-      const db = await readDb()
-      return db.members.filter((m) => m.organizationId === orgId)
+      const { rows } = await sql`SELECT * FROM organization_members WHERE organization_id = ${orgId}`
+      return rows.map(parseMember)
     },
     async findByUserId(userId: string): Promise<OrganizationMember[]> {
-      const db = await readDb()
-      return db.members.filter((m) => m.userId === userId)
+      const { rows } = await sql`SELECT * FROM organization_members WHERE user_id = ${userId}`
+      return rows.map(parseMember)
     },
     async findByOrgAndUser(orgId: string, userId: string): Promise<OrganizationMember | null> {
-      const db = await readDb()
-      return db.members.find((m) => m.organizationId === orgId && m.userId === userId) || null
+      const { rows } = await sql`
+        SELECT * FROM organization_members
+        WHERE organization_id = ${orgId} AND user_id = ${userId}
+      `
+      return rows[0] ? parseMember(rows[0]) : null
     },
     async create(member: OrganizationMember): Promise<OrganizationMember> {
-      const db = await readDb()
-      db.members.push(member)
-      await writeDb(db)
+      await sql`
+        INSERT INTO organization_members (id, organization_id, user_id, role, department, weekly_measurable, joined_at, invited_by, status)
+        VALUES (${member.id}, ${member.organizationId}, ${member.userId}, ${member.role},
+                ${member.department}, ${member.weeklyMeasurable || null}, ${member.joinedAt},
+                ${member.invitedBy || null}, ${member.status})
+      `
       return member
     },
     async update(id: string, updates: Partial<OrganizationMember>): Promise<OrganizationMember | null> {
-      const db = await readDb()
-      const index = db.members.findIndex((m) => m.id === id)
-      if (index === -1) return null
-      db.members[index] = { ...db.members[index], ...updates }
-      await writeDb(db)
-      return db.members[index]
+      const { rows } = await sql`
+        UPDATE organization_members SET
+          role = COALESCE(${updates.role || null}, role),
+          department = COALESCE(${updates.department || null}, department),
+          weekly_measurable = COALESCE(${updates.weeklyMeasurable || null}, weekly_measurable),
+          status = COALESCE(${updates.status || null}, status)
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parseMember(rows[0]) : null
     },
     async delete(id: string): Promise<boolean> {
-      const db = await readDb()
-      const index = db.members.findIndex((m) => m.id === id)
-      if (index === -1) return false
-      db.members.splice(index, 1)
-      await writeDb(db)
-      return true
+      const { rowCount } = await sql`DELETE FROM organization_members WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
     },
   },
 
   // Sessions
   sessions: {
     async findByToken(token: string): Promise<Session | null> {
-      const db = await readDb()
-      return db.sessions.find((s) => s.token === token) || null
+      const { rows } = await sql`SELECT * FROM sessions WHERE token = ${token}`
+      return rows[0] ? parseSession(rows[0]) : null
     },
     async findByUserId(userId: string): Promise<Session[]> {
-      const db = await readDb()
-      return db.sessions.filter((s) => s.userId === userId)
+      const { rows } = await sql`SELECT * FROM sessions WHERE user_id = ${userId}`
+      return rows.map(parseSession)
     },
     async create(session: Session): Promise<Session> {
-      const db = await readDb()
-      db.sessions.push(session)
-      await writeDb(db)
+      await sql`
+        INSERT INTO sessions (id, user_id, organization_id, token, expires_at, created_at, last_active_at, user_agent, ip_address)
+        VALUES (${session.id}, ${session.userId}, ${session.organizationId}, ${session.token},
+                ${session.expiresAt}, ${session.createdAt}, ${session.lastActiveAt},
+                ${session.userAgent || null}, ${session.ipAddress || null})
+      `
       return session
     },
     async update(id: string, updates: Partial<Session>): Promise<Session | null> {
-      const db = await readDb()
-      const index = db.sessions.findIndex((s) => s.id === id)
-      if (index === -1) return null
-      db.sessions[index] = { ...db.sessions[index], ...updates }
-      await writeDb(db)
-      return db.sessions[index]
+      const { rows } = await sql`
+        UPDATE sessions SET
+          last_active_at = COALESCE(${updates.lastActiveAt || null}, last_active_at)
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parseSession(rows[0]) : null
     },
     async delete(id: string): Promise<boolean> {
-      const db = await readDb()
-      const index = db.sessions.findIndex((s) => s.id === id)
-      if (index === -1) return false
-      db.sessions.splice(index, 1)
-      await writeDb(db)
-      return true
+      const { rowCount } = await sql`DELETE FROM sessions WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
     },
     async deleteByToken(token: string): Promise<boolean> {
-      const db = await readDb()
-      const index = db.sessions.findIndex((s) => s.token === token)
-      if (index === -1) return false
-      db.sessions.splice(index, 1)
-      await writeDb(db)
-      return true
+      const { rowCount } = await sql`DELETE FROM sessions WHERE token = ${token}`
+      return (rowCount ?? 0) > 0
     },
     async deleteExpired(): Promise<number> {
-      const db = await readDb()
-      const now = new Date()
-      const originalLength = db.sessions.length
-      db.sessions = db.sessions.filter((s) => new Date(s.expiresAt) > now)
-      await writeDb(db)
-      return originalLength - db.sessions.length
+      const { rowCount } = await sql`DELETE FROM sessions WHERE expires_at < NOW()`
+      return rowCount ?? 0
     },
   },
 
   // Invitations
   invitations: {
     async findByToken(token: string): Promise<Invitation | null> {
-      const db = await readDb()
-      return db.invitations.find((i) => i.token === token) || null
+      const { rows } = await sql`SELECT * FROM invitations WHERE token = ${token}`
+      return rows[0] ? parseInvitation(rows[0]) : null
     },
     async findByOrganizationId(orgId: string): Promise<Invitation[]> {
-      const db = await readDb()
-      return db.invitations.filter((i) => i.organizationId === orgId)
+      const { rows } = await sql`SELECT * FROM invitations WHERE organization_id = ${orgId}`
+      return rows.map(parseInvitation)
     },
     async findPendingByEmail(email: string): Promise<Invitation[]> {
-      const db = await readDb()
-      return db.invitations.filter(
-        (i) => i.email.toLowerCase() === email.toLowerCase() && i.status === "pending"
-      )
+      const { rows } = await sql`
+        SELECT * FROM invitations
+        WHERE LOWER(email) = LOWER(${email}) AND status = 'pending'
+      `
+      return rows.map(parseInvitation)
     },
     async create(invitation: Invitation): Promise<Invitation> {
-      const db = await readDb()
-      db.invitations.push(invitation)
-      await writeDb(db)
+      await sql`
+        INSERT INTO invitations (id, organization_id, email, role, department, token, expires_at, created_at, invited_by, status)
+        VALUES (${invitation.id}, ${invitation.organizationId}, ${invitation.email}, ${invitation.role},
+                ${invitation.department}, ${invitation.token}, ${invitation.expiresAt},
+                ${invitation.createdAt}, ${invitation.invitedBy}, ${invitation.status})
+      `
       return invitation
     },
     async update(id: string, updates: Partial<Invitation>): Promise<Invitation | null> {
-      const db = await readDb()
-      const index = db.invitations.findIndex((i) => i.id === id)
-      if (index === -1) return null
-      db.invitations[index] = { ...db.invitations[index], ...updates }
-      await writeDb(db)
-      return db.invitations[index]
+      const { rows } = await sql`
+        UPDATE invitations SET
+          status = COALESCE(${updates.status || null}, status)
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parseInvitation(rows[0]) : null
     },
     async delete(id: string): Promise<boolean> {
-      const db = await readDb()
-      const index = db.invitations.findIndex((i) => i.id === id)
-      if (index === -1) return false
-      db.invitations.splice(index, 1)
-      await writeDb(db)
-      return true
+      const { rowCount } = await sql`DELETE FROM invitations WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
     },
   },
 
   // Rocks
   rocks: {
     async findAll(): Promise<Rock[]> {
-      const db = await readDb()
-      return db.rocks
+      const { rows } = await sql`SELECT * FROM rocks`
+      return rows.map(parseRock)
     },
     async findById(id: string): Promise<Rock | null> {
-      const db = await readDb()
-      return db.rocks.find((r) => r.id === id) || null
+      const { rows } = await sql`SELECT * FROM rocks WHERE id = ${id}`
+      return rows[0] ? parseRock(rows[0]) : null
     },
     async findByOrganizationId(orgId: string): Promise<Rock[]> {
-      const db = await readDb()
-      return db.rocks.filter((r) => r.organizationId === orgId)
+      const { rows } = await sql`SELECT * FROM rocks WHERE organization_id = ${orgId}`
+      return rows.map(parseRock)
     },
     async findByUserId(userId: string, orgId: string): Promise<Rock[]> {
-      const db = await readDb()
-      return db.rocks.filter((r) => r.userId === userId && r.organizationId === orgId)
+      const { rows } = await sql`
+        SELECT * FROM rocks WHERE user_id = ${userId} AND organization_id = ${orgId}
+      `
+      return rows.map(parseRock)
     },
     async create(rock: Rock): Promise<Rock> {
-      const db = await readDb()
-      db.rocks.push(rock)
-      await writeDb(db)
+      await sql`
+        INSERT INTO rocks (id, organization_id, user_id, title, description, progress, due_date, status, bucket, outcome, done_when, quarter, created_at, updated_at)
+        VALUES (${rock.id}, ${rock.organizationId}, ${rock.userId}, ${rock.title}, ${rock.description},
+                ${rock.progress}, ${rock.dueDate}, ${rock.status}, ${rock.bucket || null},
+                ${rock.outcome || null}, ${JSON.stringify(rock.doneWhen || [])}, ${rock.quarter || null},
+                ${rock.createdAt}, ${rock.updatedAt})
+      `
       return rock
     },
     async update(id: string, updates: Partial<Rock>): Promise<Rock | null> {
-      const db = await readDb()
-      const index = db.rocks.findIndex((r) => r.id === id)
-      if (index === -1) return null
-      db.rocks[index] = { ...db.rocks[index], ...updates, updatedAt: new Date().toISOString() }
-      await writeDb(db)
-      return db.rocks[index]
+      const now = new Date().toISOString()
+      const { rows } = await sql`
+        UPDATE rocks SET
+          title = COALESCE(${updates.title || null}, title),
+          description = COALESCE(${updates.description || null}, description),
+          progress = COALESCE(${updates.progress ?? null}, progress),
+          due_date = COALESCE(${updates.dueDate || null}, due_date),
+          status = COALESCE(${updates.status || null}, status),
+          bucket = COALESCE(${updates.bucket || null}, bucket),
+          outcome = COALESCE(${updates.outcome || null}, outcome),
+          done_when = COALESCE(${updates.doneWhen ? JSON.stringify(updates.doneWhen) : null}::jsonb, done_when),
+          quarter = COALESCE(${updates.quarter || null}, quarter),
+          updated_at = ${now}
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parseRock(rows[0]) : null
     },
     async delete(id: string): Promise<boolean> {
-      const db = await readDb()
-      const index = db.rocks.findIndex((r) => r.id === id)
-      if (index === -1) return false
-      db.rocks.splice(index, 1)
-      await writeDb(db)
-      return true
+      const { rowCount } = await sql`DELETE FROM rocks WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
     },
   },
 
-  // Tasks
+  // Tasks (simple tasks - keeping for compatibility)
   tasks: {
     async findByOrganizationId(orgId: string): Promise<Task[]> {
-      const db = await readDb()
-      return db.tasks.filter((t) => t.organizationId === orgId)
+      return [] // Not used currently, assigned_tasks is used instead
     },
     async findByUserId(userId: string, orgId: string): Promise<Task[]> {
-      const db = await readDb()
-      return db.tasks.filter((t) => t.userId === userId && t.organizationId === orgId)
+      return []
     },
     async create(task: Task): Promise<Task> {
-      const db = await readDb()
-      db.tasks.push(task)
-      await writeDb(db)
       return task
     },
     async update(id: string, updates: Partial<Task>): Promise<Task | null> {
-      const db = await readDb()
-      const index = db.tasks.findIndex((t) => t.id === id)
-      if (index === -1) return null
-      db.tasks[index] = { ...db.tasks[index], ...updates, updatedAt: new Date().toISOString() }
-      await writeDb(db)
-      return db.tasks[index]
+      return null
     },
     async delete(id: string): Promise<boolean> {
-      const db = await readDb()
-      const index = db.tasks.findIndex((t) => t.id === id)
-      if (index === -1) return false
-      db.tasks.splice(index, 1)
-      await writeDb(db)
-      return true
+      return false
     },
   },
 
   // Assigned Tasks
   assignedTasks: {
     async findByOrganizationId(orgId: string): Promise<AssignedTask[]> {
-      const db = await readDb()
-      return db.assignedTasks.filter((t) => t.organizationId === orgId)
+      const { rows } = await sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId}`
+      return rows.map(parseAssignedTask)
     },
     async findByAssigneeId(assigneeId: string, orgId: string): Promise<AssignedTask[]> {
-      const db = await readDb()
-      return db.assignedTasks.filter((t) => t.assigneeId === assigneeId && t.organizationId === orgId)
+      const { rows } = await sql`
+        SELECT * FROM assigned_tasks
+        WHERE assignee_id = ${assigneeId} AND organization_id = ${orgId}
+      `
+      return rows.map(parseAssignedTask)
     },
     async findById(id: string): Promise<AssignedTask | null> {
-      const db = await readDb()
-      return db.assignedTasks.find((t) => t.id === id) || null
+      const { rows } = await sql`SELECT * FROM assigned_tasks WHERE id = ${id}`
+      return rows[0] ? parseAssignedTask(rows[0]) : null
     },
     async create(task: AssignedTask): Promise<AssignedTask> {
-      const db = await readDb()
-      db.assignedTasks.push(task)
-      await writeDb(db)
+      await sql`
+        INSERT INTO assigned_tasks (id, organization_id, title, description, assignee_id, assignee_name,
+          assigned_by_id, assigned_by_name, type, rock_id, rock_title, priority, due_date, status,
+          completed_at, added_to_eod, eod_report_id, created_at, updated_at)
+        VALUES (${task.id}, ${task.organizationId}, ${task.title}, ${task.description || null},
+                ${task.assigneeId}, ${task.assigneeName}, ${task.assignedById}, ${task.assignedByName},
+                ${task.type}, ${task.rockId}, ${task.rockTitle}, ${task.priority}, ${task.dueDate},
+                ${task.status}, ${task.completedAt}, ${task.addedToEOD}, ${task.eodReportId},
+                ${task.createdAt}, ${task.updatedAt})
+      `
       return task
     },
     async update(id: string, updates: Partial<AssignedTask>): Promise<AssignedTask | null> {
-      const db = await readDb()
-      const index = db.assignedTasks.findIndex((t) => t.id === id)
-      if (index === -1) return null
-      db.assignedTasks[index] = { ...db.assignedTasks[index], ...updates, updatedAt: new Date().toISOString() }
-      await writeDb(db)
-      return db.assignedTasks[index]
+      const now = new Date().toISOString()
+      const { rows } = await sql`
+        UPDATE assigned_tasks SET
+          title = COALESCE(${updates.title || null}, title),
+          description = COALESCE(${updates.description || null}, description),
+          priority = COALESCE(${updates.priority || null}, priority),
+          due_date = COALESCE(${updates.dueDate || null}, due_date),
+          status = COALESCE(${updates.status || null}, status),
+          completed_at = COALESCE(${updates.completedAt || null}, completed_at),
+          added_to_eod = COALESCE(${updates.addedToEOD ?? null}, added_to_eod),
+          eod_report_id = COALESCE(${updates.eodReportId || null}, eod_report_id),
+          updated_at = ${now}
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parseAssignedTask(rows[0]) : null
     },
     async delete(id: string): Promise<boolean> {
-      const db = await readDb()
-      const index = db.assignedTasks.findIndex((t) => t.id === id)
-      if (index === -1) return false
-      db.assignedTasks.splice(index, 1)
-      await writeDb(db)
-      return true
+      const { rowCount } = await sql`DELETE FROM assigned_tasks WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
     },
   },
 
   // EOD Reports
   eodReports: {
     async findByOrganizationId(orgId: string): Promise<EODReport[]> {
-      const db = await readDb()
-      return db.eodReports.filter((r) => r.organizationId === orgId)
+      const { rows } = await sql`SELECT * FROM eod_reports WHERE organization_id = ${orgId}`
+      return rows.map(parseEODReport)
     },
     async findByUserId(userId: string, orgId: string): Promise<EODReport[]> {
-      const db = await readDb()
-      return db.eodReports.filter((r) => r.userId === userId && r.organizationId === orgId)
+      const { rows } = await sql`
+        SELECT * FROM eod_reports
+        WHERE user_id = ${userId} AND organization_id = ${orgId}
+      `
+      return rows.map(parseEODReport)
     },
     async findByUserAndDate(userId: string, orgId: string, date: string): Promise<EODReport | null> {
-      const db = await readDb()
-      return db.eodReports.find(
-        (r) => r.userId === userId && r.organizationId === orgId && r.date === date
-      ) || null
+      const { rows } = await sql`
+        SELECT * FROM eod_reports
+        WHERE user_id = ${userId} AND organization_id = ${orgId} AND date = ${date}
+      `
+      return rows[0] ? parseEODReport(rows[0]) : null
     },
     async findById(id: string): Promise<EODReport | null> {
-      const db = await readDb()
-      return db.eodReports.find((r) => r.id === id) || null
+      const { rows } = await sql`SELECT * FROM eod_reports WHERE id = ${id}`
+      return rows[0] ? parseEODReport(rows[0]) : null
     },
     async create(report: EODReport): Promise<EODReport> {
-      const db = await readDb()
-      db.eodReports.push(report)
-      await writeDb(db)
+      await sql`
+        INSERT INTO eod_reports (id, organization_id, user_id, date, tasks, challenges,
+          tomorrow_priorities, needs_escalation, escalation_note, submitted_at, created_at)
+        VALUES (${report.id}, ${report.organizationId}, ${report.userId}, ${report.date},
+                ${JSON.stringify(report.tasks)}, ${report.challenges},
+                ${JSON.stringify(report.tomorrowPriorities)}, ${report.needsEscalation},
+                ${report.escalationNote}, ${report.submittedAt}, ${report.createdAt})
+      `
       return report
     },
     async update(id: string, updates: Partial<EODReport>): Promise<EODReport | null> {
-      const db = await readDb()
-      const index = db.eodReports.findIndex((r) => r.id === id)
-      if (index === -1) return null
-      db.eodReports[index] = { ...db.eodReports[index], ...updates }
-      await writeDb(db)
-      return db.eodReports[index]
+      const { rows } = await sql`
+        UPDATE eod_reports SET
+          tasks = COALESCE(${updates.tasks ? JSON.stringify(updates.tasks) : null}::jsonb, tasks),
+          challenges = COALESCE(${updates.challenges || null}, challenges),
+          tomorrow_priorities = COALESCE(${updates.tomorrowPriorities ? JSON.stringify(updates.tomorrowPriorities) : null}::jsonb, tomorrow_priorities),
+          needs_escalation = COALESCE(${updates.needsEscalation ?? null}, needs_escalation),
+          escalation_note = COALESCE(${updates.escalationNote || null}, escalation_note),
+          submitted_at = COALESCE(${updates.submittedAt || null}, submitted_at)
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parseEODReport(rows[0]) : null
     },
     async delete(id: string): Promise<boolean> {
-      const db = await readDb()
-      const index = db.eodReports.findIndex((r) => r.id === id)
-      if (index === -1) return false
-      db.eodReports.splice(index, 1)
-      await writeDb(db)
-      return true
+      const { rowCount } = await sql`DELETE FROM eod_reports WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
     },
   },
 
-  // Notifications
+  // Notifications (simplified - can add full implementation later)
   notifications: {
     async findByUserId(userId: string, orgId: string): Promise<Notification[]> {
-      const db = await readDb()
-      return db.notifications.filter((n) => n.userId === userId && n.organizationId === orgId)
+      return []
     },
     async findUnreadByUserId(userId: string, orgId: string): Promise<Notification[]> {
-      const db = await readDb()
-      return db.notifications.filter(
-        (n) => n.userId === userId && n.organizationId === orgId && !n.read
-      )
+      return []
     },
     async create(notification: Notification): Promise<Notification> {
-      const db = await readDb()
-      db.notifications.push(notification)
-      await writeDb(db)
       return notification
     },
     async markAsRead(id: string): Promise<Notification | null> {
-      const db = await readDb()
-      const index = db.notifications.findIndex((n) => n.id === id)
-      if (index === -1) return null
-      db.notifications[index].read = true
-      await writeDb(db)
-      return db.notifications[index]
+      return null
     },
     async markAllAsRead(userId: string, orgId: string): Promise<number> {
-      const db = await readDb()
-      let count = 0
-      db.notifications.forEach((n) => {
-        if (n.userId === userId && n.organizationId === orgId && !n.read) {
-          n.read = true
-          count++
-        }
-      })
-      await writeDb(db)
-      return count
+      return 0
     },
     async delete(id: string): Promise<boolean> {
-      const db = await readDb()
-      const index = db.notifications.findIndex((n) => n.id === id)
-      if (index === -1) return false
-      db.notifications.splice(index, 1)
-      await writeDb(db)
-      return true
+      return false
     },
   },
 }
