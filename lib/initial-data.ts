@@ -1,5 +1,8 @@
 import type { TeamMember, Rock, Task, EODReport } from "./types"
 
+// Legacy seed data - not currently used in production (multi-tenant uses database)
+type SeedRock = Omit<Rock, "organizationId" | "updatedAt">
+
 export const initialTeamMembers: TeamMember[] = [
   {
     id: "adam-wolfe",
@@ -57,7 +60,7 @@ export const initialTeamMembers: TeamMember[] = [
   },
 ]
 
-export const initialRocks: Rock[] = [
+export const initialRocks: SeedRock[] = [
   // Adam Wolfe's Rocks
   {
     id: "adam-r1",
