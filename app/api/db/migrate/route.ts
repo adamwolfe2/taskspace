@@ -1,8 +1,38 @@
 import { sql } from "@vercel/postgres"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Security check: Only allow migration with proper authorization
+    // In production, require a secret key or check if tables exist
+    const authHeader = request.headers.get("x-migration-key")
+    const migrationKey = process.env.MIGRATION_KEY
+
+    // If MIGRATION_KEY is set, require it to match
+    if (migrationKey && authHeader !== migrationKey) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: Invalid migration key" },
+        { status: 401 }
+      )
+    }
+
+    // In production without a migration key, only allow if tables don't exist yet
+    if (process.env.NODE_ENV === "production" && !migrationKey) {
+      // Check if users table exists
+      const { rows } = await sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables
+          WHERE table_name = 'users'
+        )
+      `
+      if (rows[0]?.exists) {
+        return NextResponse.json(
+          { success: false, error: "Migration already complete. Set MIGRATION_KEY to re-run." },
+          { status: 403 }
+        )
+      }
+    }
+
     // Create users table
     await sql`
       CREATE TABLE IF NOT EXISTS users (

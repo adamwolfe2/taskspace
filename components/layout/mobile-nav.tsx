@@ -1,6 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
+import type { PageType } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { LayoutDashboard, History, Target, Shield, CheckSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -8,14 +9,14 @@ import { cn } from "@/lib/utils"
 export function MobileNav() {
   const { currentUser, currentPage, setCurrentPage } = useApp()
 
-  const navItems = [
+  const navItems: { id: PageType; label: string; icon: typeof LayoutDashboard }[] = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "history", label: "History", icon: History },
     { id: "rocks", label: "Rocks", icon: Target },
     { id: "tasks", label: "Tasks", icon: CheckSquare },
   ]
 
-  if (currentUser?.role === "admin") {
+  if (currentUser?.role === "admin" || currentUser?.role === "owner") {
     navItems.push({ id: "admin", label: "Admin", icon: Shield })
   }
 

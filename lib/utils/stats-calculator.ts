@@ -1,11 +1,11 @@
-import type { Rock, Task, EODReport } from "../types"
+import type { Rock, AssignedTask, EODReport } from "../types"
 
-export function calculateUserStats(userId: string, rocks: Rock[], tasks: Task[], eodReports: EODReport[]) {
+export function calculateUserStats(userId: string, rocks: Rock[], tasks: AssignedTask[], eodReports: EODReport[]) {
   const userRocks = rocks.filter((r) => r.userId === userId)
-  const userTasks = tasks.filter((t) => t.userId === userId)
+  const userTasks = tasks.filter((t) => t.assigneeId === userId)
   const userEODReports = eodReports.filter((e) => e.userId === userId)
 
-  const completedTasks = userTasks.filter((t) => t.completed).length
+  const completedTasks = userTasks.filter((t) => t.status === "completed").length
   const totalTasks = userTasks.length
   const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 

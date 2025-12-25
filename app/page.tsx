@@ -65,9 +65,19 @@ function AppContent() {
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
 
   const renderPage = () => {
+    const dashboardProps = {
+      currentUser: currentUser!,
+      rocks: teamData.rocks,
+      eodReports: teamData.eodReports,
+      assignedTasks: teamData.assignedTasks,
+      updateRock: teamData.updateRock,
+      submitEODReport: teamData.submitEODReport,
+      updateTask: teamData.updateTask,
+    }
+
     switch (currentPage) {
       case "dashboard":
-        return <DashboardPage {...teamData} currentUser={currentUser!} />
+        return <DashboardPage {...dashboardProps} />
       case "history":
         return <HistoryPage {...teamData} currentUser={currentUser!} />
       case "rocks":
@@ -79,18 +89,23 @@ function AppContent() {
             assignedTasks={teamData.assignedTasks}
             setAssignedTasks={teamData.setAssignedTasks}
             rocks={teamData.rocks}
+            createTask={teamData.createTask}
+            updateTask={teamData.updateTask}
+            deleteTask={teamData.deleteTask}
           />
         )
       case "admin":
         return isAdmin ? (
           <AdminPage
-            {...teamData}
+            teamMembers={teamData.teamMembers}
+            eodReports={teamData.eodReports}
+            rocks={teamData.rocks}
             currentUser={currentUser!}
             assignedTasks={teamData.assignedTasks}
             setAssignedTasks={teamData.setAssignedTasks}
           />
         ) : (
-          <DashboardPage {...teamData} currentUser={currentUser!} />
+          <DashboardPage {...dashboardProps} />
         )
       case "admin-team":
         return isAdmin ? (
@@ -101,12 +116,12 @@ function AppContent() {
             setRocks={teamData.setRocks}
           />
         ) : (
-          <DashboardPage {...teamData} currentUser={currentUser!} />
+          <DashboardPage {...dashboardProps} />
         )
       case "settings":
         return <SettingsPage />
       default:
-        return <DashboardPage {...teamData} currentUser={currentUser!} />
+        return <DashboardPage {...dashboardProps} />
     }
   }
 

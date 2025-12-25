@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import type { TeamMember, EODReport, Rock, AssignedTask } from "@/lib/types"
+import { api } from "@/lib/api/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,7 +18,6 @@ interface AdminPageProps {
   teamMembers: TeamMember[]
   eodReports: EODReport[]
   rocks: Rock[]
-  tasks: any[]
   currentUser: TeamMember
   assignedTasks: AssignedTask[]
   setAssignedTasks: (tasks: AssignedTask[]) => void
@@ -27,7 +27,6 @@ export function AdminPage({
   teamMembers,
   eodReports,
   rocks,
-  tasks,
   currentUser,
   assignedTasks,
   setAssignedTasks,
@@ -47,7 +46,7 @@ export function AdminPage({
   const reportingRate = Math.round((todayReports.length / activeMembers.length) * 100)
 
   const teamStats = activeMembers.map((member) => {
-    const stats = calculateUserStats(member.id, rocks, tasks, eodReports)
+    const stats = calculateUserStats(member.id, rocks, assignedTasks, eodReports)
     return { member, stats }
   })
 
@@ -58,7 +57,7 @@ export function AdminPage({
 
   const pendingAssignedTasks = assignedTasks.filter((t) => t.status === "pending" && t.type === "assigned")
 
-  const handleAssignTask = (taskData: {
+  const handleAssignTask = async (taskData: {
     assigneeId: string
     assigneeName: string
     title: string
@@ -69,31 +68,28 @@ export function AdminPage({
     dueDate: string
     sendEmail: boolean
   }) => {
-    const newTask: AssignedTask = {
-      id: `task-${Date.now()}`,
-      title: taskData.title,
-      description: taskData.description,
-      assigneeId: taskData.assigneeId,
-      assigneeName: taskData.assigneeName,
-      assignedById: currentUser.id,
-      assignedByName: currentUser.name,
-      type: "assigned",
-      rockId: taskData.rockId,
-      rockTitle: taskData.rockTitle,
-      priority: taskData.priority,
-      dueDate: taskData.dueDate,
-      createdAt: new Date().toISOString(),
-      status: "pending",
-      completedAt: null,
-      addedToEOD: false,
-      eodReportId: null,
-    }
-    setAssignedTasks([...assignedTasks, newTask])
+    try {
+      const newTask = await api.tasks.create({
+        title: taskData.title,
+        description: taskData.description,
+        assigneeId: taskData.assigneeId,
+        rockId: taskData.rockId,
+        priority: taskData.priority,
+        dueDate: taskData.dueDate,
+      })
+      setAssignedTasks([...assignedTasks, newTask])
 
-    toast({
-      title: "Task assigned",
-      description: `Task assigned to ${taskData.assigneeName}`,
-    })
+      toast({
+        title: "Task assigned",
+        description: `Task assigned to ${taskData.assigneeName}`,
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to assign task",
+        variant: "destructive",
+      })
+    }
   }
 
   return (

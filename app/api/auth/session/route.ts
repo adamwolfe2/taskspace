@@ -77,8 +77,11 @@ export async function GET(request: NextRequest) {
       status: member.status,
     } : null
 
+    // Return response without password hash
+    const { passwordHash: _, ...safeUser } = user
+
     return NextResponse.json<ApiResponse<{
-      user: typeof user,
+      user: Omit<typeof user, 'passwordHash'>,
       organization: typeof organization,
       member: typeof member,
       teamMember: TeamMember | null,
@@ -87,9 +90,9 @@ export async function GET(request: NextRequest) {
     }>>({
       success: true,
       data: {
-        user,
-        organization: organization || undefined,
-        member: member || undefined,
+        user: safeUser,
+        organization: organization ?? null,
+        member: member ?? null,
         teamMember,
         token: sessionToken,
         expiresAt: session.expiresAt,
