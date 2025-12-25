@@ -111,10 +111,13 @@ export async function POST(request: NextRequest) {
 
     await db.sessions.create(session)
 
+    // Return response without password hash
+    const { passwordHash: _, ...safeUser } = user
+
     const response = NextResponse.json<ApiResponse<AuthResponse>>({
       success: true,
       data: {
-        user,
+        user: safeUser as any,
         organization,
         member: membership,
         token: sessionToken,
