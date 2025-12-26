@@ -198,9 +198,120 @@ export async function GET(request: NextRequest) {
     await sql`CREATE INDEX IF NOT EXISTS idx_tasks_assignee ON assigned_tasks(assignee_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_invitations_token ON invitations(token)`
 
+    // ============================================
+    // AI COMMAND CENTER TABLES
+    // ============================================
+
+    // Admin brain dumps for processing
+    await sql`
+      CREATE TABLE IF NOT EXISTS admin_brain_dumps (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL,
+        admin_id VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        processed_at TIMESTAMP WITH TIME ZONE,
+        tasks_generated INTEGER DEFAULT 0,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    // AI-extracted insights from EOD reports
+    await sql`
+      CREATE TABLE IF NOT EXISTS eod_insights (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL,
+        eod_report_id VARCHAR(255) NOT NULL,
+        completed_items JSONB DEFAULT '[]',
+        blockers JSONB DEFAULT '[]',
+        sentiment VARCHAR(20),
+        sentiment_score INTEGER,
+        categories JSONB DEFAULT '[]',
+        highlights JSONB DEFAULT '[]',
+        ai_summary TEXT,
+        follow_up_questions JSONB DEFAULT '[]',
+        processed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    // AI-generated tasks pending approval
+    await sql`
+      CREATE TABLE IF NOT EXISTS ai_generated_tasks (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL,
+        brain_dump_id VARCHAR(255),
+        assignee_id VARCHAR(255) NOT NULL,
+        assignee_name VARCHAR(255),
+        title VARCHAR(500) NOT NULL,
+        description TEXT,
+        priority VARCHAR(20) DEFAULT 'medium',
+        due_date DATE,
+        context TEXT,
+        status VARCHAR(50) DEFAULT 'pending_approval',
+        approved_by VARCHAR(255),
+        approved_at TIMESTAMP WITH TIME ZONE,
+        converted_task_id VARCHAR(255),
+        pushed_to_slack BOOLEAN DEFAULT FALSE,
+        pushed_at TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    // Daily digests
+    await sql`
+      CREATE TABLE IF NOT EXISTS daily_digests (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL,
+        digest_date DATE NOT NULL,
+        summary TEXT,
+        wins JSONB DEFAULT '[]',
+        blockers JSONB DEFAULT '[]',
+        concerns JSONB DEFAULT '[]',
+        follow_ups JSONB DEFAULT '[]',
+        challenge_questions JSONB DEFAULT '[]',
+        team_sentiment VARCHAR(20),
+        reports_analyzed INTEGER DEFAULT 0,
+        generated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(organization_id, digest_date)
+      )
+    `
+
+    // AI conversation history for copilot
+    await sql`
+      CREATE TABLE IF NOT EXISTS ai_conversations (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL,
+        user_id VARCHAR(255) NOT NULL,
+        query TEXT NOT NULL,
+        response TEXT,
+        context_used JSONB DEFAULT '{}',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    // Add AI-related columns to organization_members
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS skills JSONB DEFAULT '[]'`
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS capacity INTEGER DEFAULT 100`
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS active_projects JSONB DEFAULT '[]'`
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS slack_user_id VARCHAR(255)`
+
+    // Add source tracking to assigned_tasks
+    await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'manual'`
+    await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS ai_context TEXT`
+
+    // AI Command Center indexes
+    await sql`CREATE INDEX IF NOT EXISTS idx_brain_dumps_org ON admin_brain_dumps(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_brain_dumps_status ON admin_brain_dumps(status)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_eod_insights_report ON eod_insights(eod_report_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_eod_insights_org ON eod_insights(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_ai_tasks_status ON ai_generated_tasks(status)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_ai_tasks_org ON ai_generated_tasks(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_digests_date ON daily_digests(organization_id, digest_date)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_ai_conversations_org ON ai_conversations(organization_id)`
+
     return NextResponse.json({
       success: true,
-      message: "Database migration completed successfully",
+      message: "Database migration completed successfully (including AI Command Center tables)",
     })
   } catch (error) {
     console.error("Migration error:", error)

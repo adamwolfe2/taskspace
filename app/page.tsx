@@ -17,6 +17,7 @@ import { AdminPage } from "@/components/pages/admin-page"
 import { AdminTeamPage } from "@/components/pages/admin-team-page"
 import { TasksPage } from "@/components/pages/tasks-page"
 import { SettingsPage } from "@/components/pages/settings-page"
+import { CommandCenterPage } from "@/components/pages/command-center-page"
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
@@ -131,6 +132,15 @@ function AppContent() {
             setTeamMembers={teamData.setTeamMembers}
             rocks={teamData.rocks}
             setRocks={teamData.setRocks}
+          />
+        ) : (
+          <DashboardPage {...dashboardProps} />
+        )
+      case "command-center":
+        return isAdmin ? (
+          <CommandCenterPage
+            teamMembers={teamData.teamMembers}
+            currentUser={currentUser!}
           />
         ) : (
           <DashboardPage {...dashboardProps} />

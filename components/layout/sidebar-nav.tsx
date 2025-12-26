@@ -2,7 +2,7 @@
 
 import { useApp } from "@/lib/contexts/app-context"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 
@@ -28,6 +28,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
   ]
 
   const adminItems: { id: PageType; label: string; icon: typeof Shield }[] = [
+    { id: "command-center", label: "AI Command Center", icon: Zap },
     { id: "admin", label: "Admin Dashboard", icon: Shield },
     { id: "admin-team", label: "Team Management", icon: Users },
   ]

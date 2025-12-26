@@ -11,6 +11,11 @@ import type {
   AssignedTask,
   EODReport,
   Notification,
+  AdminBrainDump,
+  EODInsight,
+  AIGeneratedTask,
+  DailyDigest,
+  AIConversation,
 } from "../types"
 
 // Helper to convert snake_case DB rows to camelCase
@@ -683,6 +688,396 @@ export const db = {
     },
     async delete(id: string): Promise<boolean> {
       return false
+    },
+  },
+
+  // ============================================
+  // AI COMMAND CENTER DATABASE OPERATIONS
+  // ============================================
+
+  // Brain Dumps
+  brainDumps: {
+    async findByOrganizationId(orgId: string): Promise<AdminBrainDump[]> {
+      const { rows } = await sql`
+        SELECT * FROM admin_brain_dumps
+        WHERE organization_id = ${orgId}
+        ORDER BY created_at DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        adminId: row.admin_id as string,
+        content: row.content as string,
+        processedAt: row.processed_at ? (row.processed_at as Date).toISOString() : undefined,
+        tasksGenerated: row.tasks_generated as number,
+        status: row.status as AdminBrainDump["status"],
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }))
+    },
+    async findById(id: string): Promise<AdminBrainDump | null> {
+      const { rows } = await sql`SELECT * FROM admin_brain_dumps WHERE id = ${id}`
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        adminId: row.admin_id as string,
+        content: row.content as string,
+        processedAt: row.processed_at ? (row.processed_at as Date).toISOString() : undefined,
+        tasksGenerated: row.tasks_generated as number,
+        status: row.status as AdminBrainDump["status"],
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }
+    },
+    async create(brainDump: AdminBrainDump): Promise<AdminBrainDump> {
+      await sql`
+        INSERT INTO admin_brain_dumps (id, organization_id, admin_id, content, status, created_at)
+        VALUES (${brainDump.id}, ${brainDump.organizationId}, ${brainDump.adminId},
+                ${brainDump.content}, ${brainDump.status}, ${brainDump.createdAt})
+      `
+      return brainDump
+    },
+    async update(id: string, updates: Partial<AdminBrainDump>): Promise<AdminBrainDump | null> {
+      const { rows } = await sql`
+        UPDATE admin_brain_dumps SET
+          processed_at = COALESCE(${updates.processedAt || null}, processed_at),
+          tasks_generated = COALESCE(${updates.tasksGenerated ?? null}, tasks_generated),
+          status = COALESCE(${updates.status || null}, status)
+        WHERE id = ${id}
+        RETURNING *
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        adminId: row.admin_id as string,
+        content: row.content as string,
+        processedAt: row.processed_at ? (row.processed_at as Date).toISOString() : undefined,
+        tasksGenerated: row.tasks_generated as number,
+        status: row.status as AdminBrainDump["status"],
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }
+    },
+  },
+
+  // EOD Insights
+  eodInsights: {
+    async findByOrganizationId(orgId: string): Promise<EODInsight[]> {
+      const { rows } = await sql`
+        SELECT * FROM eod_insights
+        WHERE organization_id = ${orgId}
+        ORDER BY processed_at DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        eodReportId: row.eod_report_id as string,
+        completedItems: row.completed_items as EODInsight["completedItems"],
+        blockers: row.blockers as EODInsight["blockers"],
+        sentiment: row.sentiment as EODInsight["sentiment"],
+        sentimentScore: row.sentiment_score as number,
+        categories: row.categories as string[],
+        highlights: row.highlights as string[],
+        aiSummary: row.ai_summary as string,
+        followUpQuestions: row.follow_up_questions as string[],
+        processedAt: (row.processed_at as Date)?.toISOString() || "",
+      }))
+    },
+    async findByEODReportId(eodReportId: string): Promise<EODInsight | null> {
+      const { rows } = await sql`
+        SELECT * FROM eod_insights WHERE eod_report_id = ${eodReportId}
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        eodReportId: row.eod_report_id as string,
+        completedItems: row.completed_items as EODInsight["completedItems"],
+        blockers: row.blockers as EODInsight["blockers"],
+        sentiment: row.sentiment as EODInsight["sentiment"],
+        sentimentScore: row.sentiment_score as number,
+        categories: row.categories as string[],
+        highlights: row.highlights as string[],
+        aiSummary: row.ai_summary as string,
+        followUpQuestions: row.follow_up_questions as string[],
+        processedAt: (row.processed_at as Date)?.toISOString() || "",
+      }
+    },
+    async create(insight: EODInsight): Promise<EODInsight> {
+      await sql`
+        INSERT INTO eod_insights (id, organization_id, eod_report_id, completed_items, blockers,
+          sentiment, sentiment_score, categories, highlights, ai_summary, follow_up_questions, processed_at)
+        VALUES (${insight.id}, ${insight.organizationId}, ${insight.eodReportId},
+                ${JSON.stringify(insight.completedItems)}, ${JSON.stringify(insight.blockers)},
+                ${insight.sentiment}, ${insight.sentimentScore}, ${JSON.stringify(insight.categories)},
+                ${JSON.stringify(insight.highlights)}, ${insight.aiSummary},
+                ${JSON.stringify(insight.followUpQuestions)}, ${insight.processedAt})
+      `
+      return insight
+    },
+    async findRecentByOrganization(orgId: string, days: number = 7): Promise<EODInsight[]> {
+      const { rows } = await sql`
+        SELECT * FROM eod_insights
+        WHERE organization_id = ${orgId}
+          AND processed_at >= NOW() - INTERVAL '1 day' * ${days}
+        ORDER BY processed_at DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        eodReportId: row.eod_report_id as string,
+        completedItems: row.completed_items as EODInsight["completedItems"],
+        blockers: row.blockers as EODInsight["blockers"],
+        sentiment: row.sentiment as EODInsight["sentiment"],
+        sentimentScore: row.sentiment_score as number,
+        categories: row.categories as string[],
+        highlights: row.highlights as string[],
+        aiSummary: row.ai_summary as string,
+        followUpQuestions: row.follow_up_questions as string[],
+        processedAt: (row.processed_at as Date)?.toISOString() || "",
+      }))
+    },
+  },
+
+  // AI Generated Tasks
+  aiGeneratedTasks: {
+    async findByOrganizationId(orgId: string): Promise<AIGeneratedTask[]> {
+      const { rows } = await sql`
+        SELECT * FROM ai_generated_tasks
+        WHERE organization_id = ${orgId}
+        ORDER BY created_at DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        brainDumpId: row.brain_dump_id as string | undefined,
+        assigneeId: row.assignee_id as string,
+        assigneeName: row.assignee_name as string | undefined,
+        title: row.title as string,
+        description: row.description as string | undefined,
+        priority: row.priority as AIGeneratedTask["priority"],
+        dueDate: row.due_date as string | undefined,
+        context: row.context as string,
+        status: row.status as AIGeneratedTask["status"],
+        approvedBy: row.approved_by as string | undefined,
+        approvedAt: row.approved_at ? (row.approved_at as Date).toISOString() : undefined,
+        convertedTaskId: row.converted_task_id as string | undefined,
+        pushedToSlack: row.pushed_to_slack as boolean,
+        pushedAt: row.pushed_at ? (row.pushed_at as Date).toISOString() : undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }))
+    },
+    async findPending(orgId: string): Promise<AIGeneratedTask[]> {
+      const { rows } = await sql`
+        SELECT * FROM ai_generated_tasks
+        WHERE organization_id = ${orgId} AND status = 'pending_approval'
+        ORDER BY created_at DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        brainDumpId: row.brain_dump_id as string | undefined,
+        assigneeId: row.assignee_id as string,
+        assigneeName: row.assignee_name as string | undefined,
+        title: row.title as string,
+        description: row.description as string | undefined,
+        priority: row.priority as AIGeneratedTask["priority"],
+        dueDate: row.due_date as string | undefined,
+        context: row.context as string,
+        status: row.status as AIGeneratedTask["status"],
+        approvedBy: row.approved_by as string | undefined,
+        approvedAt: row.approved_at ? (row.approved_at as Date).toISOString() : undefined,
+        convertedTaskId: row.converted_task_id as string | undefined,
+        pushedToSlack: row.pushed_to_slack as boolean,
+        pushedAt: row.pushed_at ? (row.pushed_at as Date).toISOString() : undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }))
+    },
+    async create(task: AIGeneratedTask): Promise<AIGeneratedTask> {
+      await sql`
+        INSERT INTO ai_generated_tasks (id, organization_id, brain_dump_id, assignee_id, assignee_name,
+          title, description, priority, due_date, context, status, pushed_to_slack, created_at)
+        VALUES (${task.id}, ${task.organizationId}, ${task.brainDumpId || null}, ${task.assigneeId},
+                ${task.assigneeName || null}, ${task.title}, ${task.description || null},
+                ${task.priority}, ${task.dueDate || null}, ${task.context}, ${task.status},
+                ${task.pushedToSlack}, ${task.createdAt})
+      `
+      return task
+    },
+    async update(id: string, updates: Partial<AIGeneratedTask>): Promise<AIGeneratedTask | null> {
+      const { rows } = await sql`
+        UPDATE ai_generated_tasks SET
+          status = COALESCE(${updates.status || null}, status),
+          approved_by = COALESCE(${updates.approvedBy || null}, approved_by),
+          approved_at = COALESCE(${updates.approvedAt || null}, approved_at),
+          converted_task_id = COALESCE(${updates.convertedTaskId || null}, converted_task_id),
+          pushed_to_slack = COALESCE(${updates.pushedToSlack ?? null}, pushed_to_slack),
+          pushed_at = COALESCE(${updates.pushedAt || null}, pushed_at)
+        WHERE id = ${id}
+        RETURNING *
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        brainDumpId: row.brain_dump_id as string | undefined,
+        assigneeId: row.assignee_id as string,
+        assigneeName: row.assignee_name as string | undefined,
+        title: row.title as string,
+        description: row.description as string | undefined,
+        priority: row.priority as AIGeneratedTask["priority"],
+        dueDate: row.due_date as string | undefined,
+        context: row.context as string,
+        status: row.status as AIGeneratedTask["status"],
+        approvedBy: row.approved_by as string | undefined,
+        approvedAt: row.approved_at ? (row.approved_at as Date).toISOString() : undefined,
+        convertedTaskId: row.converted_task_id as string | undefined,
+        pushedToSlack: row.pushed_to_slack as boolean,
+        pushedAt: row.pushed_at ? (row.pushed_at as Date).toISOString() : undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }
+    },
+    async delete(id: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM ai_generated_tasks WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
+    },
+  },
+
+  // Daily Digests
+  dailyDigests: {
+    async findByOrganizationId(orgId: string, limit: number = 7): Promise<DailyDigest[]> {
+      const { rows } = await sql`
+        SELECT * FROM daily_digests
+        WHERE organization_id = ${orgId}
+        ORDER BY digest_date DESC
+        LIMIT ${limit}
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        digestDate: row.digest_date as string,
+        summary: row.summary as string,
+        wins: row.wins as DailyDigest["wins"],
+        blockers: row.blockers as DailyDigest["blockers"],
+        concerns: row.concerns as DailyDigest["concerns"],
+        followUps: row.follow_ups as DailyDigest["followUps"],
+        challengeQuestions: row.challenge_questions as string[],
+        teamSentiment: row.team_sentiment as DailyDigest["teamSentiment"],
+        reportsAnalyzed: row.reports_analyzed as number,
+        generatedAt: (row.generated_at as Date)?.toISOString() || "",
+      }))
+    },
+    async findByDate(orgId: string, date: string): Promise<DailyDigest | null> {
+      const { rows } = await sql`
+        SELECT * FROM daily_digests
+        WHERE organization_id = ${orgId} AND digest_date = ${date}
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        digestDate: row.digest_date as string,
+        summary: row.summary as string,
+        wins: row.wins as DailyDigest["wins"],
+        blockers: row.blockers as DailyDigest["blockers"],
+        concerns: row.concerns as DailyDigest["concerns"],
+        followUps: row.follow_ups as DailyDigest["followUps"],
+        challengeQuestions: row.challenge_questions as string[],
+        teamSentiment: row.team_sentiment as DailyDigest["teamSentiment"],
+        reportsAnalyzed: row.reports_analyzed as number,
+        generatedAt: (row.generated_at as Date)?.toISOString() || "",
+      }
+    },
+    async create(digest: DailyDigest): Promise<DailyDigest> {
+      await sql`
+        INSERT INTO daily_digests (id, organization_id, digest_date, summary, wins, blockers,
+          concerns, follow_ups, challenge_questions, team_sentiment, reports_analyzed, generated_at)
+        VALUES (${digest.id}, ${digest.organizationId}, ${digest.digestDate}, ${digest.summary},
+                ${JSON.stringify(digest.wins)}, ${JSON.stringify(digest.blockers)},
+                ${JSON.stringify(digest.concerns)}, ${JSON.stringify(digest.followUps)},
+                ${JSON.stringify(digest.challengeQuestions)}, ${digest.teamSentiment},
+                ${digest.reportsAnalyzed}, ${digest.generatedAt})
+      `
+      return digest
+    },
+    async getLatest(orgId: string): Promise<DailyDigest | null> {
+      const { rows } = await sql`
+        SELECT * FROM daily_digests
+        WHERE organization_id = ${orgId}
+        ORDER BY digest_date DESC
+        LIMIT 1
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        digestDate: row.digest_date as string,
+        summary: row.summary as string,
+        wins: row.wins as DailyDigest["wins"],
+        blockers: row.blockers as DailyDigest["blockers"],
+        concerns: row.concerns as DailyDigest["concerns"],
+        followUps: row.follow_ups as DailyDigest["followUps"],
+        challengeQuestions: row.challenge_questions as string[],
+        teamSentiment: row.team_sentiment as DailyDigest["teamSentiment"],
+        reportsAnalyzed: row.reports_analyzed as number,
+        generatedAt: (row.generated_at as Date)?.toISOString() || "",
+      }
+    },
+  },
+
+  // AI Conversations
+  aiConversations: {
+    async findByUserId(userId: string, orgId: string, limit: number = 50): Promise<AIConversation[]> {
+      const { rows } = await sql`
+        SELECT * FROM ai_conversations
+        WHERE user_id = ${userId} AND organization_id = ${orgId}
+        ORDER BY created_at DESC
+        LIMIT ${limit}
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        query: row.query as string,
+        response: row.response as string | undefined,
+        contextUsed: row.context_used as Record<string, unknown> | undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }))
+    },
+    async create(conversation: AIConversation): Promise<AIConversation> {
+      await sql`
+        INSERT INTO ai_conversations (id, organization_id, user_id, query, response, context_used, created_at)
+        VALUES (${conversation.id}, ${conversation.organizationId}, ${conversation.userId},
+                ${conversation.query}, ${conversation.response || null},
+                ${conversation.contextUsed ? JSON.stringify(conversation.contextUsed) : null},
+                ${conversation.createdAt})
+      `
+      return conversation
+    },
+    async update(id: string, updates: Partial<AIConversation>): Promise<AIConversation | null> {
+      const { rows } = await sql`
+        UPDATE ai_conversations SET
+          response = COALESCE(${updates.response || null}, response),
+          context_used = COALESCE(${updates.contextUsed ? JSON.stringify(updates.contextUsed) : null}::jsonb, context_used)
+        WHERE id = ${id}
+        RETURNING *
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        query: row.query as string,
+        response: row.response as string | undefined,
+        contextUsed: row.context_used as Record<string, unknown> | undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }
     },
   },
 }

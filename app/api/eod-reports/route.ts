@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
-import type { EODReport, ApiResponse } from "@/lib/types"
+import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
+import type { EODReport, EODInsight, ApiResponse } from "@/lib/types"
 
 // GET /api/eod-reports - Get EOD reports
 export async function GET(request: NextRequest) {
@@ -145,6 +146,41 @@ export async function POST(request: NextRequest) {
             completedAt: now,
           })
         }
+      }
+    }
+
+    // AI: Parse EOD report asynchronously (fire-and-forget)
+    if (isClaudeConfigured()) {
+      // Get member info for AI context
+      const teamMembersData = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+      const member = teamMembersData.find(m => m.id === auth.user.id)
+
+      if (member) {
+        // Get user's rocks for context
+        const rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
+
+        // Parse EOD with AI in background (don't await)
+        parseEODReport(report, member.name, member.department, rocks)
+          .then(async (result) => {
+            // Create insight record
+            const insight: EODInsight = {
+              id: generateId(),
+              organizationId: auth.organization.id,
+              eodReportId: report.id,
+              ...result.insight,
+              processedAt: new Date().toISOString(),
+            }
+            await db.eodInsights.create(insight)
+
+            // Log if admin alert is needed
+            if (result.alertAdmin && result.alertReason) {
+              console.log(`[AI Alert] ${member.name}: ${result.alertReason}`)
+              // TODO: Send notification to admins
+            }
+          })
+          .catch((err) => {
+            console.error("AI EOD parsing failed:", err)
+          })
       }
     }
 
