@@ -112,11 +112,11 @@ export const api = {
       return handleResponse<any[]>(response)
     },
 
-    async create(email: string, role: string, department: string) {
+    async create(data: { email: string; role: string; department: string }) {
       const response = await fetch(`${API_BASE}/invitations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role, department }),
+        body: JSON.stringify(data),
       })
       return handleResponse<any>(response)
     },

@@ -11,39 +11,38 @@ interface SlackMessage {
   icon_emoji?: string
 }
 
-interface SlackBlock {
-  type: "section" | "divider" | "header" | "actions" | "context"
-  text?: {
-    type: "mrkdwn" | "plain_text"
+interface SlackTextObject {
+  type: "mrkdwn" | "plain_text"
+  text: string
+  emoji?: boolean
+}
+
+interface SlackContextElement {
+  type: "mrkdwn" | "plain_text" | "image"
+  text?: string
+  image_url?: string
+  alt_text?: string
+}
+
+interface SlackButtonElement {
+  type: "button"
+  text: {
+    type: "plain_text"
     text: string
     emoji?: boolean
   }
-  fields?: Array<{
-    type: "mrkdwn" | "plain_text"
-    text: string
-  }>
-  elements?: Array<{
-    type: "button" | "mrkdwn"
-    text?: {
-      type: "plain_text" | "mrkdwn"
-      text: string
-      emoji?: boolean
-    }
-    action_id?: string
-    url?: string
-    value?: string
-    style?: "primary" | "danger"
-  }>
-  accessory?: {
-    type: "button"
-    text: {
-      type: "plain_text"
-      text: string
-      emoji?: boolean
-    }
-    url?: string
-    action_id?: string
-  }
+  action_id?: string
+  url?: string
+  value?: string
+  style?: "primary" | "danger"
+}
+
+interface SlackBlock {
+  type: "section" | "divider" | "header" | "actions" | "context"
+  text?: SlackTextObject
+  fields?: SlackTextObject[]
+  elements?: SlackContextElement[] | SlackButtonElement[]
+  accessory?: SlackButtonElement
 }
 
 /**

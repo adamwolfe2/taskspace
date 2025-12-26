@@ -90,22 +90,33 @@ export async function PATCH(request: NextRequest) {
       case "approve": {
         // Convert AI task to real assigned task
         const newTaskId = generateId()
-        const member = await db.members.findWithUsersByOrganizationId(auth.organization.id)
-          .then(members => members.find(m => m.id === task.assigneeId))
+        const finalAssigneeId = updates?.assigneeId || task.assigneeId
+        const members = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+        const member = members.find(m => m.id === finalAssigneeId)
+
+        // Map AI priority to task priority (urgent/high -> high, medium -> medium, low -> normal)
+        const priorityMap: Record<string, "high" | "medium" | "normal"> = {
+          urgent: "high",
+          high: "high",
+          medium: "medium",
+          low: "normal",
+        }
+        const rawPriority = updates?.priority || task.priority
+        const mappedPriority = priorityMap[rawPriority] || "normal"
 
         const assignedTask: AssignedTask = {
           id: newTaskId,
           organizationId: auth.organization.id,
           title: updates?.title || task.title,
           description: updates?.description || task.description,
-          assigneeId: task.assigneeId,
-          assigneeName: member?.name || task.assigneeName || "Unknown",
+          assigneeId: finalAssigneeId,
+          assigneeName: member?.name || updates?.assigneeName || task.assigneeName || "Unknown",
           assignedById: auth.user.id,
           assignedByName: auth.user.name,
           type: "assigned",
           rockId: null,
           rockTitle: null,
-          priority: (updates?.priority || task.priority) as "high" | "medium" | "normal",
+          priority: mappedPriority,
           dueDate: updates?.dueDate || task.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
           status: "pending",
           completedAt: null,
