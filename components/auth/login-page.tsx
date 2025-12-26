@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Target, AlertCircle } from "lucide-react"
+import { Loader2, Target, AlertCircle, Play } from "lucide-react"
 
 export function LoginPage() {
-  const { login, setCurrentPage, error, clearError, isLoading } = useApp()
+  const { login, setCurrentPage, error, clearError, isLoading, enterDemoMode } = useApp()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [localError, setLocalError] = useState("")
@@ -69,7 +69,16 @@ export function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage("forgot-password")}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -92,6 +101,27 @@ export function LoginPage() {
                 "Sign in"
               )}
             </Button>
+
+            <div className="relative w-full">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={enterDemoMode}
+              disabled={isLoading}
+            >
+              <Play className="mr-2 h-4 w-4" />
+              See Demo
+            </Button>
+
             <div className="text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
               <button

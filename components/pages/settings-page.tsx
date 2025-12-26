@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import { api } from "@/lib/api/client"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
   Building,
   Bell,
@@ -23,13 +24,42 @@ import {
   Loader2,
   Copy,
   ExternalLink,
+  Mail,
+  UserPlus,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import type { TeamMember, Invitation } from "@/lib/types"
 
 export function SettingsPage() {
   const { currentUser, currentOrganization, setCurrentOrganization } = useApp()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>([])
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteRole, setInviteRole] = useState<"member" | "admin">("member")
+  const [inviteDepartment, setInviteDepartment] = useState("General")
+  const [isInviting, setIsInviting] = useState(false)
+  const [showInviteDialog, setShowInviteDialog] = useState(false)
+
+  // Load team members and invitations
+  useEffect(() => {
+    const loadTeamData = async () => {
+      try {
+        const [members, invitations] = await Promise.all([
+          api.members.list(),
+          api.invitations.list().catch(() => []), // May fail for non-admins
+        ])
+        setTeamMembers(members)
+        setPendingInvitations(invitations)
+      } catch (err) {
+        console.error("Failed to load team data:", err)
+      }
+    }
+    loadTeamData()
+  }, [])
+
+  const teamCount = teamMembers.length + pendingInvitations.length
 
   // Organization settings state
   const [orgName, setOrgName] = useState(currentOrganization?.name || "")
@@ -82,10 +112,55 @@ export function SettingsPage() {
     }
   }
 
-  const copyInviteLink = () => {
+  const handleSendInvite = async () => {
+    if (!inviteEmail.trim()) {
+      toast({
+        title: "Email required",
+        description: "Please enter an email address",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsInviting(true)
+      const invitation = await api.invitations.create({
+        email: inviteEmail.trim().toLowerCase(),
+        role: inviteRole,
+        department: inviteDepartment,
+      })
+
+      setPendingInvitations([...pendingInvitations, invitation])
+      setInviteEmail("")
+      setShowInviteDialog(false)
+
+      toast({
+        title: "Invitation sent",
+        description: `An invitation has been sent to ${invitation.email}`,
+      })
+
+      // Copy invite link to clipboard
+      const inviteLink = `${window.location.origin}?invite=${invitation.token}`
+      await navigator.clipboard.writeText(inviteLink)
+      toast({
+        title: "Link copied",
+        description: "Invitation link also copied to clipboard",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Failed to send invitation",
+        description: err.message || "An error occurred",
+        variant: "destructive",
+      })
+    } finally {
+      setIsInviting(false)
+    }
+  }
+
+  const copyInviteLink = async (token: string) => {
     const baseUrl = window.location.origin
-    // Note: In production, you'd generate an actual invitation token
-    navigator.clipboard.writeText(`${baseUrl}?invite=INVITATION_TOKEN`)
+    const inviteLink = `${baseUrl}?invite=${token}`
+    await navigator.clipboard.writeText(inviteLink)
     toast({
       title: "Link copied",
       description: "Invitation link copied to clipboard",
@@ -310,17 +385,97 @@ export function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Alert>
-                  <Users className="h-4 w-4" />
-                  <AlertDescription>
-                    To invite team members, go to the Admin &gt; Team page and use the "Invite Member" button.
-                    You can also share a direct invitation link.
-                  </AlertDescription>
-                </Alert>
-                <Button variant="outline" onClick={copyInviteLink} className="gap-2">
-                  <Copy className="h-4 w-4" />
-                  Copy Invite Link
-                </Button>
+                <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2">
+                      <UserPlus className="h-4 w-4" />
+                      Send Invitation
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Invite Team Member</DialogTitle>
+                      <DialogDescription>
+                        Send an invitation email to add a new team member
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="inviteEmail">Email Address</Label>
+                        <Input
+                          id="inviteEmail"
+                          type="email"
+                          placeholder="colleague@company.com"
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Role</Label>
+                        <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as "member" | "admin")}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="member">Team Member</SelectItem>
+                            <SelectItem value="admin">Administrator</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Department</Label>
+                        <Input
+                          placeholder="e.g., Engineering, Marketing"
+                          value={inviteDepartment}
+                          onChange={(e) => setInviteDepartment(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSendInvite} disabled={isInviting}>
+                        {isInviting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="mr-2 h-4 w-4" />
+                            Send Invitation
+                          </>
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                {pendingInvitations.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Pending Invitations</Label>
+                    <div className="space-y-2">
+                      {pendingInvitations.map((inv) => (
+                        <div key={inv.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div>
+                            <p className="font-medium">{inv.email}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {inv.role} • {inv.department}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyInviteLink(inv.token)}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -336,16 +491,23 @@ export function SettingsPage() {
                   <div>
                     <p className="font-medium">Team Members</p>
                     <p className="text-sm text-muted-foreground">
-                      Current usage of your plan limit
+                      {teamMembers.length} active + {pendingInvitations.length} pending
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold">
-                      -- / {currentOrganization?.subscription.maxUsers || 5}
+                      {teamCount} / {currentOrganization?.subscription.maxUsers || 5}
                     </p>
                     <p className="text-sm text-muted-foreground">members</p>
                   </div>
                 </div>
+                {teamCount >= (currentOrganization?.subscription.maxUsers || 5) && (
+                  <Alert className="mt-4">
+                    <AlertDescription>
+                      You've reached your team member limit. Upgrade your plan to add more members.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

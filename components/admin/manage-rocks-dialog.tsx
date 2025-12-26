@@ -111,14 +111,17 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
         description: "The rock has been updated successfully",
       })
     } else {
+      const now = new Date().toISOString()
       const newRock: Rock = {
         id: `rock-${Date.now()}`,
+        organizationId: "", // Will be set by API
         userId: selectedUserId,
         ...formData,
         doneWhen: doneWhenFiltered,
         progress: 0,
         status: "on-track",
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       }
       setRocks([...rocks, newRock])
       toast({

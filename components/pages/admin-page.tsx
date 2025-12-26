@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import type { TeamMember, EODReport, Rock, AssignedTask } from "@/lib/types"
+import { useState, useEffect } from "react"
+import type { TeamMember, EODReport, Rock, AssignedTask, EODInsight } from "@/lib/types"
+import { api } from "@/lib/api/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,13 +12,13 @@ import { calculateUserStats } from "@/lib/utils/stats-calculator"
 import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
+import { EODInsightsCard } from "@/components/ai/eod-insights-card"
 import { useToast } from "@/hooks/use-toast"
 
 interface AdminPageProps {
   teamMembers: TeamMember[]
   eodReports: EODReport[]
   rocks: Rock[]
-  tasks: any[]
   currentUser: TeamMember
   assignedTasks: AssignedTask[]
   setAssignedTasks: (tasks: AssignedTask[]) => void
@@ -27,14 +28,27 @@ export function AdminPage({
   teamMembers,
   eodReports,
   rocks,
-  tasks,
   currentUser,
   assignedTasks,
   setAssignedTasks,
 }: AdminPageProps) {
   const [showAssignTaskModal, setShowAssignTaskModal] = useState(false)
   const [showPendingTasks, setShowPendingTasks] = useState(false)
+  const [insights, setInsights] = useState<EODInsight[]>([])
   const { toast } = useToast()
+
+  // Fetch AI insights
+  useEffect(() => {
+    const fetchInsights = async () => {
+      try {
+        const data = await api.ai.getInsights(7)
+        setInsights(data)
+      } catch (err) {
+        console.error("Failed to fetch insights:", err)
+      }
+    }
+    fetchInsights()
+  }, [])
 
   const activeMembers = teamMembers.filter((m) => m.role === "member")
 
@@ -47,7 +61,7 @@ export function AdminPage({
   const reportingRate = Math.round((todayReports.length / activeMembers.length) * 100)
 
   const teamStats = activeMembers.map((member) => {
-    const stats = calculateUserStats(member.id, rocks, tasks, eodReports)
+    const stats = calculateUserStats(member.id, rocks, assignedTasks, eodReports)
     return { member, stats }
   })
 
@@ -58,7 +72,7 @@ export function AdminPage({
 
   const pendingAssignedTasks = assignedTasks.filter((t) => t.status === "pending" && t.type === "assigned")
 
-  const handleAssignTask = (taskData: {
+  const handleAssignTask = async (taskData: {
     assigneeId: string
     assigneeName: string
     title: string
@@ -69,31 +83,28 @@ export function AdminPage({
     dueDate: string
     sendEmail: boolean
   }) => {
-    const newTask: AssignedTask = {
-      id: `task-${Date.now()}`,
-      title: taskData.title,
-      description: taskData.description,
-      assigneeId: taskData.assigneeId,
-      assigneeName: taskData.assigneeName,
-      assignedById: currentUser.id,
-      assignedByName: currentUser.name,
-      type: "assigned",
-      rockId: taskData.rockId,
-      rockTitle: taskData.rockTitle,
-      priority: taskData.priority,
-      dueDate: taskData.dueDate,
-      createdAt: new Date().toISOString(),
-      status: "pending",
-      completedAt: null,
-      addedToEOD: false,
-      eodReportId: null,
-    }
-    setAssignedTasks([...assignedTasks, newTask])
+    try {
+      const newTask = await api.tasks.create({
+        title: taskData.title,
+        description: taskData.description,
+        assigneeId: taskData.assigneeId,
+        rockId: taskData.rockId,
+        priority: taskData.priority,
+        dueDate: taskData.dueDate,
+      })
+      setAssignedTasks([...assignedTasks, newTask])
 
-    toast({
-      title: "Task assigned",
-      description: `Task assigned to ${taskData.assigneeName}`,
-    })
+      toast({
+        title: "Task assigned",
+        description: `Task assigned to ${taskData.assigneeName}`,
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to assign task",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -188,43 +199,53 @@ export function AdminPage({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-destructive" />
-            Escalations ({escalations.length})
-          </CardTitle>
-          <CardDescription>Items requiring immediate attention</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {escalations.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No escalations</p>
-          ) : (
-            <div className="space-y-3">
-              {escalations.map((report) => {
-                const user = teamMembers.find((m) => m.id === report.userId)
-                return (
-                  <div key={report.id} className="border border-border rounded-lg p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {user && <UserInitials name={user.name} size="sm" />}
-                        <div>
-                          <p className="font-medium">{user?.name}</p>
-                          <p className="text-xs text-muted-foreground">{getRelativeDate(report.date)}</p>
+      {/* AI Insights and Escalations Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <EODInsightsCard
+          insights={insights}
+          teamMembers={teamMembers}
+          reports={eodReports}
+          maxItems={5}
+        />
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Escalations ({escalations.length})
+            </CardTitle>
+            <CardDescription>Items requiring immediate attention</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {escalations.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No escalations</p>
+            ) : (
+              <div className="space-y-3">
+                {escalations.map((report) => {
+                  const user = teamMembers.find((m) => m.id === report.userId)
+                  return (
+                    <div key={report.id} className="border border-border rounded-lg p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {user && <UserInitials name={user.name} size="sm" />}
+                          <div>
+                            <p className="font-medium">{user?.name}</p>
+                            <p className="text-xs text-muted-foreground">{getRelativeDate(report.date)}</p>
+                          </div>
                         </div>
+                        <Badge variant="destructive">Escalation</Badge>
                       </div>
-                      <Badge variant="destructive">Escalation</Badge>
+                      <div className="bg-destructive/10 border border-destructive/20 rounded p-3">
+                        <p className="text-sm">{report.escalationNote}</p>
+                      </div>
                     </div>
-                    <div className="bg-destructive/10 border border-destructive/20 rounded p-3">
-                      <p className="text-sm">{report.escalationNote}</p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardHeader>

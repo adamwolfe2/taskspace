@@ -54,6 +54,10 @@ export function RegisterPage() {
     { met: /[0-9]/.test(password), text: "One number" },
   ]
 
+  const passwordStrength = passwordRequirements.filter(r => r.met).length
+  const strengthColors = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-green-500"]
+  const strengthLabels = ["Weak", "Fair", "Good", "Strong"]
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md">
@@ -112,18 +116,37 @@ export function RegisterPage() {
                 autoComplete="new-password"
               />
               {password && (
-                <div className="text-xs space-y-1 mt-2">
-                  {passwordRequirements.map((req, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-center gap-1 ${
-                        req.met ? "text-green-600" : "text-muted-foreground"
-                      }`}
-                    >
-                      <Check className={`h-3 w-3 ${req.met ? "opacity-100" : "opacity-30"}`} />
-                      <span>{req.text}</span>
-                    </div>
-                  ))}
+                <div className="space-y-2 mt-2">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4].map((level) => (
+                      <div
+                        key={level}
+                        className={`h-1.5 flex-1 rounded-full transition-colors ${
+                          passwordStrength >= level
+                            ? strengthColors[passwordStrength - 1]
+                            : "bg-muted"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">
+                      Password strength: <strong>{passwordStrength > 0 ? strengthLabels[passwordStrength - 1] : "Too weak"}</strong>
+                    </span>
+                  </div>
+                  <div className="text-xs space-y-1">
+                    {passwordRequirements.map((req, i) => (
+                      <div
+                        key={i}
+                        className={`flex items-center gap-1 ${
+                          req.met ? "text-green-600" : "text-muted-foreground"
+                        }`}
+                      >
+                        <Check className={`h-3 w-3 ${req.met ? "opacity-100" : "opacity-30"}`} />
+                        <span>{req.text}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

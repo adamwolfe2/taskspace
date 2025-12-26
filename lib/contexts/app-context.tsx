@@ -12,6 +12,7 @@ interface AppContextType {
   setCurrentOrganization: (org: Organization | null) => void
   isAuthenticated: boolean
   isLoading: boolean
+  isDemoMode: boolean
 
   // Page navigation
   currentPage: PageType
@@ -26,6 +27,7 @@ interface AppContextType {
   register: (email: string, password: string, name: string, organizationName?: string) => Promise<void>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
+  enterDemoMode: () => void
 
   // Error state
   error: string | null
@@ -34,10 +36,45 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
+// Demo data
+const DEMO_USER: TeamMember = {
+  id: "demo-user-1",
+  name: "Adam Wolfe",
+  email: "adam@demo.com",
+  role: "admin",
+  department: "Operations",
+  joinDate: "2024-01-15",
+  status: "active",
+}
+
+const DEMO_ORG: Organization = {
+  id: "demo-org-1",
+  name: "Modern Amenities Group",
+  slug: "mag-demo",
+  createdAt: "2024-01-01",
+  updatedAt: "2024-01-01",
+  ownerId: "demo-user-1",
+  settings: {
+    timezone: "America/New_York",
+    weekStartDay: 1,
+    eodReminderTime: "17:00",
+    enableEmailNotifications: true,
+    enableSlackIntegration: false,
+  },
+  subscription: {
+    plan: "professional",
+    status: "active",
+    currentPeriodEnd: "2025-12-31",
+    maxUsers: 25,
+    features: ["ai-insights", "slack-integration", "email-notifications"],
+  },
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<TeamMember | null>(null)
   const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isDemoMode, setIsDemoMode] = useState(false)
   const [currentPage, setCurrentPage] = useState<PageType>("login")
   const [darkMode, setDarkMode] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -143,14 +180,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await api.auth.logout()
+      if (!isDemoMode) {
+        await api.auth.logout()
+      }
     } catch (err) {
       // Ignore logout errors
     } finally {
       setCurrentUser(null)
       setCurrentOrganization(null)
+      setIsDemoMode(false)
       setCurrentPage("login")
     }
+  }, [isDemoMode])
+
+  const enterDemoMode = useCallback(() => {
+    setCurrentUser(DEMO_USER)
+    setCurrentOrganization(DEMO_ORG)
+    setIsDemoMode(true)
+    setCurrentPage("dashboard")
+    setIsLoading(false)
   }, [])
 
   // Check session on mount
@@ -184,6 +232,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCurrentOrganization,
         isAuthenticated,
         isLoading,
+        isDemoMode,
         currentPage,
         setCurrentPage,
         darkMode,
@@ -192,6 +241,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         refreshSession,
+        enterDemoMode,
         error,
         clearError,
       }}

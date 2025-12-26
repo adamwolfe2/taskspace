@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       user = {
         id: generateId(),
         email: invitation.email.toLowerCase(),
-        passwordHash: hashPassword(password),
+        passwordHash: await hashPassword(password),
         name,
         createdAt: now,
         updatedAt: now,
@@ -142,10 +142,13 @@ export async function POST(request: NextRequest) {
 
     await db.sessions.create(session)
 
+    // Return response without password hash
+    const { passwordHash: _, ...safeUser } = user
+
     const response = NextResponse.json<ApiResponse<AuthResponse>>({
       success: true,
       data: {
-        user,
+        user: safeUser as any,
         organization,
         member,
         token: sessionToken,

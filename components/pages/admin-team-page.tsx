@@ -118,11 +118,11 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
     try {
       setIsSubmitting(true)
-      const invitation = await api.invitations.create(
-        inviteData.email,
-        inviteData.role,
-        inviteData.department
-      )
+      const invitation = await api.invitations.create({
+        email: inviteData.email,
+        role: inviteData.role,
+        department: inviteData.department,
+      })
       setInvitations([...invitations, invitation])
       toast({
         title: "Invitation Sent",

@@ -9,10 +9,31 @@ import {
   validatePassword,
   slugify,
 } from "@/lib/auth/password"
+import {
+  checkRegisterRateLimit,
+  getRateLimitHeaders,
+} from "@/lib/auth/rate-limit"
 import type { User, Organization, OrganizationMember, Session, ApiResponse, AuthResponse } from "@/lib/types"
 
 export async function POST(request: NextRequest) {
   try {
+    // Check rate limit
+    const rateLimitResult = checkRegisterRateLimit(request)
+    if (!rateLimitResult.success) {
+      const response = NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: `Too many registration attempts. Please try again in ${rateLimitResult.retryAfter} seconds.`,
+        },
+        { status: 429 }
+      )
+      const headers = getRateLimitHeaders(rateLimitResult)
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value)
+      }
+      return response
+    }
+
     const body = await request.json()
     const { email, password, name, organizationName } = body
 
@@ -57,7 +78,7 @@ export async function POST(request: NextRequest) {
     const user: User = {
       id: userId,
       email: email.toLowerCase(),
-      passwordHash: hashPassword(password),
+      passwordHash: await hashPassword(password),
       name,
       createdAt: now,
       updatedAt: now,

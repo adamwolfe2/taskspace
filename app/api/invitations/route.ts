@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId, generateInviteToken, getExpirationDate, validateEmail } from "@/lib/auth/password"
+import { sendInvitationEmail } from "@/lib/email"
 import type { Invitation, ApiResponse } from "@/lib/types"
 
 // GET /api/invitations - Get all pending invitations
@@ -117,10 +118,14 @@ export async function POST(request: NextRequest) {
 
     await db.invitations.create(invitation)
 
-    // TODO: Send invitation email
-    // For now, just return the invitation with the token
-    // In production, you would send an email with a link like:
-    // https://yourapp.com/accept-invitation?token=${invitation.token}
+    // Send invitation email (async, don't block on failure)
+    sendInvitationEmail(invitation, auth.organization, auth.user.name)
+      .then(result => {
+        if (!result.success) {
+          console.warn("Failed to send invitation email:", result.error)
+        }
+      })
+      .catch(err => console.error("Email send error:", err))
 
     return NextResponse.json<ApiResponse<Invitation>>({
       success: true,

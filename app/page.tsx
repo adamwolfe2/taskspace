@@ -7,6 +7,8 @@ import { SidebarNav } from "@/components/layout/sidebar-nav"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { LoginPage } from "@/components/auth/login-page"
 import { RegisterPage } from "@/components/auth/register-page"
+import { ForgotPasswordPage } from "@/components/auth/forgot-password-page"
+import { ResetPasswordPage } from "@/components/auth/reset-password-page"
 import { AcceptInvitationPage } from "@/components/auth/accept-invitation-page"
 import { DashboardPage } from "@/components/pages/dashboard-page"
 import { HistoryPage } from "@/components/pages/history-page"
@@ -15,27 +17,35 @@ import { AdminPage } from "@/components/pages/admin-page"
 import { AdminTeamPage } from "@/components/pages/admin-team-page"
 import { TasksPage } from "@/components/pages/tasks-page"
 import { SettingsPage } from "@/components/pages/settings-page"
+import { CommandCenterPage } from "@/components/pages/command-center-page"
+import { AnalyticsPage } from "@/components/pages/analytics-page"
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
 import { Loader2 } from "lucide-react"
 
 function AppContent() {
-  const { currentUser, currentPage, isLoading, isAuthenticated } = useApp()
+  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
+  const [resetToken, setResetToken] = useState<string | null>(null)
   const teamData = useTeamData()
 
-  // Check for invitation token in URL
+  // Check for invitation token or reset token in URL
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
-      const token = params.get("invite")
-      if (token) {
-        setInviteToken(token)
+      const invite = params.get("invite")
+      const reset = params.get("resetToken")
+      if (invite) {
+        setInviteToken(invite)
+      }
+      if (reset) {
+        setResetToken(reset)
+        setCurrentPage("reset-password")
       }
     }
-  }, [])
+  }, [setCurrentPage])
 
   // Show loading spinner while checking session
   if (isLoading) {
@@ -51,11 +61,20 @@ function AppContent() {
     return <AcceptInvitationPage token={inviteToken} />
   }
 
+  // Handle password reset with token
+  if (resetToken && !isAuthenticated) {
+    return <ResetPasswordPage token={resetToken} />
+  }
+
   // Auth pages
   if (!isAuthenticated) {
     switch (currentPage) {
       case "register":
         return <RegisterPage />
+      case "forgot-password":
+        return <ForgotPasswordPage />
+      case "reset-password":
+        return resetToken ? <ResetPasswordPage token={resetToken} /> : <ForgotPasswordPage />
       case "login":
       default:
         return <LoginPage />
@@ -65,9 +84,19 @@ function AppContent() {
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
 
   const renderPage = () => {
+    const dashboardProps = {
+      currentUser: currentUser!,
+      rocks: teamData.rocks,
+      eodReports: teamData.eodReports,
+      assignedTasks: teamData.assignedTasks,
+      updateRock: teamData.updateRock,
+      submitEODReport: teamData.submitEODReport,
+      updateTask: teamData.updateTask,
+    }
+
     switch (currentPage) {
       case "dashboard":
-        return <DashboardPage {...teamData} currentUser={currentUser!} />
+        return <DashboardPage {...dashboardProps} />
       case "history":
         return <HistoryPage {...teamData} currentUser={currentUser!} />
       case "rocks":
@@ -79,18 +108,23 @@ function AppContent() {
             assignedTasks={teamData.assignedTasks}
             setAssignedTasks={teamData.setAssignedTasks}
             rocks={teamData.rocks}
+            createTask={teamData.createTask}
+            updateTask={teamData.updateTask}
+            deleteTask={teamData.deleteTask}
           />
         )
       case "admin":
         return isAdmin ? (
           <AdminPage
-            {...teamData}
+            teamMembers={teamData.teamMembers}
+            eodReports={teamData.eodReports}
+            rocks={teamData.rocks}
             currentUser={currentUser!}
             assignedTasks={teamData.assignedTasks}
             setAssignedTasks={teamData.setAssignedTasks}
           />
         ) : (
-          <DashboardPage {...teamData} currentUser={currentUser!} />
+          <DashboardPage {...dashboardProps} />
         )
       case "admin-team":
         return isAdmin ? (
@@ -101,12 +135,31 @@ function AppContent() {
             setRocks={teamData.setRocks}
           />
         ) : (
-          <DashboardPage {...teamData} currentUser={currentUser!} />
+          <DashboardPage {...dashboardProps} />
+        )
+      case "command-center":
+        return isAdmin ? (
+          <CommandCenterPage
+            teamMembers={teamData.teamMembers}
+            currentUser={currentUser!}
+          />
+        ) : (
+          <DashboardPage {...dashboardProps} />
+        )
+      case "analytics":
+        return isAdmin ? (
+          <AnalyticsPage
+            teamMembers={teamData.teamMembers}
+            eodReports={teamData.eodReports}
+            rocks={teamData.rocks}
+          />
+        ) : (
+          <DashboardPage {...dashboardProps} />
         )
       case "settings":
         return <SettingsPage />
       default:
-        return <DashboardPage {...teamData} currentUser={currentUser!} />
+        return <DashboardPage {...dashboardProps} />
     }
   }
 
@@ -125,7 +178,7 @@ function AppContent() {
           </SheetContent>
         </Sheet>
 
-        <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{renderPage()}</main>
+        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6">{renderPage()}</main>
       </div>
 
       <MobileNav />

@@ -15,27 +15,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const members = await db.members.findByOrganizationId(auth.organization.id)
-
-    // Build full team member objects by joining with user data
-    const teamMembers: TeamMember[] = []
-
-    for (const member of members) {
-      const user = await db.users.findById(member.userId)
-      if (user) {
-        teamMembers.push({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: member.role,
-          department: member.department,
-          avatar: user.avatar,
-          joinDate: member.joinedAt,
-          weeklyMeasurable: member.weeklyMeasurable,
-          status: member.status,
-        })
-      }
-    }
+    // Use optimized JOIN query to get members with user data in a single call
+    // This fixes the N+1 query problem (was: 1 query + N queries for each user)
+    const teamMembers = await db.members.findWithUsersByOrganizationId(auth.organization.id)
 
     return NextResponse.json<ApiResponse<TeamMember[]>>({
       success: true,

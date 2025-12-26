@@ -15,9 +15,20 @@ interface TasksPageProps {
   assignedTasks: AssignedTask[]
   setAssignedTasks: (tasks: AssignedTask[]) => void
   rocks: Rock[]
+  createTask: (task: Partial<AssignedTask>) => Promise<AssignedTask>
+  updateTask: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
+  deleteTask: (id: string) => Promise<void>
 }
 
-export function TasksPage({ currentUser, assignedTasks, setAssignedTasks, rocks }: TasksPageProps) {
+export function TasksPage({
+  currentUser,
+  assignedTasks,
+  setAssignedTasks,
+  rocks,
+  createTask,
+  updateTask,
+  deleteTask,
+}: TasksPageProps) {
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
   const [editingTask, setEditingTask] = useState<AssignedTask | null>(null)
   const { toast } = useToast()
@@ -29,25 +40,26 @@ export function TasksPage({ currentUser, assignedTasks, setAssignedTasks, rocks 
 
   const userRocks = rocks.filter((r) => r.userId === currentUser.id)
 
-  const handleCompleteTask = (taskId: string) => {
-    const updatedTasks = assignedTasks.map((task) =>
-      task.id === taskId
-        ? {
-            ...task,
-            status: "completed" as const,
-            completedAt: new Date().toISOString(),
-          }
-        : task,
-    )
-    setAssignedTasks(updatedTasks)
-
-    toast({
-      title: "Task completed!",
-      description: "Added to today's EOD report",
-    })
+  const handleCompleteTask = async (taskId: string) => {
+    try {
+      await updateTask(taskId, {
+        status: "completed",
+        completedAt: new Date().toISOString(),
+      })
+      toast({
+        title: "Task completed!",
+        description: "Added to today's EOD report",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to complete task",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleAddTask = (taskData: {
+  const handleAddTask = async (taskData: {
     title: string
     description: string
     rockId: string | null
@@ -55,26 +67,26 @@ export function TasksPage({ currentUser, assignedTasks, setAssignedTasks, rocks 
     priority: "high" | "medium" | "normal"
     dueDate: string
   }) => {
-    const newTask: AssignedTask = {
-      id: `task-${Date.now()}`,
-      ...taskData,
-      assigneeId: currentUser.id,
-      assigneeName: currentUser.name,
-      assignedById: null,
-      assignedByName: null,
-      type: "personal",
-      createdAt: new Date().toISOString(),
-      status: "pending",
-      completedAt: null,
-      addedToEOD: false,
-      eodReportId: null,
+    try {
+      await createTask({
+        title: taskData.title,
+        description: taskData.description,
+        assigneeId: currentUser.id,
+        rockId: taskData.rockId,
+        priority: taskData.priority,
+        dueDate: taskData.dueDate,
+      })
+      toast({
+        title: "Task created",
+        description: "Your personal task has been added",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to create task",
+        variant: "destructive",
+      })
     }
-    setAssignedTasks([...assignedTasks, newTask])
-
-    toast({
-      title: "Task created",
-      description: "Your personal task has been added",
-    })
   }
 
   const handleEditTask = (task: AssignedTask) => {
@@ -82,12 +94,20 @@ export function TasksPage({ currentUser, assignedTasks, setAssignedTasks, rocks 
     setShowAddTaskModal(true)
   }
 
-  const handleDeleteTask = (taskId: string) => {
-    setAssignedTasks(assignedTasks.filter((t) => t.id !== taskId))
-    toast({
-      title: "Task deleted",
-      description: "Your task has been removed",
-    })
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await deleteTask(taskId)
+      toast({
+        title: "Task deleted",
+        description: "Your task has been removed",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to delete task",
+        variant: "destructive",
+      })
+    }
   }
 
   return (

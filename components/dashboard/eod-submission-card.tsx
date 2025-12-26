@@ -17,7 +17,7 @@ import { sendEODNotification } from "@/lib/email"
 interface EODSubmissionCardProps {
   rocks: Rock[]
   allRocks: Rock[]
-  onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt">) => void
+  onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt" | "organizationId">) => void | Promise<void>
   userId: string
   currentUser: TeamMember
   assignedTasks: AssignedTask[]
@@ -150,7 +150,8 @@ export function EODSubmissionCard({
 
     const filteredPriorities = tomorrowPriorities.filter((p) => p.text.trim() !== "")
 
-    const report: Omit<EODReport, "id" | "createdAt"> = {
+    // Note: organizationId is added by the API from the session
+    const report: Omit<EODReport, "id" | "createdAt" | "organizationId"> = {
       userId,
       date: getTodayString(),
       submittedAt: new Date().toISOString(),
@@ -161,26 +162,34 @@ export function EODSubmissionCard({
       escalationNote: needsEscalation ? escalationNote.trim() : null,
     }
 
-    onSubmitEOD(report)
-
     try {
-      await sendEODNotification(report as EODReport, currentUser, allRocks)
-    } catch (error) {
-      console.error("Failed to send email notification:", error)
+      await onSubmitEOD(report)
+
+      try {
+        await sendEODNotification(report as EODReport, currentUser, allRocks)
+      } catch (error) {
+        console.error("Failed to send email notification:", error)
+      }
+
+      // Reset form
+      setAutoTasks([])
+      setTasks([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
+      setChallenges("")
+      setTomorrowPriorities([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
+      setNeedsEscalation(false)
+      setEscalationNote("")
+
+      toast({
+        title: "EOD Report Submitted",
+        description: "Your end of day report has been recorded",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Submission Failed",
+        description: err.message || "Failed to submit EOD report",
+        variant: "destructive",
+      })
     }
-
-    // Reset form
-    setAutoTasks([])
-    setTasks([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
-    setChallenges("")
-    setTomorrowPriorities([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
-    setNeedsEscalation(false)
-    setEscalationNote("")
-
-    toast({
-      title: "EOD Report Submitted",
-      description: "Your end of day report has been recorded",
-    })
   }
 
   return (
