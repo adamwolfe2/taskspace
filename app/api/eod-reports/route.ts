@@ -3,7 +3,8 @@ import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
-import type { EODReport, EODInsight, ApiResponse } from "@/lib/types"
+import { sendEscalationNotification, sendAIAlertEmail, isEmailConfigured } from "@/lib/integrations/email"
+import type { EODReport, EODInsight, ApiResponse, TeamMember } from "@/lib/types"
 
 // GET /api/eod-reports - Get EOD reports
 export async function GET(request: NextRequest) {
@@ -149,43 +150,89 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Get team members for email notifications and AI context
+    const teamMembersData = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+    const member = teamMembersData.find(m => m.id === auth.user.id)
+
     // AI: Parse EOD report asynchronously (fire-and-forget)
-    if (isClaudeConfigured()) {
-      // Get member info for AI context
-      const teamMembersData = await db.members.findWithUsersByOrganizationId(auth.organization.id)
-      const member = teamMembersData.find(m => m.id === auth.user.id)
+    if (isClaudeConfigured() && member) {
+      // Get user's rocks for context
+      const rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
 
-      if (member) {
-        // Get user's rocks for context
-        const rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
+      // Parse EOD with AI in background (don't await)
+      parseEODReport(report, member.name, member.department, rocks)
+        .then(async (result) => {
+          // Create insight record
+          const insight: EODInsight = {
+            id: generateId(),
+            organizationId: auth.organization.id,
+            eodReportId: report.id,
+            ...result.insight,
+            processedAt: new Date().toISOString(),
+          }
+          await db.eodInsights.create(insight)
 
-        // Parse EOD with AI in background (don't await)
-        parseEODReport(report, member.name, member.department, rocks)
-          .then(async (result) => {
-            // Create insight record
-            const insight: EODInsight = {
-              id: generateId(),
-              organizationId: auth.organization.id,
-              eodReportId: report.id,
-              ...result.insight,
-              processedAt: new Date().toISOString(),
+          // Log if admin alert is needed
+          if (result.alertAdmin && result.alertReason) {
+            console.log(`[AI Alert] ${member.name}: ${result.alertReason}`)
+            // Send email notification to admins
+            if (isEmailConfigured()) {
+              const admins = teamMembersData.filter(m => m.role === "admin" || m.role === "owner")
+              const adminMembers: TeamMember[] = admins.map(a => ({
+                id: a.id,
+                name: a.name,
+                email: a.email,
+                role: a.role,
+                department: a.department,
+                joinDate: a.joinDate,
+              }))
+
+              const alertType = result.insight.sentiment === "negative" || result.insight.sentiment === "stressed"
+                ? "sentiment"
+                : result.insight.blockers && result.insight.blockers.length > 0
+                ? "blocker"
+                : "pattern"
+
+              sendAIAlertEmail(
+                alertType,
+                member.name,
+                member.department,
+                result.alertReason,
+                result.insight.aiSummary,
+                adminMembers
+              ).catch(err => console.error("[Email] AI alert failed:", err))
             }
-            await db.eodInsights.create(insight)
-
-            // Log if admin alert is needed
-            if (result.alertAdmin && result.alertReason) {
-              console.log(`[AI Alert] ${member.name}: ${result.alertReason}`)
-              // TODO: Send notification to admins
-            }
-          })
-          .catch((err) => {
-            console.error("AI EOD parsing failed:", err)
-          })
-      }
+          }
+        })
+        .catch((err) => {
+          console.error("AI EOD parsing failed:", err)
+        })
     }
 
-    // TODO: Send email notification to admin if escalation
-    // TODO: Send EOD summary email
+    // Send escalation email notification if needed
+    if (report.needsEscalation && isEmailConfigured() && member) {
+      const admins = teamMembersData.filter(m => m.role === "admin" || m.role === "owner")
+      const adminMembers: TeamMember[] = admins.map(a => ({
+        id: a.id,
+        name: a.name,
+        email: a.email,
+        role: a.role,
+        department: a.department,
+        joinDate: a.joinDate,
+      }))
+
+      const memberInfo: TeamMember = {
+        id: member.id,
+        name: member.name,
+        email: member.email,
+        role: member.role,
+        department: member.department,
+        joinDate: member.joinDate,
+      }
+
+      sendEscalationNotification(report, memberInfo, adminMembers)
+        .catch(err => console.error("[Email] Escalation notification failed:", err))
+    }
 
     return NextResponse.json<ApiResponse<EODReport>>({
       success: true,

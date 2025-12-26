@@ -211,6 +211,7 @@ export type PageType =
   | "admin-team"
   | "admin-tasks"
   | "command-center"
+  | "analytics"
   | "settings"
   | "profile"
 

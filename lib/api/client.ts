@@ -251,6 +251,29 @@ export const api = {
       return handleResponse<null>(response)
     },
   },
+
+  // AI Insights
+  ai: {
+    async getInsights(days: number = 7) {
+      const response = await fetch(`${API_BASE}/ai/parse-eod?days=${days}`)
+      return handleResponse<any[]>(response)
+    },
+
+    async getDigest(date?: string) {
+      const params = date ? `?date=${date}` : ""
+      const response = await fetch(`${API_BASE}/ai/digest${params}`)
+      return handleResponse<any>(response)
+    },
+
+    async generateDigest(date?: string) {
+      const response = await fetch(`${API_BASE}/ai/digest`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date }),
+      })
+      return handleResponse<any>(response)
+    },
+  },
 }
 
 export { ApiError }

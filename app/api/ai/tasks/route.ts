@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
-import type { ApiResponse, AIGeneratedTask, AssignedTask } from "@/lib/types"
+import { sendTaskAssignmentEmail, isEmailConfigured } from "@/lib/integrations/email"
+import type { ApiResponse, AIGeneratedTask, AssignedTask, TeamMember } from "@/lib/types"
 
 // GET /api/ai/tasks - Get pending AI-generated tasks
 export async function GET(request: NextRequest) {
@@ -135,6 +136,33 @@ export async function PATCH(request: NextRequest) {
           approvedAt: now,
           convertedTaskId: newTaskId,
         })
+
+        // Send email notification to assignee
+        if (isEmailConfigured() && member) {
+          const assignee: TeamMember = {
+            id: member.id,
+            name: member.name,
+            email: member.email,
+            role: member.role,
+            department: member.department,
+            joinDate: member.joinDate,
+          }
+
+          const adminMember = members.find(m => m.id === auth.user.id)
+          if (adminMember) {
+            const assignedBy: TeamMember = {
+              id: adminMember.id,
+              name: adminMember.name,
+              email: adminMember.email,
+              role: adminMember.role,
+              department: adminMember.department,
+              joinDate: adminMember.joinDate,
+            }
+
+            sendTaskAssignmentEmail(task, assignee, assignedBy)
+              .catch(err => console.error("[Email] Task assignment email failed:", err))
+          }
+        }
 
         return NextResponse.json<ApiResponse<{ aiTask: AIGeneratedTask; assignedTask: AssignedTask }>>({
           success: true,
