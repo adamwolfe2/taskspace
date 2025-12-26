@@ -7,10 +7,33 @@ import {
   getExpirationDate,
   validateEmail,
 } from "@/lib/auth/password"
+import {
+  checkLoginRateLimit,
+  resetLoginRateLimit,
+  getRateLimitHeaders,
+} from "@/lib/auth/rate-limit"
 import type { Session, ApiResponse, AuthResponse } from "@/lib/types"
 
 export async function POST(request: NextRequest) {
   try {
+    // Check rate limit
+    const rateLimitResult = checkLoginRateLimit(request)
+    if (!rateLimitResult.success) {
+      const response = NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: `Too many login attempts. Please try again in ${rateLimitResult.retryAfter} seconds.`,
+        },
+        { status: 429 }
+      )
+      // Add rate limit headers
+      const headers = getRateLimitHeaders(rateLimitResult)
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value)
+      }
+      return response
+    }
+
     const body = await request.json()
     const { email, password, organizationId } = body
 
@@ -40,7 +63,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify password
-    if (!verifyPassword(password, user.passwordHash)) {
+    const isValidPassword = await verifyPassword(password, user.passwordHash)
+    if (!isValidPassword) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Invalid email or password" },
         { status: 401 }
@@ -110,6 +134,9 @@ export async function POST(request: NextRequest) {
     }
 
     await db.sessions.create(session)
+
+    // Reset rate limit on successful login
+    resetLoginRateLimit(request)
 
     // Return response without password hash
     const { passwordHash: _, ...safeUser } = user

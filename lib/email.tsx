@@ -1,4 +1,4 @@
-import type { EODReport, TeamMember, Rock, Invitation, Organization } from "./types"
+import type { EODReport, TeamMember, Rock, Invitation, Organization, PasswordResetToken } from "./types"
 
 // Use environment variables for sensitive data
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
@@ -367,6 +367,75 @@ export async function sendEODReminder(user: TeamMember, organization: Organizati
   return sendEmail(
     [user.email],
     `⏰ Time to submit your EOD report - ${organization.name}`,
+    html
+  )
+}
+
+// Send password reset email
+export async function sendPasswordResetEmail(
+  resetToken: PasswordResetToken,
+  userName: string
+) {
+  const resetLink = `${APP_URL}?resetToken=${resetToken.token}`
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 24px; }
+    .content { padding: 30px; }
+    .reset-box { background: #fef2f2; border: 2px dashed #dc2626; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+    .button { display: inline-block; background: #dc2626; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 10px 0; }
+    .button:hover { background: #b91c1c; }
+    .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; margin: 20px 0; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+    .expires { color: #dc2626; font-size: 14px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <h1>Password Reset Request</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">AIMS Dashboard</p>
+      </div>
+
+      <div class="content">
+        <p>Hi ${escapeHtml(userName.split(" ")[0])},</p>
+        <p>We received a request to reset your password for your AIMS Dashboard account. Click the button below to create a new password:</p>
+
+        <div class="reset-box">
+          <a href="${resetLink}" class="button">Reset Password</a>
+          <p class="expires">This link expires in 1 hour</p>
+        </div>
+
+        <div class="warning">
+          <strong>Security Notice:</strong><br/>
+          If you didn't request a password reset, please ignore this email. Your password will remain unchanged.
+        </div>
+
+        <p style="color: #6b7280; font-size: 14px;">For security reasons, this link can only be used once and will expire after 1 hour.</p>
+      </div>
+
+      <div class="footer">
+        <p>AIMS Dashboard - Team Accountability & Management</p>
+        <p style="margin-top: 10px;">If the button doesn't work, copy and paste this link:<br/>
+        <a href="${resetLink}" style="color: #dc2626; word-break: break-all;">${resetLink}</a></p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+`
+
+  return sendEmail(
+    [resetToken.email],
+    "Reset your AIMS Dashboard password",
     html
   )
 }

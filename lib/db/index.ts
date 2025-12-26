@@ -5,6 +5,7 @@ import type {
   OrganizationMember,
   Session,
   Invitation,
+  PasswordResetToken,
   Rock,
   Task,
   AssignedTask,
@@ -90,6 +91,18 @@ function parseInvitation(row: Record<string, unknown>): Invitation {
     createdAt: (row.created_at as Date)?.toISOString() || "",
     invitedBy: row.invited_by as string,
     status: row.status as Invitation["status"],
+  }
+}
+
+function parsePasswordResetToken(row: Record<string, unknown>): PasswordResetToken {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    email: row.email as string,
+    token: row.token as string,
+    expiresAt: (row.expires_at as Date)?.toISOString() || "",
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    usedAt: row.used_at ? (row.used_at as Date).toISOString() : undefined,
   }
 }
 
@@ -262,6 +275,46 @@ export const db = {
       const { rows } = await sql`SELECT * FROM organization_members WHERE organization_id = ${orgId}`
       return rows.map(parseMember)
     },
+    // Optimized query that gets members with user data in a single JOIN query
+    async findWithUsersByOrganizationId(orgId: string): Promise<Array<{
+      id: string
+      name: string
+      email: string
+      role: "owner" | "admin" | "member"
+      department: string
+      avatar?: string
+      joinDate: string
+      weeklyMeasurable?: string
+      status?: "active" | "invited" | "inactive"
+    }>> {
+      const { rows } = await sql`
+        SELECT
+          u.id,
+          u.name,
+          u.email,
+          u.avatar,
+          om.role,
+          om.department,
+          om.joined_at,
+          om.weekly_measurable,
+          om.status
+        FROM organization_members om
+        JOIN users u ON u.id = om.user_id
+        WHERE om.organization_id = ${orgId}
+        ORDER BY om.joined_at ASC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        name: row.name as string,
+        email: row.email as string,
+        role: row.role as "owner" | "admin" | "member",
+        department: row.department as string,
+        avatar: row.avatar as string | undefined,
+        joinDate: (row.joined_at as Date)?.toISOString() || "",
+        weeklyMeasurable: row.weekly_measurable as string | undefined,
+        status: row.status as "active" | "invited" | "inactive" | undefined,
+      }))
+    },
     async findByUserId(userId: string): Promise<OrganizationMember[]> {
       const { rows } = await sql`SELECT * FROM organization_members WHERE user_id = ${userId}`
       return rows.map(parseMember)
@@ -380,6 +433,51 @@ export const db = {
     async delete(id: string): Promise<boolean> {
       const { rowCount } = await sql`DELETE FROM invitations WHERE id = ${id}`
       return (rowCount ?? 0) > 0
+    },
+  },
+
+  // Password Reset Tokens
+  passwordResetTokens: {
+    async findByToken(token: string): Promise<PasswordResetToken | null> {
+      const { rows } = await sql`SELECT * FROM password_reset_tokens WHERE token = ${token}`
+      return rows[0] ? parsePasswordResetToken(rows[0]) : null
+    },
+    async findByEmail(email: string): Promise<PasswordResetToken[]> {
+      const { rows } = await sql`
+        SELECT * FROM password_reset_tokens
+        WHERE LOWER(email) = LOWER(${email}) AND used_at IS NULL
+        ORDER BY created_at DESC
+      `
+      return rows.map(parsePasswordResetToken)
+    },
+    async create(token: PasswordResetToken): Promise<PasswordResetToken> {
+      await sql`
+        INSERT INTO password_reset_tokens (id, user_id, email, token, expires_at, created_at)
+        VALUES (${token.id}, ${token.userId}, ${token.email}, ${token.token},
+                ${token.expiresAt}, ${token.createdAt})
+      `
+      return token
+    },
+    async markAsUsed(id: string): Promise<PasswordResetToken | null> {
+      const now = new Date().toISOString()
+      const { rows } = await sql`
+        UPDATE password_reset_tokens SET used_at = ${now}
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parsePasswordResetToken(rows[0]) : null
+    },
+    async deleteByEmail(email: string): Promise<number> {
+      const { rowCount } = await sql`
+        DELETE FROM password_reset_tokens WHERE LOWER(email) = LOWER(${email})
+      `
+      return rowCount ?? 0
+    },
+    async deleteExpired(): Promise<number> {
+      const { rowCount } = await sql`
+        DELETE FROM password_reset_tokens WHERE expires_at < NOW() OR used_at IS NOT NULL
+      `
+      return rowCount ?? 0
     },
   },
 

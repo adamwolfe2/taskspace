@@ -7,6 +7,8 @@ import { SidebarNav } from "@/components/layout/sidebar-nav"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { LoginPage } from "@/components/auth/login-page"
 import { RegisterPage } from "@/components/auth/register-page"
+import { ForgotPasswordPage } from "@/components/auth/forgot-password-page"
+import { ResetPasswordPage } from "@/components/auth/reset-password-page"
 import { AcceptInvitationPage } from "@/components/auth/accept-invitation-page"
 import { DashboardPage } from "@/components/pages/dashboard-page"
 import { HistoryPage } from "@/components/pages/history-page"
@@ -21,21 +23,27 @@ import { Toaster } from "@/components/ui/toaster"
 import { Loader2 } from "lucide-react"
 
 function AppContent() {
-  const { currentUser, currentPage, isLoading, isAuthenticated } = useApp()
+  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
+  const [resetToken, setResetToken] = useState<string | null>(null)
   const teamData = useTeamData()
 
-  // Check for invitation token in URL
+  // Check for invitation token or reset token in URL
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
-      const token = params.get("invite")
-      if (token) {
-        setInviteToken(token)
+      const invite = params.get("invite")
+      const reset = params.get("resetToken")
+      if (invite) {
+        setInviteToken(invite)
+      }
+      if (reset) {
+        setResetToken(reset)
+        setCurrentPage("reset-password")
       }
     }
-  }, [])
+  }, [setCurrentPage])
 
   // Show loading spinner while checking session
   if (isLoading) {
@@ -51,11 +59,20 @@ function AppContent() {
     return <AcceptInvitationPage token={inviteToken} />
   }
 
+  // Handle password reset with token
+  if (resetToken && !isAuthenticated) {
+    return <ResetPasswordPage token={resetToken} />
+  }
+
   // Auth pages
   if (!isAuthenticated) {
     switch (currentPage) {
       case "register":
         return <RegisterPage />
+      case "forgot-password":
+        return <ForgotPasswordPage />
+      case "reset-password":
+        return resetToken ? <ResetPasswordPage token={resetToken} /> : <ForgotPasswordPage />
       case "login":
       default:
         return <LoginPage />

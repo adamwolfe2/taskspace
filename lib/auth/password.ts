@@ -1,21 +1,26 @@
-import { createHash, randomBytes } from "crypto"
+import { randomBytes } from "crypto"
+import bcrypt from "bcrypt"
 
-// Simple password hashing using crypto (for production, use bcrypt or argon2)
-export function hashPassword(password: string): string {
-  const salt = randomBytes(16).toString("hex")
-  const hash = createHash("sha256")
-    .update(password + salt)
-    .digest("hex")
-  return `${salt}:${hash}`
+const BCRYPT_ROUNDS = 12
+
+// Secure password hashing using bcrypt
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, BCRYPT_ROUNDS)
 }
 
-export function verifyPassword(password: string, storedHash: string): boolean {
-  const [salt, hash] = storedHash.split(":")
-  if (!salt || !hash) return false
-  const computedHash = createHash("sha256")
-    .update(password + salt)
-    .digest("hex")
-  return hash === computedHash
+export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
+  // Support for legacy SHA256 hashes (format: salt:hash)
+  if (storedHash.includes(":")) {
+    const { createHash } = await import("crypto")
+    const [salt, hash] = storedHash.split(":")
+    if (!salt || !hash) return false
+    const computedHash = createHash("sha256")
+      .update(password + salt)
+      .digest("hex")
+    return hash === computedHash
+  }
+  // bcrypt hash format starts with $2b$
+  return bcrypt.compare(password, storedHash)
 }
 
 export function generateToken(): string {

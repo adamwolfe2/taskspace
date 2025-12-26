@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       user = {
         id: generateId(),
         email: invitation.email.toLowerCase(),
-        passwordHash: hashPassword(password),
+        passwordHash: await hashPassword(password),
         name,
         createdAt: now,
         updatedAt: now,

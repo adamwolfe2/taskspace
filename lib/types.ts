@@ -69,6 +69,17 @@ export interface Invitation {
   status: "pending" | "accepted" | "expired"
 }
 
+// Password Reset Token
+export interface PasswordResetToken {
+  id: string
+  userId: string
+  email: string
+  token: string
+  expiresAt: string
+  createdAt: string
+  usedAt?: string
+}
+
 // Session Types
 export interface Session {
   id: string
@@ -189,6 +200,7 @@ export type PageType =
   | "login"
   | "register"
   | "forgot-password"
+  | "reset-password"
   | "setup-organization"
   | "accept-invitation"
   | "dashboard"

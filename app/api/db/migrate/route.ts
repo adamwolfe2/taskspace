@@ -172,7 +172,22 @@ export async function GET(request: NextRequest) {
       )
     `
 
+    // Create password reset tokens table
+    await sql`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        token VARCHAR(255) UNIQUE NOT NULL,
+        expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        used_at TIMESTAMP WITH TIME ZONE
+      )
+    `
+
     // Create indexes
+    await sql`CREATE INDEX IF NOT EXISTS idx_password_reset_token ON password_reset_tokens(token)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_password_reset_email ON password_reset_tokens(email)`
     await sql`CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)`
     await sql`CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_members_org_id ON organization_members(organization_id)`
