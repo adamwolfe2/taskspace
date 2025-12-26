@@ -16,6 +16,7 @@ import type {
   AIGeneratedTask,
   DailyDigest,
   AIConversation,
+  ApiKey,
 } from "../types"
 
 // Helper to convert snake_case DB rows to camelCase
@@ -167,6 +168,19 @@ function parseEODReport(row: Record<string, unknown>): EODReport {
     escalationNote: row.escalation_note as string | null,
     submittedAt: (row.submitted_at as Date)?.toISOString() || "",
     createdAt: (row.created_at as Date)?.toISOString() || "",
+  }
+}
+
+function parseApiKey(row: Record<string, unknown>): ApiKey {
+  return {
+    id: row.id as string,
+    organizationId: row.organization_id as string,
+    createdBy: row.created_by as string,
+    name: row.name as string,
+    key: row.key as string,
+    scopes: row.scopes as string[],
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    lastUsedAt: row.last_used_at ? (row.last_used_at as Date).toISOString() : null,
   }
 }
 
@@ -1078,6 +1092,47 @@ export const db = {
         contextUsed: row.context_used as Record<string, unknown> | undefined,
         createdAt: (row.created_at as Date)?.toISOString() || "",
       }
+    },
+  },
+
+  // API Keys for external integrations (MCP, Claude Desktop, etc.)
+  apiKeys: {
+    async findByOrganizationId(orgId: string): Promise<ApiKey[]> {
+      const { rows } = await sql`
+        SELECT * FROM api_keys
+        WHERE organization_id = ${orgId}
+        ORDER BY created_at DESC
+      `
+      return rows.map(parseApiKey)
+    },
+    async findById(id: string): Promise<ApiKey | null> {
+      const { rows } = await sql`SELECT * FROM api_keys WHERE id = ${id}`
+      return rows[0] ? parseApiKey(rows[0]) : null
+    },
+    async findByKey(key: string): Promise<ApiKey | null> {
+      const { rows } = await sql`SELECT * FROM api_keys WHERE key = ${key}`
+      return rows[0] ? parseApiKey(rows[0]) : null
+    },
+    async create(apiKey: ApiKey): Promise<ApiKey> {
+      await sql`
+        INSERT INTO api_keys (id, organization_id, created_by, name, key, scopes, created_at, last_used_at)
+        VALUES (${apiKey.id}, ${apiKey.organizationId}, ${apiKey.createdBy}, ${apiKey.name},
+                ${apiKey.key}, ${JSON.stringify(apiKey.scopes)}, ${apiKey.createdAt}, ${apiKey.lastUsedAt})
+      `
+      return apiKey
+    },
+    async updateLastUsed(id: string): Promise<ApiKey | null> {
+      const now = new Date().toISOString()
+      const { rows } = await sql`
+        UPDATE api_keys SET last_used_at = ${now}
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parseApiKey(rows[0]) : null
+    },
+    async delete(id: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM api_keys WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
     },
   },
 }

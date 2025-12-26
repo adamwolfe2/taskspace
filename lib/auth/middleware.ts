@@ -8,9 +8,63 @@ export interface AuthContext {
   organization: Organization
   member: OrganizationMember
   sessionId: string
+  isApiKey?: boolean
 }
 
-export async function getAuthContext(request: NextRequest): Promise<AuthContext | null> {
+// Authenticate via API key (for MCP server and external integrations)
+async function getApiKeyAuthContext(request: NextRequest): Promise<AuthContext | null> {
+  try {
+    const authHeader = request.headers.get("authorization")
+    if (!authHeader?.startsWith("Bearer ")) {
+      return null
+    }
+
+    const apiKeyValue = authHeader.substring(7) // Remove "Bearer " prefix
+    if (!apiKeyValue.startsWith("aims_")) {
+      return null // Not an API key
+    }
+
+    const apiKey = await db.apiKeys.findByKey(apiKeyValue)
+    if (!apiKey) {
+      return null
+    }
+
+    // Get the organization
+    const organization = await db.organizations.findById(apiKey.organizationId)
+    if (!organization) {
+      return null
+    }
+
+    // Get the user who created the API key
+    const user = await db.users.findById(apiKey.createdBy)
+    if (!user) {
+      return null
+    }
+
+    // Get the member record
+    const member = await db.members.findByOrgAndUser(apiKey.organizationId, user.id)
+    if (!member) {
+      return null
+    }
+
+    // Update last used timestamp
+    await db.apiKeys.updateLastUsed(apiKey.id)
+
+    return {
+      user,
+      organization,
+      member,
+      sessionId: apiKey.id, // Use API key ID as session ID
+      isApiKey: true,
+    }
+  } catch (error) {
+    console.error("API key auth error:", error)
+    return null
+  }
+}
+
+// Authenticate via session cookie (for web app)
+async function getSessionAuthContext(request: NextRequest): Promise<AuthContext | null> {
   try {
     const sessionToken = request.cookies.get("session_token")?.value
 
@@ -50,9 +104,20 @@ export async function getAuthContext(request: NextRequest): Promise<AuthContext 
       sessionId: session.id,
     }
   } catch (error) {
-    console.error("Auth context error:", error)
+    console.error("Session auth error:", error)
     return null
   }
+}
+
+export async function getAuthContext(request: NextRequest): Promise<AuthContext | null> {
+  // First try API key authentication (for MCP and external tools)
+  const apiKeyAuth = await getApiKeyAuthContext(request)
+  if (apiKeyAuth) {
+    return apiKeyAuth
+  }
+
+  // Fall back to session cookie authentication
+  return getSessionAuthContext(request)
 }
 
 export function isAdmin(context: AuthContext): boolean {

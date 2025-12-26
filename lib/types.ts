@@ -456,3 +456,15 @@ export interface AIQueryResponse {
   data?: unknown
   suggestedFollowUps?: string[]
 }
+
+// API Key for external integrations (MCP, Claude Desktop, etc.)
+export interface ApiKey {
+  id: string
+  organizationId: string
+  createdBy: string
+  name: string
+  key: string
+  scopes: string[]
+  createdAt: string
+  lastUsedAt: string | null
+}

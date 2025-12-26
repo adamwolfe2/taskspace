@@ -441,3 +441,87 @@ export async function sendTaskAssignmentEmail(
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
+
+/**
+ * Send a reminder email to team members who haven't submitted their EOD
+ */
+export async function sendMissingEODReminder(
+  member: TeamMember,
+  organizationName: string,
+  admins: TeamMember[]
+): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    console.log("[Email] Resend not configured, skipping EOD reminder")
+    return { success: false, error: "Email not configured" }
+  }
+
+  const subject = `📝 Reminder: Submit your EOD report for today`
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">📝 EOD Report Reminder</h1>
+  </div>
+
+  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
+    <p style="margin-top: 0;">Hi ${member.name},</p>
+
+    <p>This is a friendly reminder that you haven't submitted your End of Day (EOD) report for today.</p>
+
+    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
+      <p style="margin: 0; color: #92400e;">
+        <strong>Why it matters:</strong> Your EOD report helps the team stay aligned, track progress on rocks, and identify blockers early.
+      </p>
+    </div>
+
+    <p>It only takes a few minutes! Include:</p>
+    <ul style="color: #666;">
+      <li>What you accomplished today</li>
+      <li>Any challenges or blockers</li>
+      <li>Your priorities for tomorrow</li>
+    </ul>
+
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+      <a href="${APP_URL}" style="display: inline-block; background: #f59e0b; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Submit EOD Now</a>
+    </div>
+
+    <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
+      Sent from AIMS EOD Tracker • ${organizationName}
+    </p>
+  </div>
+</body>
+</html>
+`
+
+  try {
+    // CC admins so they know reminders were sent
+    const adminEmails = admins.map(a => a.email).filter(e => e !== member.email)
+
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: member.email,
+      cc: adminEmails.length > 0 ? adminEmails : undefined,
+      subject,
+      html,
+    })
+
+    if (result.error) {
+      console.error("[Email] EOD reminder failed:", result.error)
+      return { success: false, error: result.error.message }
+    }
+
+    console.log(`[Email] EOD reminder sent to ${member.name}: ${result.data?.id}`)
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    console.error("[Email] EOD reminder error:", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
