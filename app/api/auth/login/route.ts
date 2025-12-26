@@ -165,8 +165,21 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error) {
     console.error("Login error:", error)
+
+    let errorMessage = "An error occurred during login"
+
+    if (error instanceof Error) {
+      if (error.message.includes("relation") && error.message.includes("does not exist")) {
+        errorMessage = "Database tables not initialized. Please run the database migration."
+      } else if (error.message.includes("connect") || error.message.includes("ECONNREFUSED")) {
+        errorMessage = "Unable to connect to database. Please check database configuration."
+      } else if (process.env.NODE_ENV !== "production") {
+        errorMessage = error.message
+      }
+    }
+
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "An error occurred during login" },
+      { success: false, error: errorMessage },
       { status: 500 }
     )
   }
