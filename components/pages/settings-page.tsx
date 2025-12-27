@@ -26,9 +26,13 @@ import {
   ExternalLink,
   Mail,
   UserPlus,
+  Key,
+  Trash2,
+  Plus,
+  Terminal,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import type { TeamMember, Invitation } from "@/lib/types"
+import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
 
 export function SettingsPage() {
   const { currentUser, currentOrganization, setCurrentOrganization } = useApp()
@@ -42,7 +46,18 @@ export function SettingsPage() {
   const [isInviting, setIsInviting] = useState(false)
   const [showInviteDialog, setShowInviteDialog] = useState(false)
 
-  // Load team members and invitations
+  // API Keys state
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false)
+  const [newApiKeyName, setNewApiKeyName] = useState("")
+  const [isCreatingKey, setIsCreatingKey] = useState(false)
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null)
+
+  // Role checks (defined early for use in effects)
+  const isOwner = currentUser?.role === "owner"
+  const isAdmin = currentUser?.role === "admin" || isOwner
+
+  // Load team members, invitations, and API keys
   useEffect(() => {
     const loadTeamData = async () => {
       try {
@@ -58,6 +73,25 @@ export function SettingsPage() {
     }
     loadTeamData()
   }, [])
+
+  // Load API keys (admin only)
+  useEffect(() => {
+    const loadApiKeys = async () => {
+      if (!isAdmin) return
+      try {
+        const response = await fetch("/api/auth/api-key")
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            setApiKeys(data.data || [])
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load API keys:", err)
+      }
+    }
+    loadApiKeys()
+  }, [isAdmin])
 
   const teamCount = teamMembers.length + pendingInvitations.length
 
@@ -76,9 +110,6 @@ export function SettingsPage() {
   const [slackWebhookUrl, setSlackWebhookUrl] = useState(
     currentOrganization?.settings.slackWebhookUrl || ""
   )
-
-  const isOwner = currentUser?.role === "owner"
-  const isAdmin = currentUser?.role === "admin" || isOwner
 
   const handleSaveOrganization = async () => {
     if (!isOwner) return
@@ -167,6 +198,87 @@ export function SettingsPage() {
     })
   }
 
+  const handleCreateApiKey = async () => {
+    if (!newApiKeyName.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter a name for the API key",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsCreatingKey(true)
+      const response = await fetch("/api/auth/api-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newApiKeyName.trim() }),
+      })
+
+      const data = await response.json()
+      if (!data.success) {
+        throw new Error(data.error || "Failed to create API key")
+      }
+
+      // Store the full key to show to user (only shown once!)
+      setNewlyCreatedKey(data.data.key)
+      setApiKeys([...apiKeys, data.data])
+      setNewApiKeyName("")
+
+      toast({
+        title: "API key created",
+        description: "Make sure to copy your key - it won't be shown again!",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Failed to create API key",
+        description: err.message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsCreatingKey(false)
+    }
+  }
+
+  const handleDeleteApiKey = async (keyId: string) => {
+    try {
+      const response = await fetch(`/api/auth/api-key?id=${keyId}`, {
+        method: "DELETE",
+      })
+
+      const data = await response.json()
+      if (!data.success) {
+        throw new Error(data.error || "Failed to delete API key")
+      }
+
+      setApiKeys(apiKeys.filter(k => k.id !== keyId))
+      toast({
+        title: "API key deleted",
+        description: "The API key has been revoked",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Failed to delete API key",
+        description: err.message,
+        variant: "destructive",
+      })
+    }
+  }
+
+  const copyToClipboard = async (text: string, label: string) => {
+    await navigator.clipboard.writeText(text)
+    toast({
+      title: "Copied!",
+      description: `${label} copied to clipboard`,
+    })
+  }
+
+  const maskApiKey = (key: string) => {
+    if (key.length <= 12) return key
+    return key.substring(0, 8) + "..." + key.substring(key.length - 4)
+  }
+
   const getPlanBadge = (plan: string) => {
     switch (plan) {
       case "free":
@@ -224,6 +336,12 @@ export function SettingsPage() {
             <TabsTrigger value="billing" className="gap-2">
               <CreditCard className="h-4 w-4" />
               Billing
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="integrations" className="gap-2">
+              <Key className="h-4 w-4" />
+              Integrations
             </TabsTrigger>
           )}
         </TabsList>
@@ -585,6 +703,240 @@ export function SettingsPage() {
                   <p className="text-sm">
                     Upgrade to a paid plan to see your invoices here
                   </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
+        {isAdmin && (
+          <TabsContent value="integrations" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>API Keys</CardTitle>
+                <CardDescription>
+                  Create API keys to connect external tools like Claude Desktop via MCP
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Newly created key warning */}
+                {newlyCreatedKey && (
+                  <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+                    <Key className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="space-y-2">
+                      <p className="font-medium text-amber-800 dark:text-amber-200">
+                        Save your API key now - it won't be shown again!
+                      </p>
+                      <div className="flex items-center gap-2 p-2 bg-white dark:bg-gray-900 rounded border font-mono text-sm">
+                        <code className="flex-1 break-all">{newlyCreatedKey}</code>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyToClipboard(newlyCreatedKey, "API key")}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setNewlyCreatedKey(null)}
+                      >
+                        I've saved my key
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Create new key */}
+                <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Create API Key
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create API Key</DialogTitle>
+                      <DialogDescription>
+                        Create a new API key for external integrations
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="apiKeyName">Key Name</Label>
+                        <Input
+                          id="apiKeyName"
+                          placeholder="e.g., Claude Desktop, MCP Server"
+                          value={newApiKeyName}
+                          onChange={(e) => setNewApiKeyName(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          A descriptive name to identify this key
+                        </p>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowApiKeyDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateApiKey} disabled={isCreatingKey}>
+                        {isCreatingKey ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          <>
+                            <Key className="mr-2 h-4 w-4" />
+                            Create Key
+                          </>
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Existing keys */}
+                {apiKeys.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Your API Keys</Label>
+                    <div className="space-y-2">
+                      {apiKeys.map((apiKey) => (
+                        <div key={apiKey.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div className="flex-1">
+                            <p className="font-medium">{apiKey.name}</p>
+                            <p className="text-sm text-muted-foreground font-mono">
+                              {maskApiKey(apiKey.key)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Created {new Date(apiKey.createdAt).toLocaleDateString()}
+                              {apiKey.lastUsedAt && ` • Last used ${new Date(apiKey.lastUsedAt).toLocaleDateString()}`}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteApiKey(apiKey.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {apiKeys.length === 0 && !newlyCreatedKey && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Key className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <p>No API keys created yet</p>
+                    <p className="text-sm">Create one to connect Claude Desktop</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Terminal className="h-5 w-5" />
+                  Connect to Claude Desktop
+                </CardTitle>
+                <CardDescription>
+                  Use the MCP server to interact with AIMS from Claude Desktop
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium">Setup Instructions</h4>
+                  <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                    <li>Create an API key above (if you haven't already)</li>
+                    <li>Download the MCP server from your deployment</li>
+                    <li>Open Claude Desktop settings</li>
+                    <li>Add the MCP server configuration below</li>
+                  </ol>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <Label>Claude Desktop Configuration</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Add this to your Claude Desktop config file (~/.claude/claude_desktop_config.json)
+                  </p>
+                  <div className="relative">
+                    <pre className="p-4 bg-muted rounded-lg overflow-x-auto text-xs font-mono">
+{`{
+  "mcpServers": {
+    "aims": {
+      "command": "npx",
+      "args": ["tsx", "/path/to/mcp-server/src/index.ts"],
+      "env": {
+        "AIMS_API_URL": "${typeof window !== 'undefined' ? window.location.origin : 'https://your-app.vercel.app'}",
+        "AIMS_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}`}
+                    </pre>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="absolute top-2 right-2"
+                      onClick={() => copyToClipboard(`{
+  "mcpServers": {
+    "aims": {
+      "command": "npx",
+      "args": ["tsx", "/path/to/mcp-server/src/index.ts"],
+      "env": {
+        "AIMS_API_URL": "${typeof window !== 'undefined' ? window.location.origin : 'https://your-app.vercel.app'}",
+        "AIMS_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}`, "Configuration")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <Label>Available MCP Tools</Label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Once connected, you can use these commands in Claude:
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">get_team_members</code>
+                      <p className="text-xs text-muted-foreground">List all team members</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">check_eod_status</code>
+                      <p className="text-xs text-muted-foreground">See who submitted EOD</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">assign_task</code>
+                      <p className="text-xs text-muted-foreground">Assign tasks to team</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">get_daily_digest</code>
+                      <p className="text-xs text-muted-foreground">Get AI summary</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">get_blockers</code>
+                      <p className="text-xs text-muted-foreground">View all blockers</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">send_eod_reminder</code>
+                      <p className="text-xs text-muted-foreground">Remind missing members</p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
