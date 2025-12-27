@@ -30,6 +30,9 @@ import {
   Trash2,
   Plus,
   Terminal,
+  Download,
+  FileSpreadsheet,
+  FileJson,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
@@ -342,6 +345,12 @@ export function SettingsPage() {
             <TabsTrigger value="integrations" className="gap-2">
               <Key className="h-4 w-4" />
               Integrations
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="data" className="gap-2">
+              <Download className="h-4 w-4" />
+              Data Export
             </TabsTrigger>
           )}
         </TabsList>
@@ -937,6 +946,159 @@ export function SettingsPage() {
                       <p className="text-xs text-muted-foreground">Remind missing members</p>
                     </div>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
+        {/* Data Export Tab */}
+        {isAdmin && (
+          <TabsContent value="data" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Export Data</CardTitle>
+                <CardDescription>
+                  Download your organization's data in CSV or JSON format
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {/* Rocks Export */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <FileSpreadsheet className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Rocks (Goals)</h3>
+                        <p className="text-sm text-muted-foreground">Export all quarterly goals</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=rocks&format=csv", "_blank")}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        CSV
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=rocks&format=json", "_blank")}
+                      >
+                        <FileJson className="h-4 w-4 mr-1" />
+                        JSON
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Tasks Export */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <FileSpreadsheet className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Tasks</h3>
+                        <p className="text-sm text-muted-foreground">Export all assigned tasks</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=tasks&format=csv", "_blank")}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        CSV
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=tasks&format=json", "_blank")}
+                      >
+                        <FileJson className="h-4 w-4 mr-1" />
+                        JSON
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* EOD Reports Export */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                        <FileSpreadsheet className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">EOD Reports</h3>
+                        <p className="text-sm text-muted-foreground">Export all end-of-day reports</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=eod-reports&format=csv", "_blank")}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        CSV
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=eod-reports&format=json", "_blank")}
+                      >
+                        <FileJson className="h-4 w-4 mr-1" />
+                        JSON
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Team Export */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Team Members</h3>
+                        <p className="text-sm text-muted-foreground">Export team directory</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=team&format=csv", "_blank")}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        CSV
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=team&format=json", "_blank")}
+                      >
+                        <FileJson className="h-4 w-4 mr-1" />
+                        JSON
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium mb-2">Export Notes:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>CSV files can be opened in Excel, Google Sheets, or any spreadsheet application</li>
+                    <li>JSON format is useful for data migration or integration with other systems</li>
+                    <li>Large exports may take a moment to generate</li>
+                    <li>Exports include all historical data - use date filters in API for specific ranges</li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>

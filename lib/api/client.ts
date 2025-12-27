@@ -121,6 +121,15 @@ export const api = {
       return handleResponse<any>(response)
     },
 
+    async createBulk(data: { emails: string[]; role: string; department: string }) {
+      const response = await fetch(`${API_BASE}/invitations/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      return handleResponse<any>(response)
+    },
+
     async cancel(id: string) {
       const response = await fetch(`${API_BASE}/invitations?id=${id}`, {
         method: "DELETE",
@@ -246,6 +255,45 @@ export const api = {
 
     async delete(id: string) {
       const response = await fetch(`${API_BASE}/eod-reports?id=${id}`, {
+        method: "DELETE",
+      })
+      return handleResponse<null>(response)
+    },
+  },
+
+  // Notifications
+  notifications: {
+    async list(unreadOnly: boolean = false) {
+      const params = unreadOnly ? "?unread=true" : ""
+      const response = await fetch(`${API_BASE}/notifications${params}`)
+      return handleResponse<any[]>(response)
+    },
+
+    async getUnreadCount() {
+      const response = await fetch(`${API_BASE}/notifications?count=true`)
+      return handleResponse<{ count: number }>(response)
+    },
+
+    async markAsRead(id: string) {
+      const response = await fetch(`${API_BASE}/notifications`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      })
+      return handleResponse<any>(response)
+    },
+
+    async markAllAsRead() {
+      const response = await fetch(`${API_BASE}/notifications`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAllRead: true }),
+      })
+      return handleResponse<{ markedCount: number }>(response)
+    },
+
+    async delete(id: string) {
+      const response = await fetch(`${API_BASE}/notifications?id=${id}`, {
         method: "DELETE",
       })
       return handleResponse<null>(response)

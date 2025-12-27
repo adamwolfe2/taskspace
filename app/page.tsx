@@ -22,6 +22,7 @@ import { AnalyticsPage } from "@/components/pages/analytics-page"
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
+import { CommandPalette } from "@/components/shared/command-palette"
 import { Loader2 } from "lucide-react"
 
 function AppContent() {
@@ -183,6 +184,7 @@ function AppContent() {
 
       <MobileNav />
       <Toaster />
+      <CommandPalette />
     </div>
   )
 }

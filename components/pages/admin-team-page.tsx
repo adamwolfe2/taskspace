@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { UserInitials } from "@/components/shared/user-initials"
 import { RoleBadge } from "@/components/shared/role-badge"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy } from "lucide-react"
+import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,16 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     department: "General",
     role: "member" as "admin" | "member",
   })
+  const [bulkInviteDialogOpen, setBulkInviteDialogOpen] = useState(false)
+  const [bulkInviteData, setBulkInviteData] = useState({
+    emails: "",
+    department: "General",
+    role: "member" as "admin" | "member",
+  })
+  const [bulkInviteResult, setBulkInviteResult] = useState<{
+    successful: Invitation[]
+    failed: Array<{ email: string; error: string }>
+  } | null>(null)
   const { toast } = useToast()
 
   // Load invitations
@@ -167,6 +178,57 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     })
   }
 
+  const handleBulkInvite = async () => {
+    const emailList = bulkInviteData.emails
+      .split(/[\n,;]+/)
+      .map(e => e.trim())
+      .filter(e => e.length > 0)
+
+    if (emailList.length === 0) {
+      toast({
+        title: "No Emails",
+        description: "Please enter at least one email address",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      setBulkInviteResult(null)
+      const result = await api.invitations.createBulk({
+        emails: emailList,
+        role: bulkInviteData.role,
+        department: bulkInviteData.department,
+      })
+
+      setBulkInviteResult(result)
+
+      if (result.successful.length > 0) {
+        setInvitations([...invitations, ...result.successful])
+        toast({
+          title: "Invitations Sent",
+          description: `Successfully sent ${result.successful.length} invitation(s)`,
+        })
+      }
+
+      if (result.failed.length === 0) {
+        // All successful, close dialog
+        setBulkInviteDialogOpen(false)
+        setBulkInviteData({ emails: "", department: "General", role: "member" })
+        setBulkInviteResult(null)
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to send invitations",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const pendingInvitations = invitations.filter((i) => i.status === "pending")
 
   return (
@@ -177,6 +239,113 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
           <p className="text-muted-foreground mt-1">Manage team members and invite new users</p>
         </div>
         <div className="flex gap-2">
+          <Dialog open={bulkInviteDialogOpen} onOpenChange={(open) => {
+            setBulkInviteDialogOpen(open)
+            if (!open) {
+              setBulkInviteResult(null)
+              setBulkInviteData({ emails: "", department: "General", role: "member" })
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Users className="h-4 w-4 mr-2" />
+                Bulk Invite
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Bulk Invite Team Members</DialogTitle>
+                <DialogDescription>
+                  Invite multiple team members at once. Enter one email per line or separate with commas.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bulkEmails">Email Addresses</Label>
+                  <Textarea
+                    id="bulkEmails"
+                    value={bulkInviteData.emails}
+                    onChange={(e) => setBulkInviteData({ ...bulkInviteData, emails: e.target.value })}
+                    placeholder="john@company.com&#10;jane@company.com&#10;bob@company.com"
+                    rows={6}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter up to 50 email addresses, one per line or separated by commas
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bulkDept">Department</Label>
+                    <Input
+                      id="bulkDept"
+                      value={bulkInviteData.department}
+                      onChange={(e) => setBulkInviteData({ ...bulkInviteData, department: e.target.value })}
+                      placeholder="Engineering"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bulkRole">Role</Label>
+                    <Select
+                      value={bulkInviteData.role}
+                      onValueChange={(value: "admin" | "member") =>
+                        setBulkInviteData({ ...bulkInviteData, role: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="member">Member</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {bulkInviteResult && bulkInviteResult.failed.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      {bulkInviteResult.successful.length > 0 && (
+                        <span className="flex items-center gap-1 text-green-600">
+                          <CheckCircle2 className="h-4 w-4" />
+                          {bulkInviteResult.successful.length} sent
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1 text-red-600">
+                        <XCircle className="h-4 w-4" />
+                        {bulkInviteResult.failed.length} failed
+                      </span>
+                    </div>
+                    <div className="bg-red-50 border border-red-200 rounded-md p-3 max-h-32 overflow-y-auto">
+                      {bulkInviteResult.failed.map((f, i) => (
+                        <div key={i} className="text-sm text-red-700 flex items-center gap-2">
+                          <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                          <span className="font-medium">{f.email}:</span>
+                          <span>{f.error}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Button onClick={handleBulkInvite} className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending Invitations...
+                    </>
+                  ) : (
+                    <>
+                      <Users className="mr-2 h-4 w-4" />
+                      Send Invitations
+                    </>
+                  )}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
             <DialogTrigger asChild>
               <Button>

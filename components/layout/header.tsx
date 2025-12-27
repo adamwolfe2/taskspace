@@ -2,9 +2,10 @@
 
 import { useApp } from "@/lib/contexts/app-context"
 import { UserInitials } from "@/components/shared/user-initials"
+import { NotificationCenter } from "@/components/shared/notification-center"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Moon, Sun, LogOut, Menu, Settings, Building } from "lucide-react"
+import { Moon, Sun, LogOut, Menu, Settings, Building, Search } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +60,30 @@ export function Header({ onMenuClick }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Command Palette Trigger */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden md:flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              // Trigger Cmd+K programmatically
+              const event = new KeyboardEvent("keydown", {
+                key: "k",
+                metaKey: true,
+                bubbles: true,
+              })
+              document.dispatchEvent(event)
+            }}
+          >
+            <Search className="h-4 w-4" />
+            <span className="text-xs">Search...</span>
+            <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 flex">
+              <span className="text-xs">⌘</span>K
+            </kbd>
+          </Button>
+
+          <NotificationCenter />
+
           <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
             {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>

@@ -4,7 +4,8 @@ import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { sendEscalationNotification, sendAIAlertEmail, isEmailConfigured } from "@/lib/integrations/email"
-import type { EODReport, EODInsight, ApiResponse, TeamMember } from "@/lib/types"
+import { sendSlackMessage, buildEscalationMessage, isSlackConfigured } from "@/lib/integrations/slack"
+import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
 
 // GET /api/eod-reports - Get EOD reports
 export async function GET(request: NextRequest) {
@@ -232,6 +233,37 @@ export async function POST(request: NextRequest) {
 
       sendEscalationNotification(report, memberInfo, adminMembers)
         .catch(err => console.error("[Email] Escalation notification failed:", err))
+
+      // Send Slack notification for escalations
+      const webhookUrl = auth.organization.settings?.slackWebhookUrl
+      if (isSlackConfigured(webhookUrl)) {
+        const slackMessage = buildEscalationMessage(
+          member.name,
+          report.escalationNote || "Escalation flagged without note",
+          report.date
+        )
+        sendSlackMessage(webhookUrl!, slackMessage)
+          .catch(err => console.error("[Slack] Escalation notification failed:", err))
+      }
+
+      // Create in-app notifications for admins
+      for (const admin of admins) {
+        const notification: Notification = {
+          id: generateId(),
+          organizationId: auth.organization.id,
+          userId: admin.id,
+          type: "escalation",
+          title: "Escalation from " + member.name,
+          message: report.escalationNote || "Team member flagged an escalation",
+          read: false,
+          createdAt: new Date().toISOString(),
+          actionUrl: "/admin",
+          metadata: { reportId: report.id, memberName: member.name },
+        }
+        await db.notifications.create(notification).catch(err => {
+          console.error("Failed to create escalation notification:", err)
+        })
+      }
     }
 
     return NextResponse.json<ApiResponse<EODReport>>({
