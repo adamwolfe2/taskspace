@@ -2,10 +2,8 @@
 
 import { useState } from "react"
 import type { Rock } from "@/lib/types"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { formatDate } from "@/lib/utils/date-utils"
-import { AlertCircle, CheckCircle2, Clock } from "lucide-react"
+import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight } from "lucide-react"
 
 interface MyRocksSectionProps {
   rocks: Rock[]
@@ -15,31 +13,41 @@ interface MyRocksSectionProps {
 export function MyRocksSection({ rocks, onUpdateProgress }: MyRocksSectionProps) {
   const [draggedRock, setDraggedRock] = useState<string | null>(null)
 
-  const getStatusIcon = (status: Rock["status"]) => {
+  const getStatusConfig = (status: Rock["status"]) => {
     switch (status) {
       case "on-track":
-        return <CheckCircle2 className="h-4 w-4 text-success" />
+        return {
+          icon: CheckCircle2,
+          label: "On Track",
+          bgColor: "bg-emerald-50",
+          textColor: "text-emerald-700",
+          iconColor: "text-emerald-500",
+        }
       case "at-risk":
-        return <Clock className="h-4 w-4 text-warning" />
+        return {
+          icon: Clock,
+          label: "At Risk",
+          bgColor: "bg-amber-50",
+          textColor: "text-amber-700",
+          iconColor: "text-amber-500",
+        }
       case "blocked":
-        return <AlertCircle className="h-4 w-4 text-destructive" />
+        return {
+          icon: AlertCircle,
+          label: "Blocked",
+          bgColor: "bg-red-50",
+          textColor: "text-red-700",
+          iconColor: "text-red-500",
+        }
       case "completed":
-        return <CheckCircle2 className="h-4 w-4 text-primary" />
+        return {
+          icon: CheckCircle2,
+          label: "Completed",
+          bgColor: "bg-blue-50",
+          textColor: "text-blue-700",
+          iconColor: "text-blue-500",
+        }
     }
-  }
-
-  const getStatusBadge = (status: Rock["status"]) => {
-    const variants = {
-      "on-track": "default",
-      "at-risk": "secondary",
-      blocked: "destructive",
-      completed: "outline",
-    }
-    return (
-      <Badge variant={variants[status] as any} className="text-xs">
-        {status.replace("-", " ").toUpperCase()}
-      </Badge>
-    )
   }
 
   const handleSliderChange = (rockId: string, value: number) => {
@@ -52,61 +60,88 @@ export function MyRocksSection({ rocks, onUpdateProgress }: MyRocksSectionProps)
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          My Rocks
-          <span className="text-sm font-normal text-muted-foreground">({rocks.length})</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="bg-white rounded-xl shadow-card">
+      <div className="px-5 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-blue-500" />
+            <h3 className="font-semibold text-slate-900">My Rocks</h3>
+            <span className="text-sm text-slate-500">({rocks.length})</span>
+          </div>
+          {rocks.length > 0 && (
+            <button className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+              View all <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="p-5">
         {rocks.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No rocks assigned yet</p>
+          <div className="text-center py-12">
+            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Target className="h-6 w-6 text-slate-400" />
+            </div>
+            <p className="text-slate-600 font-medium">No rocks assigned yet</p>
+            <p className="text-sm text-slate-400 mt-1">Your quarterly goals will appear here</p>
+          </div>
         ) : (
           <div className="space-y-4">
-            {rocks.map((rock) => (
-              <div key={rock.id} className="border border-border rounded-lg p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <h4 className="font-semibold flex items-center gap-2">
-                      {getStatusIcon(rock.status)}
-                      {rock.title}
-                    </h4>
-                    <p className="text-sm text-muted-foreground mt-1">{rock.description}</p>
+            {rocks.map((rock) => {
+              const statusConfig = getStatusConfig(rock.status)
+              const StatusIcon = statusConfig.icon
+              return (
+                <div
+                  key={rock.id}
+                  className="border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition-colors duration-200"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <StatusIcon className={`h-4 w-4 ${statusConfig.iconColor} flex-shrink-0`} />
+                        <h4 className="font-medium text-slate-900 truncate">{rock.title}</h4>
+                      </div>
+                      <p className="text-sm text-slate-500 line-clamp-2">{rock.description}</p>
+                    </div>
+                    <span className={`status-pill ${statusConfig.bgColor} ${statusConfig.textColor} flex-shrink-0`}>
+                      {statusConfig.label}
+                    </span>
                   </div>
-                  {getStatusBadge(rock.status)}
-                </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="font-semibold text-primary">{rock.progress}%</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Progress</span>
+                      <span className="font-semibold text-blue-600">{rock.progress}%</span>
+                    </div>
+                    <div className="relative">
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                          style={{ width: `${rock.progress}%` }}
+                        />
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={rock.progress}
+                        onChange={(e) => handleSliderChange(rock.id, Number(e.target.value))}
+                        onMouseUp={handleSliderRelease}
+                        onTouchEnd={handleSliderRelease}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                    </div>
                   </div>
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={rock.progress}
-                      onChange={(e) => handleSliderChange(rock.id, Number(e.target.value))}
-                      onMouseUp={handleSliderRelease}
-                      onTouchEnd={handleSliderRelease}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
-                      style={{
-                        background: `linear-gradient(to right, #2563EB 0%, #2563EB ${rock.progress}%, #E5E7EB ${rock.progress}%, #E5E7EB 100%)`,
-                      }}
-                    />
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Due: {formatDate(rock.dueDate)}</span>
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                    <span className="text-xs text-slate-400">Due: {formatDate(rock.dueDate)}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
