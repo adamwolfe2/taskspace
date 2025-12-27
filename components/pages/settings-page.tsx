@@ -33,9 +33,28 @@ import {
   Download,
   FileSpreadsheet,
   FileJson,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
+
+interface IntegrationStatus {
+  email: {
+    configured: boolean
+    provider: string
+    fromAddress: string | null
+  }
+  slack: {
+    configured: boolean
+    webhookSet: boolean
+  }
+  ai: {
+    configured: boolean
+    provider: string
+  }
+}
 
 export function SettingsPage() {
   const { currentUser, currentOrganization, setCurrentOrganization } = useApp()
@@ -55,6 +74,9 @@ export function SettingsPage() {
   const [newApiKeyName, setNewApiKeyName] = useState("")
   const [isCreatingKey, setIsCreatingKey] = useState(false)
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null)
+
+  // Integration status
+  const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
 
   // Role checks (defined early for use in effects)
   const isOwner = currentUser?.role === "owner"
@@ -77,7 +99,7 @@ export function SettingsPage() {
     loadTeamData()
   }, [])
 
-  // Load API keys (admin only)
+  // Load API keys and integration status (admin only)
   useEffect(() => {
     const loadApiKeys = async () => {
       if (!isAdmin) return
@@ -93,7 +115,24 @@ export function SettingsPage() {
         console.error("Failed to load API keys:", err)
       }
     }
+
+    const loadIntegrationStatus = async () => {
+      if (!isAdmin) return
+      try {
+        const response = await fetch("/api/integrations/status")
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            setIntegrationStatus(data.data)
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load integration status:", err)
+      }
+    }
+
     loadApiKeys()
+    loadIntegrationStatus()
   }, [isAdmin])
 
   const teamCount = teamMembers.length + pendingInvitations.length
@@ -526,6 +565,17 @@ export function SettingsPage() {
                         Send an invitation email to add a new team member
                       </DialogDescription>
                     </DialogHeader>
+                    {integrationStatus && !integrationStatus.email.configured && (
+                      <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-800 dark:text-amber-200">
+                          <strong>Email not configured.</strong> Invitation emails won't be sent, but you can still copy and share the invite link manually.
+                          <a href="#integrations" className="underline ml-1" onClick={() => setShowInviteDialog(false)}>
+                            Set up email →
+                          </a>
+                        </AlertDescription>
+                      </Alert>
+                    )}
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
                         <Label htmlFor="inviteEmail">Email Address</Label>
@@ -720,6 +770,86 @@ export function SettingsPage() {
 
         {isAdmin && (
           <TabsContent value="integrations" className="space-y-6">
+            {/* Email Configuration Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Email Service (Invitations & Notifications)
+                </CardTitle>
+                <CardDescription>
+                  Required for sending team invitations and email notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {integrationStatus ? (
+                  <>
+                    <div className={`flex items-center gap-3 p-4 rounded-lg ${integrationStatus.email.configured ? 'bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800'}`}>
+                      {integrationStatus.email.configured ? (
+                        <CheckCircle2 className="h-6 w-6 text-green-600" />
+                      ) : (
+                        <XCircle className="h-6 w-6 text-red-600" />
+                      )}
+                      <div className="flex-1">
+                        <p className={`font-medium ${integrationStatus.email.configured ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
+                          {integrationStatus.email.configured ? 'Email is configured' : 'Email not configured'}
+                        </p>
+                        <p className={`text-sm ${integrationStatus.email.configured ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {integrationStatus.email.configured
+                            ? `Provider: ${integrationStatus.email.provider} • From: ${integrationStatus.email.fromAddress}`
+                            : 'Team invitations will not be sent via email'}
+                        </p>
+                      </div>
+                      {integrationStatus.email.configured && (
+                        <Badge className="bg-green-500">Active</Badge>
+                      )}
+                    </div>
+
+                    {!integrationStatus.email.configured && (
+                      <div className="space-y-4">
+                        <Separator />
+                        <div>
+                          <h4 className="font-medium mb-2">Setup Instructions</h4>
+                          <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                            <li>Sign up for a free <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Resend</a> account</li>
+                            <li>Add and verify your domain (or use sandbox for testing)</li>
+                            <li>Create an API key in Resend dashboard</li>
+                            <li>Add these environment variables to your Vercel deployment:</li>
+                          </ol>
+                        </div>
+                        <div className="relative">
+                          <pre className="p-4 bg-muted rounded-lg overflow-x-auto text-xs font-mono">
+{`RESEND_API_KEY=re_your_api_key_here
+EMAIL_FROM=AIMS Dashboard <noreply@yourdomain.com>`}
+                          </pre>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="absolute top-2 right-2"
+                            onClick={() => copyToClipboard(`RESEND_API_KEY=re_your_api_key_here
+EMAIL_FROM=AIMS Dashboard <noreply@yourdomain.com>`, "Environment variables")}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <Button variant="outline" className="gap-2" asChild>
+                          <a href="https://resend.com/docs/introduction" target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4" />
+                            View Resend Documentation
+                          </a>
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading status...
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>API Keys</CardTitle>
