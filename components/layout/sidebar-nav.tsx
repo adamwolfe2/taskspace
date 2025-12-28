@@ -1,7 +1,6 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
-import { Button } from "@/components/ui/button"
 import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
@@ -36,57 +35,78 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
 
   return (
     <nav className="flex flex-col h-full py-4">
-      <div className="flex-1">
-        <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Navigation
+      <div className="flex-1 space-y-6">
+        {/* Main Navigation */}
+        <div className="px-3">
+          <h2 className="mb-3 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Main
           </h2>
           <div className="space-y-1">
-            {navItems.map((item) => (
-              <Button
-                key={item.id}
-                variant={currentPage === item.id ? "secondary" : "ghost"}
-                className={cn("w-full justify-start", currentPage === item.id && "bg-secondary")}
-                onClick={() => handleNavigation(item.id)}
-              >
-                <item.icon className="mr-2 h-4 w-4" />
-                {item.label}
-              </Button>
-            ))}
+            {navItems.map((item) => {
+              const isActive = currentPage === item.id
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigation(item.id)}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  )}
+                >
+                  <item.icon className={cn("h-4 w-4", isActive ? "text-white" : "text-slate-400")} />
+                  {item.label}
+                </button>
+              )
+            })}
           </div>
         </div>
 
+        {/* Admin Section */}
         {isAdmin && (
-          <div className="px-3 py-2">
-            <h2 className="mb-2 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          <div className="px-3">
+            <h2 className="mb-3 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Admin
             </h2>
             <div className="space-y-1">
-              {adminItems.map((item) => (
-                <Button
-                  key={item.id}
-                  variant={currentPage === item.id ? "secondary" : "ghost"}
-                  className={cn("w-full justify-start", currentPage === item.id && "bg-secondary")}
-                  onClick={() => handleNavigation(item.id)}
-                >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.label}
-                </Button>
-              ))}
+              {adminItems.map((item) => {
+                const isActive = currentPage === item.id
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavigation(item.id)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                      isActive
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    )}
+                  >
+                    <item.icon className={cn("h-4 w-4", isActive ? "text-white" : "text-slate-400")} />
+                    {item.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
         )}
       </div>
 
-      <div className="px-3 py-2 mt-auto border-t border-border">
-        <Button
-          variant={currentPage === "settings" ? "secondary" : "ghost"}
-          className={cn("w-full justify-start", currentPage === "settings" && "bg-secondary")}
+      {/* Settings at bottom */}
+      <div className="px-3 pt-4 mt-auto border-t border-slate-100">
+        <button
           onClick={() => handleNavigation("settings")}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+            currentPage === "settings"
+              ? "bg-slate-900 text-white shadow-sm"
+              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+          )}
         >
-          <Settings className="mr-2 h-4 w-4" />
+          <Settings className={cn("h-4 w-4", currentPage === "settings" ? "text-white" : "text-slate-400")} />
           Settings
-        </Button>
+        </button>
       </div>
     </nav>
   )

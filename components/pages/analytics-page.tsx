@@ -50,11 +50,13 @@ export function AnalyticsPage({ teamMembers, eodReports, rocks }: AnalyticsPageP
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <BarChart3 className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            <div className="p-2 bg-slate-100 rounded-lg">
+              <BarChart3 className="h-6 w-6 text-slate-600" />
+            </div>
             Team Analytics
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-slate-500 mt-1">
             Insights and metrics from your team's performance
           </p>
         </div>

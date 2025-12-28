@@ -4,7 +4,9 @@ import type { EODReport, TeamMember, Rock, Invitation, Organization, PasswordRes
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@example.com"
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-const EMAIL_FROM = process.env.EMAIL_FROM || "AIMS Dashboard <noreply@aims.com>"
+// Default to Resend's testing email - works without domain verification
+// For production, set EMAIL_FROM to your verified domain (e.g., "AIMS <noreply@yourdomain.com>")
+const EMAIL_FROM = process.env.EMAIL_FROM || "AIMS Dashboard <onboarding@resend.dev>"
 
 // Check if email is configured
 function isEmailConfigured(): boolean {

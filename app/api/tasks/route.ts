@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
-import type { AssignedTask, ApiResponse, TeamMember } from "@/lib/types"
+import { sendSlackMessage, buildTaskAssignmentMessage, isSlackConfigured } from "@/lib/integrations/slack"
+import type { AssignedTask, ApiResponse, TeamMember, Notification } from "@/lib/types"
 
 // GET /api/tasks - Get tasks
 export async function GET(request: NextRequest) {
@@ -151,6 +152,42 @@ export async function POST(request: NextRequest) {
     }
 
     await db.assignedTasks.create(task)
+
+    // Send notifications for assigned tasks (not personal tasks)
+    if (taskType === "assigned" && assigneeId !== auth.user.id) {
+      // Create in-app notification
+      const notification: Notification = {
+        id: generateId(),
+        organizationId: auth.organization.id,
+        userId: targetUserId,
+        type: "task_assigned",
+        title: "New Task Assigned",
+        message: `${auth.user.name} assigned you a task: ${task.title}`,
+        read: false,
+        createdAt: now,
+        actionUrl: "/tasks",
+        metadata: { taskId: task.id, assignedBy: auth.user.name },
+      }
+      await db.notifications.create(notification).catch(err => {
+        console.error("Failed to create notification:", err)
+      })
+
+      // Send Slack notification if configured
+      const webhookUrl = auth.organization.settings?.slackWebhookUrl
+      if (isSlackConfigured(webhookUrl)) {
+        const slackMessage = buildTaskAssignmentMessage(
+          assigneeName,
+          task.title,
+          task.description,
+          task.priority,
+          task.dueDate,
+          auth.user.name
+        )
+        sendSlackMessage(webhookUrl!, slackMessage).catch(err => {
+          console.error("Failed to send Slack notification:", err)
+        })
+      }
+    }
 
     return NextResponse.json<ApiResponse<AssignedTask>>({
       success: true,

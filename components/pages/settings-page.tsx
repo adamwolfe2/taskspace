@@ -26,9 +26,35 @@ import {
   ExternalLink,
   Mail,
   UserPlus,
+  Key,
+  Trash2,
+  Plus,
+  Terminal,
+  Download,
+  FileSpreadsheet,
+  FileJson,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import type { TeamMember, Invitation } from "@/lib/types"
+import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
+
+interface IntegrationStatus {
+  email: {
+    configured: boolean
+    provider: string
+    fromAddress: string | null
+  }
+  slack: {
+    configured: boolean
+    webhookSet: boolean
+  }
+  ai: {
+    configured: boolean
+    provider: string
+  }
+}
 
 export function SettingsPage() {
   const { currentUser, currentOrganization, setCurrentOrganization } = useApp()
@@ -42,7 +68,21 @@ export function SettingsPage() {
   const [isInviting, setIsInviting] = useState(false)
   const [showInviteDialog, setShowInviteDialog] = useState(false)
 
-  // Load team members and invitations
+  // API Keys state
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false)
+  const [newApiKeyName, setNewApiKeyName] = useState("")
+  const [isCreatingKey, setIsCreatingKey] = useState(false)
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null)
+
+  // Integration status
+  const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
+
+  // Role checks (defined early for use in effects)
+  const isOwner = currentUser?.role === "owner"
+  const isAdmin = currentUser?.role === "admin" || isOwner
+
+  // Load team members, invitations, and API keys
   useEffect(() => {
     const loadTeamData = async () => {
       try {
@@ -58,6 +98,42 @@ export function SettingsPage() {
     }
     loadTeamData()
   }, [])
+
+  // Load API keys and integration status (admin only)
+  useEffect(() => {
+    const loadApiKeys = async () => {
+      if (!isAdmin) return
+      try {
+        const response = await fetch("/api/auth/api-key")
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            setApiKeys(data.data || [])
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load API keys:", err)
+      }
+    }
+
+    const loadIntegrationStatus = async () => {
+      if (!isAdmin) return
+      try {
+        const response = await fetch("/api/integrations/status")
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            setIntegrationStatus(data.data)
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load integration status:", err)
+      }
+    }
+
+    loadApiKeys()
+    loadIntegrationStatus()
+  }, [isAdmin])
 
   const teamCount = teamMembers.length + pendingInvitations.length
 
@@ -76,9 +152,6 @@ export function SettingsPage() {
   const [slackWebhookUrl, setSlackWebhookUrl] = useState(
     currentOrganization?.settings.slackWebhookUrl || ""
   )
-
-  const isOwner = currentUser?.role === "owner"
-  const isAdmin = currentUser?.role === "admin" || isOwner
 
   const handleSaveOrganization = async () => {
     if (!isOwner) return
@@ -167,6 +240,87 @@ export function SettingsPage() {
     })
   }
 
+  const handleCreateApiKey = async () => {
+    if (!newApiKeyName.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter a name for the API key",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsCreatingKey(true)
+      const response = await fetch("/api/auth/api-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newApiKeyName.trim() }),
+      })
+
+      const data = await response.json()
+      if (!data.success) {
+        throw new Error(data.error || "Failed to create API key")
+      }
+
+      // Store the full key to show to user (only shown once!)
+      setNewlyCreatedKey(data.data.key)
+      setApiKeys([...apiKeys, data.data])
+      setNewApiKeyName("")
+
+      toast({
+        title: "API key created",
+        description: "Make sure to copy your key - it won't be shown again!",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Failed to create API key",
+        description: err.message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsCreatingKey(false)
+    }
+  }
+
+  const handleDeleteApiKey = async (keyId: string) => {
+    try {
+      const response = await fetch(`/api/auth/api-key?id=${keyId}`, {
+        method: "DELETE",
+      })
+
+      const data = await response.json()
+      if (!data.success) {
+        throw new Error(data.error || "Failed to delete API key")
+      }
+
+      setApiKeys(apiKeys.filter(k => k.id !== keyId))
+      toast({
+        title: "API key deleted",
+        description: "The API key has been revoked",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Failed to delete API key",
+        description: err.message,
+        variant: "destructive",
+      })
+    }
+  }
+
+  const copyToClipboard = async (text: string, label: string) => {
+    await navigator.clipboard.writeText(text)
+    toast({
+      title: "Copied!",
+      description: `${label} copied to clipboard`,
+    })
+  }
+
+  const maskApiKey = (key: string) => {
+    if (key.length <= 12) return key
+    return key.substring(0, 8) + "..." + key.substring(key.length - 4)
+  }
+
   const getPlanBadge = (plan: string) => {
     switch (plan) {
       case "free":
@@ -224,6 +378,18 @@ export function SettingsPage() {
             <TabsTrigger value="billing" className="gap-2">
               <CreditCard className="h-4 w-4" />
               Billing
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="integrations" className="gap-2">
+              <Key className="h-4 w-4" />
+              Integrations
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="data" className="gap-2">
+              <Download className="h-4 w-4" />
+              Data Export
             </TabsTrigger>
           )}
         </TabsList>
@@ -399,6 +565,17 @@ export function SettingsPage() {
                         Send an invitation email to add a new team member
                       </DialogDescription>
                     </DialogHeader>
+                    {integrationStatus && !integrationStatus.email.configured && (
+                      <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-800 dark:text-amber-200">
+                          <strong>Email not configured.</strong> Invitation emails won't be sent, but you can still copy and share the invite link manually.
+                          <a href="#integrations" className="underline ml-1" onClick={() => setShowInviteDialog(false)}>
+                            Set up email →
+                          </a>
+                        </AlertDescription>
+                      </Alert>
+                    )}
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
                         <Label htmlFor="inviteEmail">Email Address</Label>
@@ -585,6 +762,473 @@ export function SettingsPage() {
                   <p className="text-sm">
                     Upgrade to a paid plan to see your invoices here
                   </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
+        {isAdmin && (
+          <TabsContent value="integrations" className="space-y-6">
+            {/* Email Configuration Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Email Service (Invitations & Notifications)
+                </CardTitle>
+                <CardDescription>
+                  Required for sending team invitations and email notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {integrationStatus ? (
+                  <>
+                    <div className={`flex items-center gap-3 p-4 rounded-lg ${integrationStatus.email.configured ? 'bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800'}`}>
+                      {integrationStatus.email.configured ? (
+                        <CheckCircle2 className="h-6 w-6 text-green-600" />
+                      ) : (
+                        <XCircle className="h-6 w-6 text-red-600" />
+                      )}
+                      <div className="flex-1">
+                        <p className={`font-medium ${integrationStatus.email.configured ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
+                          {integrationStatus.email.configured ? 'Email is configured' : 'Email not configured'}
+                        </p>
+                        <p className={`text-sm ${integrationStatus.email.configured ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {integrationStatus.email.configured
+                            ? `Provider: ${integrationStatus.email.provider} • From: ${integrationStatus.email.fromAddress}`
+                            : 'Team invitations will not be sent via email'}
+                        </p>
+                      </div>
+                      {integrationStatus.email.configured && (
+                        <Badge className="bg-green-500">Active</Badge>
+                      )}
+                    </div>
+
+                    {!integrationStatus.email.configured && (
+                      <div className="space-y-4">
+                        <Separator />
+                        <div>
+                          <h4 className="font-medium mb-2">Setup Instructions</h4>
+                          <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                            <li>Sign up for a free <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Resend</a> account</li>
+                            <li>Add and verify your domain (or use sandbox for testing)</li>
+                            <li>Create an API key in Resend dashboard</li>
+                            <li>Add these environment variables to your Vercel deployment:</li>
+                          </ol>
+                        </div>
+                        <div className="relative">
+                          <pre className="p-4 bg-muted rounded-lg overflow-x-auto text-xs font-mono">
+{`RESEND_API_KEY=re_your_api_key_here
+EMAIL_FROM=AIMS Dashboard <noreply@yourdomain.com>`}
+                          </pre>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="absolute top-2 right-2"
+                            onClick={() => copyToClipboard(`RESEND_API_KEY=re_your_api_key_here
+EMAIL_FROM=AIMS Dashboard <noreply@yourdomain.com>`, "Environment variables")}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <Button variant="outline" className="gap-2" asChild>
+                          <a href="https://resend.com/docs/introduction" target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4" />
+                            View Resend Documentation
+                          </a>
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading status...
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>API Keys</CardTitle>
+                <CardDescription>
+                  Create API keys to connect external tools like Claude Desktop via MCP
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Newly created key warning */}
+                {newlyCreatedKey && (
+                  <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+                    <Key className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="space-y-2">
+                      <p className="font-medium text-amber-800 dark:text-amber-200">
+                        Save your API key now - it won't be shown again!
+                      </p>
+                      <div className="flex items-center gap-2 p-2 bg-white dark:bg-gray-900 rounded border font-mono text-sm">
+                        <code className="flex-1 break-all">{newlyCreatedKey}</code>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyToClipboard(newlyCreatedKey, "API key")}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setNewlyCreatedKey(null)}
+                      >
+                        I've saved my key
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Create new key */}
+                <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Create API Key
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create API Key</DialogTitle>
+                      <DialogDescription>
+                        Create a new API key for external integrations
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="apiKeyName">Key Name</Label>
+                        <Input
+                          id="apiKeyName"
+                          placeholder="e.g., Claude Desktop, MCP Server"
+                          value={newApiKeyName}
+                          onChange={(e) => setNewApiKeyName(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          A descriptive name to identify this key
+                        </p>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowApiKeyDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateApiKey} disabled={isCreatingKey}>
+                        {isCreatingKey ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          <>
+                            <Key className="mr-2 h-4 w-4" />
+                            Create Key
+                          </>
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Existing keys */}
+                {apiKeys.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Your API Keys</Label>
+                    <div className="space-y-2">
+                      {apiKeys.map((apiKey) => (
+                        <div key={apiKey.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div className="flex-1">
+                            <p className="font-medium">{apiKey.name}</p>
+                            <p className="text-sm text-muted-foreground font-mono">
+                              {maskApiKey(apiKey.key)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Created {new Date(apiKey.createdAt).toLocaleDateString()}
+                              {apiKey.lastUsedAt && ` • Last used ${new Date(apiKey.lastUsedAt).toLocaleDateString()}`}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteApiKey(apiKey.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {apiKeys.length === 0 && !newlyCreatedKey && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Key className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <p>No API keys created yet</p>
+                    <p className="text-sm">Create one to connect Claude Desktop</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Terminal className="h-5 w-5" />
+                  Connect to Claude Desktop
+                </CardTitle>
+                <CardDescription>
+                  Use the MCP server to interact with AIMS from Claude Desktop
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium">Setup Instructions</h4>
+                  <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                    <li>Create an API key above (if you haven't already)</li>
+                    <li>Download the MCP server from your deployment</li>
+                    <li>Open Claude Desktop settings</li>
+                    <li>Add the MCP server configuration below</li>
+                  </ol>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <Label>Claude Desktop Configuration</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Add this to your Claude Desktop config file (~/.claude/claude_desktop_config.json)
+                  </p>
+                  <div className="relative">
+                    <pre className="p-4 bg-muted rounded-lg overflow-x-auto text-xs font-mono">
+{`{
+  "mcpServers": {
+    "aims": {
+      "command": "npx",
+      "args": ["tsx", "/path/to/mcp-server/src/index.ts"],
+      "env": {
+        "AIMS_API_URL": "${typeof window !== 'undefined' ? window.location.origin : 'https://your-app.vercel.app'}",
+        "AIMS_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}`}
+                    </pre>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="absolute top-2 right-2"
+                      onClick={() => copyToClipboard(`{
+  "mcpServers": {
+    "aims": {
+      "command": "npx",
+      "args": ["tsx", "/path/to/mcp-server/src/index.ts"],
+      "env": {
+        "AIMS_API_URL": "${typeof window !== 'undefined' ? window.location.origin : 'https://your-app.vercel.app'}",
+        "AIMS_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}`, "Configuration")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <Label>Available MCP Tools</Label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Once connected, you can use these commands in Claude:
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">get_team_members</code>
+                      <p className="text-xs text-muted-foreground">List all team members</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">check_eod_status</code>
+                      <p className="text-xs text-muted-foreground">See who submitted EOD</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">assign_task</code>
+                      <p className="text-xs text-muted-foreground">Assign tasks to team</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">get_daily_digest</code>
+                      <p className="text-xs text-muted-foreground">Get AI summary</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">get_blockers</code>
+                      <p className="text-xs text-muted-foreground">View all blockers</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <code className="text-xs font-mono">send_eod_reminder</code>
+                      <p className="text-xs text-muted-foreground">Remind missing members</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
+        {/* Data Export Tab */}
+        {isAdmin && (
+          <TabsContent value="data" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Export Data</CardTitle>
+                <CardDescription>
+                  Download your organization's data in CSV or JSON format
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {/* Rocks Export */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <FileSpreadsheet className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Rocks (Goals)</h3>
+                        <p className="text-sm text-muted-foreground">Export all quarterly goals</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=rocks&format=csv", "_blank")}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        CSV
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=rocks&format=json", "_blank")}
+                      >
+                        <FileJson className="h-4 w-4 mr-1" />
+                        JSON
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Tasks Export */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <FileSpreadsheet className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Tasks</h3>
+                        <p className="text-sm text-muted-foreground">Export all assigned tasks</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=tasks&format=csv", "_blank")}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        CSV
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=tasks&format=json", "_blank")}
+                      >
+                        <FileJson className="h-4 w-4 mr-1" />
+                        JSON
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* EOD Reports Export */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                        <FileSpreadsheet className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">EOD Reports</h3>
+                        <p className="text-sm text-muted-foreground">Export all end-of-day reports</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=eod-reports&format=csv", "_blank")}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        CSV
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=eod-reports&format=json", "_blank")}
+                      >
+                        <FileJson className="h-4 w-4 mr-1" />
+                        JSON
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Team Export */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Team Members</h3>
+                        <p className="text-sm text-muted-foreground">Export team directory</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=team&format=csv", "_blank")}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        CSV
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open("/api/export?type=team&format=json", "_blank")}
+                      >
+                        <FileJson className="h-4 w-4 mr-1" />
+                        JSON
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium mb-2">Export Notes:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>CSV files can be opened in Excel, Google Sheets, or any spreadsheet application</li>
+                    <li>JSON format is useful for data migration or integration with other systems</li>
+                    <li>Large exports may take a moment to generate</li>
+                    <li>Exports include all historical data - use date filters in API for specific ranges</li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>

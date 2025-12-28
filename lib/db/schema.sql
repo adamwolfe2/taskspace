@@ -272,3 +272,15 @@ CREATE INDEX IF NOT EXISTS idx_eod_insights_report ON eod_insights(eod_report_id
 CREATE INDEX IF NOT EXISTS idx_ai_tasks_org ON ai_generated_tasks(organization_id);
 CREATE INDEX IF NOT EXISTS idx_daily_digests_org_date ON daily_digests(organization_id, digest_date);
 CREATE INDEX IF NOT EXISTS idx_ai_conversations_user ON ai_conversations(user_id, organization_id);
+
+-- Additional indexes for performance
+CREATE INDEX IF NOT EXISTS idx_notifications_user_org ON notifications(user_id, organization_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, organization_id, read) WHERE read = FALSE;
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON assigned_tasks(status);
+CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON assigned_tasks(due_date);
+CREATE INDEX IF NOT EXISTS idx_rocks_status ON rocks(status);
+CREATE INDEX IF NOT EXISTS idx_rocks_quarter ON rocks(quarter);
+CREATE INDEX IF NOT EXISTS idx_eod_date ON eod_reports(date DESC);
+CREATE INDEX IF NOT EXISTS idx_invitations_org ON invitations(organization_id);
+CREATE INDEX IF NOT EXISTS idx_invitations_status ON invitations(status);

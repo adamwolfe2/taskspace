@@ -193,44 +193,38 @@ export function TeamAnalyticsCharts({
     <div className="space-y-6">
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{summaryStats.totalReports}</div>
-            <p className="text-xs text-muted-foreground">EOD Reports ({days} days)</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{summaryStats.avgSentiment}</div>
-            <p className="text-xs text-muted-foreground">Avg Sentiment Score</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-orange-500">{summaryStats.escalationCount}</div>
-            <p className="text-xs text-muted-foreground">Escalations</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-red-500">{summaryStats.blockerCount}</div>
-            <p className="text-xs text-muted-foreground">Blockers Reported</p>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-xl p-5 shadow-card">
+          <div className="text-3xl font-bold text-slate-900">{summaryStats.totalReports}</div>
+          <p className="text-sm text-slate-500 mt-1">EOD Reports ({days} days)</p>
+        </div>
+        <div className="bg-white rounded-xl p-5 shadow-card">
+          <div className="text-3xl font-bold text-slate-900">{summaryStats.avgSentiment}</div>
+          <p className="text-sm text-slate-500 mt-1">Avg Sentiment Score</p>
+        </div>
+        <div className="bg-white rounded-xl p-5 shadow-card">
+          <div className="text-3xl font-bold text-amber-500">{summaryStats.escalationCount}</div>
+          <p className="text-sm text-slate-500 mt-1">Escalations</p>
+        </div>
+        <div className="bg-white rounded-xl p-5 shadow-card">
+          <div className="text-3xl font-bold text-red-500">{summaryStats.blockerCount}</div>
+          <p className="text-sm text-slate-500 mt-1">Blockers Reported</p>
+        </div>
       </div>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Submission Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              EOD Submission Rate
-            </CardTitle>
-            <CardDescription>Daily submission rate over {days} days</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-white rounded-xl shadow-card">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-lg">
+                <TrendingUp className="h-4 w-4 text-slate-500" />
+              </div>
+              <h3 className="font-semibold text-slate-900">EOD Submission Rate</h3>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">Daily submission rate over {days} days</p>
+          </div>
+          <div className="p-5">
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={submissionTrendData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -253,19 +247,21 @@ export function TeamAnalyticsCharts({
                 />
               </LineChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Sentiment Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="h-5 w-5 text-primary" />
-              Team Sentiment
-            </CardTitle>
-            <CardDescription>Distribution of team mood from AI analysis</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-white rounded-xl shadow-card">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-lg">
+                <Users className="h-4 w-4 text-slate-500" />
+              </div>
+              <h3 className="font-semibold text-slate-900">Team Sentiment</h3>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">Distribution of team mood from AI analysis</p>
+          </div>
+          <div className="p-5">
             {sentimentData.length > 0 ? (
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
@@ -294,23 +290,25 @@ export function TeamAnalyticsCharts({
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+              <div className="h-[250px] flex items-center justify-center text-slate-400">
                 No sentiment data available
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Rock Progress by Member */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Rock Progress by Team Member
-            </CardTitle>
-            <CardDescription>Average rock completion percentage</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-white rounded-xl shadow-card">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-lg">
+                <BarChart3 className="h-4 w-4 text-slate-500" />
+              </div>
+              <h3 className="font-semibold text-slate-900">Rock Progress by Team Member</h3>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">Average rock completion percentage</p>
+          </div>
+          <div className="p-5">
             {rockProgressData.length > 0 ? (
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={rockProgressData} layout="vertical">
@@ -336,23 +334,25 @@ export function TeamAnalyticsCharts({
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+              <div className="h-[250px] flex items-center justify-center text-slate-400">
                 No rock data available
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Escalation and Blocker Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              Escalations & Blockers
-            </CardTitle>
-            <CardDescription>Issues requiring attention over time</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-white rounded-xl shadow-card">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-slate-500" />
+              </div>
+              <h3 className="font-semibold text-slate-900">Escalations & Blockers</h3>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">Issues requiring attention over time</p>
+          </div>
+          <div className="p-5">
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={escalationTrendData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -370,8 +370,8 @@ export function TeamAnalyticsCharts({
                 <Bar dataKey="blockers" fill="#ef4444" name="Blockers" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

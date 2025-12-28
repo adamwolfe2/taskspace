@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -193,25 +192,29 @@ export function EODSubmissionCard({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Submit EOD Report</CardTitle>
-        <CardDescription>Share your daily progress and updates</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <div className="bg-white rounded-xl shadow-card">
+      <div className="px-5 py-4 border-b border-slate-100">
+        <h3 className="font-semibold text-slate-900 text-lg">Submit EOD Report</h3>
+        <p className="text-sm text-slate-500 mt-0.5">Share your daily progress and updates</p>
+      </div>
+      <div className="p-5 space-y-6">
         {/* Auto-populated tasks from completed tasks */}
         {autoTasks.length > 0 && (
           <div className="space-y-3">
-            <Label className="text-base font-semibold">From Completed Tasks ({autoTasks.length})</Label>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+            <Label className="text-sm font-semibold text-slate-700">From Completed Tasks ({autoTasks.length})</Label>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 space-y-3">
               {autoTasks.map((task) => (
-                <div key={task.id} className="flex items-start justify-between gap-2 text-sm">
+                <div key={task.id} className="flex items-start justify-between gap-3 text-sm">
                   <div className="flex-1">
-                    <p className="font-medium">{task.text}</p>
-                    {task.rockTitle && <p className="text-xs text-muted-foreground">Rock: {task.rockTitle}</p>}
+                    <p className="font-medium text-slate-800">{task.text}</p>
+                    {task.rockTitle && (
+                      <span className="inline-flex mt-1 text-xs text-slate-500 bg-white px-2 py-0.5 rounded">
+                        {task.rockTitle}
+                      </span>
+                    )}
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => removeAutoTask(task.id)}>
-                    <Trash2 className="h-3 w-3" />
+                  <Button variant="ghost" size="sm" className="text-slate-400 hover:text-red-500 hover:bg-red-50" onClick={() => removeAutoTask(task.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ))}
@@ -221,24 +224,24 @@ export function EODSubmissionCard({
 
         {/* Manually added tasks */}
         <div className="space-y-3">
-          <Label className="text-base font-semibold">Additional Tasks</Label>
+          <Label className="text-sm font-semibold text-slate-700">Additional Tasks</Label>
           {tasks.map((task, index) => (
-            <div key={task.id} className="space-y-2 p-3 border border-border rounded-lg">
+            <div key={task.id} className="space-y-2 p-3 border border-slate-200 rounded-lg bg-slate-50/50">
               <div className="flex gap-2">
                 <Input
                   placeholder="What did you accomplish?"
                   value={task.text}
                   onChange={(e) => updateTask(task.id, "text", e.target.value)}
-                  className="flex-1"
+                  className="flex-1 bg-white border-slate-200"
                 />
                 {tasks.length > 1 && (
-                  <Button variant="ghost" size="icon" onClick={() => removeTask(task.id)}>
+                  <Button variant="ghost" size="icon" className="text-slate-400 hover:text-red-500 hover:bg-red-50" onClick={() => removeTask(task.id)}>
                     <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
               <Select value={task.rockId || "none"} onValueChange={(value) => updateTask(task.id, "rockId", value)}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white border-slate-200">
                   <SelectValue placeholder="Related Rock" />
                 </SelectTrigger>
                 <SelectContent>
@@ -252,7 +255,7 @@ export function EODSubmissionCard({
               </Select>
             </div>
           ))}
-          <Button variant="outline" size="sm" onClick={addTask} className="w-full bg-transparent">
+          <Button variant="outline" size="sm" onClick={addTask} className="w-full border-dashed border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-slate-400">
             <Plus className="h-4 w-4 mr-2" />
             Add Task
           </Button>
@@ -260,7 +263,7 @@ export function EODSubmissionCard({
 
         {/* Challenges */}
         <div className="space-y-2">
-          <Label htmlFor="challenges" className="text-base font-semibold">
+          <Label htmlFor="challenges" className="text-sm font-semibold text-slate-700">
             Challenges
           </Label>
           <Textarea
@@ -269,14 +272,15 @@ export function EODSubmissionCard({
             value={challenges}
             onChange={(e) => setChallenges(e.target.value)}
             rows={3}
+            className="bg-white border-slate-200 focus:border-blue-300"
           />
         </div>
 
         {/* Tomorrow's Priorities */}
         <div className="space-y-3">
-          <Label className="text-base font-semibold">Tomorrow's Priorities</Label>
+          <Label className="text-sm font-semibold text-slate-700">Tomorrow's Priorities</Label>
           {tomorrowPriorities.map((priority, index) => (
-            <div key={priority.id} className="space-y-2 p-3 border border-border rounded-lg">
+            <div key={priority.id} className="space-y-2 p-3 border border-slate-200 rounded-lg bg-slate-50/50">
               <div className="flex gap-2">
                 <Input
                   placeholder="What's your priority?"
@@ -286,12 +290,13 @@ export function EODSubmissionCard({
                       tomorrowPriorities.map((p) => (p.id === priority.id ? { ...p, text: e.target.value } : p)),
                     )
                   }}
-                  className="flex-1"
+                  className="flex-1 bg-white border-slate-200"
                 />
                 {tomorrowPriorities.length > 1 && (
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="text-slate-400 hover:text-red-500 hover:bg-red-50"
                     onClick={() => {
                       if (tomorrowPriorities.length > 1) {
                         setTomorrowPriorities(tomorrowPriorities.filter((p) => p.id !== priority.id))
@@ -320,7 +325,7 @@ export function EODSubmissionCard({
                   )
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white border-slate-200">
                   <SelectValue placeholder="Related Rock" />
                 </SelectTrigger>
                 <SelectContent>
@@ -346,7 +351,7 @@ export function EODSubmissionCard({
                   ])
                 }
               }}
-              className="w-full bg-transparent"
+              className="w-full border-dashed border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-slate-400"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Priority
@@ -356,13 +361,14 @@ export function EODSubmissionCard({
 
         {/* Escalation */}
         <div className="space-y-3">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 p-3 bg-amber-50 border border-amber-100 rounded-lg">
             <Checkbox
               id="escalation"
               checked={needsEscalation}
               onCheckedChange={(checked) => setNeedsEscalation(checked as boolean)}
+              className="border-amber-300"
             />
-            <Label htmlFor="escalation" className="cursor-pointer font-medium">
+            <Label htmlFor="escalation" className="cursor-pointer font-medium text-amber-800">
               Needs Escalation
             </Label>
           </div>
@@ -372,15 +378,16 @@ export function EODSubmissionCard({
               value={escalationNote}
               onChange={(e) => setEscalationNote(e.target.value)}
               rows={2}
+              className="bg-white border-amber-200 focus:border-amber-300"
             />
           )}
         </div>
 
-        <Button onClick={handleSubmit} className="w-full">
+        <Button onClick={handleSubmit} className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-sm">
           <Send className="h-4 w-4 mr-2" />
           Submit EOD Report
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

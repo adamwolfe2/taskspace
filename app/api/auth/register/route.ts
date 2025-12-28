@@ -187,8 +187,25 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error) {
     console.error("Registration error:", error)
+
+    // Provide more specific error messages
+    let errorMessage = "An error occurred during registration"
+
+    if (error instanceof Error) {
+      if (error.message.includes("relation") && error.message.includes("does not exist")) {
+        errorMessage = "Database tables not initialized. Please run the database migration."
+      } else if (error.message.includes("connect") || error.message.includes("ECONNREFUSED")) {
+        errorMessage = "Unable to connect to database. Please check database configuration."
+      } else if (error.message.includes("duplicate key")) {
+        errorMessage = "An account with this email already exists."
+      } else if (process.env.NODE_ENV !== "production") {
+        // In development, show the actual error
+        errorMessage = error.message
+      }
+    }
+
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "An error occurred during registration" },
+      { success: false, error: errorMessage },
       { status: 500 }
     )
   }

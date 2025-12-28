@@ -185,9 +185,25 @@ export async function GET(request: NextRequest) {
       )
     `
 
+    // Create API keys table for external integrations (MCP, Claude Desktop, etc.)
+    await sql`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL,
+        created_by VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        key VARCHAR(255) UNIQUE NOT NULL,
+        scopes JSONB DEFAULT '["read", "write"]',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        last_used_at TIMESTAMP WITH TIME ZONE
+      )
+    `
+
     // Create indexes
     await sql`CREATE INDEX IF NOT EXISTS idx_password_reset_token ON password_reset_tokens(token)`
     await sql`CREATE INDEX IF NOT EXISTS idx_password_reset_email ON password_reset_tokens(email)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_api_keys_key ON api_keys(key)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_api_keys_org ON api_keys(organization_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)`
     await sql`CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_members_org_id ON organization_members(organization_id)`

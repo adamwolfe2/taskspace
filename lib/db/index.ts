@@ -683,25 +683,109 @@ export const db = {
     },
   },
 
-  // Notifications (simplified - can add full implementation later)
+  // Notifications
   notifications: {
-    async findByUserId(userId: string, orgId: string): Promise<Notification[]> {
-      return []
+    async findByUserId(userId: string, orgId: string, limit: number = 50): Promise<Notification[]> {
+      const { rows } = await sql`
+        SELECT * FROM notifications
+        WHERE user_id = ${userId} AND organization_id = ${orgId}
+        ORDER BY created_at DESC
+        LIMIT ${limit}
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        type: row.type as Notification["type"],
+        title: row.title as string,
+        message: row.message as string || "",
+        read: row.read as boolean,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        actionUrl: row.action_url as string | undefined,
+        metadata: row.metadata as Record<string, unknown> | undefined,
+      }))
     },
     async findUnreadByUserId(userId: string, orgId: string): Promise<Notification[]> {
-      return []
+      const { rows } = await sql`
+        SELECT * FROM notifications
+        WHERE user_id = ${userId} AND organization_id = ${orgId} AND read = FALSE
+        ORDER BY created_at DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        type: row.type as Notification["type"],
+        title: row.title as string,
+        message: row.message as string || "",
+        read: row.read as boolean,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        actionUrl: row.action_url as string | undefined,
+        metadata: row.metadata as Record<string, unknown> | undefined,
+      }))
+    },
+    async getUnreadCount(userId: string, orgId: string): Promise<number> {
+      const { rows } = await sql`
+        SELECT COUNT(*) as count FROM notifications
+        WHERE user_id = ${userId} AND organization_id = ${orgId} AND read = FALSE
+      `
+      return parseInt(rows[0]?.count || "0", 10)
     },
     async create(notification: Notification): Promise<Notification> {
+      await sql`
+        INSERT INTO notifications (id, organization_id, user_id, type, title, message, read, action_url, metadata, created_at)
+        VALUES (
+          ${notification.id},
+          ${notification.organizationId},
+          ${notification.userId},
+          ${notification.type},
+          ${notification.title},
+          ${notification.message},
+          ${notification.read},
+          ${notification.actionUrl || null},
+          ${JSON.stringify(notification.metadata || {})},
+          ${notification.createdAt}
+        )
+      `
       return notification
     },
     async markAsRead(id: string): Promise<Notification | null> {
-      return null
+      const { rows } = await sql`
+        UPDATE notifications SET read = TRUE WHERE id = ${id}
+        RETURNING *
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        type: row.type as Notification["type"],
+        title: row.title as string,
+        message: row.message as string || "",
+        read: row.read as boolean,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        actionUrl: row.action_url as string | undefined,
+        metadata: row.metadata as Record<string, unknown> | undefined,
+      }
     },
     async markAllAsRead(userId: string, orgId: string): Promise<number> {
-      return 0
+      const { rowCount } = await sql`
+        UPDATE notifications SET read = TRUE
+        WHERE user_id = ${userId} AND organization_id = ${orgId} AND read = FALSE
+      `
+      return rowCount ?? 0
     },
     async delete(id: string): Promise<boolean> {
-      return false
+      const { rowCount } = await sql`DELETE FROM notifications WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
+    },
+    async deleteOld(days: number = 30): Promise<number> {
+      const { rowCount } = await sql`
+        DELETE FROM notifications
+        WHERE created_at < NOW() - INTERVAL '${days} days' AND read = TRUE
+      `
+      return rowCount ?? 0
     },
   },
 

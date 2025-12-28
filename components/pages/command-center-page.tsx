@@ -251,24 +251,26 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Zap className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            <div className="p-2 bg-slate-100 rounded-lg">
+              <Zap className="h-6 w-6 text-slate-600" />
+            </div>
             AI Command Center
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-slate-500 mt-1">
             Your AI-powered team management hub
           </p>
         </div>
         {pendingTasks.length > 0 && (
-          <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full">
-            <Sparkles className="h-4 w-4 text-primary" />
+          <div className="flex items-center gap-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-full">
+            <Sparkles className="h-4 w-4" />
             <span className="text-sm font-medium">{pendingTasks.length} pending tasks</span>
           </div>
         )}
       </div>
 
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-700">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -323,10 +325,12 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
             isLoading={isLoadingTasks}
           />
           {pendingTasks.length === 0 && (
-            <div className="text-center py-12">
-              <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-medium mb-2">No pending AI tasks</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="bg-white rounded-xl shadow-card py-16 text-center">
+              <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="h-6 w-6 text-slate-400" />
+              </div>
+              <h3 className="font-semibold text-slate-900 mb-2">No pending AI tasks</h3>
+              <p className="text-sm text-slate-500">
                 Use the Brain Dump tab to generate task suggestions
               </p>
             </div>

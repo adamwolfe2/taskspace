@@ -63,8 +63,8 @@ export function DashboardPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Welcome back, {currentUser.name.split(" ")[0]}</h1>
-        <p className="text-muted-foreground mt-1">Here's your overview for today</p>
+        <h1 className="text-2xl font-bold text-slate-900">Welcome back, {currentUser.name.split(" ")[0]}</h1>
+        <p className="text-slate-500 mt-1">Here's your overview for today</p>
       </div>
 
       <StatsCards stats={stats} />
