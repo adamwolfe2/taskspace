@@ -21,7 +21,7 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
       "on-track": { bgColor: "bg-emerald-50", textColor: "text-emerald-700", label: "On Track" },
       "at-risk": { bgColor: "bg-amber-50", textColor: "text-amber-700", label: "At Risk" },
       blocked: { bgColor: "bg-red-50", textColor: "text-red-700", label: "Blocked" },
-      completed: { bgColor: "bg-blue-50", textColor: "text-blue-700", label: "Completed" },
+      completed: { bgColor: "bg-slate-100", textColor: "text-slate-700", label: "Completed" },
     }
     return configs[status]
   }
@@ -37,7 +37,7 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
 
       <div className="bg-white rounded-xl shadow-card overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
-          <Target className="h-5 w-5 text-blue-500" />
+          <Target className="h-5 w-5 text-slate-500" />
           <h3 className="font-semibold text-slate-900">All Rocks ({displayRocks.length})</h3>
         </div>
         <div className="p-5">

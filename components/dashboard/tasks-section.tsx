@@ -32,8 +32,8 @@ export function TasksSection({ tasks, onToggleTask }: TasksSectionProps) {
     },
     upcoming: {
       label: "Upcoming",
-      bgColor: "bg-blue-50",
-      textColor: "text-blue-700",
+      bgColor: "bg-slate-100",
+      textColor: "text-slate-700",
       icon: Calendar,
     },
   }
@@ -42,7 +42,7 @@ export function TasksSection({ tasks, onToggleTask }: TasksSectionProps) {
     <div className="bg-white rounded-xl shadow-card">
       <div className="px-5 py-4 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <CheckSquare className="h-5 w-5 text-blue-500" />
+          <CheckSquare className="h-5 w-5 text-slate-500" />
           <h3 className="font-semibold text-slate-900">My Tasks</h3>
           <span className="text-sm text-slate-500">({tasks.length})</span>
         </div>

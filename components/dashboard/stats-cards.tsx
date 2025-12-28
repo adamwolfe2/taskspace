@@ -57,8 +57,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
       trend: stats.totalTasks > 0 ? safeCompletionRate - 50 : 0, // Compare to 50% baseline
       subtitle: "completion rate",
       icon: CheckCircle2,
-      iconBg: "bg-emerald-50",
-      iconColor: "text-emerald-500",
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-600",
     },
     {
       title: "Active Rocks",
@@ -66,8 +66,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
       trend: stats.activeRocks > 0 ? 5.2 : 0, // Placeholder trend
       subtitle: "quarterly goals",
       icon: Target,
-      iconBg: "bg-blue-50",
-      iconColor: "text-blue-500",
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-600",
     },
     {
       title: "Rock Progress",
@@ -75,8 +75,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
       trend: safeAverageProgress > 50 ? 12.5 : safeAverageProgress > 0 ? 4.1 : 0,
       subtitle: "average completion",
       icon: TrendingUp,
-      iconBg: "bg-amber-50",
-      iconColor: "text-amber-500",
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-600",
     },
     {
       title: "EOD Streak",
@@ -84,8 +84,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
       trend: stats.eodStreak > 5 ? 25.5 : stats.eodStreak > 0 ? 10.0 : 0,
       subtitle: "reports this week",
       icon: Calendar,
-      iconBg: "bg-purple-50",
-      iconColor: "text-purple-500",
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-600",
     },
   ]
 

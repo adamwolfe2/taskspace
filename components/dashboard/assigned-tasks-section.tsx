@@ -21,7 +21,7 @@ export function AssignedTasksSection({ tasks, onToggleTask }: AssignedTasksSecti
       case "medium":
         return { bgColor: "bg-amber-50", textColor: "text-amber-700" }
       default:
-        return { bgColor: "bg-blue-50", textColor: "text-blue-700" }
+        return { bgColor: "bg-slate-100", textColor: "text-slate-700" }
     }
   }
 
@@ -30,12 +30,12 @@ export function AssignedTasksSection({ tasks, onToggleTask }: AssignedTasksSecti
       <div className="px-5 py-4 border-b border-slate-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CheckSquare className="h-5 w-5 text-emerald-500" />
+            <CheckSquare className="h-5 w-5 text-slate-500" />
             <h3 className="font-semibold text-slate-900">My Tasks</h3>
             <span className="text-sm text-slate-500">({tasks.length})</span>
           </div>
           {tasks.length > 0 && (
-            <button className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+            <button className="text-sm text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1">
               View all <ArrowRight className="h-3.5 w-3.5" />
             </button>
           )}

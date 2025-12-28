@@ -43,9 +43,9 @@ export function MyRocksSection({ rocks, onUpdateProgress }: MyRocksSectionProps)
         return {
           icon: CheckCircle2,
           label: "Completed",
-          bgColor: "bg-blue-50",
-          textColor: "text-blue-700",
-          iconColor: "text-blue-500",
+          bgColor: "bg-slate-100",
+          textColor: "text-slate-700",
+          iconColor: "text-slate-500",
         }
     }
   }
@@ -64,12 +64,12 @@ export function MyRocksSection({ rocks, onUpdateProgress }: MyRocksSectionProps)
       <div className="px-5 py-4 border-b border-slate-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-blue-500" />
+            <Target className="h-5 w-5 text-slate-500" />
             <h3 className="font-semibold text-slate-900">My Rocks</h3>
             <span className="text-sm text-slate-500">({rocks.length})</span>
           </div>
           {rocks.length > 0 && (
-            <button className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+            <button className="text-sm text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1">
               View all <ArrowRight className="h-3.5 w-3.5" />
             </button>
           )}
@@ -111,12 +111,12 @@ export function MyRocksSection({ rocks, onUpdateProgress }: MyRocksSectionProps)
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-500">Progress</span>
-                      <span className="font-semibold text-blue-600">{rock.progress}%</span>
+                      <span className="font-semibold text-slate-700">{rock.progress}%</span>
                     </div>
                     <div className="relative">
                       <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                          className="h-full bg-slate-600 rounded-full transition-all duration-300"
                           style={{ width: `${rock.progress}%` }}
                         />
                       </div>

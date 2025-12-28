@@ -217,8 +217,8 @@ export function TeamAnalyticsCharts({
         <div className="bg-white rounded-xl shadow-card">
           <div className="px-5 py-4 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-blue-50 rounded-lg">
-                <TrendingUp className="h-4 w-4 text-blue-500" />
+              <div className="p-1.5 bg-slate-100 rounded-lg">
+                <TrendingUp className="h-4 w-4 text-slate-500" />
               </div>
               <h3 className="font-semibold text-slate-900">EOD Submission Rate</h3>
             </div>
@@ -254,8 +254,8 @@ export function TeamAnalyticsCharts({
         <div className="bg-white rounded-xl shadow-card">
           <div className="px-5 py-4 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-emerald-50 rounded-lg">
-                <Users className="h-4 w-4 text-emerald-500" />
+              <div className="p-1.5 bg-slate-100 rounded-lg">
+                <Users className="h-4 w-4 text-slate-500" />
               </div>
               <h3 className="font-semibold text-slate-900">Team Sentiment</h3>
             </div>
@@ -301,8 +301,8 @@ export function TeamAnalyticsCharts({
         <div className="bg-white rounded-xl shadow-card">
           <div className="px-5 py-4 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-purple-50 rounded-lg">
-                <BarChart3 className="h-4 w-4 text-purple-500" />
+              <div className="p-1.5 bg-slate-100 rounded-lg">
+                <BarChart3 className="h-4 w-4 text-slate-500" />
               </div>
               <h3 className="font-semibold text-slate-900">Rock Progress by Team Member</h3>
             </div>
@@ -345,8 +345,8 @@ export function TeamAnalyticsCharts({
         <div className="bg-white rounded-xl shadow-card">
           <div className="px-5 py-4 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-amber-50 rounded-lg">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <div className="p-1.5 bg-slate-100 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-slate-500" />
               </div>
               <h3 className="font-semibold text-slate-900">Escalations & Blockers</h3>
             </div>

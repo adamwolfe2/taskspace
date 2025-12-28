@@ -51,7 +51,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-primary text-white shadow-sm"
+                      ? "bg-slate-900 text-white shadow-sm"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   )}
                 >
@@ -100,7 +100,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
           className={cn(
             "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
             currentPage === "settings"
-              ? "bg-primary text-white shadow-sm"
+              ? "bg-slate-900 text-white shadow-sm"
               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           )}
         >

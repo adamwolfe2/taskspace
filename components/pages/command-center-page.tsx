@@ -252,8 +252,8 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <Zap className="h-6 w-6 text-purple-500" />
+            <div className="p-2 bg-slate-100 rounded-lg">
+              <Zap className="h-6 w-6 text-slate-600" />
             </div>
             AI Command Center
           </h1>
@@ -262,7 +262,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
           </p>
         </div>
         {pendingTasks.length > 0 && (
-          <div className="flex items-center gap-2 bg-purple-50 text-purple-700 px-4 py-2 rounded-full">
+          <div className="flex items-center gap-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-full">
             <Sparkles className="h-4 w-4" />
             <span className="text-sm font-medium">{pendingTasks.length} pending tasks</span>
           </div>
@@ -326,8 +326,8 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
           />
           {pendingTasks.length === 0 && (
             <div className="bg-white rounded-xl shadow-card py-16 text-center">
-              <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="h-6 w-6 text-purple-400" />
+              <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="h-6 w-6 text-slate-400" />
               </div>
               <h3 className="font-semibold text-slate-900 mb-2">No pending AI tasks</h3>
               <p className="text-sm text-slate-500">

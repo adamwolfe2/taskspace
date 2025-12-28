@@ -383,7 +383,7 @@ export function EODSubmissionCard({
           )}
         </div>
 
-        <Button onClick={handleSubmit} className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+        <Button onClick={handleSubmit} className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-sm">
           <Send className="h-4 w-4 mr-2" />
           Submit EOD Report
         </Button>

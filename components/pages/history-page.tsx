@@ -172,7 +172,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks }: His
                         return (
                           <div key={rockId} className="mb-4 pb-4 border-b border-slate-100 last:border-b-0">
                             <div className="mb-3">
-                              <h5 className="font-semibold text-blue-600">{rock.title}</h5>
+                              <h5 className="font-semibold text-slate-900">{rock.title}</h5>
                               <div className="flex items-center gap-3 text-sm text-slate-500 mt-1">
                                 <span className="status-pill bg-slate-100 text-slate-600">{rock.status.replace("-", " ")}</span>
                                 <span>Progress: {rock.progress}%</span>
