@@ -36,6 +36,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
+  RefreshCw,
+  Send,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
@@ -77,6 +79,9 @@ export function SettingsPage() {
 
   // Integration status
   const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
+  const [isRefreshingEmail, setIsRefreshingEmail] = useState(false)
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false)
+  const [testEmailResult, setTestEmailResult] = useState<{ success: boolean; message: string } | null>(null)
 
   // Role checks (defined early for use in effects)
   const isOwner = currentUser?.role === "owner"
@@ -134,6 +139,110 @@ export function SettingsPage() {
     loadApiKeys()
     loadIntegrationStatus()
   }, [isAdmin])
+
+  // Refresh email integration status
+  const refreshEmailStatus = async () => {
+    setIsRefreshingEmail(true)
+    setTestEmailResult(null)
+    try {
+      const response = await fetch("/api/test-email")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.config) {
+          setIntegrationStatus(prev => prev ? {
+            ...prev,
+            email: {
+              configured: data.config.resendKeyValid,
+              provider: "Resend",
+              fromAddress: data.config.emailFrom || null,
+            }
+          } : null)
+
+          if (data.config.resendKeyValid) {
+            toast({
+              title: "Email configured",
+              description: `Sending from: ${data.config.emailFrom}`,
+            })
+          } else {
+            toast({
+              title: "Email not configured",
+              description: `API Key detected: ${data.config.resendKeySet ? 'Yes' : 'No'}, Valid format: ${data.config.resendKeyValid ? 'Yes' : 'No'}`,
+              variant: "destructive",
+            })
+          }
+        }
+      } else {
+        // Fallback to integrations status endpoint
+        const statusResponse = await fetch("/api/integrations/status")
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json()
+          if (statusData.success) {
+            setIntegrationStatus(statusData.data)
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to refresh email status:", err)
+      toast({
+        title: "Error",
+        description: "Failed to check email configuration",
+        variant: "destructive",
+      })
+    } finally {
+      setIsRefreshingEmail(false)
+    }
+  }
+
+  // Send test email
+  const sendTestEmail = async () => {
+    if (!currentUser?.email) return
+
+    setIsSendingTestEmail(true)
+    setTestEmailResult(null)
+    try {
+      const response = await fetch("/api/test-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testEmail: currentUser.email }),
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        setTestEmailResult({
+          success: true,
+          message: `Test email sent to ${currentUser.email}`,
+        })
+        toast({
+          title: "Test email sent",
+          description: `Check your inbox at ${currentUser.email}`,
+        })
+      } else {
+        setTestEmailResult({
+          success: false,
+          message: data.error || data.resendError?.message || "Failed to send test email",
+        })
+        toast({
+          title: "Failed to send test email",
+          description: data.error || "Check the debug info below",
+          variant: "destructive",
+        })
+        // Log debug info
+        console.log("Email debug info:", data.debug)
+      }
+    } catch (err: any) {
+      setTestEmailResult({
+        success: false,
+        message: err.message || "Network error",
+      })
+      toast({
+        title: "Error",
+        description: "Failed to send test email",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSendingTestEmail(false)
+    }
+  }
 
   const teamCount = teamMembers.length + pendingInvitations.length
 
@@ -800,10 +909,58 @@ export function SettingsPage() {
                             : 'Team invitations will not be sent via email'}
                         </p>
                       </div>
-                      {integrationStatus.email.configured && (
-                        <Badge className="bg-green-500">Active</Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {integrationStatus.email.configured && (
+                          <Badge className="bg-green-500">Active</Badge>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={refreshEmailStatus}
+                          disabled={isRefreshingEmail}
+                        >
+                          <RefreshCw className={`h-4 w-4 ${isRefreshingEmail ? 'animate-spin' : ''}`} />
+                        </Button>
+                      </div>
                     </div>
+
+                    {/* Test Email Section */}
+                    {integrationStatus.email.configured && (
+                      <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 border border-slate-200">
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-700">Send Test Email</p>
+                          <p className="text-sm text-slate-500">
+                            Send a test email to {currentUser?.email} to verify everything is working
+                          </p>
+                        </div>
+                        <Button
+                          onClick={sendTestEmail}
+                          disabled={isSendingTestEmail}
+                          className="gap-2"
+                        >
+                          {isSendingTestEmail ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                          Send Test
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Test Result */}
+                    {testEmailResult && (
+                      <div className={`flex items-center gap-3 p-4 rounded-lg ${testEmailResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                        {testEmailResult.success ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-600" />
+                        )}
+                        <p className={`text-sm ${testEmailResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                          {testEmailResult.message}
+                        </p>
+                      </div>
+                    )}
 
                     {!integrationStatus.email.configured && (
                       <div className="space-y-4">
