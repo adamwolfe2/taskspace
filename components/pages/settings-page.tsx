@@ -44,6 +44,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
+import { AsanaIntegration } from "@/components/settings/asana-integration"
 
 interface IntegrationStatus {
   email: {
@@ -1443,6 +1444,9 @@ EMAIL_FROM=AIMS Dashboard <noreply@yourdomain.com>`, "Environment variables")}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Asana Integration */}
+            <AsanaIntegration teamMembers={teamMembers} />
           </TabsContent>
         )}
 

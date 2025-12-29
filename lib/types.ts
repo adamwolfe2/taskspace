@@ -21,6 +21,28 @@ export interface OrganizationSettings {
     logo?: string
     primaryColor?: string
   }
+  asanaIntegration?: AsanaIntegrationSettings
+}
+
+export interface AsanaIntegrationSettings {
+  enabled: boolean
+  projectGid: string
+  projectName: string
+  workspaceGid: string
+  workspaceName: string
+  userMappings: AsanaUserMapping[]
+  syncTasks: boolean
+  syncRocks: boolean
+  lastSyncAt: string | null
+}
+
+export interface AsanaUserMapping {
+  aimsUserId: string
+  aimsUserEmail: string
+  aimsUserName: string
+  asanaUserGid: string
+  asanaUserEmail: string
+  asanaUserName: string
 }
 
 export interface SubscriptionInfo {
