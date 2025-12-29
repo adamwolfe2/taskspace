@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "@/lib/auth"
+import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 
 /**
@@ -8,24 +8,20 @@ import { db } from "@/lib/db"
  */
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    if (!session?.user || !session?.organization) {
+    const auth = await getAuthContext(request)
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Check admin permissions
-    const member = await db.organizationMembers.findByUserAndOrganization(
-      session.user.id,
-      session.organization.id
-    )
-    if (!member || (member.role !== "owner" && member.role !== "admin")) {
+    if (!isAdmin(auth)) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 })
     }
 
     const body = await request.json()
 
     // Get current organization
-    const org = await db.organizations.findById(session.organization.id)
+    const org = await db.organizations.findById(auth.organization.id)
     if (!org) {
       return NextResponse.json({ error: "Organization not found" }, { status: 404 })
     }
@@ -45,7 +41,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update organization settings
-    const updatedOrg = await db.organizations.update(session.organization.id, {
+    const updatedOrg = await db.organizations.update(auth.organization.id, {
       settings: updatedSettings,
     })
 
@@ -66,14 +62,14 @@ export async function PUT(request: NextRequest) {
  * GET /api/organizations/settings
  * Get organization settings
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    if (!session?.user || !session?.organization) {
+    const auth = await getAuthContext(request)
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const org = await db.organizations.findById(session.organization.id)
+    const org = await db.organizations.findById(auth.organization.id)
     if (!org) {
       return NextResponse.json({ error: "Organization not found" }, { status: 404 })
     }

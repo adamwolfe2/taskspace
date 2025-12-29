@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { asanaClient, AsanaTask } from "@/lib/integrations/asana"
-import { getServerSession } from "@/lib/auth"
+import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import type { AsanaUserMapping, AssignedTask, Rock } from "@/lib/types"
 
@@ -18,24 +18,20 @@ interface SyncResult {
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    if (!session?.user || !session?.organization) {
+    const auth = await getAuthContext(request)
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Check admin permissions
-    const member = await db.organizationMembers.findByUserAndOrganization(
-      session.user.id,
-      session.organization.id
-    )
-    if (!member || (member.role !== "owner" && member.role !== "admin")) {
+    if (!isAdmin(auth)) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 })
     }
 
     const body = await request.json()
     const { direction = "both" } = body // "to_asana", "from_asana", or "both"
 
-    const org = await db.organizations.findById(session.organization.id)
+    const org = await db.organizations.findById(auth.organization.id)
     if (!org?.settings?.asanaIntegration?.enabled) {
       return NextResponse.json(
         { error: "Asana integration not enabled" },
@@ -60,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get AIMS tasks for mapped users
-    const aimsTasks = await db.assignedTasks.findByOrganizationId(session.organization.id)
+    const aimsTasks = await db.assignedTasks.findByOrganizationId(auth.organization.id)
 
     // Get Asana tasks from the configured project
     let asanaTasks: AsanaTask[] = []
@@ -153,8 +149,8 @@ export async function POST(request: NextRequest) {
               title: asanaTask.name,
               description: asanaTask.notes?.replace(/\n---\nAIMS Task ID:.*$/, "").trim() || "",
               assignedTo: mapping.aimsUserId,
-              assignedBy: session.user.id,
-              organizationId: session.organization.id,
+              assignedBy: auth.user.id,
+              organizationId: auth.organization.id,
               status: asanaTask.completed ? "completed" : "pending",
               priority: "medium",
               dueDate: asanaTask.due_on || undefined,
@@ -169,7 +165,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update last sync timestamp
-    await db.organizations.update(session.organization.id, {
+    await db.organizations.update(auth.organization.id, {
       settings: {
         ...org.settings,
         asanaIntegration: {
@@ -197,14 +193,14 @@ export async function POST(request: NextRequest) {
  * GET /api/asana/sync
  * Get sync status and last sync info
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    if (!session?.user || !session?.organization) {
+    const auth = await getAuthContext(request)
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const org = await db.organizations.findById(session.organization.id)
+    const org = await db.organizations.findById(auth.organization.id)
     const asanaConfig = org?.settings?.asanaIntegration
 
     return NextResponse.json({
