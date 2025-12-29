@@ -47,6 +47,8 @@ interface IntegrationStatus {
     configured: boolean
     provider: string
     fromAddress: string | null
+    appUrl?: string
+    appUrlConfigured?: boolean
   }
   slack: {
     configured: boolean
@@ -155,6 +157,8 @@ export function SettingsPage() {
               configured: data.config.resendKeyValid,
               provider: "Resend",
               fromAddress: data.config.emailFrom || null,
+              appUrl: data.config.appUrl,
+              appUrlConfigured: data.config.appUrlConfigured,
             }
           } : null)
 
@@ -923,6 +927,41 @@ export function SettingsPage() {
                         </Button>
                       </div>
                     </div>
+
+                    {/* APP URL Warning */}
+                    {integrationStatus.email.configured && integrationStatus.email.appUrlConfigured === false && (
+                      <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
+                        <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium text-amber-800">App URL Not Configured</p>
+                          <p className="text-sm text-amber-700 mt-1">
+                            Email links are using <code className="bg-amber-100 px-1 rounded">localhost:3000</code> instead of your production domain.
+                          </p>
+                          <p className="text-sm text-amber-700 mt-2">
+                            Add this environment variable in Vercel:
+                          </p>
+                          <div className="mt-2 p-2 bg-white rounded border border-amber-300 font-mono text-xs">
+                            NEXT_PUBLIC_APP_URL=https://eod.aimanagingservices.com
+                          </div>
+                          <p className="text-xs text-amber-600 mt-2">
+                            After adding the variable, redeploy your app for changes to take effect.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* APP URL Configured */}
+                    {integrationStatus.email.configured && integrationStatus.email.appUrlConfigured === true && (
+                      <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 border border-slate-200">
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-700">App URL Configured</p>
+                          <p className="text-sm text-slate-500">
+                            Links in emails will use: <code className="bg-slate-100 px-1 rounded">{integrationStatus.email.appUrl}</code>
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Test Email Section */}
                     {integrationStatus.email.configured && (
