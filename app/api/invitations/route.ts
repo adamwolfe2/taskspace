@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, role = "member", department = "General" } = body
+    const { email, role = "member", department = "General", name } = body
 
     if (!email || !validateEmail(email)) {
       return NextResponse.json<ApiResponse<null>>(
@@ -67,11 +67,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user is already a member
+    // Check if user is already an active member
     const existingUser = await db.users.findByEmail(email)
     if (existingUser) {
       const existingMember = await db.members.findByOrgAndUser(auth.organization.id, existingUser.id)
-      if (existingMember) {
+      if (existingMember && existingMember.status === "active") {
         return NextResponse.json<ApiResponse<null>>(
           { success: false, error: "This user is already a member of your organization" },
           { status: 409 }
@@ -89,17 +89,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check subscription limits
-    const members = await db.members.findByOrganizationId(auth.organization.id)
-    const pendingInvites = (await db.invitations.findByOrganizationId(auth.organization.id))
-      .filter(i => i.status === "pending")
+    // Check for existing draft member - if exists, update status to "invited"
+    const draftMember = await db.members.findByOrgAndEmail(auth.organization.id, email)
 
-    const totalUsers = members.length + pendingInvites.length
-    if (totalUsers >= auth.organization.subscription.maxUsers) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `You have reached your plan limit of ${auth.organization.subscription.maxUsers} users. Please upgrade to add more team members.` },
-        { status: 403 }
-      )
+    // Check subscription limits only if creating a new member
+    if (!draftMember) {
+      const members = await db.members.findByOrganizationId(auth.organization.id)
+      const pendingInvites = (await db.invitations.findByOrganizationId(auth.organization.id))
+        .filter(i => i.status === "pending")
+
+      const totalUsers = members.length + pendingInvites.length
+      if (totalUsers >= auth.organization.subscription.maxUsers) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: `You have reached your plan limit of ${auth.organization.subscription.maxUsers} users. Please upgrade to add more team members.` },
+          { status: 403 }
+        )
+      }
     }
 
     const now = new Date().toISOString()
@@ -108,7 +113,7 @@ export async function POST(request: NextRequest) {
       organizationId: auth.organization.id,
       email: email.toLowerCase(),
       role: role === "admin" ? "admin" : "member",
-      department,
+      department: draftMember?.department || department,
       token: generateInviteToken(),
       expiresAt: getExpirationDate(24 * 7), // 7 days
       createdAt: now,
@@ -117,6 +122,11 @@ export async function POST(request: NextRequest) {
     }
 
     await db.invitations.create(invitation)
+
+    // Update draft member status to "invited" if exists
+    if (draftMember) {
+      await db.members.update(draftMember.id, { status: "invited" })
+    }
 
     // Send invitation email (async, don't block on failure)
     sendInvitationEmail(invitation, auth.organization, auth.user.name)
@@ -130,7 +140,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json<ApiResponse<Invitation>>({
       success: true,
       data: invitation,
-      message: "Invitation sent successfully",
+      message: draftMember
+        ? "Invitation sent! The team member's pre-configured rocks and tasks will be linked when they accept."
+        : "Invitation sent successfully",
     })
   } catch (error) {
     console.error("Create invitation error:", error)

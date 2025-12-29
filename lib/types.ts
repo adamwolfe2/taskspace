@@ -47,13 +47,15 @@ export interface User {
 export interface OrganizationMember {
   id: string
   organizationId: string
-  userId: string
+  userId: string | null // null for pending/draft members
+  email: string // Store email for draft members before they have a user account
+  name: string // Store name for draft members
   role: "owner" | "admin" | "member"
   department: string
   weeklyMeasurable?: string
   joinedAt: string
   invitedBy?: string
-  status: "active" | "invited" | "inactive"
+  status: "active" | "invited" | "pending" | "inactive" // pending = draft (not yet invited)
 }
 
 export interface Invitation {
@@ -103,7 +105,7 @@ export interface TeamMember {
   avatar?: string
   joinDate: string
   weeklyMeasurable?: string
-  status?: "active" | "invited" | "inactive"
+  status?: "active" | "invited" | "pending" | "inactive" // pending = draft (not yet invited)
 }
 
 // Rock (Quarterly Goals)

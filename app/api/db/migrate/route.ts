@@ -63,19 +63,51 @@ export async function GET(request: NextRequest) {
     `
 
     // Create organization members table
+    // user_id is nullable to support draft members (created before invitation)
     await sql`
       CREATE TABLE IF NOT EXISTS organization_members (
         id VARCHAR(255) PRIMARY KEY,
         organization_id VARCHAR(255) NOT NULL,
-        user_id VARCHAR(255) NOT NULL,
+        user_id VARCHAR(255),
+        email VARCHAR(255),
+        name VARCHAR(255),
         role VARCHAR(50) NOT NULL DEFAULT 'member',
         department VARCHAR(255) DEFAULT 'General',
         weekly_measurable TEXT,
         joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         invited_by VARCHAR(255),
-        status VARCHAR(50) DEFAULT 'active',
-        UNIQUE(organization_id, user_id)
+        status VARCHAR(50) DEFAULT 'active'
       )
+    `
+
+    // Migration: Add email and name columns if they don't exist (for existing databases)
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS email VARCHAR(255)`
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS name VARCHAR(255)`
+
+    // Migration: Make user_id nullable and drop the unique constraint (for existing databases)
+    // Note: PostgreSQL doesn't have ALTER COLUMN IF NOT NULL, so we use a DO block
+    await sql`
+      DO $$
+      BEGIN
+        -- Make user_id nullable if it isn't already
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'organization_members'
+          AND column_name = 'user_id'
+          AND is_nullable = 'NO'
+        ) THEN
+          ALTER TABLE organization_members ALTER COLUMN user_id DROP NOT NULL;
+        END IF;
+
+        -- Drop the unique constraint on (organization_id, user_id) if it exists
+        -- This allows multiple draft members without user_id conflicts
+        IF EXISTS (
+          SELECT 1 FROM pg_constraint
+          WHERE conname = 'organization_members_organization_id_user_id_key'
+        ) THEN
+          ALTER TABLE organization_members DROP CONSTRAINT organization_members_organization_id_user_id_key;
+        END IF;
+      END $$;
     `
 
     // Create sessions table
@@ -208,6 +240,7 @@ export async function GET(request: NextRequest) {
     await sql`CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_members_org_id ON organization_members(organization_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_members_user_id ON organization_members(user_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_members_email ON organization_members(organization_id, email)`
     await sql`CREATE INDEX IF NOT EXISTS idx_rocks_org_id ON rocks(organization_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_rocks_user_id ON rocks(user_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_tasks_org_id ON assigned_tasks(organization_id)`

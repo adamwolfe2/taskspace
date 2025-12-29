@@ -38,7 +38,8 @@ export function AICopilotChat({
 }: AICopilotChatProps) {
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Convert conversation history to messages on mount
   useEffect(() => {
@@ -64,12 +65,16 @@ export function AICopilotChat({
     setMessages(converted.reverse())
   }, [conversationHistory])
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  // Auto-scroll to bottom when messages change or loading state changes
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
     }
-  }, [messages])
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, isLoading])
 
   const handleSubmit = async (query: string = input) => {
     if (!query.trim() || isLoading) return
@@ -123,7 +128,7 @@ export function AICopilotChat({
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0 pt-0">
-        <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
+        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-4">
               <Sparkles className="h-12 w-12 text-primary/40 mb-4" />
@@ -204,6 +209,8 @@ export function AICopilotChat({
                   </div>
                 </div>
               )}
+              {/* Scroll anchor */}
+              <div ref={messagesEndRef} />
             </div>
           )}
         </ScrollArea>
