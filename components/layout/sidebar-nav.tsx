@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
-import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Building } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 
@@ -10,7 +10,7 @@ interface SidebarNavProps {
 }
 
 export function SidebarNav({ onNavigate }: SidebarNavProps) {
-  const { currentUser, currentOrganization, currentPage, setCurrentPage } = useApp()
+  const { currentUser, currentPage, setCurrentPage } = useApp()
 
   const handleNavigation = (page: PageType) => {
     setCurrentPage(page)
@@ -18,7 +18,6 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
   }
 
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
-  const orgLogo = currentOrganization?.settings?.customBranding?.logo
 
   const navItems: { id: PageType; label: string; icon: typeof LayoutDashboard }[] = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -36,26 +35,6 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
 
   return (
     <nav className="flex flex-col h-full py-4">
-      {/* Organization Header with Logo */}
-      <div className="px-6 pb-4 mb-2 border-b border-slate-100">
-        <div className="flex items-center gap-3" data-org-header="true">
-          {orgLogo ? (
-            <img
-              src={orgLogo}
-              alt={currentOrganization?.name || "Organization"}
-              className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-              <Building className="h-5 w-5 text-slate-400" />
-            </div>
-          )}
-          <span className="font-semibold text-slate-900 truncate">
-            {currentOrganization?.name || "AIMS"}
-          </span>
-        </div>
-      </div>
-
       <div className="flex-1 space-y-6">
         {/* Main Navigation */}
         <div className="px-3">

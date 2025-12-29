@@ -39,16 +39,34 @@ export function Header({ onMenuClick }: HeaderProps) {
     }
   }
 
+  const orgLogo = currentOrganization?.settings?.customBranding?.logo
+
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
-        {/* Left side */}
+        {/* Left side - Organization branding */}
         <div className="flex items-center gap-3">
           {onMenuClick && (
             <Button variant="ghost" size="icon" className="md:hidden text-slate-600" onClick={onMenuClick}>
               <Menu className="h-5 w-5" />
             </Button>
           )}
+          <div className="hidden md:flex items-center gap-3">
+            {orgLogo ? (
+              <img
+                src={orgLogo}
+                alt={currentOrganization?.name || "Organization"}
+                className="w-8 h-8 rounded-lg object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                <Building className="h-4 w-4 text-slate-400" />
+              </div>
+            )}
+            <span className="font-semibold text-slate-900">
+              {currentOrganization?.name || "AIMS"}
+            </span>
+          </div>
         </div>
 
         {/* Right side */}
