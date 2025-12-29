@@ -101,9 +101,9 @@ export async function POST(request: NextRequest) {
       isNewUser = true
     }
 
-    // Check if already a member
+    // Check if already an active member via user ID
     const existingMember = await db.members.findByOrgAndUser(organization.id, user.id)
-    if (existingMember) {
+    if (existingMember && existingMember.status === "active") {
       await db.invitations.update(invitation.id, { status: "accepted" })
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "You are already a member of this organization" },
@@ -111,19 +111,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create membership
-    const member: OrganizationMember = {
-      id: generateId(),
-      organizationId: organization.id,
-      userId: user.id,
-      role: invitation.role,
-      department: invitation.department,
-      joinedAt: now,
-      invitedBy: invitation.invitedBy,
-      status: "active",
-    }
+    // Check for draft/invited member (created before invitation was sent)
+    const draftMember = await db.members.findByOrgAndEmail(organization.id, invitation.email)
 
-    await db.members.create(member)
+    let member: OrganizationMember
+
+    if (draftMember) {
+      // Update existing draft member with the user ID and activate
+      await db.members.update(draftMember.id, {
+        userId: user.id,
+        name: user.name, // Update with the registered name
+        status: "active",
+      })
+      member = {
+        ...draftMember,
+        userId: user.id,
+        name: user.name,
+        status: "active",
+      }
+    } else {
+      // Create new membership
+      member = {
+        id: generateId(),
+        organizationId: organization.id,
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        role: invitation.role,
+        department: invitation.department,
+        joinedAt: now,
+        invitedBy: invitation.invitedBy,
+        status: "active",
+      }
+      await db.members.create(member)
+    }
 
     // Mark invitation as accepted
     await db.invitations.update(invitation.id, { status: "accepted" })

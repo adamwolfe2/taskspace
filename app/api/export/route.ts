@@ -51,7 +51,8 @@ export async function GET(request: NextRequest) {
     switch (type) {
       case "rocks": {
         const rocks = await db.rocks.findByOrganizationId(auth.organization.id)
-        const members = await db.members.findByOrganizationId(auth.organization.id)
+        const members = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+        // Map by user id (which is what rock.userId references)
         const memberMap = new Map(members.map((m) => [m.id, m]))
 
         data = rocks.map((rock) => ({
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
           Status: rock.status,
           Progress: `${rock.progress}%`,
           Quarter: rock.quarter || "",
-          "Due Date": rock.dueDate,
+          "Due Date": rock.dueDate || "",
           "Created At": rock.createdAt,
         }))
         filename = `rocks-export-${new Date().toISOString().split("T")[0]}.csv`
@@ -69,9 +70,7 @@ export async function GET(request: NextRequest) {
       }
 
       case "tasks": {
-        let tasks = await db.tasks.findByOrganizationId(auth.organization.id)
-        const members = await db.members.findByOrganizationId(auth.organization.id)
-        const memberMap = new Map(members.map((m) => [m.id, m]))
+        let tasks = await db.assignedTasks.findByOrganizationId(auth.organization.id)
 
         // Filter by user if specified
         if (userId) {
@@ -89,12 +88,12 @@ export async function GET(request: NextRequest) {
         data = tasks.map((task) => ({
           Title: task.title,
           Description: task.description || "",
-          Assignee: task.assigneeName || memberMap.get(task.assigneeId)?.name || "Unknown",
+          Assignee: task.assigneeName || "Unknown",
           "Assigned By": task.assignedByName || "Self",
           Type: task.type,
           Priority: task.priority,
           Status: task.status,
-          "Due Date": task.dueDate,
+          "Due Date": task.dueDate || "",
           "Completed At": task.completedAt || "",
           "Created At": task.createdAt,
         }))
@@ -112,7 +111,7 @@ export async function GET(request: NextRequest) {
         }
 
         let reports = await db.eodReports.findByOrganizationId(auth.organization.id)
-        const members = await db.members.findByOrganizationId(auth.organization.id)
+        const members = await db.members.findWithUsersByOrganizationId(auth.organization.id)
         const memberMap = new Map(members.map((m) => [m.id, m]))
 
         // Filter by user if specified
@@ -151,7 +150,7 @@ export async function GET(request: NextRequest) {
           )
         }
 
-        const members = await db.members.findByOrganizationId(auth.organization.id)
+        const members = await db.members.findWithUsersByOrganizationId(auth.organization.id)
 
         data = members.map((member) => ({
           Name: member.name,

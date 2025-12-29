@@ -3,13 +3,14 @@ import { db } from "@/lib/db"
 import { generateDailyDigest, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { sendDailySummaryEmail, isEmailConfigured } from "@/lib/integrations/email"
 import { generateId } from "@/lib/auth/password"
-import type { ApiResponse, DailyDigest, TeamMember, EODInsight } from "@/lib/types"
+import type { ApiResponse, DailyDigest, TeamMember, EODInsight, Organization } from "@/lib/types"
 
 // This endpoint is designed to be called by Vercel Cron
+// Runs every hour to check which organizations are at 6 PM in their timezone
 // Configure in vercel.json:
 // {
 //   "crons": [
-//     { "path": "/api/cron/daily-digest", "schedule": "0 18 * * 1-5" }
+//     { "path": "/api/cron/daily-digest", "schedule": "0 * * * 1-5" }
 //   ]
 // }
 
@@ -23,6 +24,59 @@ function verifyCronSecret(request: NextRequest): boolean {
 
   const authHeader = request.headers.get("authorization")
   return authHeader === `Bearer ${cronSecret}`
+}
+
+/**
+ * Check if it's 6 PM (18:00) in the organization's timezone
+ * Digests run 1 hour after EOD reminders
+ */
+function isDigestTime(org: Organization): boolean {
+  const timezone = org.settings?.timezone || "America/New_York"
+
+  try {
+    const now = new Date()
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      hour: "2-digit",
+      hour12: false,
+    })
+    const currentHour = parseInt(formatter.format(now), 10)
+
+    // Digest runs at 6 PM (18:00) - 1 hour after EOD reminders
+    const isCorrectHour = currentHour === 18
+
+    // Check if it's a weekday in the org's timezone
+    const dayFormatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      weekday: "short",
+    })
+    const dayOfWeek = dayFormatter.format(now)
+    const isWeekday = !["Sat", "Sun"].includes(dayOfWeek)
+
+    return isCorrectHour && isWeekday
+  } catch (error) {
+    console.error(`[Cron] Timezone error for ${org.id}:`, error)
+    const now = new Date()
+    return now.getUTCHours() === 18 && now.getUTCDay() >= 1 && now.getUTCDay() <= 5
+  }
+}
+
+/**
+ * Get today's date in the organization's timezone
+ */
+function getTodayInTimezone(timezone: string): string {
+  try {
+    const now = new Date()
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+    return formatter.format(now)
+  } catch {
+    return new Date().toISOString().split("T")[0]
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -42,20 +96,30 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const today = new Date().toISOString().split("T")[0]
-    console.log(`[Cron] Generating daily digests for ${today}`)
+    console.log(`[Cron] Running daily digest check at ${new Date().toISOString()}`)
 
     // Get all organizations
     const organizations = await db.organizations.findAll()
-    const results: { orgId: string; success: boolean; error?: string }[] = []
+    const results: { orgId: string; orgName: string; success: boolean; skipped?: string; error?: string }[] = []
 
     for (const org of organizations) {
+      const timezone = org.settings?.timezone || "America/New_York"
+
+      // Check if it's digest time for this organization
+      if (!isDigestTime(org)) {
+        results.push({ orgId: org.id, orgName: org.name, success: true, skipped: "Not digest time" })
+        continue
+      }
+
+      console.log(`[Cron] Processing digest for org ${org.name} (timezone: ${timezone})`)
+      const today = getTodayInTimezone(timezone)
+
       try {
         // Check if digest already exists
         const existingDigest = await db.dailyDigests.findByDate(org.id, today)
         if (existingDigest) {
-          console.log(`[Cron] Digest already exists for org ${org.id}`)
-          results.push({ orgId: org.id, success: true })
+          console.log(`[Cron] Digest already exists for org ${org.name}`)
+          results.push({ orgId: org.id, orgName: org.name, success: true, skipped: "Already exists" })
           continue
         }
 
@@ -64,8 +128,8 @@ export async function GET(request: NextRequest) {
         const todayReports = allReports.filter(r => r.date === today)
 
         if (todayReports.length === 0) {
-          console.log(`[Cron] No reports for org ${org.id}`)
-          results.push({ orgId: org.id, success: true })
+          console.log(`[Cron] No reports for org ${org.name}`)
+          results.push({ orgId: org.id, orgName: org.name, success: true, skipped: "No reports" })
           continue
         }
 
@@ -117,7 +181,7 @@ export async function GET(request: NextRequest) {
         }
 
         await db.dailyDigests.create(digest)
-        console.log(`[Cron] Digest created for org ${org.id}`)
+        console.log(`[Cron] Digest created for org ${org.name}`)
 
         // Send email summary to admins
         if (isEmailConfigured()) {
@@ -129,27 +193,28 @@ export async function GET(request: NextRequest) {
           const missingMembers = activeMembers.filter(m => !submittedUserIds.has(m.id))
 
           await sendDailySummaryEmail(digest, teamMembers, admins, missingMembers)
-          console.log(`[Cron] Email sent for org ${org.id}`)
+          console.log(`[Cron] Email sent for org ${org.name}`)
         }
 
-        results.push({ orgId: org.id, success: true })
+        results.push({ orgId: org.id, orgName: org.name, success: true })
       } catch (error) {
-        console.error(`[Cron] Failed for org ${org.id}:`, error)
+        console.error(`[Cron] Failed for org ${org.name}:`, error)
         results.push({
           orgId: org.id,
+          orgName: org.name,
           success: false,
           error: error instanceof Error ? error.message : "Unknown error",
         })
       }
     }
 
-    const successCount = results.filter(r => r.success).length
+    const processedCount = results.filter(r => !r.skipped || r.skipped === "Already exists").length
     const failCount = results.filter(r => !r.success).length
 
     return NextResponse.json<ApiResponse<{ results: typeof results }>>({
       success: true,
       data: { results },
-      message: `Processed ${organizations.length} orgs: ${successCount} success, ${failCount} failed`,
+      message: `Processed ${processedCount} orgs (${failCount} failed) out of ${organizations.length} total`,
     })
   } catch (error) {
     console.error("[Cron] Daily digest error:", error)

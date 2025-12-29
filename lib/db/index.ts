@@ -61,7 +61,9 @@ function parseMember(row: Record<string, unknown>): OrganizationMember {
   return {
     id: row.id as string,
     organizationId: row.organization_id as string,
-    userId: row.user_id as string,
+    userId: (row.user_id as string) || null,
+    email: row.email as string,
+    name: row.name as string,
     role: row.role as OrganizationMember["role"],
     department: row.department as string,
     weeklyMeasurable: row.weekly_measurable as string | undefined,
@@ -294,7 +296,15 @@ export const db = {
       const { rows } = await sql`SELECT * FROM organization_members WHERE organization_id = ${orgId}`
       return rows.map(parseMember)
     },
+    async findByOrgAndId(orgId: string, memberId: string): Promise<OrganizationMember | null> {
+      const { rows } = await sql`
+        SELECT * FROM organization_members
+        WHERE organization_id = ${orgId} AND id = ${memberId}
+      `
+      return rows[0] ? parseMember(rows[0]) : null
+    },
     // Optimized query that gets members with user data in a single JOIN query
+    // Uses LEFT JOIN to also include draft/pending members who don't have a user yet
     async findWithUsersByOrganizationId(orgId: string): Promise<Array<{
       id: string
       name: string
@@ -304,13 +314,13 @@ export const db = {
       avatar?: string
       joinDate: string
       weeklyMeasurable?: string
-      status?: "active" | "invited" | "inactive"
+      status?: "active" | "invited" | "pending" | "inactive"
     }>> {
       const { rows } = await sql`
         SELECT
-          u.id,
-          u.name,
-          u.email,
+          COALESCE(u.id, om.id) as id,
+          COALESCE(u.name, om.name) as name,
+          COALESCE(u.email, om.email) as email,
           u.avatar,
           om.role,
           om.department,
@@ -318,7 +328,7 @@ export const db = {
           om.weekly_measurable,
           om.status
         FROM organization_members om
-        JOIN users u ON u.id = om.user_id
+        LEFT JOIN users u ON u.id = om.user_id
         WHERE om.organization_id = ${orgId}
         ORDER BY om.joined_at ASC
       `
@@ -331,7 +341,7 @@ export const db = {
         avatar: row.avatar as string | undefined,
         joinDate: (row.joined_at as Date)?.toISOString() || "",
         weeklyMeasurable: row.weekly_measurable as string | undefined,
-        status: row.status as "active" | "invited" | "inactive" | undefined,
+        status: row.status as "active" | "invited" | "pending" | "inactive" | undefined,
       }))
     },
     async findByUserId(userId: string): Promise<OrganizationMember[]> {
@@ -345,10 +355,17 @@ export const db = {
       `
       return rows[0] ? parseMember(rows[0]) : null
     },
+    async findByOrgAndEmail(orgId: string, email: string): Promise<OrganizationMember | null> {
+      const { rows } = await sql`
+        SELECT * FROM organization_members
+        WHERE organization_id = ${orgId} AND LOWER(email) = LOWER(${email})
+      `
+      return rows[0] ? parseMember(rows[0]) : null
+    },
     async create(member: OrganizationMember): Promise<OrganizationMember> {
       await sql`
-        INSERT INTO organization_members (id, organization_id, user_id, role, department, weekly_measurable, joined_at, invited_by, status)
-        VALUES (${member.id}, ${member.organizationId}, ${member.userId}, ${member.role},
+        INSERT INTO organization_members (id, organization_id, user_id, email, name, role, department, weekly_measurable, joined_at, invited_by, status)
+        VALUES (${member.id}, ${member.organizationId}, ${member.userId}, ${member.email}, ${member.name}, ${member.role},
                 ${member.department}, ${member.weeklyMeasurable || null}, ${member.joinedAt},
                 ${member.invitedBy || null}, ${member.status})
       `
@@ -357,6 +374,8 @@ export const db = {
     async update(id: string, updates: Partial<OrganizationMember>): Promise<OrganizationMember | null> {
       const { rows } = await sql`
         UPDATE organization_members SET
+          user_id = COALESCE(${updates.userId || null}, user_id),
+          name = COALESCE(${updates.name || null}, name),
           role = COALESCE(${updates.role || null}, role),
           department = COALESCE(${updates.department || null}, department),
           weekly_measurable = COALESCE(${updates.weeklyMeasurable || null}, weekly_measurable),

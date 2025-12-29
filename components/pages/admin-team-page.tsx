@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { UserInitials } from "@/components/shared/user-initials"
 import { RoleBadge } from "@/components/shared/role-badge"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
+import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle, Send } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -37,6 +37,7 @@ interface AdminTeamPageProps {
 export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: AdminTeamPageProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
+  const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false)
   const [rocksDialogOpen, setRocksDialogOpen] = useState(false)
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
   const [invitations, setInvitations] = useState<Invitation[]>([])
@@ -46,6 +47,12 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     name: "",
     email: "",
     department: "",
+    role: "member" as "admin" | "member",
+  })
+  const [newMemberData, setNewMemberData] = useState({
+    name: "",
+    email: "",
+    department: "General",
     role: "member" as "admin" | "member",
   })
   const [inviteData, setInviteData] = useState({
@@ -231,6 +238,103 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
   const pendingInvitations = invitations.filter((i) => i.status === "pending")
 
+  // Create a draft team member (before invitation)
+  const handleCreateDraftMember = async () => {
+    if (!newMemberData.name || !newMemberData.email) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both name and email",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      const response = await fetch("/api/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newMemberData),
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to create team member")
+      }
+
+      setTeamMembers([...teamMembers, data.data])
+      toast({
+        title: "Team Member Added",
+        description: `${newMemberData.name} has been added. You can now assign rocks and tasks, then send an invitation when ready.`,
+      })
+      setAddMemberDialogOpen(false)
+      setNewMemberData({ name: "", email: "", department: "General", role: "member" })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to create team member",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Send invitation to a pending member
+  const handleSendInviteToPending = async (member: TeamMember) => {
+    try {
+      setIsSubmitting(true)
+      const invitation = await api.invitations.create({
+        email: member.email,
+        role: member.role === "owner" ? "admin" : member.role,
+        department: member.department,
+      })
+      setInvitations([...invitations, invitation])
+      // Update member status in local state
+      setTeamMembers(teamMembers.map(m =>
+        m.id === member.id ? { ...m, status: "invited" } : m
+      ))
+      toast({
+        title: "Invitation Sent",
+        description: `An invitation has been sent to ${member.email}`,
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to send invitation",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Delete a pending member
+  const handleDeletePendingMember = async (memberId: string) => {
+    try {
+      const response = await fetch(`/api/members?memberId=${memberId}`, {
+        method: "DELETE",
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to remove member")
+      }
+
+      setTeamMembers(teamMembers.filter(m => m.id !== memberId))
+      toast({
+        title: "Member Removed",
+        description: "The team member has been removed",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to remove member",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -239,6 +343,89 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
           <p className="text-muted-foreground mt-1">Manage team members and invite new users</p>
         </div>
         <div className="flex gap-2">
+          {/* Add Team Member Dialog */}
+          <Dialog open={addMemberDialogOpen} onOpenChange={setAddMemberDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Member
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Team Member</DialogTitle>
+                <DialogDescription>
+                  Create a team member first, assign rocks and tasks, then send an invitation when ready.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="memberName">Name</Label>
+                  <Input
+                    id="memberName"
+                    value={newMemberData.name}
+                    onChange={(e) => setNewMemberData({ ...newMemberData, name: e.target.value })}
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="memberEmail">Email</Label>
+                  <Input
+                    id="memberEmail"
+                    type="email"
+                    value={newMemberData.email}
+                    onChange={(e) => setNewMemberData({ ...newMemberData, email: e.target.value })}
+                    placeholder="john@company.com"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="memberDept">Department</Label>
+                    <Input
+                      id="memberDept"
+                      value={newMemberData.department}
+                      onChange={(e) => setNewMemberData({ ...newMemberData, department: e.target.value })}
+                      placeholder="Engineering"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="memberRole">Role</Label>
+                    <Select
+                      value={newMemberData.role}
+                      onValueChange={(value: "admin" | "member") =>
+                        setNewMemberData({ ...newMemberData, role: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="member">Member</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button onClick={handleCreateDraftMember} className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Add Team Member
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  After adding, you can assign rocks and tasks before sending an invitation.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={bulkInviteDialogOpen} onOpenChange={(open) => {
             setBulkInviteDialogOpen(open)
             if (!open) {
@@ -436,8 +623,8 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         <TabsContent value="members">
           <Card>
             <CardHeader>
-              <CardTitle>Active Team Members</CardTitle>
-              <CardDescription>View and manage all team members</CardDescription>
+              <CardTitle>Team Members</CardTitle>
+              <CardDescription>View and manage all team members including pending ones</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -447,7 +634,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                       <TableHead>Member</TableHead>
                       <TableHead>Department</TableHead>
                       <TableHead>Role</TableHead>
-                      <TableHead>Join Date</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -467,11 +654,53 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                         <TableCell>
                           <RoleBadge role={member.role} />
                         </TableCell>
-                        <TableCell className="text-sm">{formatDate(member.joinDate)}</TableCell>
+                        <TableCell>
+                          {member.status === "pending" ? (
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Not Invited
+                            </Badge>
+                          ) : member.status === "invited" ? (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              <Mail className="h-3 w-3 mr-1" />
+                              Invited
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Active
+                            </Badge>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(member)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            {member.status === "pending" && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleSendInviteToPending(member)}
+                                  disabled={isSubmitting}
+                                  title="Send Invitation"
+                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                >
+                                  <Send className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeletePendingMember(member.id)}
+                                  title="Remove"
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            <Button variant="ghost" size="sm" onClick={() => handleEdit(member)} title="Edit">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

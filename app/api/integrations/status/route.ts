@@ -7,6 +7,8 @@ interface IntegrationStatus {
     configured: boolean
     provider: string
     fromAddress: string | null
+    appUrl: string
+    appUrlConfigured: boolean
   }
   slack: {
     configured: boolean
@@ -39,6 +41,7 @@ export async function GET(request: NextRequest) {
     // Check email configuration
     const resendApiKey = process.env.RESEND_API_KEY
     const emailFrom = process.env.EMAIL_FROM
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
     const emailConfigured = !!resendApiKey && resendApiKey.startsWith("re_")
 
     // Check Slack configuration
@@ -55,6 +58,8 @@ export async function GET(request: NextRequest) {
         configured: emailConfigured,
         provider: "Resend",
         fromAddress: emailConfigured ? (emailFrom || "Not set") : null,
+        appUrl: appUrl,
+        appUrlConfigured: appUrl !== "http://localhost:3000",
       },
       slack: {
         configured: slackConfigured,

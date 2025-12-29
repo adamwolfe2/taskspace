@@ -49,11 +49,6 @@ export function Header({ onMenuClick }: HeaderProps) {
               <Menu className="h-5 w-5" />
             </Button>
           )}
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold text-slate-900">
-              {currentOrganization?.name || "AIMS Dashboard"}
-            </h1>
-          </div>
         </div>
 
         {/* Right side */}

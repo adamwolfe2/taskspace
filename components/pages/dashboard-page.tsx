@@ -5,6 +5,7 @@ import { StatsCards } from "@/components/dashboard/stats-cards"
 import { MyRocksSection } from "@/components/dashboard/my-rocks-section"
 import { AssignedTasksSection } from "@/components/dashboard/assigned-tasks-section"
 import { EODSubmissionCard } from "@/components/dashboard/eod-submission-card"
+import { WeeklyEODCalendar } from "@/components/dashboard/weekly-eod-calendar"
 import { calculateUserStats } from "@/lib/utils/stats-calculator"
 
 interface DashboardPageProps {
@@ -68,6 +69,8 @@ export function DashboardPage({
       </div>
 
       <StatsCards stats={stats} />
+
+      <WeeklyEODCalendar eodReports={eodReports} userId={currentUser.id} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MyRocksSection rocks={userRocks} onUpdateProgress={handleUpdateProgress} />

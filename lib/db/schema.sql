@@ -24,17 +24,19 @@ CREATE TABLE IF NOT EXISTS organizations (
 );
 
 -- Organization members table
+-- user_id is nullable to support draft members (created before invitation)
 CREATE TABLE IF NOT EXISTS organization_members (
   id VARCHAR(255) PRIMARY KEY,
   organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
+  email VARCHAR(255),
+  name VARCHAR(255),
   role VARCHAR(50) NOT NULL DEFAULT 'member',
   department VARCHAR(255) DEFAULT 'General',
   weekly_measurable TEXT,
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   invited_by VARCHAR(255),
-  status VARCHAR(50) DEFAULT 'active',
-  UNIQUE(organization_id, user_id)
+  status VARCHAR(50) DEFAULT 'active'
 );
 
 -- Sessions table
@@ -257,6 +259,7 @@ CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_members_org_id ON organization_members(organization_id);
 CREATE INDEX IF NOT EXISTS idx_members_user_id ON organization_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_members_email ON organization_members(organization_id, email);
 CREATE INDEX IF NOT EXISTS idx_rocks_org_id ON rocks(organization_id);
 CREATE INDEX IF NOT EXISTS idx_rocks_user_id ON rocks(user_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_org_id ON assigned_tasks(organization_id);

@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     // Get environment variables
     const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
     const EMAIL_FROM = process.env.EMAIL_FROM || "AIMS Dashboard <onboarding@resend.dev>"
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
     // Debug info
     const debugInfo = {
@@ -33,6 +34,8 @@ export async function POST(request: NextRequest) {
       resendKeyPrefix: RESEND_API_KEY ? RESEND_API_KEY.substring(0, 10) + "..." : "not set",
       resendKeyValid: RESEND_API_KEY.startsWith("re_"),
       emailFrom: EMAIL_FROM,
+      appUrl: APP_URL,
+      appUrlConfigured: APP_URL !== "http://localhost:3000",
       testEmailTo: testEmail || auth.user.email,
     }
 
@@ -118,6 +121,7 @@ export async function GET(request: NextRequest) {
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
     const EMAIL_FROM = process.env.EMAIL_FROM || "AIMS Dashboard <onboarding@resend.dev>"
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
     return NextResponse.json({
       success: true,
@@ -127,6 +131,8 @@ export async function GET(request: NextRequest) {
         resendKeyValid: RESEND_API_KEY.startsWith("re_"),
         emailFrom: EMAIL_FROM,
         emailFromDefault: EMAIL_FROM === "AIMS Dashboard <onboarding@resend.dev>",
+        appUrl: APP_URL,
+        appUrlConfigured: APP_URL !== "http://localhost:3000",
       },
     })
   } catch (error: any) {

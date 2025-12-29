@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import { api } from "@/lib/api/client"
 import { Button } from "@/components/ui/button"
@@ -36,6 +36,11 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
+  RefreshCw,
+  Send,
+  Upload,
+  ImageIcon,
+  X,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
@@ -45,6 +50,8 @@ interface IntegrationStatus {
     configured: boolean
     provider: string
     fromAddress: string | null
+    appUrl?: string
+    appUrlConfigured?: boolean
   }
   slack: {
     configured: boolean
@@ -77,6 +84,9 @@ export function SettingsPage() {
 
   // Integration status
   const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
+  const [isRefreshingEmail, setIsRefreshingEmail] = useState(false)
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false)
+  const [testEmailResult, setTestEmailResult] = useState<{ success: boolean; message: string } | null>(null)
 
   // Role checks (defined early for use in effects)
   const isOwner = currentUser?.role === "owner"
@@ -135,6 +145,112 @@ export function SettingsPage() {
     loadIntegrationStatus()
   }, [isAdmin])
 
+  // Refresh email integration status
+  const refreshEmailStatus = async () => {
+    setIsRefreshingEmail(true)
+    setTestEmailResult(null)
+    try {
+      const response = await fetch("/api/test-email")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.config) {
+          setIntegrationStatus(prev => prev ? {
+            ...prev,
+            email: {
+              configured: data.config.resendKeyValid,
+              provider: "Resend",
+              fromAddress: data.config.emailFrom || null,
+              appUrl: data.config.appUrl,
+              appUrlConfigured: data.config.appUrlConfigured,
+            }
+          } : null)
+
+          if (data.config.resendKeyValid) {
+            toast({
+              title: "Email configured",
+              description: `Sending from: ${data.config.emailFrom}`,
+            })
+          } else {
+            toast({
+              title: "Email not configured",
+              description: `API Key detected: ${data.config.resendKeySet ? 'Yes' : 'No'}, Valid format: ${data.config.resendKeyValid ? 'Yes' : 'No'}`,
+              variant: "destructive",
+            })
+          }
+        }
+      } else {
+        // Fallback to integrations status endpoint
+        const statusResponse = await fetch("/api/integrations/status")
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json()
+          if (statusData.success) {
+            setIntegrationStatus(statusData.data)
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to refresh email status:", err)
+      toast({
+        title: "Error",
+        description: "Failed to check email configuration",
+        variant: "destructive",
+      })
+    } finally {
+      setIsRefreshingEmail(false)
+    }
+  }
+
+  // Send test email
+  const sendTestEmail = async () => {
+    if (!currentUser?.email) return
+
+    setIsSendingTestEmail(true)
+    setTestEmailResult(null)
+    try {
+      const response = await fetch("/api/test-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testEmail: currentUser.email }),
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        setTestEmailResult({
+          success: true,
+          message: `Test email sent to ${currentUser.email}`,
+        })
+        toast({
+          title: "Test email sent",
+          description: `Check your inbox at ${currentUser.email}`,
+        })
+      } else {
+        setTestEmailResult({
+          success: false,
+          message: data.error || data.resendError?.message || "Failed to send test email",
+        })
+        toast({
+          title: "Failed to send test email",
+          description: data.error || "Check the debug info below",
+          variant: "destructive",
+        })
+        // Log debug info
+        console.log("Email debug info:", data.debug)
+      }
+    } catch (err: any) {
+      setTestEmailResult({
+        success: false,
+        message: err.message || "Network error",
+      })
+      toast({
+        title: "Error",
+        description: "Failed to send test email",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSendingTestEmail(false)
+    }
+  }
+
   const teamCount = teamMembers.length + pendingInvitations.length
 
   // Organization settings state
@@ -152,6 +268,66 @@ export function SettingsPage() {
   const [slackWebhookUrl, setSlackWebhookUrl] = useState(
     currentOrganization?.settings.slackWebhookUrl || ""
   )
+  const [orgLogo, setOrgLogo] = useState<string | undefined>(
+    currentOrganization?.settings.customBranding?.logo
+  )
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+
+  // Handle logo file selection
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (PNG, JPG, etc.)",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate file size (max 500KB for base64)
+    if (file.size > 500 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Logo must be less than 500KB",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUploadingLogo(true)
+    try {
+      // Convert to base64
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string
+        setOrgLogo(base64)
+        setIsUploadingLogo(false)
+      }
+      reader.onerror = () => {
+        toast({
+          title: "Error",
+          description: "Failed to read image file",
+          variant: "destructive",
+        })
+        setIsUploadingLogo(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (err) {
+      setIsUploadingLogo(false)
+    }
+  }
+
+  const handleRemoveLogo = () => {
+    setOrgLogo(undefined)
+    if (logoInputRef.current) {
+      logoInputRef.current.value = ""
+    }
+  }
 
   const handleSaveOrganization = async () => {
     if (!isOwner) return
@@ -166,6 +342,9 @@ export function SettingsPage() {
           enableEmailNotifications: emailNotifications,
           enableSlackIntegration: slackIntegration,
           slackWebhookUrl: slackIntegration ? slackWebhookUrl : undefined,
+          customBranding: {
+            logo: orgLogo,
+          },
         },
       })
 
@@ -238,6 +417,33 @@ export function SettingsPage() {
       title: "Link copied",
       description: "Invitation link copied to clipboard",
     })
+  }
+
+  const cancelInvitation = async (invitationId: string) => {
+    try {
+      const response = await fetch(`/api/invitations?id=${invitationId}`, {
+        method: "DELETE",
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to cancel invitation")
+      }
+
+      // Remove from local state
+      setPendingInvitations(prev => prev.filter(inv => inv.id !== invitationId))
+
+      toast({
+        title: "Invitation cancelled",
+        description: "The invitation has been removed",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to cancel invitation",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleCreateApiKey = async () => {
@@ -402,7 +608,70 @@ export function SettingsPage() {
                 Basic information about your organization
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              {/* Logo Upload */}
+              <div className="space-y-3">
+                <Label>Organization Logo</Label>
+                <div className="flex items-start gap-4">
+                  {/* Logo Preview */}
+                  <div className="relative">
+                    {orgLogo ? (
+                      <div className="relative">
+                        <img
+                          src={orgLogo}
+                          alt="Organization logo"
+                          className="w-20 h-20 rounded-lg object-cover border border-slate-200"
+                        />
+                        {isOwner && (
+                          <button
+                            onClick={handleRemoveLogo}
+                            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                            disabled={isLoading}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-lg bg-slate-100 border border-dashed border-slate-300 flex items-center justify-center">
+                        <ImageIcon className="h-8 w-8 text-slate-400" />
+                      </div>
+                    )}
+                  </div>
+                  {/* Upload Controls */}
+                  <div className="flex-1 space-y-2">
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoChange}
+                      className="hidden"
+                      id="logo-upload"
+                      disabled={!isOwner || isLoading}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={!isOwner || isLoading || isUploadingLogo}
+                      className="gap-2"
+                    >
+                      {isUploadingLogo ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      {orgLogo ? "Change Logo" : "Upload Logo"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      Recommended: Square image, 200x200px or larger. Max 500KB.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
               <div className="space-y-2">
                 <Label htmlFor="orgName">Organization Name</Label>
                 <Input
@@ -641,13 +910,25 @@ export function SettingsPage() {
                               {inv.role} • {inv.department}
                             </p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyInviteLink(inv.token)}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyInviteLink(inv.token)}
+                              title="Copy invite link"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => cancelInvitation(inv.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              title="Cancel invitation"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -800,10 +1081,93 @@ export function SettingsPage() {
                             : 'Team invitations will not be sent via email'}
                         </p>
                       </div>
-                      {integrationStatus.email.configured && (
-                        <Badge className="bg-green-500">Active</Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {integrationStatus.email.configured && (
+                          <Badge className="bg-green-500">Active</Badge>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={refreshEmailStatus}
+                          disabled={isRefreshingEmail}
+                        >
+                          <RefreshCw className={`h-4 w-4 ${isRefreshingEmail ? 'animate-spin' : ''}`} />
+                        </Button>
+                      </div>
                     </div>
+
+                    {/* APP URL Warning */}
+                    {integrationStatus.email.configured && integrationStatus.email.appUrlConfigured === false && (
+                      <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
+                        <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium text-amber-800">App URL Not Configured</p>
+                          <p className="text-sm text-amber-700 mt-1">
+                            Email links are using <code className="bg-amber-100 px-1 rounded">localhost:3000</code> instead of your production domain.
+                          </p>
+                          <p className="text-sm text-amber-700 mt-2">
+                            Add this environment variable in Vercel:
+                          </p>
+                          <div className="mt-2 p-2 bg-white rounded border border-amber-300 font-mono text-xs">
+                            NEXT_PUBLIC_APP_URL=https://eod.aimanagingservices.com
+                          </div>
+                          <p className="text-xs text-amber-600 mt-2">
+                            After adding the variable, redeploy your app for changes to take effect.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* APP URL Configured */}
+                    {integrationStatus.email.configured && integrationStatus.email.appUrlConfigured === true && (
+                      <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 border border-slate-200">
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-700">App URL Configured</p>
+                          <p className="text-sm text-slate-500">
+                            Links in emails will use: <code className="bg-slate-100 px-1 rounded">{integrationStatus.email.appUrl}</code>
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Test Email Section */}
+                    {integrationStatus.email.configured && (
+                      <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 border border-slate-200">
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-700">Send Test Email</p>
+                          <p className="text-sm text-slate-500">
+                            Send a test email to {currentUser?.email} to verify everything is working
+                          </p>
+                        </div>
+                        <Button
+                          onClick={sendTestEmail}
+                          disabled={isSendingTestEmail}
+                          className="gap-2"
+                        >
+                          {isSendingTestEmail ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                          Send Test
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Test Result */}
+                    {testEmailResult && (
+                      <div className={`flex items-center gap-3 p-4 rounded-lg ${testEmailResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                        {testEmailResult.success ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-600" />
+                        )}
+                        <p className={`text-sm ${testEmailResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                          {testEmailResult.message}
+                        </p>
+                      </div>
+                    )}
 
                     {!integrationStatus.email.configured && (
                       <div className="space-y-4">
