@@ -38,7 +38,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     <nav className="flex flex-col h-full py-4">
       {/* Organization Header with Logo */}
       <div className="px-6 pb-4 mb-2 border-b border-slate-100">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3" data-org-header="true">
           {orgLogo ? (
             <img
               src={orgLogo}
