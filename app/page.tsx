@@ -169,13 +169,13 @@ function AppContent() {
       <Header onMenuClick={() => setSidebarOpen(true)} />
 
       <div className="flex">
-        <aside className="hidden md:block w-64 border-r border-border min-h-[calc(100vh-4rem)] bg-card">
+        <aside data-sidebar="desktop" className="hidden md:block w-64 border-r border-border min-h-[calc(100vh-4rem)] bg-card">
           <SidebarNav />
         </aside>
 
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetContent side="left" className="p-0 w-64">
-            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+          <SheetContent data-sidebar="mobile" side="left" className="p-0 w-64">
+            <SheetTitle className="sr-only hidden">Navigation Menu</SheetTitle>
             <SidebarNav onNavigate={() => setSidebarOpen(false)} />
           </SheetContent>
         </Sheet>
