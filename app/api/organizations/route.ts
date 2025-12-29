@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         plan: "free",
         status: "active",
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        maxUsers: 5,
+        maxUsers: 10,
         features: ["basic_rocks", "basic_tasks", "eod_reports"],
       },
     }

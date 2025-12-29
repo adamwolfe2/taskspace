@@ -419,6 +419,33 @@ export function SettingsPage() {
     })
   }
 
+  const cancelInvitation = async (invitationId: string) => {
+    try {
+      const response = await fetch(`/api/invitations?id=${invitationId}`, {
+        method: "DELETE",
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to cancel invitation")
+      }
+
+      // Remove from local state
+      setPendingInvitations(prev => prev.filter(inv => inv.id !== invitationId))
+
+      toast({
+        title: "Invitation cancelled",
+        description: "The invitation has been removed",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to cancel invitation",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleCreateApiKey = async () => {
     if (!newApiKeyName.trim()) {
       toast({
@@ -883,13 +910,25 @@ export function SettingsPage() {
                               {inv.role} • {inv.department}
                             </p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyInviteLink(inv.token)}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyInviteLink(inv.token)}
+                              title="Copy invite link"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => cancelInvitation(inv.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              title="Cancel invitation"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>

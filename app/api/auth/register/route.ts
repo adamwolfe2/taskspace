@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
           plan: "free",
           status: "active",
           currentPeriodEnd: getExpirationDate(24 * 30), // 30 days trial
-          maxUsers: 5,
+          maxUsers: 10,
           features: ["basic_rocks", "basic_tasks", "eod_reports"],
         },
       }
