@@ -1,8 +1,115 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
-import { generateId } from "@/lib/auth/password"
+import { generateId, validateEmail } from "@/lib/auth/password"
 import type { TeamMember, OrganizationMember, ApiResponse } from "@/lib/types"
+
+// POST /api/members - Create a draft team member (before invitation)
+export async function POST(request: NextRequest) {
+  try {
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
+    if (!isAdmin(auth)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Only admins can create team members" },
+        { status: 403 }
+      )
+    }
+
+    const body = await request.json()
+    const { name, email, role = "member", department = "General" } = body
+
+    if (!name || name.trim().length < 2) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Name must be at least 2 characters" },
+        { status: 400 }
+      )
+    }
+
+    if (!email || !validateEmail(email)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Valid email is required" },
+        { status: 400 }
+      )
+    }
+
+    // Check if user already exists in org
+    const existingUser = await db.users.findByEmail(email)
+    if (existingUser) {
+      const existingMember = await db.members.findByOrgAndUser(auth.organization.id, existingUser.id)
+      if (existingMember) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "This user is already a member of your organization" },
+          { status: 409 }
+        )
+      }
+    }
+
+    // Check if email already has a draft member
+    const existingDraft = await db.members.findByOrgAndEmail(auth.organization.id, email)
+    if (existingDraft) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "A team member with this email already exists" },
+        { status: 409 }
+      )
+    }
+
+    // Check subscription limits
+    const members = await db.members.findByOrganizationId(auth.organization.id)
+    if (members.length >= auth.organization.subscription.maxUsers) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: `You have reached your plan limit of ${auth.organization.subscription.maxUsers} users. Please upgrade to add more team members.` },
+        { status: 403 }
+      )
+    }
+
+    const now = new Date().toISOString()
+    const memberId = generateId()
+
+    const member: OrganizationMember = {
+      id: memberId,
+      organizationId: auth.organization.id,
+      userId: null, // No user yet - this is a draft
+      email: email.toLowerCase(),
+      name: name.trim(),
+      role: role === "admin" ? "admin" : "member",
+      department,
+      joinedAt: now,
+      invitedBy: auth.user.id,
+      status: "pending", // Draft status
+    }
+
+    await db.members.create(member)
+
+    const teamMember: TeamMember = {
+      id: memberId,
+      name: member.name,
+      email: member.email,
+      role: member.role,
+      department: member.department,
+      joinDate: member.joinedAt,
+      status: "pending",
+    }
+
+    return NextResponse.json<ApiResponse<TeamMember>>({
+      success: true,
+      data: teamMember,
+      message: "Team member created. You can now assign rocks and tasks, then send an invitation when ready.",
+    })
+  } catch (error) {
+    console.error("Create draft member error:", error)
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: "Failed to create team member" },
+      { status: 500 }
+    )
+  }
+}
 
 // GET /api/members - Get all team members in the organization
 export async function GET(request: NextRequest) {
@@ -172,7 +279,12 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const member = await db.members.findByOrgAndUser(auth.organization.id, memberId)
+    // Try to find by member ID first (for draft members), then by user ID
+    let member = await db.members.findByOrgAndId(auth.organization.id, memberId)
+    if (!member) {
+      member = await db.members.findByOrgAndUser(auth.organization.id, memberId)
+    }
+
     if (!member) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Member not found" },
