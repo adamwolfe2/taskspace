@@ -41,7 +41,7 @@ export const CONFIG = {
   // Feature flags
   features: {
     enableEmailNotifications: true,
-    enableSlackIntegration: false, // Disabled until backend is implemented
+    enableSlackIntegration: true, // Slack webhook integration enabled
     enableTwoFactorAuth: false, // Coming soon
     enable2FA: false,
   },
