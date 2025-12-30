@@ -7,9 +7,10 @@ import { BrainDumpInput } from "@/components/ai/brain-dump-input"
 import { AITaskReview } from "@/components/ai/ai-task-review"
 import { AICopilotChat } from "@/components/ai/ai-copilot-chat"
 import { DailyDigestCard } from "@/components/ai/daily-digest-card"
+import { BulkRockImport } from "@/components/ai/bulk-rock-import"
 import { api } from "@/lib/api/client"
 import { useToast } from "@/hooks/use-toast"
-import { Brain, Sparkles, MessageSquare, Calendar, AlertCircle, Zap } from "lucide-react"
+import { Brain, Sparkles, MessageSquare, Calendar, AlertCircle, Zap, Mountain } from "lucide-react"
 import type {
   TeamMember,
   AIGeneratedTask,
@@ -277,7 +278,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="brain-dump" className="gap-2">
             <Brain className="h-4 w-4" />
             <span className="hidden sm:inline">Brain Dump</span>
@@ -290,6 +291,10 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
                 {pendingTasks.length}
               </span>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="import-rocks" className="gap-2">
+            <Mountain className="h-4 w-4" />
+            <span className="hidden sm:inline">Import Rocks</span>
           </TabsTrigger>
           <TabsTrigger value="digest" className="gap-2">
             <Calendar className="h-4 w-4" />
@@ -335,6 +340,10 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
               </p>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="import-rocks">
+          <BulkRockImport teamMembers={teamMembers} />
         </TabsContent>
 
         <TabsContent value="digest">

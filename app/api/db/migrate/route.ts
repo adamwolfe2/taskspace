@@ -360,9 +360,16 @@ export async function GET(request: NextRequest) {
     await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS active_projects JSONB DEFAULT '[]'`
     await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS slack_user_id VARCHAR(255)`
 
+    // Add Asana Personal Access Token column for individual member sync
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS asana_pat TEXT`
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS asana_workspace_gid VARCHAR(255)`
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS asana_last_sync_at TIMESTAMP WITH TIME ZONE`
+
     // Add source tracking to assigned_tasks
     await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'manual'`
     await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS ai_context TEXT`
+    await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS asana_gid VARCHAR(255)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_tasks_asana_gid ON assigned_tasks(asana_gid)`
 
     // AI Command Center indexes
     await sql`CREATE INDEX IF NOT EXISTS idx_brain_dumps_org ON admin_brain_dumps(organization_id)`
