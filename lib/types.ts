@@ -130,6 +130,15 @@ export interface TeamMember {
   status?: "active" | "invited" | "pending" | "inactive" // pending = draft (not yet invited)
 }
 
+// Rock Milestone (sub-goals within a rock)
+export interface RockMilestone {
+  id: string
+  text: string
+  completed: boolean
+  completedAt?: string
+  dueDate?: string
+}
+
 // Rock (Quarterly Goals)
 export interface Rock {
   id: string
@@ -144,8 +153,28 @@ export interface Rock {
   updatedAt: string
   bucket?: string
   outcome?: string
-  doneWhen?: string[]
+  doneWhen?: string[] // Legacy field
+  milestones?: RockMilestone[] // New structured milestones
   quarter?: string // e.g., "Q1 2025"
+}
+
+// Task Comment
+export interface TaskComment {
+  id: string
+  userId: string
+  userName: string
+  text: string
+  createdAt: string
+}
+
+// Task Recurrence
+export interface TaskRecurrence {
+  type: "daily" | "weekly" | "monthly"
+  interval: number // every N days/weeks/months
+  daysOfWeek?: number[] // 0=Sunday, 1=Monday, etc. for weekly
+  dayOfMonth?: number // 1-31 for monthly
+  endDate?: string // Optional end date
+  lastGenerated?: string // Last date a task was generated
 }
 
 // Task Types
@@ -182,6 +211,9 @@ export interface AssignedTask {
   addedToEOD: boolean
   eodReportId: string | null
   source?: "manual" | "asana"
+  comments?: TaskComment[]
+  recurrence?: TaskRecurrence
+  parentRecurringTaskId?: string // Links to the original recurring task template
 }
 
 // EOD Report Types
@@ -229,6 +261,7 @@ export type PageType =
   | "setup-organization"
   | "accept-invitation"
   | "dashboard"
+  | "calendar"
   | "history"
   | "rocks"
   | "tasks"

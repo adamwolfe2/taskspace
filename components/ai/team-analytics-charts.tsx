@@ -18,8 +18,9 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts"
-import { BarChart3, TrendingUp, Users, AlertTriangle } from "lucide-react"
+import { BarChart3, TrendingUp, Users, AlertTriangle, Target, Calendar, ArrowUp, ArrowDown, Minus } from "lucide-react"
 import type { EODReport, EODInsight, Rock, TeamMember } from "@/lib/types"
+import { Progress } from "@/components/ui/progress"
 
 interface TeamAnalyticsChartsProps {
   eodReports: EODReport[]
@@ -220,6 +221,168 @@ export function TeamAnalyticsCharts({
       activeMembers,
     }
   }, [filteredReports, insights, filteredTasks, teamMembers, rocks, days])
+
+  // Individual member performance
+  const memberPerformance = useMemo(() => {
+    const memberMap = new Map(teamMembers.map(m => [m.id, m]))
+    const performance: Record<string, {
+      name: string
+      reportsSubmitted: number
+      tasksCompleted: number
+      rockProgress: number
+      rockCount: number
+      escalations: number
+    }> = {}
+
+    // Initialize all active members
+    teamMembers.filter(m => m.status === "active").forEach(m => {
+      performance[m.id] = {
+        name: m.name,
+        reportsSubmitted: 0,
+        tasksCompleted: 0,
+        rockProgress: 0,
+        rockCount: 0,
+        escalations: 0,
+      }
+    })
+
+    // Count reports
+    filteredReports.forEach(report => {
+      if (performance[report.userId]) {
+        performance[report.userId].reportsSubmitted++
+        if (report.needsEscalation) {
+          performance[report.userId].escalations++
+        }
+      }
+    })
+
+    // Count completed tasks
+    filteredTasks.forEach(task => {
+      if (performance[task.assigneeId]) {
+        performance[task.assigneeId].tasksCompleted++
+      }
+    })
+
+    // Calculate rock progress
+    rocks.forEach(rock => {
+      if (performance[rock.userId]) {
+        performance[rock.userId].rockProgress += rock.progress
+        performance[rock.userId].rockCount++
+      }
+    })
+
+    return Object.values(performance)
+      .map(p => ({
+        ...p,
+        avgRockProgress: p.rockCount > 0 ? Math.round(p.rockProgress / p.rockCount) : 0,
+        submissionRate: days > 0 ? Math.round((p.reportsSubmitted / days) * 100) : 0,
+      }))
+      .sort((a, b) => b.tasksCompleted - a.tasksCompleted)
+  }, [teamMembers, filteredReports, filteredTasks, rocks, days])
+
+  // Productivity heatmap by day of week
+  const productivityHeatmap = useMemo(() => {
+    const dayMap: Record<number, { reports: number; tasks: number }> = {
+      0: { reports: 0, tasks: 0 }, // Sunday
+      1: { reports: 0, tasks: 0 },
+      2: { reports: 0, tasks: 0 },
+      3: { reports: 0, tasks: 0 },
+      4: { reports: 0, tasks: 0 },
+      5: { reports: 0, tasks: 0 },
+      6: { reports: 0, tasks: 0 }, // Saturday
+    }
+
+    filteredReports.forEach(report => {
+      const dayOfWeek = new Date(report.date).getDay()
+      dayMap[dayOfWeek].reports++
+    })
+
+    filteredTasks.forEach(task => {
+      if (task.completedAt) {
+        const dayOfWeek = new Date(task.completedAt).getDay()
+        dayMap[dayOfWeek].tasks++
+      }
+    })
+
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    return dayNames.map((name, index) => ({
+      day: name,
+      reports: dayMap[index].reports,
+      tasks: dayMap[index].tasks,
+      total: dayMap[index].reports + dayMap[index].tasks,
+    }))
+  }, [filteredReports, filteredTasks])
+
+  // Period-over-period comparison
+  const periodComparison = useMemo(() => {
+    const previousStart = new Date(dateRange.start)
+    previousStart.setDate(previousStart.getDate() - days)
+    const previousEnd = new Date(dateRange.start)
+    previousEnd.setDate(previousEnd.getDate() - 1)
+
+    const previousReports = eodReports.filter(r => {
+      const date = new Date(r.date)
+      return date >= previousStart && date <= previousEnd
+    })
+
+    const previousTasks = assignedTasks.filter(t => {
+      if (!t.completedAt) return false
+      const completedDate = new Date(t.completedAt)
+      return completedDate >= previousStart && completedDate <= previousEnd
+    })
+
+    const currentEscalations = filteredReports.filter(r => r.needsEscalation).length
+    const previousEscalations = previousReports.filter(r => r.needsEscalation).length
+
+    const getChange = (current: number, previous: number) => {
+      if (previous === 0) return current > 0 ? 100 : 0
+      return Math.round(((current - previous) / previous) * 100)
+    }
+
+    return {
+      reports: {
+        current: filteredReports.length,
+        previous: previousReports.length,
+        change: getChange(filteredReports.length, previousReports.length),
+      },
+      tasks: {
+        current: filteredTasks.length,
+        previous: previousTasks.length,
+        change: getChange(filteredTasks.length, previousTasks.length),
+      },
+      escalations: {
+        current: currentEscalations,
+        previous: previousEscalations,
+        change: getChange(currentEscalations, previousEscalations),
+      },
+    }
+  }, [eodReports, assignedTasks, filteredReports, filteredTasks, dateRange, days])
+
+  // Task completion velocity (tasks per day trend)
+  const taskVelocity = useMemo(() => {
+    const dateMap = new Map<string, number>()
+
+    for (let d = new Date(dateRange.start); d <= dateRange.end; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split("T")[0]
+      dateMap.set(dateStr, 0)
+    }
+
+    filteredTasks.forEach(task => {
+      if (task.completedAt) {
+        const dateStr = task.completedAt.split("T")[0]
+        if (dateMap.has(dateStr)) {
+          dateMap.set(dateStr, (dateMap.get(dateStr) || 0) + 1)
+        }
+      }
+    })
+
+    return Array.from(dateMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([date, count]) => ({
+        date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        tasks: count,
+      }))
+  }, [filteredTasks, dateRange])
 
   // Generate written summary
   const writtenSummary = useMemo(() => {
@@ -477,6 +640,202 @@ export function TeamAnalyticsCharts({
           </div>
         </div>
       </div>
+
+      {/* Period Comparison Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl p-5 shadow-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">EOD Reports</p>
+              <p className="text-2xl font-bold text-slate-900">{periodComparison.reports.current}</p>
+            </div>
+            <div className={`flex items-center gap-1 text-sm font-medium ${
+              periodComparison.reports.change > 0 ? "text-emerald-600" :
+              periodComparison.reports.change < 0 ? "text-red-600" : "text-slate-500"
+            }`}>
+              {periodComparison.reports.change > 0 ? <ArrowUp className="h-4 w-4" /> :
+               periodComparison.reports.change < 0 ? <ArrowDown className="h-4 w-4" /> :
+               <Minus className="h-4 w-4" />}
+              {Math.abs(periodComparison.reports.change)}%
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 mt-2">
+            vs. previous {days === 7 ? "week" : days === 14 ? "2 weeks" : "month"}: {periodComparison.reports.previous}
+          </p>
+        </div>
+
+        <div className="bg-white rounded-xl p-5 shadow-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">Tasks Completed</p>
+              <p className="text-2xl font-bold text-emerald-600">{periodComparison.tasks.current}</p>
+            </div>
+            <div className={`flex items-center gap-1 text-sm font-medium ${
+              periodComparison.tasks.change > 0 ? "text-emerald-600" :
+              periodComparison.tasks.change < 0 ? "text-red-600" : "text-slate-500"
+            }`}>
+              {periodComparison.tasks.change > 0 ? <ArrowUp className="h-4 w-4" /> :
+               periodComparison.tasks.change < 0 ? <ArrowDown className="h-4 w-4" /> :
+               <Minus className="h-4 w-4" />}
+              {Math.abs(periodComparison.tasks.change)}%
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 mt-2">
+            vs. previous {days === 7 ? "week" : days === 14 ? "2 weeks" : "month"}: {periodComparison.tasks.previous}
+          </p>
+        </div>
+
+        <div className="bg-white rounded-xl p-5 shadow-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">Escalations</p>
+              <p className="text-2xl font-bold text-amber-500">{periodComparison.escalations.current}</p>
+            </div>
+            <div className={`flex items-center gap-1 text-sm font-medium ${
+              periodComparison.escalations.change < 0 ? "text-emerald-600" :
+              periodComparison.escalations.change > 0 ? "text-red-600" : "text-slate-500"
+            }`}>
+              {periodComparison.escalations.change > 0 ? <ArrowUp className="h-4 w-4" /> :
+               periodComparison.escalations.change < 0 ? <ArrowDown className="h-4 w-4" /> :
+               <Minus className="h-4 w-4" />}
+              {Math.abs(periodComparison.escalations.change)}%
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 mt-2">
+            vs. previous {days === 7 ? "week" : days === 14 ? "2 weeks" : "month"}: {periodComparison.escalations.previous}
+          </p>
+        </div>
+      </div>
+
+      {/* Task Velocity & Productivity Heatmap */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Task Velocity */}
+        <div className="bg-white rounded-xl shadow-card">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-lg">
+                <Target className="h-4 w-4 text-slate-500" />
+              </div>
+              <h3 className="font-semibold text-slate-900">Task Completion Velocity</h3>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">Tasks completed per day</p>
+          </div>
+          <div className="p-5">
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={taskVelocity}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="tasks"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  dot={{ fill: "#22c55e", r: 3 }}
+                  name="Tasks"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Productivity Heatmap */}
+        <div className="bg-white rounded-xl shadow-card">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-lg">
+                <Calendar className="h-4 w-4 text-slate-500" />
+              </div>
+              <h3 className="font-semibold text-slate-900">Productivity by Day of Week</h3>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">Activity patterns throughout the week</p>
+          </div>
+          <div className="p-5">
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={productivityHeatmap}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="reports" fill="#3b82f6" name="EOD Reports" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="tasks" fill="#22c55e" name="Tasks" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Individual Member Performance */}
+      {memberPerformance.length > 0 && (
+        <div className="bg-white rounded-xl shadow-card">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-lg">
+                <Users className="h-4 w-4 text-slate-500" />
+              </div>
+              <h3 className="font-semibold text-slate-900">Individual Performance</h3>
+            </div>
+            <p className="text-sm text-slate-500 mt-1">Performance metrics by team member</p>
+          </div>
+          <div className="p-5">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-slate-500 border-b border-slate-100">
+                    <th className="pb-3 font-medium">Team Member</th>
+                    <th className="pb-3 font-medium text-center">EOD Rate</th>
+                    <th className="pb-3 font-medium text-center">Tasks Done</th>
+                    <th className="pb-3 font-medium text-center">Rock Progress</th>
+                    <th className="pb-3 font-medium text-center">Escalations</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {memberPerformance.slice(0, 10).map((member, idx) => (
+                    <tr key={idx} className="text-sm">
+                      <td className="py-3">
+                        <p className="font-medium text-slate-900">{member.name}</p>
+                      </td>
+                      <td className="py-3 text-center">
+                        <Badge variant={member.submissionRate >= 80 ? "default" : member.submissionRate >= 50 ? "secondary" : "destructive"}>
+                          {member.submissionRate}%
+                        </Badge>
+                      </td>
+                      <td className="py-3 text-center">
+                        <span className="font-medium text-emerald-600">{member.tasksCompleted}</span>
+                      </td>
+                      <td className="py-3">
+                        <div className="flex items-center gap-2">
+                          <Progress value={member.avgRockProgress} className="h-2 flex-1" />
+                          <span className="text-xs text-slate-500 w-8">{member.avgRockProgress}%</span>
+                        </div>
+                      </td>
+                      <td className="py-3 text-center">
+                        <span className={member.escalations > 0 ? "text-amber-600 font-medium" : "text-slate-400"}>
+                          {member.escalations}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

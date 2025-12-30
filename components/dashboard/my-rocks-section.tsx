@@ -1,17 +1,21 @@
 "use client"
 
 import { useState } from "react"
-import type { Rock } from "@/lib/types"
+import type { Rock, RockMilestone } from "@/lib/types"
 import { formatDate } from "@/lib/utils/date-utils"
-import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight } from "lucide-react"
+import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight } from "lucide-react"
+import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface MyRocksSectionProps {
   rocks: Rock[]
   onUpdateProgress: (rockId: string, progress: number) => void
+  onUpdateRock?: (id: string, updates: Partial<Rock>) => Promise<Rock>
 }
 
-export function MyRocksSection({ rocks, onUpdateProgress }: MyRocksSectionProps) {
+export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock }: MyRocksSectionProps) {
   const [draggedRock, setDraggedRock] = useState<string | null>(null)
+  const [selectedRock, setSelectedRock] = useState<Rock | null>(null)
 
   const getStatusConfig = (status: Rock["status"]) => {
     switch (status) {
@@ -133,8 +137,47 @@ export function MyRocksSection({ rocks, onUpdateProgress }: MyRocksSectionProps)
                     </div>
                   </div>
 
+                  {/* Milestones preview */}
+                  {rock.milestones && rock.milestones.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span>Milestones</span>
+                        <span>
+                          {rock.milestones.filter((m) => m.completed).length}/{rock.milestones.length}
+                        </span>
+                      </div>
+                      {rock.milestones.slice(0, 2).map((milestone) => (
+                        <div key={milestone.id} className="flex items-center gap-2 text-sm">
+                          <Checkbox
+                            checked={milestone.completed}
+                            className="h-3.5 w-3.5"
+                            disabled
+                          />
+                          <span
+                            className={`truncate text-xs ${
+                              milestone.completed ? "line-through text-slate-400" : "text-slate-600"
+                            }`}
+                          >
+                            {milestone.text}
+                          </span>
+                        </div>
+                      ))}
+                      {rock.milestones.length > 2 && (
+                        <p className="text-xs text-slate-400">+{rock.milestones.length - 2} more</p>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
                     <span className="text-xs text-slate-400">Due: {formatDate(rock.dueDate)}</span>
+                    {onUpdateRock && (
+                      <button
+                        onClick={() => setSelectedRock(rock)}
+                        className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-0.5"
+                      >
+                        Details <ChevronRight className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 </div>
               )
@@ -142,6 +185,16 @@ export function MyRocksSection({ rocks, onUpdateProgress }: MyRocksSectionProps)
           </div>
         )}
       </div>
+
+      {/* Rock Detail Modal */}
+      {selectedRock && onUpdateRock && (
+        <RockDetailModal
+          open={!!selectedRock}
+          onOpenChange={(open) => !open && setSelectedRock(null)}
+          rock={selectedRock}
+          onUpdateRock={onUpdateRock}
+        />
+      )}
     </div>
   )
 }

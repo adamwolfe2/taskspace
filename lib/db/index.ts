@@ -127,6 +127,7 @@ function parseRock(row: Record<string, unknown>): Rock {
     bucket: row.bucket as string | undefined,
     outcome: row.outcome as string | undefined,
     doneWhen: row.done_when as string[] | undefined,
+    milestones: row.milestones as Rock["milestones"] | undefined,
     quarter: row.quarter as string | undefined,
     createdAt: (row.created_at as Date)?.toISOString() || "",
     updatedAt: (row.updated_at as Date)?.toISOString() || "",
@@ -155,6 +156,9 @@ function parseAssignedTask(row: Record<string, unknown>): AssignedTask {
     createdAt: (row.created_at as Date)?.toISOString() || "",
     updatedAt: (row.updated_at as Date)?.toISOString() || "",
     source: (row.source as "manual" | "asana") || "manual",
+    comments: row.comments as AssignedTask["comments"] | undefined,
+    recurrence: row.recurrence as AssignedTask["recurrence"] | undefined,
+    parentRecurringTaskId: row.parent_recurring_task_id as string | undefined,
   }
 }
 
@@ -542,11 +546,12 @@ export const db = {
     },
     async create(rock: Rock): Promise<Rock> {
       await sql`
-        INSERT INTO rocks (id, organization_id, user_id, title, description, progress, due_date, status, bucket, outcome, done_when, quarter, created_at, updated_at)
+        INSERT INTO rocks (id, organization_id, user_id, title, description, progress, due_date, status, bucket, outcome, done_when, milestones, quarter, created_at, updated_at)
         VALUES (${rock.id}, ${rock.organizationId}, ${rock.userId}, ${rock.title}, ${rock.description},
                 ${rock.progress}, ${rock.dueDate}, ${rock.status}, ${rock.bucket || null},
-                ${rock.outcome || null}, ${JSON.stringify(rock.doneWhen || [])}, ${rock.quarter || null},
-                ${rock.createdAt}, ${rock.updatedAt})
+                ${rock.outcome || null}, ${JSON.stringify(rock.doneWhen || [])},
+                ${rock.milestones ? JSON.stringify(rock.milestones) : null},
+                ${rock.quarter || null}, ${rock.createdAt}, ${rock.updatedAt})
       `
       return rock
     },
@@ -562,6 +567,7 @@ export const db = {
           bucket = COALESCE(${updates.bucket || null}, bucket),
           outcome = COALESCE(${updates.outcome || null}, outcome),
           done_when = COALESCE(${updates.doneWhen ? JSON.stringify(updates.doneWhen) : null}::jsonb, done_when),
+          milestones = COALESCE(${updates.milestones ? JSON.stringify(updates.milestones) : null}::jsonb, milestones),
           quarter = COALESCE(${updates.quarter || null}, quarter),
           updated_at = ${now}
         WHERE id = ${id}
@@ -636,6 +642,8 @@ export const db = {
           completed_at = COALESCE(${updates.completedAt || null}, completed_at),
           added_to_eod = COALESCE(${updates.addedToEOD ?? null}, added_to_eod),
           eod_report_id = COALESCE(${updates.eodReportId || null}, eod_report_id),
+          comments = COALESCE(${updates.comments ? JSON.stringify(updates.comments) : null}::jsonb, comments),
+          recurrence = COALESCE(${updates.recurrence ? JSON.stringify(updates.recurrence) : null}::jsonb, recurrence),
           updated_at = ${now}
         WHERE id = ${id}
         RETURNING *
