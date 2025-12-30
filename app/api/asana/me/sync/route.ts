@@ -24,6 +24,7 @@ interface SyncResult {
   tasksImported: number
   tasksUpdated: number
   tasksCompleted: number
+  tasksDeleted: number
   errors: string[]
 }
 
@@ -169,10 +170,32 @@ async function processAsanaTasks(
     tasksImported: 0,
     tasksUpdated: 0,
     tasksCompleted: 0,
+    tasksDeleted: 0,
     errors: [],
   }
 
   const now = new Date().toISOString()
+
+  // Create a set of all Asana task GIDs for quick lookup
+  const asanaTaskGids = new Set(asanaTasks.map(t => t.gid))
+
+  // Check for tasks in AIMS that no longer exist in Asana (deleted)
+  for (const [gid, existingTask] of existingTasksByGid) {
+    if (!asanaTaskGids.has(gid) && existingTask.status !== "completed") {
+      try {
+        // Task was deleted in Asana, delete it in AIMS
+        await sql`
+          DELETE FROM assigned_tasks
+          WHERE id = ${existingTask.id}
+        `
+        result.tasksDeleted++
+        console.log(`Deleted AIMS task ${existingTask.id} because it was deleted in Asana (gid: ${gid})`)
+      } catch (err) {
+        console.error(`Failed to delete task ${existingTask.id}:`, err)
+        result.errors.push(`Failed to delete task that was removed from Asana`)
+      }
+    }
+  }
 
   for (const asanaTask of incompleteTasks) {
     try {
@@ -230,12 +253,18 @@ async function processAsanaTasks(
     WHERE organization_id = ${auth.organization.id} AND user_id = ${auth.user.id}
   `
 
+  // Build message
+  const messages: string[] = []
+  if (result.tasksImported > 0) messages.push(`${result.tasksImported} imported`)
+  if (result.tasksDeleted > 0) messages.push(`${result.tasksDeleted} deleted`)
+  if (result.tasksCompleted > 0) messages.push(`${result.tasksCompleted} completed`)
+
   return NextResponse.json<ApiResponse<SyncResult>>({
     success: true,
     data: result,
-    message: result.tasksImported > 0
-      ? `Imported ${result.tasksImported} new tasks from Asana`
-      : `No new tasks to import (${incompleteTasks.length} tasks already synced)`,
+    message: messages.length > 0
+      ? `Synced with Asana: ${messages.join(", ")}`
+      : `No changes to sync (${incompleteTasks.length} tasks in sync)`,
   })
 }
 

@@ -1,15 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { AssignedTask, Rock } from "@/lib/types"
+import type { AssignedTask, Rock, TeamMember } from "@/lib/types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils/date-utils"
-import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, AlertCircle, Clock, Plus } from "lucide-react"
+import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, AlertCircle, Clock, Plus, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useApp } from "@/lib/contexts/app-context"
 import { differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
+import { TaskDetailModal } from "@/components/tasks/task-detail-modal"
 
 function getDueDateStatus(dueDate: string) {
   const today = startOfDay(new Date())
@@ -50,6 +51,7 @@ interface AssignedTasksSectionProps {
   onToggleTask: (taskId: string) => void
   onTasksUpdated?: () => void
   userRocks?: Rock[]
+  currentUser?: TeamMember
   onAddTask?: (taskData: {
     title: string
     description: string
@@ -59,9 +61,20 @@ interface AssignedTasksSectionProps {
     dueDate: string
     recurrence?: AssignedTask["recurrence"]
   }) => Promise<void>
+  onUpdateTask?: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
+  onDeleteTask?: (id: string) => Promise<void>
 }
 
-export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated, userRocks = [], onAddTask }: AssignedTasksSectionProps) {
+export function AssignedTasksSection({
+  tasks,
+  onToggleTask,
+  onTasksUpdated,
+  userRocks = [],
+  currentUser,
+  onAddTask,
+  onUpdateTask,
+  onDeleteTask,
+}: AssignedTasksSectionProps) {
   const { toast } = useToast()
   const { setCurrentPage } = useApp()
   const [asanaConnected, setAsanaConnected] = useState(false)
@@ -70,6 +83,7 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated, user
   const [visiblePendingCount, setVisiblePendingCount] = useState(TASKS_PER_PAGE)
   const [visibleCompletedCount, setVisibleCompletedCount] = useState(5)
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<AssignedTask | null>(null)
 
   // Sort tasks: platform-assigned (manual) first, then Asana tasks
   const sortBySource = (a: AssignedTask, b: AssignedTask) => {
@@ -155,6 +169,26 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated, user
         return { bgColor: "bg-amber-50", textColor: "text-amber-700" }
       default:
         return { bgColor: "bg-slate-100", textColor: "text-slate-700" }
+    }
+  }
+
+  const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!onDeleteTask) return
+
+    try {
+      await onDeleteTask(taskId)
+      toast({
+        title: "Task deleted",
+        description: "Your task has been removed",
+      })
+      onTasksUpdated?.()
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to delete task",
+        variant: "destructive",
+      })
     }
   }
 
@@ -247,16 +281,22 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated, user
                   {visiblePendingTasks.map((task) => {
                     const priorityConfig = getPriorityConfig(task.priority)
                     const dueDateStatus = task.dueDate ? getDueDateStatus(task.dueDate) : null
+                    const isPersonal = task.type === "personal"
                     return (
                       <div
                         key={task.id}
+                        onClick={() => onUpdateTask && currentUser && setSelectedTask(task)}
                         className={`flex items-start gap-3 p-3 border rounded-lg hover:border-slate-300 transition-colors duration-200 ${
                           dueDateStatus?.bgColor === "bg-red-50" ? "border-red-200 bg-red-50/30" : "border-slate-200"
-                        }`}
+                        } ${onUpdateTask && currentUser ? "cursor-pointer" : ""}`}
                       >
                         <Checkbox
                           checked={false}
-                          onCheckedChange={() => onToggleTask(task.id)}
+                          onCheckedChange={(e) => {
+                            e.stopPropagation?.()
+                            onToggleTask(task.id)
+                          }}
+                          onClick={(e) => e.stopPropagation()}
                           className="mt-0.5"
                         />
                         <div className="flex-1 min-w-0">
@@ -286,6 +326,16 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated, user
                             )}
                           </div>
                         </div>
+                        {isPersonal && onDeleteTask && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 flex-shrink-0"
+                            onClick={(e) => handleDeleteTask(task.id, e)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     )
                   })}
@@ -363,6 +413,21 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated, user
             onTasksUpdated?.()
           }}
           userRocks={userRocks}
+        />
+      )}
+
+      {/* Task Detail Modal */}
+      {selectedTask && currentUser && onUpdateTask && (
+        <TaskDetailModal
+          open={!!selectedTask}
+          onOpenChange={(open) => !open && setSelectedTask(null)}
+          task={selectedTask}
+          currentUser={currentUser}
+          onUpdateTask={async (id, updates) => {
+            const updated = await onUpdateTask(id, updates)
+            onTasksUpdated?.()
+            return updated
+          }}
         />
       )}
     </div>

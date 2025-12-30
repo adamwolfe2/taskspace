@@ -43,21 +43,21 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
             Main
           </h2>
           <div className="space-y-1">
-            {navItems.map((item) => {
+              {navItems.map((item) => {
               const isActive = currentPage === item.id
               return (
                 <button
                   key={item.id}
                   onClick={() => handleNavigation(item.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap",
                     isActive
                       ? "bg-slate-900 text-white shadow-sm"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   )}
                 >
-                  <item.icon className={cn("h-4 w-4", isActive ? "text-white" : "text-slate-400")} />
-                  {item.label}
+                  <item.icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-slate-400")} />
+                  <span className="truncate">{item.label}</span>
                 </button>
               )
             })}
@@ -71,21 +71,21 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
               Admin
             </h2>
             <div className="space-y-1">
-              {adminItems.map((item) => {
+                {adminItems.map((item) => {
                 const isActive = currentPage === item.id
                 return (
                   <button
                     key={item.id}
                     onClick={() => handleNavigation(item.id)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap",
                       isActive
                         ? "bg-primary text-white shadow-sm"
                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     )}
                   >
-                    <item.icon className={cn("h-4 w-4", isActive ? "text-white" : "text-slate-400")} />
-                    {item.label}
+                    <item.icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-slate-400")} />
+                    <span className="truncate">{item.label}</span>
                   </button>
                 )
               })}
