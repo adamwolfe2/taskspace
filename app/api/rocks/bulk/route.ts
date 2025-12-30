@@ -56,17 +56,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify target user is in the organization
-    const targetMember = await db.members.findByOrgAndUser(auth.organization.id, userId)
+    // The userId can be either:
+    // 1. A user.id (for active members who have registered)
+    // 2. An organization_member.id (for draft members who haven't registered yet)
+
+    // First, try to find by user_id (active members)
+    let targetMember = await db.members.findByOrgAndUser(auth.organization.id, userId)
+    let rockUserId = userId // The ID to store in the rock
+
     if (!targetMember) {
-      // Also check for draft members by email
-      const allMembers = await db.members.findByOrganizationId(auth.organization.id)
-      const draftMember = allMembers.find((m) => m.id === userId)
-      if (!draftMember) {
+      // Not found by user_id, try to find by organization_member.id (draft members)
+      targetMember = await db.members.findByOrgAndId(auth.organization.id, userId)
+
+      if (!targetMember) {
         return NextResponse.json<ApiResponse<null>>(
           { success: false, error: "User is not a member of this organization" },
           { status: 404 }
         )
       }
+
+      // For draft members, use the organization_member.id as the rock's userId
+      // This maintains consistency with how the frontend identifies draft members
+      rockUserId = targetMember.id
+    } else {
+      // For active members, use their actual user.id
+      rockUserId = targetMember.userId || userId
     }
 
     // Calculate default due date (end of current quarter)
@@ -92,7 +106,7 @@ export async function POST(request: NextRequest) {
         const rock: Rock = {
           id: generateId(),
           organizationId: auth.organization.id,
-          userId,
+          userId: rockUserId,
           title: rockInput.title.trim(),
           description: rockInput.description?.trim() || "",
           progress: 0,
