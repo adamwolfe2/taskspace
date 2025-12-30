@@ -6,20 +6,35 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserInitials } from "@/components/shared/user-initials"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Search, AlertCircle, ChevronDown, ChevronUp } from "lucide-react"
+import { Search, AlertCircle, ChevronDown, ChevronUp, Pencil } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { EditEODModal } from "@/components/dashboard/edit-eod-modal"
+
+// Grace period for editing reports (24 hours in milliseconds)
+const EDIT_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000
 
 interface HistoryPageProps {
   currentUser: TeamMember
   teamMembers: TeamMember[]
   eodReports: EODReport[]
   rocks: Rock[]
+  updateEODReport?: (id: string, updates: Partial<EODReport>) => Promise<EODReport>
 }
 
-export function HistoryPage({ currentUser, teamMembers, eodReports, rocks }: HistoryPageProps) {
+export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updateEODReport }: HistoryPageProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [userFilter, setUserFilter] = useState<string>("all")
   const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set())
+  const [editingReport, setEditingReport] = useState<EODReport | null>(null)
+
+  const canEditReport = (report: EODReport) => {
+    // Only the owner can edit their own report
+    if (report.userId !== currentUser.id) return false
+    // Check if within grace period
+    const submittedAt = new Date(report.submittedAt).getTime()
+    const now = Date.now()
+    return now - submittedAt < EDIT_GRACE_PERIOD_MS
+  }
 
   const toggleExpanded = (reportId: string) => {
     const newExpanded = new Set(expandedReports)
@@ -150,6 +165,16 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks }: His
                           Escalation
                         </span>
                       )}
+                      {canEditReport(report) && updateEODReport && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                          onClick={() => setEditingReport(report)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-600" onClick={() => toggleExpanded(report.id)}>
                         {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </Button>
@@ -244,6 +269,17 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks }: His
           })
         )}
       </div>
+
+      {/* Edit EOD Modal */}
+      {editingReport && updateEODReport && (
+        <EditEODModal
+          open={!!editingReport}
+          onOpenChange={(open) => !open && setEditingReport(null)}
+          report={editingReport}
+          rocks={rocks}
+          onSave={updateEODReport}
+        />
+      )}
     </div>
   )
 }

@@ -24,6 +24,12 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
 import { CommandPalette } from "@/components/shared/command-palette"
 import { Loader2 } from "lucide-react"
+import {
+  DashboardSkeleton,
+  HistoryPageSkeleton,
+  TasksPageSkeleton,
+  RocksPageSkeleton,
+} from "@/components/dashboard/skeletons"
 
 function AppContent() {
   const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated } = useApp()
@@ -85,6 +91,22 @@ function AppContent() {
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
 
   const renderPage = () => {
+    // Show skeletons while data is loading
+    if (teamData.isLoading) {
+      switch (currentPage) {
+        case "dashboard":
+          return <DashboardSkeleton />
+        case "history":
+          return <HistoryPageSkeleton />
+        case "rocks":
+          return <RocksPageSkeleton />
+        case "tasks":
+          return <TasksPageSkeleton />
+        default:
+          return <DashboardSkeleton />
+      }
+    }
+
     const dashboardProps = {
       currentUser: currentUser!,
       rocks: teamData.rocks,
@@ -93,6 +115,7 @@ function AppContent() {
       updateRock: teamData.updateRock,
       submitEODReport: teamData.submitEODReport,
       updateTask: teamData.updateTask,
+      onRefresh: teamData.refresh,
     }
 
     switch (currentPage) {

@@ -17,6 +17,7 @@ interface DashboardPageProps {
   updateRock: (id: string, updates: Partial<Rock>) => Promise<Rock>
   submitEODReport: (report: Partial<EODReport>) => Promise<EODReport>
   updateTask: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
+  onRefresh?: () => Promise<void>
 }
 
 export function DashboardPage({
@@ -27,6 +28,7 @@ export function DashboardPage({
   updateRock,
   submitEODReport,
   updateTask,
+  onRefresh,
 }: DashboardPageProps) {
   const [selectedEodDate, setSelectedEodDate] = useState<string | null>(null)
 
@@ -86,7 +88,7 @@ export function DashboardPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MyRocksSection rocks={userRocks} onUpdateProgress={handleUpdateProgress} />
-        <AssignedTasksSection tasks={userTasks} onToggleTask={handleToggleTask} />
+        <AssignedTasksSection tasks={userTasks} onToggleTask={handleToggleTask} onTasksUpdated={onRefresh} />
       </div>
 
       <EODSubmissionCard
