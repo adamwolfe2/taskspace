@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils/date-utils"
 import { CheckSquare, ArrowRight, Circle, RefreshCw, Link2, Unlink } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useApp } from "@/lib/contexts/app-context"
 
 interface AssignedTasksSectionProps {
   tasks: AssignedTask[]
@@ -16,6 +17,7 @@ interface AssignedTasksSectionProps {
 
 export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: AssignedTasksSectionProps) {
   const { toast } = useToast()
+  const { setCurrentPage } = useApp()
   const [asanaConnected, setAsanaConnected] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [isCheckingConnection, setIsCheckingConnection] = useState(true)
@@ -146,9 +148,12 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
             )}
             {!isCheckingConnection && !asanaConnected && (
               <p className="text-xs text-slate-400 mt-4">
-                <a href="/settings#integrations" className="text-blue-500 hover:underline">
+                <button
+                  onClick={() => setCurrentPage("settings")}
+                  className="text-blue-500 hover:underline"
+                >
                   Connect Asana
-                </a>{" "}
+                </button>{" "}
                 to sync your tasks
               </p>
             )}
