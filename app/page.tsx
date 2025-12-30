@@ -117,6 +117,7 @@ function AppContent() {
       submitEODReport: teamData.submitEODReport,
       updateTask: teamData.updateTask,
       createTask: teamData.createTask,
+      deleteTask: teamData.deleteTask,
       onRefresh: teamData.refresh,
     }
 
@@ -215,7 +216,11 @@ function AppContent() {
           </SheetContent>
         </Sheet>
 
-        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6">{renderPage()}</main>
+        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 min-w-0">
+          <div className="max-w-6xl mx-auto">
+            {renderPage()}
+          </div>
+        </main>
       </div>
 
       <MobileNav />

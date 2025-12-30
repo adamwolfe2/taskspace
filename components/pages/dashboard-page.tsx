@@ -18,6 +18,7 @@ interface DashboardPageProps {
   submitEODReport: (report: Partial<EODReport>) => Promise<EODReport>
   updateTask: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
   createTask: (task: Partial<AssignedTask>) => Promise<AssignedTask>
+  deleteTask: (id: string) => Promise<void>
   onRefresh?: () => Promise<void>
 }
 
@@ -30,6 +31,7 @@ export function DashboardPage({
   submitEODReport,
   updateTask,
   createTask,
+  deleteTask,
   onRefresh,
 }: DashboardPageProps) {
   const [selectedEodDate, setSelectedEodDate] = useState<string | null>(null)
@@ -120,7 +122,10 @@ export function DashboardPage({
           onToggleTask={handleToggleTask}
           onTasksUpdated={onRefresh}
           userRocks={userRocks}
+          currentUser={currentUser}
           onAddTask={handleAddTask}
+          onUpdateTask={updateTask}
+          onDeleteTask={deleteTask}
         />
       </div>
 

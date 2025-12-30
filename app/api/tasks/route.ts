@@ -391,6 +391,17 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    // Delete from Asana if task has an asanaGid
+    if (task.asanaGid && asanaClient.isConfigured()) {
+      try {
+        await asanaClient.deleteTask(task.asanaGid)
+        console.log(`Deleted Asana task ${task.asanaGid} for AIMS task ${id}`)
+      } catch (asanaErr) {
+        // Log but don't fail - Asana deletion is best-effort
+        console.error(`Failed to delete Asana task ${task.asanaGid}:`, asanaErr)
+      }
+    }
+
     await db.assignedTasks.delete(id)
 
     return NextResponse.json<ApiResponse<null>>({
