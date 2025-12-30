@@ -211,6 +211,7 @@ export interface AssignedTask {
   addedToEOD: boolean
   eodReportId: string | null
   source?: "manual" | "asana"
+  asanaGid?: string | null // Asana task GID for two-way sync
   comments?: TaskComment[]
   recurrence?: TaskRecurrence
   parentRecurringTaskId?: string // Links to the original recurring task template

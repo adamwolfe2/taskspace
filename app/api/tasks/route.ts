@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { sendSlackMessage, buildTaskAssignmentMessage, isSlackConfigured } from "@/lib/integrations/slack"
+import { asanaClient } from "@/lib/integrations/asana"
 import type { AssignedTask, ApiResponse, TeamMember, Notification } from "@/lib/types"
 
 // GET /api/tasks - Get tasks
@@ -259,6 +260,40 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updatedTask = await db.assignedTasks.update(id, updates)
+
+    // Sync to Asana if task has an asanaGid
+    if (task.asanaGid && asanaClient.isConfigured()) {
+      try {
+        const asanaUpdates: {
+          name?: string
+          notes?: string
+          completed?: boolean
+          due_on?: string
+        } = {}
+
+        // Map AIMS fields to Asana fields
+        if (updates.title) asanaUpdates.name = updates.title
+        if (updates.description !== undefined) asanaUpdates.notes = updates.description || ""
+        if (updates.dueDate) asanaUpdates.due_on = updates.dueDate
+
+        // Handle status/completion
+        if (updates.status === "completed") {
+          asanaUpdates.completed = true
+        } else if (updates.status && task.status === "completed") {
+          // Task was completed but now being un-completed
+          asanaUpdates.completed = false
+        }
+
+        // Only call Asana API if there are actual updates
+        if (Object.keys(asanaUpdates).length > 0) {
+          await asanaClient.updateTask(task.asanaGid, asanaUpdates)
+          console.log(`Synced task ${task.id} to Asana (${task.asanaGid})`)
+        }
+      } catch (asanaErr) {
+        // Log but don't fail the request - Asana sync is best-effort
+        console.error(`Failed to sync task ${task.id} to Asana:`, asanaErr)
+      }
+    }
 
     return NextResponse.json<ApiResponse<AssignedTask | null>>({
       success: true,
