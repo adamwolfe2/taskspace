@@ -11,7 +11,25 @@ Claude can use this server to:
 - **Get Insights**: Access AI-generated daily digests and blockers
 - **Send Reminders**: Trigger EOD reminder emails
 
-## Quick Setup Guide
+---
+
+## Quick Setup (One Command)
+
+Run the setup script for guided installation:
+
+```bash
+./setup.sh
+```
+
+This will:
+1. Install dependencies
+2. Build the server
+3. Ask for your API key
+4. Generate and optionally save the Claude Desktop config
+
+---
+
+## Manual Setup
 
 ### Step 1: Generate an API Key
 
@@ -20,7 +38,7 @@ Claude can use this server to:
 3. Scroll down to **API Keys** section
 4. Click **Generate API Key**
 5. Give it a name like "Claude Desktop"
-6. Copy the key (starts with `aims_...`) - you'll need this!
+6. Copy the key (starts with `aims_...`)
 
 ### Step 2: Build the MCP Server
 
@@ -37,7 +55,7 @@ Find your Claude Desktop config file:
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-If the file doesn't exist, create it. Add this configuration:
+Copy this configuration (replace the placeholders):
 
 ```json
 {
@@ -54,13 +72,44 @@ If the file doesn't exist, create it. Add this configuration:
 }
 ```
 
-**Important**: Replace:
+Replace:
 - `/FULL/PATH/TO/aimseod` with the actual full path to your project
-- `aims_your_api_key_here` with your actual API key from Step 1
+- `aims_your_api_key_here` with your actual API key
 
 ### Step 4: Restart Claude Desktop
 
 Completely quit Claude Desktop and reopen it. The AIMS connector should now appear in the connectors menu.
+
+---
+
+## Claude Code Setup
+
+If you're using Claude Code (CLI), add to your `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "aims-eod-tracker": {
+      "command": "node",
+      "args": ["/path/to/aimseod/mcp-server/dist/index.js"],
+      "env": {
+        "AIMS_API_URL": "https://eod.aimanagingservices.com",
+        "AIMS_API_KEY": "aims_your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+Or run with environment variables:
+
+```bash
+AIMS_API_URL="https://eod.aimanagingservices.com" \
+AIMS_API_KEY="aims_..." \
+claude --mcp /path/to/aimseod/mcp-server/dist/index.js
+```
+
+---
 
 ## Troubleshooting
 
@@ -73,8 +122,6 @@ Completely quit Claude Desktop and reopen it. The AIMS connector should now appe
 
 ### Testing the Server Locally
 
-You can test the server directly:
-
 ```bash
 cd mcp-server
 AIMS_API_URL="https://eod.aimanagingservices.com" AIMS_API_KEY="aims_..." npm run dev
@@ -84,10 +131,12 @@ If it starts without errors, the server is working.
 
 ### Viewing Logs
 
-On macOS, check Claude's logs:
+**macOS:**
 ```bash
 tail -f ~/Library/Logs/Claude/mcp*.log
 ```
+
+---
 
 ## Available Tools
 
@@ -104,6 +153,8 @@ tail -f ~/Library/Logs/Claude/mcp*.log
 | `get_escalations` | View active escalations |
 | `send_eod_reminder` | Send reminder emails |
 
+---
+
 ## Example Usage in Claude
 
 Once configured, you can ask Claude:
@@ -114,24 +165,7 @@ Once configured, you can ask Claude:
 - "What are the current blockers?"
 - "Get me the daily digest for yesterday"
 
-## Example Config (macOS)
-
-Here's a complete example for macOS:
-
-```json
-{
-  "mcpServers": {
-    "aims-eod-tracker": {
-      "command": "node",
-      "args": ["/Users/yourname/Projects/aimseod/mcp-server/dist/index.js"],
-      "env": {
-        "AIMS_API_URL": "https://eod.aimanagingservices.com",
-        "AIMS_API_KEY": "aims_abc123def456..."
-      }
-    }
-  }
-}
-```
+---
 
 ## Environment Variables
 
@@ -139,3 +173,12 @@ Here's a complete example for macOS:
 |----------|-------------|---------|
 | `AIMS_API_URL` | URL of your AIMS deployment | `http://localhost:3000` |
 | `AIMS_API_KEY` | API key for authentication | (required) |
+
+---
+
+## Files
+
+- `setup.sh` - One-command guided setup script
+- `claude_desktop_config.template.json` - Template config file
+- `src/index.ts` - MCP server source code
+- `dist/index.js` - Built server (after `npm run build`)
