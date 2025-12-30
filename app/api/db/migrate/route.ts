@@ -394,9 +394,169 @@ export async function GET(request: NextRequest) {
     await sql`CREATE INDEX IF NOT EXISTS idx_notifications_org ON notifications(organization_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(user_id, read)`
 
+    // ============================================
+    // AUDIT LOGS TABLE
+    // ============================================
+    await sql`
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        organization_id VARCHAR(255),
+        user_id VARCHAR(255),
+        action VARCHAR(100) NOT NULL,
+        severity VARCHAR(20) DEFAULT 'info',
+        resource_type VARCHAR(50),
+        resource_id VARCHAR(255),
+        metadata JSONB DEFAULT '{}',
+        ip_address VARCHAR(50),
+        user_agent TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    // Audit log indexes for efficient querying
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_org ON audit_logs(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_severity ON audit_logs(severity)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_resource ON audit_logs(resource_type, resource_id)`
+
+    // ============================================
+    // WEBHOOK CONFIGURATIONS TABLE
+    // ============================================
+    await sql`
+      CREATE TABLE IF NOT EXISTS webhook_configs (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        organization_id VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        url TEXT NOT NULL,
+        secret VARCHAR(255),
+        events JSONB DEFAULT '[]',
+        enabled BOOLEAN DEFAULT TRUE,
+        retry_count INTEGER DEFAULT 3,
+        last_triggered_at TIMESTAMP WITH TIME ZONE,
+        last_status_code INTEGER,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_webhook_configs_org ON webhook_configs(organization_id)`
+
+    // ============================================
+    // WEBHOOK DELIVERIES TABLE (for retry tracking)
+    // ============================================
+    await sql`
+      CREATE TABLE IF NOT EXISTS webhook_deliveries (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        webhook_config_id VARCHAR(255) NOT NULL,
+        event_type VARCHAR(100) NOT NULL,
+        payload JSONB NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending',
+        attempts INTEGER DEFAULT 0,
+        response_code INTEGER,
+        response_body TEXT,
+        error_message TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        delivered_at TIMESTAMP WITH TIME ZONE
+      )
+    `
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_config ON webhook_deliveries(webhook_config_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_status ON webhook_deliveries(status)`
+
+    // ============================================
+    // DATA RETENTION POLICIES TABLE
+    // ============================================
+    await sql`
+      CREATE TABLE IF NOT EXISTS data_retention_policies (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        organization_id VARCHAR(255) NOT NULL UNIQUE,
+        eod_reports_days INTEGER DEFAULT 365,
+        audit_logs_days INTEGER DEFAULT 730,
+        ai_conversations_days INTEGER DEFAULT 90,
+        notifications_days INTEGER DEFAULT 30,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    // ============================================
+    // SCHEDULED REPORTS TABLE
+    // ============================================
+    await sql`
+      CREATE TABLE IF NOT EXISTS scheduled_reports (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        organization_id VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        report_type VARCHAR(50) NOT NULL,
+        schedule VARCHAR(50) NOT NULL,
+        recipients JSONB DEFAULT '[]',
+        config JSONB DEFAULT '{}',
+        enabled BOOLEAN DEFAULT TRUE,
+        last_run_at TIMESTAMP WITH TIME ZONE,
+        next_run_at TIMESTAMP WITH TIME ZONE,
+        created_by VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_reports_org ON scheduled_reports(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_reports_next_run ON scheduled_reports(next_run_at)`
+
+    // ============================================
+    // RECURRING TASK TEMPLATES TABLE
+    // ============================================
+    await sql`
+      CREATE TABLE IF NOT EXISTS recurring_task_templates (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        organization_id VARCHAR(255) NOT NULL,
+        created_by VARCHAR(255) NOT NULL,
+        title VARCHAR(500) NOT NULL,
+        description TEXT,
+        priority VARCHAR(20) DEFAULT 'normal',
+        default_assignee_id VARCHAR(255),
+        estimated_minutes INTEGER,
+        labels JSONB DEFAULT '[]',
+        recurrence_rule JSONB NOT NULL,
+        next_run_date DATE,
+        last_run_date DATE,
+        occurrence_count INTEGER DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_recurring_templates_org ON recurring_task_templates(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_recurring_templates_next_run ON recurring_task_templates(next_run_date)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_recurring_templates_active ON recurring_task_templates(is_active)`
+
+    // Add recurring_task_id to assigned_tasks for linking generated tasks
+    await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS recurring_task_id VARCHAR(255)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_tasks_recurring_id ON assigned_tasks(recurring_task_id)`
+
+    // Add additional columns to webhook_configs for better tracking
+    await sql`ALTER TABLE webhook_configs ADD COLUMN IF NOT EXISTS failure_count INTEGER DEFAULT 0`
+    await sql`ALTER TABLE webhook_configs ADD COLUMN IF NOT EXISTS headers JSONB DEFAULT '{}'`
+
+    // Update webhook_deliveries schema for dispatcher compatibility
+    await sql`ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS webhook_id VARCHAR(255)`
+    await sql`ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS response_status INTEGER`
+    await sql`ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS response_time_ms INTEGER`
+    await sql`ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS attempt_count INTEGER DEFAULT 1`
+    await sql`ALTER TABLE webhook_deliveries ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE`
+    await sql`CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook ON webhook_deliveries(webhook_id)`
+
+    // Update audit_logs schema for improved structure
+    await sql`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS actor_id VARCHAR(255)`
+    await sql`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS actor_type VARCHAR(20) DEFAULT 'user'`
+    await sql`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS details JSONB DEFAULT '{}'`
+
     return NextResponse.json({
       success: true,
-      message: "Database migration completed successfully (including AI Command Center and Notifications tables)",
+      message: "Database migration completed successfully (including AI Command Center, Notifications, Audit Logs, Webhooks, and Enterprise tables)",
     })
   } catch (error) {
     console.error("Migration error:", error)

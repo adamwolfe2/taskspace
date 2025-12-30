@@ -1,0 +1,368 @@
+/**
+ * Webhook Configuration API
+ *
+ * Manages webhook endpoints for external integrations:
+ * - Create/update/delete webhook configurations
+ * - Test webhook delivery
+ * - View delivery history and retry failed deliveries
+ */
+
+import { NextRequest, NextResponse } from "next/server"
+import { getAuthContext } from "@/lib/auth/middleware"
+import { db } from "@/lib/db"
+import { Errors, successResponse, paginatedResponse } from "@/lib/api/errors"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { logIntegrationEvent, logSecurityEvent } from "@/lib/audit/logger"
+import { z } from "zod"
+import crypto from "crypto"
+
+// ============================================
+// VALIDATION SCHEMAS
+// ============================================
+
+const webhookEventTypes = [
+  "task.created",
+  "task.updated",
+  "task.completed",
+  "task.deleted",
+  "rock.created",
+  "rock.updated",
+  "rock.completed",
+  "eod.submitted",
+  "eod.approved",
+  "member.joined",
+  "member.removed",
+] as const
+
+const createWebhookSchema = z.object({
+  name: z.string().min(1).max(100),
+  url: z.string().url().max(500),
+  events: z.array(z.enum(webhookEventTypes)).min(1),
+  secret: z.string().min(16).max(100).optional(),
+  headers: z.record(z.string()).optional(),
+  enabled: z.boolean().default(true),
+})
+
+const updateWebhookSchema = createWebhookSchema.partial().extend({
+  regenerateSecret: z.boolean().optional(),
+})
+
+// ============================================
+// HELPERS
+// ============================================
+
+function generateWebhookSecret(): string {
+  return `whsec_${crypto.randomBytes(32).toString("hex")}`
+}
+
+function maskSecret(secret: string): string {
+  if (secret.length <= 12) return "****"
+  return secret.substring(0, 8) + "****" + secret.substring(secret.length - 4)
+}
+
+// ============================================
+// GET - List Webhooks
+// ============================================
+
+export async function GET(request: NextRequest) {
+  try {
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return Errors.unauthorized().toResponse()
+    }
+
+    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
+      return Errors.insufficientPermissions("manage webhooks").toResponse()
+    }
+
+    const webhooks = await db.sql`
+      SELECT
+        id,
+        name,
+        url,
+        events,
+        secret,
+        headers,
+        enabled,
+        last_triggered_at,
+        failure_count,
+        created_at,
+        updated_at
+      FROM webhook_configs
+      WHERE organization_id = ${auth.organization.id}
+      ORDER BY created_at DESC
+    `
+
+    // Get recent delivery stats for each webhook
+    const webhookIds = webhooks.map((w: Record<string, unknown>) => w.id)
+
+    const deliveryStats = webhookIds.length > 0 ? await db.sql`
+      SELECT
+        webhook_id,
+        COUNT(*) as total_deliveries,
+        COUNT(*) FILTER (WHERE status = 'success') as successful,
+        COUNT(*) FILTER (WHERE status = 'failed') as failed,
+        COUNT(*) FILTER (WHERE status = 'pending') as pending
+      FROM webhook_deliveries
+      WHERE webhook_id = ANY(${webhookIds})
+        AND created_at > NOW() - INTERVAL '7 days'
+      GROUP BY webhook_id
+    ` : []
+
+    const statsMap = new Map(
+      deliveryStats.map((s: Record<string, unknown>) => [s.webhook_id, s])
+    )
+
+    const formattedWebhooks = webhooks.map((webhook: Record<string, unknown>) => ({
+      id: webhook.id,
+      name: webhook.name,
+      url: webhook.url,
+      events: webhook.events,
+      secret: maskSecret(webhook.secret as string),
+      headers: webhook.headers,
+      enabled: webhook.enabled,
+      lastTriggeredAt: webhook.last_triggered_at,
+      failureCount: webhook.failure_count,
+      deliveryStats: statsMap.get(webhook.id) || {
+        total_deliveries: 0,
+        successful: 0,
+        failed: 0,
+        pending: 0,
+      },
+      createdAt: webhook.created_at,
+      updatedAt: webhook.updated_at,
+    }))
+
+    return successResponse({ webhooks: formattedWebhooks })
+  } catch (error) {
+    console.error("Webhook list error:", error)
+    return Errors.internal().toResponse()
+  }
+}
+
+// ============================================
+// POST - Create Webhook
+// ============================================
+
+export async function POST(request: NextRequest) {
+  try {
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return Errors.unauthorized().toResponse()
+    }
+
+    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
+      return Errors.insufficientPermissions("create webhooks").toResponse()
+    }
+
+    const body = await validateBody(request, createWebhookSchema)
+
+    // Check webhook limit (max 10 per org)
+    const existingCount = await db.sql`
+      SELECT COUNT(*) as count
+      FROM webhook_configs
+      WHERE organization_id = ${auth.organization.id}
+    `
+
+    if (parseInt(existingCount[0]?.count || "0", 10) >= 10) {
+      return Errors.validationError("Maximum webhook limit (10) reached").toResponse()
+    }
+
+    const secret = body.secret || generateWebhookSecret()
+    const id = crypto.randomUUID()
+
+    await db.sql`
+      INSERT INTO webhook_configs (
+        id,
+        organization_id,
+        name,
+        url,
+        events,
+        secret,
+        headers,
+        enabled,
+        failure_count,
+        created_at,
+        updated_at
+      ) VALUES (
+        ${id},
+        ${auth.organization.id},
+        ${body.name},
+        ${body.url},
+        ${JSON.stringify(body.events)},
+        ${secret},
+        ${JSON.stringify(body.headers || {})},
+        ${body.enabled},
+        0,
+        NOW(),
+        NOW()
+      )
+    `
+
+    await logIntegrationEvent(
+      "integration.webhook_created",
+      auth.organization.id,
+      auth.user.id,
+      id,
+      { name: body.name, url: body.url, events: body.events }
+    )
+
+    return successResponse({
+      webhook: {
+        id,
+        name: body.name,
+        url: body.url,
+        events: body.events,
+        secret: maskSecret(secret),
+        enabled: body.enabled,
+        createdAt: new Date().toISOString(),
+      },
+      message: "Webhook created successfully",
+    })
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return Errors.validationError(error.message).toResponse()
+    }
+    console.error("Webhook creation error:", error)
+    return Errors.internal().toResponse()
+  }
+}
+
+// ============================================
+// PATCH - Update Webhook
+// ============================================
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return Errors.unauthorized().toResponse()
+    }
+
+    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
+      return Errors.insufficientPermissions("update webhooks").toResponse()
+    }
+
+    const { searchParams } = new URL(request.url)
+    const webhookId = searchParams.get("id")
+
+    if (!webhookId) {
+      return Errors.validationError("Webhook ID is required").toResponse()
+    }
+
+    const body = await validateBody(request, updateWebhookSchema)
+
+    // Verify webhook belongs to org
+    const existing = await db.sql`
+      SELECT id, secret FROM webhook_configs
+      WHERE id = ${webhookId} AND organization_id = ${auth.organization.id}
+    `
+
+    if (existing.length === 0) {
+      return Errors.notFound("Webhook").toResponse()
+    }
+
+    // Build update fields
+    const updates: string[] = ["updated_at = NOW()"]
+
+    if (body.name !== undefined) updates.push(`name = '${body.name}'`)
+    if (body.url !== undefined) updates.push(`url = '${body.url}'`)
+    if (body.events !== undefined) updates.push(`events = '${JSON.stringify(body.events)}'`)
+    if (body.headers !== undefined) updates.push(`headers = '${JSON.stringify(body.headers)}'`)
+    if (body.enabled !== undefined) updates.push(`enabled = ${body.enabled}`)
+
+    let newSecret = existing[0].secret
+    if (body.regenerateSecret) {
+      newSecret = generateWebhookSecret()
+      updates.push(`secret = '${newSecret}'`)
+      updates.push(`failure_count = 0`)
+    }
+
+    await db.sql`
+      UPDATE webhook_configs
+      SET ${db.sql.raw(updates.join(", "))}
+      WHERE id = ${webhookId}
+    `
+
+    await logIntegrationEvent(
+      "integration.webhook_updated",
+      auth.organization.id,
+      auth.user.id,
+      webhookId,
+      { updates: Object.keys(body) }
+    )
+
+    return successResponse({
+      message: "Webhook updated successfully",
+      secretRegenerated: body.regenerateSecret || false,
+      newSecret: body.regenerateSecret ? maskSecret(newSecret) : undefined,
+    })
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return Errors.validationError(error.message).toResponse()
+    }
+    console.error("Webhook update error:", error)
+    return Errors.internal().toResponse()
+  }
+}
+
+// ============================================
+// DELETE - Remove Webhook
+// ============================================
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return Errors.unauthorized().toResponse()
+    }
+
+    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
+      return Errors.insufficientPermissions("delete webhooks").toResponse()
+    }
+
+    const { searchParams } = new URL(request.url)
+    const webhookId = searchParams.get("id")
+
+    if (!webhookId) {
+      return Errors.validationError("Webhook ID is required").toResponse()
+    }
+
+    // Verify webhook belongs to org
+    const existing = await db.sql`
+      SELECT id, name FROM webhook_configs
+      WHERE id = ${webhookId} AND organization_id = ${auth.organization.id}
+    `
+
+    if (existing.length === 0) {
+      return Errors.notFound("Webhook").toResponse()
+    }
+
+    // Delete associated deliveries first
+    await db.sql`
+      DELETE FROM webhook_deliveries
+      WHERE webhook_id = ${webhookId}
+    `
+
+    // Delete webhook
+    await db.sql`
+      DELETE FROM webhook_configs
+      WHERE id = ${webhookId}
+    `
+
+    await logIntegrationEvent(
+      "integration.webhook_deleted",
+      auth.organization.id,
+      auth.user.id,
+      webhookId,
+      { name: existing[0].name }
+    )
+
+    return successResponse({
+      message: "Webhook deleted successfully",
+    })
+  } catch (error) {
+    console.error("Webhook deletion error:", error)
+    return Errors.internal().toResponse()
+  }
+}
