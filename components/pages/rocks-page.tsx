@@ -1,11 +1,14 @@
 "use client"
 
+import { useState, useMemo } from "react"
 import type { TeamMember, Rock } from "@/lib/types"
 import { ProgressBar } from "@/components/shared/progress-bar"
 import { UserInitials } from "@/components/shared/user-initials"
 import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Target } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Target, Search } from "lucide-react"
 
 interface RocksPageProps {
   currentUser: TeamMember
@@ -14,7 +17,32 @@ interface RocksPageProps {
 }
 
 export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
-  const displayRocks = currentUser.role === "admin" ? rocks : rocks.filter((r) => r.userId === currentUser.id)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [ownerFilter, setOwnerFilter] = useState<string>("all")
+
+  const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
+  const baseRocks = isAdmin ? rocks : rocks.filter((r) => r.userId === currentUser.id)
+
+  const displayRocks = useMemo(() => {
+    return baseRocks.filter((rock) => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        const matchesTitle = rock.title.toLowerCase().includes(query)
+        const matchesDescription = rock.description?.toLowerCase().includes(query)
+        if (!matchesTitle && !matchesDescription) return false
+      }
+
+      // Status filter
+      if (statusFilter !== "all" && rock.status !== statusFilter) return false
+
+      // Owner filter (admin only)
+      if (isAdmin && ownerFilter !== "all" && rock.userId !== ownerFilter) return false
+
+      return true
+    })
+  }, [baseRocks, searchQuery, statusFilter, ownerFilter, isAdmin])
 
   const getStatusConfig = (status: Rock["status"]) => {
     const configs = {
@@ -31,14 +59,58 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Rock Progress</h1>
         <p className="text-slate-500 mt-1">
-          {currentUser.role === "admin" ? "View all team rocks" : "Track your quarterly goals"}
+          {isAdmin ? "View all team rocks" : "Track your quarterly goals"}
         </p>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="bg-white rounded-xl shadow-card p-5">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Search rocks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-slate-50 border-slate-200"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-40 bg-slate-50 border-slate-200">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="on-track">On Track</SelectItem>
+              <SelectItem value="at-risk">At Risk</SelectItem>
+              <SelectItem value="blocked">Blocked</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+          {isAdmin && (
+            <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+              <SelectTrigger className="w-full sm:w-48 bg-slate-50 border-slate-200">
+                <SelectValue placeholder="Owner" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Owners</SelectItem>
+                {teamMembers.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-card overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
           <Target className="h-5 w-5 text-slate-500" />
-          <h3 className="font-semibold text-slate-900">All Rocks ({displayRocks.length})</h3>
+          <h3 className="font-semibold text-slate-900">
+            Rocks ({displayRocks.length}{baseRocks.length !== displayRocks.length ? ` of ${baseRocks.length}` : ""})
+          </h3>
         </div>
         <div className="p-5">
           {displayRocks.length === 0 ? (
@@ -47,14 +119,18 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
                 <Target className="h-6 w-6 text-slate-400" />
               </div>
               <p className="text-slate-600 font-medium">No rocks found</p>
-              <p className="text-sm text-slate-400 mt-1">Rocks will appear here when created</p>
+              <p className="text-sm text-slate-400 mt-1">
+                {searchQuery || statusFilter !== "all" || ownerFilter !== "all"
+                  ? "Try adjusting your search or filters"
+                  : "Rocks will appear here when created"}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-slate-100">
-                    {currentUser.role === "admin" && <TableHead className="text-slate-500 font-medium">Owner</TableHead>}
+                    {isAdmin && <TableHead className="text-slate-500 font-medium">Owner</TableHead>}
                     <TableHead className="text-slate-500 font-medium">Rock</TableHead>
                     <TableHead className="text-slate-500 font-medium">Status</TableHead>
                     <TableHead className="text-slate-500 font-medium">Progress</TableHead>
@@ -70,7 +146,7 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
 
                     return (
                       <TableRow key={rock.id} className="border-slate-100 hover:bg-slate-50/50">
-                        {currentUser.role === "admin" && (
+                        {isAdmin && (
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {owner && <UserInitials name={owner.name} size="sm" />}

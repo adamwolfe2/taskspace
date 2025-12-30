@@ -27,6 +27,7 @@ interface TeamAnalyticsChartsProps {
   rocks: Rock[]
   teamMembers: TeamMember[]
   days?: number
+  assignedTasks?: import("@/lib/types").AssignedTask[]
 }
 
 const SENTIMENT_COLORS = {
@@ -44,6 +45,7 @@ export function TeamAnalyticsCharts({
   rocks,
   teamMembers,
   days = 14,
+  assignedTasks = [],
 }: TeamAnalyticsChartsProps) {
   // Calculate date range
   const dateRange = useMemo(() => {
@@ -177,6 +179,15 @@ export function TeamAnalyticsCharts({
       }))
   }, [filteredReports, insights, eodReports, dateRange])
 
+  // Filter tasks to date range
+  const filteredTasks = useMemo(() => {
+    return assignedTasks.filter(t => {
+      if (!t.completedAt) return false
+      const completedDate = new Date(t.completedAt)
+      return completedDate >= dateRange.start && completedDate <= dateRange.end
+    })
+  }, [assignedTasks, dateRange])
+
   // Summary stats
   const summaryStats = useMemo(() => {
     const totalReports = filteredReports.length
@@ -185,21 +196,114 @@ export function TeamAnalyticsCharts({
       ? Math.round(insights.reduce((sum, i) => sum + i.sentimentScore, 0) / insights.length)
       : 0
     const blockerCount = insights.reduce((sum, i) => sum + (i.blockers?.length || 0), 0)
+    const tasksCompleted = filteredTasks.length
+    const activeMembers = teamMembers.filter(m => m.status === "active").length
+    const avgSubmissionRate = activeMembers > 0 && days > 0
+      ? Math.round((totalReports / (activeMembers * days)) * 100)
+      : 0
+    const avgRockProgress = rocks.length > 0
+      ? Math.round(rocks.reduce((sum, r) => sum + r.progress, 0) / rocks.length)
+      : 0
+    const rocksOnTrack = rocks.filter(r => r.status === "on-track" || r.status === "completed").length
+    const rocksAtRisk = rocks.filter(r => r.status === "at-risk" || r.status === "blocked").length
 
-    return { totalReports, escalationCount, avgSentiment, blockerCount }
-  }, [filteredReports, insights])
+    return {
+      totalReports,
+      escalationCount,
+      avgSentiment,
+      blockerCount,
+      tasksCompleted,
+      avgSubmissionRate,
+      avgRockProgress,
+      rocksOnTrack,
+      rocksAtRisk,
+      activeMembers,
+    }
+  }, [filteredReports, insights, filteredTasks, teamMembers, rocks, days])
+
+  // Generate written summary
+  const writtenSummary = useMemo(() => {
+    const periodLabel = days === 7 ? "week" : days === 14 ? "two weeks" : "month"
+    const sentimentLabel = summaryStats.avgSentiment >= 70 ? "positive" : summaryStats.avgSentiment >= 40 ? "moderate" : "concerning"
+
+    const highlights: string[] = []
+    const concerns: string[] = []
+
+    // Submission rate analysis
+    if (summaryStats.avgSubmissionRate >= 80) {
+      highlights.push(`Strong EOD submission rate of ${summaryStats.avgSubmissionRate}%`)
+    } else if (summaryStats.avgSubmissionRate < 50) {
+      concerns.push(`Low EOD submission rate of ${summaryStats.avgSubmissionRate}% - consider follow-ups`)
+    }
+
+    // Rock progress
+    if (summaryStats.avgRockProgress >= 60) {
+      highlights.push(`Team averaging ${summaryStats.avgRockProgress}% rock progress`)
+    }
+    if (summaryStats.rocksAtRisk > 0) {
+      concerns.push(`${summaryStats.rocksAtRisk} rock${summaryStats.rocksAtRisk > 1 ? "s" : ""} at risk or blocked`)
+    }
+
+    // Escalations
+    if (summaryStats.escalationCount > 0) {
+      concerns.push(`${summaryStats.escalationCount} escalation${summaryStats.escalationCount > 1 ? "s" : ""} raised requiring attention`)
+    }
+
+    // Tasks completed
+    if (summaryStats.tasksCompleted > 0) {
+      highlights.push(`${summaryStats.tasksCompleted} task${summaryStats.tasksCompleted > 1 ? "s" : ""} completed`)
+    }
+
+    return { periodLabel, sentimentLabel, highlights, concerns }
+  }, [summaryStats, days])
 
   return (
     <div className="space-y-6">
+      {/* Written Summary */}
+      <div className="bg-white rounded-xl shadow-card p-5">
+        <h3 className="font-semibold text-slate-900 mb-3">
+          {days === 7 ? "Weekly" : days === 14 ? "Bi-Weekly" : "Monthly"} Summary
+        </h3>
+        <p className="text-slate-600 mb-4">
+          Over the past {writtenSummary.periodLabel}, your team of {summaryStats.activeMembers} members submitted{" "}
+          {summaryStats.totalReports} EOD reports with {writtenSummary.sentimentLabel} overall sentiment
+          (score: {summaryStats.avgSentiment}/100).
+        </p>
+        {writtenSummary.highlights.length > 0 && (
+          <div className="mb-3">
+            <p className="text-sm font-medium text-emerald-700 mb-1">Highlights:</p>
+            <ul className="text-sm text-slate-600 list-disc list-inside space-y-0.5">
+              {writtenSummary.highlights.map((h, i) => <li key={i}>{h}</li>)}
+            </ul>
+          </div>
+        )}
+        {writtenSummary.concerns.length > 0 && (
+          <div>
+            <p className="text-sm font-medium text-amber-700 mb-1">Areas of Concern:</p>
+            <ul className="text-sm text-slate-600 list-disc list-inside space-y-0.5">
+              {writtenSummary.concerns.map((c, i) => <li key={i}>{c}</li>)}
+            </ul>
+          </div>
+        )}
+      </div>
+
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <div className="bg-white rounded-xl p-5 shadow-card">
           <div className="text-3xl font-bold text-slate-900">{summaryStats.totalReports}</div>
-          <p className="text-sm text-slate-500 mt-1">EOD Reports ({days} days)</p>
+          <p className="text-sm text-slate-500 mt-1">EOD Reports</p>
         </div>
         <div className="bg-white rounded-xl p-5 shadow-card">
-          <div className="text-3xl font-bold text-slate-900">{summaryStats.avgSentiment}</div>
-          <p className="text-sm text-slate-500 mt-1">Avg Sentiment Score</p>
+          <div className="text-3xl font-bold text-blue-600">{summaryStats.avgSubmissionRate}%</div>
+          <p className="text-sm text-slate-500 mt-1">Submission Rate</p>
+        </div>
+        <div className="bg-white rounded-xl p-5 shadow-card">
+          <div className="text-3xl font-bold text-emerald-600">{summaryStats.tasksCompleted}</div>
+          <p className="text-sm text-slate-500 mt-1">Tasks Completed</p>
+        </div>
+        <div className="bg-white rounded-xl p-5 shadow-card">
+          <div className="text-3xl font-bold text-slate-900">{summaryStats.avgRockProgress}%</div>
+          <p className="text-sm text-slate-500 mt-1">Avg Rock Progress</p>
         </div>
         <div className="bg-white rounded-xl p-5 shadow-card">
           <div className="text-3xl font-bold text-amber-500">{summaryStats.escalationCount}</div>
@@ -207,7 +311,7 @@ export function TeamAnalyticsCharts({
         </div>
         <div className="bg-white rounded-xl p-5 shadow-card">
           <div className="text-3xl font-bold text-red-500">{summaryStats.blockerCount}</div>
-          <p className="text-sm text-slate-500 mt-1">Blockers Reported</p>
+          <p className="text-sm text-slate-500 mt-1">Blockers</p>
         </div>
       </div>
 

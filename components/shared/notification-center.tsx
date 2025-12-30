@@ -49,10 +49,52 @@ export function NotificationCenter() {
   }, [])
 
   // Fetch unread count on mount and periodically
+  // Uses visibility API to pause polling when tab is not visible
   useEffect(() => {
     fetchUnreadCount()
-    const interval = setInterval(fetchUnreadCount, 60000) // Check every minute
-    return () => clearInterval(interval)
+
+    let interval: ReturnType<typeof setInterval> | null = null
+
+    const startPolling = () => {
+      if (!interval) {
+        interval = setInterval(fetchUnreadCount, 30000) // Check every 30 seconds
+      }
+    }
+
+    const stopPolling = () => {
+      if (interval) {
+        clearInterval(interval)
+        interval = null
+      }
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchUnreadCount() // Immediate fetch when tab becomes visible
+        startPolling()
+      } else {
+        stopPolling()
+      }
+    }
+
+    // Start polling if document is visible
+    if (document.visibilityState === "visible") {
+      startPolling()
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
+    // Also fetch when window regains focus
+    const handleFocus = () => {
+      fetchUnreadCount()
+    }
+    window.addEventListener("focus", handleFocus)
+
+    return () => {
+      stopPolling()
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      window.removeEventListener("focus", handleFocus)
+    }
   }, [fetchUnreadCount])
 
   // Fetch full list when popover opens

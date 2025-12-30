@@ -103,6 +103,8 @@ export async function POST(request: NextRequest) {
       id: generateId(),
       organizationId: orgId,
       userId: auth.user.id,
+      email: auth.user.email,
+      name: auth.user.name,
       role: "owner",
       department: "Leadership",
       joinedAt: now,

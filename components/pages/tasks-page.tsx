@@ -1,13 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import type { AssignedTask, Rock, TeamMember } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
-import { Plus, ClipboardList, UserCheck } from "lucide-react"
+import { Plus, ClipboardList, UserCheck, Search } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface TasksPageProps {
@@ -31,12 +33,32 @@ export function TasksPage({
 }: TasksPageProps) {
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
   const [editingTask, setEditingTask] = useState<AssignedTask | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [priorityFilter, setPriorityFilter] = useState<string>("all")
   const { toast } = useToast()
 
   const userTasks = assignedTasks.filter((t) => t.assigneeId === currentUser.id)
-  const assignedByAdmin = userTasks.filter((t) => t.type === "assigned" && t.status === "pending")
-  const personalTasks = userTasks.filter((t) => t.type === "personal" && t.status === "pending")
-  const completedTasks = userTasks.filter((t) => t.status === "completed")
+
+  const filteredTasks = useMemo(() => {
+    return userTasks.filter((task) => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        const matchesTitle = task.title.toLowerCase().includes(query)
+        const matchesDescription = task.description?.toLowerCase().includes(query)
+        if (!matchesTitle && !matchesDescription) return false
+      }
+
+      // Priority filter
+      if (priorityFilter !== "all" && task.priority !== priorityFilter) return false
+
+      return true
+    })
+  }, [userTasks, searchQuery, priorityFilter])
+
+  const assignedByAdmin = filteredTasks.filter((t) => t.type === "assigned" && t.status !== "completed")
+  const personalTasks = filteredTasks.filter((t) => t.type === "personal" && t.status !== "completed")
+  const completedTasks = filteredTasks.filter((t) => t.status === "completed")
 
   const userRocks = rocks.filter((r) => r.userId === currentUser.id)
 
@@ -121,6 +143,32 @@ export function TasksPage({
           <Plus className="mr-2 h-4 w-4" />
           Add Task
         </Button>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="bg-white rounded-xl shadow-card p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-slate-50 border-slate-200"
+            />
+          </div>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="w-full sm:w-36 bg-slate-50 border-slate-200">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priorities</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="normal">Normal</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Tabs defaultValue="active" className="space-y-4">

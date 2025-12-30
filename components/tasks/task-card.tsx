@@ -5,8 +5,8 @@ import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, User, Pencil, Trash2 } from "lucide-react"
-import { format } from "date-fns"
+import { Calendar, User, Pencil, Trash2, AlertCircle, Clock } from "lucide-react"
+import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
 import { cn } from "@/lib/utils"
 
 interface TaskCardProps {
@@ -17,9 +17,52 @@ interface TaskCardProps {
   rocks: Rock[]
 }
 
+function getDueDateStatus(dueDate: string, isCompleted: boolean) {
+  if (isCompleted) return null
+
+  const today = startOfDay(new Date())
+  const due = startOfDay(new Date(dueDate))
+  const daysUntilDue = differenceInDays(due, today)
+
+  if (isPast(due) && !isToday(due)) {
+    return {
+      label: `${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) > 1 ? "s" : ""} overdue`,
+      color: "text-red-600",
+      bgColor: "bg-red-50",
+      icon: AlertCircle,
+    }
+  }
+  if (isToday(due)) {
+    return {
+      label: "Due today",
+      color: "text-amber-600",
+      bgColor: "bg-amber-50",
+      icon: Clock,
+    }
+  }
+  if (isTomorrow(due)) {
+    return {
+      label: "Due tomorrow",
+      color: "text-amber-500",
+      bgColor: "bg-amber-50/50",
+      icon: Clock,
+    }
+  }
+  if (daysUntilDue <= 3) {
+    return {
+      label: `Due in ${daysUntilDue} days`,
+      color: "text-slate-600",
+      bgColor: "bg-slate-50",
+      icon: Calendar,
+    }
+  }
+  return null
+}
+
 export function TaskCard({ task, onComplete, onEdit, onDelete, rocks }: TaskCardProps) {
   const isCompleted = task.status === "completed"
   const isPersonal = task.type === "personal"
+  const dueDateStatus = getDueDateStatus(task.dueDate, isCompleted)
 
   const priorityConfig = {
     high: { emoji: "🔴", label: "High", variant: "destructive" as const },
@@ -78,10 +121,17 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, rocks }: TaskCard
             <Badge variant={priority.variant}>
               {priority.emoji} {priority.label}
             </Badge>
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              <span>Due: {format(new Date(task.dueDate), "MMM d, yyyy")}</span>
-            </div>
+            {dueDateStatus ? (
+              <div className={cn("flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium", dueDateStatus.bgColor, dueDateStatus.color)}>
+                <dueDateStatus.icon className="h-3 w-3" />
+                <span>{dueDateStatus.label}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Calendar className="h-3 w-3" />
+                <span>Due: {format(new Date(task.dueDate), "MMM d, yyyy")}</span>
+              </div>
+            )}
             {!isPersonal && task.assignedByName && (
               <div className="flex items-center gap-1 text-muted-foreground">
                 <User className="h-3 w-3" />
