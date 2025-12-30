@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { generateDailyDigest, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { sendDailySummaryEmail, isEmailConfigured } from "@/lib/integrations/email"
+import { sendSlackMessage, buildConsolidatedDigestMessage, isSlackConfigured } from "@/lib/integrations/slack"
+import { generateConsolidatedDigest, formatConsolidatedDigestHTML, type MemberDigest } from "@/lib/digest/daily-digest-generator"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, DailyDigest, TeamMember, EODInsight, Organization } from "@/lib/types"
+import { Resend } from "resend"
 
 // This endpoint is designed to be called by Vercel Cron
 // Runs every hour to check which organizations are at 6 PM in their timezone
@@ -183,17 +186,94 @@ export async function GET(request: NextRequest) {
         await db.dailyDigests.create(digest)
         console.log(`[Cron] Digest created for org ${org.name}`)
 
+        // Find members who haven't submitted EOD
+        const submittedUserIds = new Set(todayReports.map(r => r.userId))
+        const activeMembers = teamMembers.filter(m => m.status === "active")
+        const missingMembers = activeMembers.filter(m => !submittedUserIds.has(m.id))
+        const admins = teamMembers.filter(m => m.role === "admin" || m.role === "owner")
+
         // Send email summary to admins
         if (isEmailConfigured()) {
-          const admins = teamMembers.filter(m => m.role === "admin" || m.role === "owner")
-
-          // Find members who haven't submitted EOD
-          const submittedUserIds = new Set(todayReports.map(r => r.userId))
-          const activeMembers = teamMembers.filter(m => m.status === "active")
-          const missingMembers = activeMembers.filter(m => !submittedUserIds.has(m.id))
-
           await sendDailySummaryEmail(digest, teamMembers, admins, missingMembers)
           console.log(`[Cron] Email sent for org ${org.name}`)
+
+          // Also send Rock-organized digest email to admins
+          const adminUser = admins[0]
+          if (adminUser) {
+            try {
+              const consolidatedDigest = await generateConsolidatedDigest(
+                org.id,
+                adminUser.id,
+                today
+              )
+
+              // Send Rock-organized HTML digest to all admins
+              const resend = new Resend(process.env.RESEND_API_KEY)
+              const adminEmails = admins.map(a => a.email)
+
+              await resend.emails.send({
+                from: process.env.EMAIL_FROM || "AIMS EOD <noreply@aims.app>",
+                to: adminEmails,
+                subject: `📊 Daily Rock Progress Summary - ${consolidatedDigest.formattedDate}`,
+                html: formatConsolidatedDigestHTML(consolidatedDigest),
+              })
+              console.log(`[Cron] Rock-organized digest email sent for org ${org.name}`)
+            } catch (digestError) {
+              console.error(`[Cron] Rock digest email failed for org ${org.name}:`, digestError)
+            }
+          }
+        }
+
+        // Send Slack notification if configured
+        const slackWebhookUrl = org.settings?.slackWebhookUrl
+        if (isSlackConfigured(slackWebhookUrl) && org.settings?.enableSlackIntegration) {
+          try {
+            const adminUser = admins[0]
+            const consolidatedDigest = await generateConsolidatedDigest(
+              org.id,
+              adminUser?.id || "",
+              today
+            )
+
+            // Convert digest to Slack format
+            const slackAdminDigest = consolidatedDigest.adminDigest ? {
+              memberName: consolidatedDigest.adminDigest.member.name,
+              rocks: consolidatedDigest.adminDigest.rocks.map(r => ({
+                title: r.rock.title,
+                progress: r.progress,
+                taskCount: r.tasks.length,
+              })),
+              blockerCount: consolidatedDigest.adminDigest.blockers.length,
+              hasReport: consolidatedDigest.adminDigest.hasReport,
+            } : null
+
+            const slackTeamDigests = consolidatedDigest.teamDigests.map(d => ({
+              memberName: d.member.name,
+              department: d.member.department,
+              rocks: d.rocks.map(r => ({
+                title: r.rock.title,
+                progress: r.progress,
+                taskCount: r.tasks.length,
+              })),
+              blockerCount: d.blockers.length,
+              hasReport: d.hasReport,
+            }))
+
+            const slackMessage = buildConsolidatedDigestMessage(
+              consolidatedDigest.date,
+              consolidatedDigest.formattedDate,
+              consolidatedDigest.totalReports,
+              consolidatedDigest.totalMembers,
+              slackAdminDigest,
+              slackTeamDigests,
+              consolidatedDigest.missingMembers.map(m => m.name)
+            )
+
+            await sendSlackMessage(slackWebhookUrl!, slackMessage)
+            console.log(`[Cron] Slack digest sent for org ${org.name}`)
+          } catch (slackError) {
+            console.error(`[Cron] Slack digest failed for org ${org.name}:`, slackError)
+          }
         }
 
         results.push({ orgId: org.id, orgName: org.name, success: true })

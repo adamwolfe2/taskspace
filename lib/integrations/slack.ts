@@ -334,3 +334,211 @@ export function buildBlockerAlertMessage(
 export function isSlackConfigured(webhookUrl?: string): boolean {
   return !!webhookUrl && webhookUrl.startsWith("https://hooks.slack.com/")
 }
+
+/**
+ * Build a consolidated daily digest message for Slack
+ * Organized by rocks with progress bars and task summaries
+ */
+export function buildConsolidatedDigestMessage(
+  date: string,
+  formattedDate: string,
+  totalReports: number,
+  totalMembers: number,
+  adminDigest: {
+    memberName: string
+    rocks: { title: string; progress: number; taskCount: number }[]
+    blockerCount: number
+    hasReport: boolean
+  } | null,
+  teamDigests: {
+    memberName: string
+    department?: string
+    rocks: { title: string; progress: number; taskCount: number }[]
+    blockerCount: number
+    hasReport: boolean
+  }[],
+  missingMembers: string[]
+): SlackMessage {
+  const completionRate = Math.round((totalReports / totalMembers) * 100)
+
+  const blocks: SlackBlock[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: `📊 Daily Team Summary - ${formattedDate}`,
+        emoji: true,
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Reports Submitted:*\n${totalReports}/${totalMembers} (${completionRate}%)`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Missing Reports:*\n${missingMembers.length > 0 ? missingMembers.length : "None! 🎉"}`,
+        },
+      ],
+    },
+    {
+      type: "divider",
+    },
+  ]
+
+  // Admin's detailed report
+  if (adminDigest && adminDigest.hasReport) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*👤 ${adminDigest.memberName}* (Your Report)`,
+      },
+    })
+
+    if (adminDigest.rocks.length > 0) {
+      let rockText = ""
+      for (const rock of adminDigest.rocks) {
+        const filledBlocks = Math.round(rock.progress / 10)
+        const emptyBlocks = 10 - filledBlocks
+        const progressBar = `${"█".repeat(filledBlocks)}${"░".repeat(emptyBlocks)}`
+        rockText += `• *${rock.title}* - ${rock.progress}% \`${progressBar}\`\n`
+        if (rock.taskCount > 0) {
+          rockText += `  _${rock.taskCount} task${rock.taskCount > 1 ? "s" : ""} completed_\n`
+        }
+      }
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: rockText,
+        },
+      })
+    }
+
+    if (adminDigest.blockerCount > 0) {
+      blocks.push({
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: `🚧 ${adminDigest.blockerCount} blocker${adminDigest.blockerCount > 1 ? "s" : ""} reported`,
+          },
+        ],
+      })
+    }
+
+    blocks.push({ type: "divider" })
+  }
+
+  // Team member summaries
+  if (teamDigests.length > 0) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: "*👥 Team Member Updates*",
+      },
+    })
+
+    for (const member of teamDigests) {
+      if (!member.hasReport) {
+        continue // Skip members without reports in the team summary
+      }
+
+      let memberText = `*${member.memberName}*${member.department ? ` (${member.department})` : ""}\n`
+
+      if (member.rocks.length > 0) {
+        for (const rock of member.rocks.slice(0, 2)) { // Show top 2 rocks
+          const emoji = rock.progress >= 75 ? "🟢" : rock.progress >= 50 ? "🟡" : rock.progress >= 25 ? "🟠" : "🔴"
+          memberText += `${emoji} ${rock.title}: ${rock.progress}%`
+          if (rock.taskCount > 0) {
+            memberText += ` (${rock.taskCount} tasks)`
+          }
+          memberText += "\n"
+        }
+        if (member.rocks.length > 2) {
+          memberText += `_...and ${member.rocks.length - 2} more rock${member.rocks.length > 3 ? "s" : ""}_\n`
+        }
+      }
+
+      if (member.blockerCount > 0) {
+        memberText += `🚧 ${member.blockerCount} blocker${member.blockerCount > 1 ? "s" : ""}\n`
+      }
+
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: memberText,
+        },
+      })
+    }
+  }
+
+  // Missing reports warning
+  if (missingMembers.length > 0) {
+    blocks.push({ type: "divider" })
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*⚠️ Missing EOD Reports*\n${missingMembers.join(", ")}`,
+      },
+    })
+  }
+
+  return {
+    text: `Daily Team Summary for ${formattedDate}: ${totalReports}/${totalMembers} reports submitted`,
+    blocks,
+  }
+}
+
+/**
+ * Build an EOD reminder message for Slack
+ */
+export function buildEODReminderMessage(
+  missingMemberNames: string[],
+  organizationName: string
+): SlackMessage {
+  const blocks: SlackBlock[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "📝 EOD Report Reminder",
+        emoji: true,
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `Hey team! The following members haven't submitted their EOD report yet:`,
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: missingMemberNames.map(name => `• ${name}`).join("\n"),
+      },
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `⏰ Please submit your EOD report before end of day!`,
+        },
+      ],
+    },
+  ]
+
+  return {
+    text: `EOD Reminder: ${missingMemberNames.length} team member${missingMemberNames.length > 1 ? "s haven't" : " hasn't"} submitted their report`,
+    blocks,
+  }
+}
