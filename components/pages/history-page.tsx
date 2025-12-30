@@ -46,9 +46,11 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
     setExpandedReports(newExpanded)
   }
 
+  const isAdminOrOwner = currentUser.role === "admin" || currentUser.role === "owner"
+
   const filteredReports = eodReports
     .filter((report) => {
-      if (currentUser.role !== "admin" && userFilter === "all") {
+      if (!isAdminOrOwner && userFilter === "all") {
         return report.userId === currentUser.id
       }
       if (userFilter !== "all") {
@@ -92,7 +94,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
               className="pl-9 bg-slate-50 border-slate-200"
             />
           </div>
-          {currentUser.role === "admin" && (
+          {isAdminOrOwner && (
             <Select value={userFilter} onValueChange={setUserFilter}>
               <SelectTrigger className="w-full sm:w-48 bg-slate-50 border-slate-200">
                 <SelectValue placeholder="Filter by user" />
