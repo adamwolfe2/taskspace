@@ -546,11 +546,10 @@ export const db = {
     },
     async create(rock: Rock): Promise<Rock> {
       await sql`
-        INSERT INTO rocks (id, organization_id, user_id, title, description, progress, due_date, status, bucket, outcome, done_when, milestones, quarter, created_at, updated_at)
+        INSERT INTO rocks (id, organization_id, user_id, title, description, progress, due_date, status, bucket, outcome, done_when, quarter, created_at, updated_at)
         VALUES (${rock.id}, ${rock.organizationId}, ${rock.userId}, ${rock.title}, ${rock.description},
                 ${rock.progress}, ${rock.dueDate}, ${rock.status}, ${rock.bucket || null},
                 ${rock.outcome || null}, ${JSON.stringify(rock.doneWhen || [])},
-                ${rock.milestones ? JSON.stringify(rock.milestones) : null},
                 ${rock.quarter || null}, ${rock.createdAt}, ${rock.updatedAt})
       `
       return rock
@@ -567,7 +566,6 @@ export const db = {
           bucket = COALESCE(${updates.bucket || null}, bucket),
           outcome = COALESCE(${updates.outcome || null}, outcome),
           done_when = COALESCE(${updates.doneWhen ? JSON.stringify(updates.doneWhen) : null}::jsonb, done_when),
-          milestones = COALESCE(${updates.milestones ? JSON.stringify(updates.milestones) : null}::jsonb, milestones),
           quarter = COALESCE(${updates.quarter || null}, quarter),
           updated_at = ${now}
         WHERE id = ${id}
@@ -578,6 +576,99 @@ export const db = {
     async delete(id: string): Promise<boolean> {
       const { rowCount } = await sql`DELETE FROM rocks WHERE id = ${id}`
       return (rowCount ?? 0) > 0
+    },
+  },
+
+  // Rock Milestones
+  rockMilestones: {
+    async findByRockId(rockId: string): Promise<Array<{
+      id: string
+      rockId: string
+      text: string
+      completed: boolean
+      completedAt: string | null
+      position: number
+      createdAt: string
+      updatedAt: string
+    }>> {
+      const { rows } = await sql`
+        SELECT * FROM rock_milestones
+        WHERE rock_id = ${rockId}
+        ORDER BY position ASC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        rockId: row.rock_id as string,
+        text: row.text as string,
+        completed: row.completed as boolean,
+        completedAt: row.completed_at ? (row.completed_at as Date).toISOString() : null,
+        position: row.position as number,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }))
+    },
+    async create(milestone: {
+      id?: string
+      rockId: string
+      text: string
+      completed?: boolean
+      position?: number
+    }): Promise<{ id: string; rockId: string; text: string; completed: boolean; position: number }> {
+      const id = milestone.id || `milestone-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      const { rows } = await sql`
+        INSERT INTO rock_milestones (id, rock_id, text, completed, position, created_at, updated_at)
+        VALUES (
+          ${id},
+          ${milestone.rockId},
+          ${milestone.text},
+          ${milestone.completed || false},
+          ${milestone.position || 0},
+          NOW(),
+          NOW()
+        )
+        RETURNING *
+      `
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        rockId: row.rock_id as string,
+        text: row.text as string,
+        completed: row.completed as boolean,
+        position: row.position as number,
+      }
+    },
+    async createMany(rockId: string, milestones: string[]): Promise<void> {
+      // Insert all milestones for a rock
+      for (let i = 0; i < milestones.length; i++) {
+        const text = milestones[i]
+        if (text && text.trim()) {
+          await sql`
+            INSERT INTO rock_milestones (rock_id, text, completed, position, created_at, updated_at)
+            VALUES (${rockId}, ${text.trim()}, false, ${i}, NOW(), NOW())
+          `
+        }
+      }
+    },
+    async update(id: string, updates: { text?: string; completed?: boolean; position?: number }): Promise<boolean> {
+      const completedAt = updates.completed ? "NOW()" : null
+      const { rowCount } = await sql`
+        UPDATE rock_milestones SET
+          text = COALESCE(${updates.text || null}, text),
+          completed = COALESCE(${updates.completed ?? null}, completed),
+          completed_at = ${updates.completed ? new Date().toISOString() : null},
+          position = COALESCE(${updates.position ?? null}, position),
+          updated_at = NOW()
+        WHERE id = ${id}
+      `
+      return (rowCount ?? 0) > 0
+    },
+    async delete(id: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM rock_milestones WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
+    },
+    async deleteByRockId(rockId: string): Promise<number> {
+      const { rowCount } = await sql`DELETE FROM rock_milestones WHERE rock_id = ${rockId}`
+      return rowCount ?? 0
     },
   },
 

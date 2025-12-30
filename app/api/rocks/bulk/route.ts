@@ -117,8 +117,11 @@ export async function POST(request: NextRequest) {
         }
 
         const timestamp = new Date().toISOString()
+        const rockId = generateId()
+
+        // Create the rock first (store milestones in doneWhen JSONB for backward compatibility)
         const rock: Rock = {
-          id: generateId(),
+          id: rockId,
           organizationId: auth.organization.id,
           userId: rockUserId,
           title: rockInput.title.trim(),
@@ -128,11 +131,23 @@ export async function POST(request: NextRequest) {
           status: "on-track",
           createdAt: timestamp,
           updatedAt: timestamp,
-          doneWhen: rockInput.milestones || [],
+          doneWhen: rockInput.milestones || [], // Store in JSONB for compatibility
           quarter: rockInput.quarter || defaultQuarter,
         }
 
         await db.rocks.create(rock)
+
+        // Create milestones in the rock_milestones table
+        if (rockInput.milestones && rockInput.milestones.length > 0) {
+          try {
+            await db.rockMilestones.createMany(rockId, rockInput.milestones)
+          } catch (milestoneErr) {
+            // Log but don't fail the rock creation if milestone table doesn't exist yet
+            console.warn(`Note: Could not create milestones in rock_milestones table for rock "${rockInput.title}":`, milestoneErr)
+            // Milestones are still saved in doneWhen JSONB, so this is not a critical failure
+          }
+        }
+
         result.created.push(rock)
       } catch (err) {
         console.error(`Failed to create rock "${rockInput.title}":`, err)

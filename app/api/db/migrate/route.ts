@@ -371,8 +371,26 @@ export async function GET(request: NextRequest) {
     await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS asana_gid VARCHAR(255)`
     await sql`CREATE INDEX IF NOT EXISTS idx_tasks_asana_gid ON assigned_tasks(asana_gid)`
 
-    // Add milestones column to rocks table
+    // Add milestones column to rocks table (legacy - kept for compatibility)
     await sql`ALTER TABLE rocks ADD COLUMN IF NOT EXISTS milestones JSONB DEFAULT '[]'`
+
+    // ============================================
+    // ROCK MILESTONES TABLE (proper relational structure)
+    // ============================================
+    await sql`
+      CREATE TABLE IF NOT EXISTS rock_milestones (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        rock_id VARCHAR(255) NOT NULL REFERENCES rocks(id) ON DELETE CASCADE,
+        text TEXT NOT NULL,
+        completed BOOLEAN DEFAULT FALSE,
+        completed_at TIMESTAMP WITH TIME ZONE,
+        position INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+    await sql`CREATE INDEX IF NOT EXISTS idx_rock_milestones_rock_id ON rock_milestones(rock_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_rock_milestones_position ON rock_milestones(rock_id, position)`
 
     // Add comments column to assigned_tasks table
     await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS comments JSONB DEFAULT '[]'`
