@@ -5,9 +5,42 @@ import type { AssignedTask } from "@/lib/types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils/date-utils"
-import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown } from "lucide-react"
+import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, AlertCircle, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useApp } from "@/lib/contexts/app-context"
+import { differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
+
+function getDueDateStatus(dueDate: string) {
+  const today = startOfDay(new Date())
+  const due = startOfDay(new Date(dueDate))
+  const daysUntilDue = differenceInDays(due, today)
+
+  if (isPast(due) && !isToday(due)) {
+    return {
+      label: `${Math.abs(daysUntilDue)}d overdue`,
+      color: "text-red-600",
+      bgColor: "bg-red-50",
+      Icon: AlertCircle,
+    }
+  }
+  if (isToday(due)) {
+    return {
+      label: "Due today",
+      color: "text-amber-600",
+      bgColor: "bg-amber-50",
+      Icon: Clock,
+    }
+  }
+  if (isTomorrow(due)) {
+    return {
+      label: "Tomorrow",
+      color: "text-amber-500",
+      bgColor: "bg-amber-50/50",
+      Icon: Clock,
+    }
+  }
+  return null
+}
 
 const TASKS_PER_PAGE = 10
 
@@ -190,10 +223,13 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
                 <div className="space-y-2">
                   {visiblePendingTasks.map((task) => {
                     const priorityConfig = getPriorityConfig(task.priority)
+                    const dueDateStatus = task.dueDate ? getDueDateStatus(task.dueDate) : null
                     return (
                       <div
                         key={task.id}
-                        className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors duration-200"
+                        className={`flex items-start gap-3 p-3 border rounded-lg hover:border-slate-300 transition-colors duration-200 ${
+                          dueDateStatus?.bgColor === "bg-red-50" ? "border-red-200 bg-red-50/30" : "border-slate-200"
+                        }`}
                       >
                         <Checkbox
                           checked={false}
@@ -206,12 +242,18 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
                             <span className={`status-pill ${priorityConfig.bgColor} ${priorityConfig.textColor}`}>
                               {task.priority}
                             </span>
+                            {dueDateStatus && (
+                              <span className={`inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded ${dueDateStatus.bgColor} ${dueDateStatus.color}`}>
+                                <dueDateStatus.Icon className="h-3 w-3" />
+                                {dueDateStatus.label}
+                              </span>
+                            )}
                           </div>
                           {task.description && (
                             <p className="text-sm text-slate-500 mt-1 line-clamp-2">{task.description}</p>
                           )}
                           <div className="flex items-center gap-3 mt-2">
-                            {task.dueDate && (
+                            {task.dueDate && !dueDateStatus && (
                               <span className="text-xs text-slate-400">Due: {formatDate(task.dueDate)}</span>
                             )}
                             {task.rockTitle && (
