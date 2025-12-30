@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { asanaClient, AsanaTask } from "@/lib/integrations/asana"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
+import { generateId } from "@/lib/auth/password"
 import type { AsanaUserMapping, AssignedTask, Rock } from "@/lib/types"
 
 interface SyncResult {
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
     // Sync AIMS → Asana (if direction is "to_asana" or "both")
     if (direction === "to_asana" || direction === "both") {
       for (const aimsTask of aimsTasks) {
-        const mapping = aimsUserToAsana.get(aimsTask.assignedTo)
+        const mapping = aimsUserToAsana.get(aimsTask.assigneeId)
         if (!mapping) continue // Skip tasks for unmapped users
 
         try {
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
             existingAimsTask = aimsTasks.find((t) => t.id === aimsIdMatch[1])
           } else {
             existingAimsTask = aimsTasks.find(
-              (t) => t.title === asanaTask.name && t.assignedTo === mapping.aimsUserId
+              (t) => t.title === asanaTask.name && t.assigneeId === mapping.aimsUserId
             )
           }
 
@@ -145,15 +146,28 @@ export async function POST(request: NextRequest) {
             }
           } else {
             // Create new task in AIMS
+            const now = new Date().toISOString()
+            const taskId = generateId()
             await db.assignedTasks.create({
+              id: taskId,
+              organizationId: auth.organization.id,
               title: asanaTask.name,
               description: asanaTask.notes?.replace(/\n---\nAIMS Task ID:.*$/, "").trim() || "",
-              assignedTo: mapping.aimsUserId,
-              assignedBy: auth.user.id,
-              organizationId: auth.organization.id,
-              status: asanaTask.completed ? "completed" : "pending",
+              assigneeId: mapping.aimsUserId,
+              assigneeName: mapping.aimsUserName,
+              assignedById: auth.user.id,
+              assignedByName: auth.user.name,
+              type: "assigned",
+              rockId: null,
+              rockTitle: null,
               priority: "medium",
-              dueDate: asanaTask.due_on || undefined,
+              dueDate: asanaTask.due_on || now.split("T")[0],
+              status: asanaTask.completed ? "completed" : "pending",
+              completedAt: asanaTask.completed ? now : null,
+              addedToEOD: false,
+              eodReportId: null,
+              createdAt: now,
+              updatedAt: now,
               source: "asana",
             })
             result.tasksCreatedInAims++
