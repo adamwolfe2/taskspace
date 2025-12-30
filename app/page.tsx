@@ -176,6 +176,7 @@ function AppContent() {
             teamMembers={teamData.teamMembers}
             eodReports={teamData.eodReports}
             rocks={teamData.rocks}
+            assignedTasks={teamData.assignedTasks}
           />
         ) : (
           <DashboardPage {...dashboardProps} />

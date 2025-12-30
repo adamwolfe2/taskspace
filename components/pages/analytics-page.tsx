@@ -6,15 +6,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { api } from "@/lib/api/client"
 import { BarChart3, Calendar, RefreshCw, Loader2 } from "lucide-react"
-import type { TeamMember, EODReport, Rock, EODInsight } from "@/lib/types"
+import type { TeamMember, EODReport, Rock, EODInsight, AssignedTask } from "@/lib/types"
 
 interface AnalyticsPageProps {
   teamMembers: TeamMember[]
   eodReports: EODReport[]
   rocks: Rock[]
+  assignedTasks?: AssignedTask[]
 }
 
-export function AnalyticsPage({ teamMembers, eodReports, rocks }: AnalyticsPageProps) {
+export function AnalyticsPage({ teamMembers, eodReports, rocks, assignedTasks = [] }: AnalyticsPageProps) {
   const [insights, setInsights] = useState<EODInsight[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedRange, setSelectedRange] = useState<"7" | "14" | "30">("14")
@@ -98,6 +99,7 @@ export function AnalyticsPage({ teamMembers, eodReports, rocks }: AnalyticsPageP
           rocks={rocks}
           teamMembers={teamMembers}
           days={parseInt(selectedRange)}
+          assignedTasks={assignedTasks}
         />
       )}
     </div>
