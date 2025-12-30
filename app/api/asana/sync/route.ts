@@ -81,7 +81,25 @@ export async function POST(request: NextRequest) {
         const mapping = aimsUserToAsana.get(aimsTask.assigneeId)
         if (!mapping) continue // Skip tasks for unmapped users
 
+        // Skip tasks that originated from Asana (they're already in Asana)
+        if (aimsTask.source === "asana") continue
+
         try {
+          // First, check if task already has an asanaGid (already synced)
+          if (aimsTask.asanaGid) {
+            const existingAsanaTask = asanaTasks.find((at) => at.gid === aimsTask.asanaGid)
+            if (existingAsanaTask) {
+              // Update existing Asana task if completion status differs
+              if (existingAsanaTask.completed !== (aimsTask.status === "completed")) {
+                await asanaClient.updateTask(existingAsanaTask.gid, {
+                  completed: aimsTask.status === "completed",
+                })
+                result.tasksUpdatedInAsana++
+              }
+              continue
+            }
+          }
+
           // Check if task already exists in Asana (by matching name pattern)
           const existingAsanaTask = asanaTasks.find(
             (at) => at.name === aimsTask.title || at.notes?.includes(`AIMS-${aimsTask.id}`)
@@ -95,9 +113,13 @@ export async function POST(request: NextRequest) {
               })
               result.tasksUpdatedInAsana++
             }
+            // Also update the aimsTask with the asanaGid if not set
+            if (!aimsTask.asanaGid) {
+              await db.assignedTasks.update(aimsTask.id, { asanaGid: existingAsanaTask.gid })
+            }
           } else {
             // Create new task in Asana
-            await asanaClient.createTask({
+            const newAsanaTask = await asanaClient.createTask({
               name: aimsTask.title,
               notes: `${aimsTask.description || ""}\n\n---\nAIMS Task ID: AIMS-${aimsTask.id}`,
               projects: [asanaConfig.projectGid],
@@ -105,6 +127,8 @@ export async function POST(request: NextRequest) {
               due_on: aimsTask.dueDate ? aimsTask.dueDate.split("T")[0] : undefined,
               completed: aimsTask.status === "completed",
             })
+            // Store the asanaGid back in the AIMS task for future syncs
+            await db.assignedTasks.update(aimsTask.id, { asanaGid: newAsanaTask.gid })
             result.tasksCreatedInAsana++
           }
         } catch (error) {
@@ -122,27 +146,41 @@ export async function POST(request: NextRequest) {
         if (!mapping) continue // Skip tasks for unmapped users
 
         try {
-          // Check if task already exists in AIMS (by AIMS ID in notes or matching name)
-          const aimsIdMatch = asanaTask.notes?.match(/AIMS-([a-zA-Z0-9-]+)/)
-          let existingAimsTask: AssignedTask | undefined
+          // First, check if task already exists by asanaGid (most reliable)
+          let existingAimsTask: AssignedTask | undefined = aimsTasks.find(
+            (t) => t.asanaGid === asanaTask.gid
+          )
 
-          if (aimsIdMatch) {
-            existingAimsTask = aimsTasks.find((t) => t.id === aimsIdMatch[1])
-          } else {
-            existingAimsTask = aimsTasks.find(
-              (t) => t.title === asanaTask.name && t.assigneeId === mapping.aimsUserId
-            )
+          // Fall back to checking by AIMS ID in notes or matching name
+          if (!existingAimsTask) {
+            const aimsIdMatch = asanaTask.notes?.match(/AIMS-([a-zA-Z0-9-]+)/)
+            if (aimsIdMatch) {
+              existingAimsTask = aimsTasks.find((t) => t.id === aimsIdMatch[1])
+            } else {
+              existingAimsTask = aimsTasks.find(
+                (t) => t.title === asanaTask.name && t.assigneeId === mapping.aimsUserId
+              )
+            }
           }
 
           if (existingAimsTask) {
             // Update existing AIMS task if completion status differs
             const newStatus = asanaTask.completed ? "completed" : "pending"
+            const updates: Partial<AssignedTask> = {}
+
             if (existingAimsTask.status !== newStatus) {
-              await db.assignedTasks.update(existingAimsTask.id, {
-                status: newStatus,
-                completedAt: asanaTask.completed ? new Date().toISOString() : undefined,
-              })
-              result.tasksUpdatedInAims++
+              updates.status = newStatus
+              updates.completedAt = asanaTask.completed ? new Date().toISOString() : undefined
+            }
+
+            // Ensure asanaGid is set if not already
+            if (!existingAimsTask.asanaGid) {
+              updates.asanaGid = asanaTask.gid
+            }
+
+            if (Object.keys(updates).length > 0) {
+              await db.assignedTasks.update(existingAimsTask.id, updates)
+              if (updates.status) result.tasksUpdatedInAims++
             }
           } else {
             // Create new task in AIMS
@@ -169,6 +207,7 @@ export async function POST(request: NextRequest) {
               createdAt: now,
               updatedAt: now,
               source: "asana",
+              asanaGid: asanaTask.gid,
             })
             result.tasksCreatedInAims++
           }

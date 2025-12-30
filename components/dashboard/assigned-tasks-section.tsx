@@ -1,14 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { AssignedTask } from "@/lib/types"
+import type { AssignedTask, Rock } from "@/lib/types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils/date-utils"
-import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, AlertCircle, Clock } from "lucide-react"
+import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, AlertCircle, Clock, Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useApp } from "@/lib/contexts/app-context"
 import { differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
+import { AddTaskModal } from "@/components/tasks/add-task-modal"
 
 function getDueDateStatus(dueDate: string) {
   const today = startOfDay(new Date())
@@ -48,9 +49,19 @@ interface AssignedTasksSectionProps {
   tasks: AssignedTask[]
   onToggleTask: (taskId: string) => void
   onTasksUpdated?: () => void
+  userRocks?: Rock[]
+  onAddTask?: (taskData: {
+    title: string
+    description: string
+    rockId: string | null
+    rockTitle: string | null
+    priority: "high" | "medium" | "normal"
+    dueDate: string
+    recurrence?: AssignedTask["recurrence"]
+  }) => Promise<void>
 }
 
-export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: AssignedTasksSectionProps) {
+export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated, userRocks = [], onAddTask }: AssignedTasksSectionProps) {
   const { toast } = useToast()
   const { setCurrentPage } = useApp()
   const [asanaConnected, setAsanaConnected] = useState(false)
@@ -58,6 +69,7 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
   const [isCheckingConnection, setIsCheckingConnection] = useState(true)
   const [visiblePendingCount, setVisiblePendingCount] = useState(TASKS_PER_PAGE)
   const [visibleCompletedCount, setVisibleCompletedCount] = useState(5)
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false)
 
   // Sort tasks: platform-assigned (manual) first, then Asana tasks
   const sortBySource = (a: AssignedTask, b: AssignedTask) => {
@@ -156,6 +168,17 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
             <span className="text-sm text-slate-500">({tasks.length})</span>
           </div>
           <div className="flex items-center gap-2">
+            {onAddTask && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setShowAddTaskModal(true)}
+                className="gap-1.5 text-xs"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Task
+              </Button>
+            )}
             {!isCheckingConnection && asanaConnected && (
               <Button
                 variant="outline"
@@ -323,6 +346,25 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
           </div>
         )}
       </div>
+
+      {/* Add Task Modal */}
+      {onAddTask && (
+        <AddTaskModal
+          open={showAddTaskModal}
+          onOpenChange={setShowAddTaskModal}
+          onSubmit={async (taskData) => {
+            await onAddTask(taskData)
+            toast({
+              title: "Task created",
+              description: taskData.recurrence
+                ? `Recurring task created (${taskData.recurrence.type})`
+                : "Your personal task has been added",
+            })
+            onTasksUpdated?.()
+          }}
+          userRocks={userRocks}
+        />
+      )}
     </div>
   )
 }

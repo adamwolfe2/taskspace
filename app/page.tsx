@@ -116,6 +116,7 @@ function AppContent() {
       updateRock: teamData.updateRock,
       submitEODReport: teamData.submitEODReport,
       updateTask: teamData.updateTask,
+      createTask: teamData.createTask,
       onRefresh: teamData.refresh,
     }
 

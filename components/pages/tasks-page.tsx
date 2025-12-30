@@ -180,32 +180,32 @@ export function TasksPage({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Tasks</h1>
-          <p className="text-muted-foreground mt-1">Manage your daily tasks and to-dos</p>
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold truncate">Tasks</h1>
+          <p className="text-muted-foreground text-sm sm:text-base mt-1">Manage your daily tasks and to-dos</p>
         </div>
-        <Button onClick={() => setShowAddTaskModal(true)}>
+        <Button onClick={() => setShowAddTaskModal(true)} className="w-full sm:w-auto flex-shrink-0">
           <Plus className="mr-2 h-4 w-4" />
           Add Task
         </Button>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-card p-4">
+      <div className="bg-white rounded-xl shadow-card p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1 relative">
+          <div className="flex-1 relative min-w-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-slate-50 border-slate-200"
+              className="pl-9 bg-slate-50 border-slate-200 w-full"
             />
           </div>
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-full sm:w-36 bg-slate-50 border-slate-200">
+            <SelectTrigger className="w-full sm:w-36 bg-slate-50 border-slate-200 flex-shrink-0">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
             <SelectContent>
@@ -218,23 +218,27 @@ export function TasksPage({
         </div>
       </div>
 
-      <Tabs defaultValue="active" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="active">My Tasks ({assignedByAdmin.length + personalTasks.length})</TabsTrigger>
-          <TabsTrigger value="completed">Completed ({completedTasks.length})</TabsTrigger>
+      <Tabs defaultValue="active" className="space-y-4 w-full overflow-hidden">
+        <TabsList className="w-full sm:w-auto flex-wrap">
+          <TabsTrigger value="active" className="flex-1 sm:flex-initial">
+            My Tasks ({assignedByAdmin.length + personalTasks.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="flex-1 sm:flex-initial">
+            Completed ({completedTasks.length})
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="active" className="space-y-6">
+        <TabsContent value="active" className="space-y-4 sm:space-y-6 w-full overflow-hidden">
           {assignedByAdmin.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-blue-500" />
-                  Assigned by Admin
+            <Card className="w-full overflow-hidden">
+              <CardHeader className="px-4 sm:px-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <UserCheck className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                  <span className="truncate">Assigned by Admin</span>
                 </CardTitle>
-                <CardDescription>Priority tasks assigned to you</CardDescription>
+                <CardDescription className="text-sm">Priority tasks assigned to you</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 px-4 sm:px-6 overflow-hidden">
                 {assignedByAdmin.map((task) => (
                   <TaskCard
                     key={task.id}
@@ -249,19 +253,19 @@ export function TasksPage({
             </Card>
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ClipboardList className="h-5 w-5 text-primary" />
-                My Personal Tasks
+          <Card className="w-full overflow-hidden">
+            <CardHeader className="px-4 sm:px-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <ClipboardList className="h-5 w-5 text-primary flex-shrink-0" />
+                <span className="truncate">My Personal Tasks</span>
               </CardTitle>
-              <CardDescription>Tasks you've created for yourself</CardDescription>
+              <CardDescription className="text-sm">Tasks you've created for yourself</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6 overflow-hidden">
               {personalTasks.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No personal tasks yet</p>
-                  <p className="text-sm mt-1">Click "+ Add Task" to create your first to-do</p>
+                <div className="text-center py-6 sm:py-8 text-muted-foreground">
+                  <p className="text-sm sm:text-base">No personal tasks yet</p>
+                  <p className="text-xs sm:text-sm mt-1">Click "+ Add Task" to create your first to-do</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -283,10 +287,12 @@ export function TasksPage({
           </Card>
         </TabsContent>
 
-        <TabsContent value="completed" className="space-y-4">
+        <TabsContent value="completed" className="space-y-4 w-full overflow-hidden">
           {completedTasks.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">No completed tasks yet</CardContent>
+            <Card className="w-full">
+              <CardContent className="py-6 sm:py-8 text-center text-muted-foreground text-sm sm:text-base">
+                No completed tasks yet
+              </CardContent>
             </Card>
           ) : (
             <div className="space-y-3">

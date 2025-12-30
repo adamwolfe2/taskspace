@@ -17,6 +17,7 @@ interface DashboardPageProps {
   updateRock: (id: string, updates: Partial<Rock>) => Promise<Rock>
   submitEODReport: (report: Partial<EODReport>) => Promise<EODReport>
   updateTask: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
+  createTask: (task: Partial<AssignedTask>) => Promise<AssignedTask>
   onRefresh?: () => Promise<void>
 }
 
@@ -28,6 +29,7 @@ export function DashboardPage({
   updateRock,
   submitEODReport,
   updateTask,
+  createTask,
   onRefresh,
 }: DashboardPageProps) {
   const [selectedEodDate, setSelectedEodDate] = useState<string | null>(null)
@@ -70,6 +72,31 @@ export function DashboardPage({
     }
   }
 
+  const handleAddTask = async (taskData: {
+    title: string
+    description: string
+    rockId: string | null
+    rockTitle: string | null
+    priority: "high" | "medium" | "normal"
+    dueDate: string
+    recurrence?: AssignedTask["recurrence"]
+  }) => {
+    try {
+      await createTask({
+        title: taskData.title,
+        description: taskData.description,
+        assigneeId: currentUser.id,
+        rockId: taskData.rockId,
+        priority: taskData.priority,
+        dueDate: taskData.dueDate,
+        recurrence: taskData.recurrence,
+      })
+    } catch (err) {
+      console.error("Failed to create task:", err)
+      throw err
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -88,7 +115,13 @@ export function DashboardPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MyRocksSection rocks={userRocks} onUpdateProgress={handleUpdateProgress} onUpdateRock={updateRock} />
-        <AssignedTasksSection tasks={userTasks} onToggleTask={handleToggleTask} onTasksUpdated={onRefresh} />
+        <AssignedTasksSection
+          tasks={userTasks}
+          onToggleTask={handleToggleTask}
+          onTasksUpdated={onRefresh}
+          userRocks={userRocks}
+          onAddTask={handleAddTask}
+        />
       </div>
 
       <EODSubmissionCard

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import type { Rock, RockMilestone } from "@/lib/types"
 import { formatDate } from "@/lib/utils/date-utils"
 import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight } from "lucide-react"
@@ -13,9 +13,57 @@ interface MyRocksSectionProps {
   onUpdateRock?: (id: string, updates: Partial<Rock>) => Promise<Rock>
 }
 
+// Get current quarter based on date
+function getCurrentQuarter(): string {
+  const now = new Date()
+  const month = now.getMonth() + 1 // 1-12
+  const year = now.getFullYear()
+  const quarter = Math.ceil(month / 3)
+  return `Q${quarter} ${year}`
+}
+
+// Parse quarter string to get year and quarter number
+function parseQuarter(quarterStr: string): { year: number; quarter: number } | null {
+  const match = quarterStr.match(/^Q([1-4])\s+(\d{4})$/)
+  if (!match) return null
+  return { quarter: parseInt(match[1]), year: parseInt(match[2]) }
+}
+
+// Get available quarters from rocks and ensure current quarter is included
+function getAvailableQuarters(rocks: Rock[]): string[] {
+  const quarters = new Set<string>()
+  const currentQuarter = getCurrentQuarter()
+  quarters.add(currentQuarter)
+
+  rocks.forEach(rock => {
+    if (rock.quarter) {
+      quarters.add(rock.quarter)
+    }
+  })
+
+  // Sort quarters chronologically (most recent first)
+  return Array.from(quarters).sort((a, b) => {
+    const parsedA = parseQuarter(a)
+    const parsedB = parseQuarter(b)
+    if (!parsedA || !parsedB) return 0
+    if (parsedA.year !== parsedB.year) return parsedB.year - parsedA.year
+    return parsedB.quarter - parsedA.quarter
+  })
+}
+
 export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock }: MyRocksSectionProps) {
   const [draggedRock, setDraggedRock] = useState<string | null>(null)
   const [selectedRock, setSelectedRock] = useState<Rock | null>(null)
+  const [selectedQuarter, setSelectedQuarter] = useState<string>("all")
+
+  // Get available quarters for filter
+  const availableQuarters = useMemo(() => getAvailableQuarters(rocks), [rocks])
+
+  // Filter rocks by selected quarter
+  const filteredRocks = useMemo(() => {
+    if (selectedQuarter === "all") return rocks
+    return rocks.filter(rock => rock.quarter === selectedQuarter)
+  }, [rocks, selectedQuarter])
 
   const getStatusConfig = (status: Rock["status"]) => {
     switch (status) {
@@ -70,7 +118,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock }: MyRock
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-slate-500" />
             <h3 className="font-semibold text-slate-900">My Rocks</h3>
-            <span className="text-sm text-slate-500">({rocks.length})</span>
+            <span className="text-sm text-slate-500">({filteredRocks.length})</span>
           </div>
           {rocks.length > 0 && (
             <button className="text-sm text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1">
@@ -78,20 +126,59 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock }: MyRock
             </button>
           )}
         </div>
+        {/* Quarter Filter Tabs */}
+        {availableQuarters.length > 0 && (
+          <div className="flex items-center gap-1 mt-3 overflow-x-auto pb-1">
+            <button
+              onClick={() => setSelectedQuarter("all")}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                selectedQuarter === "all"
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              All ({rocks.length})
+            </button>
+            {availableQuarters.map((quarter) => {
+              const count = rocks.filter(r => r.quarter === quarter).length
+              return (
+                <button
+                  key={quarter}
+                  onClick={() => setSelectedQuarter(quarter)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                    selectedQuarter === quarter
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {quarter} ({count})
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <div className="p-5">
-        {rocks.length === 0 ? (
+        {filteredRocks.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Target className="h-6 w-6 text-slate-400" />
             </div>
-            <p className="text-slate-600 font-medium">No rocks assigned yet</p>
-            <p className="text-sm text-slate-400 mt-1">Your quarterly goals will appear here</p>
+            <p className="text-slate-600 font-medium">
+              {rocks.length === 0
+                ? "No rocks assigned yet"
+                : `No rocks in ${selectedQuarter}`}
+            </p>
+            <p className="text-sm text-slate-400 mt-1">
+              {rocks.length === 0
+                ? "Your quarterly goals will appear here"
+                : "Select a different quarter or view all rocks"}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {rocks.map((rock) => {
+            {filteredRocks.map((rock) => {
               const statusConfig = getStatusConfig(rock.status)
               const StatusIcon = statusConfig.icon
               return (

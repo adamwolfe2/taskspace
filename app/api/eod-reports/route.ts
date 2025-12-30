@@ -5,6 +5,7 @@ import { generateId } from "@/lib/auth/password"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { sendEscalationNotification, sendAIAlertEmail, isEmailConfigured } from "@/lib/integrations/email"
 import { sendSlackMessage, buildEscalationMessage, isSlackConfigured } from "@/lib/integrations/slack"
+import { asanaClient } from "@/lib/integrations/asana"
 import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
 
 // GET /api/eod-reports - Get EOD reports
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
 
     await db.eodReports.create(report)
 
-    // Mark any completed tasks as added to EOD
+    // Mark any completed tasks as added to EOD and sync to Asana
     for (const task of tasks) {
       if (task.taskId) {
         const assignedTask = await db.assignedTasks.findById(task.taskId)
@@ -147,6 +148,17 @@ export async function POST(request: NextRequest) {
             status: "completed",
             completedAt: now,
           })
+
+          // Sync completion to Asana if task has an asanaGid
+          if (assignedTask.asanaGid && asanaClient.isConfigured()) {
+            try {
+              await asanaClient.completeTask(assignedTask.asanaGid)
+              console.log(`Synced task ${task.taskId} completion to Asana (${assignedTask.asanaGid})`)
+            } catch (asanaErr) {
+              // Log but don't fail - Asana sync is best-effort
+              console.error(`Failed to sync task ${task.taskId} completion to Asana:`, asanaErr)
+            }
+          }
         }
       }
     }

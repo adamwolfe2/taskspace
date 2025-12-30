@@ -65,10 +65,14 @@ function getDueDateStatus(dueDate: string, isCompleted: boolean) {
 
 export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, rocks, currentUser }: TaskCardProps) {
   const [showDetail, setShowDetail] = useState(false)
+  const [showFullDescription, setShowFullDescription] = useState(false)
   const isCompleted = task.status === "completed"
   const isPersonal = task.type === "personal"
   const dueDateStatus = getDueDateStatus(task.dueDate, isCompleted)
   const commentCount = task.comments?.length || 0
+
+  // Check if description is long (over 100 chars)
+  const isLongDescription = task.description && task.description.length > 100
 
   const priorityConfig = {
     high: { emoji: "🔴", label: "High", variant: "destructive" as const },
@@ -82,31 +86,36 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
     <>
     <Card
       className={cn(
-        "p-4 transition-all",
+        "p-3 sm:p-4 transition-all overflow-hidden w-full",
         isCompleted && "opacity-60 bg-muted/50",
         !isCompleted && isPersonal && "border-l-4 border-l-primary",
         !isCompleted && !isPersonal && "border-l-4 border-l-blue-500",
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2 sm:gap-3 min-w-0">
         <Checkbox
           checked={isCompleted}
           onCheckedChange={() => !isCompleted && onComplete(task.id)}
-          className="mt-1"
+          className="mt-1 flex-shrink-0"
           disabled={isCompleted}
         />
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2 min-w-0 overflow-hidden">
           <div className="flex items-start justify-between gap-2">
-            <h3 className={cn("font-medium", isCompleted && "line-through text-muted-foreground")}>{task.title}</h3>
+            <h3 className={cn(
+              "font-medium break-words line-clamp-2",
+              isCompleted && "line-through text-muted-foreground"
+            )}>
+              {task.title}
+            </h3>
             {isPersonal && !isCompleted && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 {onEdit && (
-                  <Button variant="ghost" size="sm" onClick={() => onEdit(task)}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onEdit(task)}>
                     <Pencil className="h-3 w-3" />
                   </Button>
                 )}
                 {onDelete && (
-                  <Button variant="ghost" size="sm" onClick={() => onDelete(task.id)}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onDelete(task.id)}>
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 )}
@@ -115,11 +124,27 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
           </div>
 
           {task.description && (
-            <p className={cn("text-sm text-muted-foreground", isCompleted && "line-through")}>{task.description}</p>
+            <div>
+              <p className={cn(
+                "text-sm text-muted-foreground break-words",
+                isCompleted && "line-through",
+                !showFullDescription && isLongDescription && "line-clamp-2"
+              )}>
+                {task.description}
+              </p>
+              {isLongDescription && (
+                <button
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                  className="text-xs text-blue-500 hover:text-blue-600 mt-1"
+                >
+                  {showFullDescription ? "Show less" : "Show more"}
+                </button>
+              )}
+            </div>
           )}
 
           {task.rockTitle && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground truncate">
               Related Rock: <span className="font-medium">{task.rockTitle}</span>
             </p>
           )}
