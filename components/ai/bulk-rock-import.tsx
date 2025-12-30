@@ -124,7 +124,16 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
       const data = await response.json()
 
       if (!data.success && data.data?.created?.length === 0) {
-        throw new Error(data.error || "Failed to create rocks")
+        // Build a detailed error message from failed rocks
+        let errorMsg = data.error || "Failed to create rocks"
+        if (data.data?.failed?.length > 0) {
+          const failedDetails = data.data.failed
+            .slice(0, 3) // Show first 3 failures
+            .map((f: { title: string; error: string }) => `"${f.title}": ${f.error}`)
+            .join("; ")
+          errorMsg = failedDetails
+        }
+        throw new Error(errorMsg)
       }
 
       const selectedMember = teamMembers.find((m) => m.id === selectedUserId)

@@ -56,15 +56,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify target user is in the organization
-    // The userId can be either:
+    // The userId from frontend can be either:
     // 1. A user.id (for active members who have registered)
     // 2. An organization_member.id (for draft members who haven't registered yet)
+    //
+    // IMPORTANT: rocks.user_id has a foreign key constraint to users.id,
+    // so we can only create rocks for active members with valid user accounts.
 
     // First, try to find by user_id (active members)
     let targetMember = await db.members.findByOrgAndUser(auth.organization.id, userId)
-    let rockUserId = userId // The ID to store in the rock
+    let rockUserId: string
 
-    if (!targetMember) {
+    if (targetMember) {
+      // Found an active member - use their user.id
+      rockUserId = targetMember.userId!
+    } else {
       // Not found by user_id, try to find by organization_member.id (draft members)
       targetMember = await db.members.findByOrgAndId(auth.organization.id, userId)
 
@@ -75,12 +81,20 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // For draft members, use the organization_member.id as the rock's userId
-      // This maintains consistency with how the frontend identifies draft members
-      rockUserId = targetMember.id
-    } else {
-      // For active members, use their actual user.id
-      rockUserId = targetMember.userId || userId
+      // Check if this member has a linked user account
+      if (!targetMember.userId) {
+        // Draft member without a user account - cannot create rocks due to FK constraint
+        return NextResponse.json<ApiResponse<null>>(
+          {
+            success: false,
+            error: `Cannot create rocks for ${targetMember.name || targetMember.email} - they need to accept their invitation and create an account first.`
+          },
+          { status: 400 }
+        )
+      }
+
+      // Member found by organization_member.id but has a user account
+      rockUserId = targetMember.userId
     }
 
     // Calculate default due date (end of current quarter)
@@ -132,9 +146,15 @@ export async function POST(request: NextRequest) {
     const successCount = result.created.length
     const failCount = result.failed.length
 
+    // If all rocks failed, include the first error message in the error field
+    const errorMessage = successCount === 0 && failCount > 0
+      ? result.failed[0]?.error || "All rocks failed to create"
+      : undefined
+
     return NextResponse.json<ApiResponse<BulkCreateResponse>>({
       success: successCount > 0,
       data: result,
+      error: errorMessage,
       message:
         failCount === 0
           ? `Successfully created ${successCount} rock(s)`
@@ -142,8 +162,11 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Bulk rock create error:", error)
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Failed to create rocks"
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Failed to create rocks" },
+      { success: false, error: errorMessage },
       { status: 500 }
     )
   }
