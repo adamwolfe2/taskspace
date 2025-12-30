@@ -1593,6 +1593,52 @@ EMAIL_FROM=AIMS Dashboard <noreply@yourdomain.com>`, "Environment variables")}
 
                 <Separator />
 
+                {/* Calendar Export */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                      <Download className="h-5 w-5 text-indigo-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Calendar Export (ICS)</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Export tasks and rocks to your calendar app (Google Calendar, Apple Calendar, Outlook)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open("/api/export/calendar?type=all", "_blank")}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      All Items
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open("/api/export/calendar?type=tasks", "_blank")}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Tasks Only
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open("/api/export/calendar?type=rocks", "_blank")}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Rocks Only
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Download the ICS file and import it into your calendar application.
+                  </p>
+                </div>
+
+                <Separator />
+
                 <div className="text-sm text-muted-foreground">
                   <p className="font-medium mb-2">Export Notes:</p>
                   <ul className="list-disc list-inside space-y-1">
