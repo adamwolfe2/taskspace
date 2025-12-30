@@ -131,10 +131,18 @@ export function CalendarView({ tasks, rocks, eodReports, currentUser, onSelectDa
       <div className="p-4">
         {/* Weekday headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
+          {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
+            <div
+              key={idx}
+              className="text-center text-xs font-medium text-slate-500 py-2 md:hidden"
+            >
+              {day}
+            </div>
+          ))}
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div
               key={day}
-              className="text-center text-xs font-medium text-slate-500 py-2"
+              className="hidden md:block text-center text-xs font-medium text-slate-500 py-2"
             >
               {day}
             </div>
@@ -160,7 +168,7 @@ export function CalendarView({ tasks, rocks, eodReports, currentUser, onSelectDa
                 key={dateKey}
                 onClick={() => handleDateClick(day)}
                 className={cn(
-                  "relative h-20 p-1 rounded-lg border transition-colors text-left",
+                  "relative h-14 md:h-20 p-1 rounded-lg border transition-colors text-left",
                   isCurrentMonth ? "bg-white" : "bg-slate-50",
                   isSelected
                     ? "border-blue-500 bg-blue-50"

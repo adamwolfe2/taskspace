@@ -3,17 +3,17 @@
 import { useApp } from "@/lib/contexts/app-context"
 import type { PageType } from "@/lib/types"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, History, Target, Shield, CheckSquare } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, CheckSquare, Calendar } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function MobileNav() {
   const { currentUser, currentPage, setCurrentPage } = useApp()
 
   const navItems: { id: PageType; label: string; icon: typeof LayoutDashboard }[] = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "history", label: "History", icon: History },
-    { id: "rocks", label: "Rocks", icon: Target },
+    { id: "dashboard", label: "Home", icon: LayoutDashboard },
+    { id: "calendar", label: "Calendar", icon: Calendar },
     { id: "tasks", label: "Tasks", icon: CheckSquare },
+    { id: "rocks", label: "Rocks", icon: Target },
   ]
 
   if (currentUser?.role === "admin" || currentUser?.role === "owner") {
