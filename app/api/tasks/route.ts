@@ -130,8 +130,40 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date().toISOString()
+    const taskId = generateId()
+
+    // Check if Asana integration is enabled and get user mapping
+    let asanaGid: string | null = null
+    const org = await db.organizations.findById(auth.organization.id)
+    const asanaConfig = org?.settings?.asanaIntegration
+
+    if (asanaConfig?.enabled && asanaConfig?.projectGid && asanaClient.isConfigured()) {
+      // Find the Asana user mapping for the assignee
+      const userMapping = asanaConfig.userMappings?.find(
+        (m: { aimsUserId: string }) => m.aimsUserId === targetUserId
+      )
+
+      if (userMapping) {
+        try {
+          // Create task in Asana
+          const asanaTask = await asanaClient.createTask({
+            name: title.trim(),
+            notes: `${description?.trim() || ""}\n\n---\nAIMS Task ID: AIMS-${taskId}`,
+            projects: [asanaConfig.projectGid],
+            assignee: userMapping.asanaUserGid,
+            due_on: dueDate ? dueDate.split("T")[0] : undefined,
+          })
+          asanaGid = asanaTask.gid
+          console.log(`Created Asana task ${asanaGid} for AIMS task ${taskId}`)
+        } catch (asanaErr) {
+          // Log but don't fail - Asana sync is best-effort
+          console.error(`Failed to create Asana task for AIMS task ${taskId}:`, asanaErr)
+        }
+      }
+    }
+
     const task: AssignedTask = {
-      id: generateId(),
+      id: taskId,
       organizationId: auth.organization.id,
       title: title.trim(),
       description: description?.trim(),
@@ -150,6 +182,8 @@ export async function POST(request: NextRequest) {
       completedAt: null,
       addedToEOD: false,
       eodReportId: null,
+      source: "manual",
+      asanaGid,
     }
 
     await db.assignedTasks.create(task)
