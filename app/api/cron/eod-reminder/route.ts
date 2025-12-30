@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { sendMissingEODReminder, isEmailConfigured } from "@/lib/integrations/email"
+import { sendSlackMessage, buildEODReminderMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import type { ApiResponse, TeamMember, Organization } from "@/lib/types"
 
 // This endpoint is designed to be called by Vercel Cron
@@ -199,7 +200,24 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        console.log(`[Cron] Sent ${remindersSent} reminders for org ${org.name}`)
+        console.log(`[Cron] Sent ${remindersSent} email reminders for org ${org.name}`)
+
+        // Also send Slack reminder if configured
+        const slackWebhookUrl = org.settings?.slackWebhookUrl
+        if (isSlackConfigured(slackWebhookUrl) && org.settings?.enableSlackIntegration && missingMembers.length > 0) {
+          try {
+            const slackMessage = buildEODReminderMessage(
+              missingMembers.map(m => m.name),
+              org.name
+            )
+            await sendSlackMessage(slackWebhookUrl!, slackMessage)
+            console.log(`[Cron] Slack reminder sent for org ${org.name}`)
+          } catch (slackError) {
+            console.error(`[Cron] Slack reminder failed for org ${org.name}:`, slackError)
+            errors.push(`Slack: ${slackError instanceof Error ? slackError.message : "Unknown error"}`)
+          }
+        }
+
         results.push({
           orgId: org.id,
           orgName: org.name,
