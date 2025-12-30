@@ -156,6 +156,7 @@ function parseAssignedTask(row: Record<string, unknown>): AssignedTask {
     createdAt: (row.created_at as Date)?.toISOString() || "",
     updatedAt: (row.updated_at as Date)?.toISOString() || "",
     source: (row.source as "manual" | "asana") || "manual",
+    asanaGid: row.asana_gid as string | null | undefined,
     comments: row.comments as AssignedTask["comments"] | undefined,
     recurrence: row.recurrence as AssignedTask["recurrence"] | undefined,
     parentRecurringTaskId: row.parent_recurring_task_id as string | undefined,
@@ -706,6 +707,13 @@ export const db = {
     },
     async findById(id: string): Promise<AssignedTask | null> {
       const { rows } = await sql`SELECT * FROM assigned_tasks WHERE id = ${id}`
+      return rows[0] ? parseAssignedTask(rows[0]) : null
+    },
+    async findByAsanaGid(asanaGid: string, orgId: string): Promise<AssignedTask | null> {
+      const { rows } = await sql`
+        SELECT * FROM assigned_tasks
+        WHERE asana_gid = ${asanaGid} AND organization_id = ${orgId}
+      `
       return rows[0] ? parseAssignedTask(rows[0]) : null
     },
     async create(task: AssignedTask): Promise<AssignedTask> {
