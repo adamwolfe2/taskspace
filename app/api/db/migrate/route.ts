@@ -338,6 +338,22 @@ export async function GET(request: NextRequest) {
       )
     `
 
+    // Notifications table for in-app notifications
+    await sql`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL,
+        user_id VARCHAR(255) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT,
+        read BOOLEAN DEFAULT FALSE,
+        action_url TEXT,
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
     // Add AI-related columns to organization_members
     await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS skills JSONB DEFAULT '[]'`
     await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS capacity INTEGER DEFAULT 100`
@@ -357,10 +373,13 @@ export async function GET(request: NextRequest) {
     await sql`CREATE INDEX IF NOT EXISTS idx_ai_tasks_org ON ai_generated_tasks(organization_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_digests_date ON daily_digests(organization_id, digest_date)`
     await sql`CREATE INDEX IF NOT EXISTS idx_ai_conversations_org ON ai_conversations(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_notifications_org ON notifications(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(user_id, read)`
 
     return NextResponse.json({
       success: true,
-      message: "Database migration completed successfully (including AI Command Center tables)",
+      message: "Database migration completed successfully (including AI Command Center and Notifications tables)",
     })
   } catch (error) {
     console.error("Migration error:", error)
