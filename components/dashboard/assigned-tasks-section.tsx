@@ -26,8 +26,17 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
   const [visiblePendingCount, setVisiblePendingCount] = useState(TASKS_PER_PAGE)
   const [visibleCompletedCount, setVisibleCompletedCount] = useState(5)
 
-  const pendingTasks = tasks.filter((t) => t.status !== "completed")
-  const completedTasks = tasks.filter((t) => t.status === "completed")
+  // Sort tasks: platform-assigned (manual) first, then Asana tasks
+  const sortBySource = (a: AssignedTask, b: AssignedTask) => {
+    const sourceA = a.source || "manual"
+    const sourceB = b.source || "manual"
+    if (sourceA === "manual" && sourceB === "asana") return -1
+    if (sourceA === "asana" && sourceB === "manual") return 1
+    return 0
+  }
+
+  const pendingTasks = tasks.filter((t) => t.status !== "completed").sort(sortBySource)
+  const completedTasks = tasks.filter((t) => t.status === "completed").sort(sortBySource)
 
   const visiblePendingTasks = pendingTasks.slice(0, visiblePendingCount)
   const visibleCompletedTasks = completedTasks.slice(0, visibleCompletedCount)

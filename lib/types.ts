@@ -181,6 +181,7 @@ export interface AssignedTask {
   completedAt: string | null
   addedToEOD: boolean
   eodReportId: string | null
+  source?: "manual" | "asana"
 }
 
 // EOD Report Types

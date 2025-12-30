@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import type { TeamMember, Rock, EODReport, AssignedTask } from "@/lib/types"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { MyRocksSection } from "@/components/dashboard/my-rocks-section"
@@ -27,9 +28,15 @@ export function DashboardPage({
   submitEODReport,
   updateTask,
 }: DashboardPageProps) {
+  const [selectedEodDate, setSelectedEodDate] = useState<string | null>(null)
+
   const userRocks = rocks.filter((r) => r.userId === currentUser.id)
   const userTasks = assignedTasks.filter((t) => t.assigneeId === currentUser.id)
   const stats = calculateUserStats(currentUser.id, rocks, assignedTasks, eodReports)
+
+  const handleSelectEodDate = (date: string) => {
+    setSelectedEodDate(date)
+  }
 
   const handleToggleTask = async (taskId: string) => {
     const task = userTasks.find(t => t.id === taskId)
@@ -70,7 +77,12 @@ export function DashboardPage({
 
       <StatsCards stats={stats} />
 
-      <WeeklyEODCalendar eodReports={eodReports} userId={currentUser.id} />
+      <WeeklyEODCalendar
+        eodReports={eodReports}
+        userId={currentUser.id}
+        selectedDate={selectedEodDate}
+        onSelectDate={handleSelectEodDate}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MyRocksSection rocks={userRocks} onUpdateProgress={handleUpdateProgress} />
@@ -84,6 +96,8 @@ export function DashboardPage({
         userId={currentUser.id}
         currentUser={currentUser}
         assignedTasks={assignedTasks}
+        selectedDate={selectedEodDate}
+        onDateReset={() => setSelectedEodDate(null)}
       />
     </div>
   )

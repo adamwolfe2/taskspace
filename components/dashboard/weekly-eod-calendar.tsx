@@ -7,6 +7,8 @@ import type { EODReport } from "@/lib/types"
 interface WeeklyEODCalendarProps {
   eodReports: EODReport[]
   userId: string
+  selectedDate?: string | null
+  onSelectDate?: (date: string) => void
 }
 
 interface WeekDay {
@@ -56,11 +58,13 @@ function getWeekDays(reports: EODReport[], userId: string): WeekDay[] {
   return weekDays
 }
 
-export function WeeklyEODCalendar({ eodReports, userId }: WeeklyEODCalendarProps) {
+export function WeeklyEODCalendar({ eodReports, userId, selectedDate, onSelectDate }: WeeklyEODCalendarProps) {
   const weekDays = useMemo(
     () => getWeekDays(eodReports, userId),
     [eodReports, userId]
   )
+
+  const todayString = new Date().toISOString().split("T")[0]
 
   const submittedCount = weekDays.filter(d => d.hasSubmission).length
   const todayIndex = weekDays.findIndex(d => d.isToday)
@@ -89,56 +93,64 @@ export function WeeklyEODCalendar({ eodReports, userId }: WeeklyEODCalendarProps
       </div>
 
       <div className="flex justify-between gap-2">
-        {weekDays.map((day) => (
-          <div
-            key={day.date}
-            className={`flex-1 flex flex-col items-center p-3 rounded-lg transition-colors ${
-              day.isToday
-                ? "bg-slate-900 text-white"
-                : day.isFuture
-                ? "bg-slate-50 text-slate-400"
-                : day.hasSubmission
-                ? "bg-emerald-50"
-                : "bg-red-50"
-            }`}
-          >
-            <span
-              className={`text-xs font-medium ${
-                day.isToday
-                  ? "text-slate-300"
+        {weekDays.map((day) => {
+          const isSelected = selectedDate === day.date
+          const isClickable = !day.isFuture && onSelectDate
+          const showAsSelected = isSelected || (selectedDate === null && day.isToday)
+
+          return (
+            <button
+              key={day.date}
+              onClick={() => isClickable && onSelectDate(day.date)}
+              disabled={day.isFuture}
+              className={`flex-1 flex flex-col items-center p-3 rounded-lg transition-colors ${
+                showAsSelected
+                  ? "bg-slate-900 text-white ring-2 ring-slate-900 ring-offset-2"
                   : day.isFuture
-                  ? "text-slate-400"
-                  : "text-slate-500"
-              }`}
-            >
-              {day.dayName}
-            </span>
-            <span
-              className={`text-lg font-bold mt-1 ${
-                day.isToday
-                  ? "text-white"
-                  : day.isFuture
-                  ? "text-slate-400"
+                  ? "bg-slate-50 text-slate-400 cursor-not-allowed"
                   : day.hasSubmission
-                  ? "text-emerald-700"
-                  : "text-red-700"
+                  ? "bg-emerald-50 hover:bg-emerald-100 cursor-pointer"
+                  : "bg-red-50 hover:bg-red-100 cursor-pointer"
               }`}
             >
-              {day.dayNumber}
-            </span>
-            <div className="mt-2">
-              {day.isFuture ? (
-                <Circle className="h-5 w-5 text-slate-300" />
-              ) : day.hasSubmission ? (
-                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-              ) : day.isToday ? (
-                <Circle className="h-5 w-5 text-amber-400" />
-              ) : (
-                <Circle className="h-5 w-5 text-red-400" />
-              )}
-            </div>
-          </div>
-        ))}
+              <span
+                className={`text-xs font-medium ${
+                  showAsSelected
+                    ? "text-slate-300"
+                    : day.isFuture
+                    ? "text-slate-400"
+                    : "text-slate-500"
+                }`}
+              >
+                {day.dayName}
+              </span>
+              <span
+                className={`text-lg font-bold mt-1 ${
+                  showAsSelected
+                    ? "text-white"
+                    : day.isFuture
+                    ? "text-slate-400"
+                    : day.hasSubmission
+                    ? "text-emerald-700"
+                    : "text-red-700"
+                }`}
+              >
+                {day.dayNumber}
+              </span>
+              <div className="mt-2">
+                {day.isFuture ? (
+                  <Circle className="h-5 w-5 text-slate-300" />
+                ) : day.hasSubmission ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                ) : showAsSelected ? (
+                  <Circle className="h-5 w-5 text-amber-400" />
+                ) : (
+                  <Circle className="h-5 w-5 text-red-400" />
+                )}
+              </div>
+            </button>
+          )
+        })}
       </div>
 
       <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-slate-100">
