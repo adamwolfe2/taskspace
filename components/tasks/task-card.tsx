@@ -1,20 +1,24 @@
 "use client"
 
-import type { AssignedTask, Rock } from "@/lib/types"
+import { useState } from "react"
+import type { AssignedTask, Rock, TeamMember } from "@/lib/types"
 import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, User, Pencil, Trash2, AlertCircle, Clock } from "lucide-react"
+import { Calendar, User, Pencil, Trash2, AlertCircle, Clock, MessageSquare, Repeat } from "lucide-react"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
 import { cn } from "@/lib/utils"
+import { TaskDetailModal } from "./task-detail-modal"
 
 interface TaskCardProps {
   task: AssignedTask
   onComplete: (taskId: string) => void
   onEdit?: (task: AssignedTask) => void
   onDelete?: (taskId: string) => void
+  onUpdateTask?: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
   rocks: Rock[]
+  currentUser?: TeamMember
 }
 
 function getDueDateStatus(dueDate: string, isCompleted: boolean) {
@@ -59,10 +63,12 @@ function getDueDateStatus(dueDate: string, isCompleted: boolean) {
   return null
 }
 
-export function TaskCard({ task, onComplete, onEdit, onDelete, rocks }: TaskCardProps) {
+export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, rocks, currentUser }: TaskCardProps) {
+  const [showDetail, setShowDetail] = useState(false)
   const isCompleted = task.status === "completed"
   const isPersonal = task.type === "personal"
   const dueDateStatus = getDueDateStatus(task.dueDate, isCompleted)
+  const commentCount = task.comments?.length || 0
 
   const priorityConfig = {
     high: { emoji: "🔴", label: "High", variant: "destructive" as const },
@@ -73,6 +79,7 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, rocks }: TaskCard
   const priority = priorityConfig[task.priority]
 
   return (
+    <>
     <Card
       className={cn(
         "p-4 transition-all",
@@ -138,16 +145,53 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, rocks }: TaskCard
                 <span>Assigned by: {task.assignedByName}</span>
               </div>
             )}
+            {task.recurrence && (
+              <div className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs font-medium">
+                <Repeat className="h-3 w-3" />
+                <span>
+                  {task.recurrence.interval === 1
+                    ? task.recurrence.type === "daily"
+                      ? "Daily"
+                      : task.recurrence.type === "weekly"
+                        ? "Weekly"
+                        : "Monthly"
+                    : `Every ${task.recurrence.interval} ${task.recurrence.type.replace("ly", "")}${task.recurrence.interval > 1 ? "s" : ""}`}
+                </span>
+              </div>
+            )}
           </div>
 
-          {isCompleted && task.completedAt && (
-            <p className="text-xs text-muted-foreground">
-              Completed at {format(new Date(task.completedAt), "h:mm a")}
-              {task.addedToEOD && " • Added to EOD ✓"}
-            </p>
-          )}
+          <div className="flex items-center justify-between">
+            {isCompleted && task.completedAt && (
+              <p className="text-xs text-muted-foreground">
+                Completed at {format(new Date(task.completedAt), "h:mm a")}
+                {task.addedToEOD && " • Added to EOD ✓"}
+              </p>
+            )}
+            {currentUser && onUpdateTask && (
+              <button
+                onClick={() => setShowDetail(true)}
+                className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors ml-auto"
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                {commentCount > 0 ? `${commentCount} note${commentCount > 1 ? "s" : ""}` : "Add note"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </Card>
+
+    {/* Task Detail Modal */}
+    {showDetail && currentUser && onUpdateTask && (
+      <TaskDetailModal
+        open={showDetail}
+        onOpenChange={setShowDetail}
+        task={task}
+        currentUser={currentUser}
+        onUpdateTask={onUpdateTask}
+      />
+    )}
+    </>
   )
 }

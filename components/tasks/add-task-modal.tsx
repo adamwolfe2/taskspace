@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { Rock } from "@/lib/types"
+import type { Rock, TaskRecurrence } from "@/lib/types"
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { Repeat } from "lucide-react"
 
 interface AddTaskModalProps {
   open: boolean
@@ -26,6 +28,7 @@ interface AddTaskModalProps {
     rockTitle: string | null
     priority: "high" | "medium" | "normal"
     dueDate: string
+    recurrence?: TaskRecurrence
   }) => void
   userRocks: Rock[]
 }
@@ -36,11 +39,21 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
   const [rockId, setRockId] = useState<string | null>(null)
   const [priority, setPriority] = useState<"high" | "medium" | "normal">("normal")
   const [dueDate, setDueDate] = useState("")
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [recurrenceType, setRecurrenceType] = useState<"daily" | "weekly" | "monthly">("weekly")
+  const [recurrenceInterval, setRecurrenceInterval] = useState(1)
 
   const handleSubmit = () => {
     if (!title.trim() || !dueDate) return
 
     const selectedRock = rockId ? userRocks.find((r) => r.id === rockId) : null
+
+    const recurrence: TaskRecurrence | undefined = isRecurring
+      ? {
+          type: recurrenceType,
+          interval: recurrenceInterval,
+        }
+      : undefined
 
     onSubmit({
       title: title.trim(),
@@ -49,6 +62,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
       rockTitle: selectedRock?.title || null,
       priority,
       dueDate,
+      recurrence,
     })
 
     setTitle("")
@@ -56,6 +70,9 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
     setRockId(null)
     setPriority("normal")
     setDueDate("")
+    setIsRecurring(false)
+    setRecurrenceType("weekly")
+    setRecurrenceInterval(1)
     onOpenChange(false)
   }
 
@@ -125,6 +142,45 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
               <Label htmlFor="dueDate">Due Date *</Label>
               <Input id="dueDate" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </div>
+          </div>
+
+          {/* Recurrence */}
+          <div className="space-y-3 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Repeat className="h-4 w-4 text-slate-500" />
+                <Label htmlFor="recurring" className="cursor-pointer">Recurring task</Label>
+              </div>
+              <Switch
+                id="recurring"
+                checked={isRecurring}
+                onCheckedChange={setIsRecurring}
+              />
+            </div>
+
+            {isRecurring && (
+              <div className="flex items-center gap-2 pl-6">
+                <span className="text-sm text-slate-600">Repeat every</span>
+                <Input
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={recurrenceInterval}
+                  onChange={(e) => setRecurrenceInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-16 text-center"
+                />
+                <Select value={recurrenceType} onValueChange={(v: any) => setRecurrenceType(v)}>
+                  <SelectTrigger className="w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">day(s)</SelectItem>
+                    <SelectItem value="weekly">week(s)</SelectItem>
+                    <SelectItem value="monthly">month(s)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
 

@@ -88,6 +88,7 @@ export function TasksPage({
     rockTitle: string | null
     priority: "high" | "medium" | "normal"
     dueDate: string
+    recurrence?: AssignedTask["recurrence"]
   }) => {
     try {
       await createTask({
@@ -97,10 +98,13 @@ export function TasksPage({
         rockId: taskData.rockId,
         priority: taskData.priority,
         dueDate: taskData.dueDate,
+        recurrence: taskData.recurrence,
       })
       toast({
         title: "Task created",
-        description: "Your personal task has been added",
+        description: taskData.recurrence
+          ? `Recurring task created (${taskData.recurrence.type})`
+          : "Your personal task has been added",
       })
     } catch (err: any) {
       toast({
@@ -189,7 +193,14 @@ export function TasksPage({
               </CardHeader>
               <CardContent className="space-y-3">
                 {assignedByAdmin.map((task) => (
-                  <TaskCard key={task.id} task={task} onComplete={handleCompleteTask} rocks={rocks} />
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onComplete={handleCompleteTask}
+                    onUpdateTask={updateTask}
+                    rocks={rocks}
+                    currentUser={currentUser}
+                  />
                 ))}
               </CardContent>
             </Card>
@@ -218,7 +229,9 @@ export function TasksPage({
                       onComplete={handleCompleteTask}
                       onEdit={handleEditTask}
                       onDelete={handleDeleteTask}
+                      onUpdateTask={updateTask}
                       rocks={rocks}
+                      currentUser={currentUser}
                     />
                   ))}
                 </div>
@@ -235,7 +248,14 @@ export function TasksPage({
           ) : (
             <div className="space-y-3">
               {completedTasks.map((task) => (
-                <TaskCard key={task.id} task={task} onComplete={handleCompleteTask} rocks={rocks} />
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onComplete={handleCompleteTask}
+                  onUpdateTask={updateTask}
+                  rocks={rocks}
+                  currentUser={currentUser}
+                />
               ))}
             </div>
           )}

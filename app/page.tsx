@@ -19,6 +19,7 @@ import { TasksPage } from "@/components/pages/tasks-page"
 import { SettingsPage } from "@/components/pages/settings-page"
 import { CommandCenterPage } from "@/components/pages/command-center-page"
 import { AnalyticsPage } from "@/components/pages/analytics-page"
+import { CalendarPage } from "@/components/pages/calendar-page"
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
@@ -180,6 +181,15 @@ function AppContent() {
           />
         ) : (
           <DashboardPage {...dashboardProps} />
+        )
+      case "calendar":
+        return (
+          <CalendarPage
+            currentUser={currentUser!}
+            assignedTasks={teamData.assignedTasks}
+            rocks={teamData.rocks}
+            eodReports={teamData.eodReports}
+          />
         )
       case "settings":
         return <SettingsPage />

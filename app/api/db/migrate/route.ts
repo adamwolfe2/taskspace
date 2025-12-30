@@ -371,6 +371,16 @@ export async function GET(request: NextRequest) {
     await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS asana_gid VARCHAR(255)`
     await sql`CREATE INDEX IF NOT EXISTS idx_tasks_asana_gid ON assigned_tasks(asana_gid)`
 
+    // Add milestones column to rocks table
+    await sql`ALTER TABLE rocks ADD COLUMN IF NOT EXISTS milestones JSONB DEFAULT '[]'`
+
+    // Add comments column to assigned_tasks table
+    await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS comments JSONB DEFAULT '[]'`
+
+    // Add recurrence columns to assigned_tasks table
+    await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS recurrence JSONB`
+    await sql`ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS parent_recurring_task_id VARCHAR(255)`
+
     // AI Command Center indexes
     await sql`CREATE INDEX IF NOT EXISTS idx_brain_dumps_org ON admin_brain_dumps(organization_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_brain_dumps_status ON admin_brain_dumps(status)`
