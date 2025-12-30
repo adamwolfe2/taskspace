@@ -45,6 +45,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
 import { AsanaIntegration } from "@/components/settings/asana-integration"
+import { AsanaMemberConnection } from "@/components/settings/asana-member-connection"
 
 interface IntegrationStatus {
   email: {
@@ -757,6 +758,9 @@ export function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Personal Asana Integration for all members */}
+          <AsanaMemberConnection />
 
           <Card>
             <CardHeader>

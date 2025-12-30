@@ -1,18 +1,86 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import type { AssignedTask } from "@/lib/types"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils/date-utils"
-import { CheckSquare, ArrowRight, Circle } from "lucide-react"
+import { CheckSquare, ArrowRight, Circle, RefreshCw, Link2, Unlink } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface AssignedTasksSectionProps {
   tasks: AssignedTask[]
   onToggleTask: (taskId: string) => void
+  onTasksUpdated?: () => void
 }
 
-export function AssignedTasksSection({ tasks, onToggleTask }: AssignedTasksSectionProps) {
+export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: AssignedTasksSectionProps) {
+  const { toast } = useToast()
+  const [asanaConnected, setAsanaConnected] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true)
+
   const pendingTasks = tasks.filter((t) => t.status !== "completed")
   const completedTasks = tasks.filter((t) => t.status === "completed")
+
+  // Check if user has Asana connected
+  useEffect(() => {
+    const checkAsanaConnection = async () => {
+      try {
+        const response = await fetch("/api/asana/me/connect")
+        const data = await response.json()
+        if (data.success) {
+          setAsanaConnected(data.data.connected)
+        }
+      } catch (err) {
+        console.error("Failed to check Asana connection:", err)
+      } finally {
+        setIsCheckingConnection(false)
+      }
+    }
+    checkAsanaConnection()
+  }, [])
+
+  const handleSyncAsana = async () => {
+    setIsSyncing(true)
+    try {
+      const response = await fetch("/api/asana/me/sync", {
+        method: "POST",
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        const result = data.data
+        if (result.tasksImported > 0 || result.tasksCompleted > 0) {
+          toast({
+            title: "Sync complete",
+            description: `Imported ${result.tasksImported} new tasks${result.tasksCompleted > 0 ? `, ${result.tasksCompleted} marked complete` : ""}`,
+          })
+          // Trigger refresh of tasks
+          onTasksUpdated?.()
+        } else {
+          toast({
+            title: "Already up to date",
+            description: "No new tasks to sync from Asana",
+          })
+        }
+      } else {
+        toast({
+          title: "Sync failed",
+          description: data.error || "Failed to sync with Asana",
+          variant: "destructive",
+        })
+      }
+    } catch (err) {
+      toast({
+        title: "Sync failed",
+        description: "Failed to connect to Asana",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSyncing(false)
+    }
+  }
 
   const getPriorityConfig = (priority: string) => {
     switch (priority) {
@@ -34,11 +102,25 @@ export function AssignedTasksSection({ tasks, onToggleTask }: AssignedTasksSecti
             <h3 className="font-semibold text-slate-900">My Tasks</h3>
             <span className="text-sm text-slate-500">({tasks.length})</span>
           </div>
-          {tasks.length > 0 && (
-            <button className="text-sm text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1">
-              View all <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {!isCheckingConnection && asanaConnected && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSyncAsana}
+                disabled={isSyncing}
+                className="gap-1.5 text-xs"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+                {isSyncing ? "Syncing..." : "Sync Asana"}
+              </Button>
+            )}
+            {tasks.length > 0 && (
+              <button className="text-sm text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1">
+                View all <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -50,6 +132,26 @@ export function AssignedTasksSection({ tasks, onToggleTask }: AssignedTasksSecti
             </div>
             <p className="text-slate-600 font-medium">No tasks assigned yet</p>
             <p className="text-sm text-slate-400 mt-1">Tasks assigned to you will appear here</p>
+            {!isCheckingConnection && asanaConnected && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSyncAsana}
+                disabled={isSyncing}
+                className="mt-4 gap-1.5"
+              >
+                <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+                {isSyncing ? "Syncing..." : "Import from Asana"}
+              </Button>
+            )}
+            {!isCheckingConnection && !asanaConnected && (
+              <p className="text-xs text-slate-400 mt-4">
+                <a href="/settings#integrations" className="text-blue-500 hover:underline">
+                  Connect Asana
+                </a>{" "}
+                to sync your tasks
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
