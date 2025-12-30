@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { asanaClient } from "@/lib/integrations/asana"
-import { getServerSession } from "@/lib/auth"
+import { getAuthContext } from "@/lib/auth/middleware"
 
 /**
  * GET /api/asana/projects?workspace=<workspaceGid>
@@ -8,8 +8,8 @@ import { getServerSession } from "@/lib/auth"
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    if (!session?.user) {
+    const auth = await getAuthContext(request)
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
