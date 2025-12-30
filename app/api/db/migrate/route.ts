@@ -554,6 +554,90 @@ export async function GET(request: NextRequest) {
     await sql`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS actor_type VARCHAR(20) DEFAULT 'user'`
     await sql`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS details JSONB DEFAULT '{}'`
 
+    // ============================================
+    // RATE LIMITING TABLE (for serverless compatibility)
+    // ============================================
+    await sql`
+      CREATE TABLE IF NOT EXISTS rate_limit_attempts (
+        id SERIAL PRIMARY KEY,
+        identifier VARCHAR(255) NOT NULL,
+        attempted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+    await sql`CREATE INDEX IF NOT EXISTS idx_rate_limit_identifier ON rate_limit_attempts(identifier)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_rate_limit_attempted_at ON rate_limit_attempts(attempted_at)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_rate_limit_lookup ON rate_limit_attempts(identifier, attempted_at)`
+
+    // ============================================
+    // CRITICAL PERFORMANCE INDEXES
+    // These are essential for production query performance
+    // ============================================
+
+    // User lookups (login, profile)
+    await sql`CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users(LOWER(email))`
+
+    // Session validation (every authenticated request)
+    await sql`CREATE INDEX IF NOT EXISTS idx_sessions_token_expires ON sessions(token, expires_at)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_sessions_user_org ON sessions(user_id, organization_id)`
+
+    // Member lookups (permissions, team views)
+    await sql`CREATE INDEX IF NOT EXISTS idx_members_user_org ON organization_members(user_id, organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_members_org_status ON organization_members(organization_id, status)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_members_email_lower ON organization_members(organization_id, LOWER(email))`
+
+    // Task queries (dashboard, filters)
+    await sql`CREATE INDEX IF NOT EXISTS idx_tasks_org_assignee ON assigned_tasks(organization_id, assignee_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_tasks_org_status ON assigned_tasks(organization_id, status)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_tasks_org_due_date ON assigned_tasks(organization_id, due_date)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_tasks_assignee_status ON assigned_tasks(assignee_id, status)`
+
+    // Rock queries (quarterly tracking)
+    await sql`CREATE INDEX IF NOT EXISTS idx_rocks_org_user ON rocks(organization_id, user_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_rocks_org_status ON rocks(organization_id, status)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_rocks_org_quarter ON rocks(organization_id, quarter)`
+
+    // EOD report queries (daily submission checks)
+    await sql`CREATE INDEX IF NOT EXISTS idx_eod_org_date ON eod_reports(organization_id, date)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_eod_user_date ON eod_reports(user_id, date)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_eod_org_user_date ON eod_reports(organization_id, user_id, date)`
+
+    // Notification queries (unread counts, user inbox)
+    await sql`CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, read)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC)`
+
+    // API key validation
+    await sql`CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key)`
+
+    // Invitation lookups
+    await sql`CREATE INDEX IF NOT EXISTS idx_invitations_org_status ON invitations(organization_id, status)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_invitations_email_lower ON invitations(LOWER(email))`
+
+    // Audit log queries (compliance, debugging)
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_org_created ON audit_logs(organization_id, created_at DESC)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_user_created ON audit_logs(user_id, created_at DESC)`
+
+    // ============================================
+    // DATA CLEANUP FUNCTION
+    // ============================================
+    await sql`
+      CREATE OR REPLACE FUNCTION cleanup_expired_data()
+      RETURNS void AS $$
+      BEGIN
+        -- Delete expired sessions
+        DELETE FROM sessions WHERE expires_at < NOW();
+
+        -- Delete old rate limit attempts (older than 1 hour)
+        DELETE FROM rate_limit_attempts WHERE attempted_at < NOW() - INTERVAL '1 hour';
+
+        -- Delete expired password reset tokens
+        DELETE FROM password_reset_tokens WHERE expires_at < NOW();
+
+        -- Delete expired invitations
+        DELETE FROM invitations WHERE expires_at < NOW() AND status = 'pending';
+      END;
+      $$ LANGUAGE plpgsql;
+    `
+
     return NextResponse.json({
       success: true,
       message: "Database migration completed successfully (including AI Command Center, Notifications, Audit Logs, Webhooks, and Enterprise tables)",
