@@ -5,8 +5,11 @@ import type { AssignedTask } from "@/lib/types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils/date-utils"
-import { CheckSquare, ArrowRight, Circle, RefreshCw, Link2, Unlink } from "lucide-react"
+import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useApp } from "@/lib/contexts/app-context"
+
+const TASKS_PER_PAGE = 10
 
 interface AssignedTasksSectionProps {
   tasks: AssignedTask[]
@@ -16,12 +19,29 @@ interface AssignedTasksSectionProps {
 
 export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: AssignedTasksSectionProps) {
   const { toast } = useToast()
+  const { setCurrentPage } = useApp()
   const [asanaConnected, setAsanaConnected] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [isCheckingConnection, setIsCheckingConnection] = useState(true)
+  const [visiblePendingCount, setVisiblePendingCount] = useState(TASKS_PER_PAGE)
+  const [visibleCompletedCount, setVisibleCompletedCount] = useState(5)
 
-  const pendingTasks = tasks.filter((t) => t.status !== "completed")
-  const completedTasks = tasks.filter((t) => t.status === "completed")
+  // Sort tasks: platform-assigned (manual) first, then Asana tasks
+  const sortBySource = (a: AssignedTask, b: AssignedTask) => {
+    const sourceA = a.source || "manual"
+    const sourceB = b.source || "manual"
+    if (sourceA === "manual" && sourceB === "asana") return -1
+    if (sourceA === "asana" && sourceB === "manual") return 1
+    return 0
+  }
+
+  const pendingTasks = tasks.filter((t) => t.status !== "completed").sort(sortBySource)
+  const completedTasks = tasks.filter((t) => t.status === "completed").sort(sortBySource)
+
+  const visiblePendingTasks = pendingTasks.slice(0, visiblePendingCount)
+  const visibleCompletedTasks = completedTasks.slice(0, visibleCompletedCount)
+  const hasMorePending = pendingTasks.length > visiblePendingCount
+  const hasMoreCompleted = completedTasks.length > visibleCompletedCount
 
   // Check if user has Asana connected
   useEffect(() => {
@@ -146,9 +166,12 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
             )}
             {!isCheckingConnection && !asanaConnected && (
               <p className="text-xs text-slate-400 mt-4">
-                <a href="/settings#integrations" className="text-blue-500 hover:underline">
+                <button
+                  onClick={() => setCurrentPage("settings")}
+                  className="text-blue-500 hover:underline"
+                >
                   Connect Asana
-                </a>{" "}
+                </button>{" "}
                 to sync your tasks
               </p>
             )}
@@ -165,7 +188,7 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
                   </span>
                 </div>
                 <div className="space-y-2">
-                  {pendingTasks.map((task) => {
+                  {visiblePendingTasks.map((task) => {
                     const priorityConfig = getPriorityConfig(task.priority)
                     return (
                       <div
@@ -202,6 +225,17 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
                     )
                   })}
                 </div>
+                {hasMorePending && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setVisiblePendingCount((prev) => prev + TASKS_PER_PAGE)}
+                    className="w-full text-slate-500 hover:text-slate-700"
+                  >
+                    <ChevronDown className="h-4 w-4 mr-1" />
+                    Load more ({pendingTasks.length - visiblePendingCount} remaining)
+                  </Button>
+                )}
               </div>
             )}
 
@@ -215,7 +249,7 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
                   </span>
                 </div>
                 <div className="space-y-2">
-                  {completedTasks.slice(0, 5).map((task) => (
+                  {visibleCompletedTasks.map((task) => (
                     <div
                       key={task.id}
                       className="flex items-start gap-3 p-3 border border-slate-100 rounded-lg bg-slate-50/50"
@@ -231,6 +265,17 @@ export function AssignedTasksSection({ tasks, onToggleTask, onTasksUpdated }: As
                     </div>
                   ))}
                 </div>
+                {hasMoreCompleted && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setVisibleCompletedCount((prev) => prev + TASKS_PER_PAGE)}
+                    className="w-full text-slate-500 hover:text-slate-700"
+                  >
+                    <ChevronDown className="h-4 w-4 mr-1" />
+                    Load more ({completedTasks.length - visibleCompletedCount} remaining)
+                  </Button>
+                )}
               </div>
             )}
           </div>

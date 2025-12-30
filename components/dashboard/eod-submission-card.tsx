@@ -9,9 +9,14 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, X, Send, Trash2 } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask } from "@/lib/types"
-import { getTodayString } from "@/lib/utils/date-utils"
+import { getTodayString, formatDate } from "@/lib/utils/date-utils"
 import { useToast } from "@/hooks/use-toast"
 import { sendEODNotification } from "@/lib/email"
+
+function formatDisplayDate(dateStr: string): string {
+  const date = new Date(dateStr + "T12:00:00")
+  return date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
+}
 
 interface EODSubmissionCardProps {
   rocks: Rock[]
@@ -20,6 +25,8 @@ interface EODSubmissionCardProps {
   userId: string
   currentUser: TeamMember
   assignedTasks: AssignedTask[]
+  selectedDate?: string | null
+  onDateReset?: () => void
 }
 
 export function EODSubmissionCard({
@@ -29,14 +36,19 @@ export function EODSubmissionCard({
   userId,
   currentUser,
   assignedTasks,
+  selectedDate,
+  onDateReset,
 }: EODSubmissionCardProps) {
-  const completedTasksToday = assignedTasks.filter(
-    (t) =>
-      t.assigneeId === userId &&
-      t.status === "completed" &&
-      t.completedAt &&
-      new Date(t.completedAt).toDateString() === new Date().toDateString(),
-  )
+  const reportDate = selectedDate || getTodayString()
+  const isBackdatedReport = selectedDate && selectedDate !== getTodayString()
+
+  const completedTasksForDate = assignedTasks.filter((t) => {
+    if (t.assigneeId !== userId || t.status !== "completed" || !t.completedAt) {
+      return false
+    }
+    const completedDate = new Date(t.completedAt).toISOString().split("T")[0]
+    return completedDate === reportDate
+  })
 
   const [autoTasks, setAutoTasks] = useState<EODTask[]>([])
   const [tasks, setTasks] = useState<EODTask[]>([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
@@ -49,14 +61,14 @@ export function EODSubmissionCard({
   const { toast } = useToast()
 
   useEffect(() => {
-    const autoPopulated = completedTasksToday.map((task) => ({
+    const autoPopulated = completedTasksForDate.map((task) => ({
       id: crypto.randomUUID(),
       text: task.title,
       rockId: task.rockId,
       rockTitle: task.rockTitle,
     }))
     setAutoTasks(autoPopulated)
-  }, [completedTasksToday.length])
+  }, [completedTasksForDate.length, reportDate])
 
   const removeAutoTask = (id: string) => {
     setAutoTasks(autoTasks.filter((t) => t.id !== id))
@@ -152,7 +164,7 @@ export function EODSubmissionCard({
     // Note: organizationId is added by the API from the session
     const report: Omit<EODReport, "id" | "createdAt" | "organizationId"> = {
       userId,
-      date: getTodayString(),
+      date: reportDate,
       submittedAt: new Date().toISOString(),
       tasks: allTasks,
       challenges: challenges.trim(),
@@ -177,10 +189,13 @@ export function EODSubmissionCard({
       setTomorrowPriorities([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
       setNeedsEscalation(false)
       setEscalationNote("")
+      onDateReset?.()
 
       toast({
         title: "EOD Report Submitted",
-        description: "Your end of day report has been recorded",
+        description: isBackdatedReport
+          ? `Your EOD report for ${formatDisplayDate(reportDate)} has been recorded`
+          : "Your end of day report has been recorded",
       })
     } catch (err: any) {
       toast({
@@ -194,8 +209,24 @@ export function EODSubmissionCard({
   return (
     <div className="bg-white rounded-xl shadow-card">
       <div className="px-5 py-4 border-b border-slate-100">
-        <h3 className="font-semibold text-slate-900 text-lg">Submit EOD Report</h3>
-        <p className="text-sm text-slate-500 mt-0.5">Share your daily progress and updates</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-slate-900 text-lg">Submit EOD Report</h3>
+            {isBackdatedReport ? (
+              <p className="text-sm text-amber-600 mt-0.5 font-medium">
+                Submitting for: {formatDisplayDate(reportDate)}
+              </p>
+            ) : (
+              <p className="text-sm text-slate-500 mt-0.5">Share your daily progress and updates</p>
+            )}
+          </div>
+          {isBackdatedReport && onDateReset && (
+            <Button variant="ghost" size="sm" onClick={onDateReset} className="text-slate-500">
+              <X className="h-4 w-4 mr-1" />
+              Cancel
+            </Button>
+          )}
+        </div>
       </div>
       <div className="p-5 space-y-6">
         {/* Auto-populated tasks from completed tasks */}
@@ -385,7 +416,7 @@ export function EODSubmissionCard({
 
         <Button onClick={handleSubmit} className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-sm">
           <Send className="h-4 w-4 mr-2" />
-          Submit EOD Report
+          {isBackdatedReport ? `Submit EOD for ${formatDisplayDate(reportDate)}` : "Submit EOD Report"}
         </Button>
       </div>
     </div>

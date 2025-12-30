@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { sql } from "@vercel/postgres"
+import { db } from "@/lib/db"
 import type { ApiResponse } from "@/lib/types"
 
 const ASANA_API_BASE = "https://app.asana.com/api/1.0"
@@ -12,7 +13,7 @@ interface AsanaWorkspace {
 
 /**
  * GET /api/asana/me/connect
- * Check if the current user has Asana connected
+ * Check if the current user has Asana connected (either via org mapping or personal PAT)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +25,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get member record to check Asana connection
+    // First check if user is mapped in org-level Asana config
+    const org = await db.organizations.findById(auth.organization.id)
+    const asanaConfig = org?.settings?.asanaIntegration
+
+    let isConnectedViaOrg = false
+    if (asanaConfig?.enabled && asanaConfig?.userMappings?.length > 0) {
+      const userMapping = asanaConfig.userMappings.find(
+        (m: any) => m.aimsUserId === auth.user.id || m.aimsUserEmail?.toLowerCase() === auth.user.email?.toLowerCase()
+      )
+      isConnectedViaOrg = !!userMapping && !!process.env.ASANA_ACCESS_TOKEN
+    }
+
+    // Also check member's personal PAT
     const { rows } = await sql`
       SELECT asana_pat, asana_workspace_gid, asana_last_sync_at
       FROM organization_members
@@ -32,17 +45,22 @@ export async function GET(request: NextRequest) {
     `
 
     const member = rows[0]
-    const isConnected = !!member?.asana_pat
+    const hasPersonalPat = !!member?.asana_pat
+    const isConnected = isConnectedViaOrg || hasPersonalPat
 
     return NextResponse.json<ApiResponse<{
       connected: boolean
+      connectedViaOrg: boolean
+      connectedViaPersonal: boolean
       workspaceGid: string | null
       lastSyncAt: string | null
     }>>({
       success: true,
       data: {
         connected: isConnected,
-        workspaceGid: member?.asana_workspace_gid || null,
+        connectedViaOrg: isConnectedViaOrg,
+        connectedViaPersonal: hasPersonalPat,
+        workspaceGid: member?.asana_workspace_gid || asanaConfig?.workspaceGid || null,
         lastSyncAt: member?.asana_last_sync_at?.toISOString() || null,
       },
     })

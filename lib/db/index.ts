@@ -154,6 +154,7 @@ function parseAssignedTask(row: Record<string, unknown>): AssignedTask {
     eodReportId: row.eod_report_id as string | null,
     createdAt: (row.created_at as Date)?.toISOString() || "",
     updatedAt: (row.updated_at as Date)?.toISOString() || "",
+    source: (row.source as "manual" | "asana") || "manual",
   }
 }
 
