@@ -11,6 +11,7 @@ import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { Plus, ClipboardList, UserCheck, Search } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { addDays, addWeeks, addMonths } from "date-fns"
 
 interface TasksPageProps {
   currentUser: TeamMember
@@ -62,12 +63,54 @@ export function TasksPage({
 
   const userRocks = rocks.filter((r) => r.userId === currentUser.id)
 
+  const calculateNextDueDate = (currentDueDate: string, recurrence: NonNullable<AssignedTask["recurrence"]>): Date => {
+    const current = new Date(currentDueDate)
+    switch (recurrence.type) {
+      case "daily":
+        return addDays(current, recurrence.interval)
+      case "weekly":
+        return addWeeks(current, recurrence.interval)
+      case "monthly":
+        return addMonths(current, recurrence.interval)
+      default:
+        return addDays(current, 1)
+    }
+  }
+
   const handleCompleteTask = async (taskId: string) => {
     try {
+      const completedTask = userTasks.find((t) => t.id === taskId)
+
       await updateTask(taskId, {
         status: "completed",
         completedAt: new Date().toISOString(),
       })
+
+      // If this is a recurring task, create the next instance
+      if (completedTask?.recurrence) {
+        const nextDueDate = calculateNextDueDate(completedTask.dueDate, completedTask.recurrence)
+
+        // Check if we've passed the end date
+        if (!completedTask.recurrence.endDate || nextDueDate <= new Date(completedTask.recurrence.endDate)) {
+          await createTask({
+            title: completedTask.title,
+            description: completedTask.description,
+            assigneeId: completedTask.assigneeId,
+            rockId: completedTask.rockId,
+            priority: completedTask.priority,
+            dueDate: nextDueDate.toISOString().split("T")[0],
+            recurrence: completedTask.recurrence,
+            parentRecurringTaskId: completedTask.parentRecurringTaskId || completedTask.id,
+          })
+
+          toast({
+            title: "Task completed!",
+            description: `Added to today's EOD report. Next occurrence created for ${nextDueDate.toLocaleDateString()}`,
+          })
+          return
+        }
+      }
+
       toast({
         title: "Task completed!",
         description: "Added to today's EOD report",
