@@ -128,21 +128,25 @@ export async function POST(request: NextRequest) {
       await db.members.update(draftMember.id, { status: "invited" })
     }
 
-    // Send invitation email (async, don't block on failure)
-    sendInvitationEmail(invitation, auth.organization, auth.user.name)
-      .then(result => {
-        if (!result.success) {
-          console.warn("Failed to send invitation email:", result.error)
-        }
-      })
-      .catch(err => console.error("Email send error:", err))
+    // Send invitation email and capture result
+    const emailResult = await sendInvitationEmail(invitation, auth.organization, auth.user.name)
 
-    return NextResponse.json<ApiResponse<Invitation>>({
+    if (!emailResult.success) {
+      console.error("Failed to send invitation email:", emailResult.error)
+    }
+
+    return NextResponse.json<ApiResponse<Invitation & { emailSent?: boolean; emailError?: string }>>({
       success: true,
-      data: invitation,
+      data: {
+        ...invitation,
+        emailSent: emailResult.success,
+        emailError: emailResult.success ? undefined : String(emailResult.error),
+      },
       message: draftMember
-        ? "Invitation sent! The team member's pre-configured rocks and tasks will be linked when they accept."
-        : "Invitation sent successfully",
+        ? "Invitation created! The team member's pre-configured rocks and tasks will be linked when they accept."
+        : emailResult.success
+          ? "Invitation sent successfully"
+          : `Invitation created but email failed: ${emailResult.error}. You can copy the invite link manually.`,
     })
   } catch (error) {
     console.error("Create invitation error:", error)

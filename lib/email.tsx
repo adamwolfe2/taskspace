@@ -36,10 +36,17 @@ async function sendEmail(to: string[], subject: string, html: string) {
     })
 
     const data = await response.json()
-    return { success: response.ok, data }
+
+    if (!response.ok) {
+      console.error("Resend API error:", data)
+      return { success: false, error: data.message || data.error || "Resend API error", data }
+    }
+
+    console.log("Email sent successfully:", { to, subject, id: data.id })
+    return { success: true, data }
   } catch (error) {
     console.error("Failed to send email:", error)
-    return { success: false, error }
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
 
