@@ -133,7 +133,7 @@ export function WeeklyEODCalendar({
 
  return (
  <TooltipProvider>
- <div className="bg-white  rounded-xl shadow-card p-5">
+ <div className="section-card p-5">
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-2">
  <div className="p-2 rounded-lg bg-slate-100 ">

@@ -141,8 +141,8 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock }: MyRock
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-card">
-      <div className="px-5 py-4 border-b border-slate-100">
+    <div className="section-card">
+      <div className="section-header flex-col items-start gap-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-slate-500" />

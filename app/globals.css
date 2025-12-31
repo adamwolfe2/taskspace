@@ -514,6 +514,111 @@
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     color: #475569;
   }
+
+  /* Priority badges for tasks and escalations */
+  .badge-critical {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    color: #dc2626;
+    border: 1px solid rgb(254 202 202 / 0.5);
+  }
+
+  .badge-high {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    color: #ea580c;
+    border: 1px solid rgb(253 186 116 / 0.5);
+  }
+
+  .badge-medium {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    color: #d97706;
+    border: 1px solid rgb(252 211 77 / 0.5);
+  }
+
+  .badge-low {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    color: #16a34a;
+    border: 1px solid rgb(134 239 172 / 0.5);
+  }
+}
+
+/* ============================================
+   SEMANTIC CARD VARIANTS
+   ============================================ */
+@layer components {
+  /* Stat card with subtle accent */
+  .stat-card {
+    @apply bg-white rounded-2xl p-5 relative overflow-hidden;
+    border: 1px solid rgb(241 245 249);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.02),
+      0 1px 2px rgb(0 0 0 / 0.03),
+      0 2px 4px rgb(0 0 0 / 0.03);
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    border-color: rgb(226 232 240);
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.02),
+      0 4px 8px rgb(0 0 0 / 0.05),
+      0 8px 16px rgb(0 0 0 / 0.04);
+  }
+
+  /* Section card wrapper */
+  .section-card {
+    @apply bg-white rounded-2xl overflow-hidden;
+    border: 1px solid rgb(241 245 249);
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.02),
+      0 1px 2px rgb(0 0 0 / 0.03);
+  }
+
+  .section-header {
+    @apply flex items-center justify-between px-5 py-4 border-b border-slate-100;
+  }
+
+  .section-title {
+    @apply text-base font-semibold text-slate-900 flex items-center gap-2;
+  }
+
+  .section-content {
+    @apply p-5;
+  }
+
+  /* Card with colored left border */
+  .card-accent-left {
+    @apply bg-white rounded-xl overflow-hidden;
+    border: 1px solid rgb(241 245 249);
+    border-left: 4px solid rgb(59 130 246);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.04);
+  }
+
+  .card-accent-left-success {
+    border-left-color: rgb(16 185 129);
+  }
+
+  .card-accent-left-warning {
+    border-left-color: rgb(245 158 11);
+  }
+
+  .card-accent-left-error {
+    border-left-color: rgb(239 68 68);
+  }
+
+  /* Toggle group card */
+  .toggle-group-card {
+    @apply flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100;
+    transition: all 0.2s ease-out;
+  }
+
+  .toggle-group-card:hover {
+    @apply bg-slate-100 border-slate-200;
+  }
 }
 
 /* ============================================

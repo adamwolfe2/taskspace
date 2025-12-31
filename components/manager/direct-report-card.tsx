@@ -234,18 +234,18 @@ export function DirectReportCard({ report, onClick, className }: DirectReportCar
           report.rocks.some((r) => r.status === "blocked" || r.status === "at-risk")) && (
           <div className="flex flex-wrap gap-1.5 mt-4">
             {report.metrics.overdueTasks > 0 && (
-              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
+              <Badge variant="critical" className="text-xs">
                 <AlertTriangle className="h-3 w-3 mr-1" />
                 {report.metrics.overdueTasks} overdue
               </Badge>
             )}
             {report.rocks.filter((r) => r.status === "blocked").length > 0 && (
-              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
+              <Badge variant="blocked" className="text-xs">
                 {report.rocks.filter((r) => r.status === "blocked").length} blocked
               </Badge>
             )}
             {report.rocks.filter((r) => r.status === "at-risk").length > 0 && (
-              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
+              <Badge variant="at-risk" className="text-xs">
                 {report.rocks.filter((r) => r.status === "at-risk").length} at risk
               </Badge>
             )}

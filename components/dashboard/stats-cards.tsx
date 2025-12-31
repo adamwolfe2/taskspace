@@ -1,5 +1,6 @@
 import { CheckCircle2, Target, TrendingUp, Calendar, TrendingDown, Minus, Flame } from "lucide-react"
 import { getStreakMilestone } from "@/lib/utils/stats-calculator"
+import { cn } from "@/lib/utils"
 
 interface StatsCardsProps {
   stats: {
@@ -16,7 +17,7 @@ function TrendBadge({ value, suffix = "%" }: { value: number; suffix?: string })
   // Handle NaN or invalid values
   if (!isFinite(value) || isNaN(value)) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+      <span className="trend-neutral">
         <Minus className="h-3 w-3" />
         —
       </span>
@@ -25,21 +26,21 @@ function TrendBadge({ value, suffix = "%" }: { value: number; suffix?: string })
 
   if (value > 0) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+      <span className="trend-up">
         <TrendingUp className="h-3 w-3" />
         +{value.toFixed(1)}{suffix}
       </span>
     )
   } else if (value < 0) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+      <span className="trend-down">
         <TrendingDown className="h-3 w-3" />
         {value.toFixed(1)}{suffix}
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+    <span className="trend-neutral">
       <Minus className="h-3 w-3" />
       0{suffix}
     </span>
@@ -96,7 +97,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       {cards.map((card, index) => (
         <div
           key={index}
-          className="bg-white rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow duration-200"
+          className="stat-card"
         >
           <div className="flex items-start justify-between">
             <div className={`p-2 rounded-lg ${card.iconBg}`}>
