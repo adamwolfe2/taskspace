@@ -84,6 +84,13 @@ export async function GET(request: NextRequest) {
     await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS email VARCHAR(255)`
     await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS name VARCHAR(255)`
 
+    // Migration: Add timezone, reminder, and manager columns (for existing databases)
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS timezone VARCHAR(100)`
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS eod_reminder_time VARCHAR(10)`
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS manager_id VARCHAR(255)`
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS job_title VARCHAR(255)`
+    await sql`ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS notification_preferences JSONB DEFAULT '{}'`
+
     // Migration: Make user_id nullable and drop the unique constraint (for existing databases)
     // Note: PostgreSQL doesn't have ALTER COLUMN IF NOT NULL, so we use a DO block
     await sql`
