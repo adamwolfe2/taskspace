@@ -813,15 +813,15 @@ export function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="personalTimezone">Your Timezone</Label>
                 <Select
-                  value={personalTimezone}
-                  onValueChange={setPersonalTimezone}
+                  value={personalTimezone || "org-default"}
+                  onValueChange={(value) => setPersonalTimezone(value === "org-default" ? "" : value)}
                   disabled={isSavingPersonal}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Use organization default" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Use organization default</SelectItem>
+                    <SelectItem value="org-default">Use organization default</SelectItem>
                     {timezones.map((tz) => (
                       <SelectItem key={tz.value} value={tz.value}>
                         {tz.label}
