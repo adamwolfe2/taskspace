@@ -13,6 +13,15 @@ interface MyRocksSectionProps {
   onUpdateRock?: (id: string, updates: Partial<Rock>) => Promise<Rock>
 }
 
+// Calculate quarter from a date string (YYYY-MM-DD or ISO format)
+function getQuarterFromDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  const month = date.getMonth() + 1 // 1-12
+  const year = date.getFullYear()
+  const quarter = Math.ceil(month / 3)
+  return `Q${quarter} ${year}`
+}
+
 // Get current quarter based on date
 function getCurrentQuarter(): string {
   const now = new Date()
@@ -29,6 +38,16 @@ function parseQuarter(quarterStr: string): { year: number; quarter: number } | n
   return { quarter: parseInt(match[1]), year: parseInt(match[2]) }
 }
 
+// Get rock's effective quarter (from due date, falling back to stored quarter)
+function getRockQuarter(rock: Rock): string {
+  // Calculate quarter from due date for accuracy
+  if (rock.dueDate) {
+    return getQuarterFromDate(rock.dueDate)
+  }
+  // Fall back to stored quarter if no due date
+  return rock.quarter || getCurrentQuarter()
+}
+
 // Get available quarters from rocks and ensure current quarter is included
 function getAvailableQuarters(rocks: Rock[]): string[] {
   const quarters = new Set<string>()
@@ -36,8 +55,10 @@ function getAvailableQuarters(rocks: Rock[]): string[] {
   quarters.add(currentQuarter)
 
   rocks.forEach(rock => {
-    if (rock.quarter) {
-      quarters.add(rock.quarter)
+    // Use calculated quarter from due date instead of stored quarter
+    const rockQuarter = getRockQuarter(rock)
+    if (rockQuarter) {
+      quarters.add(rockQuarter)
     }
   })
 
@@ -59,10 +80,10 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock }: MyRock
   // Get available quarters for filter
   const availableQuarters = useMemo(() => getAvailableQuarters(rocks), [rocks])
 
-  // Filter rocks by selected quarter
+  // Filter rocks by selected quarter (using calculated quarter from due date)
   const filteredRocks = useMemo(() => {
     if (selectedQuarter === "all") return rocks
-    return rocks.filter(rock => rock.quarter === selectedQuarter)
+    return rocks.filter(rock => getRockQuarter(rock) === selectedQuarter)
   }, [rocks, selectedQuarter])
 
   const getStatusConfig = (status: Rock["status"]) => {
@@ -148,7 +169,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock }: MyRock
               All ({rocks.length})
             </button>
             {availableQuarters.map((quarter) => {
-              const count = rocks.filter(r => r.quarter === quarter).length
+              const count = rocks.filter(r => getRockQuarter(r) === quarter).length
               return (
                 <button
                   key={quarter}
