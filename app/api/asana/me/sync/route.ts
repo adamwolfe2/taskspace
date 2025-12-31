@@ -12,6 +12,7 @@ interface AsanaTask {
   name: string
   notes: string
   completed: boolean
+  completed_at: string | null
   due_on: string | null
   assignee: {
     gid: string
@@ -97,25 +98,60 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get incomplete tasks assigned to this user
-    // Using user_task_list endpoint for better results
-    let tasksEndpoint = `${ASANA_API_BASE}/user_task_lists/${asanaUserGid}/tasks?opt_fields=name,notes,completed,due_on,assignee.email,assignee.name,projects.name`
+    // Get all tasks (including completed) assigned to this user
+    // Calculate date 365 days ago for completed tasks filter
+    const completedSince = new Date()
+    completedSince.setDate(completedSince.getDate() - 365)
+    const completedSinceStr = completedSince.toISOString().split('T')[0]
 
-    // If we have a workspace, use the tasks endpoint with workspace filter instead
+    const optFields = "name,notes,completed,completed_at,due_on,assignee.email,assignee.name,projects.name"
+    let allTasks: AsanaTask[] = []
+
     if (workspaceGid) {
-      tasksEndpoint = `${ASANA_API_BASE}/tasks?assignee=${asanaUserGid}&workspace=${workspaceGid}&opt_fields=name,notes,completed,due_on,assignee.email,assignee.name,projects.name`
+      // Fetch incomplete tasks
+      const incompleteEndpoint = `${ASANA_API_BASE}/tasks?assignee=${asanaUserGid}&workspace=${workspaceGid}&opt_fields=${optFields}`
+      const incompleteResponse = await fetch(incompleteEndpoint, {
+        headers: { Authorization: `Bearer ${pat}` },
+      })
+
+      if (incompleteResponse.ok) {
+        const incompleteData = await incompleteResponse.json()
+        allTasks = incompleteData.data || []
+      }
+
+      // Fetch completed tasks from the last 365 days
+      const completedEndpoint = `${ASANA_API_BASE}/tasks?assignee=${asanaUserGid}&workspace=${workspaceGid}&completed_since=${completedSinceStr}&opt_fields=${optFields}`
+      const completedResponse = await fetch(completedEndpoint, {
+        headers: { Authorization: `Bearer ${pat}` },
+      })
+
+      if (completedResponse.ok) {
+        const completedData = await completedResponse.json()
+        const completedTasks = completedData.data || []
+
+        // Merge and deduplicate
+        const taskMap = new Map<string, AsanaTask>()
+        for (const task of [...allTasks, ...completedTasks]) {
+          taskMap.set(task.gid, task)
+        }
+        allTasks = Array.from(taskMap.values())
+      }
+    } else {
+      // Fallback to user_task_list endpoint
+      const tasksEndpoint = `${ASANA_API_BASE}/user_task_lists/${asanaUserGid}/tasks?opt_fields=${optFields}`
+      const tasksResponse = await fetch(tasksEndpoint, {
+        headers: { Authorization: `Bearer ${pat}` },
+      })
+
+      if (tasksResponse.ok) {
+        const tasksData = await tasksResponse.json()
+        allTasks = tasksData.data || []
+      }
     }
 
-    const tasksResponse = await fetch(tasksEndpoint, {
-      headers: { Authorization: `Bearer ${pat}` },
-    })
-
-    if (!tasksResponse.ok) {
-      const errorData = await tasksResponse.json().catch(() => ({}))
-      console.error("Asana tasks fetch error:", errorData)
-
-      // If user_task_list fails, try the search endpoint
-      const searchEndpoint = `${ASANA_API_BASE}/workspaces/${workspaceGid}/tasks/search?assignee.any=${asanaUserGid}&is_subtask=false&completed=false&opt_fields=name,notes,completed,due_on,assignee.email,assignee.name,projects.name`
+    if (allTasks.length === 0) {
+      // Try the search endpoint as fallback (for both completed and incomplete)
+      const searchEndpoint = `${ASANA_API_BASE}/workspaces/${workspaceGid}/tasks/search?assignee.any=${asanaUserGid}&is_subtask=false&opt_fields=${optFields}`
 
       const searchResponse = await fetch(searchEndpoint, {
         headers: { Authorization: `Bearer ${pat}` },
@@ -129,11 +165,10 @@ export async function POST(request: NextRequest) {
       }
 
       const searchData = await searchResponse.json()
-      return processAsanaTasks(searchData.data, auth, workspaceGid)
+      allTasks = searchData.data || []
     }
 
-    const tasksData = await tasksResponse.json()
-    return processAsanaTasks(tasksData.data, auth, workspaceGid)
+    return processAsanaTasks(allTasks, auth, workspaceGid)
 
   } catch (error) {
     console.error("Asana sync error:", error)
@@ -149,21 +184,20 @@ async function processAsanaTasks(
   auth: { user: { id: string; name: string; email?: string }; organization: { id: string } },
   workspaceGid: string | null
 ) {
-  // Filter to only incomplete tasks
-  const incompleteTasks = asanaTasks.filter(t => !t.completed)
+  // Process ALL tasks (both completed and incomplete)
 
   // Get existing tasks from AIMS that were synced from Asana
   const { rows: existingTaskRows } = await sql`
-    SELECT id, asana_gid, status
+    SELECT id, asana_gid, status, completed_at
     FROM assigned_tasks
     WHERE organization_id = ${auth.organization.id}
       AND assignee_id = ${auth.user.id}
       AND asana_gid IS NOT NULL
   `
 
-  const existingTasksByGid = new Map<string, { id: string; status: string }>()
+  const existingTasksByGid = new Map<string, { id: string; status: string; completed_at: string | null }>()
   for (const task of existingTaskRows) {
-    existingTasksByGid.set(task.asana_gid, { id: task.id, status: task.status })
+    existingTasksByGid.set(task.asana_gid, { id: task.id, status: task.status, completed_at: task.completed_at })
   }
 
   const result: SyncResult = {
@@ -180,6 +214,7 @@ async function processAsanaTasks(
   const asanaTaskGids = new Set(asanaTasks.map(t => t.gid))
 
   // Check for tasks in AIMS that no longer exist in Asana (deleted)
+  // Only delete if it was an incomplete task that got deleted
   for (const [gid, existingTask] of existingTasksByGid) {
     if (!asanaTaskGids.has(gid) && existingTask.status !== "completed") {
       try {
@@ -197,30 +232,44 @@ async function processAsanaTasks(
     }
   }
 
-  for (const asanaTask of incompleteTasks) {
+  // Process ALL tasks from Asana (completed and incomplete)
+  for (const asanaTask of asanaTasks) {
     try {
       const existingTask = existingTasksByGid.get(asanaTask.gid)
 
       if (existingTask) {
         // Task already exists, check if needs update
-        if (asanaTask.completed && existingTask.status !== "completed") {
+        const newStatus = asanaTask.completed ? "completed" : "pending"
+
+        if (existingTask.status !== newStatus) {
+          const completedAt = asanaTask.completed
+            ? (asanaTask.completed_at || now)
+            : null
+
           await sql`
             UPDATE assigned_tasks
-            SET status = 'completed',
-                completed_at = ${now},
+            SET status = ${newStatus},
+                completed_at = ${completedAt},
                 updated_at = ${now}
             WHERE id = ${existingTask.id}
           `
-          result.tasksCompleted++
+          if (asanaTask.completed) {
+            result.tasksCompleted++
+          }
         }
         result.tasksUpdated++
       } else {
-        // Create new task from Asana
+        // Create new task from Asana (including completed ones)
         const taskId = generateId()
+        const status = asanaTask.completed ? "completed" : "pending"
+        const completedAt = asanaTask.completed
+          ? (asanaTask.completed_at || now)
+          : null
+
         await sql`
           INSERT INTO assigned_tasks (
             id, organization_id, title, description, assignee_id, assignee_name,
-            type, priority, due_date, status, source, asana_gid, created_at, updated_at
+            type, priority, due_date, status, completed_at, source, asana_gid, created_at, updated_at
           ) VALUES (
             ${taskId},
             ${auth.organization.id},
@@ -231,7 +280,8 @@ async function processAsanaTasks(
             'assigned',
             'normal',
             ${asanaTask.due_on || now.split("T")[0]},
-            'pending',
+            ${status},
+            ${completedAt},
             'asana',
             ${asanaTask.gid},
             ${now},
@@ -253,18 +303,21 @@ async function processAsanaTasks(
     WHERE organization_id = ${auth.organization.id} AND user_id = ${auth.user.id}
   `
 
-  // Build message
+  // Build message - count total completed and pending
+  const completedCount = asanaTasks.filter(t => t.completed).length
+  const pendingCount = asanaTasks.filter(t => !t.completed).length
+
   const messages: string[] = []
   if (result.tasksImported > 0) messages.push(`${result.tasksImported} imported`)
   if (result.tasksDeleted > 0) messages.push(`${result.tasksDeleted} deleted`)
-  if (result.tasksCompleted > 0) messages.push(`${result.tasksCompleted} completed`)
+  if (result.tasksCompleted > 0) messages.push(`${result.tasksCompleted} status updated`)
 
   return NextResponse.json<ApiResponse<SyncResult>>({
     success: true,
     data: result,
     message: messages.length > 0
-      ? `Synced with Asana: ${messages.join(", ")}`
-      : `No changes to sync (${incompleteTasks.length} tasks in sync)`,
+      ? `Synced with Asana: ${messages.join(", ")} (${completedCount} completed, ${pendingCount} pending)`
+      : `No changes to sync (${completedCount} completed, ${pendingCount} pending tasks in sync)`,
   })
 }
 

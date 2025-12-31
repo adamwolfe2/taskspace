@@ -141,13 +141,52 @@ class AsanaClient {
   }
 
   /**
+   * Helper to get a date string N days ago in YYYY-MM-DD format
+   */
+  private getDateDaysAgo(days: number): string {
+    const date = new Date()
+    date.setDate(date.getDate() - days)
+    return date.toISOString().split('T')[0]
+  }
+
+  /**
    * Get tasks from a project
+   * @param options.includeCompleted - if true, fetches both completed and incomplete tasks
+   * @param options.completedSinceDays - days to look back for completed tasks (default: 365)
    */
   async getProjectTasks(
     projectGid: string,
-    options?: { completed?: boolean; assignee?: string }
+    options?: { completed?: boolean; assignee?: string; includeCompleted?: boolean; completedSinceDays?: number }
   ): Promise<AsanaTask[]> {
-    let endpoint = `/projects/${projectGid}/tasks?opt_fields=name,notes,completed,completed_at,due_on,assignee.name,assignee.email,assignee.gid,projects.name`
+    const optFields = "name,notes,completed,completed_at,due_on,assignee.name,assignee.email,assignee.gid,projects.name"
+
+    // If we want all tasks (including completed), we need to fetch separately and merge
+    if (options?.includeCompleted) {
+      // Get incomplete tasks
+      let incompleteEndpoint = `/projects/${projectGid}/tasks?opt_fields=${optFields}`
+      if (options?.assignee) {
+        incompleteEndpoint += `&assignee=${options.assignee}`
+      }
+      const incompleteTasks = await this.request<AsanaTask[]>(incompleteEndpoint)
+
+      // Get completed tasks (default to last 365 days if not specified)
+      const completedSince = this.getDateDaysAgo(options.completedSinceDays || 365)
+      let completedEndpoint = `/projects/${projectGid}/tasks?opt_fields=${optFields}&completed_since=${completedSince}`
+      if (options?.assignee) {
+        completedEndpoint += `&assignee=${options.assignee}`
+      }
+      const completedTasks = await this.request<AsanaTask[]>(completedEndpoint)
+
+      // Merge and deduplicate by gid
+      const taskMap = new Map<string, AsanaTask>()
+      for (const task of [...incompleteTasks, ...completedTasks]) {
+        taskMap.set(task.gid, task)
+      }
+      return Array.from(taskMap.values())
+    }
+
+    // Original behavior for backward compatibility
+    let endpoint = `/projects/${projectGid}/tasks?opt_fields=${optFields}`
 
     if (options?.completed !== undefined) {
       endpoint += `&completed_since=${options.completed ? "now" : "1970-01-01"}`
