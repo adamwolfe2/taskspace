@@ -78,6 +78,8 @@ export interface OrganizationMember {
   joinedAt: string
   invitedBy?: string
   status: "active" | "invited" | "pending" | "inactive" // pending = draft (not yet invited)
+  timezone?: string // User's personal timezone (overrides org default)
+  eodReminderTime?: string // User's personal reminder time (HH:MM format)
 }
 
 export interface Invitation {
@@ -128,6 +130,8 @@ export interface TeamMember {
   joinDate: string
   weeklyMeasurable?: string
   status?: "active" | "invited" | "pending" | "inactive" // pending = draft (not yet invited)
+  timezone?: string // User's personal timezone
+  eodReminderTime?: string // User's preferred reminder time (HH:MM format)
 }
 
 // Rock Milestone (sub-goals within a rock)

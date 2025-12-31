@@ -41,6 +41,8 @@ import {
   Upload,
   ImageIcon,
   X,
+  Clock,
+  Globe,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
@@ -146,6 +148,17 @@ export function SettingsPage() {
     loadApiKeys()
     loadIntegrationStatus()
   }, [isAdmin])
+
+  // Load personal preferences from team members data
+  useEffect(() => {
+    if (currentUser && teamMembers.length > 0) {
+      const member = teamMembers.find(m => m.id === currentUser.id)
+      if (member) {
+        setPersonalTimezone(member.timezone || "")
+        setPersonalReminderTime(member.eodReminderTime || "")
+      }
+    }
+  }, [currentUser, teamMembers])
 
   // Refresh email integration status
   const refreshEmailStatus = async () => {
@@ -253,6 +266,51 @@ export function SettingsPage() {
     }
   }
 
+  // Save personal preferences (timezone and reminder time)
+  const handleSavePersonalPreferences = async () => {
+    if (!currentUser) return
+
+    try {
+      setIsSavingPersonal(true)
+      const response = await fetch("/api/members", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId: currentUser.id,
+          timezone: personalTimezone || null,
+          eodReminderTime: personalReminderTime || null,
+        }),
+      })
+
+      const data = await response.json()
+      if (!data.success) {
+        throw new Error(data.error || "Failed to save preferences")
+      }
+
+      // Update local state
+      setTeamMembers(prev =>
+        prev.map(m =>
+          m.id === currentUser.id
+            ? { ...m, timezone: personalTimezone, eodReminderTime: personalReminderTime }
+            : m
+        )
+      )
+
+      toast({
+        title: "Preferences saved",
+        description: "Your personal notification settings have been updated.",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to save preferences",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingPersonal(false)
+    }
+  }
+
   const teamCount = teamMembers.length + pendingInvitations.length
 
   // Organization settings state
@@ -270,6 +328,11 @@ export function SettingsPage() {
   const [slackWebhookUrl, setSlackWebhookUrl] = useState(
     currentOrganization?.settings.slackWebhookUrl || ""
   )
+
+  // Personal preferences state (per-user timezone and reminder time)
+  const [personalTimezone, setPersonalTimezone] = useState<string>("")
+  const [personalReminderTime, setPersonalReminderTime] = useState<string>("")
+  const [isSavingPersonal, setIsSavingPersonal] = useState(false)
   const [orgLogo, setOrgLogo] = useState<string | undefined>(
     currentOrganization?.settings.customBranding?.logo
   )
@@ -735,6 +798,75 @@ export function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
+          {/* Personal Preferences - available to all users */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Personal Reminder Settings
+              </CardTitle>
+              <CardDescription>
+                Set your timezone and preferred EOD reminder time
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="personalTimezone">Your Timezone</Label>
+                <Select
+                  value={personalTimezone}
+                  onValueChange={setPersonalTimezone}
+                  disabled={isSavingPersonal}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Use organization default" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Use organization default</SelectItem>
+                    {timezones.map((tz) => (
+                      <SelectItem key={tz.value} value={tz.value}>
+                        {tz.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {personalTimezone
+                    ? `Reminders will be sent in ${personalTimezone}`
+                    : `Using organization timezone: ${currentOrganization?.settings.timezone || "America/New_York"}`}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="personalReminderTime">Your EOD Reminder Time</Label>
+                <Input
+                  id="personalReminderTime"
+                  type="time"
+                  value={personalReminderTime}
+                  onChange={(e) => setPersonalReminderTime(e.target.value)}
+                  disabled={isSavingPersonal}
+                  placeholder="HH:MM"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {personalReminderTime
+                    ? `You'll receive reminders at ${personalReminderTime} in your timezone`
+                    : `Using organization default: ${currentOrganization?.settings.eodReminderTime || "17:00"}`}
+                </p>
+              </div>
+              <Button onClick={handleSavePersonalPreferences} disabled={isSavingPersonal}>
+                {isSavingPersonal ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Save Preferences
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Email Notifications</CardTitle>

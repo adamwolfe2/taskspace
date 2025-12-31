@@ -329,6 +329,142 @@ export function buildBlockerAlertMessage(
 }
 
 /**
+ * Build a full EOD report message for Slack
+ * Includes the entire report content verbatim
+ */
+export function buildFullEODReportMessage(
+  memberName: string,
+  department: string,
+  date: string,
+  tasks: { id: string; text: string; rockId?: string | null; rockTitle?: string }[],
+  challenges: string,
+  tomorrowPriorities: { id: string; text: string; rockId?: string | null; rockTitle?: string }[],
+  needsEscalation: boolean,
+  escalationNote?: string | null
+): SlackMessage {
+  const blocks: SlackBlock[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: `📝 EOD Report - ${date}`,
+        emoji: true,
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Team Member:*\n${memberName}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Department:*\n${department}`,
+        },
+      ],
+    },
+    {
+      type: "divider",
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: "*📋 Today's Accomplishments:*",
+      },
+    },
+  ]
+
+  // Group tasks by rock
+  const tasksByRock: Record<string, typeof tasks> = {}
+  for (const task of tasks) {
+    const key = task.rockTitle || "General"
+    if (!tasksByRock[key]) tasksByRock[key] = []
+    tasksByRock[key].push(task)
+  }
+
+  for (const [rockTitle, rockTasks] of Object.entries(tasksByRock)) {
+    let taskText = rockTitle !== "General" ? `*${rockTitle}:*\n` : ""
+    taskText += rockTasks.map(t => `• ${t.text}`).join("\n")
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: taskText,
+      },
+    })
+  }
+
+  // Challenges
+  if (challenges && challenges.trim()) {
+    blocks.push(
+      { type: "divider" },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*⚠️ Challenges:*\n${challenges}`,
+        },
+      }
+    )
+  }
+
+  // Tomorrow's Priorities
+  if (tomorrowPriorities.length > 0) {
+    blocks.push(
+      { type: "divider" },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "*🎯 Tomorrow's Priorities:*",
+        },
+      }
+    )
+
+    // Group by rock
+    const prioritiesByRock: Record<string, typeof tomorrowPriorities> = {}
+    for (const priority of tomorrowPriorities) {
+      const key = priority.rockTitle || "General"
+      if (!prioritiesByRock[key]) prioritiesByRock[key] = []
+      prioritiesByRock[key].push(priority)
+    }
+
+    for (const [rockTitle, rockPriorities] of Object.entries(prioritiesByRock)) {
+      let priorityText = rockTitle !== "General" ? `*${rockTitle}:*\n` : ""
+      priorityText += rockPriorities.map(p => `• ${p.text}`).join("\n")
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: priorityText,
+        },
+      })
+    }
+  }
+
+  // Escalation
+  if (needsEscalation && escalationNote) {
+    blocks.push(
+      { type: "divider" },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*🚨 ESCALATION:*\n> ${escalationNote}`,
+        },
+      }
+    )
+  }
+
+  return {
+    text: `EOD Report from ${memberName} (${date})`,
+    blocks,
+  }
+}
+
+/**
  * Check if Slack is configured for an organization
  */
 export function isSlackConfigured(webhookUrl?: string): boolean {

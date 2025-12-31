@@ -151,7 +151,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { memberId, department, weeklyMeasurable, role } = body
+    const { memberId, department, weeklyMeasurable, role, timezone, eodReminderTime } = body
 
     if (!memberId) {
       return NextResponse.json<ApiResponse<null>>(
@@ -203,6 +203,8 @@ export async function PATCH(request: NextRequest) {
     if (department !== undefined) updates.department = department
     if (weeklyMeasurable !== undefined) updates.weeklyMeasurable = weeklyMeasurable
     if (role !== undefined && isAdmin(auth)) updates.role = role
+    if (timezone !== undefined) updates.timezone = timezone
+    if (eodReminderTime !== undefined) updates.eodReminderTime = eodReminderTime
 
     await db.members.update(member.id, updates)
 

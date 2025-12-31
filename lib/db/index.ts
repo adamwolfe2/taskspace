@@ -70,6 +70,8 @@ function parseMember(row: Record<string, unknown>): OrganizationMember {
     joinedAt: (row.joined_at as Date)?.toISOString() || "",
     invitedBy: row.invited_by as string | undefined,
     status: row.status as OrganizationMember["status"],
+    timezone: row.timezone as string | undefined,
+    eodReminderTime: row.eod_reminder_time as string | undefined,
   }
 }
 
@@ -321,6 +323,8 @@ export const db = {
       joinDate: string
       weeklyMeasurable?: string
       status?: "active" | "invited" | "pending" | "inactive"
+      timezone?: string
+      eodReminderTime?: string
     }>> {
       const { rows } = await sql`
         SELECT
@@ -332,7 +336,9 @@ export const db = {
           om.department,
           om.joined_at,
           om.weekly_measurable,
-          om.status
+          om.status,
+          om.timezone,
+          om.eod_reminder_time
         FROM organization_members om
         LEFT JOIN users u ON u.id = om.user_id
         WHERE om.organization_id = ${orgId}
@@ -348,6 +354,8 @@ export const db = {
         joinDate: (row.joined_at as Date)?.toISOString() || "",
         weeklyMeasurable: row.weekly_measurable as string | undefined,
         status: row.status as "active" | "invited" | "pending" | "inactive" | undefined,
+        timezone: row.timezone as string | undefined,
+        eodReminderTime: row.eod_reminder_time as string | undefined,
       }))
     },
     async findByUserId(userId: string): Promise<OrganizationMember[]> {
@@ -385,7 +393,9 @@ export const db = {
           role = COALESCE(${updates.role || null}, role),
           department = COALESCE(${updates.department || null}, department),
           weekly_measurable = COALESCE(${updates.weeklyMeasurable || null}, weekly_measurable),
-          status = COALESCE(${updates.status || null}, status)
+          status = COALESCE(${updates.status || null}, status),
+          timezone = COALESCE(${updates.timezone || null}, timezone),
+          eod_reminder_time = COALESCE(${updates.eodReminderTime || null}, eod_reminder_time)
         WHERE id = ${id}
         RETURNING *
       `

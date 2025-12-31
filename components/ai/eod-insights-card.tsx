@@ -22,7 +22,13 @@ interface EODInsightsCardProps {
   maxItems?: number
 }
 
-const sentimentConfig = {
+const sentimentConfig: Record<string, {
+  icon: typeof TrendingUp
+  color: string
+  bgColor: string
+  borderColor: string
+  label: string
+}> = {
   positive: {
     icon: TrendingUp,
     color: "text-green-500",
@@ -51,6 +57,14 @@ const sentimentConfig = {
     borderColor: "border-orange-200",
     label: "Stressed",
   },
+}
+
+const defaultSentiment = {
+  icon: CheckCircle2,
+  color: "text-gray-500",
+  bgColor: "bg-gray-50",
+  borderColor: "border-gray-200",
+  label: "Unknown",
 }
 
 export function EODInsightsCard({
@@ -108,7 +122,7 @@ export function EODInsightsCard({
         <ScrollArea className="h-[300px]">
           <div className="space-y-4">
             {enrichedInsights.map((insight) => {
-              const sentimentInfo = sentimentConfig[insight.sentiment]
+              const sentimentInfo = sentimentConfig[insight.sentiment] || defaultSentiment
               const SentimentIcon = sentimentInfo.icon
 
               return (

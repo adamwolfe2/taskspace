@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserInitials } from "@/components/shared/user-initials"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Search, AlertCircle, ChevronDown, ChevronUp, Pencil } from "lucide-react"
+import { Search, AlertCircle, ChevronDown, ChevronUp, Pencil, Trash2, Loader2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { EditEODModal } from "@/components/dashboard/edit-eod-modal"
 
@@ -19,13 +19,27 @@ interface HistoryPageProps {
   eodReports: EODReport[]
   rocks: Rock[]
   updateEODReport?: (id: string, updates: Partial<EODReport>) => Promise<EODReport>
+  deleteEODReport?: (id: string) => Promise<void>
 }
 
-export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updateEODReport }: HistoryPageProps) {
+export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updateEODReport, deleteEODReport }: HistoryPageProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [userFilter, setUserFilter] = useState<string>("all")
   const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set())
   const [editingReport, setEditingReport] = useState<EODReport | null>(null)
+  const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
+
+  const handleDeleteReport = async (reportId: string) => {
+    if (!deleteEODReport) return
+    if (!confirm("Are you sure you want to delete this EOD report? This action cannot be undone.")) return
+
+    setDeletingReportId(reportId)
+    try {
+      await deleteEODReport(reportId)
+    } finally {
+      setDeletingReportId(null)
+    }
+  }
 
   const canEditReport = (report: EODReport) => {
     // Only the owner can edit their own report
@@ -175,6 +189,21 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
                           onClick={() => setEditingReport(report)}
                         >
                           <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {isAdminOrOwner && deleteEODReport && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-slate-400 hover:text-red-600 hover:bg-red-50"
+                          onClick={() => handleDeleteReport(report.id)}
+                          disabled={deletingReportId === report.id}
+                        >
+                          {deletingReportId === report.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </Button>
                       )}
                       <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-600" onClick={() => toggleExpanded(report.id)}>
