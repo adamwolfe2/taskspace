@@ -13,7 +13,37 @@ Claude can use this server to:
 
 ---
 
-## Quick Setup (One Command)
+## Easiest Setup: Remote Connector (No Installation!)
+
+The simplest way to connect Claude Desktop to AIMS - no local installation required:
+
+### Step 1: Get your API Key
+
+1. Log into your AIMS dashboard at https://eod.aimanagingservices.com
+2. Go to **Settings** → **API Keys**
+3. Click **Generate API Key**
+4. Copy the key (starts with `aims_...`)
+
+### Step 2: Add Connector in Claude Desktop
+
+1. Open Claude Desktop
+2. Go to **Settings** → **Extensions** → **Connectors** (or **Connections**)
+3. Click **Add custom connector**
+4. Fill in:
+   - **Name**: `AIMS EOD Tracker`
+   - **Remote MCP server URL**: `https://eod.aimanagingservices.com/api/mcp`
+   - **OAuth Client Secret**: Your API key (`aims_...`)
+5. Click **Add**
+
+That's it! Claude can now check EOD status, view rocks, and manage your team.
+
+---
+
+## Alternative: Local MCP Server
+
+If you prefer running the MCP server locally (for development or offline use):
+
+### Quick Setup (One Command)
 
 Run the setup script for guided installation:
 
