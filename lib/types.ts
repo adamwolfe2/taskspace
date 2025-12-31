@@ -95,6 +95,8 @@ export interface OrganizationMember {
   status: "active" | "invited" | "pending" | "inactive" // pending = draft (not yet invited)
   timezone?: string // User's personal timezone (overrides org default)
   eodReminderTime?: string // User's personal reminder time (HH:MM format)
+  managerId?: string | null // ID of the user who manages this member
+  jobTitle?: string // Job title for display
   notificationPreferences?: NotificationPreferences
 }
 
@@ -148,6 +150,8 @@ export interface TeamMember {
   status?: "active" | "invited" | "pending" | "inactive" // pending = draft (not yet invited)
   timezone?: string // User's personal timezone
   eodReminderTime?: string // User's preferred reminder time (HH:MM format)
+  managerId?: string | null // ID of the user who manages this member
+  jobTitle?: string // Job title for display
   notificationPreferences?: NotificationPreferences
 }
 
@@ -307,6 +311,7 @@ export type PageType =
   | "admin-tasks"
   | "command-center"
   | "analytics"
+  | "manager"
   | "settings"
   | "profile"
 
@@ -831,4 +836,169 @@ export interface TeamMemberWithAchievements extends TeamMember {
   achievements?: UserAchievement[]
   totalPoints?: number
   focusHoursThisWeek?: number
+}
+
+// ============================================
+// MANAGER DASHBOARD TYPES
+// ============================================
+
+// Direct report with aggregated metrics
+export interface DirectReport {
+  id: string
+  userId: string
+  name: string
+  email: string
+  avatar?: string
+  department: string
+  jobTitle?: string
+  status: "active" | "invited" | "pending" | "inactive"
+  joinDate: string
+  // Task metrics
+  metrics: DirectReportMetrics
+  // Recent activity
+  recentActivity: DirectReportActivity
+  // Current rocks
+  rocks: DirectReportRock[]
+  // EOD status
+  eodStatus: EODStatus
+  // Sentiment (from AI analysis)
+  sentiment?: DirectReportSentiment
+}
+
+export interface DirectReportMetrics {
+  // Tasks
+  totalTasks: number
+  completedTasks: number
+  pendingTasks: number
+  overdueTasks: number
+  taskCompletionRate: number // 0-100
+  tasksCompletedThisWeek: number
+  tasksCompletedLastWeek: number
+  avgTasksPerWeek: number
+  // Rocks
+  totalRocks: number
+  onTrackRocks: number
+  atRiskRocks: number
+  blockedRocks: number
+  completedRocks: number
+  avgRockProgress: number // 0-100
+  // EOD
+  eodSubmittedToday: boolean
+  eodStreakDays: number
+  eodSubmissionRateLast30Days: number // 0-100
+  lastEodDate?: string
+  // Engagement
+  escalationsThisMonth: number
+  blockersMentioned: number
+}
+
+export interface DirectReportActivity {
+  lastActive?: string
+  recentTasksCompleted: Array<{
+    id: string
+    title: string
+    completedAt: string
+    rockTitle?: string
+  }>
+  recentEodSummary?: string
+  upcomingDeadlines: Array<{
+    id: string
+    title: string
+    type: "task" | "rock"
+    dueDate: string
+    priority?: "high" | "medium" | "normal"
+  }>
+}
+
+export interface DirectReportRock {
+  id: string
+  title: string
+  progress: number
+  status: "on-track" | "at-risk" | "blocked" | "completed"
+  dueDate: string
+  quarter?: string
+}
+
+export interface EODStatus {
+  submittedToday: boolean
+  lastSubmittedAt?: string
+  lastSubmittedDate?: string
+  streakDays: number
+  needsEscalation: boolean
+  escalationNote?: string
+  tasksReported?: number
+  prioritiesSet?: number
+}
+
+export interface DirectReportSentiment {
+  current: "positive" | "neutral" | "negative" | "stressed"
+  trend: "improving" | "stable" | "declining"
+  lastUpdated?: string
+  concernFlags?: string[]
+}
+
+// Manager dashboard overview
+export interface ManagerDashboard {
+  manager: {
+    id: string
+    name: string
+    email: string
+    avatar?: string
+    department: string
+    jobTitle?: string
+  }
+  teamSummary: TeamSummary
+  directReports: DirectReport[]
+  alerts: ManagerAlert[]
+  insights: ManagerInsight[]
+}
+
+export interface TeamSummary {
+  totalMembers: number
+  activeMembers: number
+  // Task health
+  totalPendingTasks: number
+  totalOverdueTasks: number
+  avgTaskCompletionRate: number
+  tasksCompletedThisWeek: number
+  // Rock health
+  totalActiveRocks: number
+  rocksOnTrack: number
+  rocksAtRisk: number
+  rocksBlocked: number
+  avgRockProgress: number
+  // EOD health
+  eodSubmissionRateToday: number
+  eodSubmissionRate7Days: number
+  avgEodStreak: number
+  // Sentiment
+  teamSentiment: "positive" | "neutral" | "negative" | "mixed"
+  // Escalations
+  activeEscalations: number
+  unaddressedBlockers: number
+}
+
+export interface ManagerAlert {
+  id: string
+  type: "overdue_task" | "blocked_rock" | "missed_eod" | "escalation" | "at_risk" | "low_engagement"
+  severity: "critical" | "high" | "medium" | "low"
+  title: string
+  description: string
+  memberId: string
+  memberName: string
+  relatedItemId?: string
+  relatedItemType?: "task" | "rock" | "eod"
+  createdAt: string
+  actionUrl?: string
+}
+
+export interface ManagerInsight {
+  id: string
+  type: "workload" | "performance" | "sentiment" | "pattern" | "recommendation"
+  title: string
+  description: string
+  data?: Record<string, unknown>
+  priority: "high" | "medium" | "low"
+  actionable: boolean
+  suggestedAction?: string
 }

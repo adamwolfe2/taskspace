@@ -20,6 +20,7 @@ import { SettingsPage } from "@/components/pages/settings-page"
 import { CommandCenterPage } from "@/components/pages/command-center-page"
 import { AnalyticsPage } from "@/components/pages/analytics-page"
 import { CalendarPage } from "@/components/pages/calendar-page"
+import { ManagerDashboardPage } from "@/components/pages/manager-dashboard-page"
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
@@ -184,6 +185,8 @@ function AppContent() {
         ) : (
           <DashboardPage {...dashboardProps} />
         )
+      case "manager":
+        return <ManagerDashboardPage currentUser={currentUser!} />
       case "calendar":
         return (
           <CalendarPage

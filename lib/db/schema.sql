@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS organization_members (
   status VARCHAR(50) DEFAULT 'active',
   timezone VARCHAR(100),
   eod_reminder_time VARCHAR(10),
+  manager_id VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
+  job_title VARCHAR(255),
   notification_preferences JSONB DEFAULT '{
     "task_assigned": {"email": true, "inApp": true, "slack": true},
     "eod_reminder": {"email": true, "inApp": true, "slack": false},
@@ -362,3 +364,7 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_org ON push_subscriptions(orga
 CREATE INDEX IF NOT EXISTS idx_google_calendar_tokens_user ON google_calendar_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_google_calendar_events_user ON google_calendar_events(user_id);
 CREATE INDEX IF NOT EXISTS idx_google_calendar_events_item ON google_calendar_events(item_type, item_id);
+
+-- Manager relationships index
+CREATE INDEX IF NOT EXISTS idx_members_manager_id ON organization_members(manager_id);
+CREATE INDEX IF NOT EXISTS idx_members_org_manager ON organization_members(organization_id, manager_id);

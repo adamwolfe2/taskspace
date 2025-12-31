@@ -76,6 +76,8 @@ function parseMember(row: Record<string, unknown>): OrganizationMember {
     status: row.status as OrganizationMember["status"],
     timezone: row.timezone as string | undefined,
     eodReminderTime: row.eod_reminder_time as string | undefined,
+    managerId: (row.manager_id as string) || null,
+    jobTitle: row.job_title as string | undefined,
     notificationPreferences: row.notification_preferences as OrganizationMember["notificationPreferences"],
   }
 }
@@ -330,6 +332,8 @@ export const db = {
       status?: "active" | "invited" | "pending" | "inactive"
       timezone?: string
       eodReminderTime?: string
+      managerId?: string | null
+      jobTitle?: string
     }>> {
       const { rows } = await sql`
         SELECT
@@ -343,7 +347,9 @@ export const db = {
           om.weekly_measurable,
           om.status,
           om.timezone,
-          om.eod_reminder_time
+          om.eod_reminder_time,
+          om.manager_id,
+          om.job_title
         FROM organization_members om
         LEFT JOIN users u ON u.id = om.user_id
         WHERE om.organization_id = ${orgId}
@@ -361,6 +367,8 @@ export const db = {
         status: row.status as "active" | "invited" | "pending" | "inactive" | undefined,
         timezone: row.timezone as string | undefined,
         eodReminderTime: row.eod_reminder_time as string | undefined,
+        managerId: (row.manager_id as string) || null,
+        jobTitle: row.job_title as string | undefined,
       }))
     },
     async findByUserId(userId: string): Promise<OrganizationMember[]> {
@@ -401,7 +409,84 @@ export const db = {
           status = COALESCE(${updates.status || null}, status),
           timezone = COALESCE(${updates.timezone || null}, timezone),
           eod_reminder_time = COALESCE(${updates.eodReminderTime || null}, eod_reminder_time),
+          manager_id = COALESCE(${updates.managerId || null}, manager_id),
+          job_title = COALESCE(${updates.jobTitle || null}, job_title),
           notification_preferences = COALESCE(${updates.notificationPreferences ? JSON.stringify(updates.notificationPreferences) : null}::jsonb, notification_preferences)
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parseMember(rows[0]) : null
+    },
+    // Find all direct reports for a manager
+    async findDirectReports(orgId: string, managerId: string): Promise<Array<{
+      id: string
+      userId: string | null
+      name: string
+      email: string
+      role: "owner" | "admin" | "member"
+      department: string
+      avatar?: string
+      joinDate: string
+      weeklyMeasurable?: string
+      status?: "active" | "invited" | "pending" | "inactive"
+      timezone?: string
+      eodReminderTime?: string
+      jobTitle?: string
+    }>> {
+      const { rows } = await sql`
+        SELECT
+          COALESCE(u.id, om.id) as id,
+          om.user_id,
+          COALESCE(u.name, om.name) as name,
+          COALESCE(u.email, om.email) as email,
+          u.avatar,
+          om.role,
+          om.department,
+          om.joined_at,
+          om.weekly_measurable,
+          om.status,
+          om.timezone,
+          om.eod_reminder_time,
+          om.job_title
+        FROM organization_members om
+        LEFT JOIN users u ON u.id = om.user_id
+        WHERE om.organization_id = ${orgId}
+          AND om.manager_id = ${managerId}
+          AND om.status = 'active'
+        ORDER BY om.name ASC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        userId: (row.user_id as string) || null,
+        name: row.name as string,
+        email: row.email as string,
+        role: row.role as "owner" | "admin" | "member",
+        department: row.department as string,
+        avatar: row.avatar as string | undefined,
+        joinDate: (row.joined_at as Date)?.toISOString() || "",
+        weeklyMeasurable: row.weekly_measurable as string | undefined,
+        status: row.status as "active" | "invited" | "pending" | "inactive" | undefined,
+        timezone: row.timezone as string | undefined,
+        eodReminderTime: row.eod_reminder_time as string | undefined,
+        jobTitle: row.job_title as string | undefined,
+      }))
+    },
+    // Get count of direct reports for a manager
+    async getDirectReportsCount(orgId: string, managerId: string): Promise<number> {
+      const { rows } = await sql`
+        SELECT COUNT(*) as count
+        FROM organization_members
+        WHERE organization_id = ${orgId}
+          AND manager_id = ${managerId}
+          AND status = 'active'
+      `
+      return parseInt(rows[0]?.count || "0", 10)
+    },
+    // Update manager for a member (allows setting to null)
+    async updateManager(id: string, managerId: string | null): Promise<OrganizationMember | null> {
+      const { rows } = await sql`
+        UPDATE organization_members SET
+          manager_id = ${managerId}
         WHERE id = ${id}
         RETURNING *
       `
