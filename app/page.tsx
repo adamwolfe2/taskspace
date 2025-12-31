@@ -25,6 +25,7 @@ import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
 import { CommandPalette } from "@/components/shared/command-palette"
+import { DemoModeBanner } from "@/components/shared/demo-mode-banner"
 import { Loader2 } from "lucide-react"
 import {
   DashboardSkeleton,
@@ -206,6 +207,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-background">
       <Header onMenuClick={() => setSidebarOpen(true)} />
+      <DemoModeBanner />
 
       <div className="flex">
         <aside data-sidebar="desktop" className="hidden md:block w-64 border-r border-border min-h-[calc(100vh-4rem)] bg-card">

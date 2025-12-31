@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import type { TeamMember, Rock, AssignedTask, EODReport } from "../types"
 import { api } from "../api/client"
 import { useApp } from "../contexts/app-context"
@@ -8,6 +8,40 @@ import { useApp } from "../contexts/app-context"
 // Demo data for the demo mode
 const today = new Date().toISOString().split("T")[0]
 const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0]
+
+// LocalStorage keys for demo mode data persistence
+const DEMO_STORAGE_KEYS = {
+  teamMembers: "aims_demo_team_members",
+  rocks: "aims_demo_rocks",
+  tasks: "aims_demo_tasks",
+  eodReports: "aims_demo_eod_reports",
+  lastSaved: "aims_demo_last_saved",
+}
+
+// Helper to safely load from localStorage
+function loadFromStorage<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback
+  try {
+    const stored = localStorage.getItem(key)
+    if (stored) {
+      return JSON.parse(stored)
+    }
+  } catch (error) {
+    console.warn(`Failed to load ${key} from localStorage:`, error)
+  }
+  return fallback
+}
+
+// Helper to safely save to localStorage
+function saveToStorage<T>(key: string, data: T): void {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem(key, JSON.stringify(data))
+    localStorage.setItem(DEMO_STORAGE_KEYS.lastSaved, new Date().toISOString())
+  } catch (error) {
+    console.warn(`Failed to save ${key} to localStorage:`, error)
+  }
+}
 
 const DEMO_TEAM_MEMBERS: TeamMember[] = [
   { id: "demo-user-1", name: "Adam Wolfe", email: "adam@demo.com", role: "admin", department: "Operations", joinDate: "2024-01-15", status: "active" },
@@ -100,6 +134,9 @@ export function useTeamData() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Track if initial load is complete to prevent saving defaults back to storage
+  const initialLoadComplete = useRef(false)
+
   // Fetch all data
   const fetchData = useCallback(async () => {
     if (!isAuthenticated || !currentOrganization) {
@@ -107,13 +144,23 @@ export function useTeamData() {
       return
     }
 
-    // Use demo data in demo mode
+    // Use demo data in demo mode - load from localStorage if available, fallback to defaults
     if (isDemoMode) {
-      setTeamMembers(DEMO_TEAM_MEMBERS)
-      setRocks(DEMO_ROCKS)
-      setAssignedTasks(DEMO_TASKS)
-      setEODReports(DEMO_EOD_REPORTS)
+      const savedMembers = loadFromStorage<TeamMember[]>(DEMO_STORAGE_KEYS.teamMembers, DEMO_TEAM_MEMBERS)
+      const savedRocks = loadFromStorage<Rock[]>(DEMO_STORAGE_KEYS.rocks, DEMO_ROCKS)
+      const savedTasks = loadFromStorage<AssignedTask[]>(DEMO_STORAGE_KEYS.tasks, DEMO_TASKS)
+      const savedReports = loadFromStorage<EODReport[]>(DEMO_STORAGE_KEYS.eodReports, DEMO_EOD_REPORTS)
+
+      setTeamMembers(savedMembers)
+      setRocks(savedRocks)
+      setAssignedTasks(savedTasks)
+      setEODReports(savedReports)
       setIsLoading(false)
+
+      // Mark initial load as complete after a small delay to allow state to settle
+      setTimeout(() => {
+        initialLoadComplete.current = true
+      }, 100)
       return
     }
 
@@ -143,6 +190,31 @@ export function useTeamData() {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  // Auto-save demo mode data to localStorage whenever it changes
+  useEffect(() => {
+    if (isDemoMode && initialLoadComplete.current && teamMembers.length > 0) {
+      saveToStorage(DEMO_STORAGE_KEYS.teamMembers, teamMembers)
+    }
+  }, [isDemoMode, teamMembers])
+
+  useEffect(() => {
+    if (isDemoMode && initialLoadComplete.current) {
+      saveToStorage(DEMO_STORAGE_KEYS.rocks, rocks)
+    }
+  }, [isDemoMode, rocks])
+
+  useEffect(() => {
+    if (isDemoMode && initialLoadComplete.current) {
+      saveToStorage(DEMO_STORAGE_KEYS.tasks, assignedTasks)
+    }
+  }, [isDemoMode, assignedTasks])
+
+  useEffect(() => {
+    if (isDemoMode && initialLoadComplete.current) {
+      saveToStorage(DEMO_STORAGE_KEYS.eodReports, eodReports)
+    }
+  }, [isDemoMode, eodReports])
 
   // Rock operations
   const createRock = useCallback(async (rock: Partial<Rock>) => {
@@ -337,6 +409,34 @@ export function useTeamData() {
     return fetchData()
   }, [fetchData])
 
+  // Reset demo data to defaults (clears localStorage)
+  const resetDemoData = useCallback(() => {
+    if (!isDemoMode) return
+
+    // Clear localStorage
+    Object.values(DEMO_STORAGE_KEYS).forEach((key) => {
+      localStorage.removeItem(key)
+    })
+
+    // Reset to default demo data
+    setTeamMembers(DEMO_TEAM_MEMBERS)
+    setRocks(DEMO_ROCKS)
+    setAssignedTasks(DEMO_TASKS)
+    setEODReports(DEMO_EOD_REPORTS)
+
+    // Reset the initialLoadComplete flag to prevent immediate re-saving
+    initialLoadComplete.current = false
+    setTimeout(() => {
+      initialLoadComplete.current = true
+    }, 100)
+  }, [isDemoMode])
+
+  // Get demo data last saved timestamp
+  const getDemoDataLastSaved = useCallback((): string | null => {
+    if (!isDemoMode || typeof window === "undefined") return null
+    return localStorage.getItem(DEMO_STORAGE_KEYS.lastSaved)
+  }, [isDemoMode])
+
   return {
     // Data
     teamMembers,
@@ -375,5 +475,9 @@ export function useTeamData() {
 
     // Utility
     refresh,
+
+    // Demo mode utilities
+    resetDemoData,
+    getDemoDataLastSaved,
   }
 }
