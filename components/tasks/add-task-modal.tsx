@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import type { Rock, TaskRecurrence } from "@/lib/types"
+import { useState, useEffect } from "react"
+import type { Rock, TaskRecurrence, TaskTemplate } from "@/lib/types"
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Repeat } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Repeat, FileText, Bookmark, Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface AddTaskModalProps {
   open: boolean
@@ -42,6 +44,103 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
   const [isRecurring, setIsRecurring] = useState(false)
   const [recurrenceType, setRecurrenceType] = useState<"daily" | "weekly" | "monthly">("weekly")
   const [recurrenceInterval, setRecurrenceInterval] = useState(1)
+
+  // Template state
+  const [templates, setTemplates] = useState<TaskTemplate[]>([])
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false)
+  const [templateName, setTemplateName] = useState("")
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false)
+  const { toast } = useToast()
+
+  // Load templates when modal opens
+  useEffect(() => {
+    if (open) {
+      loadTemplates()
+    }
+  }, [open])
+
+  const loadTemplates = async () => {
+    setIsLoadingTemplates(true)
+    try {
+      const response = await fetch("/api/task-templates")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setTemplates(data.data || [])
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load templates:", error)
+    } finally {
+      setIsLoadingTemplates(false)
+    }
+  }
+
+  const applyTemplate = (template: TaskTemplate) => {
+    setTitle(template.title)
+    setDescription(template.description || "")
+    setPriority(template.priority)
+    if (template.defaultRockId) {
+      setRockId(template.defaultRockId)
+    }
+    if (template.recurrence) {
+      setIsRecurring(true)
+      setRecurrenceType(template.recurrence.type)
+      setRecurrenceInterval(template.recurrence.interval)
+    } else {
+      setIsRecurring(false)
+    }
+    toast({
+      title: "Template applied",
+      description: `"${template.name}" loaded`,
+    })
+  }
+
+  const saveTemplate = async () => {
+    if (!templateName.trim() || !title.trim()) return
+
+    setIsSavingTemplate(true)
+    try {
+      const recurrence: TaskRecurrence | undefined = isRecurring
+        ? { type: recurrenceType, interval: recurrenceInterval }
+        : undefined
+
+      const response = await fetch("/api/task-templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: templateName.trim(),
+          title: title.trim(),
+          description: description.trim(),
+          priority,
+          defaultRockId: rockId,
+          recurrence,
+          isShared: false,
+        }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Template saved",
+          description: `"${templateName}" saved for future use`,
+        })
+        loadTemplates()
+        setSaveAsTemplate(false)
+        setTemplateName("")
+      } else {
+        throw new Error("Failed to save template")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save template",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingTemplate(false)
+    }
+  }
 
   const handleSubmit = () => {
     if (!title.trim() || !dueDate) return
@@ -73,16 +172,46 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
     setIsRecurring(false)
     setRecurrenceType("weekly")
     setRecurrenceInterval(1)
+    setSaveAsTemplate(false)
+    setTemplateName("")
     onOpenChange(false)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Task</DialogTitle>
           <DialogDescription>Create a personal task or to-do</DialogDescription>
         </DialogHeader>
+
+        {/* Template Picker */}
+        {templates.length > 0 && (
+          <div className="pb-3 border-b">
+            <Label className="flex items-center gap-1.5 mb-2">
+              <FileText className="h-3.5 w-3.5" />
+              Use Template
+            </Label>
+            <Select onValueChange={(id) => {
+              const template = templates.find(t => t.id === id)
+              if (template) applyTemplate(template)
+            }}>
+              <SelectTrigger className="bg-slate-50">
+                <SelectValue placeholder="Select a template to fill form..." />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    <span className="flex items-center gap-2">
+                      <Bookmark className="h-3 w-3" />
+                      {template.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="space-y-4">
           <div>
@@ -179,6 +308,46 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
                     <SelectItem value="monthly">month(s)</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+          </div>
+
+          {/* Save as Template */}
+          <div className="space-y-3 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bookmark className="h-4 w-4 text-slate-500" />
+                <Label htmlFor="save-template" className="cursor-pointer">Save as template</Label>
+              </div>
+              <Switch
+                id="save-template"
+                checked={saveAsTemplate}
+                onCheckedChange={setSaveAsTemplate}
+                disabled={!title.trim()}
+              />
+            </div>
+
+            {saveAsTemplate && (
+              <div className="flex items-center gap-2 pl-6">
+                <Input
+                  placeholder="Template name..."
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={saveTemplate}
+                  disabled={!templateName.trim() || isSavingTemplate}
+                >
+                  {isSavingTemplate ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Save"
+                  )}
+                </Button>
               </div>
             )}
           </div>

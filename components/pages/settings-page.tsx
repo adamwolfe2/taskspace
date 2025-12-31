@@ -48,6 +48,9 @@ import { useToast } from "@/hooks/use-toast"
 import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
 import { AsanaIntegration } from "@/components/settings/asana-integration"
 import { AsanaMemberConnection } from "@/components/settings/asana-member-connection"
+import { NotificationPreferencesCard } from "@/components/settings/notification-preferences"
+import { PushNotificationsCard } from "@/components/settings/push-notifications"
+import { GoogleCalendarIntegration } from "@/components/settings/google-calendar-integration"
 
 interface IntegrationStatus {
   email: {
@@ -867,6 +870,19 @@ export function SettingsPage() {
             </CardContent>
           </Card>
 
+          {/* Granular Notification Preferences */}
+          {currentUser && (
+            <NotificationPreferencesCard
+              memberId={currentUser.id}
+              initialPreferences={teamMembers.find(m => m.id === currentUser.id)?.notificationPreferences}
+            />
+          )}
+
+          {/* Browser Push Notifications */}
+          {currentUser && (
+            <PushNotificationsCard userId={currentUser.id} />
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Email Notifications</CardTitle>
@@ -1583,6 +1599,11 @@ EMAIL_FROM=AIMS Dashboard <noreply@yourdomain.com>`, "Environment variables")}
 
             {/* Asana Integration */}
             <AsanaIntegration teamMembers={teamMembers} />
+
+            {/* Google Calendar Integration */}
+            {currentUser && (
+              <GoogleCalendarIntegration userId={currentUser.id} />
+            )}
           </TabsContent>
         )}
 

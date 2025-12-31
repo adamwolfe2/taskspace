@@ -1,4 +1,5 @@
-import { CheckCircle2, Target, TrendingUp, Calendar, TrendingDown, Minus } from "lucide-react"
+import { CheckCircle2, Target, TrendingUp, Calendar, TrendingDown, Minus, Flame } from "lucide-react"
+import { getStreakMilestone } from "@/lib/utils/stats-calculator"
 
 interface StatsCardsProps {
   stats: {
@@ -80,12 +81,13 @@ export function StatsCards({ stats }: StatsCardsProps) {
     },
     {
       title: "EOD Streak",
-      value: `${stats.eodStreak}`,
+      value: stats.eodStreak > 0 ? `${stats.eodStreak} 🔥` : "0",
       trend: stats.eodStreak > 5 ? 25.5 : stats.eodStreak > 0 ? 10.0 : 0,
-      subtitle: "reports this week",
-      icon: Calendar,
-      iconBg: "bg-slate-100",
-      iconColor: "text-slate-600",
+      subtitle: stats.eodStreak === 1 ? "consecutive day" : "consecutive days",
+      icon: stats.eodStreak >= 5 ? Flame : Calendar,
+      iconBg: stats.eodStreak >= 5 ? "bg-orange-100" : "bg-slate-100",
+      iconColor: stats.eodStreak >= 5 ? "text-orange-600" : "text-slate-600",
+      milestone: getStreakMilestone(stats.eodStreak),
     },
   ]
 
@@ -100,11 +102,17 @@ export function StatsCards({ stats }: StatsCardsProps) {
             <div className={`p-2 rounded-lg ${card.iconBg}`}>
               <card.icon className={`h-5 w-5 ${card.iconColor}`} />
             </div>
-            <TrendBadge value={card.trend} />
+            {card.milestone ? (
+              <span className={`text-xs font-semibold ${card.milestone.color} bg-orange-50 px-2 py-1 rounded-full`}>
+                {card.milestone.label}
+              </span>
+            ) : (
+              <TrendBadge value={card.trend} />
+            )}
           </div>
           <div className="mt-4">
             <p className="text-3xl font-bold text-slate-900">{card.value}</p>
-            <p className="text-sm text-slate-500 mt-1">{card.title}</p>
+            <p className="text-sm text-slate-500 mt-1">{card.subtitle}</p>
           </div>
         </div>
       ))}

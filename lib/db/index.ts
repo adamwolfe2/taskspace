@@ -17,6 +17,10 @@ import type {
   DailyDigest,
   AIConversation,
   ApiKey,
+  TaskTemplate,
+  PushSubscription,
+  GoogleCalendarToken,
+  GoogleCalendarEventMapping,
 } from "../types"
 
 // Helper to convert snake_case DB rows to camelCase
@@ -72,6 +76,7 @@ function parseMember(row: Record<string, unknown>): OrganizationMember {
     status: row.status as OrganizationMember["status"],
     timezone: row.timezone as string | undefined,
     eodReminderTime: row.eod_reminder_time as string | undefined,
+    notificationPreferences: row.notification_preferences as OrganizationMember["notificationPreferences"],
   }
 }
 
@@ -395,7 +400,8 @@ export const db = {
           weekly_measurable = COALESCE(${updates.weeklyMeasurable || null}, weekly_measurable),
           status = COALESCE(${updates.status || null}, status),
           timezone = COALESCE(${updates.timezone || null}, timezone),
-          eod_reminder_time = COALESCE(${updates.eodReminderTime || null}, eod_reminder_time)
+          eod_reminder_time = COALESCE(${updates.eodReminderTime || null}, eod_reminder_time),
+          notification_preferences = COALESCE(${updates.notificationPreferences ? JSON.stringify(updates.notificationPreferences) : null}::jsonb, notification_preferences)
         WHERE id = ${id}
         RETURNING *
       `
@@ -1353,6 +1359,295 @@ export const db = {
     },
     async delete(id: string): Promise<boolean> {
       const { rowCount } = await sql`DELETE FROM api_keys WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
+    },
+  },
+
+  // Task Templates
+  taskTemplates: {
+    async findByOrganizationId(orgId: string, userId?: string): Promise<TaskTemplate[]> {
+      const { rows } = await sql`
+        SELECT * FROM task_templates
+        WHERE organization_id = ${orgId}
+        AND (is_shared = TRUE OR created_by = ${userId || ''})
+        ORDER BY created_at DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        createdBy: row.created_by as string,
+        name: row.name as string,
+        title: row.title as string,
+        description: row.description as string | undefined,
+        priority: (row.priority as TaskTemplate["priority"]) || "normal",
+        defaultRockId: row.default_rock_id as string | undefined,
+        recurrence: row.recurrence as TaskTemplate["recurrence"],
+        isShared: row.is_shared as boolean,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }))
+    },
+    async findById(id: string): Promise<TaskTemplate | null> {
+      const { rows } = await sql`SELECT * FROM task_templates WHERE id = ${id}`
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        createdBy: row.created_by as string,
+        name: row.name as string,
+        title: row.title as string,
+        description: row.description as string | undefined,
+        priority: (row.priority as TaskTemplate["priority"]) || "normal",
+        defaultRockId: row.default_rock_id as string | undefined,
+        recurrence: row.recurrence as TaskTemplate["recurrence"],
+        isShared: row.is_shared as boolean,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }
+    },
+    async create(template: TaskTemplate): Promise<TaskTemplate> {
+      await sql`
+        INSERT INTO task_templates (id, organization_id, created_by, name, title, description, priority, default_rock_id, recurrence, is_shared, created_at)
+        VALUES (${template.id}, ${template.organizationId}, ${template.createdBy}, ${template.name},
+                ${template.title}, ${template.description || null}, ${template.priority},
+                ${template.defaultRockId || null},
+                ${template.recurrence ? JSON.stringify(template.recurrence) : null},
+                ${template.isShared}, ${template.createdAt})
+      `
+      return template
+    },
+    async delete(id: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM task_templates WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
+    },
+  },
+
+  // Push Subscriptions for browser notifications
+  pushSubscriptions: {
+    async findByUserId(userId: string): Promise<PushSubscription[]> {
+      const { rows } = await sql`
+        SELECT * FROM push_subscriptions
+        WHERE user_id = ${userId}
+        ORDER BY created_at DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        userId: row.user_id as string,
+        organizationId: row.organization_id as string,
+        endpoint: row.endpoint as string,
+        p256dh: row.p256dh as string,
+        auth: row.auth as string,
+        userAgent: row.user_agent as string | undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        lastUsedAt: row.last_used_at ? (row.last_used_at as Date).toISOString() : undefined,
+      }))
+    },
+    async findByOrganizationId(orgId: string): Promise<PushSubscription[]> {
+      const { rows } = await sql`
+        SELECT * FROM push_subscriptions
+        WHERE organization_id = ${orgId}
+        ORDER BY created_at DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        userId: row.user_id as string,
+        organizationId: row.organization_id as string,
+        endpoint: row.endpoint as string,
+        p256dh: row.p256dh as string,
+        auth: row.auth as string,
+        userAgent: row.user_agent as string | undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        lastUsedAt: row.last_used_at ? (row.last_used_at as Date).toISOString() : undefined,
+      }))
+    },
+    async findByEndpoint(endpoint: string): Promise<PushSubscription | null> {
+      const { rows } = await sql`SELECT * FROM push_subscriptions WHERE endpoint = ${endpoint}`
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        userId: row.user_id as string,
+        organizationId: row.organization_id as string,
+        endpoint: row.endpoint as string,
+        p256dh: row.p256dh as string,
+        auth: row.auth as string,
+        userAgent: row.user_agent as string | undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        lastUsedAt: row.last_used_at ? (row.last_used_at as Date).toISOString() : undefined,
+      }
+    },
+    async create(subscription: PushSubscription): Promise<PushSubscription> {
+      await sql`
+        INSERT INTO push_subscriptions (id, user_id, organization_id, endpoint, p256dh, auth, user_agent, created_at)
+        VALUES (${subscription.id}, ${subscription.userId}, ${subscription.organizationId},
+                ${subscription.endpoint}, ${subscription.p256dh}, ${subscription.auth},
+                ${subscription.userAgent || null}, ${subscription.createdAt})
+        ON CONFLICT (endpoint) DO UPDATE SET
+          user_id = ${subscription.userId},
+          organization_id = ${subscription.organizationId},
+          p256dh = ${subscription.p256dh},
+          auth = ${subscription.auth},
+          user_agent = ${subscription.userAgent || null}
+      `
+      return subscription
+    },
+    async updateLastUsed(id: string): Promise<void> {
+      const now = new Date().toISOString()
+      await sql`UPDATE push_subscriptions SET last_used_at = ${now} WHERE id = ${id}`
+    },
+    async delete(endpoint: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM push_subscriptions WHERE endpoint = ${endpoint}`
+      return (rowCount ?? 0) > 0
+    },
+    async deleteByUserId(userId: string): Promise<number> {
+      const { rowCount } = await sql`DELETE FROM push_subscriptions WHERE user_id = ${userId}`
+      return rowCount ?? 0
+    },
+  },
+
+  // Google Calendar tokens
+  googleCalendarTokens: {
+    async findByUserId(userId: string, orgId: string): Promise<GoogleCalendarToken | null> {
+      const { rows } = await sql`
+        SELECT * FROM google_calendar_tokens
+        WHERE user_id = ${userId} AND organization_id = ${orgId}
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        userId: row.user_id as string,
+        organizationId: row.organization_id as string,
+        accessToken: row.access_token as string,
+        refreshToken: row.refresh_token as string,
+        tokenType: row.token_type as string,
+        expiryDate: Number(row.expiry_date),
+        scope: row.scope as string | undefined,
+        calendarId: row.calendar_id as string,
+        syncEnabled: row.sync_enabled as boolean,
+        lastSyncAt: row.last_sync_at ? (row.last_sync_at as Date).toISOString() : undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }
+    },
+    async create(token: GoogleCalendarToken): Promise<GoogleCalendarToken> {
+      await sql`
+        INSERT INTO google_calendar_tokens (id, user_id, organization_id, access_token, refresh_token,
+          token_type, expiry_date, scope, calendar_id, sync_enabled, created_at, updated_at)
+        VALUES (${token.id}, ${token.userId}, ${token.organizationId}, ${token.accessToken},
+          ${token.refreshToken}, ${token.tokenType}, ${token.expiryDate}, ${token.scope || null},
+          ${token.calendarId}, ${token.syncEnabled}, ${token.createdAt}, ${token.updatedAt})
+        ON CONFLICT (user_id, organization_id) DO UPDATE SET
+          access_token = ${token.accessToken},
+          refresh_token = ${token.refreshToken},
+          expiry_date = ${token.expiryDate},
+          scope = ${token.scope || null},
+          updated_at = ${token.updatedAt}
+      `
+      return token
+    },
+    async update(userId: string, orgId: string, updates: Partial<GoogleCalendarToken>): Promise<GoogleCalendarToken | null> {
+      const now = new Date().toISOString()
+      const { rows } = await sql`
+        UPDATE google_calendar_tokens SET
+          access_token = COALESCE(${updates.accessToken || null}, access_token),
+          refresh_token = COALESCE(${updates.refreshToken || null}, refresh_token),
+          expiry_date = COALESCE(${updates.expiryDate ?? null}, expiry_date),
+          calendar_id = COALESCE(${updates.calendarId || null}, calendar_id),
+          sync_enabled = COALESCE(${updates.syncEnabled ?? null}, sync_enabled),
+          last_sync_at = COALESCE(${updates.lastSyncAt || null}, last_sync_at),
+          updated_at = ${now}
+        WHERE user_id = ${userId} AND organization_id = ${orgId}
+        RETURNING *
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        userId: row.user_id as string,
+        organizationId: row.organization_id as string,
+        accessToken: row.access_token as string,
+        refreshToken: row.refresh_token as string,
+        tokenType: row.token_type as string,
+        expiryDate: Number(row.expiry_date),
+        scope: row.scope as string | undefined,
+        calendarId: row.calendar_id as string,
+        syncEnabled: row.sync_enabled as boolean,
+        lastSyncAt: row.last_sync_at ? (row.last_sync_at as Date).toISOString() : undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }
+    },
+    async delete(userId: string, orgId: string): Promise<boolean> {
+      const { rowCount } = await sql`
+        DELETE FROM google_calendar_tokens
+        WHERE user_id = ${userId} AND organization_id = ${orgId}
+      `
+      return (rowCount ?? 0) > 0
+    },
+  },
+
+  // Google Calendar event mappings
+  googleCalendarEvents: {
+    async findByItem(userId: string, itemType: string, itemId: string): Promise<GoogleCalendarEventMapping | null> {
+      const { rows } = await sql`
+        SELECT * FROM google_calendar_events
+        WHERE user_id = ${userId} AND item_type = ${itemType} AND item_id = ${itemId}
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        userId: row.user_id as string,
+        googleEventId: row.google_event_id as string,
+        itemType: row.item_type as "task" | "rock",
+        itemId: row.item_id as string,
+        calendarId: row.calendar_id as string,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }
+    },
+    async findByGoogleEventId(userId: string, googleEventId: string): Promise<GoogleCalendarEventMapping | null> {
+      const { rows } = await sql`
+        SELECT * FROM google_calendar_events
+        WHERE user_id = ${userId} AND google_event_id = ${googleEventId}
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        userId: row.user_id as string,
+        googleEventId: row.google_event_id as string,
+        itemType: row.item_type as "task" | "rock",
+        itemId: row.item_id as string,
+        calendarId: row.calendar_id as string,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }
+    },
+    async create(mapping: GoogleCalendarEventMapping): Promise<GoogleCalendarEventMapping> {
+      await sql`
+        INSERT INTO google_calendar_events (id, user_id, google_event_id, item_type, item_id, calendar_id, created_at, updated_at)
+        VALUES (${mapping.id}, ${mapping.userId}, ${mapping.googleEventId}, ${mapping.itemType},
+          ${mapping.itemId}, ${mapping.calendarId}, ${mapping.createdAt}, ${mapping.updatedAt})
+        ON CONFLICT (user_id, google_event_id) DO UPDATE SET
+          item_type = ${mapping.itemType},
+          item_id = ${mapping.itemId},
+          updated_at = ${mapping.updatedAt}
+      `
+      return mapping
+    },
+    async delete(userId: string, googleEventId: string): Promise<boolean> {
+      const { rowCount } = await sql`
+        DELETE FROM google_calendar_events
+        WHERE user_id = ${userId} AND google_event_id = ${googleEventId}
+      `
+      return (rowCount ?? 0) > 0
+    },
+    async deleteByItem(userId: string, itemType: string, itemId: string): Promise<boolean> {
+      const { rowCount } = await sql`
+        DELETE FROM google_calendar_events
+        WHERE user_id = ${userId} AND item_type = ${itemType} AND item_id = ${itemId}
+      `
       return (rowCount ?? 0) > 0
     },
   },

@@ -66,6 +66,21 @@ export interface User {
   lastLoginAt?: string
 }
 
+// Notification preferences for each event type
+export interface NotificationChannels {
+  email: boolean
+  inApp: boolean
+  slack: boolean
+}
+
+export interface NotificationPreferences {
+  task_assigned: NotificationChannels
+  eod_reminder: NotificationChannels
+  escalation: NotificationChannels
+  rock_updated: NotificationChannels
+  digest: { email: boolean; slack: boolean }
+}
+
 export interface OrganizationMember {
   id: string
   organizationId: string
@@ -80,6 +95,7 @@ export interface OrganizationMember {
   status: "active" | "invited" | "pending" | "inactive" // pending = draft (not yet invited)
   timezone?: string // User's personal timezone (overrides org default)
   eodReminderTime?: string // User's personal reminder time (HH:MM format)
+  notificationPreferences?: NotificationPreferences
 }
 
 export interface Invitation {
@@ -132,6 +148,7 @@ export interface TeamMember {
   status?: "active" | "invited" | "pending" | "inactive" // pending = draft (not yet invited)
   timezone?: string // User's personal timezone
   eodReminderTime?: string // User's preferred reminder time (HH:MM format)
+  notificationPreferences?: NotificationPreferences
 }
 
 // Rock Milestone (sub-goals within a rock)
@@ -179,6 +196,21 @@ export interface TaskRecurrence {
   dayOfMonth?: number // 1-31 for monthly
   endDate?: string // Optional end date
   lastGenerated?: string // Last date a task was generated
+}
+
+// Task Template
+export interface TaskTemplate {
+  id: string
+  organizationId: string
+  createdBy: string
+  name: string
+  title: string
+  description?: string
+  priority: "high" | "medium" | "normal"
+  defaultRockId?: string
+  recurrence?: TaskRecurrence
+  isShared: boolean
+  createdAt: string
 }
 
 // Task Types
@@ -518,6 +550,47 @@ export interface AIQueryResponse {
   response: string
   data?: unknown
   suggestedFollowUps?: string[]
+}
+
+// Push notification subscription
+export interface PushSubscription {
+  id: string
+  userId: string
+  organizationId: string
+  endpoint: string
+  p256dh: string
+  auth: string
+  userAgent?: string
+  createdAt: string
+  lastUsedAt?: string
+}
+
+// Google Calendar integration
+export interface GoogleCalendarToken {
+  id: string
+  userId: string
+  organizationId: string
+  accessToken: string
+  refreshToken: string
+  tokenType: string
+  expiryDate: number
+  scope?: string
+  calendarId: string
+  syncEnabled: boolean
+  lastSyncAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface GoogleCalendarEventMapping {
+  id: string
+  userId: string
+  googleEventId: string
+  itemType: "task" | "rock"
+  itemId: string
+  calendarId: string
+  createdAt: string
+  updatedAt: string
 }
 
 // API Key for external integrations (MCP, Claude Desktop, etc.)
