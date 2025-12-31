@@ -604,3 +604,231 @@ export interface ApiKey {
   createdAt: string
   lastUsedAt: string | null
 }
+
+// ============================================
+// FOCUS MODE & TIME TRACKING TYPES
+// ============================================
+
+export interface FocusSession {
+  id: string
+  organizationId: string
+  userId: string
+  taskId?: string
+  rockId?: string
+  startedAt: string
+  endedAt?: string
+  durationMinutes?: number
+  breakMinutes: number
+  sessionType: "pomodoro" | "custom" | "deep_work"
+  notes?: string
+  completed: boolean
+  createdAt: string
+}
+
+export interface TimeEntry {
+  id: string
+  organizationId: string
+  userId: string
+  taskId?: string
+  rockId?: string
+  startedAt: string
+  endedAt?: string
+  durationMinutes?: number
+  description?: string
+  billable: boolean
+  createdAt: string
+}
+
+// ============================================
+// SUBTASK TYPES
+// ============================================
+
+export interface TaskSubtask {
+  id: string
+  taskId: string
+  title: string
+  completed: boolean
+  completedAt?: string
+  sortOrder: number
+  createdAt: string
+}
+
+// ============================================
+// WEEKLY REVIEW TYPES
+// ============================================
+
+export interface WeeklyReview {
+  id: string
+  organizationId: string
+  userId: string
+  weekStart: string
+  weekEnd: string
+  accomplishments: { text: string; category?: string }[]
+  wentWell?: string
+  couldImprove?: string
+  nextWeekGoals: { text: string; priority?: string }[]
+  notes?: string
+  mood?: "positive" | "neutral" | "negative"
+  energyLevel?: number // 1-5
+  productivityRating?: number // 1-5
+  createdAt: string
+  updatedAt: string
+}
+
+// ============================================
+// ACHIEVEMENT SYSTEM TYPES
+// ============================================
+
+export interface Achievement {
+  id: string
+  name: string
+  description?: string
+  category: "streak" | "tasks" | "rocks" | "engagement"
+  icon: string
+  badgeColor: string
+  criteria: {
+    type: string
+    threshold: number
+  }
+  points: number
+  isActive: boolean
+  createdAt: string
+}
+
+export interface UserAchievement {
+  id: string
+  organizationId: string
+  userId: string
+  achievementId: string
+  achievement?: Achievement
+  earnedAt: string
+  progress: number
+  notified: boolean
+}
+
+// ============================================
+// ROCK DEPENDENCY TYPES
+// ============================================
+
+export interface RockDependency {
+  id: string
+  organizationId: string
+  rockId: string
+  dependsOnRockId: string
+  dependencyType: "blocks" | "soft_dependency"
+  createdAt: string
+  // Populated fields
+  rock?: Rock
+  dependsOnRock?: Rock
+}
+
+// ============================================
+// DASHBOARD CUSTOMIZATION TYPES
+// ============================================
+
+export interface DashboardWidget {
+  id: string
+  type: "stats" | "rocks" | "tasks" | "eod_calendar" | "focus" | "achievements" | "quick_actions"
+  title?: string
+  enabled: boolean
+  settings?: Record<string, unknown>
+}
+
+export interface DashboardLayout {
+  id: string
+  organizationId: string
+  userId: string
+  layout: {
+    i: string
+    x: number
+    y: number
+    w: number
+    h: number
+    minW?: number
+    minH?: number
+  }[]
+  widgets: DashboardWidget[]
+  createdAt: string
+  updatedAt: string
+}
+
+// ============================================
+// RECENT ITEMS TYPES
+// ============================================
+
+export interface RecentItem {
+  id: string
+  organizationId: string
+  userId: string
+  itemType: "task" | "rock" | "eod_report"
+  itemId: string
+  viewedAt: string
+  // Populated fields
+  item?: AssignedTask | Rock | EODReport
+}
+
+// ============================================
+// STANDUP REPORT TYPES
+// ============================================
+
+export interface StandupMemberReport {
+  memberId: string
+  memberName: string
+  yesterday: string[]
+  today: string[]
+  blockers: string[]
+}
+
+export interface StandupReport {
+  id: string
+  organizationId: string
+  generatedBy: string
+  reportDate: string
+  content: {
+    members: StandupMemberReport[]
+    summary?: string
+  }
+  summary?: string
+  sharedTo: { channel: string; sentAt: string }[]
+  createdAt: string
+}
+
+// ============================================
+// SMART SUGGESTION TYPES
+// ============================================
+
+export interface TaskSuggestion {
+  id: string
+  type: "from_eod" | "overdue_rock" | "similar_task" | "workload"
+  title: string
+  description?: string
+  reason: string
+  priority: "high" | "medium" | "normal"
+  suggestedAssigneeId?: string
+  suggestedRockId?: string
+  suggestedDueDate?: string
+  dismissed: boolean
+  createdAt: string
+}
+
+// ============================================
+// EXTENDED TYPES WITH NEW FIELDS
+// ============================================
+
+export interface AssignedTaskExtended extends AssignedTask {
+  subtasks?: TaskSubtask[]
+  estimatedMinutes?: number
+  actualMinutes?: number
+  timeTrackingEnabled?: boolean
+}
+
+export interface EODReportExtended extends EODReport {
+  mood?: "positive" | "neutral" | "negative" | "stressed"
+  energyLevel?: number
+}
+
+export interface TeamMemberWithAchievements extends TeamMember {
+  achievements?: UserAchievement[]
+  totalPoints?: number
+  focusHoursThisWeek?: number
+}
