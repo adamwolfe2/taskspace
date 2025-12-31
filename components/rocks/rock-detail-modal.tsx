@@ -46,6 +46,8 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock }: Rock
         return { icon: AlertCircle, label: "Blocked", color: "text-red-600", bgColor: "bg-red-50" }
       case "completed":
         return { icon: CheckCircle2, label: "Completed", color: "text-slate-600", bgColor: "bg-slate-100" }
+      default:
+        return { icon: Target, label: "Unknown", color: "text-slate-600", bgColor: "bg-slate-100" }
     }
   }
 

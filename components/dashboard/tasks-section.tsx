@@ -61,6 +61,7 @@ export function TasksSection({ tasks, onToggleTask }: TasksSectionProps) {
             {Object.entries(groupedTasks).map(([category, categoryTasks]) => {
               if (categoryTasks.length === 0) return null
               const config = categoryConfig[category as keyof typeof categoryConfig]
+              if (!config) return null
               const Icon = config.icon
 
               return (
