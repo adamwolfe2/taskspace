@@ -283,6 +283,20 @@ export function useTeamData() {
     }
   }, [isDemoMode, eodReports])
 
+  const deleteEODReport = useCallback(async (id: string) => {
+    if (isDemoMode) {
+      setEODReports((prev) => prev.filter((r) => r.id !== id))
+      return
+    }
+    try {
+      await api.eodReports.delete(id)
+      setEODReports((prev) => prev.filter((r) => r.id !== id))
+    } catch (err: any) {
+      setError(err.message)
+      throw err
+    }
+  }, [isDemoMode])
+
   // Member operations
   const updateMember = useCallback(async (memberId: string, updates: Partial<TeamMember>) => {
     if (isDemoMode) {
@@ -353,6 +367,7 @@ export function useTeamData() {
     // EOD Report operations
     submitEODReport,
     updateEODReport,
+    deleteEODReport,
 
     // Member operations
     updateMember,

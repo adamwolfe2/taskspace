@@ -99,6 +99,14 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock }: MyRock
           textColor: "text-slate-700",
           iconColor: "text-slate-500",
         }
+      default:
+        return {
+          icon: Target,
+          label: "Unknown",
+          bgColor: "bg-slate-100",
+          textColor: "text-slate-700",
+          iconColor: "text-slate-500",
+        }
     }
   }
 

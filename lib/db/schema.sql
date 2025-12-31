@@ -36,7 +36,9 @@ CREATE TABLE IF NOT EXISTS organization_members (
   weekly_measurable TEXT,
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   invited_by VARCHAR(255),
-  status VARCHAR(50) DEFAULT 'active'
+  status VARCHAR(50) DEFAULT 'active',
+  timezone VARCHAR(100),
+  eod_reminder_time VARCHAR(10)
 );
 
 -- Sessions table

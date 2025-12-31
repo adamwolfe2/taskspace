@@ -4,7 +4,7 @@ import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { sendEscalationNotification, sendAIAlertEmail, isEmailConfigured } from "@/lib/integrations/email"
-import { sendSlackMessage, buildEscalationMessage, isSlackConfigured } from "@/lib/integrations/slack"
+import { sendSlackMessage, buildEscalationMessage, buildFullEODReportMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import { asanaClient } from "@/lib/integrations/asana"
 import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
 
@@ -222,6 +222,36 @@ export async function POST(request: NextRequest) {
         })
     }
 
+    // Send full EOD report via Slack if enabled
+    const webhookUrl = auth.organization.settings?.slackWebhookUrl
+    if (isSlackConfigured(webhookUrl) && member) {
+      // Get rock titles for tasks and priorities
+      const taskRocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
+      const rockMap = new Map(taskRocks.map(r => [r.id, r.title]))
+
+      const tasksWithRockTitles = (report.tasks || []).map(t => ({
+        ...t,
+        rockTitle: t.rockId ? rockMap.get(t.rockId) : undefined,
+      }))
+      const prioritiesWithRockTitles = (report.tomorrowPriorities || []).map(p => ({
+        ...p,
+        rockTitle: p.rockId ? rockMap.get(p.rockId) : undefined,
+      }))
+
+      const fullEODMessage = buildFullEODReportMessage(
+        member.name,
+        member.department,
+        report.date,
+        tasksWithRockTitles,
+        report.challenges,
+        prioritiesWithRockTitles,
+        report.needsEscalation,
+        report.escalationNote
+      )
+      sendSlackMessage(webhookUrl!, fullEODMessage)
+        .catch(err => console.error("[Slack] Full EOD report notification failed:", err))
+    }
+
     // Send escalation email notification if needed
     if (report.needsEscalation && isEmailConfigured() && member) {
       const admins = teamMembersData.filter(m => m.role === "admin" || m.role === "owner")
@@ -246,17 +276,7 @@ export async function POST(request: NextRequest) {
       sendEscalationNotification(report, memberInfo, adminMembers)
         .catch(err => console.error("[Email] Escalation notification failed:", err))
 
-      // Send Slack notification for escalations
-      const webhookUrl = auth.organization.settings?.slackWebhookUrl
-      if (isSlackConfigured(webhookUrl)) {
-        const slackMessage = buildEscalationMessage(
-          member.name,
-          report.escalationNote || "Escalation flagged without note",
-          report.date
-        )
-        sendSlackMessage(webhookUrl!, slackMessage)
-          .catch(err => console.error("[Slack] Escalation notification failed:", err))
-      }
+      // Note: Escalation is now included in the full EOD report sent to Slack above
 
       // Create in-app notifications for admins
       for (const admin of admins) {
