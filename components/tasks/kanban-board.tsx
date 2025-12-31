@@ -85,10 +85,10 @@ function TaskCard({
   isDragging?: boolean
   onClick?: () => void
 }) {
-  const priorityColors = {
-    high: "bg-red-100 text-red-700 border-red-200",
-    medium: "bg-amber-100 text-amber-700 border-amber-200",
-    normal: "bg-slate-100 text-slate-700 border-slate-200",
+  const priorityVariants = {
+    high: "high" as const,
+    medium: "medium" as const,
+    normal: "low" as const,
   }
 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "completed"
@@ -109,8 +109,8 @@ function TaskCard({
             <span className="text-sm font-medium line-clamp-2">{task.title}</span>
           </div>
           <Badge
-            variant="outline"
-            className={cn("text-xs flex-shrink-0", priorityColors[task.priority])}
+            variant={priorityVariants[task.priority]}
+            className="text-xs flex-shrink-0"
           >
             {task.priority}
           </Badge>

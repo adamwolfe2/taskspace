@@ -75,9 +75,9 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
   const isLongDescription = task.description && task.description.length > 100
 
   const priorityConfig = {
-    high: { emoji: "🔴", label: "High", variant: "destructive" as const },
-    medium: { emoji: "🟡", label: "Medium", variant: "default" as const },
-    normal: { emoji: "🟢", label: "Normal", variant: "secondary" as const },
+    high: { emoji: "🔴", label: "High", variant: "high" as const },
+    medium: { emoji: "🟡", label: "Medium", variant: "medium" as const },
+    normal: { emoji: "🟢", label: "Normal", variant: "low" as const },
   }
 
   const priority = priorityConfig[task.priority]
