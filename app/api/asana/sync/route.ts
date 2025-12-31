@@ -59,10 +59,13 @@ export async function POST(request: NextRequest) {
     // Get AIMS tasks for mapped users
     const aimsTasks = await db.assignedTasks.findByOrganizationId(auth.organization.id)
 
-    // Get Asana tasks from the configured project
+    // Get Asana tasks from the configured project (including completed tasks from last 365 days)
     let asanaTasks: AsanaTask[] = []
     try {
-      asanaTasks = await asanaClient.getProjectTasks(asanaConfig.projectGid)
+      asanaTasks = await asanaClient.getProjectTasks(asanaConfig.projectGid, {
+        includeCompleted: true,
+        completedSinceDays: 365, // Sync completed tasks from the last year
+      })
     } catch (error) {
       result.errors.push(`Failed to fetch Asana tasks: ${error}`)
     }
