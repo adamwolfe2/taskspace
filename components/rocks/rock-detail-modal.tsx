@@ -19,6 +19,25 @@ import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { Target, Calendar, AlertCircle, CheckCircle2, Clock, Pencil, Save, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
+// Calculate quarter from a date string (YYYY-MM-DD or ISO format)
+function getQuarterFromDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  const month = date.getMonth() + 1 // 1-12
+  const year = date.getFullYear()
+  const quarter = Math.ceil(month / 3)
+  return `Q${quarter} ${year}`
+}
+
+// Get rock's effective quarter (from due date, falling back to stored quarter)
+function getRockQuarter(rock: Rock): string | null {
+  // Calculate quarter from due date for accuracy
+  if (rock.dueDate) {
+    return getQuarterFromDate(rock.dueDate)
+  }
+  // Fall back to stored quarter if no due date
+  return rock.quarter || null
+}
+
 interface RockDetailModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -228,7 +247,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock }: Rock
 
           {/* Metadata */}
           <div className="border-t pt-4 text-sm text-slate-500 space-y-1">
-            {rock.quarter && <p>Quarter: {rock.quarter}</p>}
+            {getRockQuarter(rock) && <p>Quarter: {getRockQuarter(rock)}</p>}
             {rock.outcome && <p>Expected Outcome: {rock.outcome}</p>}
             <p>Created: {formatDate(rock.createdAt)}</p>
             <p>Last Updated: {formatDate(rock.updatedAt)}</p>

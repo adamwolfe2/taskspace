@@ -20,8 +20,17 @@ interface WeekDay {
   hasSubmission: boolean
 }
 
+// Format date to YYYY-MM-DD using local timezone (not UTC)
+function getLocalDateString(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function getWeekDays(reports: EODReport[], userId: string): WeekDay[] {
   const today = new Date()
+  const todayString = getLocalDateString(today)
   const dayOfWeek = today.getDay() // 0 = Sunday, 1 = Monday, etc.
 
   // Calculate Monday of current week
@@ -43,14 +52,18 @@ function getWeekDays(reports: EODReport[], userId: string): WeekDay[] {
   for (let i = 0; i < 5; i++) {
     const date = new Date(monday)
     date.setDate(monday.getDate() + i)
-    const dateString = date.toISOString().split("T")[0]
+    const dateString = getLocalDateString(date)
+
+    // Compare dates at midnight local time for isFuture check
+    const dateAtMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
 
     weekDays.push({
       date: dateString,
       dayName: dayNames[i],
       dayNumber: date.getDate(),
-      isToday: dateString === today.toISOString().split("T")[0],
-      isFuture: date > today,
+      isToday: dateString === todayString,
+      isFuture: dateAtMidnight > todayAtMidnight,
       hasSubmission: userReportDates.has(dateString),
     })
   }
@@ -64,7 +77,7 @@ export function WeeklyEODCalendar({ eodReports, userId, selectedDate, onSelectDa
     [eodReports, userId]
   )
 
-  const todayString = new Date().toISOString().split("T")[0]
+  const todayString = getLocalDateString(new Date())
 
   const submittedCount = weekDays.filter(d => d.hasSubmission).length
   const todayIndex = weekDays.findIndex(d => d.isToday)
