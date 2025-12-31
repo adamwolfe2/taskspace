@@ -48,6 +48,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     email: "",
     department: "",
     role: "member" as "admin" | "member",
+    managerId: null as string | null,
   })
   const [newMemberData, setNewMemberData] = useState({
     name: "",
@@ -94,6 +95,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       email: member.email,
       department: member.department,
       role: member.role === "owner" ? "admin" : member.role,
+      managerId: member.managerId || null,
     })
     setDialogOpen(true)
   }
@@ -103,11 +105,32 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
     try {
       setIsSubmitting(true)
+
+      // Update member details
       const updated = await api.members.update(editingMember.id, {
         department: formData.department,
         role: formData.role,
       })
-      setTeamMembers(teamMembers.map((m) => (m.id === editingMember.id ? updated : m)))
+
+      // Update manager assignment if changed
+      if (formData.managerId !== editingMember.managerId) {
+        await fetch("/api/manager/direct-reports", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            memberId: editingMember.id,
+            managerId: formData.managerId,
+          }),
+        })
+      }
+
+      // Update local state with manager info
+      const updatedWithManager = {
+        ...updated,
+        managerId: formData.managerId,
+      }
+
+      setTeamMembers(teamMembers.map((m) => (m.id === editingMember.id ? updatedWithManager : m)))
       toast({
         title: "Member Updated",
         description: `${formData.name} has been updated successfully`,
@@ -829,6 +852,32 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                   Owner role cannot be changed
                 </p>
               )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editManager">Reports To</Label>
+              <Select
+                value={formData.managerId || "none"}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, managerId: value === "none" ? null : value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select manager" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Manager</SelectItem>
+                  {teamMembers
+                    .filter((m) => m.id !== editingMember?.id && m.status === "active")
+                    .map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.name} ({m.department})
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Assign a manager to enable team dashboard visibility
+              </p>
             </div>
             <Button onClick={handleSubmit} className="w-full" disabled={isSubmitting}>
               {isSubmitting ? (

@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
-import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 
@@ -25,6 +25,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     { id: "history", label: "EOD History", icon: History },
     { id: "rocks", label: "Rock Progress", icon: Target },
     { id: "tasks", label: "Tasks", icon: CheckSquare },
+    { id: "manager", label: "My Team", icon: UsersRound },
   ]
 
   const adminItems: { id: PageType; label: string; icon: typeof Shield }[] = [
