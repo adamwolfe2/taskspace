@@ -207,8 +207,8 @@ export function EODSubmissionCard({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-card">
-      <div className="px-5 py-4 border-b border-slate-100">
+    <div className="section-card">
+      <div className="section-header">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-slate-900 text-lg">Submit EOD Report</h3>

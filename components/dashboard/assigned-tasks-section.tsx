@@ -193,8 +193,8 @@ export function AssignedTasksSection({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-card">
-      <div className="px-5 py-4 border-b border-slate-100">
+    <div className="section-card">
+      <div className="section-header">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CheckSquare className="h-5 w-5 text-slate-500" />
