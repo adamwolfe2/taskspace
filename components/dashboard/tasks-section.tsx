@@ -73,14 +73,15 @@ export function TasksSection({ tasks, onToggleTask }: TasksSectionProps) {
                     </span>
                   </div>
                   <div className="space-y-2">
-                    {categoryTasks.map((task) => (
+                    {categoryTasks.map((task, index) => (
                       <div
                         key={task.id}
-                        className={`flex items-start gap-3 p-3 border rounded-lg transition-all duration-200 ${
+                        className={`flex items-start gap-3 p-3 border rounded-lg transition-all duration-200 animate-fade-in-up opacity-0 ${
                           task.completed
                             ? "border-slate-100 bg-slate-50/50"
                             : "border-slate-200 hover:border-slate-300 hover:shadow-sm"
                         }`}
+                        style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'forwards' }}
                       >
                         <Checkbox
                           checked={task.completed}
