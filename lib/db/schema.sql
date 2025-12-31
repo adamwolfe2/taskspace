@@ -38,7 +38,14 @@ CREATE TABLE IF NOT EXISTS organization_members (
   invited_by VARCHAR(255),
   status VARCHAR(50) DEFAULT 'active',
   timezone VARCHAR(100),
-  eod_reminder_time VARCHAR(10)
+  eod_reminder_time VARCHAR(10),
+  notification_preferences JSONB DEFAULT '{
+    "task_assigned": {"email": true, "inApp": true, "slack": true},
+    "eod_reminder": {"email": true, "inApp": true, "slack": false},
+    "escalation": {"email": true, "inApp": true, "slack": true},
+    "rock_updated": {"email": false, "inApp": true, "slack": false},
+    "digest": {"email": true, "slack": true}
+  }'
 );
 
 -- Sessions table
@@ -256,6 +263,65 @@ CREATE TABLE IF NOT EXISTS ai_conversations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Task Templates table
+CREATE TABLE IF NOT EXISTS task_templates (
+  id VARCHAR(255) PRIMARY KEY,
+  organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  created_by VARCHAR(255) NOT NULL REFERENCES users(id),
+  name VARCHAR(255) NOT NULL,
+  title VARCHAR(500) NOT NULL,
+  description TEXT,
+  priority VARCHAR(50) DEFAULT 'normal',
+  default_rock_id VARCHAR(255),
+  recurrence JSONB,
+  is_shared BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Google Calendar OAuth tokens
+CREATE TABLE IF NOT EXISTS google_calendar_tokens (
+  id VARCHAR(255) PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  access_token TEXT NOT NULL,
+  refresh_token TEXT NOT NULL,
+  token_type VARCHAR(50) DEFAULT 'Bearer',
+  expiry_date BIGINT NOT NULL,
+  scope TEXT,
+  calendar_id VARCHAR(255) DEFAULT 'primary',
+  sync_enabled BOOLEAN DEFAULT TRUE,
+  last_sync_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, organization_id)
+);
+
+-- Google Calendar event mappings (link AIMS items to Google Calendar events)
+CREATE TABLE IF NOT EXISTS google_calendar_events (
+  id VARCHAR(255) PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  google_event_id VARCHAR(255) NOT NULL,
+  item_type VARCHAR(50) NOT NULL,
+  item_id VARCHAR(255) NOT NULL,
+  calendar_id VARCHAR(255) DEFAULT 'primary',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, google_event_id)
+);
+
+-- Push notification subscriptions
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id VARCHAR(255) PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  user_agent TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  last_used_at TIMESTAMP WITH TIME ZONE
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
@@ -289,3 +355,10 @@ CREATE INDEX IF NOT EXISTS idx_rocks_quarter ON rocks(quarter);
 CREATE INDEX IF NOT EXISTS idx_eod_date ON eod_reports(date DESC);
 CREATE INDEX IF NOT EXISTS idx_invitations_org ON invitations(organization_id);
 CREATE INDEX IF NOT EXISTS idx_invitations_status ON invitations(status);
+CREATE INDEX IF NOT EXISTS idx_task_templates_org ON task_templates(organization_id);
+CREATE INDEX IF NOT EXISTS idx_task_templates_user ON task_templates(created_by);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_org ON push_subscriptions(organization_id);
+CREATE INDEX IF NOT EXISTS idx_google_calendar_tokens_user ON google_calendar_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_google_calendar_events_user ON google_calendar_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_google_calendar_events_item ON google_calendar_events(item_type, item_id);

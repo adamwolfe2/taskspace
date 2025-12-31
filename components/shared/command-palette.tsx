@@ -27,8 +27,10 @@ import {
   Moon,
   Sun,
   Bell,
+  Zap,
 } from "lucide-react"
 import type { PageType } from "@/lib/types"
+import { QuickTaskDialog } from "./quick-task-dialog"
 
 interface CommandItem {
   id: string
@@ -42,6 +44,7 @@ interface CommandItem {
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false)
+  const [showQuickTask, setShowQuickTask] = useState(false)
   const { setCurrentPage, currentUser, logout, darkMode, setDarkMode } = useApp()
 
   // Listen for keyboard shortcut (Cmd+K or Ctrl+K)
@@ -169,6 +172,18 @@ export function CommandPalette() {
 
     // Actions
     {
+      id: "quick-task",
+      name: "Quick Add Task",
+      description: "Rapidly create a new personal task",
+      icon: <Zap className="mr-2 h-4 w-4" />,
+      action: () => {
+        setOpen(false)
+        setTimeout(() => setShowQuickTask(true), 100)
+      },
+      keywords: ["new", "create", "add", "todo", "task"],
+      group: "Actions",
+    },
+    {
       id: "toggle-dark",
       name: darkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
       description: "Toggle dark/light theme",
@@ -270,6 +285,15 @@ export function CommandPalette() {
           </CommandGroup>
         </CommandList>
       </CommandDialog>
+
+      {/* Quick Task Dialog */}
+      {currentUser && (
+        <QuickTaskDialog
+          open={showQuickTask}
+          onOpenChange={setShowQuickTask}
+          userId={currentUser.id}
+        />
+      )}
     </>
   )
 }

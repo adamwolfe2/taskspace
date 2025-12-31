@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
-import { Plus, ClipboardList, UserCheck, Search } from "lucide-react"
+import { KanbanBoard } from "@/components/tasks/kanban-board"
+import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid } from "lucide-react"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useToast } from "@/hooks/use-toast"
 import { addDays, addWeeks, addMonths } from "date-fns"
 
@@ -36,6 +38,7 @@ export function TasksPage({
   const [editingTask, setEditingTask] = useState<AssignedTask | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("list")
   const { toast } = useToast()
 
   const userTasks = assignedTasks.filter((t) => t.assigneeId === currentUser.id)
@@ -179,6 +182,29 @@ export function TasksPage({
     }
   }
 
+  const handleKanbanStatusChange = async (taskId: string, newStatus: AssignedTask["status"]) => {
+    try {
+      const updates: Partial<AssignedTask> = { status: newStatus }
+      if (newStatus === "completed") {
+        updates.completedAt = new Date().toISOString()
+      }
+      await updateTask(taskId, updates)
+
+      if (newStatus === "completed") {
+        toast({
+          title: "Task completed!",
+          description: "Added to today's EOD report",
+        })
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update task status",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -192,7 +218,7 @@ export function TasksPage({
         </Button>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search, Filters, and View Toggle */}
       <div className="bg-white rounded-xl shadow-card p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative min-w-0">
@@ -215,9 +241,35 @@ export function TasksPage({
               <SelectItem value="normal">Normal</SelectItem>
             </SelectContent>
           </Select>
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(value) => value && setViewMode(value as "list" | "kanban")}
+            className="flex-shrink-0"
+          >
+            <ToggleGroupItem value="list" aria-label="List view" className="gap-1.5">
+              <LayoutList className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">List</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="kanban" aria-label="Kanban view" className="gap-1.5">
+              <LayoutGrid className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">Kanban</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
       </div>
 
+      {/* Kanban View */}
+      {viewMode === "kanban" ? (
+        <div className="space-y-4">
+          <KanbanBoard
+            tasks={filteredTasks}
+            onTaskStatusChange={handleKanbanStatusChange}
+            onTaskClick={(task) => handleEditTask(task)}
+          />
+        </div>
+      ) : (
+      /* List View */
       <Tabs defaultValue="active" className="space-y-4 w-full overflow-hidden">
         <TabsList className="w-full sm:w-auto flex-wrap">
           <TabsTrigger value="active" className="flex-1 sm:flex-initial">
@@ -310,6 +362,7 @@ export function TasksPage({
           )}
         </TabsContent>
       </Tabs>
+      )}
 
       <AddTaskModal
         open={showAddTaskModal}
