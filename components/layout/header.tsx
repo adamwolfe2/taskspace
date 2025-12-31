@@ -3,6 +3,7 @@
 import { useApp } from "@/lib/contexts/app-context"
 import { UserInitials } from "@/components/shared/user-initials"
 import { NotificationCenter } from "@/components/shared/notification-center"
+import { DemoModeIndicator } from "@/components/shared/demo-mode-banner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { LogOut, Menu, Settings, Building, Search, ChevronDown } from "lucide-react"
@@ -71,6 +72,9 @@ export function Header({ onMenuClick }: HeaderProps) {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
+          {/* Demo mode indicator */}
+          <DemoModeIndicator />
+
           {/* Search button */}
           <Button
             variant="outline"

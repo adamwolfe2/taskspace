@@ -64,7 +64,8 @@ const DEMO_ORG: Organization = {
   subscription: {
     plan: "professional",
     status: "active",
-    currentPeriodEnd: "2025-12-31",
+    // Demo mode never expires - set far in the future
+    currentPeriodEnd: "2099-12-31",
     maxUsers: 25,
     features: ["ai-insights", "slack-integration", "email-notifications"],
   },
