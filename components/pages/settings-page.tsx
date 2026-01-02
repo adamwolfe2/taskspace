@@ -1156,12 +1156,12 @@ export function SettingsPage() {
  </div>
  <div className="text-right">
  <p className="text-2xl font-bold">
- {teamCount} / {currentOrganization?.subscription.maxUsers || 5}
+ {teamCount} / {currentOrganization?.subscription.maxUsers || 100}
  </p>
  <p className="text-sm text-muted-foreground">members</p>
  </div>
  </div>
- {teamCount >= (currentOrganization?.subscription.maxUsers || 5) && (
+ {teamCount >= (currentOrganization?.subscription.maxUsers || 100) && (
  <Alert className="mt-4">
  <AlertDescription>
  You've reached your team member limit. Upgrade your plan to add more members.
@@ -1192,7 +1192,7 @@ export function SettingsPage() {
  </span>
  </div>
  <p className="text-sm text-muted-foreground">
- {currentOrganization?.subscription.maxUsers || 5} team members included
+ {currentOrganization?.subscription.maxUsers || 100} team members included
  </p>
  </div>
  <Shield className="h-8 w-8 text-muted-foreground" />
@@ -1219,14 +1219,40 @@ export function SettingsPage() {
  <Separator />
 
  <div className="space-y-3">
- <h4 className="font-medium">Upgrade Your Plan</h4>
+ <h4 className="font-medium">Team Size Limit</h4>
  <p className="text-sm text-muted-foreground">
- Get more features and team member slots with a paid plan.
+ Adjust the maximum number of team members for your workspace.
  </p>
- <Button className="gap-2">
- <ExternalLink className="h-4 w-4" />
- View Pricing
- </Button>
+ <div className="flex items-center gap-3">
+ <Input
+ type="number"
+ min="1"
+ max="500"
+ className="w-24"
+ value={currentOrganization?.subscription.maxUsers || 100}
+ onChange={async (e) => {
+ const newMax = parseInt(e.target.value, 10)
+ if (isNaN(newMax) || newMax < 1) return
+ try {
+ const res = await fetch("/api/organizations", {
+ method: "PATCH",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ subscription: { maxUsers: newMax } }),
+ })
+ if (res.ok) {
+ const data = await res.json()
+ if (data.success && data.data) {
+ setCurrentOrganization(data.data)
+ toast({ title: "Updated", description: `Team limit set to ${newMax} members` })
+ }
+ }
+ } catch (err) {
+ toast({ title: "Error", description: "Failed to update limit", variant: "destructive" })
+ }
+ }}
+ />
+ <span className="text-sm text-muted-foreground">members</span>
+ </div>
  </div>
  </CardContent>
  </Card>

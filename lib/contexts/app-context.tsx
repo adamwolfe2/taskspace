@@ -66,7 +66,7 @@ const DEMO_ORG: Organization = {
     status: "active",
     // Demo mode never expires - set far in the future
     currentPeriodEnd: "2099-12-31",
-    maxUsers: 25,
+    maxUsers: 100,
     features: ["ai-insights", "slack-integration", "email-notifications"],
   },
 }

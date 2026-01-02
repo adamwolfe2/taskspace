@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         plan: "free",
         status: "active",
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        maxUsers: 10,
+        maxUsers: 100, // Internal tool - generous limit
         features: ["basic_rocks", "basic_tasks", "eod_reports"],
       },
     }
@@ -144,7 +144,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, settings } = body
+    const { name, settings, subscription } = body
 
     const updates: Partial<Organization> = {}
 
@@ -156,6 +156,14 @@ export async function PATCH(request: NextRequest) {
       updates.settings = {
         ...auth.organization.settings,
         ...settings,
+      }
+    }
+
+    // Allow owner to update subscription (e.g., maxUsers for internal tools)
+    if (subscription) {
+      updates.subscription = {
+        ...auth.organization.subscription,
+        ...subscription,
       }
     }
 
