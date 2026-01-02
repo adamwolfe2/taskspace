@@ -31,6 +31,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
     outcome: "",
     doneWhen: [""],
     dueDate: "",
+    quarter: "Q1 2025",
   })
   const { toast } = useToast()
 
@@ -49,6 +50,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
       outcome: rock.outcome || "",
       doneWhen: rock.doneWhen || [""],
       dueDate: rock.dueDate,
+      quarter: rock.quarter || "Q1 2025",
     })
     setShowForm(true)
   }
@@ -70,6 +72,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
       outcome: "",
       doneWhen: [""],
       dueDate: "",
+      quarter: "Q1 2025",
     })
     setShowForm(true)
   }
@@ -102,6 +105,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
                 ...r,
                 ...formData,
                 doneWhen: doneWhenFiltered,
+                quarter: formData.quarter,
               }
             : r,
         ),
@@ -118,6 +122,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
         userId: selectedUserId,
         ...formData,
         doneWhen: doneWhenFiltered,
+        quarter: formData.quarter,
         progress: 0,
         status: "on-track",
         createdAt: now,
@@ -210,7 +215,14 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <CardTitle className="text-base">{rock.title}</CardTitle>
-                            {rock.bucket && <p className="text-sm text-muted-foreground mt-1">Bucket: {rock.bucket}</p>}
+                            <div className="flex items-center gap-3 mt-1">
+                              {rock.quarter && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
+                                  {rock.quarter}
+                                </span>
+                              )}
+                              {rock.bucket && <p className="text-sm text-muted-foreground">Bucket: {rock.bucket}</p>}
+                            </div>
                           </div>
                           <div className="flex gap-2">
                             <Button variant="ghost" size="sm" onClick={() => handleEditRock(rock)}>
@@ -342,6 +354,25 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
                         </div>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="quarter">Quarter</Label>
+                    <Select
+                      value={formData.quarter}
+                      onValueChange={(value) => setFormData({ ...formData, quarter: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select quarter" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Q4 2024">Q4 2024</SelectItem>
+                        <SelectItem value="Q1 2025">Q1 2025</SelectItem>
+                        <SelectItem value="Q2 2025">Q2 2025</SelectItem>
+                        <SelectItem value="Q3 2025">Q3 2025</SelectItem>
+                        <SelectItem value="Q4 2025">Q4 2025</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">
