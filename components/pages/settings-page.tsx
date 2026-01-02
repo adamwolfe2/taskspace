@@ -331,6 +331,9 @@ export function SettingsPage() {
  const [slackWebhookUrl, setSlackWebhookUrl] = useState(
  currentOrganization?.settings.slackWebhookUrl || ""
  )
+ const [teamToolsUrl, setTeamToolsUrl] = useState(
+ currentOrganization?.settings.teamToolsUrl || ""
+ )
 
  // Personal preferences state (per-user timezone and reminder time)
  const [personalTimezone, setPersonalTimezone] = useState<string>("")
@@ -410,6 +413,7 @@ export function SettingsPage() {
  enableEmailNotifications: emailNotifications,
  enableSlackIntegration: slackIntegration,
  slackWebhookUrl: slackIntegration ? slackWebhookUrl : undefined,
+ teamToolsUrl: teamToolsUrl.trim() || undefined,
  customBranding: {
  logo: orgLogo,
  },
@@ -944,6 +948,51 @@ export function SettingsPage() {
  />
  </div>
  )}
+ {isOwner && (
+ <Button onClick={handleSaveOrganization} disabled={isLoading}>
+ {isLoading ? (
+ <>
+ <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+ Saving...
+ </>
+ ) : (
+ <>
+ <Check className="mr-2 h-4 w-4" />
+ Save Changes
+ </>
+ )}
+ </Button>
+ )}
+ </CardContent>
+ </Card>
+
+ {/* Team Tools Section */}
+ <Card>
+ <CardHeader>
+ <CardTitle className="flex items-center gap-2">
+ <ExternalLink className="h-5 w-5" />
+ Team Tools
+ </CardTitle>
+ <CardDescription>
+ Add an external link that all team members can access from the sidebar
+ </CardDescription>
+ </CardHeader>
+ <CardContent className="space-y-4">
+ <div className="space-y-2">
+ <Label htmlFor="teamToolsUrl">Team Tools URL</Label>
+ <Input
+ id="teamToolsUrl"
+ type="url"
+ placeholder="https://your-team-tools.example.com"
+ value={teamToolsUrl}
+ onChange={(e) => setTeamToolsUrl(e.target.value)}
+ disabled={!isOwner || isLoading}
+ />
+ <p className="text-sm text-muted-foreground">
+ When set, a "Team Tools" link will appear in the sidebar for all workspace members.
+ Leave empty to hide this link.
+ </p>
+ </div>
  {isOwner && (
  <Button onClick={handleSaveOrganization} disabled={isLoading}>
  {isLoading ? (

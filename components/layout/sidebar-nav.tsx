@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
-import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 
@@ -10,7 +10,7 @@ interface SidebarNavProps {
 }
 
 export function SidebarNav({ onNavigate }: SidebarNavProps) {
-  const { currentUser, currentPage, setCurrentPage } = useApp()
+  const { currentUser, currentPage, setCurrentPage, currentOrganization } = useApp()
 
   const handleNavigation = (page: PageType) => {
     setCurrentPage(page)
@@ -18,6 +18,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
   }
 
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
+  const teamToolsUrl = currentOrganization?.settings?.teamToolsUrl
 
   const navItems: { id: PageType; label: string; icon: typeof LayoutDashboard }[] = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -65,6 +66,25 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
             })}
           </div>
         </div>
+
+        {/* Team Tools - External Link */}
+        {teamToolsUrl && (
+          <div className="px-3">
+            <h2 className="mb-3 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Resources
+            </h2>
+            <a
+              href={teamToolsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onNavigate?.()}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            >
+              <ExternalLink className="h-4 w-4 flex-shrink-0 text-slate-400" />
+              <span className="truncate">Team Tools</span>
+            </a>
+          </div>
+        )}
 
         {/* Admin Section */}
         {isAdmin && (
