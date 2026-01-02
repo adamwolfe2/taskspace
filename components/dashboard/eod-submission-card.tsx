@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, X, Send, Trash2 } from "lucide-react"
+import { Plus, X, Send, Trash2, Target } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask } from "@/lib/types"
+import type { TeamMemberMetric } from "@/lib/metrics"
 import { getTodayString, formatDate } from "@/lib/utils/date-utils"
 import { useToast } from "@/hooks/use-toast"
 import { sendEODNotification } from "@/lib/email"
@@ -58,7 +59,27 @@ export function EODSubmissionCard({
   ])
   const [needsEscalation, setNeedsEscalation] = useState(false)
   const [escalationNote, setEscalationNote] = useState("")
+  const [metricValueToday, setMetricValueToday] = useState<string>("")
+  const [activeMetric, setActiveMetric] = useState<TeamMemberMetric | null>(null)
   const { toast } = useToast()
+
+  // Fetch user's active metric
+  useEffect(() => {
+    async function fetchMetric() {
+      try {
+        const response = await fetch("/api/metrics")
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data.metric) {
+            setActiveMetric(data.data.metric)
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch active metric:", err)
+      }
+    }
+    fetchMetric()
+  }, [userId])
 
   useEffect(() => {
     const autoPopulated = completedTasksForDate.map((task) => ({
@@ -162,6 +183,14 @@ export function EODSubmissionCard({
     const filteredPriorities = tomorrowPriorities.filter((p) => p.text.trim() !== "")
 
     // Note: organizationId is added by the API from the session
+    // Parse metric value - handle empty string, NaN, etc.
+    const parsedMetricValue = metricValueToday.trim() !== ""
+      ? parseInt(metricValueToday, 10)
+      : null
+    const validMetricValue = parsedMetricValue !== null && !isNaN(parsedMetricValue)
+      ? parsedMetricValue
+      : null
+
     const report: Omit<EODReport, "id" | "createdAt" | "organizationId"> = {
       userId,
       date: reportDate,
@@ -171,6 +200,7 @@ export function EODSubmissionCard({
       tomorrowPriorities: filteredPriorities,
       needsEscalation,
       escalationNote: needsEscalation ? escalationNote.trim() : null,
+      metricValueToday: validMetricValue,
     }
 
     try {
@@ -189,6 +219,7 @@ export function EODSubmissionCard({
       setTomorrowPriorities([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
       setNeedsEscalation(false)
       setEscalationNote("")
+      setMetricValueToday("")
       onDateReset?.()
 
       toast({
@@ -306,6 +337,33 @@ export function EODSubmissionCard({
             className="bg-white border-slate-200 focus:border-blue-300"
           />
         </div>
+
+        {/* Weekly Metric Input - only shown if user has an active metric */}
+        {activeMetric && (
+          <div className="space-y-2">
+            <Label htmlFor="metricValue" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <Target className="h-4 w-4 text-purple-600" />
+              {activeMetric.metricName}
+            </Label>
+            <div className="flex items-center gap-3">
+              <Input
+                id="metricValue"
+                type="number"
+                min="0"
+                placeholder="0"
+                value={metricValueToday}
+                onChange={(e) => setMetricValueToday(e.target.value)}
+                className="w-24 bg-white border-slate-200 focus:border-purple-300"
+              />
+              <span className="text-sm text-slate-500">
+                Weekly goal: <span className="font-medium text-slate-700">{activeMetric.weeklyGoal}</span>
+              </span>
+            </div>
+            <p className="text-xs text-slate-500">
+              How many {activeMetric.metricName.toLowerCase()} today? This will be added to your weekly total.
+            </p>
+          </div>
+        )}
 
         {/* Tomorrow's Priorities */}
         <div className="space-y-3">

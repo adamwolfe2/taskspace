@@ -1506,8 +1506,71 @@ EMAIL_FROM=AIMS Dashboard <noreply@yourdomain.com>`, "Environment variables")}
  </CardDescription>
  </CardHeader>
  <CardContent className="space-y-4">
+ {/* One-Click Setup */}
+ <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
+ <div className="flex items-start gap-4">
+ <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center flex-shrink-0">
+ <Download className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+ </div>
+ <div className="flex-1">
+ <h4 className="font-semibold text-purple-900 dark:text-purple-100">
+ One-Click Setup (Recommended)
+ </h4>
+ <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+ Download a pre-configured extension and drag it into Claude Desktop's Extensions settings.
+ </p>
+ {apiKeys.length > 0 ? (
+ <div className="mt-3 space-y-2">
+ <Label className="text-sm text-purple-800 dark:text-purple-200">
+ Select an API key to include:
+ </Label>
+ <div className="flex items-center gap-2 flex-wrap">
+ {apiKeys.map((key) => (
+ <Button
+ key={key.id}
+ size="sm"
+ className="gap-2 bg-purple-600 hover:bg-purple-700 text-white"
+ onClick={() => {
+ window.open(`/api/mcp/bundle?keyId=${key.id}`, "_blank")
+ toast({
+ title: "Downloading extension...",
+ description: "Drag the .mcpb file into Claude Desktop → Settings → Extensions",
+ })
+ }}
+ >
+ <Download className="h-4 w-4" />
+ {key.name}
+ </Button>
+ ))}
+ </div>
+ <p className="text-xs text-purple-600 dark:text-purple-400 mt-2">
+ After downloading, open Claude Desktop → Settings → Extensions, then drag and drop the file.
+ </p>
+ </div>
+ ) : (
+ <div className="mt-3">
+ <p className="text-sm text-amber-700 dark:text-amber-300">
+ Create an API key above first, then come back here to download the extension.
+ </p>
+ </div>
+ )}
+ </div>
+ </div>
+ </div>
+
+ <div className="relative">
+ <div className="absolute inset-0 flex items-center">
+ <span className="w-full border-t" />
+ </div>
+ <div className="relative flex justify-center text-xs uppercase">
+ <span className="bg-background px-2 text-muted-foreground">
+ Or configure manually
+ </span>
+ </div>
+ </div>
+
  <div className="space-y-3">
- <h4 className="font-medium">Setup Instructions</h4>
+ <h4 className="font-medium">Manual Setup Instructions</h4>
  <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
  <li>Create an API key above (if you haven't already)</li>
  <li>Download the MCP server from your deployment</li>

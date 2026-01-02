@@ -663,9 +663,54 @@ export async function GET(request: NextRequest) {
       $$ LANGUAGE plpgsql;
     `
 
+    // ============================================
+    // WEEKLY SCORECARD TABLES (EOS-style metrics)
+    // ============================================
+
+    // Team member metrics - defines the measurable for each team member
+    await sql`
+      CREATE TABLE IF NOT EXISTS team_member_metrics (
+        id VARCHAR(255) PRIMARY KEY,
+        team_member_id VARCHAR(255) NOT NULL REFERENCES organization_members(id) ON DELETE CASCADE,
+        metric_name TEXT NOT NULL,
+        weekly_goal INTEGER NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    // Partial unique index - only one active metric per member
+    await sql`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_active_metric_per_member
+      ON team_member_metrics(team_member_id)
+      WHERE is_active = true
+    `
+
+    // Weekly metric entries - stores aggregated weekly values
+    await sql`
+      CREATE TABLE IF NOT EXISTS weekly_metric_entries (
+        id VARCHAR(255) PRIMARY KEY,
+        team_member_id VARCHAR(255) NOT NULL REFERENCES organization_members(id) ON DELETE CASCADE,
+        metric_id VARCHAR(255) NOT NULL REFERENCES team_member_metrics(id) ON DELETE CASCADE,
+        week_ending DATE NOT NULL,
+        actual_value INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(team_member_id, week_ending)
+      )
+    `
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_weekly_entries_week ON weekly_metric_entries(week_ending)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_weekly_entries_member ON weekly_metric_entries(team_member_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_team_member_metrics_member ON team_member_metrics(team_member_id)`
+
+    // Add metric_value_today to eod_reports for daily tracking
+    await sql`ALTER TABLE eod_reports ADD COLUMN IF NOT EXISTS metric_value_today INTEGER DEFAULT NULL`
+
     return NextResponse.json({
       success: true,
-      message: "Database migration completed successfully (including AI Command Center, Notifications, Audit Logs, Webhooks, and Enterprise tables)",
+      message: "Database migration completed successfully (including AI Command Center, Notifications, Audit Logs, Webhooks, Enterprise tables, and Weekly Scorecard)",
     })
   } catch (error) {
     console.error("Migration error:", error)
