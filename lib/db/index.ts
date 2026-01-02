@@ -882,30 +882,67 @@ export const db = {
       return rows[0] ? parseEODReport(rows[0]) : null
     },
     async create(report: EODReport): Promise<EODReport> {
-      await sql`
-        INSERT INTO eod_reports (id, organization_id, user_id, date, tasks, challenges,
-          tomorrow_priorities, needs_escalation, escalation_note, metric_value_today, submitted_at, created_at)
-        VALUES (${report.id}, ${report.organizationId}, ${report.userId}, ${report.date},
-                ${JSON.stringify(report.tasks)}, ${report.challenges},
-                ${JSON.stringify(report.tomorrowPriorities)}, ${report.needsEscalation},
-                ${report.escalationNote}, ${report.metricValueToday}, ${report.submittedAt}, ${report.createdAt})
-      `
+      try {
+        // Try with metric_value_today column (requires migration)
+        await sql`
+          INSERT INTO eod_reports (id, organization_id, user_id, date, tasks, challenges,
+            tomorrow_priorities, needs_escalation, escalation_note, metric_value_today, submitted_at, created_at)
+          VALUES (${report.id}, ${report.organizationId}, ${report.userId}, ${report.date},
+                  ${JSON.stringify(report.tasks)}, ${report.challenges},
+                  ${JSON.stringify(report.tomorrowPriorities)}, ${report.needsEscalation},
+                  ${report.escalationNote}, ${report.metricValueToday}, ${report.submittedAt}, ${report.createdAt})
+        `
+      } catch (err: any) {
+        // Fallback if metric_value_today column doesn't exist (migration not run)
+        if (err.message?.includes('metric_value_today') || err.message?.includes('column')) {
+          await sql`
+            INSERT INTO eod_reports (id, organization_id, user_id, date, tasks, challenges,
+              tomorrow_priorities, needs_escalation, escalation_note, submitted_at, created_at)
+            VALUES (${report.id}, ${report.organizationId}, ${report.userId}, ${report.date},
+                    ${JSON.stringify(report.tasks)}, ${report.challenges},
+                    ${JSON.stringify(report.tomorrowPriorities)}, ${report.needsEscalation},
+                    ${report.escalationNote}, ${report.submittedAt}, ${report.createdAt})
+          `
+        } else {
+          throw err
+        }
+      }
       return report
     },
     async update(id: string, updates: Partial<EODReport>): Promise<EODReport | null> {
-      const { rows } = await sql`
-        UPDATE eod_reports SET
-          tasks = COALESCE(${updates.tasks ? JSON.stringify(updates.tasks) : null}::jsonb, tasks),
-          challenges = COALESCE(${updates.challenges || null}, challenges),
-          tomorrow_priorities = COALESCE(${updates.tomorrowPriorities ? JSON.stringify(updates.tomorrowPriorities) : null}::jsonb, tomorrow_priorities),
-          needs_escalation = COALESCE(${updates.needsEscalation ?? null}, needs_escalation),
-          escalation_note = COALESCE(${updates.escalationNote || null}, escalation_note),
-          metric_value_today = COALESCE(${updates.metricValueToday ?? null}, metric_value_today),
-          submitted_at = COALESCE(${updates.submittedAt || null}, submitted_at)
-        WHERE id = ${id}
-        RETURNING *
-      `
-      return rows[0] ? parseEODReport(rows[0]) : null
+      try {
+        // Try with metric_value_today column (requires migration)
+        const { rows } = await sql`
+          UPDATE eod_reports SET
+            tasks = COALESCE(${updates.tasks ? JSON.stringify(updates.tasks) : null}::jsonb, tasks),
+            challenges = COALESCE(${updates.challenges || null}, challenges),
+            tomorrow_priorities = COALESCE(${updates.tomorrowPriorities ? JSON.stringify(updates.tomorrowPriorities) : null}::jsonb, tomorrow_priorities),
+            needs_escalation = COALESCE(${updates.needsEscalation ?? null}, needs_escalation),
+            escalation_note = COALESCE(${updates.escalationNote || null}, escalation_note),
+            metric_value_today = COALESCE(${updates.metricValueToday ?? null}, metric_value_today),
+            submitted_at = COALESCE(${updates.submittedAt || null}, submitted_at)
+          WHERE id = ${id}
+          RETURNING *
+        `
+        return rows[0] ? parseEODReport(rows[0]) : null
+      } catch (err: any) {
+        // Fallback if metric_value_today column doesn't exist
+        if (err.message?.includes('metric_value_today') || err.message?.includes('column')) {
+          const { rows } = await sql`
+            UPDATE eod_reports SET
+              tasks = COALESCE(${updates.tasks ? JSON.stringify(updates.tasks) : null}::jsonb, tasks),
+              challenges = COALESCE(${updates.challenges || null}, challenges),
+              tomorrow_priorities = COALESCE(${updates.tomorrowPriorities ? JSON.stringify(updates.tomorrowPriorities) : null}::jsonb, tomorrow_priorities),
+              needs_escalation = COALESCE(${updates.needsEscalation ?? null}, needs_escalation),
+              escalation_note = COALESCE(${updates.escalationNote || null}, escalation_note),
+              submitted_at = COALESCE(${updates.submittedAt || null}, submitted_at)
+            WHERE id = ${id}
+            RETURNING *
+          `
+          return rows[0] ? parseEODReport(rows[0]) : null
+        }
+        throw err
+      }
     },
     async delete(id: string): Promise<boolean> {
       const { rowCount } = await sql`DELETE FROM eod_reports WHERE id = ${id}`
