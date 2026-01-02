@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
+    const quarter = searchParams.get("quarter")
 
     let rocks: Rock[]
 
@@ -35,6 +36,11 @@ export async function GET(request: NextRequest) {
     } else {
       // Regular members see only their rocks
       rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
+    }
+
+    // Filter by quarter if specified
+    if (quarter) {
+      rocks = rocks.filter((rock) => rock.quarter === quarter)
     }
 
     return NextResponse.json<ApiResponse<Rock[]>>({

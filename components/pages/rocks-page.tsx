@@ -8,7 +8,7 @@ import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Target, Search } from "lucide-react"
+import { Target, Search, Calendar } from "lucide-react"
 
 interface RocksPageProps {
   currentUser: TeamMember
@@ -20,12 +20,36 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [ownerFilter, setOwnerFilter] = useState<string>("all")
+  const [quarterFilter, setQuarterFilter] = useState<string>("Q1 2025") // Default to current quarter
 
   const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
   const baseRocks = isAdmin ? rocks : rocks.filter((r) => r.userId === currentUser.id)
 
+  // Get unique quarters from rocks for filter options
+  const availableQuarters = useMemo(() => {
+    const quarters = new Set<string>()
+    baseRocks.forEach((rock) => {
+      if (rock.quarter) quarters.add(rock.quarter)
+    })
+    // Ensure Q1 2025 is always available
+    quarters.add("Q1 2025")
+    return Array.from(quarters).sort((a, b) => {
+      // Sort by year then quarter
+      const [qA, yearA] = a.split(" ")
+      const [qB, yearB] = b.split(" ")
+      if (yearA !== yearB) return parseInt(yearA) - parseInt(yearB)
+      return qA.localeCompare(qB)
+    })
+  }, [baseRocks])
+
   const displayRocks = useMemo(() => {
     return baseRocks.filter((rock) => {
+      // Quarter filter
+      if (quarterFilter !== "all") {
+        const rockQuarter = rock.quarter || ""
+        if (rockQuarter !== quarterFilter) return false
+      }
+
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
@@ -42,7 +66,7 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
 
       return true
     })
-  }, [baseRocks, searchQuery, statusFilter, ownerFilter, isAdmin])
+  }, [baseRocks, searchQuery, statusFilter, ownerFilter, quarterFilter, isAdmin])
 
   const getStatusConfig = (status: Rock["status"]) => {
     const configs = {
@@ -75,6 +99,20 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
               className="pl-9 bg-slate-50 border-slate-200"
             />
           </div>
+          <Select value={quarterFilter} onValueChange={setQuarterFilter}>
+            <SelectTrigger className="w-full sm:w-36 bg-slate-50 border-slate-200">
+              <Calendar className="h-4 w-4 mr-2 text-slate-400" />
+              <SelectValue placeholder="Quarter" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Quarters</SelectItem>
+              {availableQuarters.map((quarter) => (
+                <SelectItem key={quarter} value={quarter}>
+                  {quarter}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-40 bg-slate-50 border-slate-200">
               <SelectValue placeholder="Status" />
@@ -120,9 +158,9 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
               </div>
               <p className="text-slate-600 font-medium">No rocks found</p>
               <p className="text-sm text-slate-400 mt-1">
-                {searchQuery || statusFilter !== "all" || ownerFilter !== "all"
+                {searchQuery || statusFilter !== "all" || ownerFilter !== "all" || quarterFilter !== "all"
                   ? "Try adjusting your search or filters"
-                  : "Rocks will appear here when created"}
+                  : `No rocks assigned for ${quarterFilter}`}
               </p>
             </div>
           ) : (
@@ -132,6 +170,7 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
                   <TableRow className="border-slate-100">
                     {isAdmin && <TableHead className="text-slate-500 font-medium">Owner</TableHead>}
                     <TableHead className="text-slate-500 font-medium">Rock</TableHead>
+                    <TableHead className="text-slate-500 font-medium">Quarter</TableHead>
                     <TableHead className="text-slate-500 font-medium">Status</TableHead>
                     <TableHead className="text-slate-500 font-medium">Progress</TableHead>
                     <TableHead className="text-slate-500 font-medium">Due Date</TableHead>
@@ -159,6 +198,15 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
                             <p className="font-medium text-slate-900">{rock.title}</p>
                             <p className="text-xs text-slate-400 mt-0.5">{rock.description}</p>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {rock.quarter ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
+                              {rock.quarter}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 text-sm">-</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <span className={`status-pill ${statusConfig.bgColor} ${statusConfig.textColor}`}>
