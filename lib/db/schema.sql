@@ -368,3 +368,42 @@ CREATE INDEX IF NOT EXISTS idx_google_calendar_events_item ON google_calendar_ev
 -- Manager relationships index
 CREATE INDEX IF NOT EXISTS idx_members_manager_id ON organization_members(manager_id);
 CREATE INDEX IF NOT EXISTS idx_members_org_manager ON organization_members(organization_id, manager_id);
+
+-- ============================================
+-- WEEKLY SCORECARD TABLES (EOS-style metrics)
+-- ============================================
+
+-- Team member metrics - defines the measurable for each team member
+CREATE TABLE IF NOT EXISTS team_member_metrics (
+  id VARCHAR(255) PRIMARY KEY,
+  team_member_id VARCHAR(255) NOT NULL REFERENCES organization_members(id) ON DELETE CASCADE,
+  metric_name TEXT NOT NULL,
+  weekly_goal INTEGER NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Only one active metric per member
+CREATE UNIQUE INDEX IF NOT EXISTS idx_active_metric_per_member
+ON team_member_metrics(team_member_id)
+WHERE is_active = true;
+
+-- Weekly metric entries - stores aggregated weekly values
+CREATE TABLE IF NOT EXISTS weekly_metric_entries (
+  id VARCHAR(255) PRIMARY KEY,
+  team_member_id VARCHAR(255) NOT NULL REFERENCES organization_members(id) ON DELETE CASCADE,
+  metric_id VARCHAR(255) NOT NULL REFERENCES team_member_metrics(id) ON DELETE CASCADE,
+  week_ending DATE NOT NULL, -- Always a Friday
+  actual_value INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(team_member_id, week_ending)
+);
+
+CREATE INDEX IF NOT EXISTS idx_weekly_entries_week ON weekly_metric_entries(week_ending);
+CREATE INDEX IF NOT EXISTS idx_weekly_entries_member ON weekly_metric_entries(team_member_id);
+CREATE INDEX IF NOT EXISTS idx_team_member_metrics_member ON team_member_metrics(team_member_id);
+
+-- Add metric_value_today to eod_reports for daily tracking
+ALTER TABLE eod_reports ADD COLUMN IF NOT EXISTS metric_value_today INTEGER DEFAULT NULL;

@@ -282,6 +282,7 @@ export interface EODReport {
   tomorrowPriorities: EODPriority[]
   needsEscalation: boolean
   escalationNote: string | null
+  metricValueToday: number | null // Daily metric value for weekly scorecard
   submittedAt: string
   createdAt: string
 }
@@ -311,6 +312,7 @@ export type PageType =
   | "admin-tasks"
   | "command-center"
   | "analytics"
+  | "scorecard"
   | "manager"
   | "settings"
   | "profile"

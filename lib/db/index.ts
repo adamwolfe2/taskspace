@@ -183,6 +183,7 @@ function parseEODReport(row: Record<string, unknown>): EODReport {
     tomorrowPriorities: row.tomorrow_priorities as EODReport["tomorrowPriorities"],
     needsEscalation: row.needs_escalation as boolean,
     escalationNote: row.escalation_note as string | null,
+    metricValueToday: row.metric_value_today as number | null,
     submittedAt: (row.submitted_at as Date)?.toISOString() || "",
     createdAt: (row.created_at as Date)?.toISOString() || "",
   }
@@ -883,11 +884,11 @@ export const db = {
     async create(report: EODReport): Promise<EODReport> {
       await sql`
         INSERT INTO eod_reports (id, organization_id, user_id, date, tasks, challenges,
-          tomorrow_priorities, needs_escalation, escalation_note, submitted_at, created_at)
+          tomorrow_priorities, needs_escalation, escalation_note, metric_value_today, submitted_at, created_at)
         VALUES (${report.id}, ${report.organizationId}, ${report.userId}, ${report.date},
                 ${JSON.stringify(report.tasks)}, ${report.challenges},
                 ${JSON.stringify(report.tomorrowPriorities)}, ${report.needsEscalation},
-                ${report.escalationNote}, ${report.submittedAt}, ${report.createdAt})
+                ${report.escalationNote}, ${report.metricValueToday}, ${report.submittedAt}, ${report.createdAt})
       `
       return report
     },
@@ -899,6 +900,7 @@ export const db = {
           tomorrow_priorities = COALESCE(${updates.tomorrowPriorities ? JSON.stringify(updates.tomorrowPriorities) : null}::jsonb, tomorrow_priorities),
           needs_escalation = COALESCE(${updates.needsEscalation ?? null}, needs_escalation),
           escalation_note = COALESCE(${updates.escalationNote || null}, escalation_note),
+          metric_value_today = COALESCE(${updates.metricValueToday ?? null}, metric_value_today),
           submitted_at = COALESCE(${updates.submittedAt || null}, submitted_at)
         WHERE id = ${id}
         RETURNING *

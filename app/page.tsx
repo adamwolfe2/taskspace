@@ -21,6 +21,7 @@ import { CommandCenterPage } from "@/components/pages/command-center-page"
 import { AnalyticsPage } from "@/components/pages/analytics-page"
 import { CalendarPage } from "@/components/pages/calendar-page"
 import { ManagerDashboardPage } from "@/components/pages/manager-dashboard-page"
+import { ScorecardPage } from "@/components/pages/scorecard-page"
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
@@ -183,6 +184,12 @@ function AppContent() {
             rocks={teamData.rocks}
             assignedTasks={teamData.assignedTasks}
           />
+        ) : (
+          <DashboardPage {...dashboardProps} />
+        )
+      case "scorecard":
+        return isAdmin ? (
+          <ScorecardPage />
         ) : (
           <DashboardPage {...dashboardProps} />
         )

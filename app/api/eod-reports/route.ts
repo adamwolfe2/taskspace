@@ -6,6 +6,7 @@ import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { sendEscalationNotification, sendAIAlertEmail, isEmailConfigured } from "@/lib/integrations/email"
 import { sendSlackMessage, buildEscalationMessage, buildFullEODReportMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import { asanaClient } from "@/lib/integrations/asana"
+import { getActiveMetricForUser, upsertWeeklyMetricEntry } from "@/lib/metrics"
 import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
 
 // GET /api/eod-reports - Get EOD reports
@@ -87,6 +88,7 @@ export async function POST(request: NextRequest) {
       tomorrowPriorities,
       needsEscalation,
       escalationNote,
+      metricValueToday,
       date,
     } = body
 
@@ -121,6 +123,15 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date().toISOString()
+
+    // Parse metric value - ensure it's a valid number or null
+    const parsedMetricValue = metricValueToday !== undefined && metricValueToday !== null && metricValueToday !== ""
+      ? parseInt(String(metricValueToday), 10)
+      : null
+    const validMetricValue = parsedMetricValue !== null && !isNaN(parsedMetricValue)
+      ? parsedMetricValue
+      : null
+
     const report: EODReport = {
       id: generateId(),
       organizationId: auth.organization.id,
@@ -131,11 +142,22 @@ export async function POST(request: NextRequest) {
       tomorrowPriorities,
       needsEscalation: needsEscalation || false,
       escalationNote: needsEscalation ? escalationNote : null,
+      metricValueToday: validMetricValue,
       submittedAt: now,
       createdAt: now,
     }
 
     await db.eodReports.create(report)
+
+    // Update weekly metric aggregation if user has a metric defined
+    if (validMetricValue !== null) {
+      const activeMetric = await getActiveMetricForUser(auth.user.id, auth.organization.id)
+      if (activeMetric) {
+        // Fire-and-forget - don't block EOD submission
+        upsertWeeklyMetricEntry(auth.user.id, auth.organization.id, activeMetric.id)
+          .catch(err => console.error("[Metrics] Failed to update weekly entry:", err))
+      }
+    }
 
     // Mark any completed tasks as added to EOD and sync to Asana
     for (const task of tasks) {

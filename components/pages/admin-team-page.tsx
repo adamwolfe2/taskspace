@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { UserInitials } from "@/components/shared/user-initials"
 import { RoleBadge } from "@/components/shared/role-badge"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle, Send } from "lucide-react"
+import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle, Send, Target } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -71,7 +71,39 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     successful: Invitation[]
     failed: Array<{ email: string; error: string }>
   } | null>(null)
+  const [metricData, setMetricData] = useState({ metricName: "", weeklyGoal: "" })
+  const [isLoadingMetric, setIsLoadingMetric] = useState(false)
   const { toast } = useToast()
+
+  // Load metric data when editing a member
+  useEffect(() => {
+    async function loadMetric() {
+      if (!editingMember?.id) return
+      setIsLoadingMetric(true)
+      try {
+        const response = await fetch(`/api/metrics?memberId=${editingMember.id}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data.metric) {
+            setMetricData({
+              metricName: data.data.metric.metricName || "",
+              weeklyGoal: String(data.data.metric.weeklyGoal || ""),
+            })
+          } else {
+            setMetricData({ metricName: "", weeklyGoal: "" })
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load metric:", err)
+        setMetricData({ metricName: "", weeklyGoal: "" })
+      } finally {
+        setIsLoadingMetric(false)
+      }
+    }
+    if (dialogOpen && editingMember) {
+      loadMetric()
+    }
+  }, [dialogOpen, editingMember?.id])
 
   // Load invitations
   useEffect(() => {
@@ -122,6 +154,22 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
             managerId: formData.managerId,
           }),
         })
+      }
+
+      // Update metric if provided
+      if (metricData.metricName.trim() && metricData.weeklyGoal.trim()) {
+        const goalNumber = parseInt(metricData.weeklyGoal, 10)
+        if (!isNaN(goalNumber) && goalNumber >= 0) {
+          await fetch("/api/metrics", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              memberId: editingMember.id,
+              metricName: metricData.metricName.trim(),
+              weeklyGoal: goalNumber,
+            }),
+          })
+        }
       }
 
       // Update local state with manager info
@@ -879,6 +927,47 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                 Assign a manager to enable team dashboard visibility
               </p>
             </div>
+
+            {/* Weekly Metric Section */}
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Target className="h-4 w-4 text-purple-600" />
+                <Label className="font-semibold">Weekly Scorecard Metric</Label>
+              </div>
+              {isLoadingMetric ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading metric...
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="metricName">Metric Name</Label>
+                    <Input
+                      id="metricName"
+                      placeholder="e.g., Workflows, Sales Calls, Designs"
+                      value={metricData.metricName}
+                      onChange={(e) => setMetricData({ ...metricData, metricName: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="weeklyGoal">Weekly Goal</Label>
+                    <Input
+                      id="weeklyGoal"
+                      type="number"
+                      min="0"
+                      placeholder="e.g., 5"
+                      value={metricData.weeklyGoal}
+                      onChange={(e) => setMetricData({ ...metricData, weeklyGoal: e.target.value })}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    This metric will appear in the EOD form and Weekly Scorecard
+                  </p>
+                </div>
+              )}
+            </div>
+
             <Button onClick={handleSubmit} className="w-full" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
