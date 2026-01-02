@@ -17,6 +17,7 @@ export interface OrganizationSettings {
   enableEmailNotifications: boolean
   enableSlackIntegration: boolean
   slackWebhookUrl?: string
+  teamToolsUrl?: string // External link to team tools page
   customBranding?: {
     logo?: string
     primaryColor?: string
