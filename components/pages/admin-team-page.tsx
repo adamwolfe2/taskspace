@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { UserInitials } from "@/components/shared/user-initials"
 import { RoleBadge } from "@/components/shared/role-badge"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle, Send, Target } from "lucide-react"
+import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle, Send, Target, KeyRound } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -406,6 +406,36 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     }
   }
 
+  // Send a login link (password reset) to a team member
+  const handleSendLoginLink = async (member: TeamMember) => {
+    try {
+      setIsSubmitting(true)
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: member.email }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send login link")
+      }
+
+      toast({
+        title: "Login Link Sent",
+        description: `A password reset link has been sent to ${member.email}. They can use it to set a new password and log in.`,
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to send login link",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -767,6 +797,18 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </>
+                            )}
+                            {member.status === "active" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleSendLoginLink(member)}
+                                disabled={isSubmitting}
+                                title="Send Login Link"
+                                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                              >
+                                <KeyRound className="h-4 w-4" />
+                              </Button>
                             )}
                             <Button variant="ghost" size="sm" onClick={() => handleEdit(member)} title="Edit">
                               <Pencil className="h-4 w-4" />
