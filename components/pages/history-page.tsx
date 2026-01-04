@@ -78,9 +78,9 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
       const searchLower = searchQuery.toLowerCase()
       return (
         user?.name.toLowerCase().includes(searchLower) ||
-        report.tasks.some((t) => t.text.toLowerCase().includes(searchLower)) ||
-        report.challenges.toLowerCase().includes(searchLower) ||
-        report.tomorrowPriorities.some((p) => p.text.toLowerCase().includes(searchLower))
+        report.tasks?.some((t) => t.text?.toLowerCase().includes(searchLower)) ||
+        report.challenges?.toLowerCase().includes(searchLower) ||
+        report.tomorrowPriorities?.some((p) => p.text?.toLowerCase().includes(searchLower))
       )
     })
     .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())

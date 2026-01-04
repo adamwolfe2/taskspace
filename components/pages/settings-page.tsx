@@ -251,8 +251,6 @@ export function SettingsPage() {
  description: data.error || "Check the debug info below",
  variant: "destructive",
  })
- // Log debug info
- console.log("Email debug info:", data.debug)
  }
  } catch (err: any) {
  setTestEmailResult({
@@ -464,12 +462,18 @@ export function SettingsPage() {
  })
 
  // Copy invite link to clipboard
- const inviteLink = `${window.location.origin}?invite=${invitation.token}`
- await navigator.clipboard.writeText(inviteLink)
- toast({
- title: "Link copied",
- description: "Invitation link also copied to clipboard",
- })
+ if (typeof window !== "undefined") {
+   const inviteLink = `${window.location.origin}?invite=${invitation.token}`
+   try {
+     await navigator.clipboard.writeText(inviteLink)
+     toast({
+       title: "Link copied",
+       description: "Invitation link also copied to clipboard",
+     })
+   } catch {
+     // Clipboard API not available
+   }
+ }
  } catch (err: any) {
  toast({
  title: "Failed to send invitation",
@@ -482,13 +486,22 @@ export function SettingsPage() {
  }
 
  const copyInviteLink = async (token: string) => {
- const baseUrl = window.location.origin
- const inviteLink = `${baseUrl}?invite=${token}`
- await navigator.clipboard.writeText(inviteLink)
- toast({
- title: "Link copied",
- description: "Invitation link copied to clipboard",
- })
+   if (typeof window === "undefined") return
+   const baseUrl = window.location.origin
+   const inviteLink = `${baseUrl}?invite=${token}`
+   try {
+     await navigator.clipboard.writeText(inviteLink)
+     toast({
+       title: "Link copied",
+       description: "Invitation link copied to clipboard",
+     })
+   } catch {
+     toast({
+       title: "Failed to copy",
+       description: "Please copy the link manually",
+       variant: "destructive",
+     })
+   }
  }
 
  const cancelInvitation = async (invitationId: string) => {

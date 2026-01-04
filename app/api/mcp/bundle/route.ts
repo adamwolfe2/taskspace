@@ -302,7 +302,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get the API key
-    const apiKeys = await db.apiKeys.findByOrganizationId(auth.organizationId)
+    const apiKeys = await db.apiKeys.findByOrganizationId(auth.organization.id)
     const apiKey = apiKeys.find(k => k.id === apiKeyId)
 
     if (!apiKey) {
@@ -313,7 +313,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get organization name for display
-    const org = await db.organizations.findById(auth.organizationId)
+    const org = await db.organizations.findById(auth.organization.id)
     const orgName = org?.name || ""
 
     // Build the API URL

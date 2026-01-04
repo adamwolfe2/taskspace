@@ -407,3 +407,20 @@ CREATE INDEX IF NOT EXISTS idx_team_member_metrics_member ON team_member_metrics
 
 -- Add metric_value_today to eod_reports for daily tracking
 ALTER TABLE eod_reports ADD COLUMN IF NOT EXISTS metric_value_today INTEGER DEFAULT NULL;
+
+-- ============================================
+-- ASANA INTEGRATION COLUMNS
+-- ============================================
+
+-- Add Asana fields to organization_members for per-user Asana connection
+ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS asana_pat TEXT;
+ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS asana_workspace_gid VARCHAR(255);
+ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS asana_last_sync_at TIMESTAMP WITH TIME ZONE;
+
+-- Add Asana fields to assigned_tasks for task sync tracking
+ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'manual';
+ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS asana_gid VARCHAR(255);
+
+-- Index for efficient Asana task lookup
+CREATE INDEX IF NOT EXISTS idx_assigned_tasks_asana_gid ON assigned_tasks(asana_gid) WHERE asana_gid IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_assigned_tasks_source ON assigned_tasks(source);
