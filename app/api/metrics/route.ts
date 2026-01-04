@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         FROM team_member_metrics tmm
         JOIN organization_members om ON tmm.team_member_id = om.id
         WHERE om.id = ${memberId}
-        AND om.organization_id = ${auth.organizationId}
+        AND om.organization_id = ${auth.organization.id}
         AND tmm.is_active = true
         LIMIT 1
       `)
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // Get metric for current user
-      metric = await getActiveMetricForUser(auth.userId, auth.organizationId)
+      metric = await getActiveMetricForUser(auth.user.id, auth.organization.id)
 
       if (includeHistory && auth.member) {
         history = await getMetricHistory(auth.member.id)
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the member belongs to this organization
-    const members = await db.members.findWithUsersByOrganizationId(auth.organizationId)
+    const members = await db.members.findWithUsersByOrganizationId(auth.organization.id)
     const member = members.find(m => m.id === memberId)
 
     if (!member) {

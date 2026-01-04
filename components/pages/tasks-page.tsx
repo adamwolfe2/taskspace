@@ -83,6 +83,7 @@ export function TasksPage({
   const handleCompleteTask = async (taskId: string) => {
     try {
       const completedTask = userTasks.find((t) => t.id === taskId)
+      if (!completedTask) return
 
       await updateTask(taskId, {
         status: "completed",

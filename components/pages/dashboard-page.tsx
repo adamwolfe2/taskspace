@@ -79,9 +79,8 @@ export function DashboardPage({
  }
  }
 
- const handleViewTask = (taskId: string) => {
- // Could open a task detail modal here
- console.log("View task:", taskId)
+ const handleViewTask = (_taskId: string) => {
+ // TODO: Open task detail modal
  }
 
  const handleUpdateProgress = async (rockId: string, progress: number) => {

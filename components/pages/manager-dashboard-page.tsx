@@ -488,17 +488,14 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
         report={selectedReport}
         open={!!selectedReport}
         onOpenChange={(open) => !open && setSelectedReport(null)}
-        onViewTasks={(userId) => {
-          // Navigate to tasks filtered by user
-          console.log("View tasks for", userId)
+        onViewTasks={() => {
+          // TODO: Navigate to tasks filtered by user
         }}
-        onViewRocks={(userId) => {
-          // Navigate to rocks filtered by user
-          console.log("View rocks for", userId)
+        onViewRocks={() => {
+          // TODO: Navigate to rocks filtered by user
         }}
-        onViewEOD={(userId) => {
-          // Navigate to EOD history filtered by user
-          console.log("View EOD for", userId)
+        onViewEOD={() => {
+          // TODO: Navigate to EOD history filtered by user
         }}
         onSendMessage={(userId) => {
           // Open message/email
