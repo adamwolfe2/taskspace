@@ -35,6 +35,13 @@ interface ParsedRock {
   description: string
   milestones: string[]
   suggestedQuarter?: string
+  assigneeName?: string
+}
+
+interface ParsedMetric {
+  assigneeName: string
+  metricName: string
+  weeklyGoal: number
 }
 
 interface BulkRockImportProps {
@@ -45,6 +52,7 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
   const [selectedUserId, setSelectedUserId] = useState<string>("")
   const [rawText, setRawText] = useState("")
   const [parsedRocks, setParsedRocks] = useState<ParsedRock[]>([])
+  const [parsedMetrics, setParsedMetrics] = useState<ParsedMetric[]>([])
   const [isParsing, setIsParsing] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,16 +82,22 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
       }
 
       setParsedRocks(data.data.rocks)
+      setParsedMetrics(data.data.metrics || [])
 
-      if (data.data.rocks.length === 0) {
-        setError("No rocks found in the text. Please check the formatting and try again.")
+      if (data.data.rocks.length === 0 && (data.data.metrics?.length || 0) === 0) {
+        setError("No rocks or metrics found in the text. Please check the formatting and try again.")
       } else {
+        const metricsMsg = data.data.metrics?.length > 0
+          ? ` and ${data.data.metrics.length} metric(s)`
+          : ""
         toast({
-          title: "Rocks parsed",
-          description: `Found ${data.data.rocks.length} rock(s)`,
+          title: "Content parsed",
+          description: `Found ${data.data.rocks.length} rock(s)${metricsMsg}`,
         })
         // Expand first rock by default
-        setExpandedRock(0)
+        if (data.data.rocks.length > 0) {
+          setExpandedRock(0)
+        }
       }
     } catch (err: any) {
       setError(err.message)
@@ -118,6 +132,7 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
             milestones: rock.milestones,
             quarter: rock.suggestedQuarter,
           })),
+          metrics: parsedMetrics, // Pass parsed metrics to the API
         }),
       })
 
@@ -137,15 +152,19 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
       }
 
       const selectedMember = teamMembers.find((m) => m.id === selectedUserId)
+      const metricsSetMsg = data.data.metricsSet > 0
+        ? ` and ${data.data.metricsSet} metric(s) set`
+        : ""
 
       toast({
         title: "Rocks created!",
-        description: `Created ${data.data.created.length} rock(s) for ${selectedMember?.name || "team member"}`,
+        description: `Created ${data.data.created.length} rock(s) for ${selectedMember?.name || "team member"}${metricsSetMsg}`,
       })
 
       // Reset form
       setRawText("")
       setParsedRocks([])
+      setParsedMetrics([])
       setExpandedRock(null)
     } catch (err: any) {
       setError(err.message)
@@ -422,6 +441,42 @@ Rock 2: Launch New Product
                 )}
               </Card>
             ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Parsed Metrics Preview */}
+      {parsedMetrics.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Weekly Scorecard Metrics ({parsedMetrics.length})
+            </CardTitle>
+            <CardDescription>
+              These metrics will be set for each team member's weekly scorecard
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {parsedMetrics.map((metric, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-lg"
+                >
+                  <div>
+                    <span className="font-medium text-purple-900">{metric.assigneeName}</span>
+                    <span className="text-purple-600 mx-2">→</span>
+                    <span className="text-purple-800">{metric.metricName}</span>
+                  </div>
+                  <Badge variant="outline" className="bg-white text-purple-700 border-purple-300">
+                    Goal: {metric.weeklyGoal}/week
+                  </Badge>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}

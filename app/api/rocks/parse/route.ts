@@ -7,10 +7,18 @@ interface ParsedRock {
   description: string
   milestones: string[]
   suggestedQuarter?: string
+  assigneeName?: string
+}
+
+interface ParsedMetric {
+  assigneeName: string
+  metricName: string
+  weeklyGoal: number
 }
 
 interface ParseRocksResponse {
   rocks: ParsedRock[]
+  metrics: ParsedMetric[]
   rawResponse: string
 }
 
@@ -57,38 +65,57 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const systemPrompt = `You are a helpful assistant that parses quarterly rock/goal descriptions into structured data.
+    const systemPrompt = `You are a helpful assistant that parses quarterly rock/goal descriptions and weekly scorecard metrics into structured data.
 
 A "Rock" is a quarterly goal with:
 - A clear title (the main goal)
 - A description (1-2 sentence summary of what success looks like)
 - Milestones (specific deliverables or "done when" criteria - the sub-items under each rock)
+- Optional assignee (the person responsible)
 
-Your job is to extract rocks from unstructured text and return them as JSON.
+A "Metric" is a weekly scorecard measurable with:
+- An assignee name
+- A metric name (what they're measuring, e.g., "Calls Made", "Pages Optimized")
+- A weekly goal (numeric target per week)
+
+Your job is to extract both rocks AND metrics from unstructured text and return them as JSON.
 
 IMPORTANT: Return ONLY valid JSON, no markdown code blocks or extra text.`
 
-    const userPrompt = `Parse the following text into structured quarterly rocks. Extract each rock with its title, description, and milestones (the sub-items/bullet points).
+    const userPrompt = `Parse the following text into structured quarterly rocks AND weekly scorecard metrics.
 
 TEXT TO PARSE:
 ${text}
 
-Return a JSON array in this exact format:
-[
-  {
-    "title": "Brief rock title",
-    "description": "1-2 sentence description of what success looks like",
-    "milestones": ["Milestone 1", "Milestone 2", "Milestone 3"],
-    "suggestedQuarter": "Q1 2025"
-  }
-]
+Return a JSON object in this exact format:
+{
+  "rocks": [
+    {
+      "title": "Brief rock title",
+      "description": "1-2 sentence description of what success looks like",
+      "milestones": ["Milestone 1", "Milestone 2", "Milestone 3"],
+      "suggestedQuarter": "Q1 2025",
+      "assigneeName": "Person's name if mentioned"
+    }
+  ],
+  "metrics": [
+    {
+      "assigneeName": "Person's name",
+      "metricName": "Calls Made",
+      "weeklyGoal": 20
+    }
+  ]
+}
 
 Rules:
-1. The title should be concise but descriptive
+1. The rock title should be concise but descriptive
 2. The description should summarize the overall goal
 3. Milestones should be the specific deliverables or sub-tasks listed under each rock
 4. If a quarter is mentioned, include it in suggestedQuarter
-5. Return ONLY the JSON array, no additional text`
+5. If a person is mentioned with the rock, include their name in assigneeName
+6. Look for weekly measurables, KPIs, metrics, or goals like "20 calls per week", "10 pages weekly"
+7. Extract metrics separately - they are for the WEEKLY SCORECARD tracking
+8. Return ONLY the JSON object, no additional text`
 
     const response = await fetch(ANTHROPIC_API_URL, {
       method: "POST",
@@ -124,7 +151,8 @@ Rules:
     const responseText = data.content?.[0]?.text || ""
 
     // Parse the JSON response
-    let parsedRocks: ParsedRock[]
+    let parsedRocks: ParsedRock[] = []
+    let parsedMetrics: ParsedMetric[] = []
     try {
       // Try to extract JSON from the response (handle potential markdown code blocks)
       let jsonStr = responseText.trim()
@@ -138,21 +166,31 @@ Rules:
       }
       jsonStr = jsonStr.trim()
 
-      parsedRocks = JSON.parse(jsonStr)
+      const parsed = JSON.parse(jsonStr)
 
-      if (!Array.isArray(parsedRocks)) {
-        throw new Error("Response is not an array")
-      }
+      // Handle both old format (array) and new format (object with rocks and metrics)
+      const rocksArray = Array.isArray(parsed) ? parsed : (parsed.rocks || [])
+      const metricsArray = Array.isArray(parsed) ? [] : (parsed.metrics || [])
 
-      // Validate structure
-      parsedRocks = parsedRocks.map((rock) => ({
+      // Validate rocks structure
+      parsedRocks = rocksArray.map((rock: any) => ({
         title: String(rock.title || "Untitled Rock"),
         description: String(rock.description || ""),
         milestones: Array.isArray(rock.milestones)
           ? rock.milestones.map((m: any) => String(m))
           : [],
         suggestedQuarter: rock.suggestedQuarter ? String(rock.suggestedQuarter) : undefined,
+        assigneeName: rock.assigneeName ? String(rock.assigneeName) : undefined,
       }))
+
+      // Validate metrics structure
+      parsedMetrics = metricsArray
+        .filter((m: any) => m.assigneeName && m.metricName && typeof m.weeklyGoal === "number")
+        .map((metric: any) => ({
+          assigneeName: String(metric.assigneeName),
+          metricName: String(metric.metricName),
+          weeklyGoal: Number(metric.weeklyGoal),
+        }))
     } catch (parseError) {
       console.error("Failed to parse AI response:", parseError, responseText)
       return NextResponse.json<ApiResponse<null>>(
@@ -164,13 +202,18 @@ Rules:
       )
     }
 
+    const metricsMessage = parsedMetrics.length > 0
+      ? ` and ${parsedMetrics.length} metric(s)`
+      : ""
+
     return NextResponse.json<ApiResponse<ParseRocksResponse>>({
       success: true,
       data: {
         rocks: parsedRocks,
+        metrics: parsedMetrics,
         rawResponse: responseText,
       },
-      message: `Successfully parsed ${parsedRocks.length} rock(s)`,
+      message: `Successfully parsed ${parsedRocks.length} rock(s)${metricsMessage}`,
     })
   } catch (error) {
     console.error("Rock parse error:", error)

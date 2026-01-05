@@ -3,7 +3,8 @@ import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { parseBrainDump, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
-import type { ApiResponse, AdminBrainDump, AIGeneratedTask, TeamMember } from "@/lib/types"
+import { setTeamMemberMetric } from "@/lib/metrics"
+import type { ApiResponse, AdminBrainDump, AIGeneratedTask, TeamMember, ParsedScorecardMetric } from "@/lib/types"
 
 // POST /api/ai/brain-dump - Process a brain dump and generate task suggestions
 export async function POST(request: NextRequest) {
@@ -99,6 +100,37 @@ export async function POST(request: NextRequest) {
       generatedTasks.push(task)
     }
 
+    // Process and save parsed scorecard metrics
+    const savedMetrics: ParsedScorecardMetric[] = []
+    if (result.metrics && result.metrics.length > 0) {
+      for (const metricData of result.metrics) {
+        // Try to match the assignee by ID first, then by name
+        let member = teamMembers.find(m => m.id === metricData.assigneeId)
+        if (!member) {
+          // Try fuzzy name match
+          const nameLower = metricData.assigneeName.toLowerCase()
+          member = teamMembers.find(m =>
+            m.name.toLowerCase().includes(nameLower) ||
+            nameLower.includes(m.name.toLowerCase())
+          )
+        }
+
+        if (member && metricData.metricName && metricData.weeklyGoal > 0) {
+          try {
+            await setTeamMemberMetric(member.id, metricData.metricName, metricData.weeklyGoal)
+            savedMetrics.push({
+              assigneeId: member.id,
+              assigneeName: member.name,
+              metricName: metricData.metricName,
+              weeklyGoal: metricData.weeklyGoal,
+            })
+          } catch (err) {
+            console.error(`Failed to save metric for ${member.name}:`, err)
+          }
+        }
+      }
+    }
+
     // Update brain dump status
     await db.brainDumps.update(brainDumpId, {
       processedAt: now,
@@ -106,9 +138,14 @@ export async function POST(request: NextRequest) {
       status: "completed",
     })
 
+    const metricsMessage = savedMetrics.length > 0
+      ? ` and ${savedMetrics.length} scorecard metric(s)`
+      : ""
+
     return NextResponse.json<ApiResponse<{
       brainDump: AdminBrainDump
       tasks: AIGeneratedTask[]
+      metrics: ParsedScorecardMetric[]
       summary: string
       warnings?: string[]
     }>>({
@@ -116,10 +153,11 @@ export async function POST(request: NextRequest) {
       data: {
         brainDump: { ...brainDump, processedAt: now, tasksGenerated: generatedTasks.length, status: "completed" },
         tasks: generatedTasks,
+        metrics: savedMetrics,
         summary: result.summary,
         warnings: result.warnings,
       },
-      message: `Generated ${generatedTasks.length} task suggestions`,
+      message: `Generated ${generatedTasks.length} task suggestions${metricsMessage}`,
     })
   } catch (error) {
     console.error("Brain dump processing error:", error)
