@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
+import { setTeamMemberMetric } from "@/lib/metrics"
 import type { Rock, ApiResponse } from "@/lib/types"
 
 interface BulkRockInput {
@@ -12,9 +13,16 @@ interface BulkRockInput {
   dueDate?: string
 }
 
+interface MetricInput {
+  assigneeName: string
+  metricName: string
+  weeklyGoal: number
+}
+
 interface BulkCreateResponse {
   created: Rock[]
   failed: Array<{ title: string; error: string }>
+  metricsSet?: number
 }
 
 /**
@@ -39,7 +47,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { rocks, userId } = body as { rocks: BulkRockInput[]; userId: string }
+    const { rocks, userId, metrics } = body as {
+      rocks: BulkRockInput[]
+      userId: string
+      metrics?: MetricInput[]
+    }
 
     if (!rocks || !Array.isArray(rocks) || rocks.length === 0) {
       return NextResponse.json<ApiResponse<null>>(
@@ -158,6 +170,33 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Process metrics if provided
+    let metricsSetCount = 0
+    if (metrics && Array.isArray(metrics) && metrics.length > 0) {
+      // Get all team members to match by name
+      const teamMembers = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+
+      for (const metricInput of metrics) {
+        try {
+          // Match the assignee by name (fuzzy matching)
+          const nameLower = metricInput.assigneeName.toLowerCase()
+          const member = teamMembers.find(m =>
+            m.name.toLowerCase().includes(nameLower) ||
+            nameLower.includes(m.name.toLowerCase())
+          )
+
+          if (member && metricInput.metricName && metricInput.weeklyGoal > 0) {
+            await setTeamMemberMetric(member.id, metricInput.metricName, metricInput.weeklyGoal)
+            metricsSetCount++
+          }
+        } catch (err) {
+          console.error(`Failed to set metric for ${metricInput.assigneeName}:`, err)
+        }
+      }
+    }
+
+    result.metricsSet = metricsSetCount
+
     const successCount = result.created.length
     const failCount = result.failed.length
 
@@ -166,14 +205,16 @@ export async function POST(request: NextRequest) {
       ? result.failed[0]?.error || "All rocks failed to create"
       : undefined
 
+    const metricsMessage = metricsSetCount > 0 ? `, ${metricsSetCount} metric(s) set` : ""
+
     return NextResponse.json<ApiResponse<BulkCreateResponse>>({
       success: successCount > 0,
       data: result,
       error: errorMessage,
       message:
         failCount === 0
-          ? `Successfully created ${successCount} rock(s)`
-          : `Created ${successCount} rock(s), ${failCount} failed`,
+          ? `Successfully created ${successCount} rock(s)${metricsMessage}`
+          : `Created ${successCount} rock(s), ${failCount} failed${metricsMessage}`,
     })
   } catch (error) {
     console.error("Bulk rock create error:", error)

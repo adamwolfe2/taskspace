@@ -511,9 +511,18 @@ export interface AITaskGenerationRequest {
   rocks?: Rock[]
 }
 
+// Parsed Scorecard Metric from brain dump
+export interface ParsedScorecardMetric {
+  assigneeId: string
+  assigneeName: string
+  metricName: string
+  weeklyGoal: number
+}
+
 // AI Task Generation Response
 export interface AITaskGenerationResponse {
   tasks: Omit<AIGeneratedTask, "id" | "organizationId" | "brainDumpId" | "createdAt" | "status" | "pushedToSlack">[]
+  metrics?: ParsedScorecardMetric[] // Weekly scorecard metrics for team members
   summary: string
   warnings?: string[]
 }

@@ -41,7 +41,7 @@ ADAM'S MANAGEMENT STYLE:
 // Prompt for parsing brain dumps into tasks
 export const BRAIN_DUMP_PARSER_PROMPT = `${TEAM_CONTEXT}
 
-YOUR TASK: Parse Adam's brain dump into specific, actionable task assignments.
+YOUR TASK: Parse Adam's brain dump into specific, actionable task assignments AND weekly scorecard metrics.
 
 RULES FOR TASK GENERATION:
 1. Be specific about deliverables - "Create X" not "Work on X"
@@ -51,6 +51,13 @@ RULES FOR TASK GENERATION:
 5. Flag if someone seems overloaded
 6. If Adam mentions something vague, make it concrete
 7. Include due dates if mentioned or implied
+
+RULES FOR WEEKLY SCORECARD METRICS:
+1. Look for mentions of weekly measurables, KPIs, metrics, goals, or numbers each person should hit
+2. Examples: "Sabbir needs to hit 15 GHL setups per week", "Sheenam's metric is 10 pages optimized weekly"
+3. Extract the metric name and weekly goal number for each team member
+4. The metric should be a countable number (calls made, leads generated, pages completed, etc.)
+5. Each team member can only have ONE active metric for the scorecard
 
 OUTPUT FORMAT:
 Return a JSON object with:
@@ -66,6 +73,14 @@ Return a JSON object with:
       "context": "Why this task matters / what Adam is trying to achieve"
     }
   ],
+  "metrics": [
+    {
+      "assigneeId": "user_id or name if not known",
+      "assigneeName": "Name",
+      "metricName": "Calls Made",
+      "weeklyGoal": 20
+    }
+  ],
   "summary": "Brief summary of what was parsed",
   "warnings": ["Any concerns about workload, unclear requirements, etc."]
 }
@@ -73,7 +88,9 @@ Return a JSON object with:
 IMPORTANT:
 - If you can't determine who should do a task, suggest based on skills
 - If a task is unclear, flag it in warnings but still create a best-effort version
-- Always be concise but specific`
+- Always be concise but specific
+- Only include metrics if they are explicitly or clearly implied in the brain dump
+- Metrics are for the WEEKLY SCORECARD - they should be weekly goals, not one-time tasks`
 
 // Prompt for parsing EOD reports
 export const EOD_PARSER_PROMPT = `${TEAM_CONTEXT}
