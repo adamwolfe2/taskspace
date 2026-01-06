@@ -1841,6 +1841,7 @@ export const db = {
       responsibilities: string | null
       notes: string | null
       email: string | null
+      rocks: string | null
       isActive: boolean
       createdAt: string
       updatedAt: string
@@ -1862,6 +1863,7 @@ export const db = {
         responsibilities: row.responsibilities as string | null,
         notes: row.notes as string | null,
         email: row.email as string | null,
+        rocks: row.rocks as string | null,
         isActive: row.is_active as boolean,
         createdAt: (row.created_at as Date)?.toISOString() || "",
         updatedAt: (row.updated_at as Date)?.toISOString() || "",
@@ -1878,6 +1880,7 @@ export const db = {
       responsibilities: string | null
       notes: string | null
       email: string | null
+      rocks: string | null
       isActive: boolean
       createdAt: string
       updatedAt: string
@@ -1899,9 +1902,46 @@ export const db = {
         responsibilities: row.responsibilities as string | null,
         notes: row.notes as string | null,
         email: row.email as string | null,
+        rocks: row.rocks as string | null,
         isActive: row.is_active as boolean,
         createdAt: (row.created_at as Date)?.toISOString() || "",
         updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }
+    },
+    async findByEmail(email: string): Promise<{
+      id: string
+      firstName: string
+      lastName: string
+      fullName: string
+      supervisor: string | null
+      department: string | null
+      jobTitle: string | null
+      responsibilities: string | null
+      notes: string | null
+      email: string | null
+      rocks: string | null
+      isActive: boolean
+    } | null> {
+      const { rows } = await sql`
+        SELECT *, TRIM(first_name || ' ' || COALESCE(last_name, '')) as full_name
+        FROM ma_employees
+        WHERE LOWER(email) = LOWER(${email}) AND is_active = TRUE
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        firstName: row.first_name as string,
+        lastName: row.last_name as string,
+        fullName: row.full_name as string,
+        supervisor: row.supervisor as string | null,
+        department: row.department as string | null,
+        jobTitle: row.job_title as string | null,
+        responsibilities: row.responsibilities as string | null,
+        notes: row.notes as string | null,
+        email: row.email as string | null,
+        rocks: row.rocks as string | null,
+        isActive: row.is_active as boolean,
       }
     },
     async findByDepartment(department: string): Promise<{
@@ -1991,6 +2031,7 @@ export const db = {
       responsibilities?: string | null
       notes?: string | null
       email?: string | null
+      rocks?: string | null
       isActive?: boolean
     }): Promise<boolean> {
       const now = new Date().toISOString()
@@ -2004,9 +2045,26 @@ export const db = {
           responsibilities = COALESCE(${updates.responsibilities}, responsibilities),
           notes = COALESCE(${updates.notes}, notes),
           email = COALESCE(${updates.email}, email),
+          rocks = COALESCE(${updates.rocks}, rocks),
           is_active = COALESCE(${updates.isActive ?? null}, is_active),
           updated_at = ${now}
         WHERE id = ${id}
+      `
+      return (rowCount ?? 0) > 0
+    },
+    async updateRocks(id: string, rocks: string | null): Promise<boolean> {
+      const now = new Date().toISOString()
+      const { rowCount } = await sql`
+        UPDATE ma_employees SET rocks = ${rocks}, updated_at = ${now}
+        WHERE id = ${id}
+      `
+      return (rowCount ?? 0) > 0
+    },
+    async updateRocksByEmail(email: string, rocks: string | null): Promise<boolean> {
+      const now = new Date().toISOString()
+      const { rowCount } = await sql`
+        UPDATE ma_employees SET rocks = ${rocks}, updated_at = ${now}
+        WHERE LOWER(email) = LOWER(${email}) AND is_active = TRUE
       `
       return (rowCount ?? 0) > 0
     },

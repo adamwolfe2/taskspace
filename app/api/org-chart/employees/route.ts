@@ -58,8 +58,7 @@ export async function GET() {
         notes: emp.notes || "",
         extraInfo: emp.responsibilities || "",
         email: emp.email || undefined,
-        // No rocks field in ma_employees - kept for compatibility
-        rocks: "",
+        rocks: emp.rocks || "",
       }))
 
       return NextResponse.json({

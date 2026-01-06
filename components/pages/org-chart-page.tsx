@@ -10,19 +10,22 @@ import { ZoomControls } from "@/components/org-chart/zoom-controls"
 import { StatusIndicator } from "@/components/org-chart/status-indicator"
 import { buildOrgTree } from "@/lib/org-chart/utils"
 import type { OrgChartEmployee, OrgChartEmployeeNode } from "@/lib/org-chart/types"
-import { Loader2, RefreshCw, Users } from "lucide-react"
+import { Loader2, RefreshCw, Users, ArrowRightLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/lib/contexts/app-context"
+import { useToast } from "@/hooks/use-toast"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export function OrgChartPage() {
   const { currentUser } = useApp()
+  const { toast } = useToast()
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
 
   const [selectedEmployee, setSelectedEmployee] = useState<OrgChartEmployee | null>(null)
   const [highlightedEmployee, setHighlightedEmployee] = useState<string | null>(null)
   const [progressData, setProgressData] = useState<Map<string, boolean>>(new Map())
+  const [isSyncing, setIsSyncing] = useState(false)
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const transformRef = useRef<any>(null)
 
@@ -144,6 +147,40 @@ export function OrgChartPage() {
     }, 300)
   }
 
+  // Sync rocks from workspace to org chart
+  const handleSyncRocks = async () => {
+    setIsSyncing(true)
+    try {
+      const response = await fetch("/api/org-chart/sync-rocks", {
+        method: "POST",
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        toast({
+          title: "Rocks synced",
+          description: `Synced ${data.results.synced.length} employees. ${data.results.notFound.length} not found in org chart.`,
+        })
+        // Refresh employees to show updated rocks
+        refreshEmployees()
+      } else {
+        toast({
+          title: "Sync failed",
+          description: data.error || "Failed to sync rocks",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Sync failed",
+        description: "Failed to sync rocks from workspace",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
   if (employeesLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
@@ -185,15 +222,34 @@ export function OrgChartPage() {
           </h1>
           <StatusIndicator />
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refreshEmployees()}
-          className="bg-white/80 backdrop-blur"
-        >
-          <RefreshCw className="h-4 w-4 mr-1" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncRocks}
+              disabled={isSyncing}
+              className="bg-white/80 backdrop-blur"
+              title="Sync rocks from workspace members to org chart"
+            >
+              {isSyncing ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <ArrowRightLeft className="h-4 w-4 mr-1" />
+              )}
+              Sync Rocks
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refreshEmployees()}
+            className="bg-white/80 backdrop-blur"
+          >
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Zoomable canvas */}
