@@ -708,9 +708,57 @@ export async function GET(request: NextRequest) {
     // Add metric_value_today to eod_reports for daily tracking
     await sql`ALTER TABLE eod_reports ADD COLUMN IF NOT EXISTS metric_value_today INTEGER DEFAULT NULL`
 
+    // ============================================
+    // ORG CHART ROCK PROGRESS TABLE
+    // ============================================
+
+    // Tracks individual rock bullet completion for org chart employees
+    await sql`
+      CREATE TABLE IF NOT EXISTS org_chart_rock_progress (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::varchar,
+        employee_name VARCHAR(255) NOT NULL,
+        rock_index INTEGER NOT NULL,
+        bullet_index INTEGER NOT NULL,
+        completed BOOLEAN DEFAULT FALSE,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_by VARCHAR(255),
+        UNIQUE(employee_name, rock_index, bullet_index)
+      )
+    `
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_org_chart_rock_progress_employee ON org_chart_rock_progress(employee_name)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_org_chart_rock_progress_composite ON org_chart_rock_progress(employee_name, rock_index)`
+
+    // ============================================
+    // MA EMPLOYEES TABLE (Org Chart Data Source)
+    // ============================================
+
+    // Stores all Modern Amenities employees for the org chart
+    // Hierarchy is built from the supervisor field (name matching)
+    await sql`
+      CREATE TABLE IF NOT EXISTS ma_employees (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::varchar,
+        first_name VARCHAR(255) NOT NULL,
+        last_name VARCHAR(255) NOT NULL,
+        supervisor VARCHAR(255),
+        department VARCHAR(100),
+        job_title VARCHAR(255),
+        responsibilities TEXT,
+        notes TEXT,
+        email VARCHAR(255),
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_ma_employees_supervisor ON ma_employees(supervisor)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_ma_employees_department ON ma_employees(department)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_ma_employees_active ON ma_employees(is_active)`
+
     return NextResponse.json({
       success: true,
-      message: "Database migration completed successfully (including AI Command Center, Notifications, Audit Logs, Webhooks, Enterprise tables, and Weekly Scorecard)",
+      message: "Database migration completed successfully (including AI Command Center, Notifications, Audit Logs, Webhooks, Enterprise tables, Weekly Scorecard, and Org Chart)",
     })
   } catch (error) {
     console.error("Migration error:", error)
