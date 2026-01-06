@@ -1,26 +1,50 @@
 import { NextResponse } from "next/server"
+import { db } from "@/lib/db"
 import { checkAirtableConnection } from "@/lib/org-chart/airtable"
 
 export async function GET() {
   try {
+    // Check database for employees (primary source)
+    let databaseConnected = false
+    let employeeCount = 0
+    try {
+      employeeCount = await db.maEmployees.count()
+      databaseConnected = employeeCount > 0
+    } catch {
+      databaseConnected = false
+    }
+
+    // Check Airtable as fallback
     const airtableConnected = await checkAirtableConnection()
-    const openaiConfigured = !!process.env.ANTHROPIC_API_KEY || !!process.env.OPENAI_API_KEY
+    const aiConfigured = !!process.env.ANTHROPIC_API_KEY || !!process.env.OPENAI_API_KEY
+
+    // Connected if we have database employees OR Airtable
+    const isConnected = databaseConnected || airtableConnected
 
     return NextResponse.json({
       success: true,
+      connected: isConnected,
+      database: databaseConnected,
       airtable: airtableConnected,
-      openai: openaiConfigured,
-      message: airtableConnected
-        ? "All systems operational"
-        : "Airtable not connected, using fallback data",
+      openai: aiConfigured,
+      employeeCount,
+      source: databaseConnected ? "database" : airtableConnected ? "airtable" : "fallback",
+      message: databaseConnected
+        ? `Connected to database (${employeeCount} employees)`
+        : airtableConnected
+        ? "Connected to Airtable"
+        : "Using fallback data",
     })
   } catch (error) {
     console.error("Status check error:", error)
     return NextResponse.json({
       success: true,
+      connected: false,
+      database: false,
       airtable: false,
       openai: !!process.env.ANTHROPIC_API_KEY || !!process.env.OPENAI_API_KEY,
-      message: "Airtable connection failed",
+      source: "fallback",
+      message: "Connection check failed",
     })
   }
 }

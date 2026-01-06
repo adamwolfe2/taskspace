@@ -60,6 +60,7 @@ export function normalizeName(name: string): string {
 
 /**
  * Check if two names match (fuzzy matching)
+ * Handles nicknames like "Jess" -> "Jessica", "Mike" -> "Michael"
  */
 export function namesMatch(name1: string, name2: string): boolean {
   const n1 = normalizeName(name1)
@@ -80,6 +81,19 @@ export function namesMatch(name1: string, name2: string): boolean {
     const firstLast1 = `${parts1[0]} ${parts1[parts1.length - 1]}`
     const firstLast2 = `${parts2[0]} ${parts2[parts2.length - 1]}`
     if (firstLast1 === firstLast2) return true
+
+    // Check if last names match AND first name is prefix/nickname
+    const lastName1 = parts1[parts1.length - 1]
+    const lastName2 = parts2[parts2.length - 1]
+    const firstName1 = parts1[0]
+    const firstName2 = parts2[0]
+
+    if (lastName1 === lastName2) {
+      // Check if one first name starts with the other (handles Jess/Jessica, Mike/Michael, etc.)
+      if (firstName1.startsWith(firstName2) || firstName2.startsWith(firstName1)) {
+        return true
+      }
+    }
   }
 
   return false
