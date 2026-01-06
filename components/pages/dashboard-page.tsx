@@ -14,6 +14,15 @@ import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-
 import { calculateUserStats } from "@/lib/utils/stats-calculator"
 import { triggerConfetti } from "@/lib/utils/confetti"
 
+// Get current quarter string (e.g., "Q1 2026")
+function getCurrentQuarter(): string {
+  const now = new Date()
+  const month = now.getMonth() // 0-11
+  const year = now.getFullYear()
+  const quarter = Math.floor(month / 3) + 1
+  return `Q${quarter} ${year}`
+}
+
 interface DashboardPageProps {
  currentUser: TeamMember
  rocks: Rock[]
@@ -43,7 +52,10 @@ export function DashboardPage({
  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false)
  const eodCardRef = useRef<HTMLDivElement>(null)
 
+ const currentQuarter = getCurrentQuarter()
  const userRocks = rocks.filter((r) => r.userId === currentUser.id)
+ // Filter to only current quarter rocks for EOD submission (less clutter)
+ const currentQuarterRocks = userRocks.filter((r) => r.quarter === currentQuarter)
  const userTasks = assignedTasks.filter((t) => t.assigneeId === currentUser.id)
  const stats = calculateUserStats(currentUser.id, rocks, assignedTasks, eodReports)
 
@@ -198,7 +210,7 @@ export function DashboardPage({
  <div ref={eodCardRef}>
  <ErrorBoundary title="EOD submission unavailable">
  <EODSubmissionCard
- rocks={userRocks}
+ rocks={currentQuarterRocks}
  allRocks={rocks}
  onSubmitEOD={handleSubmitEOD}
  userId={currentUser.id}
