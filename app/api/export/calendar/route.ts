@@ -89,34 +89,36 @@ export async function GET(request: NextRequest) {
 
     // Add tasks
     if (type === "tasks" || type === "all") {
-      let tasks = await db.assignedTasks.findByUserId(auth.user.id)
+      let tasks = await db.assignedTasks.findByAssigneeId(auth.user.id, auth.organization.id)
 
       // Filter by date range
       if (startDate) {
-        tasks = tasks.filter((t) => t.dueDate >= startDate)
+        tasks = tasks.filter((t) => t.dueDate && t.dueDate >= startDate)
       }
       if (endDate) {
-        tasks = tasks.filter((t) => t.dueDate <= endDate)
+        tasks = tasks.filter((t) => t.dueDate && t.dueDate <= endDate)
       }
 
       // Only include incomplete tasks
       tasks = tasks.filter((t) => t.status !== "completed")
 
       for (const task of tasks) {
-        const priorityLabel = task.priority === "high" ? "🔴 " : task.priority === "medium" ? "🟡 " : ""
-        events.push({
-          uid: `task-${task.id}@aims-eod`,
-          summary: `${priorityLabel}[Task] ${task.title}`,
-          description: task.description || undefined,
-          dtstart: task.dueDate,
-          categories: ["Task", task.priority],
-        })
+        if (task.dueDate) {
+          const priorityLabel = task.priority === "high" ? "🔴 " : task.priority === "medium" ? "🟡 " : ""
+          events.push({
+            uid: `task-${task.id}@aims-eod`,
+            summary: `${priorityLabel}[Task] ${task.title}`,
+            description: task.description || undefined,
+            dtstart: task.dueDate,
+            categories: ["Task", task.priority],
+          })
+        }
       }
     }
 
     // Add rocks
     if (type === "rocks" || type === "all") {
-      let rocks = await db.rocks.findByUserId(auth.user.id)
+      let rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
 
       // Filter by date range
       if (startDate) {
