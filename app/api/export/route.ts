@@ -229,30 +229,47 @@ async function fetchAuditLogs(
   organizationId: string,
   dateRange?: { start: string; end: string }
 ): Promise<Record<string, unknown>[]> {
-  const conditions = [`organization_id = '${organizationId}'`]
-
+  // Use parameterized queries to prevent SQL injection
+  let logs
   if (dateRange) {
-    conditions.push(`created_at >= '${dateRange.start}'`)
-    conditions.push(`created_at < '${dateRange.end}'::date + interval '1 day'`)
+    logs = await db.sql`
+      SELECT
+        id,
+        action,
+        actor_id,
+        actor_type,
+        resource_type,
+        resource_id,
+        details,
+        ip_address,
+        severity,
+        created_at
+      FROM audit_logs
+      WHERE organization_id = ${organizationId}
+        AND created_at >= ${dateRange.start}::date
+        AND created_at < ${dateRange.end}::date + interval '1 day'
+      ORDER BY created_at DESC
+      LIMIT 10000
+    `
+  } else {
+    logs = await db.sql`
+      SELECT
+        id,
+        action,
+        actor_id,
+        actor_type,
+        resource_type,
+        resource_id,
+        details,
+        ip_address,
+        severity,
+        created_at
+      FROM audit_logs
+      WHERE organization_id = ${organizationId}
+      ORDER BY created_at DESC
+      LIMIT 10000
+    `
   }
-
-  const logs = await db.sql`
-    SELECT
-      id,
-      action,
-      actor_id,
-      actor_type,
-      resource_type,
-      resource_id,
-      details,
-      ip_address,
-      severity,
-      created_at
-    FROM audit_logs
-    WHERE ${db.sql.raw(conditions.join(" AND "))}
-    ORDER BY created_at DESC
-    LIMIT 10000
-  `
 
   return logs.map((l: Record<string, unknown>) => ({
     id: l.id,
@@ -272,72 +289,114 @@ async function fetchTeamSummary(
   organizationId: string,
   dateRange?: { start: string; end: string }
 ): Promise<Record<string, unknown>[]> {
-  const dateCondition = dateRange
-    ? `AND created_at >= '${dateRange.start}' AND created_at < '${dateRange.end}'::date + interval '1 day'`
-    : ""
-
-  const eodDateCondition = dateRange
-    ? `AND date >= '${dateRange.start}' AND date <= '${dateRange.end}'`
-    : ""
-
+  // Use separate queries to avoid SQL injection from dynamic date conditions
+  // First get members
   const members = await db.sql`
     SELECT
       om.id,
       om.name,
       om.email,
       om.department,
-      om.role,
-      (
-        SELECT COUNT(*) FROM assigned_tasks
-        WHERE assignee_id = om.id
-        AND organization_id = ${organizationId}
-        ${db.sql.raw(dateCondition)}
-      ) as total_tasks,
-      (
-        SELECT COUNT(*) FROM assigned_tasks
-        WHERE assignee_id = om.id
-        AND organization_id = ${organizationId}
-        AND status = 'completed'
-        ${db.sql.raw(dateCondition)}
-      ) as completed_tasks,
-      (
-        SELECT COUNT(*) FROM rocks
-        WHERE user_id = om.id
-        AND organization_id = ${organizationId}
-        ${db.sql.raw(dateCondition)}
-      ) as total_rocks,
-      (
-        SELECT COUNT(*) FROM eod_reports
-        WHERE user_id = om.id
-        AND organization_id = ${organizationId}
-        ${db.sql.raw(eodDateCondition)}
-      ) as eod_submissions,
-      (
-        SELECT AVG(progress) FROM rocks
-        WHERE user_id = om.id
-        AND organization_id = ${organizationId}
-      ) as avg_rock_progress
+      om.role
     FROM organization_members om
     WHERE om.organization_id = ${organizationId}
     AND om.status = 'active'
     ORDER BY om.name
   `
 
-  return members.map((m: Record<string, unknown>) => ({
-    memberId: m.id,
-    name: m.name,
-    email: m.email,
-    department: m.department,
-    role: m.role,
-    totalTasks: parseInt(String(m.total_tasks || 0), 10),
-    completedTasks: parseInt(String(m.completed_tasks || 0), 10),
-    completionRate: m.total_tasks
-      ? Math.round((parseInt(String(m.completed_tasks || 0), 10) / parseInt(String(m.total_tasks), 10)) * 100)
-      : 0,
-    totalRocks: parseInt(String(m.total_rocks || 0), 10),
-    eodSubmissions: parseInt(String(m.eod_submissions || 0), 10),
-    avgRockProgress: Math.round(parseFloat(String(m.avg_rock_progress || 0))),
-  }))
+  // Then calculate stats for each member with parameterized queries
+  const memberStats = await Promise.all(
+    members.map(async (m: Record<string, unknown>) => {
+      let totalTasks, completedTasks, totalRocks, eodSubmissions
+
+      if (dateRange) {
+        const taskStats = await db.sql`
+          SELECT
+            COUNT(*) as total,
+            COUNT(*) FILTER (WHERE status = 'completed') as completed
+          FROM assigned_tasks
+          WHERE assignee_id = ${m.id}
+          AND organization_id = ${organizationId}
+          AND created_at >= ${dateRange.start}::date
+          AND created_at < ${dateRange.end}::date + interval '1 day'
+        `
+        totalTasks = parseInt(String(taskStats[0]?.total || 0), 10)
+        completedTasks = parseInt(String(taskStats[0]?.completed || 0), 10)
+
+        const rockStats = await db.sql`
+          SELECT COUNT(*) as total
+          FROM rocks
+          WHERE user_id = ${m.id}
+          AND organization_id = ${organizationId}
+          AND created_at >= ${dateRange.start}::date
+          AND created_at < ${dateRange.end}::date + interval '1 day'
+        `
+        totalRocks = parseInt(String(rockStats[0]?.total || 0), 10)
+
+        const eodStats = await db.sql`
+          SELECT COUNT(*) as total
+          FROM eod_reports
+          WHERE user_id = ${m.id}
+          AND organization_id = ${organizationId}
+          AND date >= ${dateRange.start}
+          AND date <= ${dateRange.end}
+        `
+        eodSubmissions = parseInt(String(eodStats[0]?.total || 0), 10)
+      } else {
+        const taskStats = await db.sql`
+          SELECT
+            COUNT(*) as total,
+            COUNT(*) FILTER (WHERE status = 'completed') as completed
+          FROM assigned_tasks
+          WHERE assignee_id = ${m.id}
+          AND organization_id = ${organizationId}
+        `
+        totalTasks = parseInt(String(taskStats[0]?.total || 0), 10)
+        completedTasks = parseInt(String(taskStats[0]?.completed || 0), 10)
+
+        const rockStats = await db.sql`
+          SELECT COUNT(*) as total
+          FROM rocks
+          WHERE user_id = ${m.id}
+          AND organization_id = ${organizationId}
+        `
+        totalRocks = parseInt(String(rockStats[0]?.total || 0), 10)
+
+        const eodStats = await db.sql`
+          SELECT COUNT(*) as total
+          FROM eod_reports
+          WHERE user_id = ${m.id}
+          AND organization_id = ${organizationId}
+        `
+        eodSubmissions = parseInt(String(eodStats[0]?.total || 0), 10)
+      }
+
+      const avgProgress = await db.sql`
+        SELECT AVG(progress) as avg
+        FROM rocks
+        WHERE user_id = ${m.id}
+        AND organization_id = ${organizationId}
+      `
+
+      return {
+        memberId: m.id,
+        name: m.name,
+        email: m.email,
+        department: m.department,
+        role: m.role,
+        totalTasks,
+        completedTasks,
+        completionRate: totalTasks
+          ? Math.round((completedTasks / totalTasks) * 100)
+          : 0,
+        totalRocks,
+        eodSubmissions,
+        avgRockProgress: Math.round(parseFloat(String(avgProgress[0]?.avg || 0))),
+      }
+    })
+  )
+
+  return memberStats
 }
 
 // ============================================

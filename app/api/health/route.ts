@@ -37,7 +37,7 @@ interface HealthStatus {
 // Track server start time for uptime calculation
 const startTime = Date.now()
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(_request: NextRequest): Promise<NextResponse> {
   const checks: HealthStatus["checks"] = {
     server: { status: "ok" },
     database: { status: "ok" },

@@ -4,7 +4,7 @@ import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { sendSlackMessage, buildTaskAssignmentMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import { asanaClient } from "@/lib/integrations/asana"
-import type { AssignedTask, ApiResponse, TeamMember, Notification } from "@/lib/types"
+import type { AssignedTask, ApiResponse, Notification } from "@/lib/types"
 
 // GET /api/tasks - Get tasks
 export async function GET(request: NextRequest) {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       rockId,
       priority = "normal",
       dueDate,
-      type = "personal",
+      type: _type = "personal",
     } = body
 
     if (!title) {

@@ -1,16 +1,31 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { MA_EMPLOYEES_SEED, TOTAL_EMPLOYEES } from "@/lib/org-chart/seed-data"
 
 // POST - Seed the database with all MA employees
 // This will clear existing employees and insert fresh data
-export async function POST(request: Request) {
+// ADMIN ONLY - requires authentication
+export async function POST(request: NextRequest) {
   try {
+    // Require admin authentication
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
+    if (!isAdmin(auth)) {
+      return NextResponse.json(
+        { success: false, error: "Admin access required" },
+        { status: 403 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const clearFirst = searchParams.get("clear") !== "false" // Default to clearing first
-
-    // Check for authorization (optional - for admin protection)
-    // You could add auth check here if needed
 
     let deletedCount = 0
     if (clearFirst) {
@@ -43,9 +58,25 @@ export async function POST(request: Request) {
   }
 }
 
-// GET - Check current employee count
-export async function GET() {
+// GET - Check current employee count (admin only)
+export async function GET(request: NextRequest) {
   try {
+    // Require admin authentication
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
+    if (!isAdmin(auth)) {
+      return NextResponse.json(
+        { success: false, error: "Admin access required" },
+        { status: 403 }
+      )
+    }
+
     const count = await db.maEmployees.count()
 
     return NextResponse.json({

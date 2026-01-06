@@ -1,9 +1,19 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { getAuthContext } from "@/lib/auth/middleware"
 
 // GET - Fetch all rock progress or for a specific employee
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const employeeName = searchParams.get("employeeName")
 
@@ -30,8 +40,17 @@ export async function GET(request: Request) {
 }
 
 // POST - Update rock progress (toggle bullet completion)
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
     const { employeeName, rockIndex, bulletIndex, completed, updatedBy } = body
 
@@ -47,7 +66,7 @@ export async function POST(request: Request) {
       rockIndex,
       bulletIndex,
       completed,
-      updatedBy
+      updatedBy || auth.member.name
     )
 
     return NextResponse.json({
@@ -64,8 +83,17 @@ export async function POST(request: Request) {
 }
 
 // DELETE - Delete progress for an employee (when rocks are changed)
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    // Require authentication
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const employeeName = searchParams.get("employeeName")
 

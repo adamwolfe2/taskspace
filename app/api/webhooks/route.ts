@@ -262,25 +262,24 @@ export async function PATCH(request: NextRequest) {
       return Errors.notFound("Webhook").toResponse()
     }
 
-    // Build update fields
-    const updates: string[] = ["updated_at = NOW()"]
-
-    if (body.name !== undefined) updates.push(`name = '${body.name}'`)
-    if (body.url !== undefined) updates.push(`url = '${body.url}'`)
-    if (body.events !== undefined) updates.push(`events = '${JSON.stringify(body.events)}'`)
-    if (body.headers !== undefined) updates.push(`headers = '${JSON.stringify(body.headers)}'`)
-    if (body.enabled !== undefined) updates.push(`enabled = ${body.enabled}`)
-
+    // Use parameterized update to prevent SQL injection
     let newSecret = existing[0].secret
     if (body.regenerateSecret) {
       newSecret = generateWebhookSecret()
-      updates.push(`secret = '${newSecret}'`)
-      updates.push(`failure_count = 0`)
     }
 
+    // Build update with safe parameterized query
     await db.sql`
       UPDATE webhook_configs
-      SET ${db.sql.raw(updates.join(", "))}
+      SET
+        updated_at = NOW(),
+        name = COALESCE(${body.name ?? null}, name),
+        url = COALESCE(${body.url ?? null}, url),
+        events = CASE WHEN ${body.events !== undefined} THEN ${body.events ? JSON.stringify(body.events) : null}::jsonb ELSE events END,
+        headers = CASE WHEN ${body.headers !== undefined} THEN ${body.headers ? JSON.stringify(body.headers) : '{}'}::jsonb ELSE headers END,
+        enabled = COALESCE(${body.enabled ?? null}, enabled),
+        secret = ${body.regenerateSecret ? newSecret : existing[0].secret},
+        failure_count = CASE WHEN ${body.regenerateSecret || false} THEN 0 ELSE failure_count END
       WHERE id = ${webhookId}
     `
 
