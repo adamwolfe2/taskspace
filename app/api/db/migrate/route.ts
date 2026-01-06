@@ -756,6 +756,10 @@ export async function GET(request: NextRequest) {
     await sql`CREATE INDEX IF NOT EXISTS idx_ma_employees_department ON ma_employees(department)`
     await sql`CREATE INDEX IF NOT EXISTS idx_ma_employees_active ON ma_employees(is_active)`
 
+    // Add rocks column to ma_employees for syncing workspace rocks
+    await sql`ALTER TABLE ma_employees ADD COLUMN IF NOT EXISTS rocks TEXT`
+    await sql`CREATE INDEX IF NOT EXISTS idx_ma_employees_email ON ma_employees(email)`
+
     return NextResponse.json({
       success: true,
       message: "Database migration completed successfully (including AI Command Center, Notifications, Audit Logs, Webhooks, Enterprise tables, Weekly Scorecard, and Org Chart)",
