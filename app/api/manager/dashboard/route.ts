@@ -12,6 +12,9 @@ import type {
   TeamSummary,
   ManagerAlert,
   ManagerInsight,
+  AssignedTask,
+  Rock,
+  EODReport,
 } from "@/lib/types"
 import {
   format,
@@ -239,9 +242,9 @@ function createEmptyDirectReport(member: {
 }
 
 function calculateMetrics(
-  tasks: typeof import("@/lib/types").AssignedTask[],
-  rocks: typeof import("@/lib/types").Rock[],
-  eodReports: typeof import("@/lib/types").EODReport[],
+  tasks: AssignedTask[],
+  rocks: Rock[],
+  eodReports: EODReport[],
   today: Date
 ): DirectReportMetrics {
   const todayStr = format(today, "yyyy-MM-dd")
@@ -325,7 +328,7 @@ function calculateMetrics(
 }
 
 function calculateEodStreak(
-  eodReports: typeof import("@/lib/types").EODReport[],
+  eodReports: EODReport[],
   today: Date
 ): number {
   const sortedDates = eodReports
@@ -365,7 +368,7 @@ function calculateEodStreak(
 }
 
 function calculateEodStatus(
-  eodReports: typeof import("@/lib/types").EODReport[],
+  eodReports: EODReport[],
   today: Date
 ): EODStatus {
   const todayStr = format(today, "yyyy-MM-dd")
@@ -385,9 +388,9 @@ function calculateEodStatus(
 }
 
 function calculateRecentActivity(
-  tasks: typeof import("@/lib/types").AssignedTask[],
-  rocks: typeof import("@/lib/types").Rock[],
-  eodReports: typeof import("@/lib/types").EODReport[],
+  tasks: AssignedTask[],
+  rocks: Rock[],
+  eodReports: EODReport[],
   today: Date
 ): DirectReportActivity {
   // Recent completed tasks (last 5)

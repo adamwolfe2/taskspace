@@ -9,7 +9,7 @@
 
 import { NextRequest } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
-import { db } from "@/lib/db"
+import { sql } from "@vercel/postgres"
 import { Errors, paginatedResponse, successResponse } from "@/lib/api/errors"
 import { z } from "zod"
 
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     // Use parameterized queries to prevent SQL injection
     // Build conditions array and values for dynamic WHERE clause
-    const logs = await db.sql`
+    const { rows: logs } = await sql`
       SELECT
         id,
         action,
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
     `
 
     // Get total count with same filters
-    const countResult = await db.sql`
+    const { rows: countResult } = await sql`
       SELECT COUNT(*) as total
       FROM audit_logs
       WHERE organization_id = ${auth.organization.id}
@@ -130,11 +130,7 @@ export async function GET(request: NextRequest) {
       createdAt: log.created_at,
     }))
 
-    return paginatedResponse(formattedLogs, {
-      page,
-      pageSize: limit,
-      total,
-    })
+    return paginatedResponse(formattedLogs, total, page, limit)
   } catch (error) {
     console.error("Audit log query error:", error)
     return Errors.internal().toResponse()
@@ -160,63 +156,63 @@ export async function POST(request: NextRequest) {
     const { startDate, endDate } = body
 
     // Get activity summary
-    const activityByAction = await db.sql`
+    const { rows: activityByAction } = await sql`
       SELECT
         action,
         COUNT(*) as count,
         COUNT(DISTINCT actor_id) as unique_actors
       FROM audit_logs
       WHERE organization_id = ${auth.organization.id}
-        ${startDate ? db.sql`AND created_at >= ${startDate}` : db.sql``}
-        ${endDate ? db.sql`AND created_at < ${endDate}::date + interval '1 day'` : db.sql``}
+        AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
+        AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
       GROUP BY action
       ORDER BY count DESC
       LIMIT 20
     `
 
     // Get activity by severity
-    const activityBySeverity = await db.sql`
+    const { rows: activityBySeverity } = await sql`
       SELECT
         severity,
         COUNT(*) as count
       FROM audit_logs
       WHERE organization_id = ${auth.organization.id}
-        ${startDate ? db.sql`AND created_at >= ${startDate}` : db.sql``}
-        ${endDate ? db.sql`AND created_at < ${endDate}::date + interval '1 day'` : db.sql``}
+        AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
+        AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
       GROUP BY severity
     `
 
     // Get daily activity for the period
-    const dailyActivity = await db.sql`
+    const { rows: dailyActivity } = await sql`
       SELECT
         DATE(created_at) as date,
         COUNT(*) as count
       FROM audit_logs
       WHERE organization_id = ${auth.organization.id}
-        ${startDate ? db.sql`AND created_at >= ${startDate}` : db.sql``}
-        ${endDate ? db.sql`AND created_at < ${endDate}::date + interval '1 day'` : db.sql``}
+        AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
+        AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
       GROUP BY DATE(created_at)
       ORDER BY date DESC
       LIMIT 30
     `
 
     // Get top actors
-    const topActors = await db.sql`
+    const { rows: topActors } = await sql`
       SELECT
         actor_id,
         COUNT(*) as action_count
       FROM audit_logs
       WHERE organization_id = ${auth.organization.id}
         AND actor_id IS NOT NULL
-        ${startDate ? db.sql`AND created_at >= ${startDate}` : db.sql``}
-        ${endDate ? db.sql`AND created_at < ${endDate}::date + interval '1 day'` : db.sql``}
+        AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
+        AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
       GROUP BY actor_id
       ORDER BY action_count DESC
       LIMIT 10
     `
 
     // Get security events
-    const securityEvents = await db.sql`
+    const { rows: securityEvents } = await sql`
       SELECT
         action,
         COUNT(*) as count,
@@ -224,8 +220,8 @@ export async function POST(request: NextRequest) {
       FROM audit_logs
       WHERE organization_id = ${auth.organization.id}
         AND action LIKE 'security.%'
-        ${startDate ? db.sql`AND created_at >= ${startDate}` : db.sql``}
-        ${endDate ? db.sql`AND created_at < ${endDate}::date + interval '1 day'` : db.sql``}
+        AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
+        AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
       GROUP BY action
       ORDER BY count DESC
     `
