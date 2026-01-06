@@ -1775,6 +1775,58 @@ export const db = {
       return (rowCount ?? 0) > 0
     },
   },
+
+  // Org Chart Rock Progress - tracks completion of individual rock bullets
+  orgChartRockProgress: {
+    async findByEmployee(employeeName: string): Promise<{ employeeName: string; rockIndex: number; bulletIndex: number; completed: boolean; updatedAt: string; updatedBy?: string }[]> {
+      const { rows } = await sql`
+        SELECT * FROM org_chart_rock_progress
+        WHERE employee_name = ${employeeName}
+      `
+      return rows.map(row => ({
+        employeeName: row.employee_name as string,
+        rockIndex: row.rock_index as number,
+        bulletIndex: row.bullet_index as number,
+        completed: row.completed as boolean,
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+        updatedBy: row.updated_by as string | undefined,
+      }))
+    },
+    async findAll(): Promise<{ employeeName: string; rockIndex: number; bulletIndex: number; completed: boolean; updatedAt: string; updatedBy?: string }[]> {
+      const { rows } = await sql`SELECT * FROM org_chart_rock_progress`
+      return rows.map(row => ({
+        employeeName: row.employee_name as string,
+        rockIndex: row.rock_index as number,
+        bulletIndex: row.bullet_index as number,
+        completed: row.completed as boolean,
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+        updatedBy: row.updated_by as string | undefined,
+      }))
+    },
+    async upsert(employeeName: string, rockIndex: number, bulletIndex: number, completed: boolean, updatedBy?: string): Promise<void> {
+      const now = new Date().toISOString()
+      await sql`
+        INSERT INTO org_chart_rock_progress (id, employee_name, rock_index, bullet_index, completed, updated_at, updated_by)
+        VALUES (gen_random_uuid(), ${employeeName}, ${rockIndex}, ${bulletIndex}, ${completed}, ${now}, ${updatedBy || null})
+        ON CONFLICT (employee_name, rock_index, bullet_index)
+        DO UPDATE SET completed = ${completed}, updated_at = ${now}, updated_by = ${updatedBy || null}
+      `
+    },
+    async delete(employeeName: string, rockIndex: number, bulletIndex: number): Promise<boolean> {
+      const { rowCount } = await sql`
+        DELETE FROM org_chart_rock_progress
+        WHERE employee_name = ${employeeName} AND rock_index = ${rockIndex} AND bullet_index = ${bulletIndex}
+      `
+      return (rowCount ?? 0) > 0
+    },
+    async deleteByEmployee(employeeName: string): Promise<boolean> {
+      const { rowCount } = await sql`
+        DELETE FROM org_chart_rock_progress
+        WHERE employee_name = ${employeeName}
+      `
+      return (rowCount ?? 0) > 0
+    },
+  },
 }
 
 export default db

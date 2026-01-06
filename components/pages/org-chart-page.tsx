@@ -1,0 +1,261 @@
+"use client"
+
+import { useState, useEffect, useRef, useCallback } from "react"
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
+import useSWR from "swr"
+import { OrgChart } from "@/components/org-chart/org-chart"
+import { EmployeeModal } from "@/components/org-chart/employee-modal"
+import { ChatInterface } from "@/components/org-chart/chat-interface"
+import { ZoomControls } from "@/components/org-chart/zoom-controls"
+import { StatusIndicator } from "@/components/org-chart/status-indicator"
+import { buildOrgTree } from "@/lib/org-chart/utils"
+import type { OrgChartEmployee, OrgChartEmployeeNode } from "@/lib/org-chart/types"
+import { Loader2, RefreshCw, Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useApp } from "@/lib/contexts/app-context"
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+export function OrgChartPage() {
+  const { currentUser } = useApp()
+  const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
+
+  const [selectedEmployee, setSelectedEmployee] = useState<OrgChartEmployee | null>(null)
+  const [highlightedEmployee, setHighlightedEmployee] = useState<string | null>(null)
+  const [progressData, setProgressData] = useState<Map<string, boolean>>(new Map())
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const transformRef = useRef<any>(null)
+
+  // Fetch employees
+  const {
+    data: employeeData,
+    error: employeeError,
+    isLoading: employeesLoading,
+    mutate: refreshEmployees,
+  } = useSWR<{ success: boolean; employees: OrgChartEmployee[] }>(
+    "/api/org-chart/employees",
+    fetcher,
+    { refreshInterval: 30000 } // Refresh every 30 seconds
+  )
+
+  // Fetch progress data
+  const { data: progressResponse, mutate: refreshProgress } = useSWR(
+    "/api/org-chart/progress",
+    fetcher,
+    { refreshInterval: 10000 } // Refresh every 10 seconds
+  )
+
+  // Update progress map when data changes
+  useEffect(() => {
+    if (progressResponse?.success && progressResponse.progress) {
+      const newMap = new Map<string, boolean>()
+      progressResponse.progress.forEach((p: any) => {
+        const key = `${p.employeeName}-${p.rockIndex}-${p.bulletIndex}`
+        newMap.set(key, p.completed)
+      })
+      setProgressData(newMap)
+    }
+  }, [progressResponse])
+
+  const employees = employeeData?.employees || []
+  const orgTree = buildOrgTree(employees)
+
+  // Handle zoom to employee
+  const handleZoomToEmployee = useCallback(
+    (employeeName: string) => {
+      const card = cardRefs.current.get(employeeName.toLowerCase())
+      if (card && transformRef.current) {
+        // Get card position
+        const rect = card.getBoundingClientRect()
+        const container = card.closest(".transform-wrapper")
+        if (container) {
+          const containerRect = container.getBoundingClientRect()
+
+          // Calculate center position
+          const centerX = containerRect.width / 2
+          const centerY = containerRect.height / 2
+          const cardCenterX = rect.left - containerRect.left + rect.width / 2
+          const cardCenterY = rect.top - containerRect.top + rect.height / 2
+
+          // Zoom and center
+          transformRef.current.setTransform(
+            centerX - cardCenterX,
+            centerY - cardCenterY,
+            1,
+            300 // Animation duration
+          )
+        }
+
+        // Highlight the employee briefly
+        setHighlightedEmployee(employeeName)
+        setTimeout(() => setHighlightedEmployee(null), 3000)
+      }
+    },
+    []
+  )
+
+  // Handle progress change
+  const handleProgressChange = async (
+    employeeName: string,
+    rockIndex: number,
+    bulletIndex: number,
+    completed: boolean
+  ) => {
+    // Optimistic update
+    const key = `${employeeName}-${rockIndex}-${bulletIndex}`
+    setProgressData((prev) => {
+      const newMap = new Map(prev)
+      newMap.set(key, completed)
+      return newMap
+    })
+
+    // Save to server
+    try {
+      await fetch("/api/org-chart/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeName,
+          rockIndex,
+          bulletIndex,
+          completed,
+          updatedBy: currentUser?.name,
+        }),
+      })
+      // Refresh progress data
+      refreshProgress()
+    } catch (error) {
+      console.error("Failed to save progress:", error)
+      // Revert on error
+      setProgressData((prev) => {
+        const newMap = new Map(prev)
+        newMap.set(key, !completed)
+        return newMap
+      })
+    }
+  }
+
+  // Handle employee click from modal
+  const handleEmployeeClickFromModal = (employee: OrgChartEmployee) => {
+    setSelectedEmployee(null)
+    setTimeout(() => {
+      handleZoomToEmployee(employee.fullName)
+      setSelectedEmployee(employee)
+    }, 300)
+  }
+
+  if (employeesLoading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          <p className="text-slate-500">Loading organization chart...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (employeeError || !employeeData?.success) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <Users className="h-12 w-12 text-slate-300" />
+          <h2 className="text-xl font-semibold text-slate-700">
+            Failed to load organization chart
+          </h2>
+          <p className="text-slate-500 max-w-md">
+            There was a problem loading the employee data. Please try again.
+          </p>
+          <Button onClick={() => refreshEmployees()} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative h-[calc(100vh-8rem)] -m-4 md:-m-6">
+      {/* Header bar */}
+      <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-bold text-slate-900 bg-white/80 backdrop-blur px-3 py-1.5 rounded-lg">
+            Organization Chart
+          </h1>
+          <StatusIndicator />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refreshEmployees()}
+          className="bg-white/80 backdrop-blur"
+        >
+          <RefreshCw className="h-4 w-4 mr-1" />
+          Refresh
+        </Button>
+      </div>
+
+      {/* Zoomable canvas */}
+      <TransformWrapper
+        ref={transformRef}
+        initialScale={0.5}
+        minScale={0.2}
+        maxScale={2}
+        limitToBounds={false}
+        centerOnInit={true}
+      >
+        {({ zoomIn, zoomOut, resetTransform }) => (
+          <>
+            <TransformComponent
+              wrapperStyle={{
+                width: "100%",
+                height: "100%",
+                background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+              }}
+              contentStyle={{
+                width: "100%",
+                height: "100%",
+              }}
+              wrapperClass="transform-wrapper"
+            >
+              <div className="flex items-center justify-center min-h-full min-w-full py-24">
+                <OrgChart
+                  root={orgTree}
+                  onEmployeeClick={setSelectedEmployee}
+                  highlightedEmployee={highlightedEmployee}
+                  progressData={progressData}
+                  cardRefs={cardRefs}
+                />
+              </div>
+            </TransformComponent>
+
+            <ZoomControls
+              onZoomIn={() => zoomIn()}
+              onZoomOut={() => zoomOut()}
+              onReset={() => resetTransform()}
+            />
+          </>
+        )}
+      </TransformWrapper>
+
+      {/* Chat interface */}
+      <ChatInterface
+        employees={employees}
+        onMentionClick={handleZoomToEmployee}
+      />
+
+      {/* Employee modal */}
+      <EmployeeModal
+        employee={selectedEmployee}
+        open={!!selectedEmployee}
+        onOpenChange={(open) => !open && setSelectedEmployee(null)}
+        onProgressChange={handleProgressChange}
+        progressData={progressData}
+        allEmployees={employees}
+        onEmployeeClick={handleEmployeeClickFromModal}
+        isAdmin={isAdmin}
+      />
+    </div>
+  )
+}
