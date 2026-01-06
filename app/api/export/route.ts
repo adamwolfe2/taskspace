@@ -477,8 +477,8 @@ export async function POST(request: NextRequest) {
       "integration.data_exported",
       auth.organization.id,
       auth.user.id,
-      body.type,
       {
+        exportType: body.type,
         format: body.format,
         recordCount: data.length,
         dateRange: body.dateRange,

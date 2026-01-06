@@ -18,7 +18,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts"
-import { BarChart3, TrendingUp, Users, AlertTriangle, Calendar, ArrowUp, ArrowDown, Minus } from "lucide-react"
+import { BarChart3, TrendingUp, Users, AlertTriangle, Calendar, ArrowUp, ArrowDown, Minus, Target } from "lucide-react"
 import type { EODReport, EODInsight, Rock, TeamMember } from "@/lib/types"
 import { Progress } from "@/components/ui/progress"
 
