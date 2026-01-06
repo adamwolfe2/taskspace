@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
+import { db } from "@/lib/db"
 import { fetchEmployeesFromAirtable } from "@/lib/org-chart/airtable"
 import type { OrgChartEmployee } from "@/lib/org-chart/types"
 
-// Fallback data in case Airtable is not configured
+// Fallback data in case database and Airtable are not available
 const FALLBACK_EMPLOYEES: OrgChartEmployee[] = [
   {
     id: "fallback-1",
@@ -41,22 +42,58 @@ const FALLBACK_EMPLOYEES: OrgChartEmployee[] = [
 
 export async function GET() {
   try {
-    // Check if Airtable is configured
-    if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
-      console.warn("Airtable not configured, using fallback data")
+    // Primary source: ma_employees database table
+    const dbEmployees = await db.maEmployees.findAll()
+
+    if (dbEmployees.length > 0) {
+      // Transform to OrgChartEmployee format
+      const employees: OrgChartEmployee[] = dbEmployees.map(emp => ({
+        id: emp.id,
+        firstName: emp.firstName,
+        lastName: emp.lastName,
+        fullName: emp.fullName,
+        supervisor: emp.supervisor,
+        department: emp.department || "",
+        jobTitle: emp.jobTitle || "",
+        notes: emp.notes || "",
+        extraInfo: emp.responsibilities || "",
+        email: emp.email || undefined,
+        // No rocks field in ma_employees - kept for compatibility
+        rocks: "",
+      }))
+
       return NextResponse.json({
         success: true,
-        employees: FALLBACK_EMPLOYEES,
-        source: "fallback",
+        employees,
+        source: "database",
+        count: employees.length,
       })
     }
 
-    const employees = await fetchEmployeesFromAirtable()
+    // Fallback #1: Try Airtable if database is empty
+    if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) {
+      console.warn("Database empty, trying Airtable")
+      try {
+        const airtableEmployees = await fetchEmployeesFromAirtable()
+        return NextResponse.json({
+          success: true,
+          employees: airtableEmployees,
+          source: "airtable",
+          count: airtableEmployees.length,
+        })
+      } catch (airtableError) {
+        console.error("Airtable fallback failed:", airtableError)
+      }
+    }
 
+    // Fallback #2: Return static demo data
+    console.warn("Using fallback data - run seed API to populate database")
     return NextResponse.json({
       success: true,
-      employees,
-      source: "airtable",
+      employees: FALLBACK_EMPLOYEES,
+      source: "fallback",
+      count: FALLBACK_EMPLOYEES.length,
+      warning: "Database is empty. Run POST /api/ma-employees/seed to populate with MA employee data.",
     })
   } catch (error) {
     console.error("Error fetching employees:", error)
@@ -66,7 +103,8 @@ export async function GET() {
       success: true,
       employees: FALLBACK_EMPLOYEES,
       source: "fallback",
-      warning: "Failed to fetch from Airtable, using fallback data",
+      count: FALLBACK_EMPLOYEES.length,
+      warning: "Failed to fetch employees, using fallback data",
     })
   }
 }

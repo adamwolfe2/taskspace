@@ -1827,6 +1827,205 @@ export const db = {
       return (rowCount ?? 0) > 0
     },
   },
+
+  // MA Employees - org chart data source
+  maEmployees: {
+    async findAll(): Promise<{
+      id: string
+      firstName: string
+      lastName: string
+      fullName: string
+      supervisor: string | null
+      department: string | null
+      jobTitle: string | null
+      responsibilities: string | null
+      notes: string | null
+      email: string | null
+      isActive: boolean
+      createdAt: string
+      updatedAt: string
+    }[]> {
+      const { rows } = await sql`
+        SELECT * FROM ma_employees
+        WHERE is_active = TRUE
+        ORDER BY full_name ASC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        firstName: row.first_name as string,
+        lastName: row.last_name as string,
+        fullName: row.full_name as string,
+        supervisor: row.supervisor as string | null,
+        department: row.department as string | null,
+        jobTitle: row.job_title as string | null,
+        responsibilities: row.responsibilities as string | null,
+        notes: row.notes as string | null,
+        email: row.email as string | null,
+        isActive: row.is_active as boolean,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }))
+    },
+    async findById(id: string): Promise<{
+      id: string
+      firstName: string
+      lastName: string
+      fullName: string
+      supervisor: string | null
+      department: string | null
+      jobTitle: string | null
+      responsibilities: string | null
+      notes: string | null
+      email: string | null
+      isActive: boolean
+      createdAt: string
+      updatedAt: string
+    } | null> {
+      const { rows } = await sql`SELECT * FROM ma_employees WHERE id = ${id}`
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        firstName: row.first_name as string,
+        lastName: row.last_name as string,
+        fullName: row.full_name as string,
+        supervisor: row.supervisor as string | null,
+        department: row.department as string | null,
+        jobTitle: row.job_title as string | null,
+        responsibilities: row.responsibilities as string | null,
+        notes: row.notes as string | null,
+        email: row.email as string | null,
+        isActive: row.is_active as boolean,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }
+    },
+    async findByDepartment(department: string): Promise<{
+      id: string
+      firstName: string
+      lastName: string
+      fullName: string
+      supervisor: string | null
+      department: string | null
+      jobTitle: string | null
+      responsibilities: string | null
+      notes: string | null
+      email: string | null
+      isActive: boolean
+    }[]> {
+      const { rows } = await sql`
+        SELECT * FROM ma_employees
+        WHERE department = ${department} AND is_active = TRUE
+        ORDER BY full_name ASC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        firstName: row.first_name as string,
+        lastName: row.last_name as string,
+        fullName: row.full_name as string,
+        supervisor: row.supervisor as string | null,
+        department: row.department as string | null,
+        jobTitle: row.job_title as string | null,
+        responsibilities: row.responsibilities as string | null,
+        notes: row.notes as string | null,
+        email: row.email as string | null,
+        isActive: row.is_active as boolean,
+      }))
+    },
+    async create(employee: {
+      firstName: string
+      lastName: string
+      supervisor?: string | null
+      department?: string | null
+      jobTitle?: string | null
+      responsibilities?: string | null
+      notes?: string | null
+      email?: string | null
+    }): Promise<{ id: string; fullName: string }> {
+      const { rows } = await sql`
+        INSERT INTO ma_employees (first_name, last_name, supervisor, department, job_title, responsibilities, notes, email)
+        VALUES (${employee.firstName}, ${employee.lastName}, ${employee.supervisor || null},
+                ${employee.department || null}, ${employee.jobTitle || null},
+                ${employee.responsibilities || null}, ${employee.notes || null}, ${employee.email || null})
+        RETURNING id, full_name
+      `
+      return {
+        id: rows[0].id as string,
+        fullName: rows[0].full_name as string,
+      }
+    },
+    async createMany(employees: {
+      firstName: string
+      lastName: string
+      supervisor?: string | null
+      department?: string | null
+      jobTitle?: string | null
+      responsibilities?: string | null
+      notes?: string | null
+      email?: string | null
+    }[]): Promise<number> {
+      let count = 0
+      for (const emp of employees) {
+        await sql`
+          INSERT INTO ma_employees (first_name, last_name, supervisor, department, job_title, responsibilities, notes, email)
+          VALUES (${emp.firstName}, ${emp.lastName}, ${emp.supervisor || null},
+                  ${emp.department || null}, ${emp.jobTitle || null},
+                  ${emp.responsibilities || null}, ${emp.notes || null}, ${emp.email || null})
+        `
+        count++
+      }
+      return count
+    },
+    async update(id: string, updates: {
+      firstName?: string
+      lastName?: string
+      supervisor?: string | null
+      department?: string | null
+      jobTitle?: string | null
+      responsibilities?: string | null
+      notes?: string | null
+      email?: string | null
+      isActive?: boolean
+    }): Promise<boolean> {
+      const now = new Date().toISOString()
+      const { rowCount } = await sql`
+        UPDATE ma_employees SET
+          first_name = COALESCE(${updates.firstName || null}, first_name),
+          last_name = COALESCE(${updates.lastName || null}, last_name),
+          supervisor = COALESCE(${updates.supervisor}, supervisor),
+          department = COALESCE(${updates.department}, department),
+          job_title = COALESCE(${updates.jobTitle}, job_title),
+          responsibilities = COALESCE(${updates.responsibilities}, responsibilities),
+          notes = COALESCE(${updates.notes}, notes),
+          email = COALESCE(${updates.email}, email),
+          is_active = COALESCE(${updates.isActive ?? null}, is_active),
+          updated_at = ${now}
+        WHERE id = ${id}
+      `
+      return (rowCount ?? 0) > 0
+    },
+    async delete(id: string): Promise<boolean> {
+      // Soft delete by setting is_active = false
+      const now = new Date().toISOString()
+      const { rowCount } = await sql`
+        UPDATE ma_employees SET is_active = FALSE, updated_at = ${now}
+        WHERE id = ${id}
+      `
+      return (rowCount ?? 0) > 0
+    },
+    async hardDelete(id: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM ma_employees WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
+    },
+    async deleteAll(): Promise<number> {
+      const { rowCount } = await sql`DELETE FROM ma_employees`
+      return rowCount ?? 0
+    },
+    async count(): Promise<number> {
+      const { rows } = await sql`SELECT COUNT(*) as count FROM ma_employees WHERE is_active = TRUE`
+      return parseInt(rows[0]?.count || "0", 10)
+    },
+  },
 }
 
 export default db
