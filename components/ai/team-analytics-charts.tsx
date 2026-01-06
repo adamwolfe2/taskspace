@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   LineChart,
@@ -18,7 +18,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts"
-import { BarChart3, TrendingUp, Users, AlertTriangle, Target, Calendar, ArrowUp, ArrowDown, Minus } from "lucide-react"
+import { BarChart3, TrendingUp, Users, AlertTriangle, Calendar, ArrowUp, ArrowDown, Minus } from "lucide-react"
 import type { EODReport, EODInsight, Rock, TeamMember } from "@/lib/types"
 import { Progress } from "@/components/ui/progress"
 
@@ -37,8 +37,6 @@ const SENTIMENT_COLORS = {
   negative: "#ef4444",
   stressed: "#f59e0b",
 }
-
-const CHART_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"]
 
 export function TeamAnalyticsCharts({
   eodReports,

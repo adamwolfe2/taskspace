@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { parseEODTextDump, isClaudeConfigured, ParsedEODReport } from "@/lib/ai/claude-client"
-import type { ApiResponse, Rock } from "@/lib/types"
+import type { ApiResponse } from "@/lib/types"
 
 // Get current quarter string
 function getCurrentQuarter(): string {

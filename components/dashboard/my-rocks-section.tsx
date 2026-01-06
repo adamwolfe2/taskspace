@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import type { Rock, RockMilestone } from "@/lib/types"
+import type { Rock } from "@/lib/types"
 import { formatDate } from "@/lib/utils/date-utils"
-import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight } from "lucide-react"
+import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight } from "lucide-react"
 import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
 import { Checkbox } from "@/components/ui/checkbox"
 

@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, role = "member", department = "General", name } = body
+    const { email, role = "member", department = "General", name: _name } = body
 
     if (!email || !validateEmail(email)) {
       return NextResponse.json<ApiResponse<null>>(

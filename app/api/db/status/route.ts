@@ -65,7 +65,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           table,
           count: parseInt(result.rows[0]?.count || "0"),
         })
-      } catch (e) {
+      } catch {
         status.tableCounts.push({
           table,
           count: -1, // -1 indicates table doesn't exist

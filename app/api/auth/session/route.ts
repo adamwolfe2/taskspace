@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { isTokenExpired } from "@/lib/auth/password"
-import type { ApiResponse, AuthResponse, TeamMember } from "@/lib/types"
+import type { ApiResponse, TeamMember } from "@/lib/types"
 
 export async function GET(request: NextRequest) {
   try {

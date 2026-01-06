@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
-import type { ApiResponse, EODInsight, TeamMember } from "@/lib/types"
+import type { ApiResponse, EODInsight } from "@/lib/types"
 
 // POST /api/ai/parse-eod - Parse an EOD report and extract insights
 export async function POST(request: NextRequest) {

@@ -11,12 +11,10 @@ import {
  Clock,
  Pin,
  X,
- ChevronRight,
  AlertCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { AssignedTask, Rock } from "@/lib/types"
-import { formatDueDate } from "@/lib/utils/date-helpers"
 import { parseISO, isToday, isBefore, startOfDay } from "date-fns"
 
 interface FocusOfTheDayProps {

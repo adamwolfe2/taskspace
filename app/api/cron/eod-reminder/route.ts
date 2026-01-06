@@ -43,7 +43,7 @@ function isReminderTime(org: Organization): boolean {
       hour12: false,
     })
     const timeStr = formatter.format(now)
-    const [currentHour, currentMinute] = timeStr.split(":").map(Number)
+    const [currentHour] = timeStr.split(":").map(Number)
 
     // Parse the reminder time
     const [reminderHour] = reminderTime.split(":").map(Number)

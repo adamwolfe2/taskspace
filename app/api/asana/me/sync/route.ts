@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
 async function processAsanaTasks(
   asanaTasks: AsanaTask[],
   auth: { user: { id: string; name: string; email?: string }; organization: { id: string } },
-  workspaceGid: string | null
+  _workspaceGid: string | null
 ) {
   // Process ALL tasks (both completed and incomplete)
 

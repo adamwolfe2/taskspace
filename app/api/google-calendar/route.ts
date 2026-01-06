@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import * as googleCalendar from "@/lib/google-calendar"
-import type { ApiResponse, GoogleCalendarToken } from "@/lib/types"
+import type { ApiResponse } from "@/lib/types"
 
 // GET /api/google-calendar - Get connection status and auth URL
 export async function GET(request: NextRequest) {

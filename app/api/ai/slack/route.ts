@@ -7,7 +7,7 @@ import {
   buildDailyDigestMessage,
   isSlackConfigured,
 } from "@/lib/integrations/slack"
-import type { ApiResponse, AIGeneratedTask, DailyDigest } from "@/lib/types"
+import type { ApiResponse, DailyDigest } from "@/lib/types"
 
 // POST /api/ai/slack - Send a Slack notification
 export async function POST(request: NextRequest) {

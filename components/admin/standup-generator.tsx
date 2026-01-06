@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Select,
   SelectContent,
@@ -15,12 +14,9 @@ import {
 } from "@/components/ui/select"
 import {
   Users,
-  Calendar,
   Copy,
-  Send,
   RefreshCw,
   Slack,
-  Mail,
   FileText,
   AlertTriangle,
   CheckCircle2,
@@ -43,7 +39,7 @@ export function StandupGenerator({
   eodReports,
   teamMembers,
   onShareToSlack,
-  onShareViaEmail,
+  onShareViaEmail: _onShareViaEmail,
   className,
 }: StandupGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false)
