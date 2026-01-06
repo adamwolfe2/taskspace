@@ -22,6 +22,7 @@ import { AnalyticsPage } from "@/components/pages/analytics-page"
 import { CalendarPage } from "@/components/pages/calendar-page"
 import { ManagerDashboardPage } from "@/components/pages/manager-dashboard-page"
 import { ScorecardPage } from "@/components/pages/scorecard-page"
+import { OrgChartPage } from "@/components/pages/org-chart-page"
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
@@ -206,6 +207,12 @@ function AppContent() {
         )
       case "settings":
         return <SettingsPage />
+      case "org-chart":
+        return isAdmin ? (
+          <OrgChartPage />
+        ) : (
+          <DashboardPage {...dashboardProps} />
+        )
       default:
         return <DashboardPage {...dashboardProps} />
     }

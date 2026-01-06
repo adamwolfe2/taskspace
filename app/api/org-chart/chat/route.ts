@@ -1,0 +1,148 @@
+import { NextResponse } from "next/server"
+import { findRelevantEmployees } from "@/lib/org-chart/utils"
+import type { OrgChartEmployee } from "@/lib/org-chart/types"
+
+const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+const MODEL = "claude-sonnet-4-20250514"
+
+const SYSTEM_PROMPT = `You are a helpful assistant for an organization chart application. Your job is to help employees find the right person to contact for various needs.
+
+You have access to information about employees including their names, departments, job titles, and responsibilities.
+
+When answering:
+1. Be concise and helpful
+2. If you mention an employee by name, format it as **Employee Name** so the UI can highlight it
+3. Focus on providing actionable information
+4. If you're not sure who to recommend, say so honestly
+5. Do NOT use markdown formatting other than bold for names
+6. Keep responses short - 2-3 sentences maximum
+
+You are representing Modern Amenities Group. Be professional and friendly.`
+
+async function callClaude(context: string, userMessage: string): Promise<string> {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+
+  if (!apiKey) {
+    throw new Error("ANTHROPIC_API_KEY is not configured")
+  }
+
+  const response = await fetch(ANTHROPIC_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 1024,
+      temperature: 0.7,
+      system: SYSTEM_PROMPT + "\n\nHere is the organization context:\n" + context,
+      messages: [
+        {
+          role: "user",
+          content: userMessage,
+        },
+      ],
+    }),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    console.error("Claude API error:", error)
+    throw new Error(`Claude API error: ${response.status}`)
+  }
+
+  const data = await response.json()
+
+  if (!data.content || data.content.length === 0) {
+    throw new Error("Empty response from Claude")
+  }
+
+  return data.content[0].text
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+    const { message, employees } = body as {
+      message: string
+      employees: OrgChartEmployee[]
+    }
+
+    if (!message) {
+      return NextResponse.json(
+        { success: false, error: "Message is required" },
+        { status: 400 }
+      )
+    }
+
+    // Check if Claude is configured
+    if (!process.env.ANTHROPIC_API_KEY) {
+      // Return a helpful fallback response
+      const relevantEmployees = findRelevantEmployees(employees || [], message)
+
+      if (relevantEmployees.length > 0) {
+        const names = relevantEmployees.map(e => `**${e.fullName}**`).join(", ")
+        return NextResponse.json({
+          success: true,
+          response: `Based on your query, you might want to contact: ${names}. They may be able to help with this topic.`,
+          mentionedEmployees: relevantEmployees.map(e => e.fullName),
+        })
+      }
+
+      return NextResponse.json({
+        success: true,
+        response: "I'm not sure who would be best to help with that. Try browsing the org chart to find someone in a relevant department.",
+        mentionedEmployees: [],
+      })
+    }
+
+    // Find relevant employees using RAG search
+    const relevantEmployees = findRelevantEmployees(employees || [], message)
+
+    // Build context from relevant employees
+    let context = "Organization Members:\n\n"
+    if (relevantEmployees.length > 0) {
+      relevantEmployees.forEach(emp => {
+        context += `**${emp.fullName}**\n`
+        context += `- Title: ${emp.jobTitle}\n`
+        context += `- Department: ${emp.department}\n`
+        if (emp.notes) context += `- Responsibilities: ${emp.notes}\n`
+        if (emp.extraInfo) context += `- Additional Info: ${emp.extraInfo}\n`
+        context += "\n"
+      })
+    } else if (employees && employees.length > 0) {
+      // Include a summary of all employees if no specific match
+      employees.slice(0, 10).forEach(emp => {
+        context += `- **${emp.fullName}**: ${emp.jobTitle} (${emp.department})\n`
+      })
+    }
+
+    const response = await callClaude(context, message)
+
+    // Extract mentioned employee names from the response
+    const mentionedEmployees: string[] = []
+    const boldNameRegex = /\*\*([^*]+)\*\*/g
+    let match
+    while ((match = boldNameRegex.exec(response)) !== null) {
+      const name = match[1]
+      // Verify this is actually an employee name
+      if (employees?.some(e => e.fullName.toLowerCase() === name.toLowerCase())) {
+        mentionedEmployees.push(name)
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      response,
+      mentionedEmployees,
+    })
+  } catch (error) {
+    console.error("Chat error:", error)
+    return NextResponse.json(
+      { success: false, error: "Failed to process chat message" },
+      { status: 500 }
+    )
+  }
+}

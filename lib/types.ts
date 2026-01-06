@@ -317,6 +317,7 @@ export type PageType =
   | "manager"
   | "settings"
   | "profile"
+  | "org-chart"
 
 // API Response Types
 export interface ApiResponse<T> {

@@ -424,3 +424,22 @@ ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS asana_gid VARCHAR(255);
 -- Index for efficient Asana task lookup
 CREATE INDEX IF NOT EXISTS idx_assigned_tasks_asana_gid ON assigned_tasks(asana_gid) WHERE asana_gid IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_assigned_tasks_source ON assigned_tasks(source);
+
+-- ============================================
+-- ORG CHART ROCK PROGRESS TABLE
+-- ============================================
+
+-- Tracks individual rock bullet completion for org chart employees
+CREATE TABLE IF NOT EXISTS org_chart_rock_progress (
+  id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::varchar,
+  employee_name VARCHAR(255) NOT NULL,
+  rock_index INTEGER NOT NULL,
+  bullet_index INTEGER NOT NULL,
+  completed BOOLEAN DEFAULT FALSE,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_by VARCHAR(255),
+  UNIQUE(employee_name, rock_index, bullet_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_org_chart_rock_progress_employee ON org_chart_rock_progress(employee_name);
+CREATE INDEX IF NOT EXISTS idx_org_chart_rock_progress_composite ON org_chart_rock_progress(employee_name, rock_index);
