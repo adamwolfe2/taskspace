@@ -9,7 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Send, Loader2, X, Plus, AlertTriangle, Check, Target, ChevronDown, ChevronUp } from "lucide-react"
+import { Sparkles, Send, Loader2, X, Plus, AlertTriangle, Check, Target, Undo2, RotateCcw, ChevronDown, ChevronUp, Mountain } from "lucide-react"
+import { Slider } from "@/components/ui/slider"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember } from "@/lib/types"
 import type { TeamMemberMetric } from "@/lib/metrics"
 import { getTodayString } from "@/lib/utils/date-utils"
@@ -42,6 +43,13 @@ interface ParsedEODData {
   warnings: string[]
 }
 
+// Track deleted items for undo
+interface DeletedItem {
+  type: "task" | "priority"
+  item: EODTask | EODPriority
+  index: number
+}
+
 interface AIEODSubmissionProps {
   rocks: Rock[]
   allRocks: Rock[]
@@ -71,6 +79,16 @@ export function AIEODSubmission({
   const [editedEscalationNote, setEditedEscalationNote] = useState("")
   const [metricValueToday, setMetricValueToday] = useState("")
   const [activeMetric, setActiveMetric] = useState<TeamMemberMetric | null>(null)
+
+  // Undo functionality - store original parsed state and deletion history
+  const [originalTasks, setOriginalTasks] = useState<EODTask[]>([])
+  const [originalPriorities, setOriginalPriorities] = useState<EODPriority[]>([])
+  const [originalChallenges, setOriginalChallenges] = useState("")
+  const [deletedItems, setDeletedItems] = useState<DeletedItem[]>([])
+
+  // Rock progress updates - map of rockId to new progress value
+  const [rockProgressUpdates, setRockProgressUpdates] = useState<Record<string, number>>({})
+  const [showRockProgress, setShowRockProgress] = useState(false)
 
   const { toast } = useToast()
   const currentQuarter = getCurrentQuarter()
@@ -124,28 +142,40 @@ export function AIEODSubmission({
       setParsedData(parsed)
 
       // Initialize editable state from parsed data
-      setEditedTasks(
-        parsed.tasks.map((t, i) => ({
-          id: crypto.randomUUID(),
-          text: t.text,
-          rockId: t.rockId,
-          rockTitle: t.rockTitle,
-        }))
-      )
+      const initialTasks = parsed.tasks.map((t) => ({
+        id: crypto.randomUUID(),
+        text: t.text,
+        rockId: t.rockId,
+        rockTitle: t.rockTitle,
+      }))
+      const initialPriorities = parsed.tomorrowPriorities.map((p) => ({
+        id: crypto.randomUUID(),
+        text: p.text,
+        rockId: p.rockId,
+        rockTitle: p.rockTitle,
+      }))
+
+      setEditedTasks(initialTasks)
       setEditedChallenges(parsed.challenges)
-      setEditedPriorities(
-        parsed.tomorrowPriorities.map((p) => ({
-          id: crypto.randomUUID(),
-          text: p.text,
-          rockId: p.rockId,
-          rockTitle: p.rockTitle,
-        }))
-      )
+      setEditedPriorities(initialPriorities)
       setEditedEscalation(parsed.needsEscalation)
       setEditedEscalationNote(parsed.escalationNote || "")
       if (parsed.metricValue !== null) {
         setMetricValueToday(String(parsed.metricValue))
       }
+
+      // Store original state for undo/reset functionality
+      setOriginalTasks(initialTasks.map(t => ({ ...t })))
+      setOriginalPriorities(initialPriorities.map(p => ({ ...p })))
+      setOriginalChallenges(parsed.challenges)
+      setDeletedItems([]) // Clear deletion history
+
+      // Initialize rock progress with current values
+      const progressMap: Record<string, number> = {}
+      rocks.forEach(rock => {
+        progressMap[rock.id] = rock.progress
+      })
+      setRockProgressUpdates(progressMap)
 
       setShowPreview(true)
 
@@ -197,6 +227,23 @@ export function AIEODSubmission({
     }
 
     try {
+      // Update rock progress for any changes
+      const progressUpdatePromises = Object.entries(rockProgressUpdates).map(async ([rockId, newProgress]) => {
+        const rock = rocks.find(r => r.id === rockId)
+        if (rock && rock.progress !== newProgress) {
+          try {
+            await fetch("/api/rocks", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: rockId, progress: newProgress }),
+            })
+          } catch (err) {
+            console.error(`Failed to update rock ${rockId} progress:`, err)
+          }
+        }
+      })
+      await Promise.all(progressUpdatePromises)
+
       await onSubmitEOD(report)
 
       try {
@@ -215,10 +262,20 @@ export function AIEODSubmission({
       setEditedEscalation(false)
       setEditedEscalationNote("")
       setMetricValueToday("")
+      setRockProgressUpdates({})
+      setShowRockProgress(false)
+
+      // Count how many rocks were updated
+      const rocksUpdated = Object.entries(rockProgressUpdates).filter(([rockId, newProgress]) => {
+        const rock = rocks.find(r => r.id === rockId)
+        return rock && rock.progress !== newProgress
+      }).length
 
       toast({
         title: "EOD Report Submitted",
-        description: "Your AI-generated EOD report has been recorded",
+        description: rocksUpdated > 0
+          ? `Report saved and ${rocksUpdated} rock progress update(s) applied`
+          : "Your AI-generated EOD report has been recorded",
       })
     } catch (err: any) {
       toast({
@@ -247,7 +304,18 @@ export function AIEODSubmission({
   }
 
   const removeTask = (id: string) => {
-    setEditedTasks(editedTasks.filter((t) => t.id !== id))
+    const taskIndex = editedTasks.findIndex((t) => t.id === id)
+    const task = editedTasks[taskIndex]
+    if (task) {
+      // Track deletion for undo
+      setDeletedItems(prev => [...prev, { type: "task", item: task, index: taskIndex }])
+      setEditedTasks(editedTasks.filter((t) => t.id !== id))
+      toast({
+        title: "Task removed",
+        description: "Click 'Undo' to restore it",
+        duration: 3000,
+      })
+    }
   }
 
   const addTask = () => {
@@ -270,7 +338,60 @@ export function AIEODSubmission({
   }
 
   const removePriority = (id: string) => {
-    setEditedPriorities(editedPriorities.filter((p) => p.id !== id))
+    const priorityIndex = editedPriorities.findIndex((p) => p.id === id)
+    const priority = editedPriorities[priorityIndex]
+    if (priority) {
+      // Track deletion for undo
+      setDeletedItems(prev => [...prev, { type: "priority", item: priority, index: priorityIndex }])
+      setEditedPriorities(editedPriorities.filter((p) => p.id !== id))
+      toast({
+        title: "Priority removed",
+        description: "Click 'Undo' to restore it",
+        duration: 3000,
+      })
+    }
+  }
+
+  // Undo the last deletion
+  const handleUndo = () => {
+    if (deletedItems.length === 0) return
+
+    const lastDeleted = deletedItems[deletedItems.length - 1]
+    setDeletedItems(prev => prev.slice(0, -1))
+
+    if (lastDeleted.type === "task") {
+      // Insert task back at original position (or end if position is invalid)
+      const newTasks = [...editedTasks]
+      const insertIndex = Math.min(lastDeleted.index, newTasks.length)
+      newTasks.splice(insertIndex, 0, lastDeleted.item as EODTask)
+      setEditedTasks(newTasks)
+      toast({
+        title: "Task restored",
+        description: "Your task has been restored",
+      })
+    } else {
+      // Insert priority back
+      const newPriorities = [...editedPriorities]
+      const insertIndex = Math.min(lastDeleted.index, newPriorities.length)
+      newPriorities.splice(insertIndex, 0, lastDeleted.item as EODPriority)
+      setEditedPriorities(newPriorities)
+      toast({
+        title: "Priority restored",
+        description: "Your priority has been restored",
+      })
+    }
+  }
+
+  // Reset all to original parsed state
+  const handleResetToOriginal = () => {
+    setEditedTasks(originalTasks.map(t => ({ ...t, id: crypto.randomUUID() })))
+    setEditedPriorities(originalPriorities.map(p => ({ ...p, id: crypto.randomUUID() })))
+    setEditedChallenges(originalChallenges)
+    setDeletedItems([])
+    toast({
+      title: "Reset complete",
+      description: "All changes have been reverted to the original parsed data",
+    })
   }
 
   const addPriority = () => {
@@ -393,6 +514,35 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
               </div>
             )}
 
+            {/* Undo/Reset Bar */}
+            {(deletedItems.length > 0 || editedTasks.length !== originalTasks.length || editedPriorities.length !== originalPriorities.length) && (
+              <div className="flex items-center gap-2 p-3 bg-slate-100 rounded-lg border border-slate-200">
+                {deletedItems.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleUndo}
+                    className="bg-white hover:bg-amber-50 border-amber-300 text-amber-700"
+                  >
+                    <Undo2 className="h-4 w-4 mr-1" />
+                    Undo ({deletedItems.length})
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetToOriginal}
+                  className="bg-white hover:bg-blue-50 border-blue-300 text-blue-700"
+                >
+                  <RotateCcw className="h-4 w-4 mr-1" />
+                  Reset to Original
+                </Button>
+                <span className="text-xs text-slate-500 ml-auto">
+                  {deletedItems.length > 0 ? `${deletedItems.length} item(s) in undo history` : "Changes made"}
+                </span>
+              </div>
+            )}
+
             {/* Tasks Organized by Rock */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -494,6 +644,72 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
                     Weekly goal: <span className="font-medium">{activeMetric.weeklyGoal}</span>
                   </span>
                 </div>
+              </div>
+            )}
+
+            {/* Rock Progress Updates */}
+            {rocks.length > 0 && (
+              <div className="space-y-3">
+                <div
+                  className="flex items-center justify-between cursor-pointer p-2 -mx-2 rounded-lg hover:bg-slate-50"
+                  onClick={() => setShowRockProgress(!showRockProgress)}
+                >
+                  <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2 cursor-pointer">
+                    <Mountain className="h-4 w-4 text-emerald-600" />
+                    Update Rock Progress ({rocks.length})
+                  </Label>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                    {showRockProgress ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                {showRockProgress && (
+                  <div className="space-y-4 pt-2">
+                    {rocks.map((rock) => {
+                      const currentProgress = rockProgressUpdates[rock.id] ?? rock.progress
+                      const hasChanged = currentProgress !== rock.progress
+                      return (
+                        <div key={rock.id} className="space-y-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-slate-700 truncate flex-1 mr-2">
+                              {rock.title}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              {hasChanged && (
+                                <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                                  {rock.progress}% → {currentProgress}%
+                                </Badge>
+                              )}
+                              <span className={`text-sm font-semibold w-12 text-right ${
+                                currentProgress >= 100 ? "text-emerald-600" :
+                                currentProgress >= 70 ? "text-blue-600" :
+                                currentProgress >= 40 ? "text-amber-600" : "text-slate-600"
+                              }`}>
+                                {currentProgress}%
+                              </span>
+                            </div>
+                          </div>
+                          <Slider
+                            value={[currentProgress]}
+                            onValueChange={([value]) => {
+                              setRockProgressUpdates(prev => ({ ...prev, [rock.id]: value }))
+                            }}
+                            max={100}
+                            step={5}
+                            className="w-full"
+                          />
+                        </div>
+                      )
+                    })}
+                    <p className="text-xs text-slate-500 italic">
+                      Slide to update progress. Changes will be saved when you submit your EOD report.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
