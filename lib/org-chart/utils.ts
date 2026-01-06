@@ -263,14 +263,67 @@ export function calculateRockProgress(
 }
 
 /**
+ * Common synonyms and related terms for semantic search
+ */
+const SYNONYMS: Record<string, string[]> = {
+  "hr": ["human resources", "people", "personnel", "hiring", "recruiting", "recruitment"],
+  "human resources": ["hr", "people", "personnel", "hiring", "recruiting"],
+  "it": ["information technology", "tech", "technology", "systems", "computers", "software"],
+  "tech": ["technology", "it", "information technology", "technical"],
+  "ceo": ["chief executive", "executive director", "president", "founder"],
+  "cfo": ["chief financial", "finance director", "financial"],
+  "coo": ["chief operating", "operations director"],
+  "cto": ["chief technology", "technology director", "tech lead"],
+  "finance": ["accounting", "financial", "budget", "money", "payroll"],
+  "accounting": ["finance", "financial", "accounts", "bookkeeping"],
+  "sales": ["revenue", "business development", "selling", "customers"],
+  "marketing": ["advertising", "promotion", "branding", "communications"],
+  "operations": ["ops", "operational", "processes", "logistics"],
+  "ops": ["operations", "operational"],
+  "admin": ["administration", "administrative", "office"],
+  "dev": ["development", "developer", "engineering", "programmer"],
+  "engineering": ["development", "dev", "technical", "software"],
+  "manager": ["supervisor", "lead", "director", "head"],
+  "boss": ["manager", "supervisor", "lead", "reports to"],
+  "help": ["assist", "support", "contact"],
+}
+
+/**
+ * Expand query with synonyms
+ */
+function expandWithSynonyms(keywords: string[]): string[] {
+  const expanded = new Set(keywords)
+  keywords.forEach(keyword => {
+    const synonymList = SYNONYMS[keyword]
+    if (synonymList) {
+      synonymList.forEach(syn => expanded.add(syn))
+    }
+    // Also check if any synonym key contains this keyword
+    Object.entries(SYNONYMS).forEach(([key, values]) => {
+      if (key.includes(keyword) || values.some(v => v.includes(keyword))) {
+        expanded.add(key)
+        values.forEach(v => expanded.add(v))
+      }
+    })
+  })
+  return Array.from(expanded)
+}
+
+/**
  * Find employees matching a search query (for RAG/chat)
+ * Uses keyword scoring with synonym expansion for better semantic search
  */
 export function findRelevantEmployees(
   employees: OrgChartEmployee[],
   query: string
 ): OrgChartEmployee[] {
   const queryLower = query.toLowerCase()
-  const keywords = queryLower.split(/\s+/).filter(k => k.length > 2)
+  const baseKeywords = queryLower.split(/\s+/).filter(k => k.length > 2)
+  const keywords = expandWithSynonyms(baseKeywords)
+
+  // Check if query is asking about reporting relationships
+  const reportsToMatch = queryLower.match(/(?:reports?\s+to|under|managed\s+by|supervisor\s+(?:of|is))\s+([a-z]+(?:\s+[a-z]+)?)/i)
+  const managesMatch = queryLower.match(/(?:who\s+(?:does|do)|(?:direct\s+)?reports?\s+(?:of|to))\s+([a-z]+(?:\s+[a-z]+)?)\s+(?:manage|supervise|lead)/i)
 
   return employees
     .map(emp => {
@@ -284,7 +337,7 @@ export function findRelevantEmployees(
         emp.rocks || ""
       ].join(" ").toLowerCase()
 
-      // Score based on keyword matches
+      // Score based on keyword matches (including synonyms)
       keywords.forEach(keyword => {
         if (searchFields.includes(keyword)) {
           score += 1
@@ -300,20 +353,55 @@ export function findRelevantEmployees(
         score += 10
       }
 
+      // Check individual name parts
+      baseKeywords.forEach(keyword => {
+        if (emp.fullName.toLowerCase().includes(keyword)) {
+          score += 5
+        }
+      })
+
       // Department matches
       if (emp.department.toLowerCase().includes(queryLower)) {
         score += 5
       }
+      baseKeywords.forEach(keyword => {
+        if (emp.department.toLowerCase().includes(keyword)) {
+          score += 3
+        }
+      })
 
       // Job title matches
       if (emp.jobTitle.toLowerCase().includes(queryLower)) {
         score += 5
+      }
+      baseKeywords.forEach(keyword => {
+        if (emp.jobTitle.toLowerCase().includes(keyword)) {
+          score += 3
+        }
+      })
+
+      // Supervisor relationship queries
+      if (reportsToMatch) {
+        const supervisorName = reportsToMatch[1]
+        if (emp.supervisor && emp.supervisor.toLowerCase().includes(supervisorName)) {
+          score += 15 // High score for matching supervisor relationship
+        }
+      }
+
+      // Responsibilities/notes match for "who handles X" queries
+      if (queryLower.includes("who") && (queryLower.includes("handle") || queryLower.includes("responsible") || queryLower.includes("contact"))) {
+        if (emp.notes && baseKeywords.some(k => emp.notes!.toLowerCase().includes(k))) {
+          score += 8
+        }
+        if (emp.extraInfo && baseKeywords.some(k => emp.extraInfo!.toLowerCase().includes(k))) {
+          score += 8
+        }
       }
 
       return { employee: emp, score }
     })
     .filter(({ score }) => score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
+    .slice(0, 8) // Return more results for better context
     .map(({ employee }) => employee)
 }
