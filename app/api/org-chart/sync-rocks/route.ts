@@ -106,19 +106,42 @@ export async function POST(request: NextRequest) {
     for (const member of teamMembers) {
       if (!member.userId || member.status !== "active") continue
 
-      const memberEmail = member.email
+      let memberEmail = member.email
       const memberName = member.name
+
+      // If member email is missing, try to get it from the users table
+      if (!memberEmail && member.userId) {
+        const user = await db.users.findById(member.userId)
+        if (user?.email) {
+          memberEmail = user.email
+        }
+      }
 
       // Get their rocks
       const userRocks = rocksByUserId.get(member.userId) || []
 
       if (userRocks.length === 0) {
-        results.noRocks.push({ name: memberName, email: memberEmail })
+        results.noRocks.push({ name: memberName, email: memberEmail || "unknown" })
+        continue
+      }
+
+      if (!memberEmail) {
+        results.notFound.push({ name: memberName, email: "no email found" })
         continue
       }
 
       // Find matching org chart employee by email
-      const orgChartEmployee = await db.maEmployees.findByEmail(memberEmail)
+      let orgChartEmployee = await db.maEmployees.findByEmail(memberEmail)
+
+      // If not found by exact email, try matching by name as fallback
+      if (!orgChartEmployee) {
+        // Search all employees for a name match
+        const allEmployees = await db.maEmployees.findAll()
+        orgChartEmployee = allEmployees.find(emp =>
+          emp.fullName.toLowerCase() === memberName.toLowerCase() ||
+          emp.firstName.toLowerCase() === memberName.split(' ')[0]?.toLowerCase()
+        ) || null
+      }
 
       if (!orgChartEmployee) {
         results.notFound.push({ name: memberName, email: memberEmail })
@@ -172,18 +195,35 @@ export async function GET(request: NextRequest) {
     const activeMembers = teamMembers.filter(m => m.status === "active" && m.userId)
 
     // Get org chart employees
-    const orgChartEmployees = await db.maEmployees.findAll()
+    const allOrgChartEmployees = await db.maEmployees.findAll()
 
     // Check which members are mapped
     const mappingStatus = await Promise.all(
       activeMembers.map(async (member) => {
-        const orgChartEmployee = await db.maEmployees.findByEmail(member.email)
+        let email = member.email
+        // Fallback to user email if member email is missing
+        if (!email && member.userId) {
+          const user = await db.users.findById(member.userId)
+          if (user?.email) email = user.email
+        }
+
+        // Try to find by email first
+        let orgChartEmployee = email ? await db.maEmployees.findByEmail(email) : null
+
+        // Fallback to name match
+        if (!orgChartEmployee) {
+          orgChartEmployee = allOrgChartEmployees.find(emp =>
+            emp.fullName.toLowerCase() === member.name.toLowerCase() ||
+            emp.firstName.toLowerCase() === member.name.split(' ')[0]?.toLowerCase()
+          ) || null
+        }
+
         const rocks = member.userId ? await db.rocks.findByUserId(member.userId, orgId) : []
         const quarterRocks = rocks.filter(r => r.quarter === currentQuarter || !r.quarter)
 
         return {
           name: member.name,
-          email: member.email,
+          email: email || "unknown",
           isMapped: !!orgChartEmployee,
           orgChartName: orgChartEmployee?.fullName || null,
           workspaceRockCount: quarterRocks.length,
@@ -196,7 +236,7 @@ export async function GET(request: NextRequest) {
       success: true,
       quarter: currentQuarter,
       totalWorkspaceMembers: activeMembers.length,
-      totalOrgChartEmployees: orgChartEmployees.length,
+      totalOrgChartEmployees: allOrgChartEmployees.length,
       mappingStatus,
     })
   } catch (error) {
