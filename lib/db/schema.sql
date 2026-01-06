@@ -450,11 +450,11 @@ CREATE INDEX IF NOT EXISTS idx_org_chart_rock_progress_composite ON org_chart_ro
 
 -- Stores all Modern Amenities employees for the org chart
 -- Hierarchy is built from the supervisor field (name matching)
+-- Note: full_name is computed in queries, not stored as a generated column
 CREATE TABLE IF NOT EXISTS ma_employees (
   id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::varchar,
   first_name VARCHAR(255) NOT NULL,
   last_name VARCHAR(255) NOT NULL,
-  full_name VARCHAR(255) GENERATED ALWAYS AS (TRIM(first_name || ' ' || last_name)) STORED,
   supervisor VARCHAR(255), -- Full name of supervisor (NULL = CEO/top level)
   department VARCHAR(100),
   job_title VARCHAR(255),
@@ -468,5 +468,4 @@ CREATE TABLE IF NOT EXISTS ma_employees (
 
 CREATE INDEX IF NOT EXISTS idx_ma_employees_supervisor ON ma_employees(supervisor);
 CREATE INDEX IF NOT EXISTS idx_ma_employees_department ON ma_employees(department);
-CREATE INDEX IF NOT EXISTS idx_ma_employees_full_name ON ma_employees(full_name);
 CREATE INDEX IF NOT EXISTS idx_ma_employees_active ON ma_employees(is_active) WHERE is_active = TRUE;

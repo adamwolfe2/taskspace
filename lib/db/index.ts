@@ -1846,9 +1846,10 @@ export const db = {
       updatedAt: string
     }[]> {
       const { rows } = await sql`
-        SELECT * FROM ma_employees
+        SELECT *, TRIM(first_name || ' ' || COALESCE(last_name, '')) as full_name
+        FROM ma_employees
         WHERE is_active = TRUE
-        ORDER BY full_name ASC
+        ORDER BY first_name ASC, last_name ASC
       `
       return rows.map(row => ({
         id: row.id as string,
@@ -1881,7 +1882,10 @@ export const db = {
       createdAt: string
       updatedAt: string
     } | null> {
-      const { rows } = await sql`SELECT * FROM ma_employees WHERE id = ${id}`
+      const { rows } = await sql`
+        SELECT *, TRIM(first_name || ' ' || COALESCE(last_name, '')) as full_name
+        FROM ma_employees WHERE id = ${id}
+      `
       if (!rows[0]) return null
       const row = rows[0]
       return {
@@ -1914,9 +1918,10 @@ export const db = {
       isActive: boolean
     }[]> {
       const { rows } = await sql`
-        SELECT * FROM ma_employees
+        SELECT *, TRIM(first_name || ' ' || COALESCE(last_name, '')) as full_name
+        FROM ma_employees
         WHERE department = ${department} AND is_active = TRUE
-        ORDER BY full_name ASC
+        ORDER BY first_name ASC, last_name ASC
       `
       return rows.map(row => ({
         id: row.id as string,
@@ -1947,11 +1952,12 @@ export const db = {
         VALUES (${employee.firstName}, ${employee.lastName}, ${employee.supervisor || null},
                 ${employee.department || null}, ${employee.jobTitle || null},
                 ${employee.responsibilities || null}, ${employee.notes || null}, ${employee.email || null})
-        RETURNING id, full_name
+        RETURNING id, first_name, last_name
       `
+      const fullName = `${rows[0].first_name} ${rows[0].last_name || ''}`.trim()
       return {
         id: rows[0].id as string,
-        fullName: rows[0].full_name as string,
+        fullName,
       }
     },
     async createMany(employees: {
