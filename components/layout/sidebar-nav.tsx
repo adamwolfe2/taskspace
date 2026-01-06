@@ -27,10 +27,10 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     { id: "rocks", label: "Rock Progress", icon: Target },
     { id: "tasks", label: "Tasks", icon: CheckSquare },
     { id: "manager", label: "My Team", icon: UsersRound },
-    { id: "org-chart", label: "Org Chart", icon: Network },
   ]
 
   const adminItems: { id: PageType; label: string; icon: typeof Shield }[] = [
+    { id: "org-chart", label: "Org Chart", icon: Network },
     { id: "command-center", label: "AI Command Center", icon: Zap },
     { id: "scorecard", label: "Weekly Scorecard", icon: TableProperties },
     { id: "analytics", label: "Team Analytics", icon: BarChart3 },

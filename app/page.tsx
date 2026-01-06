@@ -208,7 +208,11 @@ function AppContent() {
       case "settings":
         return <SettingsPage />
       case "org-chart":
-        return <OrgChartPage />
+        return isAdmin ? (
+          <OrgChartPage />
+        ) : (
+          <DashboardPage {...dashboardProps} />
+        )
       default:
         return <DashboardPage {...dashboardProps} />
     }
