@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     resetLoginRateLimit(request)
 
     // Return response without password hash
-    const { passwordHash: _, ...safeUser } = user
+    const { passwordHash: _passwordHash, ...safeUser } = user
 
     const response = NextResponse.json<ApiResponse<AuthResponse>>({
       success: true,

@@ -6,9 +6,7 @@ import {
  ClipboardEdit,
  Plus,
  Target,
- Clock,
  Zap,
- ChevronRight,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 

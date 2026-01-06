@@ -8,7 +8,7 @@ import {
   isTokenExpired,
   validatePassword,
 } from "@/lib/auth/password"
-import type { User, OrganizationMember, Session, ApiResponse, AuthResponse } from "@/lib/types"
+import type { OrganizationMember, Session, ApiResponse, AuthResponse } from "@/lib/types"
 
 // POST /api/invitations/accept - Accept an invitation
 export async function POST(request: NextRequest) {

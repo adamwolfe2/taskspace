@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, X, Send, Trash2, Target } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask } from "@/lib/types"
 import type { TeamMemberMetric } from "@/lib/metrics"
-import { getTodayString, formatDate } from "@/lib/utils/date-utils"
+import { getTodayString } from "@/lib/utils/date-utils"
 import { useToast } from "@/hooks/use-toast"
 import { sendEODNotification } from "@/lib/email"
 

@@ -3,7 +3,7 @@ import { asanaClient, AsanaTask } from "@/lib/integrations/asana"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
-import type { AsanaUserMapping, AssignedTask, Rock } from "@/lib/types"
+import type { AsanaUserMapping, AssignedTask } from "@/lib/types"
 
 interface SyncResult {
   tasksCreatedInAsana: number

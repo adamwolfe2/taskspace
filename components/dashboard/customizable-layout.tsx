@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback } from "react"
 import GridLayout, { Layout } from "react-grid-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -19,15 +19,12 @@ import { cn } from "@/lib/utils"
 import {
  Settings2,
  Move,
- Maximize2,
- Minimize2,
  X,
  Plus,
  LayoutGrid,
  Target,
  CheckSquare,
  Calendar,
- Flame,
  Trophy,
  Sparkles,
  BarChart3,

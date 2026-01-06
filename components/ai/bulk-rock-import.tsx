@@ -24,9 +24,6 @@ import {
   CheckCircle2,
   XCircle,
   Trash2,
-  Edit2,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react"
 import type { TeamMember } from "@/lib/types"
 
