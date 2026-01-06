@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
+import { db } from "@/lib/db"
+import { sql } from "@vercel/postgres"
+import crypto from "crypto"
 
 /**
  * GET /api/asana/oauth/callback
  *
  * Handles the OAuth callback from Asana after user authorization.
  * Asana redirects here with an authorization code that can be exchanged for an access token.
+ *
+ * SECURITY: This route validates the state parameter to prevent CSRF attacks.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -26,6 +31,43 @@ export async function GET(request: NextRequest) {
     if (!code) {
       return NextResponse.redirect(
         new URL("/settings?asana_error=No authorization code received", request.url)
+      )
+    }
+
+    // CSRF Protection: Validate state parameter
+    if (!state) {
+      console.error("Asana OAuth: Missing state parameter - potential CSRF attack")
+      return NextResponse.redirect(
+        new URL("/settings?asana_error=Invalid OAuth request - missing state parameter", request.url)
+      )
+    }
+
+    // Verify state parameter exists in our database (stored when OAuth was initiated)
+    // State format: base64(JSON.stringify({ sessionId, timestamp, nonce }))
+    let stateData: { sessionId?: string; userId?: string; orgId?: string; timestamp?: number; nonce?: string }
+    try {
+      stateData = JSON.parse(Buffer.from(state, "base64").toString("utf-8"))
+    } catch {
+      console.error("Asana OAuth: Invalid state parameter format")
+      return NextResponse.redirect(
+        new URL("/settings?asana_error=Invalid OAuth state", request.url)
+      )
+    }
+
+    // Check state is not too old (max 10 minutes)
+    const maxAge = 10 * 60 * 1000 // 10 minutes
+    if (!stateData.timestamp || Date.now() - stateData.timestamp > maxAge) {
+      console.error("Asana OAuth: State parameter expired")
+      return NextResponse.redirect(
+        new URL("/settings?asana_error=OAuth session expired - please try again", request.url)
+      )
+    }
+
+    // Verify the user/org from state exists
+    if (!stateData.userId || !stateData.orgId) {
+      console.error("Asana OAuth: Missing user/org in state")
+      return NextResponse.redirect(
+        new URL("/settings?asana_error=Invalid OAuth state - missing user info", request.url)
       )
     }
 
@@ -74,14 +116,18 @@ export async function GET(request: NextRequest) {
 
     console.log("Asana OAuth successful for user:", tokenData.data?.email)
 
-    // For now, redirect to settings with success message
-    // In a full implementation, you would:
-    // 1. Store the access_token and refresh_token in the database
-    // 2. Associate with the current user/organization
-    // 3. Use the token for API calls
+    // Store the tokens in the database for the user from state
+    // Note: In production, encrypt tokens before storing
+    const expiresAt = new Date(Date.now() + (tokenData.expires_in || 3600) * 1000).toISOString()
 
-    // The state parameter can be used to pass the user's session/org ID
-    // to know which account to associate the token with
+    await sql`
+      UPDATE organization_members
+      SET
+        asana_pat = ${tokenData.access_token},
+        asana_refresh_token = ${tokenData.refresh_token || null},
+        asana_token_expires_at = ${expiresAt}
+      WHERE organization_id = ${stateData.orgId} AND user_id = ${stateData.userId}
+    `
 
     return NextResponse.redirect(
       new URL(`/settings?asana_success=true&asana_user=${encodeURIComponent(tokenData.data?.email || "")}`, request.url)
@@ -92,4 +138,18 @@ export async function GET(request: NextRequest) {
       new URL("/settings?asana_error=An unexpected error occurred", request.url)
     )
   }
+}
+
+/**
+ * Helper to generate OAuth state parameter
+ * Call this when initiating OAuth to create a secure state
+ */
+export function generateOAuthState(userId: string, orgId: string): string {
+  const stateData = {
+    userId,
+    orgId,
+    timestamp: Date.now(),
+    nonce: crypto.randomBytes(16).toString("hex"),
+  }
+  return Buffer.from(JSON.stringify(stateData)).toString("base64")
 }

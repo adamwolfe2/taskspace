@@ -60,6 +60,31 @@ export async function POST(request: NextRequest) {
     // Get all team members with their user info
     const teamMembers = await db.members.findByOrganizationId(orgId)
 
+    // Pre-fetch all users for members that might need email lookup (batch query)
+    const userIds = teamMembers
+      .filter(m => m.userId && !m.email)
+      .map(m => m.userId!)
+    const usersMap = new Map<string, { email: string }>()
+    if (userIds.length > 0) {
+      const users = await Promise.all(userIds.map(id => db.users.findById(id)))
+      users.forEach((user, idx) => {
+        if (user?.email) {
+          usersMap.set(userIds[idx], { email: user.email })
+        }
+      })
+    }
+
+    // Pre-fetch all org chart employees (single query instead of per-member)
+    const allOrgChartEmployees = await db.maEmployees.findAll()
+    const employeesByEmail = new Map(
+      allOrgChartEmployees
+        .filter(e => e.email)
+        .map(e => [e.email!.toLowerCase(), e])
+    )
+    const employeesByName = new Map(
+      allOrgChartEmployees.map(e => [e.fullName.toLowerCase(), e])
+    )
+
     // Get all rocks for this organization, filtering by current quarter
     const allRocks = await db.rocks.findByOrganizationId(orgId)
     const quarterRocks = allRocks.filter(rock =>
@@ -74,20 +99,26 @@ export async function POST(request: NextRequest) {
       rocksByUserId.set(rock.userId, existing)
     }
 
-    // Get milestones for all rocks
+    // Batch fetch all milestones for all rocks (fix N+1 query)
     const milestonesByRockId = new Map<string, RockMilestone[]>()
-    for (const rock of quarterRocks) {
+    if (quarterRocks.length > 0) {
       try {
-        const milestones = await db.rockMilestones.findByRockId(rock.id)
-        milestonesByRockId.set(rock.id, milestones.map(m => ({
-          id: m.id,
-          text: m.text,
-          completed: m.completed,
-          completedAt: m.completedAt || undefined,
-        })))
+        // Fetch all milestones in parallel batches
+        const rockIds = quarterRocks.map(r => r.id)
+        const allMilestones = await Promise.all(
+          rockIds.map(rockId => db.rockMilestones.findByRockId(rockId).catch(() => []))
+        )
+        rockIds.forEach((rockId, idx) => {
+          milestonesByRockId.set(rockId, allMilestones[idx].map(m => ({
+            id: m.id,
+            text: m.text,
+            completed: m.completed,
+            completedAt: m.completedAt || undefined,
+          })))
+        })
       } catch {
-        // No milestones table or rock has no milestones
-        milestonesByRockId.set(rock.id, [])
+        // No milestones table - initialize empty maps
+        quarterRocks.forEach(rock => milestonesByRockId.set(rock.id, []))
       }
     }
 
@@ -103,17 +134,19 @@ export async function POST(request: NextRequest) {
     }
 
     // For each team member, sync their rocks to the org chart
+    // Note: Uses pre-fetched data to avoid N+1 queries
     for (const member of teamMembers) {
       if (!member.userId || member.status !== "active") continue
 
+      // Use cached user data instead of individual DB queries
       let memberEmail = member.email
       const memberName = member.name
 
-      // If member email is missing, try to get it from the users table
+      // If member email is missing, use pre-fetched user data
       if (!memberEmail && member.userId) {
-        const user = await db.users.findById(member.userId)
-        if (user?.email) {
-          memberEmail = user.email
+        const cachedUser = usersMap.get(member.userId)
+        if (cachedUser?.email) {
+          memberEmail = cachedUser.email
         }
       }
 
@@ -130,17 +163,21 @@ export async function POST(request: NextRequest) {
         continue
       }
 
-      // Find matching org chart employee by email
-      let orgChartEmployee = await db.maEmployees.findByEmail(memberEmail)
+      // Find matching org chart employee using pre-fetched maps (no DB query)
+      let orgChartEmployee = employeesByEmail.get(memberEmail.toLowerCase())
 
       // If not found by exact email, try matching by name as fallback
       if (!orgChartEmployee) {
-        // Search all employees for a name match
-        const allEmployees = await db.maEmployees.findAll()
-        orgChartEmployee = allEmployees.find(emp =>
-          emp.fullName.toLowerCase() === memberName.toLowerCase() ||
-          emp.firstName.toLowerCase() === memberName.split(' ')[0]?.toLowerCase()
-        ) || null
+        orgChartEmployee = employeesByName.get(memberName.toLowerCase())
+        // Also try first name match
+        if (!orgChartEmployee) {
+          const firstName = memberName.split(' ')[0]?.toLowerCase()
+          if (firstName) {
+            orgChartEmployee = allOrgChartEmployees.find(emp =>
+              emp.firstName.toLowerCase() === firstName
+            )
+          }
+        }
       }
 
       if (!orgChartEmployee) {
@@ -194,43 +231,75 @@ export async function GET(request: NextRequest) {
     const teamMembers = await db.members.findByOrganizationId(orgId)
     const activeMembers = teamMembers.filter(m => m.status === "active" && m.userId)
 
-    // Get org chart employees
-    const allOrgChartEmployees = await db.maEmployees.findAll()
-
-    // Check which members are mapped
-    const mappingStatus = await Promise.all(
-      activeMembers.map(async (member) => {
-        let email = member.email
-        // Fallback to user email if member email is missing
-        if (!email && member.userId) {
-          const user = await db.users.findById(member.userId)
-          if (user?.email) email = user.email
-        }
-
-        // Try to find by email first
-        let orgChartEmployee = email ? await db.maEmployees.findByEmail(email) : null
-
-        // Fallback to name match
-        if (!orgChartEmployee) {
-          orgChartEmployee = allOrgChartEmployees.find(emp =>
-            emp.fullName.toLowerCase() === member.name.toLowerCase() ||
-            emp.firstName.toLowerCase() === member.name.split(' ')[0]?.toLowerCase()
-          ) || null
-        }
-
-        const rocks = member.userId ? await db.rocks.findByUserId(member.userId, orgId) : []
-        const quarterRocks = rocks.filter(r => r.quarter === currentQuarter || !r.quarter)
-
-        return {
-          name: member.name,
-          email: email || "unknown",
-          isMapped: !!orgChartEmployee,
-          orgChartName: orgChartEmployee?.fullName || null,
-          workspaceRockCount: quarterRocks.length,
-          orgChartHasRocks: !!orgChartEmployee?.rocks,
+    // Pre-fetch all users for email lookup (batch instead of N queries)
+    const userIdsNeedingEmail = activeMembers
+      .filter(m => !m.email && m.userId)
+      .map(m => m.userId!)
+    const usersMap = new Map<string, string>()
+    if (userIdsNeedingEmail.length > 0) {
+      const users = await Promise.all(userIdsNeedingEmail.map(id => db.users.findById(id)))
+      users.forEach((user, idx) => {
+        if (user?.email) {
+          usersMap.set(userIdsNeedingEmail[idx], user.email)
         }
       })
+    }
+
+    // Get org chart employees (single query)
+    const allOrgChartEmployees = await db.maEmployees.findAll()
+    const employeesByEmail = new Map(
+      allOrgChartEmployees.filter(e => e.email).map(e => [e.email!.toLowerCase(), e])
     )
+    const employeesByName = new Map(
+      allOrgChartEmployees.map(e => [e.fullName.toLowerCase(), e])
+    )
+
+    // Pre-fetch all rocks for the organization (single query instead of per-member)
+    const allRocks = await db.rocks.findByOrganizationId(orgId)
+    const rocksByUserId = new Map<string, typeof allRocks>()
+    for (const rock of allRocks) {
+      const existing = rocksByUserId.get(rock.userId) || []
+      existing.push(rock)
+      rocksByUserId.set(rock.userId, existing)
+    }
+
+    // Check which members are mapped (no more DB queries in loop)
+    const mappingStatus = activeMembers.map((member) => {
+      let email = member.email
+      // Fallback to user email if member email is missing (use pre-fetched data)
+      if (!email && member.userId) {
+        email = usersMap.get(member.userId) || undefined
+      }
+
+      // Try to find by email first (using pre-fetched maps)
+      let orgChartEmployee = email ? employeesByEmail.get(email.toLowerCase()) : undefined
+
+      // Fallback to name match
+      if (!orgChartEmployee) {
+        orgChartEmployee = employeesByName.get(member.name.toLowerCase())
+        if (!orgChartEmployee) {
+          const firstName = member.name.split(' ')[0]?.toLowerCase()
+          if (firstName) {
+            orgChartEmployee = allOrgChartEmployees.find(emp =>
+              emp.firstName.toLowerCase() === firstName
+            )
+          }
+        }
+      }
+
+      // Use pre-fetched rocks data
+      const rocks = member.userId ? (rocksByUserId.get(member.userId) || []) : []
+      const quarterRocks = rocks.filter(r => r.quarter === currentQuarter || !r.quarter)
+
+      return {
+        name: member.name,
+        email: email || "unknown",
+        isMapped: !!orgChartEmployee,
+        orgChartName: orgChartEmployee?.fullName || null,
+        workspaceRockCount: quarterRocks.length,
+        orgChartHasRocks: !!orgChartEmployee?.rocks,
+      }
+    })
 
     return NextResponse.json({
       success: true,

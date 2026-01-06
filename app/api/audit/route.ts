@@ -7,11 +7,10 @@
  * - Real-time audit event streaming
  */
 
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
-import { Errors, successResponse, paginatedResponse } from "@/lib/api/errors"
-import { validateQuery } from "@/lib/validation/middleware"
+import { Errors, paginatedResponse, successResponse } from "@/lib/api/errors"
 import { z } from "zod"
 
 // ============================================
@@ -47,55 +46,23 @@ export async function GET(request: NextRequest) {
       return Errors.insufficientPermissions("view audit logs").toResponse()
     }
 
-    const query = validateQuery(request, auditQuerySchema)
-    const { page, limit, action, actorId, resourceType, resourceId, severity, startDate, endDate, search } = query
+    // Parse query params with defaults
+    const searchParams = new URL(request.url).searchParams
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10))
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10)))
+    const action = searchParams.get("action")
+    const actorId = searchParams.get("actorId")
+    const resourceType = searchParams.get("resourceType")
+    const resourceId = searchParams.get("resourceId")
+    const severity = searchParams.get("severity")
+    const startDate = searchParams.get("startDate")
+    const endDate = searchParams.get("endDate")
+    const search = searchParams.get("search")
 
     const offset = (page - 1) * limit
 
-    // Build dynamic query
-    const conditions: string[] = [`organization_id = '${auth.organization.id}'`]
-
-    if (action) {
-      conditions.push(`action = '${action}'`)
-    }
-    if (actorId) {
-      conditions.push(`actor_id = '${actorId}'`)
-    }
-    if (resourceType) {
-      conditions.push(`resource_type = '${resourceType}'`)
-    }
-    if (resourceId) {
-      conditions.push(`resource_id = '${resourceId}'`)
-    }
-    if (severity) {
-      conditions.push(`severity = '${severity}'`)
-    }
-    if (startDate) {
-      conditions.push(`created_at >= '${startDate}'`)
-    }
-    if (endDate) {
-      conditions.push(`created_at < '${endDate}'::date + interval '1 day'`)
-    }
-    if (search) {
-      const sanitizedSearch = search.replace(/'/g, "''")
-      conditions.push(`(
-        action ILIKE '%${sanitizedSearch}%' OR
-        resource_type ILIKE '%${sanitizedSearch}%' OR
-        details::text ILIKE '%${sanitizedSearch}%'
-      )`)
-    }
-
-    const whereClause = conditions.join(" AND ")
-
-    // Get total count
-    const countResult = await db.sql`
-      SELECT COUNT(*) as total
-      FROM audit_logs
-      WHERE ${db.sql.raw(whereClause)}
-    `
-    const total = parseInt(countResult[0]?.total || "0", 10)
-
-    // Get paginated results
+    // Use parameterized queries to prevent SQL injection
+    // Build conditions array and values for dynamic WHERE clause
     const logs = await db.sql`
       SELECT
         id,
@@ -110,11 +77,43 @@ export async function GET(request: NextRequest) {
         severity,
         created_at
       FROM audit_logs
-      WHERE ${db.sql.raw(whereClause)}
+      WHERE organization_id = ${auth.organization.id}
+        AND (${action}::text IS NULL OR action = ${action})
+        AND (${actorId}::uuid IS NULL OR actor_id = ${actorId}::uuid)
+        AND (${resourceType}::text IS NULL OR resource_type = ${resourceType})
+        AND (${resourceId}::text IS NULL OR resource_id = ${resourceId})
+        AND (${severity}::text IS NULL OR severity = ${severity})
+        AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
+        AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
+        AND (${search}::text IS NULL OR (
+          action ILIKE '%' || ${search} || '%' OR
+          resource_type ILIKE '%' || ${search} || '%' OR
+          details::text ILIKE '%' || ${search} || '%'
+        ))
       ORDER BY created_at DESC
       LIMIT ${limit}
       OFFSET ${offset}
     `
+
+    // Get total count with same filters
+    const countResult = await db.sql`
+      SELECT COUNT(*) as total
+      FROM audit_logs
+      WHERE organization_id = ${auth.organization.id}
+        AND (${action}::text IS NULL OR action = ${action})
+        AND (${actorId}::uuid IS NULL OR actor_id = ${actorId}::uuid)
+        AND (${resourceType}::text IS NULL OR resource_type = ${resourceType})
+        AND (${resourceId}::text IS NULL OR resource_id = ${resourceId})
+        AND (${severity}::text IS NULL OR severity = ${severity})
+        AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
+        AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
+        AND (${search}::text IS NULL OR (
+          action ILIKE '%' || ${search} || '%' OR
+          resource_type ILIKE '%' || ${search} || '%' OR
+          details::text ILIKE '%' || ${search} || '%'
+        ))
+    `
+    const total = parseInt(countResult[0]?.total || "0", 10)
 
     // Format response
     const formattedLogs = logs.map((log: Record<string, unknown>) => ({
@@ -158,7 +157,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { startDate, endDate, groupBy = "action" } = body
+    const { startDate, endDate } = body
 
     // Get activity summary
     const activityByAction = await db.sql`

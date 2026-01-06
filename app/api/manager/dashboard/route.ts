@@ -16,7 +16,6 @@ import type {
 import {
   format,
   parseISO,
-  isToday,
   differenceInDays,
   startOfWeek,
   startOfMonth,
@@ -37,7 +36,6 @@ export async function GET(request: NextRequest) {
     const managerId = auth.user.id
     const orgId = auth.organization.id
     const today = new Date()
-    const todayStr = format(today, "yyyy-MM-dd")
 
     // Get all direct reports
     const directReportMembers = await db.members.findDirectReports(orgId, managerId)
@@ -457,7 +455,7 @@ function calculateRecentActivity(
   }
 }
 
-function calculateTeamSummary(directReports: DirectReport[], today: Date): TeamSummary {
+function calculateTeamSummary(directReports: DirectReport[], _today: Date): TeamSummary {
   const activeMembers = directReports.filter((r) => r.status === "active").length
 
   // Aggregate metrics

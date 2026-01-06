@@ -9,7 +9,7 @@
  * - Bulk due date change
  */
 
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { withTransaction } from "@/lib/db/transactions"
@@ -18,7 +18,7 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { Errors, successResponse } from "@/lib/api/errors"
 import { invalidateTaskCache } from "@/lib/cache"
 import { z } from "zod"
-import type { ApiResponse, AssignedTask } from "@/lib/types"
+import type { AssignedTask } from "@/lib/types"
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -191,8 +191,8 @@ export async function POST(request: NextRequest) {
 async function bulkComplete(
   taskIds: string[],
   taskMap: Map<string, AssignedTask>,
-  organizationId: string,
-  userId: string
+  _organizationId: string,
+  _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
   let processed = 0
   let skipped = 0
@@ -232,7 +232,7 @@ async function bulkComplete(
 async function bulkDelete(
   taskIds: string[],
   organizationId: string,
-  userId: string
+  _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
   let processed = 0
   const errors: string[] = []
@@ -259,7 +259,7 @@ async function bulkReassign(
   newAssigneeId: string,
   taskMap: Map<string, AssignedTask>,
   organizationId: string,
-  userId: string
+  _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
   let processed = 0
   let skipped = 0
@@ -302,8 +302,8 @@ async function bulkChangePriority(
   taskIds: string[],
   priority: "high" | "medium" | "normal",
   taskMap: Map<string, AssignedTask>,
-  organizationId: string,
-  userId: string
+  _organizationId: string,
+  _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
   let processed = 0
   let skipped = 0
@@ -338,8 +338,8 @@ async function bulkChangeDueDate(
   taskIds: string[],
   dueDate: string,
   taskMap: Map<string, AssignedTask>,
-  organizationId: string,
-  userId: string
+  _organizationId: string,
+  _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
   let processed = 0
   let skipped = 0
