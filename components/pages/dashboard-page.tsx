@@ -6,11 +6,13 @@ import { StatsCards } from "@/components/dashboard/stats-cards"
 import { MyRocksSection } from "@/components/dashboard/my-rocks-section"
 import { AssignedTasksSection } from "@/components/dashboard/assigned-tasks-section"
 import { EODSubmissionCard } from "@/components/dashboard/eod-submission-card"
+import { AIEODSubmission } from "@/components/dashboard/ai-eod-submission"
 import { WeeklyEODCalendar } from "@/components/dashboard/weekly-eod-calendar"
 import { QuickActionsBar } from "@/components/dashboard/quick-actions-bar"
 import { FocusOfTheDay } from "@/components/dashboard/focus-of-the-day"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { calculateUserStats } from "@/lib/utils/stats-calculator"
 import { triggerConfetti } from "@/lib/utils/confetti"
 
@@ -209,6 +211,27 @@ export function DashboardPage({
  {/* EOD Submission Card */}
  <div ref={eodCardRef}>
  <ErrorBoundary title="EOD submission unavailable">
+ {(currentUser.role === "admin" || currentUser.role === "owner") ? (
+ /* Admins get tabs to switch between AI and Manual EOD submission */
+ <Tabs defaultValue="ai" className="w-full">
+ <TabsList className="grid w-full grid-cols-2 mb-4">
+ <TabsTrigger value="ai" className="data-[state=active]:bg-purple-100">
+ ✨ AI Text Dump
+ </TabsTrigger>
+ <TabsTrigger value="manual">
+ Manual Entry
+ </TabsTrigger>
+ </TabsList>
+ <TabsContent value="ai">
+ <AIEODSubmission
+ rocks={currentQuarterRocks}
+ allRocks={rocks}
+ onSubmitEOD={handleSubmitEOD}
+ userId={currentUser.id}
+ currentUser={currentUser}
+ />
+ </TabsContent>
+ <TabsContent value="manual">
  <EODSubmissionCard
  rocks={currentQuarterRocks}
  allRocks={rocks}
@@ -219,6 +242,21 @@ export function DashboardPage({
  selectedDate={selectedEodDate}
  onDateReset={() => setSelectedEodDate(null)}
  />
+ </TabsContent>
+ </Tabs>
+ ) : (
+ /* Regular members get the standard EOD card */
+ <EODSubmissionCard
+ rocks={currentQuarterRocks}
+ allRocks={rocks}
+ onSubmitEOD={handleSubmitEOD}
+ userId={currentUser.id}
+ currentUser={currentUser}
+ assignedTasks={assignedTasks}
+ selectedDate={selectedEodDate}
+ onDateReset={() => setSelectedEodDate(null)}
+ />
+ )}
  </ErrorBoundary>
  </div>
  </div>

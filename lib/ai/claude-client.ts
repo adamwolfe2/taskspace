@@ -333,6 +333,72 @@ ${context.eodReports.slice(0, 10).map(r => `- ${r.date}: ${r.tasks?.length || 0}
 }
 
 /**
+ * Parse response type for EOD text dump
+ */
+export interface ParsedEODReport {
+  tasks: Array<{
+    text: string
+    rockId: string | null
+    rockTitle: string | null
+  }>
+  challenges: string
+  tomorrowPriorities: Array<{
+    text: string
+    rockId: string | null
+    rockTitle: string | null
+  }>
+  needsEscalation: boolean
+  escalationNote: string | null
+  metricValue: number | null
+  summary: string
+  warnings: string[]
+}
+
+/**
+ * Parse an EOD text dump into a structured report
+ * Used by admins to quickly generate EOD reports from unstructured text
+ */
+export async function parseEODTextDump(
+  textDump: string,
+  rocks: Rock[],
+  currentQuarter: string
+): Promise<ParsedEODReport> {
+  // Filter to current quarter rocks for better matching
+  const quarterRocks = rocks.filter(r => r.quarter === currentQuarter)
+
+  const rocksContext = quarterRocks.length > 0
+    ? quarterRocks.map(r => `- ID: ${r.id} | Title: "${r.title}" | Description: ${r.description || "N/A"}`).join("\n")
+    : "No rocks for this quarter"
+
+  const userMessage = `
+MY ROCKS FOR ${currentQuarter}:
+${rocksContext}
+
+MY DAILY TEXT DUMP:
+${textDump}
+
+Parse this into a structured EOD report. Match tasks to my rocks where possible. Return JSON only.`
+
+  const response = await callClaude(PROMPTS.eodTextParser, userMessage, {
+    temperature: 0.3, // Low temperature for consistent parsing
+  })
+
+  const parsed = parseClaudeJSON<ParsedEODReport>(response)
+
+  // Validate and clean up the response
+  return {
+    tasks: parsed.tasks || [],
+    challenges: parsed.challenges || "No challenges mentioned",
+    tomorrowPriorities: parsed.tomorrowPriorities || [],
+    needsEscalation: parsed.needsEscalation || false,
+    escalationNote: parsed.escalationNote || null,
+    metricValue: typeof parsed.metricValue === "number" ? parsed.metricValue : null,
+    summary: parsed.summary || "Daily tasks completed",
+    warnings: parsed.warnings || [],
+  }
+}
+
+/**
  * Check if Claude API is configured
  */
 export function isClaudeConfigured(): boolean {
