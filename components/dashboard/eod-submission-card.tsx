@@ -20,7 +20,7 @@ function formatDisplayDate(dateStr: string): string {
 }
 
 interface EODSubmissionCardProps {
-  rocks: Rock[]
+  rocks: Rock[] // Current quarter rocks only
   allRocks: Rock[]
   onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt" | "organizationId">) => void | Promise<void>
   userId: string
@@ -28,6 +28,15 @@ interface EODSubmissionCardProps {
   assignedTasks: AssignedTask[]
   selectedDate?: string | null
   onDateReset?: () => void
+}
+
+// Get current quarter string for display
+function getCurrentQuarterDisplay(): string {
+  const now = new Date()
+  const month = now.getMonth()
+  const year = now.getFullYear()
+  const quarter = Math.floor(month / 3) + 1
+  return `Q${quarter} ${year}`
 }
 
 export function EODSubmissionCard({
@@ -308,11 +317,17 @@ export function EODSubmissionCard({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">General / No Rock</SelectItem>
-                  {rocks.map((rock) => (
-                    <SelectItem key={rock.id} value={rock.id}>
-                      {rock.title}
-                    </SelectItem>
-                  ))}
+                  {rocks.length > 0 ? (
+                    rocks.map((rock) => (
+                      <SelectItem key={rock.id} value={rock.id}>
+                        {rock.title}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-2 py-1.5 text-xs text-slate-500">
+                      No rocks for {getCurrentQuarterDisplay()}
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -419,11 +434,17 @@ export function EODSubmissionCard({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">General / No Rock</SelectItem>
-                  {rocks.map((rock) => (
-                    <SelectItem key={rock.id} value={rock.id}>
-                      {rock.title}
-                    </SelectItem>
-                  ))}
+                  {rocks.length > 0 ? (
+                    rocks.map((rock) => (
+                      <SelectItem key={rock.id} value={rock.id}>
+                        {rock.title}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-2 py-1.5 text-xs text-slate-500">
+                      No rocks for {getCurrentQuarterDisplay()}
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
