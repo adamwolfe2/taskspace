@@ -24,6 +24,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
   const [selectedUserId, setSelectedUserId] = useState<string>("")
   const [editingRock, setEditingRock] = useState<Rock | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [quarterFilter, setQuarterFilter] = useState<string>("all")
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -39,6 +40,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
     setSelectedUserId(userId)
     setShowForm(false)
     setEditingRock(null)
+    setQuarterFilter("all") // Reset filter when switching users
   }
 
   const handleEditRock = (rock: Rock) => {
@@ -160,7 +162,22 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
   }
 
   const selectedUser = teamMembers.find((m) => m.id === selectedUserId)
-  const userRocks = rocks.filter((r) => r.userId === selectedUserId)
+  const allUserRocks = rocks.filter((r) => r.userId === selectedUserId)
+
+  // Extract unique quarters from user's rocks for the filter dropdown
+  const availableQuarters = [...new Set(allUserRocks.map((r) => r.quarter).filter(Boolean))]
+    .sort((a, b) => {
+      // Sort by year descending, then quarter descending (Q4 > Q1)
+      const [qA, yA] = (a || "").split(" ")
+      const [qB, yB] = (b || "").split(" ")
+      if (yA !== yB) return parseInt(yB || "0") - parseInt(yA || "0")
+      return (qB || "").localeCompare(qA || "")
+    })
+
+  // Filter rocks by selected quarter
+  const userRocks = quarterFilter === "all"
+    ? allUserRocks
+    : allUserRocks.filter((r) => r.quarter === quarterFilter)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -192,9 +209,26 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
           {selectedUser && !showForm && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">
-                  {selectedUser.name}'s Rocks ({userRocks.length})
-                </h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="font-semibold">
+                    {selectedUser.name}'s Rocks ({userRocks.length}{quarterFilter !== "all" ? ` of ${allUserRocks.length}` : ""})
+                  </h3>
+                  {availableQuarters.length > 0 && (
+                    <Select value={quarterFilter} onValueChange={setQuarterFilter}>
+                      <SelectTrigger className="w-[140px] h-8">
+                        <SelectValue placeholder="Filter quarter" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Quarters</SelectItem>
+                        {availableQuarters.map((quarter) => (
+                          <SelectItem key={quarter} value={quarter || "unknown"}>
+                            {quarter}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
                 <Button onClick={handleAddNew} size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Rock
@@ -204,7 +238,9 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
               {userRocks.length === 0 ? (
                 <Card>
                   <CardContent className="py-8 text-center text-muted-foreground">
-                    No rocks assigned yet. Click "Add Rock" to create one.
+                    {quarterFilter !== "all" && allUserRocks.length > 0
+                      ? `No rocks found for ${quarterFilter}. Try selecting a different quarter.`
+                      : "No rocks assigned yet. Click \"Add Rock\" to create one."}
                   </CardContent>
                 </Card>
               ) : (
