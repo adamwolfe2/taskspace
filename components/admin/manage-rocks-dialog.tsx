@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Pencil, Trash2, Plus, X } from "lucide-react"
+import { Pencil, Trash2, Plus, X, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -25,6 +25,8 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
   const [editingRock, setEditingRock] = useState<Rock | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [quarterFilter, setQuarterFilter] = useState<string>("all")
+  const [isLoading, setIsLoading] = useState(false)
+  const [deletingRockId, setDeletingRockId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -79,15 +81,37 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
     setShowForm(true)
   }
 
-  const handleDeleteRock = (rockId: string) => {
-    setRocks(rocks.filter((r) => r.id !== rockId))
-    toast({
-      title: "Rock Deleted",
-      description: "The rock has been removed",
-    })
+  const handleDeleteRock = async (rockId: string) => {
+    setDeletingRockId(rockId)
+    try {
+      const response = await fetch(`/api/rocks?id=${rockId}`, {
+        method: "DELETE",
+      })
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to delete rock")
+      }
+
+      // Update local state after successful API call
+      setRocks(rocks.filter((r) => r.id !== rockId))
+      toast({
+        title: "Rock Deleted",
+        description: "The rock has been permanently removed",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete rock",
+        variant: "destructive",
+      })
+    } finally {
+      setDeletingRockId(null)
+    }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.title || !formData.description) {
       toast({
         title: "Missing Fields",
@@ -97,48 +121,85 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
       return
     }
 
+    setIsLoading(true)
     const doneWhenFiltered = formData.doneWhen.filter((item) => item.trim() !== "")
 
-    if (editingRock) {
-      setRocks(
-        rocks.map((r) =>
-          r.id === editingRock.id
-            ? {
-                ...r,
-                ...formData,
-                doneWhen: doneWhenFiltered,
-                quarter: formData.quarter,
-              }
-            : r,
-        ),
-      )
-      toast({
-        title: "Rock Updated",
-        description: "The rock has been updated successfully",
-      })
-    } else {
-      const now = new Date().toISOString()
-      const newRock: Rock = {
-        id: `rock-${Date.now()}`,
-        organizationId: "", // Will be set by API
-        userId: selectedUserId,
-        ...formData,
-        doneWhen: doneWhenFiltered,
-        quarter: formData.quarter,
-        progress: 0,
-        status: "on-track",
-        createdAt: now,
-        updatedAt: now,
-      }
-      setRocks([...rocks, newRock])
-      toast({
-        title: "Rock Added",
-        description: "A new rock has been added",
-      })
-    }
+    try {
+      if (editingRock) {
+        // Update existing rock via API
+        const response = await fetch("/api/rocks", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingRock.id,
+            title: formData.title,
+            description: formData.description,
+            bucket: formData.bucket,
+            outcome: formData.outcome,
+            doneWhen: doneWhenFiltered,
+            dueDate: formData.dueDate,
+            quarter: formData.quarter,
+          }),
+        })
 
-    setShowForm(false)
-    setEditingRock(null)
+        const data = await response.json()
+
+        if (!data.success) {
+          throw new Error(data.error || "Failed to update rock")
+        }
+
+        // Update local state with response data
+        setRocks(
+          rocks.map((r) =>
+            r.id === editingRock.id ? { ...r, ...data.data } : r
+          )
+        )
+        toast({
+          title: "Rock Updated",
+          description: "The rock has been saved successfully",
+        })
+      } else {
+        // Create new rock via API
+        const response = await fetch("/api/rocks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description,
+            bucket: formData.bucket,
+            outcome: formData.outcome,
+            doneWhen: doneWhenFiltered,
+            dueDate: formData.dueDate,
+            quarter: formData.quarter,
+            userId: selectedUserId,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!data.success) {
+          throw new Error(data.error || "Failed to create rock")
+        }
+
+        // Add the new rock from API response to local state
+        setRocks([...rocks, data.data])
+        toast({
+          title: "Rock Created",
+          description: "A new rock has been saved successfully",
+        })
+      }
+
+      setShowForm(false)
+      setEditingRock(null)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save rock",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const addDoneWhenField = () => {
@@ -261,16 +322,26 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleEditRock(rock)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditRock(rock)}
+                              disabled={deletingRockId === rock.id}
+                            >
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteRock(rock.id)}
+                              disabled={deletingRockId !== null}
                               className="text-destructive hover:text-destructive"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              {deletingRockId === rock.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
                             </Button>
                           </div>
                         </div>
@@ -422,11 +493,19 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
                   </div>
 
                   <div className="flex gap-2 pt-4">
-                    <Button onClick={handleSubmit} className="flex-1">
-                      {editingRock ? "Update Rock" : "Add Rock"}
+                    <Button onClick={handleSubmit} className="flex-1" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        editingRock ? "Update Rock" : "Add Rock"
+                      )}
                     </Button>
                     <Button
                       variant="outline"
+                      disabled={isLoading}
                       onClick={() => {
                         setShowForm(false)
                         setEditingRock(null)
