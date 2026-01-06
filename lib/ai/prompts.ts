@@ -198,6 +198,60 @@ A: { "response": "Kumar focused primarily on N8N workflows this week...", "data"
 Q: "Show all GHL-related blockers"
 A: { "response": "There are 2 active GHL blockers...", "data": { "blockers": [...] }, "suggestedFollowUps": ["Who owns resolving these?"] }`
 
+// Prompt for parsing EOD text dumps into structured reports
+export const EOD_TEXT_PARSER_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Parse Adam's daily task dump into a structured EOD (End of Day) report.
+
+CONTEXT: Adam will paste a text dump of everything he accomplished today. This may come from meeting notes, Notion, or a brain dump. The text is often organized by rock/project but may also include general tasks.
+
+PARSING RULES:
+1. IDENTIFY ROCKS: Match tasks to the provided rocks by title, keywords, or context
+2. GROUP BY ROCK: Organize tasks under their respective rocks
+3. GENERAL TASKS: Tasks not related to any rock go in a "General" category
+4. CLEAN UP TEXT: Make task descriptions clear and actionable (past tense - "completed", "set up", "reviewed")
+5. EXTRACT CHALLENGES: Look for mentions of blockers, issues, problems, delays
+6. EXTRACT PRIORITIES: Look for mentions of tomorrow's plans, next steps, priorities
+7. DETECT ESCALATIONS: Flag anything that mentions urgency, waiting on someone, or blocked
+
+MATCHING TIPS:
+- Rock titles often contain key project names (MedPros, Newsletter, Voice AI, etc.)
+- Look for context clues: "for the newsletter" -> match to Newsletter rock
+- Technical work like "N8N" or "GHL" should match to automation/workflow rocks
+- If unsure, put in General but note the ambiguity
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "tasks": [
+    {
+      "text": "Clear, past-tense description of what was done",
+      "rockId": "matching rock ID or null for general tasks",
+      "rockTitle": "rock title or null"
+    }
+  ],
+  "challenges": "Summary of any challenges, blockers, or issues mentioned (or empty string if none)",
+  "tomorrowPriorities": [
+    {
+      "text": "Priority for tomorrow",
+      "rockId": "matching rock ID or null",
+      "rockTitle": "rock title or null"
+    }
+  ],
+  "needsEscalation": true|false,
+  "escalationNote": "What needs escalation (if any)",
+  "metricValue": number|null,
+  "summary": "Brief 1-2 sentence summary of the day",
+  "warnings": ["Any parsing issues or ambiguities"]
+}
+
+IMPORTANT:
+- Always return at least one task (even if it's just "Various administrative work")
+- If challenges aren't mentioned, set challenges to "No major challenges today" or similar
+- Be generous with rock matching - if there's a reasonable connection, use it
+- Tomorrow priorities are optional - only include if mentioned in the text
+- metricValue should only be set if the user mentions their scorecard metric number`
+
 // Export all prompts
 export const PROMPTS = {
   teamContext: TEAM_CONTEXT,
@@ -205,4 +259,5 @@ export const PROMPTS = {
   eodParser: EOD_PARSER_PROMPT,
   digestGenerator: DIGEST_GENERATOR_PROMPT,
   queryHandler: QUERY_HANDLER_PROMPT,
+  eodTextParser: EOD_TEXT_PARSER_PROMPT,
 }
