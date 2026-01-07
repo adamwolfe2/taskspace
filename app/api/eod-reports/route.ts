@@ -7,6 +7,7 @@ import { sendEscalationNotification, sendAIAlertEmail, isEmailConfigured } from 
 import { sendSlackMessage, buildFullEODReportMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import { asanaClient } from "@/lib/integrations/asana"
 import { getActiveMetricForUser, upsertWeeklyMetricEntry } from "@/lib/metrics"
+import { getTodayInTimezone, isValidEODDate, formatDateForDisplay } from "@/lib/utils/date-utils"
 import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
 
 // GET /api/eod-reports - Get EOD reports
@@ -106,7 +107,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const reportDate = date || new Date().toISOString().split("T")[0]
+    // Get the organization's timezone (default to PST)
+    const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"
+    const todayInOrgTz = getTodayInTimezone(orgTimezone)
+
+    // Use provided date or default to today in the org's timezone (NOT UTC!)
+    const reportDate = date || todayInOrgTz
+
+    // Validate the date is reasonable (today or yesterday in org timezone)
+    const dateValidation = isValidEODDate(reportDate, orgTimezone)
+    if (!dateValidation.valid) {
+      return NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: dateValidation.reason,
+          data: null,
+          // Include helpful info for debugging
+          meta: {
+            providedDate: date,
+            todayInOrgTimezone: todayInOrgTz,
+            orgTimezone,
+            suggestedDate: dateValidation.suggestedDate,
+          }
+        } as any,
+        { status: 400 }
+      )
+    }
 
     // Check if report already exists for this date
     const existingReport = await db.eodReports.findByUserAndDate(
@@ -117,7 +143,10 @@ export async function POST(request: NextRequest) {
 
     if (existingReport) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "You have already submitted an EOD report for this date" },
+        {
+          success: false,
+          error: `You have already submitted an EOD report for ${formatDateForDisplay(reportDate)}. You can edit your existing report instead.`,
+        },
         { status: 409 }
       )
     }

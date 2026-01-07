@@ -9,12 +9,20 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Send, Loader2, X, Plus, AlertTriangle, Check, Target, ChevronDown, ChevronUp } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Sparkles, Send, Loader2, X, Plus, AlertTriangle, Check, Target, ChevronDown, ChevronUp, Calendar, Clock } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember } from "@/lib/types"
 import type { TeamMemberMetric } from "@/lib/metrics"
-import { getTodayString } from "@/lib/utils/date-utils"
 import { useToast } from "@/hooks/use-toast"
 import { sendEODNotification } from "@/lib/email"
+
+interface OrgDateInfo {
+  date: string
+  displayDate: string
+  time: string
+  timezone: string
+  timezoneDisplay: string
+}
 
 // Get current quarter string
 function getCurrentQuarter(): string {
@@ -71,9 +79,31 @@ export function AIEODSubmission({
   const [editedEscalationNote, setEditedEscalationNote] = useState("")
   const [metricValueToday, setMetricValueToday] = useState("")
   const [activeMetric, setActiveMetric] = useState<TeamMemberMetric | null>(null)
+  const [orgDateInfo, setOrgDateInfo] = useState<OrgDateInfo | null>(null)
 
   const { toast } = useToast()
   const currentQuarter = getCurrentQuarter()
+
+  // Fetch organization's current date (in org timezone)
+  useEffect(() => {
+    async function fetchOrgDate() {
+      try {
+        const response = await fetch("/api/organizations/current-date")
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data) {
+            setOrgDateInfo(data.data)
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch organization date:", err)
+      }
+    }
+    fetchOrgDate()
+    // Refresh every minute to keep time current
+    const interval = setInterval(fetchOrgDate, 60000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Fetch user's active metric
   useEffect(() => {
@@ -184,9 +214,11 @@ export function AIEODSubmission({
       ? parsedMetricValue
       : null
 
-    const report: Omit<EODReport, "id" | "createdAt" | "organizationId"> = {
+    // Note: We don't set the date here - the API will determine the correct date
+    // based on the organization's timezone to ensure all team members submit for
+    // the same day regardless of their local timezone
+    const report: Omit<EODReport, "id" | "createdAt" | "organizationId" | "date"> & { date?: string } = {
       userId,
-      date: getTodayString(),
       submittedAt: new Date().toISOString(),
       tasks: editedTasks.filter(t => t.text.trim() !== ""),
       challenges: editedChallenges.trim() || "No challenges today",
@@ -324,6 +356,25 @@ export function AIEODSubmission({
         {!showPreview ? (
           /* Text Input Phase */
           <>
+            {/* Date Banner - Shows what date users are submitting for */}
+            {orgDateInfo && (
+              <Alert className="bg-blue-50 border-blue-200">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-medium">Submitting for: </span>
+                      <span className="font-semibold">{orgDateInfo.displayDate}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-blue-600">
+                      <Clock className="h-3 w-3" />
+                      <span>{orgDateInfo.time} {orgDateInfo.timezoneDisplay}</span>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="textDump" className="text-sm font-semibold text-slate-700">
                 Paste Your Daily Tasks
@@ -370,6 +421,25 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
         ) : (
           /* Preview & Edit Phase */
           <>
+            {/* Date Banner - Shows what date users are submitting for */}
+            {orgDateInfo && (
+              <Alert className="bg-blue-50 border-blue-200">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-medium">Submitting for: </span>
+                      <span className="font-semibold">{orgDateInfo.displayDate}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-blue-600">
+                      <Clock className="h-3 w-3" />
+                      <span>{orgDateInfo.time} {orgDateInfo.timezoneDisplay}</span>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Summary & Warnings */}
             {parsedData && (
               <div className="space-y-3">
