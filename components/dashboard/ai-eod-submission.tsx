@@ -14,6 +14,7 @@ import { Sparkles, Send, Loader2, X, Plus, AlertTriangle, Check, Target, Calenda
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember } from "@/lib/types"
 import type { TeamMemberMetric } from "@/lib/metrics"
 import { useToast } from "@/hooks/use-toast"
+import { ToastAction } from "@/components/ui/toast"
 import { sendEODNotification } from "@/lib/email"
 
 interface OrgDateInfo {
@@ -253,11 +254,31 @@ export function AIEODSubmission({
         description: "Your AI-generated EOD report has been recorded",
       })
     } catch (err: any) {
-      toast({
-        title: "Submission Failed",
-        description: err.message || "Failed to submit EOD report",
-        variant: "destructive",
-      })
+      // Check if this is a duplicate submission (409 conflict)
+      if (err.status === 409 && err.data) {
+        const existingReport = err.data
+        toast({
+          title: "Report Already Exists",
+          description: "You already submitted an EOD report for today. Click to view and edit it.",
+          variant: "default",
+          action: (
+            <ToastAction
+              altText="View existing report"
+              onClick={() => {
+                window.location.href = `/?page=history&reportId=${existingReport.id}`
+              }}
+            >
+              View Report
+            </ToastAction>
+          ),
+        })
+      } else {
+        toast({
+          title: "Submission Failed",
+          description: err.message || "Failed to submit EOD report",
+          variant: "destructive",
+        })
+      }
     } finally {
       setIsSubmitting(false)
     }

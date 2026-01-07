@@ -4,10 +4,13 @@ const API_BASE = "/api"
 
 class ApiError extends Error {
   status: number
-  constructor(message: string, status: number) {
+  data?: unknown  // Include any data from the error response (e.g., existing report for 409)
+
+  constructor(message: string, status: number, data?: unknown) {
     super(message)
     this.name = "ApiError"
     this.status = status
+    this.data = data
   }
 }
 
@@ -15,7 +18,8 @@ async function handleResponse<T>(response: Response): Promise<T> {
   const data: ApiResponse<T> = await response.json()
 
   if (!response.ok || !data.success) {
-    throw new ApiError(data.error || "An error occurred", response.status)
+    // Include any data in the error (useful for 409 conflicts that return existing record)
+    throw new ApiError(data.error || "An error occurred", response.status, data.data)
   }
 
   return data.data as T

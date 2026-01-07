@@ -12,6 +12,7 @@ import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask } 
 import type { TeamMemberMetric } from "@/lib/metrics"
 import { getTodayString } from "@/lib/utils/date-utils"
 import { useToast } from "@/hooks/use-toast"
+import { ToastAction } from "@/components/ui/toast"
 import { sendEODNotification } from "@/lib/email"
 
 function formatDisplayDate(dateStr: string): string {
@@ -238,11 +239,32 @@ export function EODSubmissionCard({
           : "Your end of day report has been recorded",
       })
     } catch (err: any) {
-      toast({
-        title: "Submission Failed",
-        description: err.message || "Failed to submit EOD report",
-        variant: "destructive",
-      })
+      // Check if this is a duplicate submission (409 conflict)
+      if (err.status === 409 && err.data) {
+        const existingReport = err.data
+        toast({
+          title: "Report Already Exists",
+          description: `You already submitted an EOD report for ${formatDisplayDate(reportDate)}. Click to view and edit it.`,
+          variant: "default",
+          action: (
+            <ToastAction
+              altText="View existing report"
+              onClick={() => {
+                // Navigate to history page with the report ID
+                window.location.href = `/?page=history&reportId=${existingReport.id}`
+              }}
+            >
+              View Report
+            </ToastAction>
+          ),
+        })
+      } else {
+        toast({
+          title: "Submission Failed",
+          description: err.message || "Failed to submit EOD report",
+          variant: "destructive",
+        })
+      }
     }
   }
 

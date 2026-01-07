@@ -15,6 +15,7 @@ import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { calculateUserStats } from "@/lib/utils/stats-calculator"
 import { triggerConfetti } from "@/lib/utils/confetti"
+import { getTodayString } from "@/lib/utils/date-utils"
 
 // Get current quarter string (e.g., "Q1 2026")
 function getCurrentQuarter(): string {
@@ -61,8 +62,8 @@ export function DashboardPage({
  const userTasks = assignedTasks.filter((t) => t.assigneeId === currentUser.id)
  const stats = calculateUserStats(currentUser.id, rocks, assignedTasks, eodReports)
 
- // Check if EOD submitted today
- const today = new Date().toISOString().split("T")[0]
+ // Check if EOD submitted today (using local timezone to match API behavior)
+ const today = getTodayString()
  const hasSubmittedEODToday = eodReports.some(
  (r) => r.userId === currentUser.id && r.date === today
  )
