@@ -292,8 +292,7 @@ export function AssignedTasksSection({
                       >
                         <Checkbox
                           checked={false}
-                          onCheckedChange={(e) => {
-                            e.stopPropagation?.()
+                          onCheckedChange={() => {
                             onToggleTask(task.id)
                           }}
                           onClick={(e) => e.stopPropagation()}

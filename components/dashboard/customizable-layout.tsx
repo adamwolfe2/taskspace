@@ -46,9 +46,8 @@ interface DashboardWidget {
  maxH?: number
 }
 
-interface LayoutItem extends Layout {
- i: string
-}
+// Use Layout directly from react-grid-layout since it already has all needed properties
+type LayoutItem = Layout
 
 interface CustomizableLayoutProps {
  widgets: DashboardWidget[]
@@ -411,7 +410,7 @@ export function useDashboardLayout(
  }
  }, [widgets, layout])
 
- const handleLayoutChange = useCallback((newLayout: LayoutItem[]) => {
+ const handleLayoutChange = useCallback((newLayout: Layout[]) => {
  setLayout(newLayout)
  }, [])
 

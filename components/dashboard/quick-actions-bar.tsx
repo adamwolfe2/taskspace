@@ -7,6 +7,7 @@ import {
  Plus,
  Target,
  Zap,
+ Clock,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
