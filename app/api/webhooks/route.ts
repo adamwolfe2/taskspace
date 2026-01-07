@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
+import { sql } from "@vercel/postgres"
 import { Errors, successResponse, paginatedResponse } from "@/lib/api/errors"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { logIntegrationEvent, logSecurityEvent } from "@/lib/audit/logger"
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
       return Errors.insufficientPermissions("manage webhooks").toResponse()
     }
 
-    const webhooks = await db.sql`
+    const { rows: webhooks } = await sql`
       SELECT
         id,
         name,
@@ -96,18 +97,22 @@ export async function GET(request: NextRequest) {
     // Get recent delivery stats for each webhook
     const webhookIds = webhooks.map((w: Record<string, unknown>) => w.id)
 
-    const deliveryStats = webhookIds.length > 0 ? await db.sql`
-      SELECT
-        webhook_id,
-        COUNT(*) as total_deliveries,
-        COUNT(*) FILTER (WHERE status = 'success') as successful,
-        COUNT(*) FILTER (WHERE status = 'failed') as failed,
-        COUNT(*) FILTER (WHERE status = 'pending') as pending
-      FROM webhook_deliveries
-      WHERE webhook_id = ANY(${webhookIds})
-        AND created_at > NOW() - INTERVAL '7 days'
-      GROUP BY webhook_id
-    ` : []
+    let deliveryStats: Record<string, unknown>[] = []
+    if (webhookIds.length > 0) {
+      const { rows } = await sql`
+        SELECT
+          webhook_id,
+          COUNT(*) as total_deliveries,
+          COUNT(*) FILTER (WHERE status = 'success') as successful,
+          COUNT(*) FILTER (WHERE status = 'failed') as failed,
+          COUNT(*) FILTER (WHERE status = 'pending') as pending
+        FROM webhook_deliveries
+        WHERE webhook_id = ANY(${webhookIds})
+          AND created_at > NOW() - INTERVAL '7 days'
+        GROUP BY webhook_id
+      `
+      deliveryStats = rows
+    }
 
     const statsMap = new Map(
       deliveryStats.map((s: Record<string, unknown>) => [s.webhook_id, s])
@@ -158,20 +163,20 @@ export async function POST(request: NextRequest) {
     const body = await validateBody(request, createWebhookSchema)
 
     // Check webhook limit (max 10 per org)
-    const existingCount = await db.sql`
+    const { rows: existingCount } = await sql`
       SELECT COUNT(*) as count
       FROM webhook_configs
       WHERE organization_id = ${auth.organization.id}
     `
 
-    if (parseInt(existingCount[0]?.count || "0", 10) >= 10) {
+    if (parseInt(String(existingCount[0]?.count || "0"), 10) >= 10) {
       return Errors.validationError("Maximum webhook limit (10) reached").toResponse()
     }
 
     const secret = body.secret || generateWebhookSecret()
     const id = crypto.randomUUID()
 
-    await db.sql`
+    await sql`
       INSERT INTO webhook_configs (
         id,
         organization_id,
@@ -203,8 +208,7 @@ export async function POST(request: NextRequest) {
       "integration.webhook_created",
       auth.organization.id,
       auth.user.id,
-      id,
-      { name: body.name, url: body.url, events: body.events }
+      { webhookId: id, name: body.name, url: body.url, events: body.events }
     )
 
     return successResponse({
@@ -253,7 +257,7 @@ export async function PATCH(request: NextRequest) {
     const body = await validateBody(request, updateWebhookSchema)
 
     // Verify webhook belongs to org
-    const existing = await db.sql`
+    const { rows: existing } = await sql`
       SELECT id, secret FROM webhook_configs
       WHERE id = ${webhookId} AND organization_id = ${auth.organization.id}
     `
@@ -263,13 +267,13 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Use parameterized update to prevent SQL injection
-    let newSecret = existing[0].secret
+    let newSecret = existing[0].secret as string
     if (body.regenerateSecret) {
       newSecret = generateWebhookSecret()
     }
 
     // Build update with safe parameterized query
-    await db.sql`
+    await sql`
       UPDATE webhook_configs
       SET
         updated_at = NOW(),
@@ -287,8 +291,7 @@ export async function PATCH(request: NextRequest) {
       "integration.webhook_updated",
       auth.organization.id,
       auth.user.id,
-      webhookId,
-      { updates: Object.keys(body) }
+      { webhookId, updates: Object.keys(body) }
     )
 
     return successResponse({
@@ -328,23 +331,23 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify webhook belongs to org
-    const existing = await db.sql`
+    const { rows: existingWebhook } = await sql`
       SELECT id, name FROM webhook_configs
       WHERE id = ${webhookId} AND organization_id = ${auth.organization.id}
     `
 
-    if (existing.length === 0) {
+    if (existingWebhook.length === 0) {
       return Errors.notFound("Webhook").toResponse()
     }
 
     // Delete associated deliveries first
-    await db.sql`
+    await sql`
       DELETE FROM webhook_deliveries
       WHERE webhook_id = ${webhookId}
     `
 
     // Delete webhook
-    await db.sql`
+    await sql`
       DELETE FROM webhook_configs
       WHERE id = ${webhookId}
     `
@@ -353,8 +356,7 @@ export async function DELETE(request: NextRequest) {
       "integration.webhook_deleted",
       auth.organization.id,
       auth.user.id,
-      webhookId,
-      { name: existing[0].name }
+      { webhookId, name: existingWebhook[0].name }
     )
 
     return successResponse({

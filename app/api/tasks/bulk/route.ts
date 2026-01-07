@@ -266,8 +266,8 @@ async function bulkReassign(
   const errors: string[] = []
 
   // Verify new assignee exists
-  const members = await db.organizationMembers.findByOrganizationId(organizationId)
-  const assignee = members.find((m) => m.id === newAssigneeId && m.status === "active")
+  const members = await db.members.findByOrganizationId(organizationId)
+  const assignee = members.find((m: { id: string; status?: string }) => m.id === newAssigneeId && m.status === "active")
 
   if (!assignee) {
     return { processed: 0, skipped: taskIds.length, errors: ["Invalid assignee"] }

@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const weeksParam = url.searchParams.get("weeks")
     const weeks = weeksParam ? parseInt(weeksParam, 10) : 8
 
-    const data = await getScorecardData(auth.organizationId, weeks)
+    const data = await getScorecardData(auth.organization.id, weeks)
 
     return NextResponse.json({
       success: true,
