@@ -142,10 +142,11 @@ export async function POST(request: NextRequest) {
     )
 
     if (existingReport) {
-      return NextResponse.json<ApiResponse<null>>(
+      return NextResponse.json<ApiResponse<EODReport>>(
         {
           success: false,
           error: `You have already submitted an EOD report for ${formatDateForDisplay(reportDate)}. You can edit your existing report instead.`,
+          data: existingReport,
         },
         { status: 409 }
       )
@@ -408,11 +409,12 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Can only update same-day reports
-    const today = new Date().toISOString().split("T")[0]
-    if (report.date !== today) {
+    // Can only update same-day reports (in org timezone)
+    const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"
+    const todayInOrgTz = getTodayInTimezone(orgTimezone)
+    if (report.date !== todayInOrgTz) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "You can only update today's report" },
+        { success: false, error: `You can only update today's report (${formatDateForDisplay(todayInOrgTz)})` },
         { status: 400 }
       )
     }

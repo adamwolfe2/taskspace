@@ -7,6 +7,7 @@ function isWeekday(date: Date): boolean {
 }
 
 // Format date to YYYY-MM-DD string using local timezone
+// This matches how dates are stored in EOD reports (via getTodayString)
 function formatDateLocal(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
