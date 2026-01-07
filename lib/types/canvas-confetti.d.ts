@@ -10,10 +10,15 @@ declare module 'canvas-confetti' {
     ticks?: number
     origin?: { x?: number; y?: number }
     colors?: string[]
-    shapes?: ('square' | 'circle')[]
+    shapes?: (Shape | 'square' | 'circle')[]
     scalar?: number
     zIndex?: number
     disableForReducedMotion?: boolean
+  }
+
+  type Shape = {
+    type: 'path' | 'bitmap' | 'text'
+    [key: string]: unknown
   }
 
   interface ConfettiFunction {
@@ -23,6 +28,15 @@ declare module 'canvas-confetti' {
       canvas?: HTMLCanvasElement | null,
       globalOptions?: { resize?: boolean; useWorker?: boolean }
     ) => ConfettiFunction
+    shapeFromText: (options: { text: string; scalar?: number; color?: string; fontFamily?: string }) => Shape
+    shapeFromPath: (options: { path: string; matrix?: number[] }) => Shape
+  }
+
+  namespace confetti {
+    type Shape = {
+      type: 'path' | 'bitmap' | 'text'
+      [key: string]: unknown
+    }
   }
 
   const confetti: ConfettiFunction

@@ -1,7 +1,23 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import GridLayout, { Layout } from "react-grid-layout"
+import ReactGridLayout, { Layout } from "react-grid-layout"
+
+// Cast to any to avoid type definition mismatches with react-grid-layout v2.x
+const GridLayout = ReactGridLayout as unknown as React.ComponentType<{
+  className?: string
+  layout: Layout[]
+  cols: number
+  rowHeight: number
+  width: number
+  onLayoutChange?: (layout: Layout[]) => void
+  isDraggable?: boolean
+  isResizable?: boolean
+  draggableHandle?: string
+  margin?: [number, number]
+  containerPadding?: [number, number]
+  children?: React.ReactNode
+}>
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -122,7 +138,7 @@ export function CustomizableLayout({
 
  const handleLayoutChange = useCallback((newLayout: Layout[]) => {
  if (isEditing) {
- onLayoutChange(newLayout as LayoutItem[])
+ onLayoutChange(newLayout as unknown as LayoutItem[])
  }
  }, [isEditing, onLayoutChange])
 
@@ -207,7 +223,7 @@ export function CustomizableLayout({
  {/* Grid Layout */}
  <GridLayout
  className="layout"
- layout={enabledLayout as Layout[]}
+ layout={enabledLayout as unknown as Layout[]}
  cols={4}
  rowHeight={100}
  width={1200}
@@ -424,7 +440,7 @@ export function useDashboardLayout(
  }, [widgets, layout])
 
  const handleLayoutChange = useCallback((newLayout: Layout[]) => {
- setLayout(newLayout as LayoutItem[])
+ setLayout(newLayout as unknown as LayoutItem[])
  }, [])
 
  const handleReset = useCallback(() => {
