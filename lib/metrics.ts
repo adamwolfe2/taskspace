@@ -262,13 +262,15 @@ export async function getScorecardData(
   // Get all weekly entries for these members within the date range
   const memberIds = metricsResult.rows.map(r => r.member_id)
 
+  // Convert array to comma-separated string for PostgreSQL ANY
+  const memberIdsStr = memberIds.join(',')
   const entriesResult = await sql`
     SELECT
       team_member_id,
       week_ending,
       actual_value
     FROM weekly_metric_entries
-    WHERE team_member_id = ANY(${memberIds}::varchar[])
+    WHERE team_member_id = ANY(string_to_array(${memberIdsStr}, ','))
     AND week_ending >= ${oldestWeek}::date
     ORDER BY week_ending DESC
   `

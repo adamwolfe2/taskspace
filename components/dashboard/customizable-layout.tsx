@@ -46,8 +46,21 @@ interface DashboardWidget {
  maxH?: number
 }
 
-// Use Layout directly from react-grid-layout since it already has all needed properties
-type LayoutItem = Layout
+// Define LayoutItem with explicit properties to avoid type conflicts with react-grid-layout
+interface LayoutItem {
+  i: string
+  x: number
+  y: number
+  w: number
+  h: number
+  minW?: number
+  maxW?: number
+  minH?: number
+  maxH?: number
+  static?: boolean
+  isDraggable?: boolean
+  isResizable?: boolean
+}
 
 interface CustomizableLayoutProps {
  widgets: DashboardWidget[]
@@ -194,7 +207,7 @@ export function CustomizableLayout({
  {/* Grid Layout */}
  <GridLayout
  className="layout"
- layout={enabledLayout}
+ layout={enabledLayout as Layout[]}
  cols={4}
  rowHeight={100}
  width={1200}
@@ -411,7 +424,7 @@ export function useDashboardLayout(
  }, [widgets, layout])
 
  const handleLayoutChange = useCallback((newLayout: Layout[]) => {
- setLayout(newLayout)
+ setLayout(newLayout as LayoutItem[])
  }, [])
 
  const handleReset = useCallback(() => {

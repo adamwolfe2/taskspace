@@ -40,6 +40,10 @@ export type AuditAction =
   | "task.complete"
   | "task.assign"
   | "task.bulk_operation"
+  | "task.recurring_created"
+  | "task.recurring_updated"
+  | "task.recurring_deleted"
+  | "task.recurring_processed"
   // Rocks
   | "rock.create"
   | "rock.update"
@@ -58,6 +62,10 @@ export type AuditAction =
   | "integration.asana_sync"
   | "integration.slack_message"
   | "integration.webhook_send"
+  | "integration.webhook_created"
+  | "integration.webhook_updated"
+  | "integration.webhook_deleted"
+  | "integration.data_exported"
   // AI
   | "ai.brain_dump"
   | "ai.query"

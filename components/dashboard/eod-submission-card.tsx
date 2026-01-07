@@ -22,7 +22,7 @@ function formatDisplayDate(dateStr: string): string {
 interface EODSubmissionCardProps {
   rocks: Rock[] // Current quarter rocks only
   allRocks: Rock[]
-  onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt" | "organizationId">) => void | Promise<void>
+  onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt" | "organizationId"> | Omit<EODReport, "id" | "createdAt" | "organizationId" | "date">) => void | Promise<void>
   userId: string
   currentUser: TeamMember
   assignedTasks: AssignedTask[]
