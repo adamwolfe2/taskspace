@@ -13,6 +13,7 @@ import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, Chevro
 import { Progress } from "@/components/ui/progress"
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
 import { EODInsightsCard } from "@/components/ai/eod-insights-card"
+import { DailyReportShare } from "@/components/admin/daily-report-share"
 import { useToast } from "@/hooks/use-toast"
 
 interface AdminPageProps {
@@ -22,6 +23,7 @@ interface AdminPageProps {
   currentUser: TeamMember
   assignedTasks: AssignedTask[]
   setAssignedTasks: (tasks: AssignedTask[]) => void
+  organization?: { id: string; name: string; slug: string; settings: { timezone: string } }
 }
 
 export function AdminPage({
@@ -31,6 +33,7 @@ export function AdminPage({
   currentUser,
   assignedTasks,
   setAssignedTasks,
+  organization,
 }: AdminPageProps) {
   const [showAssignTaskModal, setShowAssignTaskModal] = useState(false)
   const [showPendingTasks, setShowPendingTasks] = useState(false)
@@ -153,6 +156,15 @@ export function AdminPage({
           </CardContent>
         </Card>
       </div>
+
+      {/* Daily Report Share Link */}
+      {organization && (
+        <DailyReportShare
+          organization={organization as any}
+          eodReports={eodReports}
+          teamMembers={teamMembers}
+        />
+      )}
 
       <Card>
         <CardHeader>

@@ -37,7 +37,7 @@ import {
 } from "@/components/dashboard/skeletons"
 
 function AppContent() {
-  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated } = useApp()
+  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [resetToken, setResetToken] = useState<string | null>(null)
@@ -153,6 +153,12 @@ function AppContent() {
             currentUser={currentUser!}
             assignedTasks={teamData.assignedTasks}
             setAssignedTasks={teamData.setAssignedTasks}
+            organization={currentOrganization ? {
+              id: currentOrganization.id,
+              name: currentOrganization.name,
+              slug: currentOrganization.slug,
+              settings: currentOrganization.settings
+            } : undefined}
           />
         ) : (
           <DashboardPage {...dashboardProps} />

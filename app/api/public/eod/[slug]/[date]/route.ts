@@ -1,0 +1,234 @@
+/**
+ * Public EOD Daily Report API
+ *
+ * This endpoint provides public access to aggregated EOD reports for a specific date.
+ * No authentication required - designed for sharing with stakeholders/board members.
+ *
+ * URL format: /api/public/eod/[org-slug]/[date]
+ * Example: /api/public/eod/aims/2026-01-05
+ */
+
+import { NextRequest, NextResponse } from "next/server"
+import { sql } from "@vercel/postgres"
+
+interface PublicEODTask {
+  description: string
+  rockTitle?: string
+  completedAt?: string
+}
+
+interface PublicEODPriority {
+  description: string
+  rockTitle?: string
+}
+
+interface PublicEODReport {
+  userName: string
+  userRole: "owner" | "admin" | "member"
+  department: string
+  jobTitle?: string
+  date: string
+  submittedAt: string
+  tasks: PublicEODTask[]
+  challenges: string
+  tomorrowPriorities: PublicEODPriority[]
+  needsEscalation: boolean
+  escalationNote: string | null
+}
+
+interface PublicDailyReport {
+  organizationName: string
+  date: string
+  displayDate: string
+  timezone: string
+  lastUpdated: string
+  reports: PublicEODReport[]
+  submissionStats: {
+    submitted: number
+    total: number
+    percentage: number
+  }
+}
+
+// GET /api/public/eod/[slug]/[date] - Get all EOD reports for a date
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string; date: string }> }
+) {
+  try {
+    const { slug, date } = await params
+
+    // Validate date format (YYYY-MM-DD)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid date format. Use YYYY-MM-DD" },
+        { status: 400 }
+      )
+    }
+
+    // Find organization by slug
+    const { rows: orgs } = await sql`
+      SELECT id, name, settings
+      FROM organizations
+      WHERE slug = ${slug}
+    `
+
+    if (orgs.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Organization not found" },
+        { status: 404 }
+      )
+    }
+
+    const org = orgs[0]
+    const orgId = org.id as string
+    const orgName = org.name as string
+    const settings = org.settings as { timezone?: string } | null
+    const timezone = settings?.timezone || "America/Los_Angeles"
+
+    // Get all active members
+    const { rows: members } = await sql`
+      SELECT
+        om.id,
+        om.user_id,
+        om.name,
+        om.email,
+        om.role,
+        om.department,
+        om.job_title,
+        om.status
+      FROM organization_members om
+      WHERE om.organization_id = ${orgId}
+        AND om.status = 'active'
+      ORDER BY
+        CASE om.role
+          WHEN 'owner' THEN 1
+          WHEN 'admin' THEN 2
+          ELSE 3
+        END,
+        om.name ASC
+    `
+
+    // Get EOD reports for this date
+    const { rows: reports } = await sql`
+      SELECT
+        er.id,
+        er.user_id,
+        er.date,
+        er.tasks,
+        er.challenges,
+        er.tomorrow_priorities,
+        er.needs_escalation,
+        er.escalation_note,
+        er.submitted_at,
+        er.created_at
+      FROM eod_reports er
+      WHERE er.organization_id = ${orgId}
+        AND er.date = ${date}
+      ORDER BY er.submitted_at ASC
+    `
+
+    // Get rocks for context
+    const { rows: rocks } = await sql`
+      SELECT id, title, user_id
+      FROM rocks
+      WHERE organization_id = ${orgId}
+    `
+    const rockMap = new Map(rocks.map(r => [r.id as string, r.title as string]))
+
+    // Build the public report data
+    const memberMap = new Map(members.map(m => [m.user_id as string, m]))
+
+    const publicReports: PublicEODReport[] = []
+
+    // First add reports from owners/admins, then members
+    const sortedReports = reports.sort((a, b) => {
+      const memberA = memberMap.get(a.user_id as string)
+      const memberB = memberMap.get(b.user_id as string)
+
+      const roleOrder = { owner: 1, admin: 2, member: 3 }
+      const roleA = roleOrder[(memberA?.role as keyof typeof roleOrder) || "member"]
+      const roleB = roleOrder[(memberB?.role as keyof typeof roleOrder) || "member"]
+
+      if (roleA !== roleB) return roleA - roleB
+
+      // Within same role, sort by name
+      const nameA = (memberA?.name as string) || ""
+      const nameB = (memberB?.name as string) || ""
+      return nameA.localeCompare(nameB)
+    })
+
+    for (const report of sortedReports) {
+      const member = memberMap.get(report.user_id as string)
+      if (!member) continue // Skip if member not found
+
+      const tasks = (report.tasks as Array<{ description: string; rockId?: string; completedAt?: string }>) || []
+      const priorities = (report.tomorrow_priorities as Array<{ description: string; rockId?: string }>) || []
+
+      publicReports.push({
+        userName: member.name as string,
+        userRole: member.role as "owner" | "admin" | "member",
+        department: member.department as string || "General",
+        jobTitle: member.job_title as string || undefined,
+        date: report.date as string,
+        submittedAt: report.submitted_at as string,
+        tasks: tasks.map(t => ({
+          description: t.description,
+          rockTitle: t.rockId ? rockMap.get(t.rockId) : undefined,
+          completedAt: t.completedAt,
+        })),
+        challenges: report.challenges as string || "",
+        tomorrowPriorities: priorities.map(p => ({
+          description: p.description,
+          rockTitle: p.rockId ? rockMap.get(p.rockId) : undefined,
+        })),
+        needsEscalation: report.needs_escalation as boolean || false,
+        escalationNote: report.escalation_note as string | null,
+      })
+    }
+
+    // Calculate submission stats
+    const activeMembers = members.filter(m => m.status === "active")
+    const submittedCount = publicReports.length
+    const totalCount = activeMembers.length
+    const percentage = totalCount > 0 ? Math.round((submittedCount / totalCount) * 100) : 0
+
+    // Format display date
+    const dateObj = new Date(date + "T12:00:00Z")
+    const displayDate = dateObj.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+
+    const dailyReport: PublicDailyReport = {
+      organizationName: orgName,
+      date,
+      displayDate,
+      timezone,
+      lastUpdated: new Date().toISOString(),
+      reports: publicReports,
+      submissionStats: {
+        submitted: submittedCount,
+        total: totalCount,
+        percentage,
+      },
+    }
+
+    // Add cache headers for 30 second caching
+    const headers = new Headers()
+    headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60")
+
+    return NextResponse.json(
+      { success: true, data: dailyReport },
+      { headers }
+    )
+  } catch (error) {
+    console.error("Public EOD report error:", error)
+    return NextResponse.json(
+      { success: false, error: "Failed to load daily report" },
+      { status: 500 }
+    )
+  }
+}
