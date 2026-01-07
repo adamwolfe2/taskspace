@@ -136,7 +136,7 @@ async function generateMemberDigest(
     otherTasks,
     blockers,
     challenges: report.challenges || "",
-    tomorrowPriorities: report.tomorrowPriorities?.map(p => p.text || p) || [],
+    tomorrowPriorities: report.tomorrowPriorities?.map(p => typeof p === 'string' ? p : p.text) || [],
     hasReport: true,
   }
 }

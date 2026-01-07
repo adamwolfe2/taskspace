@@ -54,9 +54,11 @@ export async function validateBody<T extends ZodSchema>(
 ): Promise<z.infer<T>> {
   try {
     const body = await request.json()
-    const result = options.strict
-      ? schema.strict().safeParse(body)
-      : schema.safeParse(body)
+    // Check if strict mode is requested and schema supports it (ZodObject)
+    const schemaToUse = options.strict && 'strict' in schema && typeof (schema as any).strict === 'function'
+      ? (schema as any).strict()
+      : schema
+    const result = schemaToUse.safeParse(body)
 
     if (!result.success) {
       const errorMessage = options.errorPrefix

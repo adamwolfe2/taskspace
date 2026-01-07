@@ -268,7 +268,7 @@ export async function GET(request: NextRequest) {
       let email = member.email
       // Fallback to user email if member email is missing (use pre-fetched data)
       if (!email && member.userId) {
-        email = usersMap.get(member.userId) || undefined
+        email = usersMap.get(member.userId)
       }
 
       // Try to find by email first (using pre-fetched maps)
