@@ -59,15 +59,15 @@ export function getTodayInTimezone(timezone: string = "America/Los_Angeles"): st
  * Get current time formatted in a specific timezone
  */
 export function getCurrentTimeInTimezone(timezone: string = "America/Los_Angeles"): string {
+  const now = new Date()
   try {
-    const now = new Date()
     return now.toLocaleTimeString("en-US", {
       timeZone: timezone,
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
     })
-  } catch (error) {
+  } catch (_error) {
     return now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
   }
 }

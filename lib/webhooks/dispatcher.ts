@@ -9,7 +9,7 @@
  */
 
 import crypto from "crypto"
-import { db } from "@/lib/db"
+import { sql } from "@vercel/postgres"
 
 // ============================================
 // TYPES
@@ -86,7 +86,7 @@ class WebhookDispatcher {
     data: Record<string, unknown>
   ): Promise<DeliveryResult[]> {
     // Get all enabled webhooks for this org that subscribe to this event
-    const webhooks = await db.sql`
+    const webhooks = await sql`
       SELECT id, url, secret, headers, events
       FROM webhook_configs
       WHERE organization_id = ${organizationId}
@@ -94,7 +94,7 @@ class WebhookDispatcher {
         AND events @> ${JSON.stringify([event])}::jsonb
     `
 
-    if (webhooks.length === 0) {
+    if (webhooks.rows.length === 0) {
       return []
     }
 
@@ -108,7 +108,7 @@ class WebhookDispatcher {
 
     const results: DeliveryResult[] = []
 
-    for (const webhook of webhooks) {
+    for (const webhook of webhooks.rows) {
       const result = await this.deliverToEndpoint(
         webhook as WebhookConfig,
         payload
@@ -133,7 +133,7 @@ class WebhookDispatcher {
 
     // Create delivery record
     const deliveryId = crypto.randomUUID()
-    await db.sql`
+    await sql`
       INSERT INTO webhook_deliveries (
         id,
         webhook_id,
@@ -172,7 +172,7 @@ class WebhookDispatcher {
 
       if (response.ok) {
         // Success - update delivery and webhook
-        await db.sql`
+        await sql`
           UPDATE webhook_deliveries
           SET status = 'success',
               response_status = ${statusCode},
@@ -181,7 +181,7 @@ class WebhookDispatcher {
           WHERE id = ${deliveryId}
         `
 
-        await db.sql`
+        await sql`
           UPDATE webhook_configs
           SET last_triggered_at = NOW(),
               failure_count = 0
@@ -203,7 +203,7 @@ class WebhookDispatcher {
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
 
       // Update delivery record
-      await db.sql`
+      await sql`
         UPDATE webhook_deliveries
         SET status = 'failed',
             error_message = ${errorMessage},
@@ -213,7 +213,7 @@ class WebhookDispatcher {
       `
 
       // Increment failure count
-      await db.sql`
+      await sql`
         UPDATE webhook_configs
         SET failure_count = failure_count + 1
         WHERE id = ${webhook.id}
@@ -265,13 +265,13 @@ class WebhookDispatcher {
    * Auto-disable webhooks with too many consecutive failures
    */
   private async checkAndDisableIfNeeded(webhookId: string): Promise<void> {
-    const result = await db.sql`
+    const result = await sql`
       SELECT failure_count FROM webhook_configs
       WHERE id = ${webhookId}
     `
 
-    if (result[0]?.failure_count >= 10) {
-      await db.sql`
+    if (result.rows[0]?.failure_count >= 10) {
+      await sql`
         UPDATE webhook_configs
         SET enabled = false
         WHERE id = ${webhookId}
@@ -285,7 +285,7 @@ class WebhookDispatcher {
    * Manually retry a failed delivery
    */
   async retryDelivery(deliveryId: string, organizationId: string): Promise<boolean> {
-    const delivery = await db.sql`
+    const delivery = await sql`
       SELECT wd.*, wc.url, wc.secret, wc.headers, wc.enabled, wc.events
       FROM webhook_deliveries wd
       JOIN webhook_configs wc ON wd.webhook_id = wc.id
@@ -293,11 +293,11 @@ class WebhookDispatcher {
         AND wc.organization_id = ${organizationId}
     `
 
-    if (delivery.length === 0) {
+    if (delivery.rows.length === 0) {
       return false
     }
 
-    const d = delivery[0]
+    const d = delivery.rows[0]
 
     if (!d.enabled) {
       return false
@@ -322,14 +322,14 @@ class WebhookDispatcher {
    * Test a webhook configuration
    */
   async test(webhookId: string, organizationId: string): Promise<DeliveryResult> {
-    const webhook = await db.sql`
+    const webhook = await sql`
       SELECT id, url, secret, headers, enabled, events
       FROM webhook_configs
       WHERE id = ${webhookId}
         AND organization_id = ${organizationId}
     `
 
-    if (webhook.length === 0) {
+    if (webhook.rows.length === 0) {
       return {
         webhookId,
         success: false,
@@ -349,7 +349,7 @@ class WebhookDispatcher {
       },
     }
 
-    return this.deliverToEndpoint(webhook[0] as WebhookConfig, testPayload)
+    return this.deliverToEndpoint(webhook.rows[0] as WebhookConfig, testPayload)
   }
 
   /**

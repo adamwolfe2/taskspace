@@ -8,7 +8,7 @@
  * - Workday-only options
  */
 
-import { db } from "@/lib/db"
+import { sql } from "@vercel/postgres"
 import crypto from "crypto"
 
 // ============================================
@@ -217,7 +217,7 @@ class RecurringTaskProcessor {
       const today = formatDateString(new Date())
 
       // Find all active recurring tasks due today or earlier
-      const dueTasks = await db.sql`
+      const dueTasks = await sql`
         SELECT * FROM recurring_task_templates
         WHERE is_active = true
           AND next_run_date <= ${today}
@@ -225,7 +225,7 @@ class RecurringTaskProcessor {
         LIMIT 100
       `
 
-      for (const template of dueTasks) {
+      for (const template of dueTasks.rows) {
         try {
           await this.processTemplate(template as RecurringTaskTemplate)
           processed++
@@ -252,7 +252,7 @@ class RecurringTaskProcessor {
 
     // Check max occurrences
     if (rule.maxOccurrences && template.occurrenceCount >= rule.maxOccurrences) {
-      await db.sql`
+      await sql`
         UPDATE recurring_task_templates
         SET is_active = false, updated_at = NOW()
         WHERE id = ${template.id}
@@ -267,16 +267,16 @@ class RecurringTaskProcessor {
     // Get default assignee if set
     let assigneeName = "Unassigned"
     if (template.defaultAssigneeId) {
-      const member = await db.sql`
+      const member = await sql`
         SELECT name FROM organization_members
         WHERE id = ${template.defaultAssigneeId} AND status = 'active'
       `
-      if (member.length > 0) {
-        assigneeName = member[0].name
+      if (member.rows.length > 0) {
+        assigneeName = member.rows[0].name
       }
     }
 
-    await db.sql`
+    await sql`
       INSERT INTO assigned_tasks (
         id,
         organization_id,
@@ -315,7 +315,7 @@ class RecurringTaskProcessor {
     const nextDate = calculateNextRunDate(currentDate, rule)
 
     // Update template
-    await db.sql`
+    await sql`
       UPDATE recurring_task_templates
       SET
         last_run_date = ${today},
@@ -353,7 +353,7 @@ class RecurringTaskProcessor {
       firstRun = getNextWeekday(firstRun)
     }
 
-    await db.sql`
+    await sql`
       INSERT INTO recurring_task_templates (
         id,
         organization_id,
@@ -409,27 +409,27 @@ class RecurringTaskProcessor {
       isActive: boolean
     }>
   ): Promise<boolean> {
-    const fields: string[] = ["updated_at = NOW()"]
-
-    if (updates.title !== undefined) fields.push(`title = '${updates.title}'`)
-    if (updates.description !== undefined) fields.push(`description = '${updates.description}'`)
-    if (updates.priority !== undefined) fields.push(`priority = '${updates.priority}'`)
-    if (updates.defaultAssigneeId !== undefined) fields.push(`default_assignee_id = '${updates.defaultAssigneeId}'`)
-    if (updates.estimatedMinutes !== undefined) fields.push(`estimated_minutes = ${updates.estimatedMinutes}`)
-    if (updates.labels !== undefined) fields.push(`labels = '${JSON.stringify(updates.labels)}'`)
+    // Calculate next run date if recurrence rule is updated
+    let nextRunDate: string | null = null
     if (updates.recurrenceRule !== undefined) {
-      fields.push(`recurrence_rule = '${JSON.stringify(updates.recurrenceRule)}'`)
-      // Recalculate next run date
       const nextDate = calculateNextRunDate(new Date(), updates.recurrenceRule)
-      if (nextDate) {
-        fields.push(`next_run_date = '${formatDateString(nextDate)}'`)
-      }
+      nextRunDate = nextDate ? formatDateString(nextDate) : null
     }
-    if (updates.isActive !== undefined) fields.push(`is_active = ${updates.isActive}`)
 
-    const result = await db.sql`
+    // Use COALESCE pattern to only update fields that are provided
+    await sql`
       UPDATE recurring_task_templates
-      SET ${db.sql.raw(fields.join(", "))}
+      SET
+        title = COALESCE(${updates.title ?? null}, title),
+        description = COALESCE(${updates.description ?? null}, description),
+        priority = COALESCE(${updates.priority ?? null}, priority),
+        default_assignee_id = COALESCE(${updates.defaultAssigneeId ?? null}, default_assignee_id),
+        estimated_minutes = COALESCE(${updates.estimatedMinutes ?? null}, estimated_minutes),
+        labels = COALESCE(${updates.labels ? JSON.stringify(updates.labels) : null}, labels),
+        recurrence_rule = COALESCE(${updates.recurrenceRule ? JSON.stringify(updates.recurrenceRule) : null}, recurrence_rule),
+        next_run_date = COALESCE(${nextRunDate}, next_run_date),
+        is_active = COALESCE(${updates.isActive ?? null}, is_active),
+        updated_at = NOW()
       WHERE id = ${templateId} AND organization_id = ${organizationId}
     `
 
@@ -440,7 +440,7 @@ class RecurringTaskProcessor {
    * Delete a recurring task template
    */
   async deleteTemplate(templateId: string, organizationId: string): Promise<boolean> {
-    await db.sql`
+    await sql`
       DELETE FROM recurring_task_templates
       WHERE id = ${templateId} AND organization_id = ${organizationId}
     `
@@ -451,13 +451,13 @@ class RecurringTaskProcessor {
    * Get all templates for an organization
    */
   async getTemplates(organizationId: string): Promise<RecurringTaskTemplate[]> {
-    const templates = await db.sql`
+    const templates = await sql`
       SELECT * FROM recurring_task_templates
       WHERE organization_id = ${organizationId}
       ORDER BY created_at DESC
     `
 
-    return templates.map((t: Record<string, unknown>) => ({
+    return templates.rows.map((t: Record<string, unknown>) => ({
       id: t.id,
       organizationId: t.organization_id,
       title: t.title,
