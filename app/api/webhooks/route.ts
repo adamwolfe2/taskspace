@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
           COUNT(*) FILTER (WHERE status = 'failed') as failed,
           COUNT(*) FILTER (WHERE status = 'pending') as pending
         FROM webhook_deliveries
-        WHERE webhook_id = ANY(${webhookIds})
+        WHERE webhook_id = ANY(string_to_array(${webhookIds.join(',')}, ','))
           AND created_at > NOW() - INTERVAL '7 days'
         GROUP BY webhook_id
       `

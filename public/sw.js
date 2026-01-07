@@ -1,9 +1,11 @@
+/* eslint-env serviceworker */
 // Service Worker for AIMS Push Notifications
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CACHE_NAME = 'aims-v1';
 
 // Install event - cache static assets
-self.addEventListener('install', (event) => {
+self.addEventListener('install', (_event) => {
   self.skipWaiting();
 });
 

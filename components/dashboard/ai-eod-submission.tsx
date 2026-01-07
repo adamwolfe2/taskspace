@@ -7,10 +7,10 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Sparkles, Send, Loader2, X, Plus, AlertTriangle, Check, Target, ChevronDown, ChevronUp, Calendar, Clock } from "lucide-react"
+import { Sparkles, Send, Loader2, X, Plus, AlertTriangle, Check, Target, Calendar, Clock } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember } from "@/lib/types"
 import type { TeamMemberMetric } from "@/lib/metrics"
 import { useToast } from "@/hooks/use-toast"
@@ -53,7 +53,7 @@ interface ParsedEODData {
 interface AIEODSubmissionProps {
   rocks: Rock[]
   allRocks: Rock[]
-  onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt" | "organizationId">) => void | Promise<void>
+  onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt" | "organizationId" | "date">) => void | Promise<void>
   userId: string
   currentUser: TeamMember
 }
@@ -155,7 +155,7 @@ export function AIEODSubmission({
 
       // Initialize editable state from parsed data
       setEditedTasks(
-        parsed.tasks.map((t, i) => ({
+        parsed.tasks.map((t) => ({
           id: crypto.randomUUID(),
           text: t.text,
           rockId: t.rockId,
@@ -217,7 +217,7 @@ export function AIEODSubmission({
     // Note: We don't set the date here - the API will determine the correct date
     // based on the organization's timezone to ensure all team members submit for
     // the same day regardless of their local timezone
-    const report: Omit<EODReport, "id" | "createdAt" | "organizationId" | "date"> & { date?: string } = {
+    const report: Omit<EODReport, "id" | "createdAt" | "organizationId" | "date"> = {
       userId,
       submittedAt: new Date().toISOString(),
       tasks: editedTasks.filter(t => t.text.trim() !== ""),

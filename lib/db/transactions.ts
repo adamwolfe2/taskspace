@@ -44,8 +44,13 @@ export async function withTransaction<T>(
 
   try {
     // Set isolation level if specified
-    if (options.isolationLevel) {
-      await client.sql`SET TRANSACTION ISOLATION LEVEL ${sql.raw(options.isolationLevel)}`
+    // Note: isolation levels must be set as literal SQL, not parameterized
+    if (options.isolationLevel === "READ COMMITTED") {
+      await client.sql`SET TRANSACTION ISOLATION LEVEL READ COMMITTED`
+    } else if (options.isolationLevel === "REPEATABLE READ") {
+      await client.sql`SET TRANSACTION ISOLATION LEVEL REPEATABLE READ`
+    } else if (options.isolationLevel === "SERIALIZABLE") {
+      await client.sql`SET TRANSACTION ISOLATION LEVEL SERIALIZABLE`
     }
 
     // Set timeout if specified
@@ -221,7 +226,7 @@ export async function batchUpdate<T extends Record<string, unknown>>(
           WHERE id = $1
         `
 
-        const result = await client.sql.query(query, [id, ...values])
+        const result = await client.query(query, [id, ...values])
         updated += result.rowCount || 0
       }
     })

@@ -349,8 +349,8 @@ export async function GET(request: NextRequest) {
       compressionOptions: { level: 9 },
     })
 
-    // Return the file
-    return new NextResponse(content, {
+    // Return the file (convert Buffer to Uint8Array for NextResponse compatibility)
+    return new NextResponse(new Uint8Array(content), {
       headers: {
         "Content-Type": "application/octet-stream",
         "Content-Disposition": `attachment; filename="aims-eod-tracker.mcpb"`,

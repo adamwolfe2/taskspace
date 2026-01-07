@@ -18,6 +18,24 @@ export default [
       "@typescript-eslint/no-empty-object-type": "off",
     },
   },
+  // Jest setup file config
+  {
+    files: ["jest.setup.js", "__tests__/**/*.ts"],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
+    },
+  },
+  // Service worker config
+  {
+    files: ["public/sw.js"],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker,
+      },
+    },
+  },
   {
     ignores: [".next/**", "node_modules/**", "*.config.*"],
   },

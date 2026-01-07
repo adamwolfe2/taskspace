@@ -105,7 +105,7 @@ export function DashboardPage({
  }
  }
 
- const handleSubmitEOD = async (report: Omit<EODReport, "id" | "createdAt" | "organizationId">) => {
+ const handleSubmitEOD = async (report: Omit<EODReport, "id" | "createdAt" | "organizationId" | "date">) => {
  try {
  await submitEODReport(report)
  } catch (err) {

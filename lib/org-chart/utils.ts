@@ -127,7 +127,7 @@ export function parseRocks(rocksString: string | undefined): ParsedRock[] {
     } else if (line.startsWith("*") || line.startsWith("-") || line.startsWith("•")) {
       // This is a bullet point
       if (currentRock) {
-        currentRock.bullets.push(line.replace(/^[\*\-•]\s*/, "").trim())
+        currentRock.bullets.push(line.replace(/^[*\-•]\s*/, "").trim())
       }
     } else if (!currentRock && line) {
       // First non-empty line might be a rock title without "Rock X:" prefix

@@ -11,6 +11,7 @@ interface ProgressRingProps {
  color?: string
  trackColor?: string
  animated?: boolean
+ style?: React.CSSProperties
 }
 
 export function ProgressRing({
@@ -22,6 +23,7 @@ export function ProgressRing({
  color,
  trackColor = "stroke-slate-200 ",
  animated = true,
+ style,
 }: ProgressRingProps) {
  const normalizedProgress = Math.min(100, Math.max(0, progress))
  const radius = (size - strokeWidth) / 2
@@ -32,7 +34,7 @@ export function ProgressRing({
  const progressColor = color || getProgressColor(normalizedProgress)
 
  return (
- <div className={cn("relative inline-flex items-center justify-center", className)}>
+ <div className={cn("relative inline-flex items-center justify-center", className)} style={style}>
  <svg
  width={size}
  height={size}

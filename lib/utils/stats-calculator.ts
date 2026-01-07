@@ -26,10 +26,9 @@ function calculateEODStreak(reports: EODReport[]): number {
   today.setHours(0, 0, 0, 0)
 
   let streak = 0
-  let currentDate = new Date(today)
+  const currentDate = new Date(today)
 
   // Check if today is a weekday and has a report (or if it's still work hours, don't break streak)
-  const now = new Date()
   const isTodayWeekday = isWeekday(today)
   const todayStr = formatDateLocal(today)
   const hasReportToday = reportDates.has(todayStr)

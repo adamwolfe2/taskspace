@@ -265,10 +265,10 @@ export async function GET(request: NextRequest) {
 
     // Check which members are mapped (no more DB queries in loop)
     const mappingStatus = activeMembers.map((member) => {
-      let email = member.email
+      let email: string | undefined = member.email
       // Fallback to user email if member email is missing (use pre-fetched data)
       if (!email && member.userId) {
-        email = usersMap.get(member.userId) || undefined
+        email = usersMap.get(member.userId)
       }
 
       // Try to find by email first (using pre-fetched maps)

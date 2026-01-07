@@ -1043,7 +1043,7 @@ ${allWins.length > 8 ? `  ... and ${allWins.length - 8} more` : ""}
   {
     name: "aims-eod-tracker",
     version: "2.0.0",
-  },
+  } as any,
   {
     basePath: "/api/mcp",
     maxDuration: 60,

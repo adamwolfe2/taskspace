@@ -65,7 +65,7 @@ export function fireStarConfetti() {
     gravity: 0,
     decay: 0.94,
     startVelocity: 20,
-    shapes: ["star"] as confetti.Shape[],
+    shapes: ["star"] as unknown as confetti.Shape[],
     colors: ["#FFE400", "#FFBD00", "#E89400", "#FFCA6C", "#FDFFB8"],
   }
 
