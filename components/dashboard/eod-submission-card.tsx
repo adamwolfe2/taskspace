@@ -57,7 +57,9 @@ export function EODSubmissionCard({
     if (t.assigneeId !== userId || t.status !== "completed" || !t.completedAt) {
       return false
     }
-    const completedDate = new Date(t.completedAt).toISOString().split("T")[0]
+    // Use local timezone for date comparison to match how reportDate is formatted
+    const completedAt = new Date(t.completedAt)
+    const completedDate = `${completedAt.getFullYear()}-${String(completedAt.getMonth() + 1).padStart(2, '0')}-${String(completedAt.getDate()).padStart(2, '0')}`
     return completedDate === reportDate
   })
 
