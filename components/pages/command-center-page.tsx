@@ -34,7 +34,11 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
   const [isGeneratingDigest, setIsGeneratingDigest] = useState(false)
   const [isQuerying, setIsQuerying] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
+  // Use local timezone for date string to match EOD report format
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  })
   const { toast } = useToast()
 
   // Load pending AI tasks

@@ -6,8 +6,12 @@ import { api } from "../api/client"
 import { useApp } from "../contexts/app-context"
 
 // Demo data for the demo mode
-const today = new Date().toISOString().split("T")[0]
-const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0]
+// Use local timezone for date strings to match EOD report format
+function getLocalDateString(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+const today = getLocalDateString(new Date())
+const yesterday = getLocalDateString(new Date(Date.now() - 86400000))
 
 // LocalStorage keys for demo mode data persistence
 const DEMO_STORAGE_KEYS = {
