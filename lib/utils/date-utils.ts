@@ -81,9 +81,13 @@ export function getCurrentTimeInTimezone(timezone: string = "America/Los_Angeles
 }
 
 /**
- * Check if a given date string is valid for EOD submission in the org's timezone
- * - Cannot submit for future dates
- * - Cannot submit for dates more than 1 day in the past (grace period for late submissions)
+ * Check if a given date string is valid for EOD submission
+ * - Cannot submit for future dates (in any timezone)
+ * - Extended grace period of 2 days to support international teams
+ *   (e.g., IST is 13.5 hours ahead of PST, so an employee submitting at
+ *   their EOD might be submitting for "2 days ago" in PST)
+ * - For international teams, the date on the report represents the employee's
+ *   work day, and the admin dashboard groups by submission timestamp
  */
 export function isValidEODDate(dateString: string, timezone: string = "America/Los_Angeles"): {
   valid: boolean
@@ -96,6 +100,7 @@ export function isValidEODDate(dateString: string, timezone: string = "America/L
 
   const diffDays = Math.round((submissionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
+  // Don't allow future dates
   if (diffDays > 0) {
     return {
       valid: false,
@@ -104,10 +109,12 @@ export function isValidEODDate(dateString: string, timezone: string = "America/L
     }
   }
 
-  if (diffDays < -1) {
+  // Extended grace period: allow up to 2 days back for international timezone support
+  // This handles cases like IST employees submitting after midnight PST
+  if (diffDays < -2) {
     return {
       valid: false,
-      reason: `EOD reports can only be submitted for today or yesterday. Please contact an admin if you need to submit for ${dateString}.`,
+      reason: `EOD reports can only be submitted for the past 2 days. Please contact an admin if you need to submit for ${dateString}.`,
       suggestedDate: todayInTz,
     }
   }
