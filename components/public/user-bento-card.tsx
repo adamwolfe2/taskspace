@@ -145,16 +145,15 @@ export function UserBentoCard({
     return Math.round(data.rocks.reduce((acc, r) => acc + r.progress, 0) / data.rocks.length)
   }, [data.rocks])
 
-  // Group tasks by date for weekly view
-  const tasksByDate = useMemo(() => {
-    if (data.periodType !== "weekly") return null
+  // Group tasks by rock (like internal EOD reports)
+  const tasksByRock = useMemo(() => {
     return data.tasks.reduce((acc, task) => {
-      const date = task.date || "Unknown"
-      if (!acc[date]) acc[date] = []
-      acc[date].push(task)
+      const key = task.rockTitle || "general"
+      if (!acc[key]) acc[key] = []
+      acc[key].push(task)
       return acc
     }, {} as Record<string, BentoTask[]>)
-  }, [data.tasks, data.periodType])
+  }, [data.tasks])
 
   // Role badge
   const getRoleBadge = () => {
@@ -292,40 +291,46 @@ export function UserBentoCard({
         )}
       </div>
 
-      {/* Expanded Content - Task Details */}
+      {/* Expanded Content - Task Details grouped by Rock */}
       {isExpanded && data.tasks.length > 0 && (
         <div className="border-t border-slate-100 p-4 bg-slate-50/50">
           <h4 className="text-xs font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-            Completed Tasks ({data.totalTasks})
+            <Target className="h-3.5 w-3.5 text-blue-500" />
+            Rock Progress ({data.totalTasks} tasks)
           </h4>
 
-          {data.periodType === "weekly" && tasksByDate ? (
-            // Weekly view - grouped by date
-            <div className="space-y-3">
-              {Object.entries(tasksByDate)
-                .sort(([a], [b]) => a.localeCompare(b))
-                .map(([date, tasks]) => (
-                  <div key={date}>
-                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide mb-1.5">
-                      {formatDateShort(date)}
-                    </p>
-                    <ul className="space-y-1">
-                      {tasks.map((task, idx) => (
-                        <TaskItem key={idx} task={task} />
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            // Daily view - flat list
-            <ul className="space-y-1.5">
-              {data.tasks.map((task, idx) => (
-                <TaskItem key={idx} task={task} />
+          <div className="space-y-3">
+            {/* Rock-specific tasks first */}
+            {Object.entries(tasksByRock)
+              .filter(([rockTitle]) => rockTitle !== "general")
+              .map(([rockTitle, tasks]) => (
+                <div key={rockTitle} className="p-2 bg-white border border-slate-200 rounded-lg">
+                  <p className="text-[10px] font-semibold text-slate-700 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                    <Target className="h-3 w-3 text-slate-500" />
+                    {rockTitle}
+                  </p>
+                  <ul className="space-y-1">
+                    {tasks.map((task, idx) => (
+                      <TaskItemSimple key={idx} description={task.description} />
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
-          )}
+
+            {/* General tasks */}
+            {tasksByRock["general"] && tasksByRock["general"].length > 0 && (
+              <div className="p-2 bg-white/50 border border-slate-100 rounded-lg">
+                <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1.5">
+                  General Activities
+                </p>
+                <ul className="space-y-1">
+                  {tasksByRock["general"].map((task, idx) => (
+                    <TaskItemSimple key={idx} description={task.description} />
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -339,32 +344,14 @@ export function UserBentoCard({
   )
 }
 
-// Task list item
-function TaskItem({ task }: { task: BentoTask }) {
+// Simple task list item (without rock tag - used when grouped by rock)
+function TaskItemSimple({ description }: { description: string }) {
   return (
     <li className="flex items-start gap-2 text-sm">
-      <span className="text-green-500 mt-0.5 shrink-0">-</span>
-      <div className="flex-1 min-w-0">
-        <span className="text-slate-700 text-xs">{task.description}</span>
-        {task.rockTitle && (
-          <span className="ml-1.5 inline-flex items-center gap-0.5 px-1 py-0.5 bg-purple-50 text-purple-600 rounded text-[10px]">
-            <Target className="h-2.5 w-2.5" />
-            {task.rockTitle}
-          </span>
-        )}
-      </div>
+      <CheckCircle2 className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+      <span className="text-slate-700 text-xs">{description}</span>
     </li>
   )
-}
-
-// Helper to format date short
-function formatDateShort(dateStr: string): string {
-  try {
-    const date = new Date(dateStr + "T12:00:00Z")
-    return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
-  } catch {
-    return dateStr
-  }
 }
 
 // Bento Grid Container for multiple cards

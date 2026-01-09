@@ -89,12 +89,21 @@ function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
     }
   }
 
-  // Group tasks by date
-  const tasksByDate = report.tasks.reduce((acc, task) => {
-    if (!acc[task.date]) acc[task.date] = []
-    acc[task.date].push(task)
+  // Group tasks by rock (like internal EOD reports)
+  const tasksByRock = report.tasks.reduce((acc, task) => {
+    const key = task.rockTitle || "general"
+    if (!acc[key]) acc[key] = []
+    acc[key].push(task)
     return acc
   }, {} as Record<string, WeeklyTask[]>)
+
+  // Group priorities by rock
+  const prioritiesByRock = report.priorities.reduce((acc, priority) => {
+    const key = priority.rockTitle || "general"
+    if (!acc[key]) acc[key] = []
+    acc[key].push(priority)
+    return acc
+  }, {} as Record<string, WeeklyPriority[]>)
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -149,39 +158,96 @@ function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
       {/* Content */}
       {isExpanded && (
         <div className="p-6 space-y-6">
-          {/* Tasks by Day */}
+          {/* Rock Progress Update */}
           <div>
-            <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-3">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              Completed Tasks This Week ({report.totalTasks})
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-4">
+              <Target className="h-4 w-4 text-blue-500" />
+              Rock Progress Update ({report.totalTasks} tasks)
             </h4>
-            {Object.entries(tasksByDate).length > 0 ? (
+
+            {/* Tasks grouped by rock */}
+            {Object.entries(tasksByRock).length > 0 ? (
               <div className="space-y-4">
-                {Object.entries(tasksByDate)
-                  .sort(([a], [b]) => a.localeCompare(b))
-                  .map(([date, tasks]) => (
-                    <div key={date} className="pl-4 border-l-2 border-slate-200">
-                      <p className="text-xs font-medium text-slate-500 mb-2">
-                        {format(parseISO(date), "EEEE, MMM d")}
-                      </p>
-                      <ul className="space-y-1">
-                        {tasks.map((task, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm">
-                            <span className="text-green-500 mt-0.5">-</span>
-                            <div>
-                              <span className="text-slate-700">{task.description}</span>
-                              {task.rockTitle && (
-                                <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded text-xs">
-                                  <Target className="h-3 w-3" />
-                                  {task.rockTitle}
-                                </span>
-                              )}
+                {/* Show rock-specific tasks first */}
+                {Object.entries(tasksByRock)
+                  .filter(([rockTitle]) => rockTitle !== "general")
+                  .map(([rockTitle, tasks]) => {
+                    const rockPriorities = prioritiesByRock[rockTitle] || []
+                    return (
+                      <div key={rockTitle} className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                        <h5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <Target className="h-4 w-4 text-slate-600" />
+                          {rockTitle}
+                        </h5>
+
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+                              This Week's Activities ({tasks.length})
+                            </p>
+                            <ul className="space-y-1.5 ml-4">
+                              {tasks.map((task, idx) => (
+                                <li key={idx} className="flex items-start gap-2 text-sm">
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
+                                  <span className="text-slate-700">{task.description}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {rockPriorities.length > 0 && (
+                            <div className="pt-2 border-t border-slate-200">
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+                                Next Week's Priorities
+                              </p>
+                              <ul className="space-y-1.5 ml-4">
+                                {rockPriorities.map((priority, idx) => (
+                                  <li key={idx} className="flex items-start gap-2 text-sm">
+                                    <span className="text-blue-500 font-medium">{idx + 1}.</span>
+                                    <span className="text-slate-700">{priority.description}</span>
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                {/* General activities (tasks without rocks) */}
+                {tasksByRock["general"] && tasksByRock["general"].length > 0 && (
+                  <div className="p-4 bg-slate-50/50 border border-slate-200 rounded-lg">
+                    <h5 className="font-semibold text-slate-700 mb-3">
+                      General Activities
+                    </h5>
+                    <ul className="space-y-1.5 ml-4">
+                      {tasksByRock["general"].map((task, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
+                          <span className="text-slate-600">{task.description}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* General priorities */}
+                    {prioritiesByRock["general"] && prioritiesByRock["general"].length > 0 && (
+                      <div className="pt-2 mt-3 border-t border-slate-200">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+                          Next Week's Priorities
+                        </p>
+                        <ul className="space-y-1.5 ml-4">
+                          {prioritiesByRock["general"].map((priority, idx) => (
+                            <li key={idx} className="flex items-start gap-2 text-sm">
+                              <span className="text-blue-500 font-medium">{idx + 1}.</span>
+                              <span className="text-slate-600">{priority.description}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <p className="text-sm text-slate-500 italic">No tasks recorded this week</p>

@@ -90,6 +90,22 @@ function ReportCard({ report, timezone }: { report: PublicEODReport; timezone: s
     }
   }
 
+  // Group tasks by rock (like internal EOD reports)
+  const tasksByRock = report.tasks.reduce((acc, task) => {
+    const key = task.rockTitle || "general"
+    if (!acc[key]) acc[key] = []
+    acc[key].push(task)
+    return acc
+  }, {} as Record<string, PublicEODTask[]>)
+
+  // Group priorities by rock
+  const prioritiesByRock = report.tomorrowPriorities.reduce((acc, priority) => {
+    const key = priority.rockTitle || "general"
+    if (!acc[key]) acc[key] = []
+    acc[key].push(priority)
+    return acc
+  }, {} as Record<string, PublicEODPriority[]>)
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Header */}
@@ -133,28 +149,96 @@ function ReportCard({ report, timezone }: { report: PublicEODReport; timezone: s
       {/* Content */}
       {isExpanded && (
         <div className="p-6 space-y-6">
-          {/* Completed Tasks */}
+          {/* Rock Progress Update - Tasks grouped by rock */}
           <div>
-            <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-3">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              Today's Completed Tasks ({report.tasks.length})
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-4">
+              <Target className="h-4 w-4 text-blue-500" />
+              Rock Progress Update ({report.tasks.length} tasks)
             </h4>
-            <ul className="space-y-2">
-              {report.tasks.map((task, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm">
-                  <span className="text-green-500 mt-0.5">•</span>
-                  <div>
-                    <span className="text-slate-700">{task.description}</span>
-                    {task.rockTitle && (
-                      <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded text-xs">
-                        <Target className="h-3 w-3" />
-                        {task.rockTitle}
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+
+            {/* Tasks grouped by rock */}
+            <div className="space-y-4">
+              {/* Show rock-specific tasks first */}
+              {Object.entries(tasksByRock)
+                .filter(([rockTitle]) => rockTitle !== "general")
+                .map(([rockTitle, tasks]) => {
+                  const rockPriorities = prioritiesByRock[rockTitle] || []
+                  return (
+                    <div key={rockTitle} className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                      <h5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                        <Target className="h-4 w-4 text-slate-600" />
+                        {rockTitle}
+                      </h5>
+
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+                            Today's Key Activities ({tasks.length})
+                          </p>
+                          <ul className="space-y-1.5 ml-4">
+                            {tasks.map((task, idx) => (
+                              <li key={idx} className="flex items-start gap-2 text-sm">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
+                                <span className="text-slate-700">{task.description}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {rockPriorities.length > 0 && (
+                          <div className="pt-2 border-t border-slate-200">
+                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+                              Tomorrow's Priorities
+                            </p>
+                            <ul className="space-y-1.5 ml-4">
+                              {rockPriorities.map((priority, idx) => (
+                                <li key={idx} className="flex items-start gap-2 text-sm">
+                                  <span className="text-blue-500 font-medium">{idx + 1}.</span>
+                                  <span className="text-slate-700">{priority.description}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+
+              {/* General activities (tasks without rocks) */}
+              {tasksByRock["general"] && tasksByRock["general"].length > 0 && (
+                <div className="p-4 bg-slate-50/50 border border-slate-200 rounded-lg">
+                  <h5 className="font-semibold text-slate-700 mb-3">
+                    General Activities
+                  </h5>
+                  <ul className="space-y-1.5 ml-4">
+                    {tasksByRock["general"].map((task, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
+                        <span className="text-slate-600">{task.description}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* General priorities */}
+                  {prioritiesByRock["general"] && prioritiesByRock["general"].length > 0 && (
+                    <div className="pt-2 mt-3 border-t border-slate-200">
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+                        Tomorrow's Priorities
+                      </p>
+                      <ul className="space-y-1.5 ml-4">
+                        {prioritiesByRock["general"].map((priority, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm">
+                            <span className="text-blue-500 font-medium">{idx + 1}.</span>
+                            <span className="text-slate-600">{priority.description}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Challenges */}
@@ -167,30 +251,6 @@ function ReportCard({ report, timezone }: { report: PublicEODReport; timezone: s
               <p className="text-sm text-slate-600 whitespace-pre-wrap">{report.challenges}</p>
             </div>
           )}
-
-          {/* Tomorrow's Priorities */}
-          <div>
-            <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-3">
-              <ArrowRight className="h-4 w-4 text-blue-500" />
-              Tomorrow's Priorities ({report.tomorrowPriorities.length})
-            </h4>
-            <ul className="space-y-2">
-              {report.tomorrowPriorities.map((priority, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm">
-                  <span className="text-blue-500 mt-0.5">{idx + 1}.</span>
-                  <div>
-                    <span className="text-slate-700">{priority.description}</span>
-                    {priority.rockTitle && (
-                      <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded text-xs">
-                        <Target className="h-3 w-3" />
-                        {priority.rockTitle}
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
 
           {/* Escalation Note */}
           {report.needsEscalation && report.escalationNote && (
