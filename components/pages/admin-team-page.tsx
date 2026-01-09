@@ -138,11 +138,15 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     try {
       setIsSubmitting(true)
 
-      // Update member details
-      const updated = await api.members.update(editingMember.id, {
+      // Update member details - don't send role if editing an owner (role can't change)
+      const updatePayload: { department: string; role?: "admin" | "member" } = {
         department: formData.department,
-        role: formData.role,
-      })
+      }
+      // Only include role if NOT an owner (owners can't have role changed)
+      if (editingMember.role !== "owner") {
+        updatePayload.role = formData.role
+      }
+      const updated = await api.members.update(editingMember.id, updatePayload)
 
       // Update manager assignment if changed
       if (formData.managerId !== editingMember.managerId) {
