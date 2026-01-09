@@ -57,6 +57,7 @@ interface PublicEODReport {
 
 interface PublicDailyReport {
   organizationName: string
+  organizationLogo?: string
   date: string
   displayDate: string
   timezone: string
@@ -295,9 +296,17 @@ export default function PublicEODDailyReportPage() {
         <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-gradient-to-br from-slate-800 to-slate-600 rounded-lg flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-white" />
-              </div>
+              {data.organizationLogo ? (
+                <img
+                  src={data.organizationLogo}
+                  alt={`${data.organizationName} logo`}
+                  className="h-10 w-10 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="h-10 w-10 bg-gradient-to-br from-slate-800 to-slate-600 rounded-lg flex items-center justify-center">
+                  <Building2 className="h-5 w-5 text-white" />
+                </div>
+              )}
               <div>
                 <h1 className="font-semibold text-slate-900">{data.organizationName}</h1>
                 <p className="text-sm text-slate-500">End of Day Report</p>

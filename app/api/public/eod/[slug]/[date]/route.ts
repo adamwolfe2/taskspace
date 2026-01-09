@@ -47,6 +47,7 @@ interface PublicEODReport {
 
 interface PublicDailyReport {
   organizationName: string
+  organizationLogo?: string
   date: string
   displayDate: string
   timezone: string
@@ -92,21 +93,23 @@ export async function GET(
     const org = orgs[0]
     const orgId = org.id as string
     const orgName = org.name as string
-    const settings = org.settings as { timezone?: string } | null
+    const settings = org.settings as { timezone?: string; customBranding?: { logo?: string } } | null
     const timezone = settings?.timezone || "America/Los_Angeles"
+    const orgLogo = settings?.customBranding?.logo
 
-    // Get all active members
+    // Get all active members (join with users to get name if missing in members)
     const { rows: members } = await sql`
       SELECT
         om.id,
         om.user_id,
-        om.name,
-        om.email,
+        COALESCE(NULLIF(om.name, ''), u.name, 'Unknown') as name,
+        COALESCE(om.email, u.email) as email,
         om.role,
         om.department,
         om.job_title,
         om.status
       FROM organization_members om
+      LEFT JOIN users u ON u.id = om.user_id
       WHERE om.organization_id = ${orgId}
         AND om.status = 'active'
       ORDER BY
@@ -115,7 +118,7 @@ export async function GET(
           WHEN 'admin' THEN 2
           ELSE 3
         END,
-        om.name ASC
+        COALESCE(NULLIF(om.name, ''), u.name) ASC
     `
 
     // Get EOD reports for this date
@@ -230,6 +233,7 @@ export async function GET(
 
     const dailyReport: PublicDailyReport = {
       organizationName: orgName,
+      organizationLogo: orgLogo,
       date,
       displayDate,
       timezone,
