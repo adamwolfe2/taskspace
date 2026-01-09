@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress"
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
 import { EODInsightsCard } from "@/components/ai/eod-insights-card"
 import { DailyReportShare } from "@/components/admin/daily-report-share"
+import { WeeklyReportShare } from "@/components/admin/weekly-report-share"
 import { useToast } from "@/hooks/use-toast"
 
 interface AdminPageProps {
@@ -164,6 +165,11 @@ export function AdminPage({
           eodReports={eodReports}
           teamMembers={teamMembers}
         />
+      )}
+
+      {/* Weekly Report Share Link */}
+      {organization && (
+        <WeeklyReportShare organization={organization as any} />
       )}
 
       <Card>

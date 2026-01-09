@@ -1,0 +1,428 @@
+"use client"
+
+import { useEffect, useState, useCallback } from "react"
+import { useParams } from "next/navigation"
+import { format, parseISO } from "date-fns"
+import {
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  Users,
+  RefreshCw,
+  Target,
+  Loader2,
+  Calendar,
+  Building2,
+  ChevronDown,
+  ChevronUp,
+  BarChart3,
+  TrendingUp,
+  FileText,
+} from "lucide-react"
+
+interface WeeklyTask {
+  description: string
+  rockTitle?: string
+  date: string
+  completedAt?: string
+}
+
+interface WeeklyPriority {
+  description: string
+  rockTitle?: string
+  date: string
+}
+
+interface WeeklyUserReport {
+  userName: string
+  userRole: "owner" | "admin" | "member"
+  department: string
+  jobTitle?: string
+  totalReports: number
+  totalTasks: number
+  tasks: WeeklyTask[]
+  challenges: string[]
+  priorities: WeeklyPriority[]
+  escalations: Array<{ date: string; note: string }>
+}
+
+interface WeeklyReport {
+  organizationName: string
+  weekEnding: string
+  weekRange: string
+  displayWeek: string
+  timezone: string
+  lastUpdated: string
+  userReports: WeeklyUserReport[]
+  weeklyStats: {
+    totalReports: number
+    totalTasks: number
+    totalEscalations: number
+    averageTasksPerDay: number
+    submissionsByDay: Array<{ date: string; displayDate: string; count: number; total: number }>
+  }
+}
+
+function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
+  const [isExpanded, setIsExpanded] = useState(true)
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case "owner":
+        return <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">Owner</span>
+      case "admin":
+        return <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">Admin</span>
+      default:
+        return null
+    }
+  }
+
+  // Group tasks by date
+  const tasksByDate = report.tasks.reduce((acc, task) => {
+    if (!acc[task.date]) acc[task.date] = []
+    acc[task.date].push(task)
+    return acc
+  }, {} as Record<string, WeeklyTask[]>)
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      {/* Header */}
+      <div
+        className="px-6 py-4 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100 cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-white font-semibold">
+              {(report.userName || "?").charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-slate-900">{report.userName || "Unknown"}</h3>
+                {getRoleBadge(report.userRole)}
+              </div>
+              <p className="text-sm text-slate-500">
+                {report.jobTitle || report.department}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 text-sm">
+              <span className="flex items-center gap-1 text-green-600">
+                <CheckCircle2 className="h-4 w-4" />
+                {report.totalTasks} tasks
+              </span>
+              <span className="flex items-center gap-1 text-blue-600">
+                <FileText className="h-4 w-4" />
+                {report.totalReports} reports
+              </span>
+              {report.escalations.length > 0 && (
+                <span className="flex items-center gap-1 text-red-600">
+                  <AlertTriangle className="h-4 w-4" />
+                  {report.escalations.length}
+                </span>
+              )}
+            </div>
+            <button className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
+              {isExpanded ? (
+                <ChevronUp className="h-5 w-5 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-slate-400" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      {isExpanded && (
+        <div className="p-6 space-y-6">
+          {/* Tasks by Day */}
+          <div>
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-3">
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              Completed Tasks This Week ({report.totalTasks})
+            </h4>
+            {Object.entries(tasksByDate).length > 0 ? (
+              <div className="space-y-4">
+                {Object.entries(tasksByDate)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([date, tasks]) => (
+                    <div key={date} className="pl-4 border-l-2 border-slate-200">
+                      <p className="text-xs font-medium text-slate-500 mb-2">
+                        {format(parseISO(date), "EEEE, MMM d")}
+                      </p>
+                      <ul className="space-y-1">
+                        {tasks.map((task, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm">
+                            <span className="text-green-500 mt-0.5">-</span>
+                            <div>
+                              <span className="text-slate-700">{task.description}</span>
+                              {task.rockTitle && (
+                                <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded text-xs">
+                                  <Target className="h-3 w-3" />
+                                  {task.rockTitle}
+                                </span>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">No tasks recorded this week</p>
+            )}
+          </div>
+
+          {/* Challenges */}
+          {report.challenges.length > 0 && (
+            <div>
+              <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-3">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                Challenges / Blockers
+              </h4>
+              <ul className="space-y-2">
+                {report.challenges.map((challenge, idx) => (
+                  <li key={idx} className="text-sm text-slate-600 pl-4 border-l-2 border-amber-200">
+                    {challenge}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Escalations */}
+          {report.escalations.length > 0 && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <h4 className="flex items-center gap-2 text-sm font-semibold text-red-700 mb-3">
+                <AlertTriangle className="h-4 w-4" />
+                Escalations ({report.escalations.length})
+              </h4>
+              <ul className="space-y-2">
+                {report.escalations.map((esc, idx) => (
+                  <li key={idx} className="text-sm">
+                    <span className="text-red-500 font-medium">{format(parseISO(esc.date), "MMM d")}:</span>
+                    <span className="text-red-600 ml-2">{esc.note}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function PublicEODWeeklyReportPage() {
+  const params = useParams()
+  const slug = params.slug as string
+  const date = params.date as string
+
+  const [data, setData] = useState<WeeklyReport | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const fetchReport = useCallback(async (showRefreshIndicator = false) => {
+    if (showRefreshIndicator) setIsRefreshing(true)
+
+    try {
+      const response = await fetch(`/api/public/eod/${slug}/week/${date}`)
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to load report")
+      }
+
+      setData(result.data)
+      setError(null)
+      setLastRefresh(new Date())
+    } catch (err) {
+      console.error("Failed to fetch report:", err)
+      setError(err instanceof Error ? err.message : "Failed to load report")
+    } finally {
+      setLoading(false)
+      setIsRefreshing(false)
+    }
+  }, [slug, date])
+
+  // Initial load
+  useEffect(() => {
+    fetchReport()
+  }, [fetchReport])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400 mx-auto mb-3" />
+          <p className="text-slate-500">Loading weekly report...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="h-8 w-8 text-red-500" />
+          </div>
+          <h1 className="text-xl font-semibold text-slate-900 mb-2">Report Not Found</h1>
+          <p className="text-slate-500 mb-4">{error || "Unable to load the weekly report."}</p>
+          <button
+            onClick={() => fetchReport()}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 py-4 sm:px-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-gradient-to-br from-slate-800 to-slate-600 rounded-lg flex items-center justify-center">
+                <Building2 className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="font-semibold text-slate-900">{data.organizationName}</h1>
+                <p className="text-sm text-slate-500">Weekly EOD Report</p>
+              </div>
+            </div>
+            <button
+              onClick={() => fetchReport(true)}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              Refresh
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-5xl mx-auto px-4 py-8 sm:px-6">
+        {/* Week Banner */}
+        <div className="mb-8 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-slate-200 mb-3">
+            <Calendar className="h-4 w-4 text-slate-400" />
+            <span className="text-sm font-medium text-slate-700">{data.weekRange}</span>
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">{data.displayWeek}</h2>
+          <p className="text-sm text-slate-500">
+            Last updated: {format(parseISO(data.lastUpdated), "h:mm a")}
+          </p>
+        </div>
+
+        {/* Weekly Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+            <div className="flex items-center gap-2 text-slate-500 mb-1">
+              <FileText className="h-4 w-4" />
+              <span className="text-xs font-medium">Total Reports</span>
+            </div>
+            <p className="text-2xl font-bold text-slate-900">{data.weeklyStats.totalReports}</p>
+          </div>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+            <div className="flex items-center gap-2 text-slate-500 mb-1">
+              <CheckCircle2 className="h-4 w-4" />
+              <span className="text-xs font-medium">Tasks Completed</span>
+            </div>
+            <p className="text-2xl font-bold text-green-600">{data.weeklyStats.totalTasks}</p>
+          </div>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+            <div className="flex items-center gap-2 text-slate-500 mb-1">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-xs font-medium">Avg Tasks/Day</span>
+            </div>
+            <p className="text-2xl font-bold text-blue-600">{data.weeklyStats.averageTasksPerDay}</p>
+          </div>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+            <div className="flex items-center gap-2 text-slate-500 mb-1">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-xs font-medium">Escalations</span>
+            </div>
+            <p className="text-2xl font-bold text-red-600">{data.weeklyStats.totalEscalations}</p>
+          </div>
+        </div>
+
+        {/* Daily Submission Chart */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-8">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-4">
+            <BarChart3 className="h-4 w-4 text-slate-400" />
+            Daily Submissions
+          </h3>
+          <div className="flex items-end gap-2 h-32">
+            {data.weeklyStats.submissionsByDay.map((day) => {
+              const percentage = day.total > 0 ? (day.count / day.total) * 100 : 0
+              return (
+                <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
+                  <span className="text-xs font-medium text-slate-600">{day.count}/{day.total}</span>
+                  <div className="w-full bg-slate-100 rounded-t-lg overflow-hidden" style={{ height: "80px" }}>
+                    <div
+                      className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg transition-all duration-500"
+                      style={{ height: `${percentage}%`, marginTop: `${100 - percentage}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-slate-500">{day.displayDate.split(",")[0]}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Team Reports */}
+        <div className="mb-6">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900 mb-4">
+            <Users className="h-5 w-5 text-slate-400" />
+            Team Reports ({data.userReports.length} members)
+          </h3>
+        </div>
+
+        {data.userReports.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="h-8 w-8 text-slate-400" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900 mb-2">No Reports This Week</h2>
+            <p className="text-slate-500">Reports will appear here as team members submit them.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {data.userReports.map((report, idx) => (
+              <UserWeeklyCard key={idx} report={report} />
+            ))}
+          </div>
+        )}
+
+        {/* Footer info */}
+        <div className="mt-8 text-center text-sm text-slate-400">
+          <p>Timezone: {data.timezone}</p>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200 bg-white mt-12">
+        <div className="max-w-5xl mx-auto px-4 py-6 sm:px-6">
+          <p className="text-center text-sm text-slate-400">
+            Powered by AIMS EOD Dashboard
+          </p>
+        </div>
+      </footer>
+    </div>
+  )
+}

@@ -1,0 +1,320 @@
+/**
+ * Public Weekly EOD Report API
+ *
+ * This endpoint provides public access to aggregated EOD reports for a week.
+ * Shows consolidated weekly report every Thursday (Friday-Thursday week).
+ * No authentication required - designed for sharing with stakeholders/board members.
+ *
+ * URL format: /api/public/eod/[org-slug]/week/[date]
+ * Example: /api/public/eod/aims/week/2026-01-08 (Thursday date)
+ */
+
+import { NextRequest, NextResponse } from "next/server"
+import { sql } from "@vercel/postgres"
+
+interface WeeklyTask {
+  description: string
+  rockTitle?: string
+  date: string
+  completedAt?: string
+}
+
+interface WeeklyPriority {
+  description: string
+  rockTitle?: string
+  date: string
+}
+
+interface WeeklyUserReport {
+  userName: string
+  userRole: "owner" | "admin" | "member"
+  department: string
+  jobTitle?: string
+  totalReports: number
+  totalTasks: number
+  tasks: WeeklyTask[]
+  challenges: string[]
+  priorities: WeeklyPriority[]
+  escalations: Array<{ date: string; note: string }>
+}
+
+interface WeeklyReport {
+  organizationName: string
+  weekEnding: string
+  weekRange: string
+  displayWeek: string
+  timezone: string
+  lastUpdated: string
+  userReports: WeeklyUserReport[]
+  weeklyStats: {
+    totalReports: number
+    totalTasks: number
+    totalEscalations: number
+    averageTasksPerDay: number
+    submissionsByDay: Array<{ date: string; displayDate: string; count: number; total: number }>
+  }
+}
+
+// GET /api/public/eod/[slug]/week/[date] - Get weekly EOD report
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string; date: string }> }
+) {
+  try {
+    const { slug, date } = await params
+
+    // Validate date format (YYYY-MM-DD) - should be a Thursday
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid date format. Use YYYY-MM-DD" },
+        { status: 400 }
+      )
+    }
+
+    // Calculate week range (Friday to Thursday)
+    const endDate = new Date(date + "T12:00:00Z")
+    const startDate = new Date(endDate)
+    startDate.setDate(startDate.getDate() - 6) // Go back 6 days to Friday
+
+    const startDateStr = startDate.toISOString().split("T")[0]
+    const endDateStr = date
+
+    // Find organization by slug
+    const { rows: orgs } = await sql`
+      SELECT id, name, settings
+      FROM organizations
+      WHERE slug = ${slug}
+    `
+
+    if (orgs.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Organization not found" },
+        { status: 404 }
+      )
+    }
+
+    const org = orgs[0]
+    const orgId = org.id as string
+    const orgName = org.name as string
+    const settings = org.settings as { timezone?: string } | null
+    const timezone = settings?.timezone || "America/Los_Angeles"
+
+    // Get all active members
+    const { rows: members } = await sql`
+      SELECT
+        om.id,
+        om.user_id,
+        om.name,
+        om.email,
+        om.role,
+        om.department,
+        om.job_title,
+        om.status
+      FROM organization_members om
+      WHERE om.organization_id = ${orgId}
+        AND om.status = 'active'
+      ORDER BY
+        CASE om.role
+          WHEN 'owner' THEN 1
+          WHEN 'admin' THEN 2
+          ELSE 3
+        END,
+        om.name ASC
+    `
+
+    // Get EOD reports for the week
+    const { rows: reports } = await sql`
+      SELECT
+        er.id,
+        er.user_id,
+        er.date,
+        er.tasks,
+        er.challenges,
+        er.tomorrow_priorities,
+        er.needs_escalation,
+        er.escalation_note,
+        er.submitted_at,
+        er.created_at
+      FROM eod_reports er
+      WHERE er.organization_id = ${orgId}
+        AND er.date >= ${startDateStr}
+        AND er.date <= ${endDateStr}
+      ORDER BY er.date ASC, er.submitted_at ASC
+    `
+
+    // Get rocks for context
+    const { rows: rocks } = await sql`
+      SELECT id, title, user_id
+      FROM rocks
+      WHERE organization_id = ${orgId}
+    `
+    const rockMap = new Map(rocks.map(r => [r.id as string, r.title as string]))
+
+    // Build member lookup
+    const memberMap = new Map(members.map(m => [m.user_id as string, m]))
+
+    // Aggregate reports by user
+    const userReportsMap = new Map<string, WeeklyUserReport>()
+
+    for (const report of reports) {
+      const member = memberMap.get(report.user_id as string)
+      if (!member) continue
+
+      const userId = report.user_id as string
+
+      // Format date properly (PostgreSQL DATE returns Date object)
+      const dateValue = report.date
+      let reportDate: string
+      if (dateValue instanceof Date) {
+        reportDate = `${dateValue.getFullYear()}-${String(dateValue.getMonth() + 1).padStart(2, '0')}-${String(dateValue.getDate()).padStart(2, '0')}`
+      } else if (typeof dateValue === 'string') {
+        reportDate = dateValue.split('T')[0]
+      } else {
+        reportDate = String(dateValue)
+      }
+
+      if (!userReportsMap.has(userId)) {
+        userReportsMap.set(userId, {
+          userName: (member.name as string) || "Unknown",
+          userRole: member.role as "owner" | "admin" | "member",
+          department: (member.department as string) || "General",
+          jobTitle: (member.job_title as string) || undefined,
+          totalReports: 0,
+          totalTasks: 0,
+          tasks: [],
+          challenges: [],
+          priorities: [],
+          escalations: [],
+        })
+      }
+
+      const userReport = userReportsMap.get(userId)!
+      userReport.totalReports++
+
+      // Add tasks
+      const tasks = (report.tasks as Array<{ text: string; rockId?: string; completedAt?: string }>) || []
+      for (const task of tasks) {
+        if (task.text) {
+          userReport.tasks.push({
+            description: task.text,
+            rockTitle: task.rockId ? rockMap.get(task.rockId) : undefined,
+            date: reportDate,
+            completedAt: task.completedAt,
+          })
+          userReport.totalTasks++
+        }
+      }
+
+      // Add challenges
+      const challenges = report.challenges as string
+      if (challenges && challenges.trim()) {
+        userReport.challenges.push(challenges.trim())
+      }
+
+      // Add priorities
+      const priorities = (report.tomorrow_priorities as Array<{ text: string; rockId?: string }>) || []
+      for (const priority of priorities) {
+        if (priority.text) {
+          userReport.priorities.push({
+            description: priority.text,
+            rockTitle: priority.rockId ? rockMap.get(priority.rockId) : undefined,
+            date: reportDate,
+          })
+        }
+      }
+
+      // Add escalations
+      if (report.needs_escalation && report.escalation_note) {
+        userReport.escalations.push({
+          date: reportDate,
+          note: report.escalation_note as string,
+        })
+      }
+    }
+
+    // Convert to array and sort by role then name
+    const userReports = Array.from(userReportsMap.values()).sort((a, b) => {
+      const roleOrder = { owner: 1, admin: 2, member: 3 }
+      const roleA = roleOrder[a.userRole]
+      const roleB = roleOrder[b.userRole]
+      if (roleA !== roleB) return roleA - roleB
+      return a.userName.localeCompare(b.userName)
+    })
+
+    // Calculate daily submission stats
+    const submissionsByDay: Array<{ date: string; displayDate: string; count: number; total: number }> = []
+    const totalMembers = members.length
+
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split("T")[0]
+      const dayReports = reports.filter(r => {
+        const dateValue = r.date
+        let reportDate: string
+        if (dateValue instanceof Date) {
+          reportDate = `${dateValue.getFullYear()}-${String(dateValue.getMonth() + 1).padStart(2, '0')}-${String(dateValue.getDate()).padStart(2, '0')}`
+        } else if (typeof dateValue === 'string') {
+          reportDate = dateValue.split('T')[0]
+        } else {
+          reportDate = String(dateValue)
+        }
+        return reportDate === dateStr
+      })
+
+      const displayDate = new Date(dateStr + "T12:00:00Z").toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      })
+
+      submissionsByDay.push({
+        date: dateStr,
+        displayDate,
+        count: dayReports.length,
+        total: totalMembers,
+      })
+    }
+
+    // Calculate weekly stats
+    const totalReports = reports.length
+    const totalTasks = userReports.reduce((sum, u) => sum + u.totalTasks, 0)
+    const totalEscalations = userReports.reduce((sum, u) => sum + u.escalations.length, 0)
+    const daysWithReports = submissionsByDay.filter(d => d.count > 0).length
+    const averageTasksPerDay = daysWithReports > 0 ? Math.round(totalTasks / daysWithReports) : 0
+
+    // Format week display
+    const weekRangeDisplay = `${startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${endDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+    const displayWeek = `Week Ending ${endDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`
+
+    const weeklyReport: WeeklyReport = {
+      organizationName: orgName,
+      weekEnding: endDateStr,
+      weekRange: weekRangeDisplay,
+      displayWeek,
+      timezone,
+      lastUpdated: new Date().toISOString(),
+      userReports,
+      weeklyStats: {
+        totalReports,
+        totalTasks,
+        totalEscalations,
+        averageTasksPerDay,
+        submissionsByDay,
+      },
+    }
+
+    // Add cache headers for 5 minute caching
+    const headers = new Headers()
+    headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600")
+
+    return NextResponse.json(
+      { success: true, data: weeklyReport },
+      { headers }
+    )
+  } catch (error) {
+    console.error("Weekly EOD report error:", error)
+    return NextResponse.json(
+      { success: false, error: "Failed to load weekly report" },
+      { status: 500 }
+    )
+  }
+}
