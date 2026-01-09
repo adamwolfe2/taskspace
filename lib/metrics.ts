@@ -237,17 +237,18 @@ export async function getScorecardData(
   const metricsResult = await sql`
     SELECT
       om.id as member_id,
-      om.name as member_name,
+      COALESCE(NULLIF(om.name, ''), u.name, 'Unknown') as member_name,
       om.department,
       tmm.id as metric_id,
       tmm.metric_name,
       tmm.weekly_goal
     FROM team_member_metrics tmm
     JOIN organization_members om ON tmm.team_member_id = om.id
+    LEFT JOIN users u ON u.id = om.user_id
     WHERE om.organization_id = ${organizationId}
     AND om.status = 'active'
     AND tmm.is_active = true
-    ORDER BY om.name ASC
+    ORDER BY COALESCE(NULLIF(om.name, ''), u.name) ASC
   `
 
   if (metricsResult.rows.length === 0) {
