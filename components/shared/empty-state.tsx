@@ -80,31 +80,32 @@ export function EmptyState({
  >
  <div
  className={cn(
- "rounded-full bg-slate-100  flex items-center justify-center mb-4",
+ "rounded-full bg-gray-100 flex items-center justify-center mb-4",
  styles.iconWrapper
  )}
  >
  {IconProp && typeof IconProp === "function" ? (
- <IconProp className={cn("text-slate-400 ", styles.icon)} />
+ <IconProp className={cn("text-gray-400", styles.icon)} />
  ) : (
- IconProp || <Inbox className={cn("text-slate-400 ", styles.icon)} />
+ IconProp || <Inbox className={cn("text-gray-400", styles.icon)} />
  )}
  </div>
- <h3 className={cn("text-slate-900  mb-1", styles.title)}>
+ <h3 className={cn("text-gray-900 mb-1", styles.title)}>
  {title}
  </h3>
  {description && (
- <p className={cn("text-slate-500  max-w-sm mb-4", styles.description)}>
+ <p className={cn("text-gray-500 max-w-sm mb-4 px-4 sm:px-0", styles.description)}>
  {description}
  </p>
  )}
  {(action || secondaryAction) && (
- <div className="flex flex-wrap items-center gap-2 mt-2">
+ <div className="flex flex-col sm:flex-row items-center gap-2 mt-2 w-full sm:w-auto px-4 sm:px-0">
  {action && (
  <Button
  onClick={action.onClick}
  variant={action.variant || "default"}
  size={size === "sm" ? "sm" : "default"}
+ className="w-full sm:w-auto"
  >
  {action.label}
  </Button>
@@ -114,6 +115,7 @@ export function EmptyState({
  onClick={secondaryAction.onClick}
  variant="ghost"
  size={size === "sm" ? "sm" : "default"}
+ className="w-full sm:w-auto"
  >
  {secondaryAction.label}
  </Button>

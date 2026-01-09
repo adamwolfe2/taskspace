@@ -23,10 +23,8 @@ import {
   BarChart3,
   Sparkles,
   Users,
-  Bell,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 
 export function MobileNav() {
   const { currentUser, currentPage, setCurrentPage } = useApp()
@@ -64,97 +62,112 @@ export function MobileNav() {
   const isMoreActive = filteredSecondaryItems.some((item) => item.id === currentPage)
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border z-40 safe-area-pb">
-      <div className="flex items-center justify-around h-16 px-1">
+    <nav
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200 z-50"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <div className="flex items-center justify-around h-16 px-2">
         {primaryItems.map((item) => {
           const isActive = currentPage === item.id
           return (
-            <Button
+            <button
               key={item.id}
-              variant="ghost"
+              aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
-                "flex-col h-14 gap-0.5 flex-1 rounded-xl transition-all duration-200",
+                "flex flex-col items-center justify-center flex-1 min-w-0 h-14 gap-1 rounded-xl transition-all duration-200 active:scale-95",
                 isActive
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-red-600 bg-red-50"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               )}
               onClick={() => setCurrentPage(item.id)}
             >
               <div className="relative">
-                <item.icon className={cn("h-5 w-5 transition-transform", isActive && "scale-110")} />
-                {/* Add indicator dot when active */}
+                <item.icon className={cn("h-6 w-6 transition-transform", isActive && "scale-110")} />
+                {/* Active indicator dot */}
                 {isActive && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-red-600" />
                 )}
               </div>
-              <span className={cn("text-[10px] font-medium", isActive && "font-semibold")}>
+              <span className={cn(
+                "text-[10px] leading-tight truncate max-w-full px-1",
+                isActive ? "font-semibold" : "font-medium"
+              )}>
                 {item.label}
               </span>
-            </Button>
+            </button>
           )
         })}
 
         {/* More menu trigger */}
         <Sheet open={moreSheetOpen} onOpenChange={setMoreSheetOpen}>
           <SheetTrigger asChild>
-            <Button
-              variant="ghost"
+            <button
+              aria-label="More options"
               className={cn(
-                "flex-col h-14 gap-0.5 flex-1 rounded-xl transition-all duration-200",
+                "flex flex-col items-center justify-center flex-1 min-w-0 h-14 gap-1 rounded-xl transition-all duration-200 active:scale-95",
                 isMoreActive
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-red-600 bg-red-50"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               )}
             >
               <div className="relative">
-                <MoreHorizontal className={cn("h-5 w-5", isMoreActive && "scale-110")} />
+                <MoreHorizontal className={cn("h-6 w-6", isMoreActive && "scale-110")} />
                 {isMoreActive && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-red-600" />
                 )}
               </div>
-              <span className={cn("text-[10px] font-medium", isMoreActive && "font-semibold")}>
+              <span className={cn(
+                "text-[10px] leading-tight",
+                isMoreActive ? "font-semibold" : "font-medium"
+              )}>
                 More
               </span>
-            </Button>
+            </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetContent
+            side="bottom"
+            className="rounded-t-3xl px-4"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+          >
             <SheetHeader className="pb-4">
-              <SheetTitle>More Options</SheetTitle>
+              <SheetTitle className="text-left">More Options</SheetTitle>
             </SheetHeader>
             <div className="grid grid-cols-3 gap-3 pb-6">
               {filteredSecondaryItems.map((item) => {
                 const isActive = currentPage === item.id
                 return (
-                  <Button
+                  <button
                     key={item.id}
-                    variant="ghost"
+                    aria-label={item.label}
+                    aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      "flex-col h-20 gap-2 rounded-2xl border transition-all duration-200",
+                      "flex flex-col items-center justify-center h-20 gap-2 rounded-2xl border transition-all duration-200 active:scale-95",
                       isActive
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-muted hover:border-muted-foreground/50"
+                        ? "border-red-200 bg-red-50 text-red-600"
+                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                     )}
                     onClick={() => handleNavigation(item.id)}
                   >
                     <item.icon className="h-6 w-6" />
-                    <span className="text-xs font-medium text-center leading-tight">
+                    <span className="text-xs font-medium text-center leading-tight px-1">
                       {item.label}
                     </span>
-                  </Button>
+                  </button>
                 )
               })}
             </div>
 
             {/* Quick actions */}
-            <div className="border-t pt-4 space-y-3">
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+            <div className="border-t border-gray-200 pt-4 space-y-3">
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
                 Quick Actions
               </p>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 gap-2"
+                  className="flex-1 gap-2 h-10"
                   onClick={() => {
                     setMoreSheetOpen(false)
                     // Trigger command palette
@@ -174,9 +187,6 @@ export function MobileNav() {
           </SheetContent>
         </Sheet>
       </div>
-
-      {/* Safe area padding for devices with home indicators */}
-      <div className="h-safe-area-inset-bottom bg-card" />
     </nav>
   )
 }

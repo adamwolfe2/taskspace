@@ -643,47 +643,54 @@ export function SettingsPage() {
  return (
  <div className="space-y-6">
  <div>
- <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
- <p className="text-muted-foreground">
+ <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Settings</h1>
+ <p className="text-sm text-gray-500 mt-1">
  Manage your organization settings and preferences
  </p>
  </div>
 
  <Tabs defaultValue="organization" className="space-y-6">
- <TabsList>
- <TabsTrigger value="organization" className="gap-2">
- <Building className="h-4 w-4" />
- Organization
+ {/* Scrollable tabs container for mobile */}
+ <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+ <TabsList className="inline-flex min-w-max bg-gray-100/80">
+ <TabsTrigger value="organization" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+ <Building className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+ <span className="hidden sm:inline">Organization</span>
+ <span className="sm:hidden">Org</span>
  </TabsTrigger>
- <TabsTrigger value="notifications" className="gap-2">
- <Bell className="h-4 w-4" />
- Notifications
+ <TabsTrigger value="notifications" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+ <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+ <span className="hidden sm:inline">Notifications</span>
+ <span className="sm:hidden">Alerts</span>
  </TabsTrigger>
  {isAdmin && (
- <TabsTrigger value="team" className="gap-2">
- <Users className="h-4 w-4" />
+ <TabsTrigger value="team" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+ <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
  Team
  </TabsTrigger>
  )}
  {isOwner && (
- <TabsTrigger value="billing" className="gap-2">
- <CreditCard className="h-4 w-4" />
+ <TabsTrigger value="billing" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+ <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
  Billing
  </TabsTrigger>
  )}
  {isAdmin && (
- <TabsTrigger value="integrations" className="gap-2">
- <Key className="h-4 w-4" />
- Integrations
+ <TabsTrigger value="integrations" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+ <Key className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+ <span className="hidden sm:inline">Integrations</span>
+ <span className="sm:hidden">Integ.</span>
  </TabsTrigger>
  )}
  {isAdmin && (
- <TabsTrigger value="data" className="gap-2">
- <Download className="h-4 w-4" />
- Data Export
+ <TabsTrigger value="data" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+ <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+ <span className="hidden sm:inline">Data Export</span>
+ <span className="sm:hidden">Export</span>
  </TabsTrigger>
  )}
  </TabsList>
+ </div>
 
  <TabsContent value="organization" className="space-y-6">
  <Card>

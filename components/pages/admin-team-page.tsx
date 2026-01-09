@@ -442,12 +442,12 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Team Management</h1>
-          <p className="text-muted-foreground mt-1">Manage team members and invite new users</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Team Management</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage team members and invite new users</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {/* Add Team Member Dialog */}
           <Dialog open={addMemberDialogOpen} onOpenChange={setAddMemberDialogOpen}>
             <DialogTrigger asChild>
@@ -732,7 +732,8 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
               <CardDescription>View and manage all team members including pending ones</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              {/* Desktop: Table view */}
+              <div className="hidden sm:block overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -824,6 +825,99 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+
+              {/* Mobile: Card stack view */}
+              <div className="sm:hidden space-y-3">
+                {teamMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className="bg-white border border-gray-200 rounded-xl p-4 space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <UserInitials name={member.name} size="sm" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{member.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                        </div>
+                      </div>
+                      {member.status === "pending" ? (
+                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex-shrink-0 text-[10px]">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Pending
+                        </Badge>
+                      ) : member.status === "invited" ? (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex-shrink-0 text-[10px]">
+                          <Mail className="h-3 w-3 mr-1" />
+                          Invited
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex-shrink-0 text-[10px]">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Active
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Dept:</span>{" "}
+                        <span className="text-gray-700">{member.department}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-500">Role:</span>{" "}
+                        <RoleBadge role={member.role} />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                      {member.status === "pending" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSendInviteToPending(member)}
+                          disabled={isSubmitting}
+                          className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50"
+                        >
+                          <Send className="h-4 w-4 mr-1.5" />
+                          Invite
+                        </Button>
+                      )}
+                      {member.status === "active" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSendLoginLink(member)}
+                          disabled={isSubmitting}
+                          className="flex-1 text-purple-600 border-purple-200 hover:bg-purple-50"
+                        >
+                          <KeyRound className="h-4 w-4 mr-1.5" />
+                          Login Link
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(member)}
+                        className="flex-1"
+                      >
+                        <Pencil className="h-4 w-4 mr-1.5" />
+                        Edit
+                      </Button>
+                      {member.role !== "owner" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteMember(member.id, member.name)}
+                          className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
