@@ -173,11 +173,25 @@ function parseAssignedTask(row: Record<string, unknown>): AssignedTask {
 }
 
 function parseEODReport(row: Record<string, unknown>): EODReport {
+  // PostgreSQL DATE type returns a JavaScript Date object
+  // We need to format it as YYYY-MM-DD string using local timezone
+  const dateValue = row.date
+  let dateString: string
+  if (dateValue instanceof Date) {
+    // Format as YYYY-MM-DD using local timezone (not UTC to avoid date shifting)
+    dateString = `${dateValue.getFullYear()}-${String(dateValue.getMonth() + 1).padStart(2, '0')}-${String(dateValue.getDate()).padStart(2, '0')}`
+  } else if (typeof dateValue === 'string') {
+    // Already a string, extract just the date part if it has time component
+    dateString = dateValue.split('T')[0]
+  } else {
+    dateString = String(dateValue)
+  }
+
   return {
     id: row.id as string,
     organizationId: row.organization_id as string,
     userId: row.user_id as string,
-    date: row.date as string,
+    date: dateString,
     tasks: row.tasks as EODReport["tasks"],
     challenges: row.challenges as string,
     tomorrowPriorities: row.tomorrow_priorities as EODReport["tomorrowPriorities"],
