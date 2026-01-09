@@ -4,6 +4,7 @@
 /* ============================================
    PREMIUM SAAS DESIGN SYSTEM
    Light mode only - Clean, modern, polished
+   Brand: RED/WHITE (Modern Amenities Group)
    ============================================ */
 
 :root {
@@ -15,8 +16,8 @@
   --popover: 255 255 255;
   --popover-foreground: 15 23 42;
 
-  /* Primary - Rich blue with depth */
-  --primary: 59 130 246;
+  /* Primary - Brand Red */
+  --primary: 220 38 38;             /* Red-600 #DC2626 */
   --primary-foreground: 255 255 255;
 
   /* Secondary - Warm gray */
@@ -27,9 +28,9 @@
   --muted: 241 245 249;
   --muted-foreground: 100 116 139;
 
-  /* Accent - Subtle highlight */
-  --accent: 239 246 255;
-  --accent-foreground: 30 64 175;
+  /* Accent - Subtle red highlight */
+  --accent: 254 242 242;            /* Red-50 */
+  --accent-foreground: 153 27 27;   /* Red-800 */
 
   /* Semantic colors - Refined */
   --destructive: 239 68 68;
@@ -42,13 +43,13 @@
   /* Borders and inputs */
   --border: 226 232 240;
   --input: 226 232 240;
-  --ring: 59 130 246;
+  --ring: 220 38 38;                /* Red-600 */
 
-  /* Charts */
-  --chart-1: 59 130 246;
+  /* Charts - Red first for brand consistency */
+  --chart-1: 220 38 38;             /* Red-600 */
   --chart-2: 16 185 129;
   --chart-3: 245 158 11;
-  --chart-4: 239 68 68;
+  --chart-4: 59 130 246;            /* Blue moved to 4th position */
   --chart-5: 139 92 246;
 
   /* Premium radius - slightly larger for modern feel */
@@ -57,12 +58,12 @@
   /* Sidebar */
   --sidebar: 255 255 255;
   --sidebar-foreground: 71 85 105;
-  --sidebar-primary: 59 130 246;
+  --sidebar-primary: 220 38 38;     /* Red-600 */
   --sidebar-primary-foreground: 255 255 255;
-  --sidebar-accent: 239 246 255;
-  --sidebar-accent-foreground: 30 64 175;
+  --sidebar-accent: 254 242 242;    /* Red-50 */
+  --sidebar-accent-foreground: 153 27 27; /* Red-800 */
   --sidebar-border: 241 245 249;
-  --sidebar-ring: 59 130 246;
+  --sidebar-ring: 220 38 38;        /* Red-600 */
 }
 
 @theme inline {
@@ -181,9 +182,9 @@
   /* Soft glow for buttons */
   .shadow-glow-primary {
     box-shadow:
-      0 0 0 1px rgb(59 130 246 / 0.1),
-      0 2px 4px rgb(59 130 246 / 0.1),
-      0 4px 12px rgb(59 130 246 / 0.15);
+      0 0 0 1px rgb(220 38 38 / 0.1),
+      0 2px 4px rgb(220 38 38 / 0.1),
+      0 4px 12px rgb(220 38 38 / 0.15);
   }
 
   .shadow-glow-success {
@@ -203,13 +204,13 @@
    PREMIUM GRADIENTS
    ============================================ */
 @layer utilities {
-  /* Primary button gradient */
+  /* Primary button gradient - Brand Red */
   .gradient-primary {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
   }
 
   .gradient-primary-hover {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
   }
 
   /* Success gradient */
@@ -218,8 +219,8 @@
   }
 
   /* Subtle card accent gradients */
-  .gradient-accent-blue {
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  .gradient-accent-red {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
   }
 
   .gradient-accent-emerald {
@@ -363,10 +364,10 @@
 
   @keyframes glow-pulse {
     0%, 100% {
-      box-shadow: 0 0 0 0 rgb(59 130 246 / 0.4);
+      box-shadow: 0 0 0 0 rgb(220 38 38 / 0.4);
     }
     50% {
-      box-shadow: 0 0 0 8px rgb(59 130 246 / 0);
+      box-shadow: 0 0 0 8px rgb(220 38 38 / 0);
     }
   }
 
@@ -594,7 +595,7 @@
   .card-accent-left {
     @apply bg-white rounded-xl overflow-hidden;
     border: 1px solid rgb(241 245 249);
-    border-left: 4px solid rgb(59 130 246);
+    border-left: 4px solid rgb(220 38 38);
     box-shadow: 0 1px 3px rgb(0 0 0 / 0.04);
   }
 
@@ -635,7 +636,7 @@
   }
 
   .nav-item-active {
-    @apply bg-blue-50 text-blue-700;
+    @apply bg-red-50 text-red-700;
   }
 
   .nav-item-active::before {
@@ -646,7 +647,7 @@
     transform: translateY(-50%);
     width: 3px;
     height: 20px;
-    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
     border-radius: 0 2px 2px 0;
   }
 }
@@ -693,16 +694,16 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     cursor: pointer;
-    box-shadow: 0 2px 8px rgb(59 130 246 / 0.3);
+    box-shadow: 0 2px 8px rgb(220 38 38 / 0.3);
     transition: all 0.2s ease-out;
     border: 3px solid white;
   }
 
   input[type="range"].slider-thumb::-webkit-slider-thumb:hover {
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgb(59 130 246 / 0.4);
+    box-shadow: 0 4px 12px rgb(220 38 38 / 0.4);
   }
 
   input[type="range"].slider-thumb::-moz-range-thumb {
@@ -710,9 +711,9 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     cursor: pointer;
-    box-shadow: 0 2px 8px rgb(59 130 246 / 0.3);
+    box-shadow: 0 2px 8px rgb(220 38 38 / 0.3);
     transition: all 0.2s ease-out;
     border: 3px solid white;
   }
@@ -755,7 +756,7 @@
     content: '';
     display: block;
     height: 3px;
-    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+    background: linear-gradient(90deg, #dc2626 0%, #f87171 100%);
   }
 
   /* Glass effect card */
@@ -825,7 +826,7 @@
    ============================================ */
 @layer utilities {
   .text-gradient-primary {
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #dc2626 0%, #f87171 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -855,7 +856,7 @@
     outline: none;
     box-shadow:
       0 0 0 2px white,
-      0 0 0 4px rgb(59 130 246 / 0.3),
+      0 0 0 4px rgb(220 38 38 / 0.3),
       0 1px 2px rgb(0 0 0 / 0.05);
   }
 }

@@ -16,6 +16,7 @@ import type { TeamMemberMetric } from "@/lib/metrics"
 import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
 import { sendEODNotification } from "@/lib/email"
+import { updateStreak } from "@/lib/hooks/use-productivity"
 
 interface OrgDateInfo {
   date: string
@@ -231,6 +232,19 @@ export function AIEODSubmission({
 
     try {
       await onSubmitEOD(report)
+
+      // Update streak after successful EOD submission
+      try {
+        const streakResult = await updateStreak()
+        if (streakResult.isNewRecord) {
+          toast({
+            title: "New Streak Record!",
+            description: `Congratulations! You've achieved a ${streakResult.longestStreak}-day streak!`,
+          })
+        }
+      } catch (streakError) {
+        console.error("Failed to update streak:", streakError)
+      }
 
       try {
         await sendEODNotification(report as EODReport, currentUser, allRocks)
