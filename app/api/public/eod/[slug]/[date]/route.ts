@@ -162,8 +162,9 @@ export async function GET(
       const member = memberMap.get(report.user_id as string)
       if (!member) continue // Skip if member not found
 
-      const tasks = (report.tasks as Array<{ description: string; rockId?: string; completedAt?: string }>) || []
-      const priorities = (report.tomorrow_priorities as Array<{ description: string; rockId?: string }>) || []
+      // EOD tasks use 'text' field, priorities use 'text' field as well
+      const tasks = (report.tasks as Array<{ text: string; rockId?: string; completedAt?: string }>) || []
+      const priorities = (report.tomorrow_priorities as Array<{ text: string; rockId?: string }>) || []
 
       publicReports.push({
         userName: member.name as string,
@@ -173,13 +174,13 @@ export async function GET(
         date: report.date as string,
         submittedAt: report.submitted_at as string,
         tasks: tasks.map(t => ({
-          description: t.description,
+          description: t.text,
           rockTitle: t.rockId ? rockMap.get(t.rockId) : undefined,
           completedAt: t.completedAt,
         })),
         challenges: report.challenges as string || "",
         tomorrowPriorities: priorities.map(p => ({
-          description: p.description,
+          description: p.text,
           rockTitle: p.rockId ? rockMap.get(p.rockId) : undefined,
         })),
         needsEscalation: report.needs_escalation as boolean || false,
