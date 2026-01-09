@@ -41,6 +41,32 @@ export async function GET(request: NextRequest) {
     // Get metric - either for current user or specified member
     let metric: TeamMemberMetric | null
     let history: TeamMemberMetric[] = []
+    let weeklyTotal: number | null = null
+
+    // Helper to calculate weekly total from EOD reports
+    const getWeeklyMetricTotal = async (userId: string, orgId: string): Promise<number> => {
+      const { sql } = await import("@vercel/postgres")
+      // Get current week (Friday to Thursday)
+      const today = new Date()
+      const dayOfWeek = today.getDay()
+      // Calculate start of current week (Friday)
+      const fridayOffset = dayOfWeek >= 5 ? dayOfWeek - 5 : dayOfWeek + 2
+      const weekStart = new Date(today)
+      weekStart.setDate(today.getDate() - fridayOffset)
+      const weekStartStr = weekStart.toISOString().split("T")[0]
+      const todayStr = today.toISOString().split("T")[0]
+
+      const { rows } = await sql`
+        SELECT COALESCE(SUM(metric_value_today), 0) as total
+        FROM eod_reports
+        WHERE user_id = ${userId}
+          AND organization_id = ${orgId}
+          AND date >= ${weekStartStr}
+          AND date <= ${todayStr}
+          AND metric_value_today IS NOT NULL
+      `
+      return parseInt(rows[0]?.total || "0", 10)
+    }
 
     if (memberId) {
       // Admin getting metric for specific member
@@ -81,12 +107,18 @@ export async function GET(request: NextRequest) {
       if (includeHistory && auth.member) {
         history = await getMetricHistory(auth.member.id)
       }
+
+      // Calculate weekly total for current user (useful for Thursday confirmations)
+      if (metric) {
+        weeklyTotal = await getWeeklyMetricTotal(auth.user.id, auth.organization.id)
+      }
     }
 
     return NextResponse.json({
       success: true,
       data: {
         metric,
+        weeklyTotal,
         history: includeHistory ? history : undefined,
       },
     })

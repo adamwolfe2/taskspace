@@ -47,6 +47,17 @@ interface WeeklyUserReport {
   rocks: PublicRockProgress[]
 }
 
+// Scorecard data for the weekly report
+interface ScorecardEntry {
+  memberId: string
+  memberName: string
+  department: string
+  metricName: string
+  weeklyGoal: number
+  actualValue: number | null
+  isOnTrack: boolean
+}
+
 interface WeeklyReport {
   organizationName: string
   organizationLogo?: string
@@ -63,6 +74,8 @@ interface WeeklyReport {
     averageTasksPerDay: number
     submissionsByDay: Array<{ date: string; displayDate: string; count: number; total: number }>
   }
+  // Weekly scorecard data
+  scorecard: ScorecardEntry[]
 }
 
 // GET /api/public/eod/[slug]/week/[date] - Get weekly EOD report
@@ -308,6 +321,36 @@ export async function GET(
     const daysWithReports = submissionsByDay.filter(d => d.count > 0).length
     const averageTasksPerDay = daysWithReports > 0 ? Math.round(totalTasks / daysWithReports) : 0
 
+    // Fetch weekly scorecard data
+    const { rows: scorecardRows } = await sql`
+      SELECT
+        tmm.team_member_id as member_id,
+        COALESCE(NULLIF(om.name, ''), u.name, 'Unknown') as member_name,
+        om.department,
+        tmm.metric_name,
+        tmm.weekly_goal,
+        wme.actual_value
+      FROM team_member_metrics tmm
+      JOIN organization_members om ON tmm.team_member_id = om.id
+      LEFT JOIN users u ON u.id = om.user_id
+      LEFT JOIN weekly_metric_entries wme ON wme.team_member_id = tmm.team_member_id
+        AND wme.week_ending = ${endDateStr}::date
+      WHERE om.organization_id = ${orgId}
+        AND tmm.is_active = true
+        AND om.status = 'active'
+      ORDER BY COALESCE(NULLIF(om.name, ''), u.name) ASC
+    `
+
+    const scorecard: ScorecardEntry[] = scorecardRows.map(row => ({
+      memberId: row.member_id as string,
+      memberName: row.member_name as string,
+      department: (row.department as string) || "General",
+      metricName: row.metric_name as string,
+      weeklyGoal: row.weekly_goal as number,
+      actualValue: row.actual_value as number | null,
+      isOnTrack: row.actual_value !== null && (row.actual_value as number) >= (row.weekly_goal as number),
+    }))
+
     // Format week display
     const weekRangeDisplay = `${startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${endDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
     const displayWeek = `Week Ending ${endDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`
@@ -328,6 +371,7 @@ export async function GET(
         averageTasksPerDay,
         submissionsByDay,
       },
+      scorecard,
     }
 
     // Add cache headers for 5 minute caching

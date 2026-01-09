@@ -57,6 +57,17 @@ interface WeeklyUserReport {
   rocks: PublicRockProgress[]
 }
 
+// Scorecard entry for weekly deliverables
+interface ScorecardEntry {
+  memberId: string
+  memberName: string
+  department: string
+  metricName: string
+  weeklyGoal: number
+  actualValue: number | null
+  isOnTrack: boolean
+}
+
 interface WeeklyReport {
   organizationName: string
   organizationLogo?: string
@@ -73,6 +84,7 @@ interface WeeklyReport {
     averageTasksPerDay: number
     submissionsByDay: Array<{ date: string; displayDate: string; count: number; total: number }>
   }
+  scorecard: ScorecardEntry[]
 }
 
 function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
@@ -471,6 +483,102 @@ export default function PublicEODWeeklyReportPage() {
             })}
           </div>
         </div>
+
+        {/* Weekly Scorecard - Deliverables */}
+        {data.scorecard && data.scorecard.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-8 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-purple-50 to-white">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                <Target className="h-5 w-5 text-purple-600" />
+                Weekly Scorecard
+              </h3>
+              <p className="text-sm text-slate-500 mt-1">Team deliverables and metrics for this week</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/50">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Team Member</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Metric</th>
+                    <th className="px-6 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wide">Goal</th>
+                    <th className="px-6 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wide">Actual</th>
+                    <th className="px-6 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wide">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {data.scorecard.map((entry) => (
+                    <tr key={entry.memberId} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-medium text-slate-900">{entry.memberName}</p>
+                          <p className="text-xs text-slate-500">{entry.department}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full text-sm font-medium">
+                          <Target className="h-3.5 w-3.5" />
+                          {entry.metricName}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="text-sm font-semibold text-slate-700">{entry.weeklyGoal}</span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {entry.actualValue !== null ? (
+                          <span className={`inline-flex items-center justify-center min-w-[3rem] px-3 py-1 rounded-full text-sm font-bold ${
+                            entry.isOnTrack
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}>
+                            {entry.actualValue}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-sm">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {entry.actualValue !== null ? (
+                          entry.isOnTrack ? (
+                            <span className="inline-flex items-center gap-1 text-green-600 text-sm font-medium">
+                              <CheckCircle2 className="h-4 w-4" />
+                              On Track
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-red-600 text-sm font-medium">
+                              <AlertTriangle className="h-4 w-4" />
+                              Below Goal
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-slate-400 text-sm italic">Pending</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Summary Footer */}
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-600">
+                  <span className="font-medium text-slate-900">{data.scorecard.filter(e => e.actualValue !== null).length}</span> of{" "}
+                  <span className="font-medium text-slate-900">{data.scorecard.length}</span> metrics reported
+                </span>
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center gap-1.5 text-green-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {data.scorecard.filter(e => e.isOnTrack).length} on track
+                  </span>
+                  <span className="flex items-center gap-1.5 text-red-600">
+                    <AlertTriangle className="h-4 w-4" />
+                    {data.scorecard.filter(e => e.actualValue !== null && !e.isOnTrack).length} below goal
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Team Reports with View Toggle */}
         {data.userReports.length > 0 && (

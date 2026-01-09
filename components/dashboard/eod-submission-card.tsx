@@ -7,10 +7,16 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, X, Send, Trash2, Target } from "lucide-react"
+import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2 } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask } from "@/lib/types"
 import type { TeamMemberMetric } from "@/lib/metrics"
 import { getTodayString } from "@/lib/utils/date-utils"
+
+// Check if a date is Thursday (day 4)
+function isThursday(dateStr: string): boolean {
+  const date = new Date(dateStr + "T12:00:00")
+  return date.getDay() === 4
+}
 import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
 import { sendEODNotification } from "@/lib/email"
@@ -74,11 +80,16 @@ export function EODSubmissionCard({
   const [escalationNote, setEscalationNote] = useState("")
   const [metricValueToday, setMetricValueToday] = useState<string>("")
   const [activeMetric, setActiveMetric] = useState<TeamMemberMetric | null>(null)
+  const [weeklyMetricTotal, setWeeklyMetricTotal] = useState<number | null>(null)
+  const [weeklyMetricConfirmed, setWeeklyMetricConfirmed] = useState<string>("")
   const { toast } = useToast()
 
-  // Fetch user's active metric
+  // Check if this is a Thursday submission (weekly deliverable due)
+  const isThursdaySubmission = isThursday(reportDate)
+
+  // Fetch user's active metric and weekly total (for Thursdays)
   useEffect(() => {
-    async function fetchMetric() {
+    async function fetchMetricAndTotal() {
       try {
         const response = await fetch("/api/metrics")
         if (response.ok) {
@@ -86,13 +97,17 @@ export function EODSubmissionCard({
           if (data.success && data.data.metric) {
             setActiveMetric(data.data.metric)
           }
+          // If it's Thursday, also get the weekly total so far
+          if (isThursdaySubmission && data.success && data.data.weeklyTotal !== undefined) {
+            setWeeklyMetricTotal(data.data.weeklyTotal)
+          }
         }
       } catch (err) {
         console.error("Failed to fetch active metric:", err)
       }
     }
-    fetchMetric()
-  }, [userId])
+    fetchMetricAndTotal()
+  }, [userId, isThursdaySubmission])
 
   useEffect(() => {
     const autoPopulated = completedTasksForDate.map((task) => ({
@@ -393,12 +408,56 @@ export function EODSubmissionCard({
           />
         </div>
 
-        {/* Weekly Metric Input - only shown if user has an active metric */}
+        {/* Thursday Weekly Deliverable Confirmation - prominent section for EOW reporting */}
+        {isThursdaySubmission && activeMetric && (
+          <div className="space-y-3 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-purple-600" />
+              <Label className="text-sm font-bold text-purple-900">
+                Weekly Deliverable Confirmation (Due Today)
+              </Label>
+            </div>
+            <p className="text-sm text-purple-700">
+              It's Thursday! Please confirm your weekly {activeMetric.metricName.toLowerCase()} total for the scorecard.
+            </p>
+            <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-purple-200">
+              <div className="flex-1">
+                <Label htmlFor="weeklyConfirm" className="text-xs font-medium text-slate-600 mb-1 block">
+                  Final Weekly Total for {activeMetric.metricName}
+                </Label>
+                <Input
+                  id="weeklyConfirm"
+                  type="number"
+                  min="0"
+                  placeholder={weeklyMetricTotal !== null ? String(weeklyMetricTotal) : "0"}
+                  value={weeklyMetricConfirmed}
+                  onChange={(e) => setWeeklyMetricConfirmed(e.target.value)}
+                  className="w-32 bg-white border-purple-300 focus:border-purple-500 text-lg font-semibold"
+                />
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-slate-500">Weekly Goal</p>
+                <p className="text-xl font-bold text-purple-700">{activeMetric.weeklyGoal}</p>
+              </div>
+            </div>
+            {weeklyMetricTotal !== null && (
+              <p className="text-xs text-purple-600">
+                <CheckCircle2 className="h-3 w-3 inline mr-1" />
+                Running total from this week's reports: <span className="font-semibold">{weeklyMetricTotal}</span>
+                {weeklyMetricTotal >= activeMetric.weeklyGoal
+                  ? " - You've hit your goal!"
+                  : ` - ${activeMetric.weeklyGoal - weeklyMetricTotal} more to reach goal`}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Daily Metric Input - only shown if user has an active metric */}
         {activeMetric && (
           <div className="space-y-2">
             <Label htmlFor="metricValue" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
               <Target className="h-4 w-4 text-purple-600" />
-              {activeMetric.metricName}
+              {activeMetric.metricName} {isThursdaySubmission ? "(Today's contribution)" : ""}
             </Label>
             <div className="flex items-center gap-3">
               <Input
