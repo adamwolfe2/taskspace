@@ -321,15 +321,19 @@ export async function setTeamMemberMetric(
   metricName: string,
   weeklyGoal: number
 ): Promise<TeamMemberMetric> {
+  console.log("setTeamMemberMetric: Deactivating existing metrics for member:", memberId)
+
   // Deactivate existing active metric
-  await sql`
+  const deactivateResult = await sql`
     UPDATE team_member_metrics
     SET is_active = false, updated_at = NOW()
     WHERE team_member_id = ${memberId}
     AND is_active = true
   `
+  console.log("setTeamMemberMetric: Deactivated", deactivateResult.rowCount, "existing metrics")
 
   // Insert new metric
+  console.log("setTeamMemberMetric: Inserting new metric:", metricName, "goal:", weeklyGoal)
   const result = await sql`
     INSERT INTO team_member_metrics (id, team_member_id, metric_name, weekly_goal, is_active, created_at, updated_at)
     VALUES (
@@ -344,7 +348,14 @@ export async function setTeamMemberMetric(
     RETURNING *
   `
 
+  if (result.rows.length === 0) {
+    console.error("setTeamMemberMetric: INSERT returned no rows!")
+    throw new Error("Failed to insert metric - no rows returned")
+  }
+
   const row = result.rows[0]
+  console.log("setTeamMemberMetric: Successfully inserted metric with id:", row.id)
+
   return {
     id: row.id,
     teamMemberId: row.team_member_id,

@@ -164,7 +164,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       if (metricData.metricName.trim() && metricData.weeklyGoal.trim()) {
         const goalNumber = parseInt(metricData.weeklyGoal, 10)
         if (!isNaN(goalNumber) && goalNumber >= 0) {
-          await fetch("/api/metrics", {
+          const metricResponse = await fetch("/api/metrics", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -173,6 +173,11 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
               weeklyGoal: goalNumber,
             }),
           })
+          const metricResult = await metricResponse.json()
+          if (!metricResult.success) {
+            console.error("Failed to save metric:", metricResult.error)
+            throw new Error(metricResult.error || "Failed to save weekly metric")
+          }
         }
       }
 
