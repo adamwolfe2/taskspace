@@ -160,8 +160,12 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Get the member record
-    const member = await db.members.findByOrgAndUser(auth.organization.id, memberId)
+    // Get the member record - try organization_members.id first, then user_id
+    let member = await db.members.findByOrgAndId(auth.organization.id, memberId)
+    if (!member) {
+      member = await db.members.findByOrgAndUser(auth.organization.id, memberId)
+    }
+
     if (!member) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Member not found" },
@@ -170,7 +174,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Check permissions - admins can update members, users can only update themselves
-    const isSelf = memberId === auth.user.id
+    // Compare both the member.id and member.userId to auth.member.id and auth.user.id
+    const isSelf = member.id === auth.member.id || member.userId === auth.user.id
     if (!isSelf && !isAdmin(auth)) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "You can only update your own profile" },
@@ -209,24 +214,26 @@ export async function PATCH(request: NextRequest) {
 
     await db.members.update(member.id, updates)
 
-    // Get updated member with user data
-    const user = await db.users.findById(memberId)
-    const updatedMember = await db.members.findByOrgAndUser(auth.organization.id, memberId)
+    // Get updated member with user data - use member.userId if available
+    const user = member.userId ? await db.users.findById(member.userId) : null
+    const updatedMember = await db.members.findById(member.id)
 
-    if (!user || !updatedMember) {
+    if (!updatedMember) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Failed to retrieve updated member" },
         { status: 500 }
       )
     }
 
+    // Return team member with correct ID (organization_members.id)
     const teamMember: TeamMember = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
+      id: updatedMember.id, // organization_members.id
+      userId: updatedMember.userId || undefined, // users.id if exists
+      name: user?.name || updatedMember.name || '',
+      email: user?.email || updatedMember.email || '',
       role: updatedMember.role,
       department: updatedMember.department,
-      avatar: user.avatar,
+      avatar: user?.avatar,
       joinDate: updatedMember.joinedAt,
       weeklyMeasurable: updatedMember.weeklyMeasurable,
       status: updatedMember.status,
