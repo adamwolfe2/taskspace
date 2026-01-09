@@ -23,7 +23,19 @@ import {
   startOfWeek,
   startOfMonth,
   subDays,
+  isValid,
 } from "date-fns"
+
+// Safe parseISO that returns null for invalid dates
+function safeParseISO(dateStr: string | null | undefined): Date | null {
+  if (!dateStr) return null
+  try {
+    const parsed = parseISO(dateStr)
+    return isValid(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
 
 // GET /api/manager/dashboard - Get complete manager dashboard with direct reports
 export async function GET(request: NextRequest) {
@@ -290,17 +302,24 @@ function calculateMetrics(
   // EOD metrics
   const eodSubmittedToday = eodReports.some((e) => e.date === todayStr)
   const eodStreakDays = calculateEodStreak(eodReports, today)
-  const reportsLast30Days = eodReports.filter((e) => parseISO(e.date) >= thirtyDaysAgo).length
+  const reportsLast30Days = eodReports.filter((e) => {
+    const date = safeParseISO(e.date)
+    return date && date >= thirtyDaysAgo
+  }).length
   const eodSubmissionRateLast30Days = Math.round((reportsLast30Days / 30) * 100)
 
   // Escalation metrics
   const escalationsThisMonth = eodReports.filter((e) => {
-    return parseISO(e.date) >= monthStart && e.needsEscalation
+    const date = safeParseISO(e.date)
+    return date && date >= monthStart && e.needsEscalation
   }).length
 
   // Calculate blockers mentioned (from challenges field)
   const blockersMentioned = eodReports
-    .filter((e) => parseISO(e.date) >= monthStart)
+    .filter((e) => {
+      const date = safeParseISO(e.date)
+      return date && date >= monthStart
+    })
     .filter((e) => e.challenges && e.challenges.trim().length > 0).length
 
   return {
@@ -331,8 +350,10 @@ function calculateEodStreak(
   eodReports: EODReport[],
   today: Date
 ): number {
+  // Filter out invalid dates and sort
   const sortedDates = eodReports
     .map((r) => r.date)
+    .filter((d) => d && safeParseISO(d))
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
 
   if (sortedDates.length === 0) return 0
@@ -350,7 +371,9 @@ function calculateEodStreak(
   for (const dateStr of sortedDates) {
     if (dateStr === todayStr) continue
 
-    const date = parseISO(dateStr)
+    const date = safeParseISO(dateStr)
+    if (!date) continue // Skip invalid dates
+
     const diff = differenceInDays(expectedDate, date)
 
     if (diff === 0) {
@@ -418,7 +441,8 @@ function calculateRecentActivity(
   tasks
     .filter((t) => t.status !== "completed" && t.dueDate)
     .filter((t) => {
-      const due = parseISO(t.dueDate)
+      const due = safeParseISO(t.dueDate)
+      if (!due) return false
       return differenceInDays(due, today) <= 7 && differenceInDays(due, today) >= 0
     })
     .forEach((t) => {
@@ -433,9 +457,10 @@ function calculateRecentActivity(
 
   // Add upcoming rocks
   rocks
-    .filter((r) => r.status !== "completed")
+    .filter((r) => r.status !== "completed" && r.dueDate)
     .filter((r) => {
-      const due = parseISO(r.dueDate)
+      const due = safeParseISO(r.dueDate)
+      if (!due) return false
       return differenceInDays(due, today) <= 14 && differenceInDays(due, today) >= 0
     })
     .forEach((r) => {

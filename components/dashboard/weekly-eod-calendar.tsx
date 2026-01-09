@@ -172,22 +172,22 @@ export function WeeklyEODCalendar({
  className={cn(
  "flex-1 flex flex-col items-center p-3 rounded-lg transition-all",
  showAsSelected
- ? "bg-slate-900  text-white  ring-2 ring-slate-900  ring-offset-2 "
+ ? "bg-gradient-to-br from-slate-500 to-slate-600 text-white ring-2 ring-slate-400 ring-offset-2"
  : day.isFuture
- ? "bg-slate-50  text-slate-400  cursor-not-allowed"
+ ? "bg-slate-100 text-slate-400 cursor-not-allowed"
  : day.hasSubmission
- ? "bg-emerald-50  hover:bg-emerald-100  cursor-pointer"
- : "bg-red-50  hover:bg-red-100  cursor-pointer"
+ ? "bg-emerald-50 hover:bg-emerald-100 cursor-pointer"
+ : "bg-red-50 hover:bg-red-100 cursor-pointer"
  )}
  >
  <span
  className={cn(
  "text-xs font-medium",
  showAsSelected
- ? "text-slate-300 "
+ ? "text-slate-200"
  : day.isFuture
- ? "text-slate-400 "
- : "text-slate-500 "
+ ? "text-slate-400"
+ : "text-slate-500"
  )}
  >
  {day.dayName}
@@ -196,12 +196,12 @@ export function WeeklyEODCalendar({
  className={cn(
  "text-lg font-bold mt-1",
  showAsSelected
- ? "text-white "
+ ? "text-white"
  : day.isFuture
- ? "text-slate-400 "
+ ? "text-slate-400"
  : day.hasSubmission
- ? "text-emerald-700 "
- : "text-red-700 "
+ ? "text-emerald-700"
+ : "text-red-700"
  )}
  >
  {day.dayNumber}
