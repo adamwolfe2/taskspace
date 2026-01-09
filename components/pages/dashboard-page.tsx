@@ -19,10 +19,8 @@ import { getTodayString } from "@/lib/utils/date-utils"
 import { ProductivityWidget } from "@/components/productivity/productivity-dashboard"
 import {
   useProductivityDashboard,
-  saveFocusBlock,
-  saveEnergy,
+  useTodayEnergy,
 } from "@/lib/hooks/use-productivity"
-import type { FocusBlockInput, DailyEnergyInput } from "@/lib/types"
 
 // Get current quarter string (e.g., "Q1 2026")
 function getCurrentQuarter(): string {
@@ -63,7 +61,8 @@ export function DashboardPage({
  const eodCardRef = useRef<HTMLDivElement>(null)
 
  // Productivity data
- const { data: productivityData, refresh: refreshProductivity } = useProductivityDashboard(currentUser.id)
+ const { data: productivityData, isLoading: productivityLoading } = useProductivityDashboard(currentUser.id)
+ const { energy: todayEnergy } = useTodayEnergy(currentUser.id)
 
  // Calculate total focus minutes from weekly hours data
  const totalFocusMinutes = productivityData?.weeklyHours?.reduce(
@@ -193,12 +192,12 @@ export function DashboardPage({
  </ErrorBoundary>
 
  {/* Productivity Widget */}
- {productivityData && (
+ {!productivityLoading && productivityData && (
    <ErrorBoundary title="Productivity metrics unavailable">
      <ProductivityWidget
        focusScore={productivityData.focusScore}
        streak={productivityData.streak}
-       todayEnergy={null}
+       todayEnergy={todayEnergy || null}
        totalFocusMinutes={totalFocusMinutes}
      />
    </ErrorBoundary>

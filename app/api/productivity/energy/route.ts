@@ -15,10 +15,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId") || auth.user.id
+    const requestedUserId = searchParams.get("userId")
     const date = searchParams.get("date")
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
+
+    // Users can only view their own data unless they're admin/owner
+    const isAdmin = auth.member.role === "admin" || auth.member.role === "owner"
+    const userId = requestedUserId && isAdmin ? requestedUserId : auth.user.id
 
     // If specific date requested, return single entry
     if (date) {
