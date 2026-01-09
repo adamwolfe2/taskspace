@@ -42,9 +42,10 @@ export function DailyReportShare({
     ? `${window.location.origin}/public/eod/${organization.slug}/${dateString}`
     : `/public/eod/${organization.slug}/${dateString}`
 
-  // Get reports for selected date
-  const dateReports = eodReports.filter(r => r.date === dateString)
-  const activeMembers = teamMembers.filter(m => m.role === "member" || m.role === "admin" || m.role === "owner")
+  // Get reports for selected date - only from current team members
+  const teamMemberIds = new Set(teamMembers.map(m => m.id))
+  const dateReports = eodReports.filter(r => r.date === dateString && teamMemberIds.has(r.userId))
+  const activeMembers = teamMembers.filter(m => m.status === "active")
   const submissionRate = activeMembers.length > 0
     ? Math.round((dateReports.length / activeMembers.length) * 100)
     : 0
