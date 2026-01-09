@@ -222,11 +222,20 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Skip navigation link for accessibility */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <Header onMenuClick={() => setSidebarOpen(true)} />
       <DemoModeBanner />
 
       <div className="flex">
-        <aside data-sidebar="desktop" className="hidden md:block w-64 border-r border-border min-h-[calc(100vh-4rem)] bg-card">
+        <aside
+          data-sidebar="desktop"
+          className="hidden md:block w-64 border-r border-border min-h-[calc(100vh-4rem)] bg-card"
+          aria-label="Main navigation"
+        >
           <SidebarNav />
         </aside>
 
@@ -237,7 +246,12 @@ function AppContent() {
           </SheetContent>
         </Sheet>
 
-        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 min-w-0">
+        <main
+          id="main-content"
+          className="flex-1 p-4 md:p-6 pb-24 md:pb-6 min-w-0"
+          role="main"
+          aria-label="Main content"
+        >
           <div className="max-w-6xl mx-auto">
             {renderPage()}
           </div>
