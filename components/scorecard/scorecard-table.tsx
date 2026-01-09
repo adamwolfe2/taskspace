@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   Table,
   TableBody,
@@ -10,8 +10,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { Pencil, Check, X, Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface ScorecardRow {
   memberId: string
@@ -35,29 +39,131 @@ function formatWeekHeader(dateStr: string): string {
 function MetricCell({
   value,
   goal,
+  isAdmin,
+  onEdit,
 }: {
   value: number | null
   goal: number
+  isAdmin?: boolean
+  onEdit?: () => void
 }) {
   if (value === null) {
     return (
-      <span className="text-slate-400 text-sm">-</span>
+      <div
+        className={cn(
+          "flex items-center justify-center",
+          isAdmin && "cursor-pointer hover:bg-slate-100 rounded py-1 px-2"
+        )}
+        onClick={isAdmin ? onEdit : undefined}
+        title={isAdmin ? "Click to add value" : undefined}
+      >
+        <span className="text-slate-400 text-sm">-</span>
+        {isAdmin && <Pencil className="h-3 w-3 text-slate-300 ml-1" />}
+      </div>
     )
   }
 
   const isOnTrack = value >= goal
 
   return (
-    <span
+    <div
       className={cn(
-        "inline-flex items-center justify-center px-2 py-1 rounded text-sm font-medium min-w-[3rem]",
-        isOnTrack
-          ? "bg-green-100 text-green-800"
-          : "bg-red-100 text-red-800"
+        "flex items-center justify-center",
+        isAdmin && "cursor-pointer"
       )}
+      onClick={isAdmin ? onEdit : undefined}
+      title={isAdmin ? "Click to edit" : undefined}
     >
-      {value}
-    </span>
+      <span
+        className={cn(
+          "inline-flex items-center justify-center px-2 py-1 rounded text-sm font-medium min-w-[3rem]",
+          isOnTrack
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800",
+          isAdmin && "hover:ring-2 hover:ring-offset-1 hover:ring-slate-300"
+        )}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
+
+// Inline edit component for metric values
+function EditableMetricCell({
+  memberId,
+  weekEnding,
+  currentValue,
+  goal,
+  onSave,
+  onCancel,
+}: {
+  memberId: string
+  weekEnding: string
+  currentValue: number | null
+  goal: number
+  onSave: (value: number) => Promise<void>
+  onCancel: () => void
+}) {
+  const [value, setValue] = useState(currentValue?.toString() || "")
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    const numValue = parseInt(value, 10)
+    if (isNaN(numValue) || numValue < 0) {
+      return
+    }
+    setSaving(true)
+    try {
+      await onSave(numValue)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSave()
+    } else if (e.key === "Escape") {
+      onCancel()
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      <Input
+        type="number"
+        min="0"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        className="w-16 h-8 text-center text-sm"
+        autoFocus
+        disabled={saving}
+      />
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-6 w-6"
+        onClick={handleSave}
+        disabled={saving}
+      >
+        {saving ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <Check className="h-3 w-3 text-green-600" />
+        )}
+      </Button>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-6 w-6"
+        onClick={onCancel}
+        disabled={saving}
+      >
+        <X className="h-3 w-3 text-red-600" />
+      </Button>
+    </div>
   )
 }
 
@@ -65,28 +171,81 @@ export function ScorecardTable() {
   const [data, setData] = useState<ScorecardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [editingCell, setEditingCell] = useState<{ memberId: string; week: string } | null>(null)
+  const { toast } = useToast()
+
+  const fetchScorecard = useCallback(async () => {
+    try {
+      const response = await fetch("/api/scorecard?weeks=8")
+      if (!response.ok) {
+        throw new Error("Failed to fetch scorecard data")
+      }
+      const result = await response.json()
+      if (result.success) {
+        setData(result.data)
+        setIsAdmin(result.isAdmin || false)
+      } else {
+        setError(result.error || "Failed to load scorecard")
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load scorecard")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    async function fetchScorecard() {
-      try {
-        const response = await fetch("/api/scorecard?weeks=8")
-        if (!response.ok) {
-          throw new Error("Failed to fetch scorecard data")
-        }
-        const result = await response.json()
-        if (result.success) {
-          setData(result.data)
-        } else {
-          setError(result.error || "Failed to load scorecard")
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load scorecard")
-      } finally {
-        setLoading(false)
-      }
-    }
     fetchScorecard()
-  }, [])
+  }, [fetchScorecard])
+
+  const handleSaveMetric = async (memberId: string, weekEnding: string, value: number) => {
+    try {
+      const response = await fetch("/api/scorecard", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId, weekEnding, value }),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to update metric")
+      }
+
+      // Update local data
+      setData((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          rows: prev.rows.map((row) => {
+            if (row.memberId === memberId) {
+              return {
+                ...row,
+                entries: {
+                  ...row.entries,
+                  [weekEnding]: value,
+                },
+              }
+            }
+            return row
+          }),
+        }
+      })
+
+      setEditingCell(null)
+      toast({
+        title: "Metric updated",
+        description: "Weekly scorecard entry has been saved",
+      })
+    } catch (err) {
+      toast({
+        title: "Update failed",
+        description: err instanceof Error ? err.message : "Failed to update metric",
+        variant: "destructive",
+      })
+    }
+  }
 
   if (loading) {
     return (
@@ -120,6 +279,11 @@ export function ScorecardTable() {
 
   return (
     <div className="overflow-x-auto">
+      {isAdmin && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+          <strong>Admin Mode:</strong> Click any metric cell to edit the value.
+        </div>
+      )}
       <Table>
         <TableHeader>
           <TableRow>
@@ -154,10 +318,23 @@ export function ScorecardTable() {
               </TableCell>
               {data.weeks.map((week) => (
                 <TableCell key={week} className="text-center">
-                  <MetricCell
-                    value={row.entries[week]}
-                    goal={row.weeklyGoal}
-                  />
+                  {editingCell?.memberId === row.memberId && editingCell?.week === week ? (
+                    <EditableMetricCell
+                      memberId={row.memberId}
+                      weekEnding={week}
+                      currentValue={row.entries[week]}
+                      goal={row.weeklyGoal}
+                      onSave={(value) => handleSaveMetric(row.memberId, week, value)}
+                      onCancel={() => setEditingCell(null)}
+                    />
+                  ) : (
+                    <MetricCell
+                      value={row.entries[week]}
+                      goal={row.weeklyGoal}
+                      isAdmin={isAdmin}
+                      onEdit={() => setEditingCell({ memberId: row.memberId, week })}
+                    />
+                  )}
                 </TableCell>
               ))}
             </TableRow>
