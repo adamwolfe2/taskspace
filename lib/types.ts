@@ -140,7 +140,8 @@ export interface Session {
 
 // Team Member (for UI display - combines User + OrganizationMember)
 export interface TeamMember {
-  id: string
+  id: string // This is organization_members.id - use for metrics, manager assignments
+  userId?: string // This is users.id - use for rocks, tasks, EOD reports
   name: string
   email: string
   role: "owner" | "admin" | "member"
