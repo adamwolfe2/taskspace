@@ -54,17 +54,23 @@ export function AdminPage({
     fetchInsights()
   }, [])
 
-  const activeMembers = teamMembers.filter((m) => m.role === "member")
+  // Get all active team members (all roles count for reporting)
+  const activeMembers = teamMembers.filter((m) => m.status === "active")
+  const teamMemberIds = new Set(teamMembers.map(m => m.id))
 
   const escalations = eodReports
     .filter((r) => r.needsEscalation)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
 
-  const todayReports = eodReports.filter((r) => r.date === getTodayString())
-  const reportingRate = Math.round((todayReports.length / activeMembers.length) * 100)
+  // Only count reports from current team members
+  const todayReports = eodReports.filter((r) => r.date === getTodayString() && teamMemberIds.has(r.userId))
+  const reportingRate = activeMembers.length > 0
+    ? Math.round((todayReports.length / activeMembers.length) * 100)
+    : 0
 
-  const teamStats = activeMembers.map((member) => {
+  // For stats, use members role (excludes owner for individual performance)
+  const teamStats = teamMembers.filter((m) => m.role === "member").map((member) => {
     const stats = calculateUserStats(member.id, rocks, assignedTasks, eodReports)
     return { member, stats }
   })
