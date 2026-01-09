@@ -1015,3 +1015,198 @@ export interface ManagerInsight {
   actionable: boolean
   suggestedAction?: string
 }
+
+// ============================================
+// PRODUCTIVITY TRACKING TYPES (Rize-inspired)
+// ============================================
+
+// Focus Score - calculated from task completion, consistency, and rock progress
+export interface FocusScore {
+  score: number // 0-100
+  breakdown: {
+    taskCompletion: number      // Weight: 30%
+    rockProgress: number        // Weight: 25%
+    consistencyStreak: number   // Weight: 20%
+    reportSubmission: number    // Weight: 15%
+    blockerResolution: number   // Weight: 10%
+  }
+  trend: "up" | "down" | "stable"
+  weekOverWeek: number // percentage change
+  calculatedAt: string
+}
+
+// Focus Score Input for calculations
+export interface FocusScoreInput {
+  tasksCompleted: number
+  tasksPlanned: number
+  rockProgressPercent: number
+  consecutiveSubmissions: number
+  totalPossibleDays: number
+  reportsSubmittedOnTime: number
+  totalReportsDue: number
+  blockersResolved: number
+  totalBlockers: number
+}
+
+// User Streak data
+export interface UserStreak {
+  id: string
+  organizationId: string
+  userId: string
+  currentStreak: number
+  longestStreak: number
+  lastSubmissionDate: string | null
+  milestoneDates: {
+    "7"?: string
+    "14"?: string
+    "30"?: string
+    "60"?: string
+    "90"?: string
+    "100"?: string
+  }
+  updatedAt: string
+}
+
+// Streak milestones
+export type StreakMilestone = 7 | 14 | 30 | 60 | 90 | 100
+
+export interface StreakMilestoneInfo {
+  milestone: StreakMilestone
+  label: string
+  icon: string // emoji
+  color: string
+}
+
+// Focus Block - manual time tracking sessions
+export interface FocusBlock {
+  id: string
+  organizationId: string
+  userId: string
+  startTime: string
+  endTime: string
+  category: FocusBlockCategory
+  quality: 1 | 2 | 3 | 4 | 5 // Self-rated quality
+  interruptions: number
+  notes?: string
+  taskId?: string // Optional link to task
+  rockId?: string // Optional link to rock
+  createdAt: string
+}
+
+export type FocusBlockCategory = "deep_work" | "meetings" | "admin" | "collaboration" | "learning" | "planning"
+
+// Focus block creation input
+export interface FocusBlockInput {
+  startTime: string
+  endTime: string
+  category: FocusBlockCategory
+  quality?: 1 | 2 | 3 | 4 | 5
+  interruptions?: number
+  notes?: string
+  taskId?: string
+  rockId?: string
+}
+
+// Daily Energy/Mood tracking
+export interface DailyEnergy {
+  id: string
+  organizationId: string
+  userId: string
+  date: string
+  energyLevel: EnergyLevel
+  mood: MoodEmoji
+  factors: EnergyFactor[]
+  notes?: string
+  createdAt: string
+}
+
+export type EnergyLevel = "low" | "medium" | "high" | "peak"
+export type MoodEmoji = "😫" | "😐" | "🙂" | "😄" | "🔥"
+export type EnergyFactor =
+  | "good_sleep"
+  | "exercise"
+  | "caffeine"
+  | "stress"
+  | "meetings"
+  | "deadline_pressure"
+  | "great_progress"
+  | "team_support"
+
+// Daily energy input
+export interface DailyEnergyInput {
+  date: string
+  energyLevel: EnergyLevel
+  mood: MoodEmoji
+  factors?: EnergyFactor[]
+  notes?: string
+}
+
+// Stored Focus Score history
+export interface FocusScoreHistory {
+  id: string
+  organizationId: string
+  userId: string
+  date: string
+  score: number
+  breakdown: FocusScore["breakdown"]
+  createdAt: string
+}
+
+// Weekly productivity summary
+export interface WeeklyProductivitySummary {
+  weekStart: string
+  weekEnd: string
+  userId: string
+  // Focus metrics
+  avgFocusScore: number
+  focusScoreTrend: "up" | "down" | "stable"
+  // Time metrics
+  totalFocusHours: number
+  focusBlocksByCategory: Record<FocusBlockCategory, number>
+  avgDailyFocusHours: number
+  // Task metrics
+  tasksCompleted: number
+  tasksPlanned: number
+  taskCompletionRate: number
+  // Rock metrics
+  rocksProgressed: number
+  avgRockProgress: number
+  // Energy metrics
+  avgEnergyLevel: number // 1-4 scale
+  moodDistribution: Record<MoodEmoji, number>
+  // Streak
+  currentStreak: number
+  // EOD metrics
+  eodSubmissionRate: number
+  escalationsRaised: number
+}
+
+// Productivity dashboard data
+export interface ProductivityDashboardData {
+  focusScore: FocusScore
+  streak: UserStreak
+  todayEnergy: DailyEnergy | null
+  recentFocusBlocks: FocusBlock[]
+  weeklySummary: WeeklyProductivitySummary
+  focusScoreHistory: FocusScoreHistory[]
+}
+
+// Team productivity comparison (for managers)
+export interface TeamProductivityComparison {
+  userId: string
+  userName: string
+  avatar?: string
+  focusScore: number
+  currentStreak: number
+  tasksCompletedThisWeek: number
+  avgRockProgress: number
+  rank: number
+}
+
+// Productivity leaderboard
+export interface ProductivityLeaderboard {
+  period: "weekly" | "monthly"
+  organizationId: string
+  entries: TeamProductivityComparison[]
+  generatedAt: string
+}
