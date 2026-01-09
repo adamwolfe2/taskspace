@@ -342,8 +342,11 @@ export const db = {
     },
     // Optimized query that gets members with user data in a single JOIN query
     // Uses LEFT JOIN to also include draft/pending members who don't have a user yet
+    // IMPORTANT: id is always organization_members.id (for foreign key references like team_member_metrics)
+    // userId is the users.id (if they have registered)
     async findWithUsersByOrganizationId(orgId: string): Promise<Array<{
-      id: string
+      id: string // This is organization_members.id - use for metrics, manager assignments, etc.
+      userId?: string // This is users.id - use for rocks, tasks, EOD reports
       name: string
       email: string
       role: "owner" | "admin" | "member"
@@ -359,7 +362,8 @@ export const db = {
     }>> {
       const { rows } = await sql`
         SELECT
-          COALESCE(u.id, om.id) as id,
+          om.id as id,
+          om.user_id as user_id,
           COALESCE(u.name, om.name) as name,
           COALESCE(u.email, om.email) as email,
           u.avatar,
@@ -379,6 +383,7 @@ export const db = {
       `
       return rows.map(row => ({
         id: row.id as string,
+        userId: row.user_id as string | undefined,
         name: row.name as string,
         email: row.email as string,
         role: row.role as "owner" | "admin" | "member",
