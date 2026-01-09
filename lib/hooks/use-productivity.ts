@@ -149,3 +149,84 @@ export async function saveFocusBlock(input: FocusBlockInput): Promise<FocusBlock
   }
   return json.data
 }
+
+/**
+ * Hook to fetch today's focus blocks
+ */
+export function useTodayFocusBlocks(userId?: string) {
+  const today = new Date().toISOString().split("T")[0]
+  const baseUrl = "/api/productivity/focus-blocks"
+  const params = new URLSearchParams({
+    startDate: today,
+    endDate: today,
+  })
+  if (userId) {
+    params.set("userId", userId)
+  }
+
+  const { data, error, isLoading, mutate } = useSWR<FocusBlock[]>(
+    `${baseUrl}?${params.toString()}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  )
+
+  return {
+    focusBlocks: data || [],
+    isLoading,
+    isError: !!error,
+    error,
+    refresh: mutate,
+  }
+}
+
+/**
+ * Hook to fetch today's energy
+ */
+export function useTodayEnergy(userId?: string) {
+  const today = new Date().toISOString().split("T")[0]
+  const baseUrl = "/api/productivity/energy"
+  const params = new URLSearchParams({ date: today })
+  if (userId) {
+    params.set("userId", userId)
+  }
+
+  const { data, error, isLoading, mutate } = useSWR<DailyEnergy | null>(
+    `${baseUrl}?${params.toString()}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  )
+
+  return {
+    energy: data,
+    isLoading,
+    isError: !!error,
+    error,
+    refresh: mutate,
+  }
+}
+
+/**
+ * Update streak after EOD submission
+ */
+export async function updateStreak(date?: string): Promise<{
+  currentStreak: number
+  longestStreak: number
+  isNewRecord: boolean
+}> {
+  const res = await fetch("/api/productivity/streak/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ date }),
+  })
+
+  const json = await res.json()
+  if (!json.success) {
+    throw new Error(json.error || "Failed to update streak")
+  }
+  return json.data
+}

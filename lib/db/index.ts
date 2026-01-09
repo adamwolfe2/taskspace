@@ -21,6 +21,13 @@ import type {
   PushSubscription,
   GoogleCalendarToken,
   GoogleCalendarEventMapping,
+  FocusBlock,
+  DailyEnergy,
+  UserStreak,
+  FocusBlockCategory,
+  EnergyLevel,
+  MoodEmoji,
+  EnergyFactor,
 } from "../types"
 
 // Helper to convert snake_case DB rows to camelCase
@@ -2102,6 +2109,371 @@ export const db = {
     async count(): Promise<number> {
       const { rows } = await sql`SELECT COUNT(*) as count FROM ma_employees WHERE is_active = TRUE`
       return parseInt(rows[0]?.count || "0", 10)
+    },
+  },
+
+  // ============================================
+  // PRODUCTIVITY TRACKING
+  // ============================================
+
+  focusBlocks: {
+    async findByUserId(userId: string, organizationId: string, startDate?: string, endDate?: string): Promise<FocusBlock[]> {
+      let query
+      if (startDate && endDate) {
+        query = await sql`
+          SELECT * FROM focus_blocks
+          WHERE user_id = ${userId} AND organization_id = ${organizationId}
+          AND start_time >= ${startDate}::timestamp AND start_time <= ${endDate}::timestamp
+          ORDER BY start_time DESC
+        `
+      } else {
+        query = await sql`
+          SELECT * FROM focus_blocks
+          WHERE user_id = ${userId} AND organization_id = ${organizationId}
+          ORDER BY start_time DESC
+          LIMIT 50
+        `
+      }
+      return query.rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        startTime: (row.start_time as Date)?.toISOString() || "",
+        endTime: (row.end_time as Date)?.toISOString() || "",
+        category: row.category as FocusBlockCategory,
+        quality: row.quality as number | null,
+        interruptions: (row.interruptions as number) || 0,
+        notes: row.notes as string | null,
+        taskId: row.task_id as string | null,
+        rockId: row.rock_id as string | null,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }))
+    },
+    async findById(id: string): Promise<FocusBlock | null> {
+      const { rows } = await sql`SELECT * FROM focus_blocks WHERE id = ${id}`
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        startTime: (row.start_time as Date)?.toISOString() || "",
+        endTime: (row.end_time as Date)?.toISOString() || "",
+        category: row.category as FocusBlockCategory,
+        quality: row.quality as number | null,
+        interruptions: (row.interruptions as number) || 0,
+        notes: row.notes as string | null,
+        taskId: row.task_id as string | null,
+        rockId: row.rock_id as string | null,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }
+    },
+    async create(block: {
+      organizationId: string
+      userId: string
+      startTime: string
+      endTime: string
+      category: string
+      quality?: number
+      interruptions?: number
+      notes?: string
+      taskId?: string
+      rockId?: string
+    }): Promise<{ id: string }> {
+      const { rows } = await sql`
+        INSERT INTO focus_blocks (organization_id, user_id, start_time, end_time, category, quality, interruptions, notes, task_id, rock_id)
+        VALUES (${block.organizationId}, ${block.userId}, ${block.startTime}::timestamp, ${block.endTime}::timestamp,
+                ${block.category}, ${block.quality || null}, ${block.interruptions || 0},
+                ${block.notes || null}, ${block.taskId || null}, ${block.rockId || null})
+        RETURNING id
+      `
+      return { id: rows[0].id as string }
+    },
+    async update(id: string, updates: {
+      startTime?: string
+      endTime?: string
+      category?: string
+      quality?: number
+      interruptions?: number
+      notes?: string
+    }): Promise<boolean> {
+      const { rowCount } = await sql`
+        UPDATE focus_blocks SET
+          start_time = COALESCE(${updates.startTime || null}::timestamp, start_time),
+          end_time = COALESCE(${updates.endTime || null}::timestamp, end_time),
+          category = COALESCE(${updates.category || null}, category),
+          quality = COALESCE(${updates.quality ?? null}, quality),
+          interruptions = COALESCE(${updates.interruptions ?? null}, interruptions),
+          notes = COALESCE(${updates.notes}, notes),
+          updated_at = NOW()
+        WHERE id = ${id}
+      `
+      return (rowCount ?? 0) > 0
+    },
+    async delete(id: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM focus_blocks WHERE id = ${id}`
+      return (rowCount ?? 0) > 0
+    },
+    async getTodayTotalMinutes(userId: string, organizationId: string): Promise<number> {
+      const today = new Date().toISOString().split("T")[0]
+      const { rows } = await sql`
+        SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (end_time - start_time)) / 60), 0) as total_minutes
+        FROM focus_blocks
+        WHERE user_id = ${userId} AND organization_id = ${organizationId}
+        AND DATE(start_time) = ${today}::date
+      `
+      return Math.round(parseFloat(rows[0]?.total_minutes || "0"))
+    },
+  },
+
+  dailyEnergy: {
+    async findByUserAndDate(userId: string, organizationId: string, date: string): Promise<DailyEnergy | null> {
+      const { rows } = await sql`
+        SELECT * FROM daily_energy
+        WHERE user_id = ${userId} AND organization_id = ${organizationId} AND date = ${date}::date
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        date: row.date as string,
+        energyLevel: row.energy_level as EnergyLevel,
+        mood: row.mood as MoodEmoji,
+        factors: (row.factors as EnergyFactor[]) || [],
+        notes: row.notes as string | null,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }
+    },
+    async findByUserDateRange(userId: string, organizationId: string, startDate: string, endDate: string): Promise<DailyEnergy[]> {
+      const { rows } = await sql`
+        SELECT * FROM daily_energy
+        WHERE user_id = ${userId} AND organization_id = ${organizationId}
+        AND date >= ${startDate}::date AND date <= ${endDate}::date
+        ORDER BY date DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        date: row.date as string,
+        energyLevel: row.energy_level as EnergyLevel,
+        mood: row.mood as MoodEmoji,
+        factors: (row.factors as EnergyFactor[]) || [],
+        notes: row.notes as string | null,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }))
+    },
+    async upsert(energy: {
+      organizationId: string
+      userId: string
+      date: string
+      energyLevel: string
+      mood: string
+      factors?: string[]
+      notes?: string
+    }): Promise<{ id: string }> {
+      const factorsJson = JSON.stringify(energy.factors || [])
+      const { rows } = await sql`
+        INSERT INTO daily_energy (organization_id, user_id, date, energy_level, mood, factors, notes)
+        VALUES (${energy.organizationId}, ${energy.userId}, ${energy.date}::date,
+                ${energy.energyLevel}, ${energy.mood}, ${factorsJson}::jsonb, ${energy.notes || null})
+        ON CONFLICT (organization_id, user_id, date)
+        DO UPDATE SET
+          energy_level = EXCLUDED.energy_level,
+          mood = EXCLUDED.mood,
+          factors = EXCLUDED.factors,
+          notes = EXCLUDED.notes,
+          updated_at = NOW()
+        RETURNING id
+      `
+      return { id: rows[0].id as string }
+    },
+  },
+
+  userStreaks: {
+    async findByUser(userId: string, organizationId: string): Promise<{
+      id: string
+      organizationId: string
+      userId: string
+      currentStreak: number
+      longestStreak: number
+      lastSubmissionDate: string | null
+      milestoneDates: Record<string, string>
+      updatedAt: string
+    } | null> {
+      const { rows } = await sql`
+        SELECT * FROM user_streaks
+        WHERE user_id = ${userId} AND organization_id = ${organizationId}
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        currentStreak: (row.current_streak as number) || 0,
+        longestStreak: (row.longest_streak as number) || 0,
+        lastSubmissionDate: row.last_submission_date as string | null,
+        milestoneDates: (row.milestone_dates as Record<string, string>) || {},
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }
+    },
+    async upsert(streak: {
+      organizationId: string
+      userId: string
+      currentStreak: number
+      longestStreak: number
+      lastSubmissionDate: string
+      milestoneDates?: Record<string, string>
+    }): Promise<{ id: string }> {
+      const milestonesJson = JSON.stringify(streak.milestoneDates || {})
+      const { rows } = await sql`
+        INSERT INTO user_streaks (organization_id, user_id, current_streak, longest_streak, last_submission_date, milestone_dates)
+        VALUES (${streak.organizationId}, ${streak.userId}, ${streak.currentStreak},
+                ${streak.longestStreak}, ${streak.lastSubmissionDate}::date, ${milestonesJson}::jsonb)
+        ON CONFLICT (organization_id, user_id)
+        DO UPDATE SET
+          current_streak = EXCLUDED.current_streak,
+          longest_streak = EXCLUDED.longest_streak,
+          last_submission_date = EXCLUDED.last_submission_date,
+          milestone_dates = EXCLUDED.milestone_dates,
+          updated_at = NOW()
+        RETURNING id
+      `
+      return { id: rows[0].id as string }
+    },
+    async updateStreak(userId: string, organizationId: string, today: string): Promise<{
+      currentStreak: number
+      longestStreak: number
+      isNewRecord: boolean
+    }> {
+      // Get existing streak
+      const existing = await this.findByUser(userId, organizationId)
+
+      if (!existing) {
+        // First submission ever
+        await this.upsert({
+          organizationId,
+          userId,
+          currentStreak: 1,
+          longestStreak: 1,
+          lastSubmissionDate: today,
+          milestoneDates: {},
+        })
+        return { currentStreak: 1, longestStreak: 1, isNewRecord: true }
+      }
+
+      const lastDate = existing.lastSubmissionDate ? new Date(existing.lastSubmissionDate) : null
+      const todayDate = new Date(today)
+
+      // If already submitted today, no change
+      if (lastDate && lastDate.toISOString().split("T")[0] === today) {
+        return {
+          currentStreak: existing.currentStreak,
+          longestStreak: existing.longestStreak,
+          isNewRecord: false,
+        }
+      }
+
+      let newCurrentStreak = existing.currentStreak
+      let isNewRecord = false
+
+      if (lastDate) {
+        // Calculate working days difference
+        const diffTime = todayDate.getTime() - lastDate.getTime()
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+        // Check if it's a consecutive working day (accounting for weekends)
+        let workingDaysDiff = 0
+        const checkDate = new Date(lastDate)
+        checkDate.setDate(checkDate.getDate() + 1)
+        while (checkDate <= todayDate) {
+          const day = checkDate.getDay()
+          if (day !== 0 && day !== 6) {
+            workingDaysDiff++
+          }
+          checkDate.setDate(checkDate.getDate() + 1)
+        }
+
+        if (workingDaysDiff === 1) {
+          // Consecutive working day
+          newCurrentStreak += 1
+        } else if (workingDaysDiff === 0) {
+          // Same day or weekend skip
+          newCurrentStreak += 0
+        } else {
+          // Streak broken
+          newCurrentStreak = 1
+        }
+      } else {
+        newCurrentStreak = 1
+      }
+
+      const newLongestStreak = Math.max(newCurrentStreak, existing.longestStreak)
+      isNewRecord = newCurrentStreak > existing.longestStreak
+
+      // Check for new milestones
+      const milestoneDates = { ...existing.milestoneDates }
+      const milestones = [7, 14, 30, 60, 90, 100]
+      for (const milestone of milestones) {
+        if (newCurrentStreak >= milestone && !milestoneDates[milestone.toString()]) {
+          milestoneDates[milestone.toString()] = today
+        }
+      }
+
+      await this.upsert({
+        organizationId,
+        userId,
+        currentStreak: newCurrentStreak,
+        longestStreak: newLongestStreak,
+        lastSubmissionDate: today,
+        milestoneDates,
+      })
+
+      return { currentStreak: newCurrentStreak, longestStreak: newLongestStreak, isNewRecord }
+    },
+  },
+
+  focusScoreHistory: {
+    async findByUserDateRange(userId: string, organizationId: string, startDate: string, endDate: string): Promise<{
+      id: string
+      date: string
+      score: number
+      breakdown: Record<string, number>
+    }[]> {
+      const { rows } = await sql`
+        SELECT * FROM focus_score_history
+        WHERE user_id = ${userId} AND organization_id = ${organizationId}
+        AND date >= ${startDate}::date AND date <= ${endDate}::date
+        ORDER BY date DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        date: row.date as string,
+        score: row.score as number,
+        breakdown: (row.breakdown as Record<string, number>) || {},
+      }))
+    },
+    async upsert(score: {
+      organizationId: string
+      userId: string
+      date: string
+      score: number
+      breakdown: Record<string, number>
+    }): Promise<{ id: string }> {
+      const breakdownJson = JSON.stringify(score.breakdown)
+      const { rows } = await sql`
+        INSERT INTO focus_score_history (organization_id, user_id, date, score, breakdown)
+        VALUES (${score.organizationId}, ${score.userId}, ${score.date}::date, ${score.score}, ${breakdownJson}::jsonb)
+        ON CONFLICT (organization_id, user_id, date)
+        DO UPDATE SET
+          score = EXCLUDED.score,
+          breakdown = EXCLUDED.breakdown
+        RETURNING id
+      `
+      return { id: rows[0].id as string }
     },
   },
 }

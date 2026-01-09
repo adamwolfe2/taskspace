@@ -760,9 +760,95 @@ export async function GET(request: NextRequest) {
     await sql`ALTER TABLE ma_employees ADD COLUMN IF NOT EXISTS rocks TEXT`
     await sql`CREATE INDEX IF NOT EXISTS idx_ma_employees_email ON ma_employees(email)`
 
+    // ============================================
+    // PRODUCTIVITY TRACKING TABLES (Rize-inspired)
+    // ============================================
+
+    // Focus blocks table (manual focus time logging)
+    await sql`
+      CREATE TABLE IF NOT EXISTS focus_blocks (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::varchar,
+        organization_id VARCHAR(255) NOT NULL,
+        user_id VARCHAR(255) NOT NULL,
+        start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+        end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+        category VARCHAR(50) NOT NULL CHECK (category IN ('deep_work', 'meetings', 'admin', 'collaboration', 'learning', 'planning')),
+        quality INTEGER CHECK (quality >= 1 AND quality <= 5),
+        interruptions INTEGER DEFAULT 0,
+        notes TEXT,
+        task_id VARCHAR(255),
+        rock_id VARCHAR(255),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_focus_blocks_user ON focus_blocks(user_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_focus_blocks_org ON focus_blocks(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_focus_blocks_user_time ON focus_blocks(user_id, start_time)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_focus_blocks_org_time ON focus_blocks(organization_id, start_time)`
+
+    // Daily energy/mood tracking
+    await sql`
+      CREATE TABLE IF NOT EXISTS daily_energy (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::varchar,
+        organization_id VARCHAR(255) NOT NULL,
+        user_id VARCHAR(255) NOT NULL,
+        date DATE NOT NULL,
+        energy_level VARCHAR(20) CHECK (energy_level IN ('low', 'medium', 'high', 'peak')),
+        mood VARCHAR(10),
+        factors JSONB DEFAULT '[]',
+        notes TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(organization_id, user_id, date)
+      )
+    `
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_daily_energy_user ON daily_energy(user_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_daily_energy_user_date ON daily_energy(user_id, date)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_daily_energy_org_date ON daily_energy(organization_id, date)`
+
+    // User streaks (persistent tracking)
+    await sql`
+      CREATE TABLE IF NOT EXISTS user_streaks (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::varchar,
+        organization_id VARCHAR(255) NOT NULL,
+        user_id VARCHAR(255) NOT NULL,
+        current_streak INTEGER DEFAULT 0,
+        longest_streak INTEGER DEFAULT 0,
+        last_submission_date DATE,
+        milestone_dates JSONB DEFAULT '{}',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(organization_id, user_id)
+      )
+    `
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_user_streaks_user ON user_streaks(user_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_user_streaks_org_user ON user_streaks(organization_id, user_id)`
+
+    // Focus score history (daily snapshots)
+    await sql`
+      CREATE TABLE IF NOT EXISTS focus_score_history (
+        id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::varchar,
+        organization_id VARCHAR(255) NOT NULL,
+        user_id VARCHAR(255) NOT NULL,
+        date DATE NOT NULL,
+        score INTEGER CHECK (score >= 0 AND score <= 100),
+        breakdown JSONB,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(organization_id, user_id, date)
+      )
+    `
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_focus_score_history_user ON focus_score_history(user_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_focus_score_history_user_date ON focus_score_history(user_id, date)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_focus_score_history_org_date ON focus_score_history(organization_id, date)`
+
     return NextResponse.json({
       success: true,
-      message: "Database migration completed successfully (including AI Command Center, Notifications, Audit Logs, Webhooks, Enterprise tables, Weekly Scorecard, and Org Chart)",
+      message: "Database migration completed successfully (including AI Command Center, Notifications, Audit Logs, Webhooks, Enterprise tables, Weekly Scorecard, Org Chart, and Productivity Tracking)",
     })
   } catch (error) {
     console.error("Migration error:", error)

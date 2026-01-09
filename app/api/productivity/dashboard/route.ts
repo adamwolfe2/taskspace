@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     // Fetch all data in parallel
     const [reports, tasks, rocks] = await Promise.all([
       db.eodReports.findByUserId(userId, auth.organization.id),
-      db.tasks.findByAssignee(userId, auth.organization.id),
+      db.tasks.findByUserId(userId, auth.organization.id),
       db.rocks.findByUserId(userId, auth.organization.id),
     ])
 
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
     longestStreak = Math.max(longestStreak, currentStreak)
 
     // Task metrics
-    const completedTasks = tasks.filter((t) => t.status === "completed").length
+    const completedTasks = tasks.filter((t) => t.completed).length
     const totalTasks = tasks.length
 
     // Rock metrics
@@ -245,9 +245,11 @@ export async function GET(request: NextRequest) {
 
     // === TASKS THIS WEEK ===
     const weekStartStr = weekStart.toISOString().split("T")[0]
+    // Use updatedAt as a proxy for completion date for completed tasks
     const thisWeekTasks = tasks.filter((t) => {
-      if (!t.completedAt) return false
-      return t.completedAt >= weekStartStr
+      if (!t.completed) return false
+      // Use updatedAt as a proxy for when the task was completed
+      return t.updatedAt >= weekStartStr
     })
     const thisWeekCompleted = thisWeekTasks.length
     const thisWeekTotal = tasks.filter((t) => t.dueDate && t.dueDate >= weekStartStr).length

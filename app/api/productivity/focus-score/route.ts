@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // Fetch user data
     const [reports, tasks, rocks] = await Promise.all([
       db.eodReports.findByUserId(userId, auth.organization.id),
-      db.tasks.findByAssignee(userId, auth.organization.id),
+      db.tasks.findByUserId(userId, auth.organization.id),
       db.rocks.findByUserId(userId, auth.organization.id),
     ])
 
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const recentReports = reports.filter((r) => r.date >= startDate)
 
     // Calculate task metrics
-    const completedTasks = tasks.filter((t) => t.status === "completed").length
+    const completedTasks = tasks.filter((t) => t.completed).length
     const totalTasks = tasks.length
 
     // Calculate rock progress

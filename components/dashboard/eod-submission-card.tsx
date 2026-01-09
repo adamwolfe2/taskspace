@@ -14,6 +14,7 @@ import { getTodayString } from "@/lib/utils/date-utils"
 import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
 import { sendEODNotification } from "@/lib/email"
+import { updateStreak } from "@/lib/hooks/use-productivity"
 
 function formatDisplayDate(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00")
@@ -217,6 +218,21 @@ export function EODSubmissionCard({
 
     try {
       await onSubmitEOD(report)
+
+      // Update streak after successful EOD submission
+      try {
+        const streakResult = await updateStreak(reportDate)
+        if (streakResult.isNewRecord) {
+          // Show special toast for new streak record
+          toast({
+            title: "New Streak Record!",
+            description: `Congratulations! You've achieved a ${streakResult.longestStreak}-day streak!`,
+          })
+        }
+      } catch (streakError) {
+        console.error("Failed to update streak:", streakError)
+        // Don't fail the submission if streak update fails
+      }
 
       try {
         await sendEODNotification(report as EODReport, currentUser, allRocks)
