@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
 
     // Only admins can set metrics
     if (!isAdmin(auth)) {
+      console.log("Metrics API: Access denied, user role:", auth.member.role)
       return NextResponse.json(
         { success: false, error: "Admin access required to set metrics" },
         { status: 403 }
@@ -122,6 +123,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { memberId, metricName, weeklyGoal } = body
+
+    console.log("Metrics API: Setting metric for member:", memberId, "name:", metricName, "goal:", weeklyGoal)
 
     if (!memberId || !metricName || weeklyGoal === undefined) {
       return NextResponse.json(
@@ -142,6 +145,7 @@ export async function POST(request: NextRequest) {
     const member = members.find(m => m.id === memberId)
 
     if (!member) {
+      console.log("Metrics API: Member not found:", memberId, "in org:", auth.organization.id)
       return NextResponse.json(
         { success: false, error: "Team member not found" },
         { status: 404 }
@@ -149,6 +153,7 @@ export async function POST(request: NextRequest) {
     }
 
     const metric = await setTeamMemberMetric(memberId, metricName, weeklyGoal)
+    console.log("Metrics API: Successfully saved metric:", metric.id)
 
     return NextResponse.json({
       success: true,
