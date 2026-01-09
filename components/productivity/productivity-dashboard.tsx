@@ -187,7 +187,7 @@ export function ProductivityCompact({
   )
 }
 
-// Widget for the customizable dashboard
+// Widget for the customizable dashboard - compact single-row layout
 export function ProductivityWidget({
   focusScore,
   streak,
@@ -204,65 +204,49 @@ export function ProductivityWidget({
   className?: string
 }) {
   return (
-    <div className={cn("bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden", className)}>
-      <div className="p-4 border-b border-slate-100">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-            <Activity className="h-4 w-4 text-slate-500" />
-            Productivity
-          </h3>
-          {onViewDetails && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onViewDetails}
-              className="text-xs text-slate-500 h-7 px-2"
-            >
-              View all
-              <ChevronRight className="h-3 w-3 ml-1" />
-            </Button>
-          )}
-        </div>
+    <div className={cn("section-card p-4", className)}>
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-3">
+        <Activity className="h-4 w-4 text-slate-500" />
+        <span className="text-sm font-semibold text-slate-700">Productivity</span>
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* Focus Score - Compact */}
+      {/* Compact metrics row */}
+      <div className="flex items-center gap-4">
+        {/* Focus Score */}
         <FocusScoreCompact score={focusScore.score} trend={focusScore.trend} />
 
-        {/* Metrics row */}
-        <div className="grid grid-cols-2 gap-3 pt-2">
-          {/* Streak */}
-          <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+        {/* Divider */}
+        <div className="h-10 w-px bg-slate-200" />
+
+        {/* Streak & Focus Time */}
+        <div className="flex items-center gap-4 flex-1">
+          <div className="flex items-center gap-2">
             <span className="text-lg">🔥</span>
             <div>
-              <div className="text-sm font-semibold text-slate-900">
-                {streak.currentStreak} days
-              </div>
+              <div className="text-sm font-bold text-slate-900">{streak.currentStreak} days</div>
               <div className="text-[10px] text-slate-500">Streak</div>
             </div>
           </div>
 
-          {/* Focus Time */}
-          <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+          <div className="flex items-center gap-2">
             <span className="text-lg">⏱️</span>
             <div>
-              <div className="text-sm font-semibold text-slate-900">
-                {(totalFocusMinutes / 60).toFixed(1)}h
-              </div>
+              <div className="text-sm font-bold text-slate-900">{(totalFocusMinutes / 60).toFixed(1)}h</div>
               <div className="text-[10px] text-slate-500">Today</div>
             </div>
           </div>
-        </div>
 
-        {/* Energy Status */}
-        {todayEnergy && (
-          <div className="pt-2 border-t border-slate-100">
-            <EnergyDisplay
-              energyLevel={todayEnergy.energyLevel}
-              mood={todayEnergy.mood}
-            />
-          </div>
-        )}
+          {/* Energy Status - inline if available */}
+          {todayEnergy && (
+            <div className="flex items-center gap-2 ml-auto">
+              <EnergyDisplay
+                energyLevel={todayEnergy.energyLevel}
+                mood={todayEnergy.mood}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

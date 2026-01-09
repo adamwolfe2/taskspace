@@ -127,6 +127,13 @@ CREATE TABLE IF NOT EXISTS assigned_tasks (
   completed_at TIMESTAMP WITH TIME ZONE,
   added_to_eod BOOLEAN DEFAULT FALSE,
   eod_report_id VARCHAR(255),
+  comments JSONB DEFAULT '[]',
+  recurrence JSONB,
+  parent_recurring_task_id VARCHAR(255),
+  recurring_task_id VARCHAR(255),
+  source VARCHAR(50) DEFAULT 'manual',
+  asana_gid VARCHAR(255),
+  ai_context TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -417,9 +424,7 @@ ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS asana_pat TEXT;
 ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS asana_workspace_gid VARCHAR(255);
 ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS asana_last_sync_at TIMESTAMP WITH TIME ZONE;
 
--- Add Asana fields to assigned_tasks for task sync tracking
-ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'manual';
-ALTER TABLE assigned_tasks ADD COLUMN IF NOT EXISTS asana_gid VARCHAR(255);
+-- Note: Asana fields (source, asana_gid) are now in assigned_tasks CREATE TABLE
 
 -- Index for efficient Asana task lookup
 CREATE INDEX IF NOT EXISTS idx_assigned_tasks_asana_gid ON assigned_tasks(asana_gid) WHERE asana_gid IS NOT NULL;
