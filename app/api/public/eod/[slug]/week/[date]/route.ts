@@ -25,6 +25,13 @@ interface WeeklyPriority {
   date: string
 }
 
+// Rock progress for bento cards
+interface PublicRockProgress {
+  id: string
+  progress: number
+  status: "on-track" | "at-risk" | "blocked" | "completed"
+}
+
 interface WeeklyUserReport {
   userName: string
   userRole: "owner" | "admin" | "member"
@@ -36,6 +43,8 @@ interface WeeklyUserReport {
   challenges: string[]
   priorities: WeeklyPriority[]
   escalations: Array<{ date: string; note: string }>
+  // New fields for bento cards
+  rocks: PublicRockProgress[]
 }
 
 interface WeeklyReport {
@@ -142,13 +151,27 @@ export async function GET(
       ORDER BY er.date ASC, er.submitted_at ASC
     `
 
-    // Get rocks for context
+    // Get rocks for context (with progress and status for bento cards)
     const { rows: rocks } = await sql`
-      SELECT id, title, user_id
+      SELECT id, title, user_id, progress, status
       FROM rocks
       WHERE organization_id = ${orgId}
     `
     const rockMap = new Map(rocks.map(r => [r.id as string, r.title as string]))
+
+    // Group rocks by user for bento cards
+    const rocksByUser = new Map<string, PublicRockProgress[]>()
+    for (const rock of rocks) {
+      const userId = rock.user_id as string
+      if (!rocksByUser.has(userId)) {
+        rocksByUser.set(userId, [])
+      }
+      rocksByUser.get(userId)!.push({
+        id: rock.id as string,
+        progress: (rock.progress as number) || 0,
+        status: (rock.status as PublicRockProgress["status"]) || "on-track",
+      })
+    }
 
     // Build member lookup
     const memberMap = new Map(members.map(m => [m.user_id as string, m]))
@@ -185,6 +208,7 @@ export async function GET(
           challenges: [],
           priorities: [],
           escalations: [],
+          rocks: rocksByUser.get(userId) || [],
         })
       }
 

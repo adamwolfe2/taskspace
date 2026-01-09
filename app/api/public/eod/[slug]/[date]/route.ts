@@ -22,6 +22,13 @@ interface PublicEODPriority {
   rockTitle?: string
 }
 
+// Rock progress for bento cards
+interface PublicRockProgress {
+  id: string
+  progress: number
+  status: "on-track" | "at-risk" | "blocked" | "completed"
+}
+
 interface PublicEODReport {
   userName: string
   userRole: "owner" | "admin" | "member"
@@ -34,6 +41,8 @@ interface PublicEODReport {
   tomorrowPriorities: PublicEODPriority[]
   needsEscalation: boolean
   escalationNote: string | null
+  // New fields for bento cards
+  rocks: PublicRockProgress[]
 }
 
 interface PublicDailyReport {
@@ -128,13 +137,27 @@ export async function GET(
       ORDER BY er.submitted_at ASC
     `
 
-    // Get rocks for context
+    // Get rocks for context (with progress and status for bento cards)
     const { rows: rocks } = await sql`
-      SELECT id, title, user_id
+      SELECT id, title, user_id, progress, status
       FROM rocks
       WHERE organization_id = ${orgId}
     `
     const rockMap = new Map(rocks.map(r => [r.id as string, r.title as string]))
+
+    // Group rocks by user for bento cards
+    const rocksByUser = new Map<string, PublicRockProgress[]>()
+    for (const rock of rocks) {
+      const userId = rock.user_id as string
+      if (!rocksByUser.has(userId)) {
+        rocksByUser.set(userId, [])
+      }
+      rocksByUser.get(userId)!.push({
+        id: rock.id as string,
+        progress: (rock.progress as number) || 0,
+        status: (rock.status as PublicRockProgress["status"]) || "on-track",
+      })
+    }
 
     // Build the public report data
     const memberMap = new Map(members.map(m => [m.user_id as string, m]))
@@ -166,6 +189,7 @@ export async function GET(
       const tasks = (report.tasks as Array<{ text: string; rockId?: string; completedAt?: string }>) || []
       const priorities = (report.tomorrow_priorities as Array<{ text: string; rockId?: string }>) || []
 
+      const userId = report.user_id as string
       publicReports.push({
         userName: (member.name as string) || "Unknown",
         userRole: member.role as "owner" | "admin" | "member",
@@ -185,6 +209,7 @@ export async function GET(
         })),
         needsEscalation: report.needs_escalation as boolean || false,
         escalationNote: report.escalation_note as string | null,
+        rocks: rocksByUser.get(userId) || [],
       })
     }
 

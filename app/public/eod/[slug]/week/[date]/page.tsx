@@ -18,7 +18,10 @@ import {
   BarChart3,
   TrendingUp,
   FileText,
+  LayoutGrid,
+  List,
 } from "lucide-react"
+import { UserBentoCard, UserBentoGrid, type UserBentoData } from "@/components/public/user-bento-card"
 
 interface WeeklyTask {
   description: string
@@ -33,6 +36,13 @@ interface WeeklyPriority {
   date: string
 }
 
+// Rock progress for bento cards
+interface PublicRockProgress {
+  id: string
+  progress: number
+  status: "on-track" | "at-risk" | "blocked" | "completed"
+}
+
 interface WeeklyUserReport {
   userName: string
   userRole: "owner" | "admin" | "member"
@@ -44,6 +54,7 @@ interface WeeklyUserReport {
   challenges: string[]
   priorities: WeeklyPriority[]
   escalations: Array<{ date: string; note: string }>
+  rocks: PublicRockProgress[]
 }
 
 interface WeeklyReport {
@@ -226,6 +237,7 @@ export default function PublicEODWeeklyReportPage() {
   const [error, setError] = useState<string | null>(null)
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [viewMode, setViewMode] = useState<"bento" | "list">("bento")
 
   const fetchReport = useCallback(async (showRefreshIndicator = false) => {
     if (showRefreshIndicator) setIsRefreshing(true)
@@ -385,13 +397,39 @@ export default function PublicEODWeeklyReportPage() {
           </div>
         </div>
 
-        {/* Team Reports */}
-        <div className="mb-6">
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900 mb-4">
-            <Users className="h-5 w-5 text-slate-400" />
-            Team Reports ({data.userReports.length} members)
-          </h3>
-        </div>
+        {/* Team Reports with View Toggle */}
+        {data.userReports.length > 0 && (
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+              <Users className="h-5 w-5 text-slate-400" />
+              Team Reports ({data.userReports.length} members)
+            </h3>
+            <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode("bento")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  viewMode === "bento"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Overview
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  viewMode === "list"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <List className="h-4 w-4" />
+                Details
+              </button>
+            </div>
+          </div>
+        )}
 
         {data.userReports.length === 0 ? (
           <div className="text-center py-16">
@@ -401,7 +439,32 @@ export default function PublicEODWeeklyReportPage() {
             <h2 className="text-lg font-semibold text-slate-900 mb-2">No Reports This Week</h2>
             <p className="text-slate-500">Reports will appear here as team members submit them.</p>
           </div>
+        ) : viewMode === "bento" ? (
+          // Bento Grid View - Executive Overview
+          <UserBentoGrid>
+            {data.userReports.map((report, idx) => {
+              const bentoData: UserBentoData = {
+                userName: report.userName,
+                userRole: report.userRole,
+                department: report.department,
+                jobTitle: report.jobTitle,
+                totalTasks: report.totalTasks,
+                totalReports: report.totalReports,
+                escalationCount: report.escalations.length,
+                rocks: report.rocks || [],
+                tasks: report.tasks.map(t => ({
+                  description: t.description,
+                  rockTitle: t.rockTitle,
+                  date: t.date,
+                  completedAt: t.completedAt,
+                })),
+                periodType: "weekly",
+              }
+              return <UserBentoCard key={idx} data={bentoData} />
+            })}
+          </UserBentoGrid>
         ) : (
+          // List View - Detailed Reports
           <div className="space-y-4">
             {data.userReports.map((report, idx) => (
               <UserWeeklyCard key={idx} report={report} />
