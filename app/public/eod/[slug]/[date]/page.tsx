@@ -88,11 +88,11 @@ function ReportCard({ report, timezone }: { report: PublicEODReport; timezone: s
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-white font-semibold">
-              {report.userName.charAt(0).toUpperCase()}
+              {(report.userName || "?").charAt(0).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-slate-900">{report.userName}</h3>
+                <h3 className="font-semibold text-slate-900">{report.userName || "Unknown"}</h3>
                 {getRoleBadge(report.userRole)}
               </div>
               <p className="text-sm text-slate-500">
