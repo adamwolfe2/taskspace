@@ -380,8 +380,12 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     }
   }
 
-  // Delete a pending member
-  const handleDeletePendingMember = async (memberId: string) => {
+  // Delete a pending or invited member (who hasn't fully joined yet)
+  const handleDeleteMember = async (memberId: string, memberName: string) => {
+    if (!confirm(`Are you sure you want to remove ${memberName} from the workspace?`)) {
+      return
+    }
+
     try {
       const response = await fetch(`/api/members?memberId=${memberId}`, {
         method: "DELETE",
@@ -395,7 +399,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       setTeamMembers(teamMembers.filter(m => m.id !== memberId))
       toast({
         title: "Member Removed",
-        description: "The team member has been removed",
+        description: `${memberName} has been removed from the workspace`,
       })
     } catch (err: any) {
       toast({
@@ -776,27 +780,16 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             {member.status === "pending" && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleSendInviteToPending(member)}
-                                  disabled={isSubmitting}
-                                  title="Send Invitation"
-                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                >
-                                  <Send className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeletePendingMember(member.id)}
-                                  title="Remove"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleSendInviteToPending(member)}
+                                disabled={isSubmitting}
+                                title="Send Invitation"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <Send className="h-4 w-4" />
+                              </Button>
                             )}
                             {member.status === "active" && (
                               <Button
@@ -813,6 +806,18 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                             <Button variant="ghost" size="sm" onClick={() => handleEdit(member)} title="Edit">
                               <Pencil className="h-4 w-4" />
                             </Button>
+                            {/* Allow removing non-owner members who aren't fully active, or active non-owners */}
+                            {member.role !== "owner" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteMember(member.id, member.name)}
+                                title="Remove from workspace"
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
