@@ -42,6 +42,15 @@ interface PublicRockProgress {
   status: "on-track" | "at-risk" | "blocked" | "completed"
 }
 
+// Helper to calculate quarter from date (e.g., "2026-01-08" -> "Q1 2026")
+function getQuarterFromDate(dateStr: string): string {
+  const date = new Date(dateStr + "T12:00:00Z")
+  const month = date.getMonth() // 0-11
+  const year = date.getFullYear()
+  const quarter = Math.floor(month / 3) + 1
+  return `Q${quarter} ${year}`
+}
+
 interface WeeklyUserReport {
   userName: string
   userRole: "owner" | "admin" | "member"
@@ -180,10 +189,13 @@ export async function GET(
     `
 
     // Get rocks for context (with progress and status for bento cards)
+    // Filter by current quarter based on report week ending date
+    const currentQuarter = getQuarterFromDate(endDateStr)
     const { rows: rocks } = await sql`
       SELECT id, title, user_id, progress, status
       FROM rocks
       WHERE organization_id = ${orgId}
+        AND quarter = ${currentQuarter}
     `
     const rockMap = new Map(rocks.map(r => [r.id as string, r.title as string]))
 
