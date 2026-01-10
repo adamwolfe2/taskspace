@@ -708,6 +708,9 @@ export async function GET(request: NextRequest) {
     // Add metric_value_today to eod_reports for daily tracking
     await sql`ALTER TABLE eod_reports ADD COLUMN IF NOT EXISTS metric_value_today INTEGER DEFAULT NULL`
 
+    // Add attachments to eod_reports for file/image uploads
+    await sql`ALTER TABLE eod_reports ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT NULL`
+
     // ============================================
     // ORG CHART ROCK PROGRESS TABLE
     // ============================================
