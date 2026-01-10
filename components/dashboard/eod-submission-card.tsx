@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2 } from "lucide-react"
-import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask } from "@/lib/types"
+import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2, Paperclip } from "lucide-react"
+import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask, FileAttachment } from "@/lib/types"
+import { FileTray } from "@/components/ui/file-tray"
 import type { TeamMemberMetric } from "@/lib/metrics"
 import { getTodayString } from "@/lib/utils/date-utils"
 
@@ -82,6 +83,7 @@ export function EODSubmissionCard({
   const [activeMetric, setActiveMetric] = useState<TeamMemberMetric | null>(null)
   const [weeklyMetricTotal, setWeeklyMetricTotal] = useState<number | null>(null)
   const [weeklyMetricConfirmed, setWeeklyMetricConfirmed] = useState<string>("")
+  const [attachments, setAttachments] = useState<FileAttachment[]>([])
   const { toast } = useToast()
 
   // Check if this is a Thursday submission (weekly deliverable due)
@@ -229,6 +231,7 @@ export function EODSubmissionCard({
       needsEscalation,
       escalationNote: needsEscalation ? escalationNote.trim() : null,
       metricValueToday: validMetricValue,
+      attachments: attachments.length > 0 ? attachments : undefined,
     }
 
     try {
@@ -263,6 +266,7 @@ export function EODSubmissionCard({
       setNeedsEscalation(false)
       setEscalationNote("")
       setMetricValueToday("")
+      setAttachments([])
       onDateReset?.()
 
       toast({
@@ -405,6 +409,21 @@ export function EODSubmissionCard({
             onChange={(e) => setChallenges(e.target.value)}
             rows={3}
             className="bg-white border-slate-200 focus:border-blue-300"
+          />
+        </div>
+
+        {/* Attachments (Optional) */}
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <Paperclip className="h-4 w-4 text-slate-500" />
+            Attachments
+            <span className="text-xs font-normal text-slate-400">(optional)</span>
+          </Label>
+          <FileTray
+            attachments={attachments}
+            onAttachmentsChange={setAttachments}
+            maxFiles={5}
+            maxSizeMB={10}
           />
         </div>
 

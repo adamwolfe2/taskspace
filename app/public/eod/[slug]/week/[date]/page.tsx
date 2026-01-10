@@ -20,6 +20,10 @@ import {
   FileText,
   LayoutGrid,
   List,
+  Paperclip,
+  Image as ImageIcon,
+  File,
+  ExternalLink,
 } from "lucide-react"
 import { UserBentoCard, UserBentoGrid, type UserBentoData } from "@/components/public/user-bento-card"
 
@@ -33,6 +37,15 @@ interface WeeklyTask {
 interface WeeklyPriority {
   description: string
   rockTitle?: string
+  date: string
+}
+
+interface WeeklyAttachment {
+  id: string
+  name: string
+  url: string
+  type: string
+  size: number
   date: string
 }
 
@@ -54,6 +67,7 @@ interface WeeklyUserReport {
   challenges: string[]
   priorities: WeeklyPriority[]
   escalations: Array<{ date: string; note: string }>
+  attachments: WeeklyAttachment[]
   rocks: PublicRockProgress[]
 }
 
@@ -85,6 +99,16 @@ interface WeeklyReport {
     submissionsByDay: Array<{ date: string; displayDate: string; count: number; total: number }>
   }
   scorecard: ScorecardEntry[]
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function isImageType(type: string): boolean {
+  return type.startsWith("image/")
 }
 
 function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
@@ -149,6 +173,12 @@ function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
                 <FileText className="h-4 w-4" />
                 {report.totalReports} reports
               </span>
+              {report.attachments && report.attachments.length > 0 && (
+                <span className="flex items-center gap-1 text-slate-500">
+                  <Paperclip className="h-4 w-4" />
+                  {report.attachments.length}
+                </span>
+              )}
               {report.escalations.length > 0 && (
                 <span className="flex items-center gap-1 text-red-600">
                   <AlertTriangle className="h-4 w-4" />
@@ -298,6 +328,50 @@ function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {/* Attachments */}
+          {report.attachments && report.attachments.length > 0 && (
+            <div>
+              <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-3">
+                <Paperclip className="h-4 w-4 text-slate-500" />
+                Attachments ({report.attachments.length})
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {report.attachments.map((attachment) => (
+                  <a
+                    key={attachment.id}
+                    href={attachment.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg hover:border-slate-300 hover:bg-slate-100 transition-colors"
+                  >
+                    {isImageType(attachment.type) ? (
+                      <div className="h-10 w-10 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
+                        <img
+                          src={attachment.url}
+                          alt={attachment.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                        <File className="h-5 w-5 text-slate-400" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-700 truncate group-hover:text-slate-900">
+                        {attachment.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {formatFileSize(attachment.size)}
+                      </p>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </div>

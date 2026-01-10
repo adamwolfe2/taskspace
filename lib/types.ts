@@ -274,6 +274,16 @@ export interface EODPriority {
   rockTitle: string | null
 }
 
+// File attachment for EOD/EOW reports
+export interface FileAttachment {
+  id: string
+  name: string
+  url: string
+  type: string
+  size: number
+  uploadedAt: string
+}
+
 export interface EODReport {
   id: string
   organizationId: string
@@ -285,6 +295,7 @@ export interface EODReport {
   needsEscalation: boolean
   escalationNote: string | null
   metricValueToday: number | null // Daily metric value for weekly scorecard
+  attachments?: FileAttachment[] // Optional file/image attachments
   submittedAt: string
   createdAt: string
 }

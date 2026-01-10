@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
       escalationNote,
       metricValueToday,
       date,
+      attachments,
     } = body
 
     if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
@@ -173,6 +174,7 @@ export async function POST(request: NextRequest) {
       needsEscalation: needsEscalation || false,
       escalationNote: needsEscalation ? escalationNote : null,
       metricValueToday: validMetricValue,
+      attachments: attachments && Array.isArray(attachments) && attachments.length > 0 ? attachments : undefined,
       submittedAt: now,
       createdAt: now,
     }
