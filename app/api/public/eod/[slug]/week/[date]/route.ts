@@ -25,6 +25,16 @@ interface WeeklyPriority {
   date: string
 }
 
+// Attachment from EOD reports
+interface WeeklyAttachment {
+  id: string
+  name: string
+  url: string
+  type: string
+  size: number
+  date: string
+}
+
 // Rock progress for bento cards
 interface PublicRockProgress {
   id: string
@@ -43,6 +53,7 @@ interface WeeklyUserReport {
   challenges: string[]
   priorities: WeeklyPriority[]
   escalations: Array<{ date: string; note: string }>
+  attachments: WeeklyAttachment[]
   // New fields for bento cards
   rocks: PublicRockProgress[]
 }
@@ -158,6 +169,7 @@ export async function GET(
         er.tomorrow_priorities,
         er.needs_escalation,
         er.escalation_note,
+        er.attachments,
         er.submitted_at,
         er.created_at
       FROM eod_reports er
@@ -224,6 +236,7 @@ export async function GET(
           challenges: [],
           priorities: [],
           escalations: [],
+          attachments: [],
           rocks: rocksByUser.get(userId) || [],
         })
       }
@@ -269,6 +282,21 @@ export async function GET(
           date: reportDate,
           note: report.escalation_note as string,
         })
+      }
+
+      // Add attachments
+      const reportAttachments = report.attachments as Array<{ id: string; name: string; url: string; type: string; size: number }> | null
+      if (reportAttachments && Array.isArray(reportAttachments)) {
+        for (const attachment of reportAttachments) {
+          userReport.attachments.push({
+            id: attachment.id,
+            name: attachment.name,
+            url: attachment.url,
+            type: attachment.type,
+            size: attachment.size,
+            date: reportDate,
+          })
+        }
       }
     }
 

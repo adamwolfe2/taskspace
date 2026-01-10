@@ -14,10 +14,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, X, Save } from "lucide-react"
-import type { Rock, EODReport, EODTask, EODPriority } from "@/lib/types"
+import { Plus, X, Save, Paperclip } from "lucide-react"
+import type { Rock, EODReport, EODTask, EODPriority, FileAttachment } from "@/lib/types"
 import { formatDate } from "@/lib/utils/date-utils"
 import { useToast } from "@/hooks/use-toast"
+import { FileTray } from "@/components/ui/file-tray"
 
 interface EditEODModalProps {
   open: boolean
@@ -33,6 +34,7 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
   const [tomorrowPriorities, setTomorrowPriorities] = useState<EODPriority[]>([])
   const [needsEscalation, setNeedsEscalation] = useState(false)
   const [escalationNote, setEscalationNote] = useState("")
+  const [attachments, setAttachments] = useState<FileAttachment[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
 
@@ -48,6 +50,7 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
       )
       setNeedsEscalation(report.needsEscalation)
       setEscalationNote(report.escalationNote || "")
+      setAttachments(report.attachments || [])
     }
   }, [open, report])
 
@@ -146,6 +149,7 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
         tomorrowPriorities: filteredPriorities,
         needsEscalation,
         escalationNote: needsEscalation ? escalationNote.trim() : null,
+        attachments: attachments.length > 0 ? attachments : undefined,
       })
 
       toast({
@@ -236,6 +240,21 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
               onChange={(e) => setChallenges(e.target.value)}
               rows={3}
               className="bg-white border-slate-200 focus:border-blue-300"
+            />
+          </div>
+
+          {/* Attachments */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <Paperclip className="h-4 w-4 text-slate-500" />
+              Attachments
+              <span className="text-xs font-normal text-slate-400">(optional)</span>
+            </Label>
+            <FileTray
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+              maxFiles={5}
+              maxSizeMB={10}
             />
           </div>
 
