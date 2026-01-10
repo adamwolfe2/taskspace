@@ -279,11 +279,6 @@ export function ScorecardTable() {
 
   return (
     <div className="overflow-x-auto">
-      {isAdmin && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-          <strong>Admin Mode:</strong> Click any metric cell to edit the value.
-        </div>
-      )}
       <Table>
         <TableHeader>
           <TableRow>
