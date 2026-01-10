@@ -415,6 +415,9 @@ CREATE INDEX IF NOT EXISTS idx_team_member_metrics_member ON team_member_metrics
 -- Add metric_value_today to eod_reports for daily tracking
 ALTER TABLE eod_reports ADD COLUMN IF NOT EXISTS metric_value_today INTEGER DEFAULT NULL;
 
+-- Add attachments to eod_reports for file/image uploads
+ALTER TABLE eod_reports ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT NULL;
+
 -- ============================================
 -- ASANA INTEGRATION COLUMNS
 -- ============================================
