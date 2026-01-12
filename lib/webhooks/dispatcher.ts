@@ -9,7 +9,7 @@
  */
 
 import crypto from "crypto"
-import { sql } from "@vercel/postgres"
+import { sql } from "../db/sql"
 
 // ============================================
 // TYPES

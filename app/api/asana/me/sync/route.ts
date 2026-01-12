@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import { db } from "@/lib/db"
 import type { ApiResponse } from "@/lib/types"

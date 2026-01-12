@@ -7,7 +7,7 @@
  * - 503: System degraded or unhealthy
  */
 
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/db/sql"
 import { NextRequest, NextResponse } from "next/server"
 
 interface HealthCheck {

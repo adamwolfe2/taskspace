@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/db/sql"
 import { Errors, successResponse, paginatedResponse } from "@/lib/api/errors"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { logIntegrationEvent, logSecurityEvent } from "@/lib/audit/logger"

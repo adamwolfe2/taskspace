@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/db/sql"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { logIntegrationEvent } from "@/lib/audit/logger"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"

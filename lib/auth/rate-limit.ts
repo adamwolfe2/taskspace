@@ -8,7 +8,7 @@
  * This ensures rate limits work correctly across Vercel serverless instances.
  */
 
-import { sql } from "@vercel/postgres"
+import { sql } from "../db/sql"
 
 interface RateLimitEntry {
   count: number

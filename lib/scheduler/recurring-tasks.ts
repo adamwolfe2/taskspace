@@ -8,7 +8,7 @@
  * - Workday-only options
  */
 
-import { sql } from "@vercel/postgres"
+import { sql } from "../db/sql"
 import crypto from "crypto"
 
 // ============================================
