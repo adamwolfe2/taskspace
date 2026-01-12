@@ -5,7 +5,7 @@
  * atomicity. Uses Vercel Postgres's transaction support.
  */
 
-import { sql, VercelPoolClient } from "@vercel/postgres"
+import { sql, VercelPoolClient } from "./sql"
 
 // ============================================
 // TRANSACTION TYPES

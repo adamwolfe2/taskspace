@@ -1,4 +1,4 @@
-import { sql } from "@vercel/postgres"
+import { sql } from "./sql"
 import type {
   User,
   Organization,

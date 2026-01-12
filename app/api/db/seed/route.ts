@@ -5,7 +5,7 @@
  * Only works if the organization has no rocks currently.
  */
 
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/db/sql"
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"

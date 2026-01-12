@@ -15,7 +15,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { getScorecardData } from "@/lib/metrics"
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 
 export async function GET(request: NextRequest) {

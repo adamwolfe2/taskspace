@@ -6,7 +6,7 @@
  * and can be queried for reporting.
  */
 
-import { sql } from "@vercel/postgres"
+import { sql } from "../db/sql"
 
 // ============================================
 // AUDIT LOG TYPES

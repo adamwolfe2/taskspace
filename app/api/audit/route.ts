@@ -9,7 +9,7 @@
 
 import { NextRequest } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/db/sql"
 import { Errors, paginatedResponse, successResponse } from "@/lib/api/errors"
 import { z } from "zod"
 

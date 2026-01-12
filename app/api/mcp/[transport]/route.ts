@@ -12,7 +12,7 @@
 
 import { createMcpHandler } from "mcp-handler"
 import { z } from "zod"
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/db/sql"
 import { db } from "@/lib/db"
 import { headers } from "next/headers"
 

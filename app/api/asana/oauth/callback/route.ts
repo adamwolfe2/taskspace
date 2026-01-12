@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/db/sql"
 import crypto from "crypto"
 
 /**
