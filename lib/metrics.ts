@@ -64,7 +64,7 @@ export function getCurrentWeekEnding(): Date {
 }
 
 /**
- * Get array of last N Fridays for column headers (most recent first)
+ * Get array of last N Fridays for column headers (chronological order: oldest to newest)
  */
 export function getWeekColumns(count: number = 8): Date[] {
   const fridays: Date[] = []
@@ -76,7 +76,8 @@ export function getWeekColumns(count: number = 8): Date[] {
     fridays.push(friday)
   }
 
-  return fridays
+  // Reverse to show chronologically (oldest to newest, left to right)
+  return fridays.reverse()
 }
 
 /**

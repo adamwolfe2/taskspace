@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const managerId = auth.user.id
+    // Use member ID (not user ID) since manager_id stores organization_members.id
+    const managerId = auth.member.id
     const orgId = auth.organization.id
     const today = new Date()
 

@@ -656,20 +656,22 @@ export const db = {
   // Rocks
   rocks: {
     async findAll(): Promise<Rock[]> {
-      const { rows } = await sql`SELECT * FROM rocks`
+      // OPTIMIZED: Added LIMIT to prevent unbounded queries
+      const { rows } = await sql`SELECT * FROM rocks ORDER BY created_at DESC LIMIT 1000`
       return rows.map(parseRock)
     },
     async findById(id: string): Promise<Rock | null> {
-      const { rows } = await sql`SELECT * FROM rocks WHERE id = ${id}`
+      const { rows } = await sql`SELECT * FROM rocks WHERE id = ${id} LIMIT 1`
       return rows[0] ? parseRock(rows[0]) : null
     },
     async findByOrganizationId(orgId: string): Promise<Rock[]> {
-      const { rows } = await sql`SELECT * FROM rocks WHERE organization_id = ${orgId}`
+      // OPTIMIZED: Added LIMIT to prevent unbounded queries
+      const { rows } = await sql`SELECT * FROM rocks WHERE organization_id = ${orgId} ORDER BY created_at DESC LIMIT 500`
       return rows.map(parseRock)
     },
     async findByUserId(userId: string, orgId: string): Promise<Rock[]> {
       const { rows } = await sql`
-        SELECT * FROM rocks WHERE user_id = ${userId} AND organization_id = ${orgId}
+        SELECT * FROM rocks WHERE user_id = ${userId} AND organization_id = ${orgId} ORDER BY created_at DESC LIMIT 100
       `
       return rows.map(parseRock)
     },
@@ -832,18 +834,21 @@ export const db = {
   // Assigned Tasks
   assignedTasks: {
     async findByOrganizationId(orgId: string): Promise<AssignedTask[]> {
-      const { rows } = await sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId}`
+      // OPTIMIZED: Added LIMIT and ORDER BY to prevent unbounded queries
+      const { rows } = await sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId} ORDER BY created_at DESC LIMIT 1000`
       return rows.map(parseAssignedTask)
     },
     async findByAssigneeId(assigneeId: string, orgId: string): Promise<AssignedTask[]> {
+      // OPTIMIZED: Added LIMIT to prevent unbounded queries
       const { rows } = await sql`
         SELECT * FROM assigned_tasks
         WHERE assignee_id = ${assigneeId} AND organization_id = ${orgId}
+        ORDER BY created_at DESC LIMIT 200
       `
       return rows.map(parseAssignedTask)
     },
     async findById(id: string): Promise<AssignedTask | null> {
-      const { rows } = await sql`SELECT * FROM assigned_tasks WHERE id = ${id}`
+      const { rows } = await sql`SELECT * FROM assigned_tasks WHERE id = ${id} LIMIT 1`
       return rows[0] ? parseAssignedTask(rows[0]) : null
     },
     async findByAsanaGid(asanaGid: string, orgId: string): Promise<AssignedTask | null> {
@@ -904,13 +909,22 @@ export const db = {
   // EOD Reports
   eodReports: {
     async findByOrganizationId(orgId: string): Promise<EODReport[]> {
-      const { rows } = await sql`SELECT * FROM eod_reports WHERE organization_id = ${orgId}`
+      // OPTIMIZED: Added LIMIT and ORDER BY - fetches last 90 days max
+      const { rows } = await sql`
+        SELECT * FROM eod_reports
+        WHERE organization_id = ${orgId}
+        ORDER BY date DESC
+        LIMIT 500
+      `
       return rows.map(parseEODReport)
     },
     async findByUserId(userId: string, orgId: string): Promise<EODReport[]> {
+      // OPTIMIZED: Added LIMIT - fetches last 90 days max per user
       const { rows } = await sql`
         SELECT * FROM eod_reports
         WHERE user_id = ${userId} AND organization_id = ${orgId}
+        ORDER BY date DESC
+        LIMIT 90
       `
       return rows.map(parseEODReport)
     },
@@ -918,11 +932,12 @@ export const db = {
       const { rows } = await sql`
         SELECT * FROM eod_reports
         WHERE user_id = ${userId} AND organization_id = ${orgId} AND date = ${date}
+        LIMIT 1
       `
       return rows[0] ? parseEODReport(rows[0]) : null
     },
     async findById(id: string): Promise<EODReport | null> {
-      const { rows } = await sql`SELECT * FROM eod_reports WHERE id = ${id}`
+      const { rows } = await sql`SELECT * FROM eod_reports WHERE id = ${id} LIMIT 1`
       return rows[0] ? parseEODReport(rows[0]) : null
     },
     async create(report: EODReport): Promise<EODReport> {
@@ -1250,6 +1265,29 @@ export const db = {
         WHERE organization_id = ${orgId}
           AND processed_at >= NOW() - INTERVAL '1 day' * ${days}
         ORDER BY processed_at DESC
+        LIMIT 100
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        eodReportId: row.eod_report_id as string,
+        completedItems: row.completed_items as EODInsight["completedItems"],
+        blockers: row.blockers as EODInsight["blockers"],
+        sentiment: row.sentiment as EODInsight["sentiment"],
+        sentimentScore: row.sentiment_score as number,
+        categories: row.categories as string[],
+        highlights: row.highlights as string[],
+        aiSummary: row.ai_summary as string,
+        followUpQuestions: row.follow_up_questions as string[],
+        processedAt: (row.processed_at as Date)?.toISOString() || "",
+      }))
+    },
+    // OPTIMIZED: Batch fetch insights for multiple reports (fixes N+1 query problem)
+    async findByReportIds(reportIds: string[]): Promise<EODInsight[]> {
+      if (reportIds.length === 0) return []
+      const { rows } = await sql`
+        SELECT * FROM eod_insights
+        WHERE eod_report_id = ANY(${reportIds})
       `
       return rows.map(row => ({
         id: row.id as string,

@@ -609,6 +609,7 @@ export async function GET(request: NextRequest) {
     await sql`CREATE INDEX IF NOT EXISTS idx_members_user_org ON organization_members(user_id, organization_id)`
     await sql`CREATE INDEX IF NOT EXISTS idx_members_org_status ON organization_members(organization_id, status)`
     await sql`CREATE INDEX IF NOT EXISTS idx_members_email_lower ON organization_members(organization_id, LOWER(email))`
+    await sql`CREATE INDEX IF NOT EXISTS idx_members_manager ON organization_members(organization_id, manager_id)`
 
     // Task queries (dashboard, filters)
     await sql`CREATE INDEX IF NOT EXISTS idx_tasks_org_assignee ON assigned_tasks(organization_id, assignee_id)`

@@ -153,14 +153,9 @@ export async function GET(request: NextRequest) {
         // Get rocks
         const rocks = await db.rocks.findByOrganizationId(org.id)
 
-        // Get insights for reports
-        const insights: EODInsight[] = []
-        for (const report of todayReports) {
-          const insight = await db.eodInsights.findByEODReportId(report.id)
-          if (insight) {
-            insights.push(insight)
-          }
-        }
+        // OPTIMIZED: Batch fetch insights instead of N+1 queries
+        const reportIds = todayReports.map(r => r.id)
+        const insights = await db.eodInsights.findByReportIds(reportIds)
 
         // Get previous digest
         const previousDigest = await db.dailyDigests.getLatest(org.id)
