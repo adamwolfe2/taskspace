@@ -706,6 +706,15 @@ export const db = {
       const { rowCount } = await sql`DELETE FROM rocks WHERE id = ${id}`
       return (rowCount ?? 0) > 0
     },
+    // Optimized: fetch rocks for multiple users at once (reduces data transfer)
+    async findByUserIds(userIds: string[], orgId: string): Promise<Rock[]> {
+      if (userIds.length === 0) return []
+      const { rows } = await sql`
+        SELECT * FROM rocks
+        WHERE organization_id = ${orgId} AND user_id = ANY(${userIds})
+      `
+      return rows.map(parseRock)
+    },
   },
 
   // Rock Milestones
@@ -881,6 +890,15 @@ export const db = {
       const { rowCount } = await sql`DELETE FROM assigned_tasks WHERE id = ${id}`
       return (rowCount ?? 0) > 0
     },
+    // Optimized: fetch tasks for multiple users at once (reduces data transfer)
+    async findByUserIds(userIds: string[], orgId: string): Promise<AssignedTask[]> {
+      if (userIds.length === 0) return []
+      const { rows } = await sql`
+        SELECT * FROM assigned_tasks
+        WHERE organization_id = ${orgId} AND assignee_id = ANY(${userIds})
+      `
+      return rows.map(parseAssignedTask)
+    },
   },
 
   // EOD Reports
@@ -973,6 +991,24 @@ export const db = {
     async delete(id: string): Promise<boolean> {
       const { rowCount } = await sql`DELETE FROM eod_reports WHERE id = ${id}`
       return (rowCount ?? 0) > 0
+    },
+    // Optimized: fetch EOD reports for multiple users with date range (reduces data transfer)
+    async findByUserIdsWithDateRange(
+      userIds: string[],
+      orgId: string,
+      startDate: string,
+      endDate: string
+    ): Promise<EODReport[]> {
+      if (userIds.length === 0) return []
+      const { rows } = await sql`
+        SELECT * FROM eod_reports
+        WHERE organization_id = ${orgId}
+          AND user_id = ANY(${userIds})
+          AND date >= ${startDate}
+          AND date <= ${endDate}
+        ORDER BY date DESC
+      `
+      return rows.map(parseEODReport)
     },
   },
 

@@ -9,6 +9,7 @@ import { asanaClient } from "@/lib/integrations/asana"
 import { getActiveMetricForUser, upsertWeeklyMetricEntry } from "@/lib/metrics"
 import { getTodayInTimezone, isValidEODDate, formatDateForDisplay } from "@/lib/utils/date-utils"
 import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
+import { format, subDays } from "date-fns"
 
 // GET /api/eod-reports - Get EOD reports
 export async function GET(request: NextRequest) {
@@ -29,33 +30,52 @@ export async function GET(request: NextRequest) {
 
     let reports: EODReport[]
 
-    if (isAdmin(auth)) {
-      // Admins can see all reports
-      reports = await db.eodReports.findByOrganizationId(auth.organization.id)
+    // OPTIMIZED: Default to last 90 days to reduce data transfer
+    // This significantly reduces Vercel Postgres bandwidth usage
+    const today = new Date()
+    const defaultStartDate = format(subDays(today, 90), "yyyy-MM-dd")
+    const defaultEndDate = format(today, "yyyy-MM-dd")
+    const effectiveStartDate = startDate || defaultStartDate
+    const effectiveEndDate = endDate || defaultEndDate
 
-      // Filter by user if specified
-      if (userId) {
-        reports = reports.filter(r => r.userId === userId)
+    // Determine which user(s) to fetch for
+    const targetUserId = isAdmin(auth) && userId ? userId : (isAdmin(auth) ? null : auth.user.id)
+
+    if (targetUserId) {
+      // Fetch reports for a specific user with date range
+      reports = await db.eodReports.findByUserIdsWithDateRange(
+        [targetUserId],
+        auth.organization.id,
+        date || effectiveStartDate,
+        date || effectiveEndDate
+      )
+    } else if (isAdmin(auth)) {
+      // Admin fetching all users - still apply date range limit
+      // Get all members first
+      const members = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+      const userIds = members.filter(m => m.userId).map(m => m.userId as string)
+
+      if (userIds.length > 0) {
+        reports = await db.eodReports.findByUserIdsWithDateRange(
+          userIds,
+          auth.organization.id,
+          date || effectiveStartDate,
+          date || effectiveEndDate
+        )
+      } else {
+        reports = []
       }
     } else {
-      // Regular members see only their reports
-      reports = await db.eodReports.findByUserId(auth.user.id, auth.organization.id)
+      // Regular member - only their own reports
+      reports = await db.eodReports.findByUserIdsWithDateRange(
+        [auth.user.id],
+        auth.organization.id,
+        date || effectiveStartDate,
+        date || effectiveEndDate
+      )
     }
 
-    // Filter by specific date
-    if (date) {
-      reports = reports.filter(r => r.date === date)
-    }
-
-    // Filter by date range
-    if (startDate) {
-      reports = reports.filter(r => r.date >= startDate)
-    }
-    if (endDate) {
-      reports = reports.filter(r => r.date <= endDate)
-    }
-
-    // Sort by date descending
+    // Sort by date descending (already done in DB, but ensure consistency)
     reports.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
     return NextResponse.json<ApiResponse<EODReport[]>>({

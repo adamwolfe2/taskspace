@@ -57,7 +57,7 @@ export function NotificationCenter() {
 
  const startPolling = () => {
  if (!interval) {
- interval = setInterval(fetchUnreadCount, 30000) // Check every 30 seconds
+ interval = setInterval(fetchUnreadCount, 300000) // Check every 5 minutes (reduced from 30s to save bandwidth)
  }
  }
 

@@ -24,6 +24,7 @@ import {
   startOfMonth,
   subDays,
   isValid,
+  addDays,
 } from "date-fns"
 
 // Safe parseISO that returns null for invalid dates
@@ -96,14 +97,27 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Get all tasks for the organization
-    const allTasks = await db.assignedTasks.findByOrganizationId(orgId)
+    // OPTIMIZED: Only fetch data for direct reports (not entire organization)
+    // This reduces data transfer significantly
+    const directReportUserIds = directReportMembers
+      .filter((m) => m.userId)
+      .map((m) => m.userId as string)
 
-    // Get all rocks for the organization
-    const allRocks = await db.rocks.findByOrganizationId(orgId)
+    // Get tasks only for direct reports
+    const allTasks = await db.assignedTasks.findByUserIds(directReportUserIds, orgId)
 
-    // Get all EOD reports for the organization
-    const allEodReports = await db.eodReports.findByOrganizationId(orgId)
+    // Get rocks only for direct reports
+    const allRocks = await db.rocks.findByUserIds(directReportUserIds, orgId)
+
+    // Get EOD reports only for direct reports, last 45 days only
+    const fortyFiveDaysAgo = format(subDays(today, 45), "yyyy-MM-dd")
+    const todayStr = format(today, "yyyy-MM-dd")
+    const allEodReports = await db.eodReports.findByUserIdsWithDateRange(
+      directReportUserIds,
+      orgId,
+      fortyFiveDaysAgo,
+      todayStr
+    )
 
     // Build detailed reports for each direct report
     const directReports: DirectReport[] = await Promise.all(
