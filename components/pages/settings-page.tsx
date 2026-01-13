@@ -43,6 +43,7 @@ import {
  X,
  Clock,
  Globe,
+ Sparkles,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
@@ -53,6 +54,9 @@ import { PushNotificationsCard } from "@/components/settings/push-notifications"
 import { GoogleCalendarIntegration } from "@/components/settings/google-calendar-integration"
 import { BrandingSettings } from "@/components/settings/branding-settings"
 import { BillingSettings } from "@/components/settings/billing-settings"
+import { AIInbox } from "@/components/ai/ai-inbox"
+import { AIBudgetControls } from "@/components/ai/ai-budget-controls"
+import { WorkspaceSwitcher } from "@/components/workspace"
 
 interface IntegrationStatus {
  email: {
@@ -644,11 +648,14 @@ export function SettingsPage() {
 
  return (
  <div className="space-y-6">
+ <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
  <div>
  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Settings</h1>
  <p className="text-sm text-gray-500 mt-1">
  Manage your organization settings and preferences
  </p>
+ </div>
+ <WorkspaceSwitcher className="w-full sm:w-auto" />
  </div>
 
  <Tabs defaultValue="organization" className="space-y-6">
@@ -675,6 +682,13 @@ export function SettingsPage() {
  <TabsTrigger value="billing" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
  <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
  Billing
+ </TabsTrigger>
+ )}
+ {isAdmin && (
+ <TabsTrigger value="ai" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+ <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+ <span className="hidden sm:inline">AI Inbox</span>
+ <span className="sm:hidden">AI</span>
  </TabsTrigger>
  )}
  {isAdmin && (
@@ -1201,6 +1215,13 @@ export function SettingsPage() {
  {isOwner && (
  <TabsContent value="billing" className="space-y-6">
  <BillingSettings />
+ </TabsContent>
+ )}
+
+ {isAdmin && currentOrganization && (
+ <TabsContent value="ai" className="space-y-6">
+ <AIBudgetControls organizationId={currentOrganization.id} />
+ <AIInbox organizationId={currentOrganization.id} teamMembers={teamMembers} />
  </TabsContent>
  )}
 

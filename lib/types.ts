@@ -15,6 +15,9 @@ export interface Organization {
   customDomain?: string
   faviconUrl?: string
   billingEmail?: string
+  // Stripe integration
+  stripeCustomerId?: string
+  stripeSubscriptionId?: string | null
 }
 
 export interface OrganizationSettings {
@@ -56,9 +59,12 @@ export interface AsanaUserMapping {
 export interface SubscriptionInfo {
   plan: "free" | "starter" | "professional" | "enterprise"
   status: "active" | "trialing" | "past_due" | "canceled"
-  currentPeriodEnd: string
+  currentPeriodEnd: string | null
   maxUsers: number
   features: string[]
+  // Additional billing fields
+  billingCycle?: "monthly" | "yearly" | null
+  cancelAtPeriodEnd?: boolean
 }
 
 // User Types
@@ -177,6 +183,7 @@ export interface RockMilestone {
 export interface Rock {
   id: string
   organizationId: string
+  workspaceId?: string | null // Multi-workspace support (SESSION 5)
   userId: string
   title: string
   description: string
@@ -242,6 +249,7 @@ export interface Task {
 export interface AssignedTask {
   id: string
   organizationId: string
+  workspaceId?: string | null // Multi-workspace support (SESSION 5)
   title: string
   description?: string
   assigneeId: string
@@ -251,15 +259,15 @@ export interface AssignedTask {
   type: "assigned" | "personal"
   rockId: string | null
   rockTitle: string | null
-  priority: "high" | "medium" | "normal"
-  dueDate: string
+  priority: "high" | "medium" | "normal" | "low"
+  dueDate: string | null
   createdAt: string
-  updatedAt: string
+  updatedAt?: string
   status: "pending" | "in-progress" | "completed"
-  completedAt: string | null
-  addedToEOD: boolean
-  eodReportId: string | null
-  source?: "manual" | "asana"
+  completedAt?: string | null
+  addedToEOD?: boolean
+  eodReportId?: string | null
+  source?: "manual" | "asana" | "ai_suggestion"
   asanaGid?: string | null // Asana task GID for two-way sync
   comments?: TaskComment[]
   recurrence?: TaskRecurrence
@@ -294,6 +302,7 @@ export interface FileAttachment {
 export interface EODReport {
   id: string
   organizationId: string
+  workspaceId?: string | null // Multi-workspace support (SESSION 5)
   userId: string
   date: string
   tasks: EODTask[]
@@ -344,6 +353,7 @@ export interface ApiResponse<T> {
   data?: T
   error?: string
   message?: string
+  code?: string // Error code for programmatic handling (e.g., CREDITS_EXHAUSTED)
 }
 
 export interface PaginatedResponse<T> {
@@ -513,6 +523,70 @@ export interface AIConversation {
   response?: string
   contextUsed?: Record<string, unknown>
   createdAt: string
+}
+
+// AI Suggestion types for the inbox
+export type AISuggestionSourceType = "eod_report" | "brain_dump" | "digest" | "query" | "scheduled"
+export type AISuggestionType = "task" | "follow_up" | "blocker" | "alert" | "rock_update"
+export type AISuggestionStatus = "pending" | "approved" | "rejected" | "auto_applied" | "expired"
+export type AISuggestionPriority = "low" | "medium" | "high" | "urgent"
+
+export interface AISuggestion {
+  id: string
+  organizationId: string
+  sourceType: AISuggestionSourceType
+  sourceId?: string
+  sourceText?: string
+  suggestionType: AISuggestionType
+  title: string
+  description?: string
+  suggestedData: Record<string, unknown>
+  context?: string
+  confidence: number
+  priority: AISuggestionPriority
+  targetUserId?: string
+  targetUserName?: string
+  relatedEntityType?: string
+  relatedEntityId?: string
+  status: AISuggestionStatus
+  reviewedBy?: string
+  reviewedAt?: string
+  reviewerNotes?: string
+  actionTaken?: Record<string, unknown>
+  creditsCost: number
+  expiresAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AIBudgetSettings {
+  id: string
+  organizationId: string
+  monthlyBudgetCredits: number
+  warningThresholdPercent: number
+  autoApproveEnabled: boolean
+  autoApproveMinConfidence: number
+  autoApproveTypes: string[]
+  pauseOnBudgetExceeded: boolean
+  // Legacy fields
+  monthlyCreditBudget?: number
+  autoApproveMaxCreditsPerDay?: number
+  notifyOnNewSuggestions?: boolean
+  notifyOnBudgetThreshold?: Record<string, boolean>
+  digestFrequency?: "immediate" | "daily" | "weekly" | "never"
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SuggestionStats {
+  pending: number
+  approvedToday: number
+  rejectedToday: number
+  autoAppliedToday?: number
+  creditsUsedToday?: number
+  avgConfidence?: number
+  // Legacy aliases
+  pendingCount?: number
 }
 
 // Extended team member with AI fields

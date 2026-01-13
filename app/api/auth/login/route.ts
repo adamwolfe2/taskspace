@@ -12,6 +12,7 @@ import {
   resetLoginRateLimit,
   getRateLimitHeaders,
 } from "@/lib/auth/rate-limit"
+import { logger, logAuthEvent, formatError } from "@/lib/logger"
 import type { Session, ApiResponse, AuthResponse } from "@/lib/types"
 
 export async function POST(request: NextRequest) {
@@ -138,6 +139,9 @@ export async function POST(request: NextRequest) {
     // Reset rate limit on successful login
     resetLoginRateLimit(request)
 
+    // Log successful login
+    logAuthEvent("login", user.id, true, { orgId: selectedOrgId })
+
     // Return response without password hash
     const { passwordHash: _passwordHash, ...safeUser } = user
 
@@ -164,7 +168,8 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error("Login error:", error)
+    logger.error({ error: formatError(error) }, "Login error")
+    logAuthEvent("login", undefined, false, { error: formatError(error) })
 
     let errorMessage = "An error occurred during login"
 

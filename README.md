@@ -82,10 +82,16 @@ Optional:
 - Vercel will build and deploy automatically
 
 ### 5. Run Database Migration
-After first deployment:
+Migrations are run via CLI for security:
 ```bash
-curl -X GET https://your-app.vercel.app/api/db/migrate \
-  -H "x-migration-key: YOUR_MIGRATION_KEY"
+# Set your production database URL
+export DATABASE_URL=your-production-database-url
+
+# Run pending migrations
+npm run migrate
+
+# Check migration status
+npm run migrate:status
 ```
 
 ## API Routes
@@ -103,24 +109,28 @@ curl -X GET https://your-app.vercel.app/api/db/migrate \
 | `/api/invitations` | GET/POST/DELETE | Manage invitations |
 | `/api/invitations/accept` | GET/POST | Accept invitation |
 | `/api/organizations` | GET/PATCH | Manage organization |
-| `/api/db/migrate` | GET | Run database migration |
+| `/api/db/migrate` | GET | Check migration status (admin only) |
 
 ## Security Features
 
-- Password hashing with SHA256 + salt
+- Password hashing with bcrypt (12 rounds)
 - Session-based authentication with httpOnly cookies
 - Password hash exclusion from all API responses
-- Protected migration endpoint
+- CLI-only database migrations (no HTTP exposure)
+- Database-backed rate limiting for auth endpoints
 - Multi-tenant data isolation
 - Role-based authorization checks
 
 ## Scripts
 
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint
+npm run dev            # Start development server
+npm run build          # Build for production
+npm run start          # Start production server
+npm run lint           # Run ESLint
+npm run migrate        # Run database migrations
+npm run migrate:status # Check migration status
+npm run migrate:create # Create new migration
 ```
 
 ## License

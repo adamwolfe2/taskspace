@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { answerQuery, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
+import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import type { ApiResponse, AIQueryResponse, AIConversation, TeamMember } from "@/lib/types"
 
 // POST /api/ai/query - Ask a natural language question about team data
@@ -28,6 +29,15 @@ export async function POST(request: NextRequest) {
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },
         { status: 503 }
       )
+    }
+
+    // Check AI credits before processing
+    const creditCheck = await checkCreditsOrRespond({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+    })
+    if (creditCheck instanceof NextResponse) {
+      return creditCheck
     }
 
     const body = await request.json()
@@ -83,6 +93,22 @@ export async function POST(request: NextRequest) {
       eodReports: recentReports,
     })
 
+    // Record AI usage
+    if (result.usage) {
+      await recordUsage({
+        organizationId: auth.organization.id,
+        userId: auth.user.id,
+        action: "query",
+        model: result.usage.model,
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+        metadata: {
+          conversationId: conversation.id,
+          queryLength: query.length,
+        },
+      })
+    }
+
     // Update conversation with response
     await db.aiConversations.update(conversation.id, {
       response: result.response,
@@ -94,15 +120,31 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Remove usage from response (internal tracking only)
+    const { usage: _usage, ...responseData } = result
+
     return NextResponse.json<ApiResponse<AIQueryResponse & { conversationId: string }>>({
       success: true,
       data: {
-        ...result,
+        ...responseData,
         conversationId: conversation.id,
       },
     })
   } catch (error) {
     console.error("AI query error:", error)
+
+    // Handle credit exhaustion error
+    if ((error as Error & { code?: string }).code === "CREDITS_EXHAUSTED") {
+      return NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: "AI credit limit reached. Please upgrade your plan for more credits.",
+          code: "CREDITS_EXHAUSTED",
+        },
+        { status: 402 }
+      )
+    }
+
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to process query" },
       { status: 500 }

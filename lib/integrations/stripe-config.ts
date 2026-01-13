@@ -52,6 +52,7 @@ export function getStripeConfig(): StripeConfig {
 export const PLAN_FEATURES: Record<string, {
   name: string
   maxSeats: number | null
+  aiCreditsMonthly: number // -1 = unlimited
   features: string[]
   monthlyPrice: number // in cents
   yearlyPrice: number // in cents
@@ -59,6 +60,7 @@ export const PLAN_FEATURES: Record<string, {
   free: {
     name: "Free",
     maxSeats: 5,
+    aiCreditsMonthly: 100,
     features: ["basic_rocks", "basic_tasks", "eod_reports"],
     monthlyPrice: 0,
     yearlyPrice: 0,
@@ -66,6 +68,7 @@ export const PLAN_FEATURES: Record<string, {
   starter: {
     name: "Starter",
     maxSeats: 15,
+    aiCreditsMonthly: 500,
     features: ["basic_rocks", "basic_tasks", "eod_reports", "email_notifications", "basic_analytics"],
     monthlyPrice: 2900, // $29/month
     yearlyPrice: 29000, // $290/year (save ~17%)
@@ -73,6 +76,7 @@ export const PLAN_FEATURES: Record<string, {
   professional: {
     name: "Professional",
     maxSeats: 50,
+    aiCreditsMonthly: 2000,
     features: [
       "basic_rocks",
       "basic_tasks",
@@ -90,6 +94,7 @@ export const PLAN_FEATURES: Record<string, {
   enterprise: {
     name: "Enterprise",
     maxSeats: null, // unlimited
+    aiCreditsMonthly: -1, // unlimited
     features: [
       "basic_rocks",
       "basic_tasks",
@@ -104,10 +109,18 @@ export const PLAN_FEATURES: Record<string, {
       "custom_integrations",
       "dedicated_support",
       "sla_guarantee",
+      "unlimited_ai",
     ],
     monthlyPrice: 19900, // $199/month
     yearlyPrice: 199000, // $1990/year
   },
+}
+
+// Get AI credit limit for a plan
+export function getPlanAICredits(plan: string): number {
+  const planConfig = PLAN_FEATURES[plan]
+  if (!planConfig) return 100 // default to free tier
+  return planConfig.aiCreditsMonthly
 }
 
 // Check if a feature is available for a plan

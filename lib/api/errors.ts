@@ -2,11 +2,13 @@
  * Standardized API Error Handling
  *
  * Provides consistent error types, status codes, and response formatting
- * across all API routes. Includes logging integration and client-friendly messages.
+ * across all API routes. Integrates with structured logging and Sentry.
  */
 
 import { NextResponse } from "next/server"
+import * as Sentry from "@sentry/nextjs"
 import type { ApiResponse } from "@/lib/types"
+import { logger, formatError, type RequestContext } from "@/lib/logger"
 
 // ============================================
 // ERROR CODES
@@ -290,26 +292,58 @@ function handlePostgresError(error: { code: string; message: string }): ApiError
 }
 
 /**
- * Logs errors for debugging and monitoring
+ * Logs errors using structured logging and sends to Sentry
  */
 function logError(apiError: ApiError, originalError?: unknown): void {
   const logData = {
     code: apiError.code,
-    message: apiError.message,
     statusCode: apiError.statusCode,
     details: apiError.details,
-    stack: apiError.stack,
-    originalError:
-      originalError instanceof Error
-        ? { message: originalError.message, stack: originalError.stack }
-        : originalError,
+    originalError: originalError ? formatError(originalError) : undefined,
   }
 
   if (apiError.statusCode >= 500) {
-    console.error("[API Error]", JSON.stringify(logData, null, 2))
-  } else if (process.env.NODE_ENV === "development") {
-    console.warn("[API Warning]", JSON.stringify(logData, null, 2))
+    // Log as error
+    logger.error(logData, `API Error: ${apiError.message}`)
+
+    // Send to Sentry for 500+ errors
+    Sentry.captureException(originalError || apiError, {
+      tags: {
+        errorCode: apiError.code,
+        statusCode: apiError.statusCode.toString(),
+      },
+      extra: logData,
+    })
+  } else if (apiError.statusCode >= 400) {
+    // Log as warning for 4xx errors
+    logger.warn(logData, `API Warning: ${apiError.message}`)
   }
+}
+
+/**
+ * Handle API errors with full context
+ * Use this in API route catch blocks
+ *
+ * @example
+ * try {
+ *   // ... API logic
+ * } catch (error) {
+ *   return handleAPIError(error, { userId, orgId, path: '/api/tasks' })
+ * }
+ */
+export function handleAPIError(
+  error: unknown,
+  context?: RequestContext
+): NextResponse<ApiResponse<null>> {
+  // Set Sentry context
+  if (context) {
+    Sentry.setContext("request", context)
+    if (context.userId) {
+      Sentry.setUser({ id: context.userId })
+    }
+  }
+
+  return handleError(error)
 }
 
 // ============================================

@@ -71,6 +71,14 @@ export type AuditAction =
   | "ai.query"
   | "ai.task_generate"
   | "ai.digest_generate"
+  // Subscription/Billing
+  | "subscription.checkout_completed"
+  | "subscription.created"
+  | "subscription.updated"
+  | "subscription.canceled"
+  | "subscription.payment_failed"
+  | "subscription.payment_succeeded"
+  | "subscription.seats_updated"
   // Export
   | "export.data"
   | "export.calendar"

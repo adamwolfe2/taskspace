@@ -1,7 +1,119 @@
 /**
  * Asana Integration Client
  * Handles two-way sync between AIMS EOD Tracker and Asana
+ * Includes webhook signature verification for incoming requests
  */
+
+import { createHmac, timingSafeEqual } from "crypto"
+
+// ============================================
+// ASANA WEBHOOK SIGNATURE VERIFICATION
+// ============================================
+
+/**
+ * Verify Asana webhook signature (X-Hook-Signature)
+ *
+ * Asana uses HMAC-SHA256 signature verification:
+ * https://developers.asana.com/docs/webhooks#security
+ *
+ * @param signature - X-Hook-Signature header value
+ * @param body - Raw request body string
+ * @param secret - Webhook secret from Asana
+ * @returns true if signature is valid
+ */
+export function verifyAsanaSignature(
+  signature: string,
+  body: string,
+  secret: string
+): boolean {
+  if (!signature || !body || !secret) {
+    return false
+  }
+
+  // Compute expected signature
+  const expectedSignature = createHmac("sha256", secret)
+    .update(body)
+    .digest("hex")
+
+  // Use timing-safe comparison to prevent timing attacks
+  try {
+    return timingSafeEqual(
+      Buffer.from(signature, "utf8"),
+      Buffer.from(expectedSignature, "utf8")
+    )
+  } catch {
+    // Buffer lengths don't match
+    return false
+  }
+}
+
+/**
+ * Handle Asana webhook handshake
+ *
+ * When Asana first establishes a webhook, it sends a POST with
+ * X-Hook-Secret header. We must respond with the same header.
+ *
+ * @param request - Incoming request
+ * @returns Response for handshake, or null if not a handshake
+ */
+export function handleAsanaWebhookHandshake(
+  request: Request
+): Response | null {
+  const hookSecret = request.headers.get("x-hook-secret")
+
+  if (hookSecret) {
+    // This is a webhook handshake request
+    // Store this secret for future verification
+    return new Response(null, {
+      status: 200,
+      headers: {
+        "X-Hook-Secret": hookSecret,
+      },
+    })
+  }
+
+  return null
+}
+
+/**
+ * Validate incoming Asana webhook request
+ *
+ * @param request - Incoming request
+ * @returns Validation result with extracted data
+ */
+export async function validateAsanaRequest(
+  request: Request
+): Promise<{
+  valid: boolean
+  error?: string
+  body?: string
+  isHandshake?: boolean
+}> {
+  // Check for handshake first
+  const hookSecret = request.headers.get("x-hook-secret")
+  if (hookSecret) {
+    return { valid: true, isHandshake: true }
+  }
+
+  // Get stored secret
+  const webhookSecret = process.env.ASANA_WEBHOOK_SECRET
+  if (!webhookSecret) {
+    return { valid: false, error: "ASANA_WEBHOOK_SECRET not configured" }
+  }
+
+  const signature = request.headers.get("x-hook-signature")
+  if (!signature) {
+    return { valid: false, error: "Missing x-hook-signature header" }
+  }
+
+  const body = await request.text()
+
+  if (!verifyAsanaSignature(signature, body, webhookSecret)) {
+    return { valid: false, error: "Invalid signature" }
+  }
+
+  return { valid: true, body }
+}
 
 const ASANA_API_BASE = "https://app.asana.com/api/1.0"
 

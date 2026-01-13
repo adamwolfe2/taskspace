@@ -13,6 +13,7 @@ import {
   checkRegisterRateLimit,
   getRateLimitHeaders,
 } from "@/lib/auth/rate-limit"
+import { logger, logAuthEvent, formatError } from "@/lib/logger"
 import type { User, Organization, OrganizationMember, Session, ApiResponse, AuthResponse } from "@/lib/types"
 
 export async function POST(request: NextRequest) {
@@ -160,6 +161,12 @@ export async function POST(request: NextRequest) {
 
     await db.sessions.create(session)
 
+    // Log successful registration
+    logAuthEvent("register", userId, true, {
+      orgId: organization?.id,
+      orgName: organization?.name,
+    })
+
     // Return response without password hash
     const { passwordHash: _passwordHash, ...safeUser } = user
 
@@ -188,7 +195,8 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error("Registration error:", error)
+    logger.error({ error: formatError(error) }, "Registration error")
+    logAuthEvent("register", undefined, false, { error: formatError(error) })
 
     // Provide more specific error messages
     let errorMessage = "An error occurred during registration"
