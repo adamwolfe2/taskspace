@@ -11,6 +11,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import type { EODReport } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { useApp } from "@/lib/contexts/app-context"
 
 interface WeeklyEODCalendarProps {
  eodReports: EODReport[]
@@ -30,24 +32,53 @@ interface WeekDay {
  hasSubmission: boolean
 }
 
-// Format date to YYYY-MM-DD using local timezone (not UTC)
-function getLocalDateString(date: Date): string {
- const year = date.getFullYear()
- const month = String(date.getMonth() + 1).padStart(2, '0')
- const day = String(date.getDate()).padStart(2, '0')
- return `${year}-${month}-${day}`
+// Format date to YYYY-MM-DD using specified timezone
+function getDateStringInTimezone(date: Date, timezone: string): string {
+ try {
+   const formatter = new Intl.DateTimeFormat("en-CA", {
+     timeZone: timezone,
+     year: "numeric",
+     month: "2-digit",
+     day: "2-digit",
+   })
+   // en-CA locale gives us YYYY-MM-DD format
+   return formatter.format(date)
+ } catch (error) {
+   // Fallback to local timezone
+   const year = date.getFullYear()
+   const month = String(date.getMonth() + 1).padStart(2, '0')
+   const day = String(date.getDate()).padStart(2, '0')
+   return `${year}-${month}-${day}`
+ }
 }
 
-function getWeekDays(reports: EODReport[], userId: string): WeekDay[] {
+// Get day of week in specified timezone (0 = Sunday, 6 = Saturday)
+function getDayOfWeekInTimezone(date: Date, timezone: string): number {
+ try {
+   const formatter = new Intl.DateTimeFormat("en-US", {
+     timeZone: timezone,
+     weekday: "short",
+   })
+   const dayName = formatter.format(date)
+   const days: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+   return days[dayName] ?? date.getDay()
+ } catch (error) {
+   return date.getDay()
+ }
+}
+
+function getWeekDays(reports: EODReport[], userId: string, todayString: string): WeekDay[] {
  const today = new Date()
- const todayString = getLocalDateString(today)
- const dayOfWeek = today.getDay() // 0 = Sunday, 1 = Monday, etc.
+
+ // Parse today's date string to create the week
+ const [year, month, day] = todayString.split('-').map(Number)
+ const todayDate = new Date(year, month - 1, day)
+ const dayOfWeek = todayDate.getDay() // 0 = Sunday, 1 = Monday, etc.
 
  // Calculate Monday of current week
- const monday = new Date(today)
+ const monday = new Date(todayDate)
  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek // Adjust for Sunday
- monday.setDate(today.getDate() + diff)
- monday.setHours(0, 0, 0, 0)
+ monday.setDate(todayDate.getDate() + diff)
 
  // Get user's report dates as a Set for quick lookup
  const userReportDates = new Set(
@@ -62,18 +93,17 @@ function getWeekDays(reports: EODReport[], userId: string): WeekDay[] {
  for (let i = 0; i < 5; i++) {
  const date = new Date(monday)
  date.setDate(monday.getDate() + i)
- const dateString = getLocalDateString(date)
-
- // Compare dates at midnight local time for isFuture check
- const dateAtMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate())
- const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+ const dateYear = date.getFullYear()
+ const dateMonth = String(date.getMonth() + 1).padStart(2, '0')
+ const dateDay = String(date.getDate()).padStart(2, '0')
+ const dateString = `${dateYear}-${dateMonth}-${dateDay}`
 
  weekDays.push({
  date: dateString,
  dayName: dayNames[i],
  dayNumber: date.getDate(),
  isToday: dateString === todayString,
- isFuture: dateAtMidnight > todayAtMidnight,
+ isFuture: dateString > todayString,
  hasSubmission: userReportDates.has(dateString),
  })
  }
@@ -89,9 +119,14 @@ export function WeeklyEODCalendar({
  onViewReport,
  showMoodTrend = true
 }: WeeklyEODCalendarProps) {
+ const { currentOrganization } = useApp()
+ // Use organization timezone for date calculations
+ const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
+ const todayString = getTodayInTimezone(orgTimezone)
+
  const weekDays = useMemo(
- () => getWeekDays(eodReports, userId),
- [eodReports, userId]
+ () => getWeekDays(eodReports, userId, todayString),
+ [eodReports, userId, todayString]
  )
 
  // Create a map of date -> report for quick lookup
@@ -102,8 +137,6 @@ export function WeeklyEODCalendar({
  .forEach(r => map.set(r.date, r))
  return map
  }, [eodReports, userId])
-
- const todayString = getLocalDateString(new Date())
 
  const submittedCount = weekDays.filter(d => d.hasSubmission).length
  const todayIndex = weekDays.findIndex(d => d.isToday)

@@ -290,7 +290,7 @@ export function RockRoadmap({
  {viewMode === "team" ? (
  // Team View
  Object.entries(rocksByUser).map(([userId, userRocks]) => {
- const member = teamMembers.find((m) => m.id === userId)
+ const member = teamMembers.find((m) => m.userId === userId)
  return (
  <div key={userId} className="border-b last:border-b-0">
  <div className="px-4 py-2 bg-slate-100  font-medium text-sm text-slate-700 ">

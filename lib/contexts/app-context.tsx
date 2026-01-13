@@ -123,7 +123,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Build team member from response
       const teamMember: TeamMember = {
-        id: data.user.id,
+        id: data.member.id, // organization_members.id - use for metrics, manager assignments
+        userId: data.user.id, // users.id - use for rocks, tasks, EOD reports
         name: data.user.name,
         email: data.user.email,
         role: data.member.role,
@@ -154,7 +155,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (data.organization && data.member) {
         const teamMember: TeamMember = {
-          id: data.user.id,
+          id: data.member.id, // organization_members.id - use for metrics, manager assignments
+          userId: data.user.id, // users.id - use for rocks, tasks, EOD reports
           name: data.user.name,
           email: data.user.email,
           role: data.member.role,
