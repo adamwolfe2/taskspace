@@ -65,6 +65,16 @@ function parseOrganization(row: Record<string, unknown>): Organization {
     subscription: row.subscription as Organization["subscription"],
     createdAt: (row.created_at as Date)?.toISOString() || "",
     updatedAt: (row.updated_at as Date)?.toISOString() || "",
+    // Branding fields
+    logoUrl: row.logo_url as string | undefined,
+    primaryColor: row.primary_color as string | undefined,
+    secondaryColor: row.secondary_color as string | undefined,
+    customDomain: row.custom_domain as string | undefined,
+    faviconUrl: row.favicon_url as string | undefined,
+    billingEmail: row.billing_email as string | undefined,
+    // Stripe fields
+    stripeCustomerId: row.stripe_customer_id as string | undefined,
+    stripeSubscriptionId: row.stripe_subscription_id as string | null | undefined,
   }
 }
 
@@ -307,6 +317,14 @@ export const db = {
           name = COALESCE(${updates.name || null}, name),
           settings = COALESCE(${newSettings}::jsonb, settings),
           subscription = COALESCE(${newSubscription}::jsonb, subscription),
+          logo_url = COALESCE(${updates.logoUrl ?? null}, logo_url),
+          primary_color = COALESCE(${updates.primaryColor ?? null}, primary_color),
+          secondary_color = COALESCE(${updates.secondaryColor ?? null}, secondary_color),
+          custom_domain = COALESCE(${updates.customDomain ?? null}, custom_domain),
+          favicon_url = COALESCE(${updates.faviconUrl ?? null}, favicon_url),
+          billing_email = COALESCE(${updates.billingEmail ?? null}, billing_email),
+          stripe_customer_id = COALESCE(${updates.stripeCustomerId ?? null}, stripe_customer_id),
+          stripe_subscription_id = ${updates.stripeSubscriptionId !== undefined ? updates.stripeSubscriptionId : null},
           updated_at = ${now}
         WHERE id = ${id}
         RETURNING *
@@ -320,8 +338,7 @@ export const db = {
     async findByStripeCustomerId(customerId: string): Promise<Organization | null> {
       const { rows } = await sql`
         SELECT * FROM organizations
-        WHERE subscription->>'stripeCustomerId' = ${customerId}
-           OR settings->>'stripeCustomerId' = ${customerId}
+        WHERE stripe_customer_id = ${customerId}
       `
       return rows[0] ? parseOrganization(rows[0]) : null
     },

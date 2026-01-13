@@ -1,0 +1,429 @@
+/**
+ * Stripe Billing Module
+ *
+ * Centralized billing functionality including:
+ * - Plan definitions
+ * - Checkout session creation
+ * - Customer portal
+ * - AI credit tracking
+ */
+
+import { sql } from "../db/sql"
+import { logger } from "../logger"
+
+// ============================================
+// PLAN DEFINITIONS
+// ============================================
+
+export interface PlanConfig {
+  id: string
+  name: string
+  displayName: string
+  maxSeats: number | null
+  aiCreditsMonthly: number // -1 = unlimited
+  priceMonthly: number // in cents
+  priceYearly: number // in cents
+  features: string[]
+}
+
+export const PLANS: Record<string, PlanConfig> = {
+  free: {
+    id: "free",
+    name: "free",
+    displayName: "Free",
+    maxSeats: 5,
+    aiCreditsMonthly: 100,
+    priceMonthly: 0,
+    priceYearly: 0,
+    features: ["basic_rocks", "basic_tasks", "eod_reports"],
+  },
+  pro: {
+    id: "pro",
+    name: "pro",
+    displayName: "Pro",
+    maxSeats: 20,
+    aiCreditsMonthly: 1000,
+    priceMonthly: 1500, // $15/user/mo
+    priceYearly: 14400, // $144/user/yr
+    features: [
+      "basic_rocks",
+      "basic_tasks",
+      "eod_reports",
+      "ai_insights",
+      "team_analytics",
+      "asana_integration",
+    ],
+  },
+  team: {
+    id: "team",
+    name: "team",
+    displayName: "Team",
+    maxSeats: 100,
+    aiCreditsMonthly: 5000,
+    priceMonthly: 2500, // $25/user/mo
+    priceYearly: 24000, // $240/user/yr
+    features: [
+      "basic_rocks",
+      "basic_tasks",
+      "eod_reports",
+      "ai_insights",
+      "team_analytics",
+      "asana_integration",
+      "custom_branding",
+      "api_access",
+      "priority_support",
+    ],
+  },
+  enterprise: {
+    id: "enterprise",
+    name: "enterprise",
+    displayName: "Enterprise",
+    maxSeats: null, // unlimited
+    aiCreditsMonthly: -1, // unlimited
+    priceMonthly: 7500, // $75/user/mo (custom pricing usually)
+    priceYearly: 72000,
+    features: [
+      "basic_rocks",
+      "basic_tasks",
+      "eod_reports",
+      "ai_insights",
+      "team_analytics",
+      "asana_integration",
+      "custom_branding",
+      "api_access",
+      "priority_support",
+      "sso_saml",
+      "dedicated_support",
+      "sla_guarantee",
+      "unlimited_ai",
+    ],
+  },
+}
+
+// ============================================
+// AI CREDITS MANAGEMENT
+// ============================================
+
+export interface AIUsageRecord {
+  organizationId: string
+  userId: string
+  action: string
+  model: string
+  inputTokens: number
+  outputTokens: number
+  creditsUsed: number
+  metadata?: Record<string, unknown>
+}
+
+/**
+ * Check if organization has AI credits remaining
+ */
+export async function checkAICredits(organizationId: string): Promise<{
+  hasCredits: boolean
+  creditsUsed: number
+  creditsLimit: number
+  remainingCredits: number
+}> {
+  try {
+    // Get organization's plan
+    const { rows: orgRows } = await sql`
+      SELECT subscription->>'plan' as plan
+      FROM organizations
+      WHERE id = ${organizationId}
+    `
+    const plan = orgRows[0]?.plan || "free"
+    const planConfig = PLANS[plan] || PLANS.free
+
+    // Unlimited for enterprise
+    if (planConfig.aiCreditsMonthly === -1) {
+      return {
+        hasCredits: true,
+        creditsUsed: 0,
+        creditsLimit: -1,
+        remainingCredits: -1,
+      }
+    }
+
+    // Get current month's usage
+    const { rows: usageRows } = await sql`
+      SELECT COALESCE(SUM(credits_used), 0)::integer as credits_used
+      FROM ai_usage
+      WHERE organization_id = ${organizationId}
+        AND created_at >= date_trunc('month', CURRENT_DATE)
+    `
+    const creditsUsed = usageRows[0]?.credits_used || 0
+    const creditsLimit = planConfig.aiCreditsMonthly
+    const remainingCredits = Math.max(0, creditsLimit - creditsUsed)
+
+    return {
+      hasCredits: creditsUsed < creditsLimit,
+      creditsUsed,
+      creditsLimit,
+      remainingCredits,
+    }
+  } catch (error) {
+    logger.error({ error, organizationId }, "Failed to check AI credits")
+    // Fail open - allow the request if we can't check
+    return {
+      hasCredits: true,
+      creditsUsed: 0,
+      creditsLimit: 100,
+      remainingCredits: 100,
+    }
+  }
+}
+
+/**
+ * Record AI usage for an organization
+ */
+export async function recordAIUsage(usage: AIUsageRecord): Promise<void> {
+  try {
+    await sql`
+      INSERT INTO ai_usage (
+        organization_id, user_id, action, model,
+        input_tokens, output_tokens, credits_used, metadata
+      ) VALUES (
+        ${usage.organizationId},
+        ${usage.userId},
+        ${usage.action},
+        ${usage.model},
+        ${usage.inputTokens},
+        ${usage.outputTokens},
+        ${usage.creditsUsed},
+        ${JSON.stringify(usage.metadata || {})}::jsonb
+      )
+    `
+
+    logger.debug(
+      {
+        organizationId: usage.organizationId,
+        action: usage.action,
+        creditsUsed: usage.creditsUsed,
+      },
+      "AI usage recorded"
+    )
+  } catch (error) {
+    // Log but don't fail the request if usage tracking fails
+    logger.error({ error, usage }, "Failed to record AI usage")
+  }
+}
+
+/**
+ * Get AI usage statistics for an organization
+ */
+export async function getAIUsageStats(
+  organizationId: string,
+  startDate?: Date,
+  endDate?: Date
+): Promise<{
+  totalCredits: number
+  totalTokens: number
+  queryCount: number
+  byAction: Record<string, number>
+  byModel: Record<string, number>
+}> {
+  const start = startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  const end = endDate || new Date()
+
+  try {
+    // Get totals
+    const { rows: totalRows } = await sql`
+      SELECT
+        COALESCE(SUM(credits_used), 0)::integer as total_credits,
+        COALESCE(SUM(input_tokens + output_tokens), 0)::integer as total_tokens,
+        COUNT(*)::integer as query_count
+      FROM ai_usage
+      WHERE organization_id = ${organizationId}
+        AND created_at >= ${start.toISOString()}
+        AND created_at < ${end.toISOString()}
+    `
+
+    // Get by action
+    const { rows: actionRows } = await sql`
+      SELECT action, SUM(credits_used)::integer as credits
+      FROM ai_usage
+      WHERE organization_id = ${organizationId}
+        AND created_at >= ${start.toISOString()}
+        AND created_at < ${end.toISOString()}
+      GROUP BY action
+    `
+    const byAction: Record<string, number> = {}
+    for (const row of actionRows) {
+      byAction[row.action as string] = row.credits as number
+    }
+
+    // Get by model
+    const { rows: modelRows } = await sql`
+      SELECT model, SUM(credits_used)::integer as credits
+      FROM ai_usage
+      WHERE organization_id = ${organizationId}
+        AND created_at >= ${start.toISOString()}
+        AND created_at < ${end.toISOString()}
+      GROUP BY model
+    `
+    const byModel: Record<string, number> = {}
+    for (const row of modelRows) {
+      byModel[row.model as string] = row.credits as number
+    }
+
+    return {
+      totalCredits: totalRows[0]?.total_credits || 0,
+      totalTokens: totalRows[0]?.total_tokens || 0,
+      queryCount: totalRows[0]?.query_count || 0,
+      byAction,
+      byModel,
+    }
+  } catch (error) {
+    logger.error({ error, organizationId }, "Failed to get AI usage stats")
+    return {
+      totalCredits: 0,
+      totalTokens: 0,
+      queryCount: 0,
+      byAction: {},
+      byModel: {},
+    }
+  }
+}
+
+// ============================================
+// SEAT MANAGEMENT
+// ============================================
+
+/**
+ * Check if organization can add more seats
+ */
+export async function canAddSeat(organizationId: string): Promise<{
+  canAdd: boolean
+  currentSeats: number
+  maxSeats: number | null
+}> {
+  try {
+    // Get organization's plan and current member count
+    const { rows } = await sql`
+      SELECT
+        o.subscription->>'plan' as plan,
+        COUNT(om.id)::integer as current_seats
+      FROM organizations o
+      LEFT JOIN organization_members om ON om.organization_id = o.id AND om.status = 'active'
+      WHERE o.id = ${organizationId}
+      GROUP BY o.id
+    `
+
+    const plan = rows[0]?.plan || "free"
+    const currentSeats = rows[0]?.current_seats || 0
+    const planConfig = PLANS[plan] || PLANS.free
+    const maxSeats = planConfig.maxSeats
+
+    return {
+      canAdd: maxSeats === null || currentSeats < maxSeats,
+      currentSeats,
+      maxSeats,
+    }
+  } catch (error) {
+    logger.error({ error, organizationId }, "Failed to check seat availability")
+    return { canAdd: false, currentSeats: 0, maxSeats: 5 }
+  }
+}
+
+/**
+ * Get seat usage for an organization
+ */
+export async function getSeatUsage(organizationId: string): Promise<{
+  used: number
+  limit: number | null
+  available: number | null
+}> {
+  const result = await canAddSeat(organizationId)
+  return {
+    used: result.currentSeats,
+    limit: result.maxSeats,
+    available: result.maxSeats === null ? null : Math.max(0, result.maxSeats - result.currentSeats),
+  }
+}
+
+// ============================================
+// FEATURE CHECKS
+// ============================================
+
+/**
+ * Check if a feature is enabled for an organization's plan
+ */
+export async function isFeatureEnabled(
+  organizationId: string,
+  feature: string
+): Promise<boolean> {
+  try {
+    const { rows } = await sql`
+      SELECT subscription->>'plan' as plan
+      FROM organizations
+      WHERE id = ${organizationId}
+    `
+    const plan = rows[0]?.plan || "free"
+    const planConfig = PLANS[plan] || PLANS.free
+    return planConfig.features.includes(feature)
+  } catch (error) {
+    logger.error({ error, organizationId, feature }, "Failed to check feature")
+    return false
+  }
+}
+
+/**
+ * Get all enabled features for an organization
+ */
+export async function getEnabledFeatures(organizationId: string): Promise<string[]> {
+  try {
+    const { rows } = await sql`
+      SELECT subscription->>'plan' as plan
+      FROM organizations
+      WHERE id = ${organizationId}
+    `
+    const plan = rows[0]?.plan || "free"
+    const planConfig = PLANS[plan] || PLANS.free
+    return planConfig.features
+  } catch (error) {
+    logger.error({ error, organizationId }, "Failed to get features")
+    return PLANS.free.features
+  }
+}
+
+// ============================================
+// BILLING PORTAL
+// ============================================
+
+/**
+ * Get billing summary for an organization
+ */
+export async function getBillingSummary(organizationId: string): Promise<{
+  plan: PlanConfig
+  seatUsage: { used: number; limit: number | null }
+  aiUsage: { used: number; limit: number; remaining: number }
+  features: string[]
+}> {
+  try {
+    const { rows } = await sql`
+      SELECT subscription->>'plan' as plan
+      FROM organizations
+      WHERE id = ${organizationId}
+    `
+    const planId = rows[0]?.plan || "free"
+    const plan = PLANS[planId] || PLANS.free
+
+    const seatResult = await getSeatUsage(organizationId)
+    const aiResult = await checkAICredits(organizationId)
+    const features = await getEnabledFeatures(organizationId)
+
+    return {
+      plan,
+      seatUsage: { used: seatResult.used, limit: seatResult.limit },
+      aiUsage: {
+        used: aiResult.creditsUsed,
+        limit: aiResult.creditsLimit,
+        remaining: aiResult.remainingCredits,
+      },
+      features,
+    }
+  } catch (error) {
+    logger.error({ error, organizationId }, "Failed to get billing summary")
+    throw error
+  }
+}

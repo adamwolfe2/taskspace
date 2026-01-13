@@ -42,16 +42,28 @@ interface ClaudeResponse {
 }
 
 /**
- * Make a request to the Claude API
+ * Response from callClaudeWithUsage
  */
-async function callClaude(
+export interface ClaudeCallResult {
+  text: string
+  usage: {
+    inputTokens: number
+    outputTokens: number
+  }
+  model: string
+}
+
+/**
+ * Make a request to the Claude API (with usage tracking)
+ */
+async function callClaudeWithUsage(
   systemPrompt: string,
   userMessage: string,
   options?: {
     maxTokens?: number
     temperature?: number
   }
-): Promise<string> {
+): Promise<ClaudeCallResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY
 
   if (!apiKey) {
@@ -91,7 +103,29 @@ async function callClaude(
     throw new Error("Empty response from Claude")
   }
 
-  return data.content[0].text
+  return {
+    text: data.content[0].text,
+    usage: {
+      inputTokens: data.usage?.input_tokens || 0,
+      outputTokens: data.usage?.output_tokens || 0,
+    },
+    model: data.model,
+  }
+}
+
+/**
+ * Make a request to the Claude API (legacy - returns text only)
+ */
+async function callClaude(
+  systemPrompt: string,
+  userMessage: string,
+  options?: {
+    maxTokens?: number
+    temperature?: number
+  }
+): Promise<string> {
+  const result = await callClaudeWithUsage(systemPrompt, userMessage, options)
+  return result.text
 }
 
 /**
@@ -277,7 +311,7 @@ export async function answerQuery(
     rocks?: Rock[]
     teamMembers?: TeamMember[]
   }
-): Promise<AIQueryResponse> {
+): Promise<AIQueryResponse & { usage?: { inputTokens: number; outputTokens: number; model: string } }> {
   const contextStr = buildContext(context)
 
   const userMessage = `
@@ -289,11 +323,19 @@ ${contextStr}
 
 Answer the question based on the data provided. Return JSON only.`
 
-  const response = await callClaude(PROMPTS.queryHandler, userMessage, {
+  const result = await callClaudeWithUsage(PROMPTS.queryHandler, userMessage, {
     temperature: 0.5,
   })
 
-  return parseClaudeJSON<AIQueryResponse>(response)
+  const parsed = parseClaudeJSON<AIQueryResponse>(result.text)
+  return {
+    ...parsed,
+    usage: {
+      inputTokens: result.usage.inputTokens,
+      outputTokens: result.usage.outputTokens,
+      model: result.model,
+    },
+  }
 }
 
 /**

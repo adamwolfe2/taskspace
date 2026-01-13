@@ -99,10 +99,12 @@ async function handleCheckoutCompleted(session: any) {
   // Log the event
   await auditLogger.log({
     organizationId,
+    userId: null,
     action: "subscription.checkout_completed",
+    severity: "info",
     resourceType: "subscription",
     resourceId: session.subscription || session.id,
-    newValues: { plan, billingCycle, customerId: session.customer },
+    metadata: { plan, billingCycle, customerId: session.customer },
   })
 }
 
@@ -135,12 +137,12 @@ async function handleSubscriptionUpdated(subscription: any) {
 
   // Update organization subscription
   const subscriptionData = {
-    plan,
-    status: subscription.status,
-    billingCycle,
+    plan: plan as "free" | "starter" | "professional" | "enterprise",
+    status: subscription.status as "active" | "trialing" | "past_due" | "canceled",
+    billingCycle: billingCycle as "monthly" | "yearly" | null,
     currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-    cancelAtPeriodEnd: subscription.cancel_at_period_end,
-    maxUsers: planConfig.maxSeats,
+    cancelAtPeriodEnd: subscription.cancel_at_period_end as boolean,
+    maxUsers: planConfig.maxSeats ?? 5, // Default to 5 if null
     features: planConfig.features,
   }
 
@@ -154,10 +156,12 @@ async function handleSubscriptionUpdated(subscription: any) {
   // Log the event
   await auditLogger.log({
     organizationId: orgId,
+    userId: null,
     action: "subscription.updated",
+    severity: "info",
     resourceType: "subscription",
     resourceId: subscription.id,
-    newValues: subscriptionData,
+    metadata: subscriptionData,
   })
 }
 
@@ -185,7 +189,7 @@ async function handleSubscriptionDeleted(subscription: any) {
       billingCycle: null,
       currentPeriodEnd: null,
       cancelAtPeriodEnd: false,
-      maxUsers: freeConfig.maxSeats,
+      maxUsers: freeConfig.maxSeats ?? 5,
       features: freeConfig.features,
     },
   })
@@ -195,7 +199,9 @@ async function handleSubscriptionDeleted(subscription: any) {
   // Log the event
   await auditLogger.log({
     organizationId: org.id,
+    userId: null,
     action: "subscription.canceled",
+    severity: "warning",
     resourceType: "subscription",
     resourceId: subscription.id,
   })
@@ -257,10 +263,12 @@ async function handleInvoicePaymentFailed(invoice: any) {
   // Log the event
   await auditLogger.log({
     organizationId: org.id,
+    userId: null,
     action: "subscription.payment_failed",
+    severity: "error",
     resourceType: "subscription",
     resourceId: invoice.subscription,
-    newValues: { invoiceId: invoice.id, amount: invoice.amount_due },
+    metadata: { invoiceId: invoice.id, amount: invoice.amount_due },
   })
 
   // TODO: Send email notification to billing admin

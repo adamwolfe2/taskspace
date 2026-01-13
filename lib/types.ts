@@ -15,6 +15,9 @@ export interface Organization {
   customDomain?: string
   faviconUrl?: string
   billingEmail?: string
+  // Stripe integration
+  stripeCustomerId?: string
+  stripeSubscriptionId?: string | null
 }
 
 export interface OrganizationSettings {
@@ -56,9 +59,12 @@ export interface AsanaUserMapping {
 export interface SubscriptionInfo {
   plan: "free" | "starter" | "professional" | "enterprise"
   status: "active" | "trialing" | "past_due" | "canceled"
-  currentPeriodEnd: string
+  currentPeriodEnd: string | null
   maxUsers: number
   features: string[]
+  // Additional billing fields
+  billingCycle?: "monthly" | "yearly" | null
+  cancelAtPeriodEnd?: boolean
 }
 
 // User Types
@@ -344,6 +350,7 @@ export interface ApiResponse<T> {
   data?: T
   error?: string
   message?: string
+  code?: string // Error code for programmatic handling (e.g., CREDITS_EXHAUSTED)
 }
 
 export interface PaginatedResponse<T> {
