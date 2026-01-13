@@ -2555,6 +2555,351 @@ export const db = {
       return { id: rows[0].id as string }
     },
   },
+
+  // ============================================
+  // MULTI-TENANCY & PRODUCTIZATION
+  // ============================================
+
+  // Get all organizations a user is a member of (for org switcher)
+  userOrganizations: {
+    async findByUserId(userId: string): Promise<Array<{
+      id: string
+      name: string
+      slug: string
+      logoUrl?: string
+      primaryColor?: string
+      role: "owner" | "admin" | "member"
+      memberStatus: "active" | "invited" | "pending" | "inactive"
+      subscriptionTier?: string
+      subscriptionStatus?: string
+      seatsUsed?: number
+      seatsPurchased?: number
+      joinedAt: string
+    }>> {
+      const { rows } = await sql`
+        SELECT
+          o.id,
+          o.name,
+          o.slug,
+          o.logo_url,
+          o.primary_color,
+          om.role,
+          om.status as member_status,
+          om.joined_at,
+          os.status as subscription_status,
+          st.name as subscription_tier,
+          os.seats_purchased,
+          os.seats_used
+        FROM organization_members om
+        JOIN organizations o ON om.organization_id = o.id
+        LEFT JOIN organization_subscriptions os ON o.id = os.organization_id
+        LEFT JOIN subscription_tiers st ON os.tier_id = st.id
+        WHERE om.user_id = ${userId} AND om.status = 'active'
+        ORDER BY om.joined_at ASC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        name: row.name as string,
+        slug: row.slug as string,
+        logoUrl: row.logo_url as string | undefined,
+        primaryColor: row.primary_color as string | undefined,
+        role: row.role as "owner" | "admin" | "member",
+        memberStatus: row.member_status as "active" | "invited" | "pending" | "inactive",
+        subscriptionTier: row.subscription_tier as string | undefined,
+        subscriptionStatus: row.subscription_status as string | undefined,
+        seatsUsed: row.seats_used as number | undefined,
+        seatsPurchased: row.seats_purchased as number | undefined,
+        joinedAt: (row.joined_at as Date)?.toISOString() || "",
+      }))
+    },
+  },
+
+  // User organization preferences (for remembering last org, default org, etc.)
+  userOrgPreferences: {
+    async findByUserId(userId: string): Promise<{
+      id: string
+      userId: string
+      lastOrganizationId?: string
+      defaultOrganizationId?: string
+      organizationOrder: string[]
+      preferences?: Record<string, unknown>
+    } | null> {
+      const { rows } = await sql`
+        SELECT * FROM user_organization_preferences WHERE user_id = ${userId}
+      `
+      if (!rows[0]) return null
+      return {
+        id: rows[0].id as string,
+        userId: rows[0].user_id as string,
+        lastOrganizationId: rows[0].last_organization_id as string | undefined,
+        defaultOrganizationId: rows[0].default_organization_id as string | undefined,
+        organizationOrder: (rows[0].organization_order as string[]) || [],
+        preferences: rows[0].preferences as Record<string, unknown> | undefined,
+      }
+    },
+    async upsert(prefs: {
+      userId: string
+      lastOrganizationId?: string
+      defaultOrganizationId?: string
+      organizationOrder?: string[]
+      preferences?: Record<string, unknown>
+    }): Promise<{ id: string }> {
+      const id = `uop_${crypto.randomUUID()}`
+      const orderJson = JSON.stringify(prefs.organizationOrder || [])
+      const prefsJson = JSON.stringify(prefs.preferences || {})
+      const { rows } = await sql`
+        INSERT INTO user_organization_preferences (id, user_id, last_organization_id, default_organization_id, organization_order, preferences)
+        VALUES (${id}, ${prefs.userId}, ${prefs.lastOrganizationId || null}, ${prefs.defaultOrganizationId || null}, ${orderJson}::jsonb, ${prefsJson}::jsonb)
+        ON CONFLICT (user_id)
+        DO UPDATE SET
+          last_organization_id = COALESCE(EXCLUDED.last_organization_id, user_organization_preferences.last_organization_id),
+          default_organization_id = COALESCE(EXCLUDED.default_organization_id, user_organization_preferences.default_organization_id),
+          organization_order = CASE WHEN EXCLUDED.organization_order != '[]'::jsonb THEN EXCLUDED.organization_order ELSE user_organization_preferences.organization_order END,
+          preferences = CASE WHEN EXCLUDED.preferences != '{}'::jsonb THEN EXCLUDED.preferences ELSE user_organization_preferences.preferences END,
+          updated_at = NOW()
+        RETURNING id
+      `
+      return { id: rows[0].id as string }
+    },
+  },
+
+  // Audit logs for compliance tracking
+  auditLogs: {
+    async create(log: {
+      organizationId?: string
+      userId?: string
+      action: string
+      resourceType?: string
+      resourceId?: string
+      oldValues?: Record<string, unknown>
+      newValues?: Record<string, unknown>
+      ipAddress?: string
+      userAgent?: string
+      metadata?: Record<string, unknown>
+    }): Promise<{ id: string }> {
+      const id = `audit_${crypto.randomUUID()}`
+      const oldValuesJson = log.oldValues ? JSON.stringify(log.oldValues) : null
+      const newValuesJson = log.newValues ? JSON.stringify(log.newValues) : null
+      const metadataJson = log.metadata ? JSON.stringify(log.metadata) : '{}'
+
+      await sql`
+        INSERT INTO audit_logs (id, organization_id, user_id, action, resource_type, resource_id, old_values, new_values, ip_address, user_agent, metadata)
+        VALUES (${id}, ${log.organizationId || null}, ${log.userId || null}, ${log.action}, ${log.resourceType || null}, ${log.resourceId || null}, ${oldValuesJson}::jsonb, ${newValuesJson}::jsonb, ${log.ipAddress || null}, ${log.userAgent || null}, ${metadataJson}::jsonb)
+      `
+      return { id }
+    },
+    async findByOrganization(orgId: string, limit = 100, offset = 0): Promise<Array<{
+      id: string
+      userId?: string
+      action: string
+      resourceType?: string
+      resourceId?: string
+      metadata?: Record<string, unknown>
+      createdAt: string
+    }>> {
+      const { rows } = await sql`
+        SELECT id, user_id, action, resource_type, resource_id, metadata, created_at
+        FROM audit_logs
+        WHERE organization_id = ${orgId}
+        ORDER BY created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        userId: row.user_id as string | undefined,
+        action: row.action as string,
+        resourceType: row.resource_type as string | undefined,
+        resourceId: row.resource_id as string | undefined,
+        metadata: row.metadata as Record<string, unknown> | undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }))
+    },
+  },
+
+  // Cross-workspace task management (for multi-org admins)
+  crossWorkspaceTasks: {
+    async create(task: {
+      sourceOrganizationId: string
+      targetOrganizationId: string
+      assignedByUserId: string
+      title: string
+      description?: string
+      priority?: "high" | "medium" | "normal"
+      sourceTaskId?: string
+    }): Promise<{ id: string }> {
+      const id = `cwt_${crypto.randomUUID()}`
+      const { rows } = await sql`
+        INSERT INTO cross_workspace_tasks (id, source_organization_id, target_organization_id, assigned_by_user_id, title, description, priority, source_task_id)
+        VALUES (${id}, ${task.sourceOrganizationId}, ${task.targetOrganizationId}, ${task.assignedByUserId}, ${task.title}, ${task.description || null}, ${task.priority || 'normal'}, ${task.sourceTaskId || null})
+        RETURNING id
+      `
+      return { id: rows[0].id as string }
+    },
+    async findByUser(userId: string): Promise<Array<{
+      id: string
+      sourceOrganizationId: string
+      sourceOrganizationName: string
+      targetOrganizationId: string
+      targetOrganizationName: string
+      title: string
+      description?: string
+      priority: "high" | "medium" | "normal"
+      status: string
+      createdAt: string
+    }>> {
+      const { rows } = await sql`
+        SELECT
+          cwt.*,
+          so.name as source_org_name,
+          to_org.name as target_org_name
+        FROM cross_workspace_tasks cwt
+        JOIN organizations so ON cwt.source_organization_id = so.id
+        JOIN organizations to_org ON cwt.target_organization_id = to_org.id
+        WHERE cwt.assigned_by_user_id = ${userId}
+        ORDER BY cwt.created_at DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        sourceOrganizationId: row.source_organization_id as string,
+        sourceOrganizationName: row.source_org_name as string,
+        targetOrganizationId: row.target_organization_id as string,
+        targetOrganizationName: row.target_org_name as string,
+        title: row.title as string,
+        description: row.description as string | undefined,
+        priority: row.priority as "high" | "medium" | "normal",
+        status: row.status as string,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+      }))
+    },
+    async updateStatus(id: string, status: string, targetTaskId?: string): Promise<boolean> {
+      const { rowCount } = await sql`
+        UPDATE cross_workspace_tasks
+        SET status = ${status}, target_task_id = COALESCE(${targetTaskId || null}, target_task_id), updated_at = NOW()
+        WHERE id = ${id}
+      `
+      return (rowCount ?? 0) > 0
+    },
+  },
+
+  // Subscription tiers
+  subscriptionTiers: {
+    async findAll(): Promise<Array<{
+      id: string
+      name: string
+      slug: string
+      description?: string
+      priceMonthly: number
+      priceYearly: number
+      maxSeats: number | null
+      features: string[]
+      isActive: boolean
+      sortOrder: number
+    }>> {
+      const { rows } = await sql`
+        SELECT * FROM subscription_tiers WHERE is_active = true ORDER BY sort_order ASC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        name: row.name as string,
+        slug: row.slug as string,
+        description: row.description as string | undefined,
+        priceMonthly: row.price_monthly as number,
+        priceYearly: row.price_yearly as number,
+        maxSeats: row.max_seats as number | null,
+        features: (row.features as string[]) || [],
+        isActive: row.is_active as boolean,
+        sortOrder: row.sort_order as number,
+      }))
+    },
+    async findBySlug(slug: string): Promise<{
+      id: string
+      name: string
+      slug: string
+      description?: string
+      priceMonthly: number
+      priceYearly: number
+      maxSeats: number | null
+      features: string[]
+    } | null> {
+      const { rows } = await sql`
+        SELECT * FROM subscription_tiers WHERE slug = ${slug} AND is_active = true
+      `
+      if (!rows[0]) return null
+      return {
+        id: rows[0].id as string,
+        name: rows[0].name as string,
+        slug: rows[0].slug as string,
+        description: rows[0].description as string | undefined,
+        priceMonthly: rows[0].price_monthly as number,
+        priceYearly: rows[0].price_yearly as number,
+        maxSeats: rows[0].max_seats as number | null,
+        features: (rows[0].features as string[]) || [],
+      }
+    },
+  },
+
+  // Organization subscriptions
+  orgSubscriptions: {
+    async findByOrganizationId(orgId: string): Promise<{
+      id: string
+      organizationId: string
+      tierId: string
+      tierName?: string
+      status: string
+      billingCycle: string
+      currentPeriodStart?: string
+      currentPeriodEnd?: string
+      trialEndsAt?: string
+      seatsPurchased: number
+      seatsUsed: number
+    } | null> {
+      const { rows } = await sql`
+        SELECT os.*, st.name as tier_name
+        FROM organization_subscriptions os
+        LEFT JOIN subscription_tiers st ON os.tier_id = st.id
+        WHERE os.organization_id = ${orgId}
+      `
+      if (!rows[0]) return null
+      return {
+        id: rows[0].id as string,
+        organizationId: rows[0].organization_id as string,
+        tierId: rows[0].tier_id as string,
+        tierName: rows[0].tier_name as string | undefined,
+        status: rows[0].status as string,
+        billingCycle: rows[0].billing_cycle as string,
+        currentPeriodStart: rows[0].current_period_start ? (rows[0].current_period_start as Date).toISOString() : undefined,
+        currentPeriodEnd: rows[0].current_period_end ? (rows[0].current_period_end as Date).toISOString() : undefined,
+        trialEndsAt: rows[0].trial_ends_at ? (rows[0].trial_ends_at as Date).toISOString() : undefined,
+        seatsPurchased: rows[0].seats_purchased as number,
+        seatsUsed: rows[0].seats_used as number,
+      }
+    },
+    async create(sub: {
+      organizationId: string
+      tierId: string
+      billingCycle?: "monthly" | "yearly"
+      seatsPurchased?: number
+    }): Promise<{ id: string }> {
+      const id = `sub_${crypto.randomUUID()}`
+      const { rows } = await sql`
+        INSERT INTO organization_subscriptions (id, organization_id, tier_id, billing_cycle, seats_purchased, current_period_start, current_period_end)
+        VALUES (${id}, ${sub.organizationId}, ${sub.tierId}, ${sub.billingCycle || 'monthly'}, ${sub.seatsPurchased || 5}, NOW(), NOW() + INTERVAL '30 days')
+        RETURNING id
+      `
+      return { id: rows[0].id as string }
+    },
+    async updateSeatsUsed(orgId: string): Promise<void> {
+      await sql`
+        UPDATE organization_subscriptions
+        SET seats_used = (
+          SELECT COUNT(*) FROM organization_members
+          WHERE organization_id = ${orgId} AND status = 'active'
+        ),
+        updated_at = NOW()
+        WHERE organization_id = ${orgId}
+      `
+    },
+  },
 }
 
 export default db

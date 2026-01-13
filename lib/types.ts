@@ -8,6 +8,13 @@ export interface Organization {
   ownerId: string
   settings: OrganizationSettings
   subscription: SubscriptionInfo
+  // Enhanced branding fields (for productization)
+  logoUrl?: string
+  primaryColor?: string
+  secondaryColor?: string
+  customDomain?: string
+  faviconUrl?: string
+  billingEmail?: string
 }
 
 export interface OrganizationSettings {
@@ -1221,4 +1228,188 @@ export interface ProductivityLeaderboard {
   organizationId: string
   entries: TeamProductivityComparison[]
   generatedAt: string
+}
+
+// ============================================
+// MULTI-TENANCY & PRODUCTIZATION TYPES
+// ============================================
+
+// Subscription tier definition
+export interface SubscriptionTier {
+  id: string
+  name: string
+  slug: string
+  description?: string
+  priceMonthly: number // In cents
+  priceYearly: number // In cents
+  maxSeats: number | null // null = unlimited
+  features: string[]
+  isActive: boolean
+  sortOrder: number
+  createdAt: string
+}
+
+// Organization subscription details
+export interface OrganizationSubscription {
+  id: string
+  organizationId: string
+  tierId: string
+  status: "active" | "trialing" | "past_due" | "canceled" | "paused"
+  billingCycle: "monthly" | "yearly"
+  currentPeriodStart?: string
+  currentPeriodEnd?: string
+  trialEndsAt?: string
+  canceledAt?: string
+  seatsPurchased: number
+  seatsUsed: number
+  stripeCustomerId?: string
+  stripeSubscriptionId?: string
+  metadata?: Record<string, unknown>
+  createdAt: string
+  updatedAt: string
+  // Joined fields
+  tier?: SubscriptionTier
+}
+
+// Billing history entry
+export interface BillingHistoryEntry {
+  id: string
+  organizationId: string
+  subscriptionId?: string
+  amount: number // In cents
+  currency: string
+  status: "paid" | "pending" | "failed" | "refunded"
+  description?: string
+  invoiceUrl?: string
+  stripeInvoiceId?: string
+  billingPeriodStart?: string
+  billingPeriodEnd?: string
+  createdAt: string
+}
+
+// Cross-workspace task for managing multiple organizations
+export interface CrossWorkspaceTask {
+  id: string
+  sourceOrganizationId: string
+  targetOrganizationId: string
+  sourceTaskId?: string
+  targetTaskId?: string
+  assignedByUserId: string
+  title: string
+  description?: string
+  priority: "high" | "medium" | "normal"
+  status: "pending" | "synced" | "completed" | "archived"
+  createdAt: string
+  updatedAt: string
+  // Joined fields
+  sourceOrganization?: Organization
+  targetOrganization?: Organization
+}
+
+// Organization feature flag
+export interface OrganizationFeature {
+  id: string
+  organizationId: string
+  featureKey: string
+  enabled: boolean
+  settings?: Record<string, unknown>
+  createdAt: string
+  updatedAt: string
+}
+
+// User organization preferences
+export interface UserOrganizationPreferences {
+  id: string
+  userId: string
+  lastOrganizationId?: string
+  defaultOrganizationId?: string
+  organizationOrder: string[] // Organization IDs in preferred order
+  preferences?: Record<string, unknown>
+  createdAt: string
+  updatedAt: string
+}
+
+// Audit log entry for compliance
+export interface AuditLogEntry {
+  id: string
+  organizationId?: string
+  userId?: string
+  action: string
+  resourceType?: string
+  resourceId?: string
+  oldValues?: Record<string, unknown>
+  newValues?: Record<string, unknown>
+  ipAddress?: string
+  userAgent?: string
+  metadata?: Record<string, unknown>
+  createdAt: string
+}
+
+// White-label configuration
+export interface WhiteLabelConfig {
+  id: string
+  organizationId: string
+  brandName: string
+  logoUrl?: string
+  logoDarkUrl?: string
+  faviconUrl?: string
+  primaryColor: string
+  secondaryColor: string
+  accentColor: string
+  customCss?: string
+  customDomain?: string
+  emailFromName?: string
+  emailFromAddress?: string
+  supportEmail?: string
+  supportUrl?: string
+  termsUrl?: string
+  privacyUrl?: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+// User's organization list item (for org switcher)
+export interface UserOrganizationItem {
+  id: string
+  name: string
+  slug: string
+  logoUrl?: string
+  primaryColor?: string
+  role: "owner" | "admin" | "member"
+  memberStatus: "active" | "invited" | "pending" | "inactive"
+  subscriptionTier?: string
+  subscriptionStatus?: string
+  seatsUsed?: number
+  seatsPurchased?: number
+  joinedAt: string
+  isCurrent?: boolean
+}
+
+// Organization seat usage summary
+export interface OrganizationSeatUsage {
+  organizationId: string
+  organizationName: string
+  seatsPurchased: number
+  seatsUsed: number
+  seatsAvailable: number
+  tierMaxSeats: number | null
+}
+
+// Create organization request
+export interface CreateOrganizationRequest {
+  name: string
+  slug?: string // Auto-generated if not provided
+  logoUrl?: string
+  primaryColor?: string
+  billingEmail?: string
+}
+
+// Switch organization response
+export interface SwitchOrganizationResponse {
+  success: boolean
+  organization: Organization
+  member: OrganizationMember
+  token: string
+  expiresAt: string
 }

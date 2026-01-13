@@ -850,9 +850,187 @@ export async function GET(request: NextRequest) {
     await sql`CREATE INDEX IF NOT EXISTS idx_focus_score_history_user_date ON focus_score_history(user_id, date)`
     await sql`CREATE INDEX IF NOT EXISTS idx_focus_score_history_org_date ON focus_score_history(organization_id, date)`
 
+    // ============================================
+    // MULTI-TENANCY & PRODUCTIZATION TABLES
+    // ============================================
+
+    // Add branding columns to organizations table
+    await sql`ALTER TABLE organizations ADD COLUMN IF NOT EXISTS logo_url TEXT`
+    await sql`ALTER TABLE organizations ADD COLUMN IF NOT EXISTS primary_color VARCHAR(7) DEFAULT '#dc2626'`
+    await sql`ALTER TABLE organizations ADD COLUMN IF NOT EXISTS secondary_color VARCHAR(7) DEFAULT '#1f2937'`
+    await sql`ALTER TABLE organizations ADD COLUMN IF NOT EXISTS custom_domain VARCHAR(255)`
+    await sql`ALTER TABLE organizations ADD COLUMN IF NOT EXISTS favicon_url TEXT`
+    await sql`ALTER TABLE organizations ADD COLUMN IF NOT EXISTS billing_email VARCHAR(255)`
+
+    // Subscription tiers table - defines available plans
+    await sql`
+      CREATE TABLE IF NOT EXISTS subscription_tiers (
+        id VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        slug VARCHAR(50) UNIQUE NOT NULL,
+        description TEXT,
+        price_monthly INTEGER NOT NULL,
+        price_yearly INTEGER NOT NULL,
+        max_seats INTEGER,
+        features JSONB DEFAULT '[]',
+        is_active BOOLEAN DEFAULT TRUE,
+        sort_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    // Insert default subscription tiers
+    await sql`
+      INSERT INTO subscription_tiers (id, name, slug, description, price_monthly, price_yearly, max_seats, features, sort_order)
+      VALUES
+        ('tier_free', 'Free', 'free', 'Perfect for individuals getting started', 0, 0, 5,
+         '["Basic task management", "EOD reports", "1 rock per user", "Email support"]'::jsonb, 0),
+        ('tier_starter', 'Starter', 'starter', 'For small teams running EOS', 1500, 14400, 15,
+         '["Everything in Free", "Unlimited rocks", "Team scorecard", "AI-powered insights", "Asana integration", "Priority support"]'::jsonb, 1),
+        ('tier_professional', 'Professional', 'professional', 'For growing organizations', 3500, 33600, 50,
+         '["Everything in Starter", "Manager dashboards", "Advanced analytics", "Custom branding", "API access", "Google Calendar sync", "Dedicated success manager"]'::jsonb, 2),
+        ('tier_enterprise', 'Enterprise', 'enterprise', 'For large organizations with custom needs', 7500, 72000, NULL,
+         '["Everything in Professional", "Unlimited seats", "SSO/SAML", "Custom integrations", "SLA guarantee", "On-premise option", "Custom contract"]'::jsonb, 3)
+      ON CONFLICT (id) DO UPDATE SET
+        price_monthly = EXCLUDED.price_monthly,
+        price_yearly = EXCLUDED.price_yearly,
+        features = EXCLUDED.features
+    `
+
+    // Organization billing/subscription details
+    await sql`
+      CREATE TABLE IF NOT EXISTS organization_subscriptions (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        tier_id VARCHAR(255) NOT NULL REFERENCES subscription_tiers(id),
+        status VARCHAR(50) NOT NULL DEFAULT 'active',
+        billing_cycle VARCHAR(20) DEFAULT 'monthly',
+        current_period_start TIMESTAMP WITH TIME ZONE,
+        current_period_end TIMESTAMP WITH TIME ZONE,
+        trial_ends_at TIMESTAMP WITH TIME ZONE,
+        canceled_at TIMESTAMP WITH TIME ZONE,
+        seats_purchased INTEGER DEFAULT 5,
+        seats_used INTEGER DEFAULT 1,
+        stripe_customer_id VARCHAR(255),
+        stripe_subscription_id VARCHAR(255),
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(organization_id)
+      )
+    `
+
+    // Cross-workspace task assignment
+    await sql`
+      CREATE TABLE IF NOT EXISTS cross_workspace_tasks (
+        id VARCHAR(255) PRIMARY KEY,
+        source_organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        target_organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        source_task_id VARCHAR(255),
+        target_task_id VARCHAR(255),
+        assigned_by_user_id VARCHAR(255) NOT NULL REFERENCES users(id),
+        title VARCHAR(500) NOT NULL,
+        description TEXT,
+        priority VARCHAR(50) DEFAULT 'normal',
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    // User organization preferences (for org switching)
+    await sql`
+      CREATE TABLE IF NOT EXISTS user_organization_preferences (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        last_organization_id VARCHAR(255) REFERENCES organizations(id) ON DELETE SET NULL,
+        default_organization_id VARCHAR(255) REFERENCES organizations(id) ON DELETE SET NULL,
+        organization_order JSONB DEFAULT '[]',
+        preferences JSONB DEFAULT '{}',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(user_id)
+      )
+    `
+
+    // White-label configurations
+    await sql`
+      CREATE TABLE IF NOT EXISTS white_label_configs (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        brand_name VARCHAR(255) NOT NULL,
+        logo_url TEXT,
+        logo_dark_url TEXT,
+        favicon_url TEXT,
+        primary_color VARCHAR(7) DEFAULT '#dc2626',
+        secondary_color VARCHAR(7) DEFAULT '#1f2937',
+        accent_color VARCHAR(7) DEFAULT '#3b82f6',
+        custom_css TEXT,
+        custom_domain VARCHAR(255),
+        email_from_name VARCHAR(255),
+        email_from_address VARCHAR(255),
+        support_email VARCHAR(255),
+        support_url TEXT,
+        terms_url TEXT,
+        privacy_url TEXT,
+        is_active BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(organization_id)
+      )
+    `
+
+    // Billing history
+    await sql`
+      CREATE TABLE IF NOT EXISTS billing_history (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        subscription_id VARCHAR(255) REFERENCES organization_subscriptions(id) ON DELETE SET NULL,
+        amount INTEGER NOT NULL,
+        currency VARCHAR(3) DEFAULT 'USD',
+        status VARCHAR(50) NOT NULL,
+        description TEXT,
+        invoice_url TEXT,
+        stripe_invoice_id VARCHAR(255),
+        billing_period_start TIMESTAMP WITH TIME ZONE,
+        billing_period_end TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+
+    // Organization feature flags
+    await sql`
+      CREATE TABLE IF NOT EXISTS organization_features (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        feature_key VARCHAR(100) NOT NULL,
+        enabled BOOLEAN DEFAULT TRUE,
+        settings JSONB DEFAULT '{}',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(organization_id, feature_key)
+      )
+    `
+
+    // Indexes for multi-tenancy tables
+    await sql`CREATE INDEX IF NOT EXISTS idx_org_subscriptions_org ON organization_subscriptions(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_org_subscriptions_status ON organization_subscriptions(status)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_cross_workspace_source ON cross_workspace_tasks(source_organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_cross_workspace_target ON cross_workspace_tasks(target_organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_cross_workspace_user ON cross_workspace_tasks(assigned_by_user_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_user_org_prefs_user ON user_organization_preferences(user_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_white_label_org ON white_label_configs(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_white_label_domain ON white_label_configs(custom_domain)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_billing_history_org ON billing_history(organization_id)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_org_features_org ON organization_features(organization_id)`
+
+    // Update audit_logs schema for multi-tenancy support
+    await sql`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS old_values JSONB`
+    await sql`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS new_values JSONB`
+
     return NextResponse.json({
       success: true,
-      message: "Database migration completed successfully (including AI Command Center, Notifications, Audit Logs, Webhooks, Enterprise tables, Weekly Scorecard, Org Chart, and Productivity Tracking)",
+      message: "Database migration completed successfully (including AI Command Center, Notifications, Audit Logs, Webhooks, Enterprise tables, Weekly Scorecard, Org Chart, Productivity Tracking, and Multi-Tenancy/Productization)",
     })
   } catch (error) {
     console.error("Migration error:", error)

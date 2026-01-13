@@ -4,6 +4,7 @@ import { useApp } from "@/lib/contexts/app-context"
 import { UserInitials } from "@/components/shared/user-initials"
 import { NotificationCenter } from "@/components/shared/notification-center"
 import { DemoModeIndicator } from "@/components/shared/demo-mode-banner"
+import { OrganizationSwitcher } from "@/components/shared/organization-switcher"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { LogOut, Menu, Settings, Building, Search, ChevronDown } from "lucide-react"
@@ -40,12 +41,10 @@ export function Header({ onMenuClick }: HeaderProps) {
     }
   }
 
-  const orgLogo = currentOrganization?.settings?.customBranding?.logo
-
   return (
     <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
       <div className="flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6">
-        {/* Left side - Organization branding */}
+        {/* Left side - Organization switcher */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onMenuClick && (
             <Button
@@ -58,39 +57,13 @@ export function Header({ onMenuClick }: HeaderProps) {
               <Menu className="h-5 w-5" />
             </Button>
           )}
-          {/* Mobile org name */}
-          <div className="md:hidden flex items-center gap-2 min-w-0">
-            {orgLogo ? (
-              <img
-                src={orgLogo}
-                alt={currentOrganization?.name || "Organization"}
-                className="w-7 h-7 rounded-lg object-cover flex-shrink-0"
-              />
-            ) : (
-              <div className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
-                <Building className="h-4 w-4 text-red-600" />
-              </div>
-            )}
-            <span className="font-semibold text-gray-900 text-sm truncate">
-              {currentOrganization?.name || "AIMS"}
-            </span>
+          {/* Mobile organization switcher */}
+          <div className="md:hidden">
+            <OrganizationSwitcher compact />
           </div>
-          {/* Desktop org name */}
-          <div className="hidden md:flex items-center gap-3">
-            {orgLogo ? (
-              <img
-                src={orgLogo}
-                alt={currentOrganization?.name || "Organization"}
-                className="w-8 h-8 rounded-lg object-cover"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
-                <Building className="h-4 w-4 text-red-600" />
-              </div>
-            )}
-            <span className="font-semibold text-gray-900">
-              {currentOrganization?.name || "AIMS"}
-            </span>
+          {/* Desktop organization switcher */}
+          <div className="hidden md:block">
+            <OrganizationSwitcher />
           </div>
         </div>
 
