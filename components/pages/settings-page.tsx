@@ -51,6 +51,7 @@ import { AsanaMemberConnection } from "@/components/settings/asana-member-connec
 import { NotificationPreferencesCard } from "@/components/settings/notification-preferences"
 import { PushNotificationsCard } from "@/components/settings/push-notifications"
 import { GoogleCalendarIntegration } from "@/components/settings/google-calendar-integration"
+import { BrandingSettings } from "@/components/settings/branding-settings"
 
 interface IntegrationStatus {
  email: {
@@ -822,6 +823,9 @@ export function SettingsPage() {
  )}
  </CardContent>
  </Card>
+
+ {/* Branding Settings - Admin only */}
+ {isAdmin && <BrandingSettings />}
  </TabsContent>
 
  <TabsContent value="notifications" className="space-y-6">

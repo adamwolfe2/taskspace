@@ -23,6 +23,8 @@ import { CalendarPage } from "@/components/pages/calendar-page"
 import { ManagerDashboardPage } from "@/components/pages/manager-dashboard-page"
 import { ScorecardPage } from "@/components/pages/scorecard-page"
 import { OrgChartPage } from "@/components/pages/org-chart-page"
+import { SetupOrganizationPage } from "@/components/pages/setup-organization-page"
+import { BrandThemeProvider } from "@/lib/contexts/brand-theme-context"
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
@@ -87,6 +89,8 @@ function AppContent() {
         return <ForgotPasswordPage />
       case "reset-password":
         return resetToken ? <ResetPasswordPage token={resetToken} /> : <ForgotPasswordPage />
+      case "setup-organization":
+        return <SetupOrganizationPage mode="create" />
       case "login":
       default:
         return <LoginPage />
@@ -268,7 +272,9 @@ function AppContent() {
 export default function Page() {
   return (
     <AppProvider>
-      <AppContent />
+      <BrandThemeProvider>
+        <AppContent />
+      </BrandThemeProvider>
     </AppProvider>
   )
 }

@@ -160,8 +160,9 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
     }
   }
 
-  const currentOrgLogo = currentOrganization?.settings?.customBranding?.logo
-  const currentOrgColor = currentOrganization?.settings?.customBranding?.primaryColor || "#dc2626"
+  // Support both logoUrl (direct) and settings.customBranding.logo (nested) paths
+  const currentOrgLogo = currentOrganization?.logoUrl || currentOrganization?.settings?.customBranding?.logo
+  const currentOrgColor = currentOrganization?.primaryColor || currentOrganization?.settings?.customBranding?.primaryColor || "#dc2626"
 
   // Only show the switcher if user has multiple organizations or is loading
   const showSwitcher = organizations.length > 1 || isLoading
