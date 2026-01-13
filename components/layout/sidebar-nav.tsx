@@ -32,8 +32,8 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
 
   const adminItems: { id: PageType; label: string; icon: typeof Shield }[] = [
     { id: "command-center", label: "AI Command Center", icon: Zap },
-    { id: "scorecard", label: "Weekly Scorecard", icon: TableProperties },
-    { id: "analytics", label: "Team Analytics", icon: BarChart3 },
+    { id: "scorecard", label: "Scorecard", icon: BarChart3 },
+    { id: "analytics", label: "Team Analytics", icon: TableProperties },
     { id: "admin", label: "Admin Dashboard", icon: Shield },
     { id: "admin-team", label: "Team Management", icon: Users },
   ]
