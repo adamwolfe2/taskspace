@@ -392,6 +392,59 @@ export const api = {
       return handleResponse<any>(response)
     },
   },
+
+  // Billing
+  billing: {
+    async getSubscription() {
+      const response = await fetch(`${API_BASE}/billing/subscription`)
+      return handleResponse<any>(response)
+    },
+
+    async createCheckout(plan: string, billingCycle: "monthly" | "yearly" = "monthly") {
+      const response = await fetch(`${API_BASE}/billing/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan, billingCycle }),
+      })
+      return handleResponse<{ url: string }>(response)
+    },
+
+    async changePlan(plan: string, billingCycle: "monthly" | "yearly" = "monthly") {
+      const response = await fetch(`${API_BASE}/billing/subscription`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "change_plan", plan, billingCycle }),
+      })
+      return handleResponse<any>(response)
+    },
+
+    async cancelSubscription() {
+      const response = await fetch(`${API_BASE}/billing/subscription`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cancel" }),
+      })
+      return handleResponse<any>(response)
+    },
+
+    async resumeSubscription() {
+      const response = await fetch(`${API_BASE}/billing/subscription`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "resume" }),
+      })
+      return handleResponse<any>(response)
+    },
+
+    async openPortal() {
+      const response = await fetch(`${API_BASE}/billing/subscription`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "portal" }),
+      })
+      return handleResponse<{ url: string }>(response)
+    },
+  },
 }
 
 export { ApiError }

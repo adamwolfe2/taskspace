@@ -9,6 +9,7 @@
 
 import { sql } from "@/lib/db/sql"
 import { NextRequest, NextResponse } from "next/server"
+import { getEnvStatus } from "@/lib/env"
 
 interface HealthCheck {
   status: "ok" | "warning" | "error"
@@ -29,8 +30,9 @@ interface HealthStatus {
   }
   uptime: number
   env: {
-    hasPostgresUrl: boolean
+    valid: boolean
     nodeEnv: string
+    features: { name: string; enabled: boolean }[]
   }
 }
 
@@ -136,6 +138,9 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
     checks.memory = { status: "ok", details: { available: false } }
   }
 
+  // Get environment status
+  const envStatus = getEnvStatus()
+
   const healthStatus: HealthStatus = {
     status: overallStatus,
     timestamp: new Date().toISOString(),
@@ -143,8 +148,9 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
     checks,
     uptime: Math.round((Date.now() - startTime) / 1000),
     env: {
-      hasPostgresUrl: !!process.env.POSTGRES_URL,
+      valid: envStatus.valid,
       nodeEnv: process.env.NODE_ENV || "development",
+      features: envStatus.features,
     },
   }
 

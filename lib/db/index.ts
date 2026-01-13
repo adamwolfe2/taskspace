@@ -317,6 +317,69 @@ export const db = {
       const { rowCount } = await sql`DELETE FROM organizations WHERE id = ${id}`
       return (rowCount ?? 0) > 0
     },
+    async findByStripeCustomerId(customerId: string): Promise<Organization | null> {
+      const { rows } = await sql`
+        SELECT * FROM organizations
+        WHERE subscription->>'stripeCustomerId' = ${customerId}
+           OR settings->>'stripeCustomerId' = ${customerId}
+      `
+      return rows[0] ? parseOrganization(rows[0]) : null
+    },
+  },
+
+  // Billing History
+  billingHistory: {
+    async create(entry: {
+      organizationId: string
+      subscriptionId: string
+      amount: number
+      currency: string
+      status: string
+      invoiceUrl?: string
+      stripeInvoiceId: string
+      billingPeriodStart?: string | null
+      billingPeriodEnd?: string | null
+    }): Promise<void> {
+      const id = crypto.randomUUID()
+      await sql`
+        INSERT INTO billing_history (
+          id, organization_id, subscription_id, amount, currency, status,
+          invoice_url, stripe_invoice_id, billing_period_start, billing_period_end, created_at
+        ) VALUES (
+          ${id}, ${entry.organizationId}, ${entry.subscriptionId}, ${entry.amount},
+          ${entry.currency}, ${entry.status}, ${entry.invoiceUrl || null},
+          ${entry.stripeInvoiceId}, ${entry.billingPeriodStart || null},
+          ${entry.billingPeriodEnd || null}, ${new Date().toISOString()}
+        )
+      `
+    },
+    async findByOrganizationId(orgId: string, limit: number = 20): Promise<Array<{
+      id: string
+      amount: number
+      currency: string
+      status: string
+      invoiceUrl?: string
+      billingPeriodStart?: string
+      billingPeriodEnd?: string
+      createdAt: string
+    }>> {
+      const { rows } = await sql`
+        SELECT * FROM billing_history
+        WHERE organization_id = ${orgId}
+        ORDER BY created_at DESC
+        LIMIT ${limit}
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        amount: row.amount as number,
+        currency: row.currency as string,
+        status: row.status as string,
+        invoiceUrl: row.invoice_url as string | undefined,
+        billingPeriodStart: row.billing_period_start as string | undefined,
+        billingPeriodEnd: row.billing_period_end as string | undefined,
+        createdAt: (row.created_at as Date).toISOString(),
+      }))
+    },
   },
 
   // Organization Members
