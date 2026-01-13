@@ -3,23 +3,27 @@ import bcrypt from "bcrypt"
 
 const BCRYPT_ROUNDS = 12
 
-// Secure password hashing using bcrypt
+/**
+ * Secure password hashing using bcrypt
+ * @param password - Plain text password to hash
+ * @returns bcrypt hash string
+ */
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, BCRYPT_ROUNDS)
 }
 
+/**
+ * Verify a password against a stored bcrypt hash
+ * @param password - Plain text password to verify
+ * @param storedHash - bcrypt hash to compare against
+ * @returns true if password matches
+ */
 export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
-  // Support for legacy SHA256 hashes (format: salt:hash)
-  if (storedHash.includes(":")) {
-    const { createHash } = await import("crypto")
-    const [salt, hash] = storedHash.split(":")
-    if (!salt || !hash) return false
-    const computedHash = createHash("sha256")
-      .update(password + salt)
-      .digest("hex")
-    return hash === computedHash
+  // bcrypt hashes start with $2a$, $2b$, or $2y$
+  if (!storedHash || !storedHash.startsWith("$2")) {
+    // Invalid hash format - reject for security
+    return false
   }
-  // bcrypt hash format starts with $2b$
   return bcrypt.compare(password, storedHash)
 }
 
@@ -50,20 +54,55 @@ export function validateEmail(email: string): boolean {
   return emailRegex.test(email)
 }
 
-export function validatePassword(password: string): { valid: boolean; message?: string } {
-  if (password.length < 8) {
-    return { valid: false, message: "Password must be at least 8 characters long" }
+export interface PasswordValidationResult {
+  valid: boolean
+  errors: string[]
+  /** @deprecated Use errors array instead - kept for backwards compatibility */
+  message?: string
+}
+
+/**
+ * Validate password strength against security requirements
+ * Rules:
+ * - Minimum 8 characters
+ * - At least 1 uppercase letter
+ * - At least 1 lowercase letter
+ * - At least 1 number
+ *
+ * @param password - Password to validate
+ * @returns Validation result with array of all errors
+ */
+export function validatePasswordStrength(password: string): PasswordValidationResult {
+  const errors: string[] = []
+
+  if (!password || password.length < 8) {
+    errors.push("Password must be at least 8 characters long")
   }
   if (!/[A-Z]/.test(password)) {
-    return { valid: false, message: "Password must contain at least one uppercase letter" }
+    errors.push("Password must contain at least one uppercase letter")
   }
   if (!/[a-z]/.test(password)) {
-    return { valid: false, message: "Password must contain at least one lowercase letter" }
+    errors.push("Password must contain at least one lowercase letter")
   }
   if (!/[0-9]/.test(password)) {
-    return { valid: false, message: "Password must contain at least one number" }
+    errors.push("Password must contain at least one number")
   }
-  return { valid: true }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    // Backwards compatibility - return first error as message
+    message: errors.length > 0 ? errors[0] : undefined,
+  }
+}
+
+/**
+ * @deprecated Use validatePasswordStrength instead
+ * Kept for backwards compatibility
+ */
+export function validatePassword(password: string): { valid: boolean; message?: string } {
+  const result = validatePasswordStrength(password)
+  return { valid: result.valid, message: result.message }
 }
 
 export function slugify(text: string): string {

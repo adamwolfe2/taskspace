@@ -1,7 +1,105 @@
 /**
  * Slack Integration
  * Handles sending messages and notifications to Slack
+ * Includes webhook signature verification for incoming requests
  */
+
+import { createHmac, timingSafeEqual } from "crypto"
+
+// ============================================
+// SLACK WEBHOOK SIGNATURE VERIFICATION
+// ============================================
+
+/**
+ * Verify Slack webhook signature
+ *
+ * Implements Slack's request verification:
+ * https://api.slack.com/authentication/verifying-requests-from-slack
+ *
+ * @param signature - x-slack-signature header value
+ * @param timestamp - x-slack-request-timestamp header value
+ * @param body - Raw request body string
+ * @param signingSecret - Slack signing secret from app config
+ * @returns true if signature is valid
+ */
+export function verifySlackSignature(
+  signature: string,
+  timestamp: string,
+  body: string,
+  signingSecret: string
+): boolean {
+  if (!signature || !timestamp || !body || !signingSecret) {
+    return false
+  }
+
+  // Verify timestamp is within 5 minutes to prevent replay attacks
+  const timestampSeconds = parseInt(timestamp, 10)
+  const nowSeconds = Math.floor(Date.now() / 1000)
+  const fiveMinutesAgo = nowSeconds - 60 * 5
+
+  if (timestampSeconds < fiveMinutesAgo) {
+    console.warn("Slack webhook: Request timestamp too old, possible replay attack")
+    return false
+  }
+
+  // Create the signature base string
+  const sigBaseString = `v0:${timestamp}:${body}`
+
+  // Compute expected signature
+  const expectedSignature = `v0=${createHmac("sha256", signingSecret)
+    .update(sigBaseString)
+    .digest("hex")}`
+
+  // Use timing-safe comparison to prevent timing attacks
+  try {
+    return timingSafeEqual(
+      Buffer.from(signature, "utf8"),
+      Buffer.from(expectedSignature, "utf8")
+    )
+  } catch {
+    // Buffer lengths don't match
+    return false
+  }
+}
+
+/**
+ * Validate incoming Slack request headers
+ *
+ * @param request - Incoming request
+ * @returns Validation result with extracted data
+ */
+export async function validateSlackRequest(
+  request: Request
+): Promise<{
+  valid: boolean
+  error?: string
+  timestamp?: string
+  body?: string
+}> {
+  const signingSecret = process.env.SLACK_SIGNING_SECRET
+  if (!signingSecret) {
+    return { valid: false, error: "SLACK_SIGNING_SECRET not configured" }
+  }
+
+  const signature = request.headers.get("x-slack-signature")
+  const timestamp = request.headers.get("x-slack-request-timestamp")
+
+  if (!signature) {
+    return { valid: false, error: "Missing x-slack-signature header" }
+  }
+
+  if (!timestamp) {
+    return { valid: false, error: "Missing x-slack-request-timestamp header" }
+  }
+
+  const body = await request.text()
+
+  if (!verifySlackSignature(signature, timestamp, body, signingSecret)) {
+    return { valid: false, error: "Invalid signature" }
+  }
+
+  return { valid: true, timestamp, body }
+}
 
 interface SlackMessage {
   text: string
