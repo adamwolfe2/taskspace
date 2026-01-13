@@ -51,6 +51,8 @@ import { AsanaMemberConnection } from "@/components/settings/asana-member-connec
 import { NotificationPreferencesCard } from "@/components/settings/notification-preferences"
 import { PushNotificationsCard } from "@/components/settings/push-notifications"
 import { GoogleCalendarIntegration } from "@/components/settings/google-calendar-integration"
+import { BrandingSettings } from "@/components/settings/branding-settings"
+import { BillingSettings } from "@/components/settings/billing-settings"
 
 interface IntegrationStatus {
  email: {
@@ -822,6 +824,9 @@ export function SettingsPage() {
  )}
  </CardContent>
  </Card>
+
+ {/* Branding Settings - Admin only */}
+ {isAdmin && <BrandingSettings />}
  </TabsContent>
 
  <TabsContent value="notifications" className="space-y-6">
@@ -1195,105 +1200,7 @@ export function SettingsPage() {
 
  {isOwner && (
  <TabsContent value="billing" className="space-y-6">
- <Card>
- <CardHeader>
- <CardTitle>Current Plan</CardTitle>
- <CardDescription>
- Your organization's subscription details
- </CardDescription>
- </CardHeader>
- <CardContent className="space-y-4">
- <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
- <div className="space-y-1">
- <div className="flex items-center gap-2">
- {getPlanBadge(currentOrganization?.subscription.plan || "free")}
- <span className="font-medium capitalize">
- {currentOrganization?.subscription.plan || "Free"} Plan
- </span>
- </div>
- <p className="text-sm text-muted-foreground">
- {currentOrganization?.subscription.maxUsers || 100} team members included
- </p>
- </div>
- <Shield className="h-8 w-8 text-muted-foreground" />
- </div>
-
- <Separator />
-
- <div>
- <h4 className="font-medium mb-2">Plan Features</h4>
- <ul className="space-y-2">
- {(currentOrganization?.subscription.features || [
- "basic_rocks",
- "basic_tasks",
- "eod_reports",
- ]).map((feature) => (
- <li key={feature} className="flex items-center gap-2 text-sm">
- <Check className="h-4 w-4 text-green-500" />
- {feature.replace(/_/g, "").replace(/\b\w/g, (l) => l.toUpperCase())}
- </li>
- ))}
- </ul>
- </div>
-
- <Separator />
-
- <div className="space-y-3">
- <h4 className="font-medium">Team Size Limit</h4>
- <p className="text-sm text-muted-foreground">
- Adjust the maximum number of team members for your workspace.
- </p>
- <div className="flex items-center gap-3">
- <Input
- type="number"
- min="1"
- max="500"
- className="w-24"
- value={currentOrganization?.subscription.maxUsers || 100}
- onChange={async (e) => {
- const newMax = parseInt(e.target.value, 10)
- if (isNaN(newMax) || newMax < 1) return
- try {
- const res = await fetch("/api/organizations", {
- method: "PATCH",
- headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ subscription: { maxUsers: newMax } }),
- })
- if (res.ok) {
- const data = await res.json()
- if (data.success && data.data) {
- setCurrentOrganization(data.data)
- toast({ title: "Updated", description: `Team limit set to ${newMax} members` })
- }
- }
- } catch (err) {
- toast({ title: "Error", description: "Failed to update limit", variant: "destructive" })
- }
- }}
- />
- <span className="text-sm text-muted-foreground">members</span>
- </div>
- </div>
- </CardContent>
- </Card>
-
- <Card>
- <CardHeader>
- <CardTitle>Billing History</CardTitle>
- <CardDescription>
- View your past invoices and payments
- </CardDescription>
- </CardHeader>
- <CardContent>
- <div className="text-center py-8 text-muted-foreground">
- <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-30" />
- <p>No billing history available</p>
- <p className="text-sm">
- Upgrade to a paid plan to see your invoices here
- </p>
- </div>
- </CardContent>
- </Card>
+ <BillingSettings />
  </TabsContent>
  )}
 
