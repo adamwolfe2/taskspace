@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
+import { userHasWorkspaceAccess, getWorkspaceById } from "@/lib/db/workspaces"
 import type { ApiResponse } from "@/lib/types"
 
 interface DashboardMetrics {
@@ -17,11 +18,16 @@ interface DashboardMetrics {
     tasksCompleted: number
     eodStreak: number
   }>
+  workspaceId?: string
+  workspaceName?: string
 }
 
 /**
  * GET /api/dashboard/metrics
  * Get workspace dashboard metrics (admin only)
+ *
+ * Query params:
+ * - workspaceId: Optional workspace ID to filter metrics
  */
 export async function GET(request: NextRequest) {
   try {
@@ -43,6 +49,31 @@ export async function GET(request: NextRequest) {
 
     const orgId = auth.organization.id
 
+    // Get optional workspace filter
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
+
+    // If workspace filter provided, validate access
+    let workspaceName: string | undefined
+    if (workspaceId) {
+      const workspace = await getWorkspaceById(workspaceId)
+      if (!workspace || workspace.organizationId !== orgId) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Workspace not found" },
+          { status: 404 }
+        )
+      }
+
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "No access to this workspace" },
+          { status: 403 }
+        )
+      }
+      workspaceName = workspace.name
+    }
+
     // Get today's date in the organization's timezone (simplified - using UTC)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -58,12 +89,24 @@ export async function GET(request: NextRequest) {
     const currentQuarter = `Q${quarter} ${year}`
 
     // Fetch all needed data in parallel
-    const [tasks, rocks, eodReports, members] = await Promise.all([
+    const [allTasks, allRocks, allEodReports, members] = await Promise.all([
       db.assignedTasks.findByOrganizationId(orgId),
       db.rocks.findByOrganizationId(orgId),
       db.eodReports.findByOrganizationId(orgId),
       db.members.findWithUsersByOrganizationId(orgId),
     ])
+
+    // Apply workspace filter if provided
+    // Note: workspace_id column is added via migration 1736779200003_multi_workspace.sql
+    type WithWorkspaceId = { workspaceId?: string | null }
+    const filterByWorkspace = <T extends WithWorkspaceId>(items: T[]): T[] => {
+      if (!workspaceId) return items
+      return items.filter(item => item.workspaceId === workspaceId)
+    }
+
+    const tasks = filterByWorkspace(allTasks)
+    const rocks = filterByWorkspace(allRocks)
+    const eodReports = filterByWorkspace(allEodReports as Array<typeof allEodReports[0] & WithWorkspaceId>)
 
     // Calculate metrics
     const pendingTasks = tasks.filter(t => t.status !== "completed")
@@ -114,6 +157,7 @@ export async function GET(request: NextRequest) {
       eodSubmittedThisWeek: weekReports.length,
       avgEodSubmissionRate,
       topContributors,
+      ...(workspaceId && { workspaceId, workspaceName }),
     }
 
     return NextResponse.json<ApiResponse<DashboardMetrics>>({

@@ -144,6 +144,7 @@ function parseRock(row: Record<string, unknown>): Rock {
   return {
     id: row.id as string,
     organizationId: row.organization_id as string,
+    workspaceId: row.workspace_id as string | null | undefined,
     userId: row.user_id as string,
     title: row.title as string,
     description: row.description as string,
@@ -164,6 +165,7 @@ function parseAssignedTask(row: Record<string, unknown>): AssignedTask {
   return {
     id: row.id as string,
     organizationId: row.organization_id as string,
+    workspaceId: row.workspace_id as string | null | undefined,
     title: row.title as string,
     description: row.description as string | undefined,
     assigneeId: row.assignee_id as string,
@@ -207,6 +209,7 @@ function parseEODReport(row: Record<string, unknown>): EODReport {
   return {
     id: row.id as string,
     organizationId: row.organization_id as string,
+    workspaceId: row.workspace_id as string | null | undefined,
     userId: row.user_id as string,
     date: dateString,
     tasks: row.tasks as EODReport["tasks"],

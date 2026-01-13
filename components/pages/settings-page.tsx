@@ -56,6 +56,7 @@ import { BrandingSettings } from "@/components/settings/branding-settings"
 import { BillingSettings } from "@/components/settings/billing-settings"
 import { AIInbox } from "@/components/ai/ai-inbox"
 import { AIBudgetControls } from "@/components/ai/ai-budget-controls"
+import { WorkspaceSwitcher } from "@/components/workspace"
 
 interface IntegrationStatus {
  email: {
@@ -647,11 +648,14 @@ export function SettingsPage() {
 
  return (
  <div className="space-y-6">
+ <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
  <div>
  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Settings</h1>
  <p className="text-sm text-gray-500 mt-1">
  Manage your organization settings and preferences
  </p>
+ </div>
+ <WorkspaceSwitcher className="w-full sm:w-auto" />
  </div>
 
  <Tabs defaultValue="organization" className="space-y-6">

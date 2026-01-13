@@ -8,9 +8,9 @@
  * Use the CLI or deployment hooks for actual migrations.
  */
 
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { getDatabaseHealth, checkMigrationStatus } from "@/lib/db/migrate"
-import { getAuthenticatedUser } from "@/lib/auth/middleware"
+import { getAuthContext } from "@/lib/auth/middleware"
 import type { ApiResponse } from "@/lib/types"
 
 interface MigrationStatusResponse {
@@ -27,10 +27,10 @@ interface MigrationStatusResponse {
  * Returns database migration status (admin only).
  * Does NOT run migrations - use CLI instead.
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     // Require authentication
-    const auth = await getAuthenticatedUser(request)
+    const auth = await getAuthContext(request)
     if (!auth) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Authentication required" },

@@ -2,7 +2,7 @@
  * Structured Logger
  *
  * Provides consistent, structured logging across the application.
- * Uses Pino for high-performance JSON logging.
+ * Uses console-based logging compatible with Next.js Turbopack.
  *
  * Usage:
  * import { logger, createRequestLogger } from '@/lib/logger'
@@ -16,8 +16,6 @@
  * reqLogger.info('Processing request')
  */
 
-import pino from "pino"
-
 // ============================================
 // CONFIGURATION
 // ============================================
@@ -27,10 +25,27 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production"
 const IS_DEVELOPMENT = process.env.NODE_ENV === "development"
 
 // ============================================
-// SENSITIVE DATA PATTERNS TO REDACT
+// LOG LEVELS
 // ============================================
 
-const REDACT_PATHS = [
+const LOG_LEVELS = {
+  trace: 10,
+  debug: 20,
+  info: 30,
+  warn: 40,
+  error: 50,
+  fatal: 60,
+} as const
+
+type LogLevel = keyof typeof LOG_LEVELS
+
+const currentLevelValue = LOG_LEVELS[LOG_LEVEL as LogLevel] || LOG_LEVELS.info
+
+// ============================================
+// SENSITIVE DATA REDACTION
+// ============================================
+
+const SENSITIVE_KEYS = new Set([
   "password",
   "passwordHash",
   "token",
@@ -41,55 +56,118 @@ const REDACT_PATHS = [
   "cookie",
   "accessToken",
   "refreshToken",
-  "*.password",
-  "*.passwordHash",
-  "*.token",
-  "*.secret",
-  "*.apiKey",
-  "headers.authorization",
-  "headers.cookie",
-]
+])
+
+function redactSensitive(obj: unknown, seen = new WeakSet()): unknown {
+  if (obj === null || obj === undefined) return obj
+  if (typeof obj !== "object") return obj
+
+  // Prevent circular reference issues
+  if (seen.has(obj as object)) return "[Circular]"
+  seen.add(obj as object)
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => redactSensitive(item, seen))
+  }
+
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    if (SENSITIVE_KEYS.has(key.toLowerCase())) {
+      result[key] = "[REDACTED]"
+    } else if (typeof value === "object" && value !== null) {
+      result[key] = redactSensitive(value, seen)
+    } else {
+      result[key] = value
+    }
+  }
+  return result
+}
 
 // ============================================
-// LOGGER INSTANCE
+// LOGGER IMPLEMENTATION
 // ============================================
 
-/**
- * Main logger instance
- *
- * In development: Pretty-printed, colored output
- * In production: JSON output for log aggregation
- */
-export const logger = pino({
-  level: LOG_LEVEL,
-  timestamp: pino.stdTimeFunctions.isoTime,
-  redact: {
-    paths: REDACT_PATHS,
-    censor: "[REDACTED]",
-  },
-  formatters: {
-    level: (label) => {
-      return { level: label }
-    },
-  },
-  base: {
+interface LoggerInterface {
+  trace: (obj: Record<string, unknown> | string, msg?: string) => void
+  debug: (obj: Record<string, unknown> | string, msg?: string) => void
+  info: (obj: Record<string, unknown> | string, msg?: string) => void
+  warn: (obj: Record<string, unknown> | string, msg?: string) => void
+  error: (obj: Record<string, unknown> | string, msg?: string) => void
+  fatal: (obj: Record<string, unknown> | string, msg?: string) => void
+  child: (bindings: Record<string, unknown>) => LoggerInterface
+}
+
+function createLogger(bindings: Record<string, unknown> = {}): LoggerInterface {
+  const baseContext = {
     env: process.env.NODE_ENV,
     service: "aimseod",
-    version: process.env.npm_package_version || "unknown",
-  },
-  ...(IS_DEVELOPMENT && !IS_PRODUCTION
-    ? {
-        transport: {
-          target: "pino-pretty",
-          options: {
-            colorize: true,
-            translateTime: "SYS:standard",
-            ignore: "pid,hostname,env,service",
-          },
-        },
+    ...bindings,
+  }
+
+  function log(
+    level: LogLevel,
+    obj: Record<string, unknown> | string,
+    msg?: string
+  ): void {
+    if (LOG_LEVELS[level] < currentLevelValue) return
+
+    const timestamp = new Date().toISOString()
+    let message: string
+    let data: Record<string, unknown> = {}
+
+    if (typeof obj === "string") {
+      message = obj
+    } else {
+      data = obj
+      message = msg || ""
+    }
+
+    const logEntry = {
+      time: timestamp,
+      level,
+      ...baseContext,
+      ...redactSensitive(data),
+      msg: message,
+    }
+
+    // In development, use pretty format
+    if (IS_DEVELOPMENT && !IS_PRODUCTION) {
+      const levelColors: Record<LogLevel, string> = {
+        trace: "\x1b[90m",
+        debug: "\x1b[36m",
+        info: "\x1b[32m",
+        warn: "\x1b[33m",
+        error: "\x1b[31m",
+        fatal: "\x1b[35m",
       }
-    : {}),
-})
+      const reset = "\x1b[0m"
+      const color = levelColors[level]
+      const prettyData = Object.keys(data).length > 0 ? ` ${JSON.stringify(redactSensitive(data))}` : ""
+      console.log(`${color}[${level.toUpperCase()}]${reset} ${timestamp} ${message}${prettyData}`)
+    } else {
+      // In production, output JSON
+      const consoleMethod =
+        level === "error" || level === "fatal"
+          ? console.error
+          : level === "warn"
+            ? console.warn
+            : console.log
+      consoleMethod(JSON.stringify(logEntry))
+    }
+  }
+
+  return {
+    trace: (obj, msg) => log("trace", obj, msg),
+    debug: (obj, msg) => log("debug", obj, msg),
+    info: (obj, msg) => log("info", obj, msg),
+    warn: (obj, msg) => log("warn", obj, msg),
+    error: (obj, msg) => log("error", obj, msg),
+    fatal: (obj, msg) => log("fatal", obj, msg),
+    child: (childBindings) => createLogger({ ...baseContext, ...childBindings }),
+  }
+}
+
+export const logger = createLogger()
 
 // ============================================
 // REQUEST CONTEXT LOGGER
@@ -107,56 +185,24 @@ export interface RequestContext {
 
 /**
  * Create a child logger with request context
- *
- * @param context - Request-specific context to include in all logs
- * @returns Child logger with context bound
- *
- * @example
- * const reqLogger = createRequestLogger({
- *   userId: session.userId,
- *   orgId: session.organizationId,
- *   requestId: crypto.randomUUID()
- * })
- * reqLogger.info('Processing EOD submission')
  */
-export function createRequestLogger(context: RequestContext): pino.Logger {
+export function createRequestLogger(context: RequestContext): LoggerInterface {
   return logger.child({
     ...context,
     requestId: context.requestId || generateRequestId(),
   })
 }
 
-/**
- * Generate a unique request ID
- */
 function generateRequestId(): string {
   return Math.random().toString(36).substring(2, 15)
 }
 
 // ============================================
-// LOG LEVEL HELPERS
-// ============================================
-
-/**
- * Log levels and when to use them:
- *
- * - trace: Very detailed debugging (disabled in production)
- * - debug: Debugging information (disabled in production by default)
- * - info: Normal operations (user actions, API calls)
- * - warn: Something unexpected but not necessarily wrong
- * - error: Something went wrong that needs attention
- * - fatal: Critical error, application may crash
- */
-
-// ============================================
 // API LOGGING HELPERS
 // ============================================
 
-/**
- * Log API request start
- */
 export function logApiRequest(
-  reqLogger: pino.Logger,
+  reqLogger: LoggerInterface,
   method: string,
   path: string,
   params?: Record<string, unknown>
@@ -164,11 +210,8 @@ export function logApiRequest(
   reqLogger.info({ method, path, params }, "API request started")
 }
 
-/**
- * Log API response
- */
 export function logApiResponse(
-  reqLogger: pino.Logger,
+  reqLogger: LoggerInterface,
   statusCode: number,
   durationMs: number
 ): void {
@@ -176,9 +219,6 @@ export function logApiResponse(
   reqLogger[level]({ statusCode, durationMs }, "API request completed")
 }
 
-/**
- * Log authentication events
- */
 export function logAuthEvent(
   event: "login" | "logout" | "register" | "password_reset" | "session_expired",
   userId?: string,
@@ -189,9 +229,6 @@ export function logAuthEvent(
   logger[level]({ event, userId, success, ...details }, `Auth event: ${event}`)
 }
 
-/**
- * Log security events
- */
 export function logSecurityEvent(
   event: string,
   severity: "info" | "warn" | "error",
@@ -204,9 +241,6 @@ export function logSecurityEvent(
 // ERROR LOGGING
 // ============================================
 
-/**
- * Format error for logging
- */
 export function formatError(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
     return {
@@ -218,11 +252,8 @@ export function formatError(error: unknown): Record<string, unknown> {
   return { message: String(error) }
 }
 
-/**
- * Log error with context
- */
 export function logError(
-  reqLogger: pino.Logger | typeof logger,
+  reqLogger: LoggerInterface | typeof logger,
   message: string,
   error: unknown,
   context?: Record<string, unknown>
@@ -240,9 +271,6 @@ export function logError(
 // DATABASE LOGGING
 // ============================================
 
-/**
- * Log database operation (for slow query monitoring)
- */
 export function logDbOperation(
   operation: string,
   table: string,

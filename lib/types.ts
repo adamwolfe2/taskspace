@@ -183,6 +183,7 @@ export interface RockMilestone {
 export interface Rock {
   id: string
   organizationId: string
+  workspaceId?: string | null // Multi-workspace support (SESSION 5)
   userId: string
   title: string
   description: string
@@ -248,6 +249,7 @@ export interface Task {
 export interface AssignedTask {
   id: string
   organizationId: string
+  workspaceId?: string | null // Multi-workspace support (SESSION 5)
   title: string
   description?: string
   assigneeId: string
@@ -300,6 +302,7 @@ export interface FileAttachment {
 export interface EODReport {
   id: string
   organizationId: string
+  workspaceId?: string | null // Multi-workspace support (SESSION 5)
   userId: string
   date: string
   tasks: EODTask[]
