@@ -15,12 +15,13 @@ import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { calculateUserStats } from "@/lib/utils/stats-calculator"
 import { triggerConfetti } from "@/lib/utils/confetti"
-import { getTodayString } from "@/lib/utils/date-utils"
+import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { ProductivityWidget } from "@/components/productivity/productivity-dashboard"
 import {
   useProductivityDashboard,
   useTodayEnergy,
 } from "@/lib/hooks/use-productivity"
+import { useApp } from "@/lib/contexts/app-context"
 
 // Get current quarter string (e.g., "Q1 2026")
 function getCurrentQuarter(): string {
@@ -59,6 +60,7 @@ export function DashboardPage({
  const [selectedEodDate, setSelectedEodDate] = useState<string | null>(null)
  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false)
  const eodCardRef = useRef<HTMLDivElement>(null)
+ const { currentOrganization } = useApp()
 
  // Productivity data
  const { data: productivityData, isLoading: productivityLoading } = useProductivityDashboard(currentUser.id)
@@ -77,8 +79,11 @@ export function DashboardPage({
  const userTasks = assignedTasks.filter((t) => t.assigneeId === currentUser.id)
  const stats = calculateUserStats(currentUser.id, rocks, assignedTasks, eodReports)
 
- // Check if EOD submitted today (using local timezone to match API behavior)
- const today = getTodayString()
+ // Get organization timezone for date calculations
+ const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
+
+ // Check if EOD submitted today (using organization timezone)
+ const today = getTodayInTimezone(orgTimezone)
  const hasSubmittedEODToday = eodReports.some(
  (r) => r.userId === currentUser.id && r.date === today
  )

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { UserInitials } from "@/components/shared/user-initials"
-import { getRelativeDate, getTodayString } from "@/lib/utils/date-utils"
+import { getRelativeDate, getTodayInTimezone } from "@/lib/utils/date-utils"
 import { calculateUserStats } from "@/lib/utils/stats-calculator"
 import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
@@ -56,15 +56,19 @@ export function AdminPage({
 
   // Get all active team members (all roles count for reporting)
   const activeMembers = teamMembers.filter((m) => m.status === "active")
-  const teamMemberIds = new Set(teamMembers.map(m => m.id))
+  // Use userId (users.id) for EOD report matching since EOD reports store users.id
+  const teamMemberUserIds = new Set(teamMembers.filter(m => m.userId).map(m => m.userId))
 
   const escalations = eodReports
     .filter((r) => r.needsEscalation)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
 
+  // Use organization timezone for date calculations
+  const orgTimezone = organization?.settings?.timezone || "America/Los_Angeles"
+
   // Only count reports from current team members
-  const todayReports = eodReports.filter((r) => r.date === getTodayString() && teamMemberIds.has(r.userId))
+  const todayReports = eodReports.filter((r) => r.date === getTodayInTimezone(orgTimezone) && teamMemberUserIds.has(r.userId))
   const reportingRate = activeMembers.length > 0
     ? Math.round((todayReports.length / activeMembers.length) * 100)
     : 0
@@ -246,7 +250,7 @@ export function AdminPage({
             ) : (
               <div className="space-y-3">
                 {escalations.map((report) => {
-                  const user = teamMembers.find((m) => m.id === report.userId)
+                  const user = teamMembers.find((m) => m.userId === report.userId)
                   return (
                     <div key={report.id} className="border border-border rounded-lg p-4 space-y-2">
                       <div className="flex items-center justify-between">

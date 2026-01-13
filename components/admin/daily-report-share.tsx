@@ -171,7 +171,7 @@ export function DailyReportShare({
             <p className="text-sm text-slate-500 mb-2">Submitted today:</p>
             <div className="flex flex-wrap gap-2">
               {dateReports.map(report => {
-                const member = teamMembers.find(m => m.id === report.userId)
+                const member = teamMembers.find(m => m.userId === report.userId)
                 return (
                   <Badge key={report.id} variant="outline" className="text-xs">
                     {member?.name || "Unknown"}

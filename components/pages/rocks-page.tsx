@@ -179,7 +179,7 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
                 </TableHeader>
                 <TableBody>
                   {displayRocks.map((rock) => {
-                    const owner = teamMembers.find((m) => m.id === rock.userId)
+                    const owner = teamMembers.find((m) => m.userId === rock.userId)
                     const daysLeft = getDaysUntil(rock.dueDate)
                     const statusConfig = getStatusConfig(rock.status)
 

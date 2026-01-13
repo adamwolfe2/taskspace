@@ -43,7 +43,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
 
   const canEditReport = (report: EODReport) => {
     // Only the owner can edit their own report
-    if (report.userId !== currentUser.id) return false
+    if (report.userId !== currentUser.userId) return false
     // Check if within grace period
     const submittedAt = new Date(report.submittedAt).getTime()
     const now = Date.now()
@@ -65,7 +65,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   const filteredReports = eodReports
     .filter((report) => {
       if (!isAdminOrOwner && userFilter === "all") {
-        return report.userId === currentUser.id
+        return report.userId === currentUser.userId
       }
       if (userFilter !== "all") {
         return report.userId === userFilter
@@ -74,7 +74,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
     })
     .filter((report) => {
       if (!searchQuery) return true
-      const user = teamMembers.find((m) => m.id === report.userId)
+      const user = teamMembers.find((m) => m.userId === report.userId)
       const searchLower = searchQuery.toLowerCase()
       return (
         user?.name.toLowerCase().includes(searchLower) ||
@@ -115,8 +115,8 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Team Members</SelectItem>
-                {teamMembers.map((member) => (
-                  <SelectItem key={member.id} value={member.id}>
+                {teamMembers.filter(m => m.userId).map((member) => (
+                  <SelectItem key={member.userId} value={member.userId!}>
                     {member.name}
                   </SelectItem>
                 ))}
@@ -137,7 +137,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
           </div>
         ) : (
           filteredReports.map((report) => {
-            const user = teamMembers.find((m) => m.id === report.userId)
+            const user = teamMembers.find((m) => m.userId === report.userId)
             const isExpanded = expandedReports.has(report.id)
 
             // Group tasks by rock

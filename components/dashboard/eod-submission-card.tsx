@@ -11,7 +11,8 @@ import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2, Paperclip } from
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask, FileAttachment } from "@/lib/types"
 import { FileTray } from "@/components/ui/file-tray"
 import type { TeamMemberMetric } from "@/lib/metrics"
-import { getTodayString } from "@/lib/utils/date-utils"
+import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { useApp } from "@/lib/contexts/app-context"
 
 // Check if a date is Thursday (day 4)
 function isThursday(dateStr: string): boolean {
@@ -58,8 +59,12 @@ export function EODSubmissionCard({
   selectedDate,
   onDateReset,
 }: EODSubmissionCardProps) {
-  const reportDate = selectedDate || getTodayString()
-  const isBackdatedReport = selectedDate && selectedDate !== getTodayString()
+  const { currentOrganization } = useApp()
+  // Use organization timezone for date calculations
+  const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
+  const todayInOrgTz = getTodayInTimezone(orgTimezone)
+  const reportDate = selectedDate || todayInOrgTz
+  const isBackdatedReport = selectedDate && selectedDate !== todayInOrgTz
 
   const completedTasksForDate = assignedTasks.filter((t) => {
     if (t.assigneeId !== userId || t.status !== "completed" || !t.completedAt) {
