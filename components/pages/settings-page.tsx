@@ -43,6 +43,7 @@ import {
  X,
  Clock,
  Globe,
+ Sparkles,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
@@ -53,6 +54,8 @@ import { PushNotificationsCard } from "@/components/settings/push-notifications"
 import { GoogleCalendarIntegration } from "@/components/settings/google-calendar-integration"
 import { BrandingSettings } from "@/components/settings/branding-settings"
 import { BillingSettings } from "@/components/settings/billing-settings"
+import { AIInbox } from "@/components/ai/ai-inbox"
+import { AIBudgetControls } from "@/components/ai/ai-budget-controls"
 
 interface IntegrationStatus {
  email: {
@@ -678,6 +681,13 @@ export function SettingsPage() {
  </TabsTrigger>
  )}
  {isAdmin && (
+ <TabsTrigger value="ai" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+ <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+ <span className="hidden sm:inline">AI Inbox</span>
+ <span className="sm:hidden">AI</span>
+ </TabsTrigger>
+ )}
+ {isAdmin && (
  <TabsTrigger value="integrations" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
  <Key className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
  <span className="hidden sm:inline">Integrations</span>
@@ -1201,6 +1211,13 @@ export function SettingsPage() {
  {isOwner && (
  <TabsContent value="billing" className="space-y-6">
  <BillingSettings />
+ </TabsContent>
+ )}
+
+ {isAdmin && currentOrganization && (
+ <TabsContent value="ai" className="space-y-6">
+ <AIBudgetControls organizationId={currentOrganization.id} />
+ <AIInbox organizationId={currentOrganization.id} teamMembers={teamMembers} />
  </TabsContent>
  )}
 

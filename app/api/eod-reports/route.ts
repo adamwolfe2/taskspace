@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
+import { generateEODSuggestions } from "@/lib/ai/eod-suggestions"
 import { sendEscalationNotification, sendAIAlertEmail, isEmailConfigured } from "@/lib/integrations/email"
 import { sendSlackMessage, buildFullEODReportMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import { asanaClient } from "@/lib/integrations/asana"
@@ -259,12 +260,25 @@ export async function POST(request: NextRequest) {
           }
           await db.eodInsights.create(insight)
 
+          // Generate AI suggestions for the inbox
+          const admins = teamMembersData.filter(m => m.role === "admin" || m.role === "owner")
+          generateEODSuggestions({
+            organizationId: auth.organization.id,
+            report,
+            insight,
+            member: {
+              id: member.id,
+              name: member.name,
+              department: member.department,
+            },
+            adminIds: admins.map(a => a.id),
+          }).catch(err => console.error("[AI Suggestions] Generation failed:", err))
+
           // Log if admin alert is needed
           if (result.alertAdmin && result.alertReason) {
             console.log(`[AI Alert] ${member.name}: ${result.alertReason}`)
             // Send email notification to admins
             if (isEmailConfigured()) {
-              const admins = teamMembersData.filter(m => m.role === "admin" || m.role === "owner")
               const adminMembers: TeamMember[] = admins.map(a => ({
                 id: a.id,
                 name: a.name,
