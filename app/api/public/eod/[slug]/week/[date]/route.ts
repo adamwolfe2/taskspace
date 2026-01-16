@@ -362,6 +362,12 @@ export async function GET(
     const averageTasksPerDay = daysWithReports > 0 ? Math.round(totalTasks / daysWithReports) : 0
 
     // Fetch weekly scorecard data
+    // Note: The URL uses Thursday as week ending (EOW), but scorecard entries are stored with Friday
+    // We need to convert Thursday to the next day (Friday) for the scorecard lookup
+    const scorecardWeekEnding = new Date(endDate)
+    scorecardWeekEnding.setDate(scorecardWeekEnding.getDate() + 1) // Thursday + 1 = Friday
+    const scorecardWeekEndingStr = scorecardWeekEnding.toISOString().split("T")[0]
+
     const { rows: scorecardRows } = await sql`
       SELECT
         tmm.team_member_id as member_id,
@@ -373,8 +379,8 @@ export async function GET(
       FROM team_member_metrics tmm
       JOIN organization_members om ON tmm.team_member_id = om.id
       LEFT JOIN users u ON u.id = om.user_id
-      LEFT JOIN weekly_metric_entries wme ON wme.team_member_id = tmm.team_member_id
-        AND wme.week_ending = ${endDateStr}::date
+      LEFT JOIN weekly_metric_entries wme ON wme.metric_id = tmm.id
+        AND wme.week_ending = ${scorecardWeekEndingStr}::date
       WHERE om.organization_id = ${orgId}
         AND tmm.is_active = true
         AND om.status = 'active'
