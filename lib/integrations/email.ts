@@ -443,6 +443,107 @@ export async function sendTaskAssignmentEmail(
 }
 
 /**
+ * Send the daily EOD team link email to all team members at 7pm PST
+ * Includes link to view team progress and submit their own report if needed
+ */
+export async function sendDailyEODLinkEmail(
+  member: TeamMember,
+  organizationName: string,
+  organizationSlug: string,
+  dateStr: string, // YYYY-MM-DD format
+  hasSubmittedToday: boolean
+): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    console.log("[Email] Resend not configured, skipping daily EOD link email")
+    return { success: false, error: "Email not configured" }
+  }
+
+  // Format date for display
+  const displayDate = new Date(dateStr + "T12:00:00Z").toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  })
+
+  // Build the public EOD report URL
+  const publicReportUrl = `${APP_URL}/public/eod/${organizationSlug}/${dateStr}`
+
+  const subject = `Great work today! View your team's EOD report for ${displayDate}`
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 20px; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">Great work today!</h1>
+    <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0;">${displayDate}</p>
+  </div>
+
+  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
+    <p style="margin-top: 0;">Hi ${member.name},</p>
+
+    <p>Here's the end of day report to view the entire team's progress:</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${publicReportUrl}" style="display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px;">View Team EOD Report</a>
+    </div>
+
+    ${!hasSubmittedToday ? `
+    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
+      <p style="margin: 0 0 12px 0; color: #92400e; font-weight: 500;">Haven't submitted your EOD report yet?</p>
+      <p style="margin: 0;">
+        <a href="${APP_URL}" style="color: #d97706; font-weight: 500;">Submit your report here</a>
+      </p>
+    </div>
+    ` : `
+    <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
+      <p style="margin: 0; color: #166534;">
+        <strong>You're all set!</strong> Your EOD report for today has been submitted.
+      </p>
+    </div>
+    `}
+
+    <p style="color: #666; font-size: 14px;">
+      See what the whole team accomplished today and stay aligned on progress across the workspace.
+    </p>
+
+    <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
+      Sent from AIMS EOD Tracker • ${organizationName}
+    </p>
+  </div>
+</body>
+</html>
+`
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: member.email,
+      subject,
+      html,
+    })
+
+    if (result.error) {
+      console.error("[Email] Daily EOD link email failed:", result.error)
+      return { success: false, error: result.error.message }
+    }
+
+    console.log(`[Email] Daily EOD link email sent to ${member.name}: ${result.data?.id}`)
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    console.error("[Email] Daily EOD link email error:", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+/**
  * Send a reminder email to team members who haven't submitted their EOD
  */
 export async function sendMissingEODReminder(
