@@ -445,12 +445,12 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Can only update same-day reports (in org timezone)
+    // Can only update reports within the valid submission window (today or up to 2 days back)
     const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"
-    const todayInOrgTz = getTodayInTimezone(orgTimezone)
-    if (report.date !== todayInOrgTz) {
+    const dateValidation = isValidEODDate(report.date, orgTimezone)
+    if (!dateValidation.valid) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `You can only update today's report (${formatDateForDisplay(todayInOrgTz)})` },
+        { success: false, error: `Cannot update this report: ${dateValidation.reason}` },
         { status: 400 }
       )
     }

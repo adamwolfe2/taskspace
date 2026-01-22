@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
 import { sendEODNotification } from "@/lib/email"
 import { updateStreak } from "@/lib/hooks/use-productivity"
+import { api } from "@/lib/api/client"
 
 function formatDisplayDate(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00")
@@ -284,22 +285,54 @@ export function EODSubmissionCard({
       // Check if this is a duplicate submission (409 conflict)
       if (err.status === 409 && err.data) {
         const existingReport = err.data
-        toast({
-          title: "Report Already Exists",
-          description: `You already submitted an EOD report for ${formatDisplayDate(reportDate)}. Click to view and edit it.`,
-          variant: "default",
-          action: (
-            <ToastAction
-              altText="View existing report"
-              onClick={() => {
-                // Navigate to history page with the report ID
-                window.location.href = `/?page=history&reportId=${existingReport.id}`
-              }}
-            >
-              View Report
-            </ToastAction>
-          ),
-        })
+
+        // Automatically update the existing report instead of showing an error
+        try {
+          await api.eodReports.update(existingReport.id, {
+            tasks: allTasks,
+            challenges: challenges.trim(),
+            tomorrowPriorities: filteredPriorities,
+            needsEscalation,
+            escalationNote: needsEscalation ? escalationNote.trim() : null,
+            metricValueToday: validMetricValue,
+            attachments: attachments.length > 0 ? attachments : undefined,
+          })
+
+          // Update streak after successful update
+          try {
+            const streakResult = await updateStreak(reportDate)
+            if (streakResult.isNewRecord) {
+              toast({
+                title: "New Streak Record!",
+                description: `Congratulations! You've achieved a ${streakResult.longestStreak}-day streak!`,
+              })
+            }
+          } catch (streakError) {
+            console.error("Failed to update streak:", streakError)
+          }
+
+          // Reset form
+          setAutoTasks([])
+          setTasks([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
+          setChallenges("")
+          setTomorrowPriorities([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
+          setNeedsEscalation(false)
+          setEscalationNote("")
+          setMetricValueToday("")
+          setAttachments([])
+          onDateReset?.()
+
+          toast({
+            title: "EOD Report Updated",
+            description: `Your EOD report for ${formatDisplayDate(reportDate)} has been updated`,
+          })
+        } catch (updateErr: any) {
+          toast({
+            title: "Update Failed",
+            description: updateErr.message || "Failed to update existing EOD report. You may need to contact an admin.",
+            variant: "destructive",
+          })
+        }
       } else {
         toast({
           title: "Submission Failed",
