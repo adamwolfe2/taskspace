@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
 import { sendEODNotification } from "@/lib/email"
 import { updateStreak } from "@/lib/hooks/use-productivity"
+import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { useApp } from "@/lib/contexts/app-context"
 
 interface OrgDateInfo {
   date: string
@@ -24,6 +26,36 @@ interface OrgDateInfo {
   time: string
   timezone: string
   timezoneDisplay: string
+}
+
+function formatShortDate(dateStr: string): string {
+  const date = new Date(dateStr + "T12:00:00")
+  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+}
+
+// Get valid date options for EOD submission (today, yesterday, 2 days ago)
+function getValidDateOptions(todayInOrgTz: string): { value: string; label: string; isToday: boolean }[] {
+  const today = new Date(todayInOrgTz + "T12:00:00")
+  const options = []
+
+  for (let i = 0; i <= 2; i++) {
+    const date = new Date(today)
+    date.setDate(today.getDate() - i)
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+    let label = formatShortDate(dateStr)
+    if (i === 0) label = `Today - ${label}`
+    else if (i === 1) label = `Yesterday - ${label}`
+    else label = `${i} days ago - ${label}`
+
+    options.push({
+      value: dateStr,
+      label,
+      isToday: i === 0
+    })
+  }
+
+  return options
 }
 
 // Get current quarter string
@@ -55,7 +87,7 @@ interface ParsedEODData {
 interface AIEODSubmissionProps {
   rocks: Rock[]
   allRocks: Rock[]
-  onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt" | "organizationId" | "date">) => void | Promise<void>
+  onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt" | "organizationId"> | Omit<EODReport, "id" | "createdAt" | "organizationId" | "date">) => void | Promise<void>
   userId: string
   currentUser: TeamMember
 }
@@ -67,11 +99,21 @@ export function AIEODSubmission({
   userId,
   currentUser,
 }: AIEODSubmissionProps) {
+  const { currentOrganization } = useApp()
+  // Use organization timezone for date calculations
+  const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
+  const todayInOrgTz = getTodayInTimezone(orgTimezone)
+
   const [textDump, setTextDump] = useState("")
   const [isParsing, setIsParsing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [parsedData, setParsedData] = useState<ParsedEODData | null>(null)
   const [showPreview, setShowPreview] = useState(false)
+
+  // Date selection state
+  const [selectedDate, setSelectedDate] = useState<string>(todayInOrgTz)
+  const dateOptions = getValidDateOptions(todayInOrgTz)
+  const isBackdatedReport = selectedDate !== todayInOrgTz
 
   // Editable state for the preview
   const [editedTasks, setEditedTasks] = useState<EODTask[]>([])
@@ -216,11 +258,10 @@ export function AIEODSubmission({
       ? parsedMetricValue
       : null
 
-    // Note: We don't set the date here - the API will determine the correct date
-    // based on the organization's timezone to ensure all team members submit for
-    // the same day regardless of their local timezone
-    const report: Omit<EODReport, "id" | "createdAt" | "organizationId" | "date"> = {
+    // Include the selected date in the report
+    const report: Omit<EODReport, "id" | "createdAt" | "organizationId"> = {
       userId,
+      date: selectedDate,
       submittedAt: new Date().toISOString(),
       tasks: editedTasks.filter(t => t.text.trim() !== ""),
       challenges: editedChallenges.trim() || "No challenges today",
@@ -262,10 +303,12 @@ export function AIEODSubmission({
       setEditedEscalation(false)
       setEditedEscalationNote("")
       setMetricValueToday("")
+      setSelectedDate(todayInOrgTz)
 
+      const dateLabel = dateOptions.find(d => d.value === selectedDate)?.label || selectedDate
       toast({
         title: "EOD Report Submitted",
-        description: "Your AI-generated EOD report has been recorded",
+        description: `Your AI-generated EOD report for ${dateLabel} has been recorded. You can submit another report for the same day if needed.`,
       })
     } catch (err: any) {
       // Check if this is a duplicate submission (409 conflict)
@@ -391,24 +434,36 @@ export function AIEODSubmission({
         {!showPreview ? (
           /* Text Input Phase */
           <>
-            {/* Date Banner - Shows what date users are submitting for */}
-            {orgDateInfo && (
-              <Alert className="bg-blue-50 border-blue-200">
-                <Calendar className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-medium">Submitting for: </span>
-                      <span className="font-semibold">{orgDateInfo.displayDate}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-blue-600">
-                      <Clock className="h-3 w-3" />
-                      <span>{orgDateInfo.time} {orgDateInfo.timezoneDisplay}</span>
-                    </div>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
+            {/* Date Selection */}
+            <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <Calendar className="h-5 w-5 text-purple-500" />
+              <div className="flex-1">
+                <Label className="text-xs font-medium text-slate-600">Report Date</Label>
+                <Select value={selectedDate} onValueChange={setSelectedDate}>
+                  <SelectTrigger className="mt-1 bg-white border-slate-200 h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dateOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {isBackdatedReport && (
+                <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                  Past Date
+                </span>
+              )}
+              {orgDateInfo && (
+                <div className="flex items-center gap-1 text-xs text-slate-500">
+                  <Clock className="h-3 w-3" />
+                  <span>{orgDateInfo.time} {orgDateInfo.timezoneDisplay}</span>
+                </div>
+              )}
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="textDump" className="text-sm font-semibold text-slate-700">
@@ -456,24 +511,36 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
         ) : (
           /* Preview & Edit Phase */
           <>
-            {/* Date Banner - Shows what date users are submitting for */}
-            {orgDateInfo && (
-              <Alert className="bg-blue-50 border-blue-200">
-                <Calendar className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-medium">Submitting for: </span>
-                      <span className="font-semibold">{orgDateInfo.displayDate}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-blue-600">
-                      <Clock className="h-3 w-3" />
-                      <span>{orgDateInfo.time} {orgDateInfo.timezoneDisplay}</span>
-                    </div>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
+            {/* Date Selection */}
+            <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <Calendar className="h-5 w-5 text-purple-500" />
+              <div className="flex-1">
+                <Label className="text-xs font-medium text-slate-600">Report Date</Label>
+                <Select value={selectedDate} onValueChange={setSelectedDate}>
+                  <SelectTrigger className="mt-1 bg-white border-slate-200 h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dateOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {isBackdatedReport && (
+                <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                  Past Date
+                </span>
+              )}
+              {orgDateInfo && (
+                <div className="flex items-center gap-1 text-xs text-slate-500">
+                  <Clock className="h-3 w-3" />
+                  <span>{orgDateInfo.time} {orgDateInfo.timezoneDisplay}</span>
+                </div>
+              )}
+            </div>
 
             {/* Summary & Warnings */}
             {parsedData && (
