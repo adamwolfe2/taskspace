@@ -1,3 +1,25 @@
+/**
+ * Date Utilities Module
+ *
+ * IMPORTANT: Date Handling Best Practices
+ *
+ * 1. For EOD reports and timezone-sensitive dates:
+ *    - Use getTodayInTimezone(orgTimezone) to get the current date in organization timezone
+ *    - Pass the organization's settings.timezone (e.g., "America/Los_Angeles")
+ *
+ * 2. For date display in UI:
+ *    - Use formatDate() or formatShortDate() for user-friendly display
+ *
+ * 3. For database timestamps:
+ *    - Use new Date().toISOString() for createdAt/updatedAt fields
+ *
+ * 4. AVOID these patterns:
+ *    - toISOString().split("T")[0] - causes timezone shift (UTC conversion)
+ *    - Manual YYYY-MM-DD string concatenation - use getTodayInTimezone() instead
+ *
+ * @module date-utils
+ */
+
 export function formatDate(date: string): string {
   const d = new Date(date)
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
