@@ -1,4 +1,6 @@
 import type { EODReport, TeamMember, Rock, Invitation, Organization, PasswordResetToken } from "./types"
+import { withRetry, isTransientError } from "./utils"
+import { CONFIG } from "./config"
 
 // Use environment variables for sensitive data
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
@@ -13,7 +15,7 @@ function isEmailConfigured(): boolean {
   return !!RESEND_API_KEY && RESEND_API_KEY.startsWith("re_")
 }
 
-// Generic email sending function
+// Generic email sending function with automatic retry
 async function sendEmail(to: string[], subject: string, html: string) {
   if (!isEmailConfigured()) {
     console.warn("Email not configured - RESEND_API_KEY not set")
@@ -21,31 +23,57 @@ async function sendEmail(to: string[], subject: string, html: string) {
   }
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
+    const data = await withRetry(
+      async () => {
+        const response = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: EMAIL_FROM,
+            to,
+            subject,
+            html,
+          }),
+        })
+
+        const result = await response.json()
+
+        // Throw error for non-OK responses to trigger retry
+        if (!response.ok) {
+          const error = new Error(result.message || result.error || "Resend API error")
+          // Only retry on 5xx errors or rate limits
+          if (response.status >= 500 || response.status === 429) {
+            throw error
+          }
+          // Don't retry 4xx client errors (except 429)
+          return { success: false, error: error.message, data: result, noRetry: true }
+        }
+
+        return result
       },
-      body: JSON.stringify({
-        from: EMAIL_FROM,
-        to,
-        subject,
-        html,
-      }),
-    })
+      {
+        maxAttempts: CONFIG.api.retryAttempts,
+        initialDelayMs: CONFIG.api.retryDelayMs,
+        isRetryable: isTransientError,
+        onRetry: (error, attempt) => {
+          console.warn(`Email send retry attempt ${attempt}:`, error)
+        },
+      }
+    )
 
-    const data = await response.json()
-
-    if (!response.ok) {
+    // Check if we got a non-retried error
+    if (data && 'noRetry' in data) {
       console.error("Resend API error:", data)
-      return { success: false, error: data.message || data.error || "Resend API error", data }
+      return { success: false, error: data.error, data: data.data }
     }
 
     console.log("Email sent successfully:", { to, subject, id: data.id })
     return { success: true, data }
   } catch (error) {
-    console.error("Failed to send email:", error)
+    console.error("Failed to send email after retries:", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }

@@ -18,6 +18,7 @@ export function NotificationCenter() {
  const [unreadCount, setUnreadCount] = useState(0)
  const [isLoading, setIsLoading] = useState(false)
  const [isOpen, setIsOpen] = useState(false)
+ const [processingIds, setProcessingIds] = useState<Set<string>>(new Set())
 
  const fetchNotifications = useCallback(async () => {
  try {
@@ -105,6 +106,7 @@ export function NotificationCenter() {
  }, [isOpen, fetchNotifications])
 
  const markAsRead = async (id: string) => {
+ setProcessingIds(prev => new Set(prev).add(id))
  try {
  const response = await fetch("/api/notifications", {
  method: "PATCH",
@@ -119,6 +121,12 @@ export function NotificationCenter() {
  }
  } catch (err) {
  console.error("Failed to mark notification as read:", err)
+ } finally {
+ setProcessingIds(prev => {
+ const next = new Set(prev)
+ next.delete(id)
+ return next
+ })
  }
  }
 
@@ -142,6 +150,7 @@ export function NotificationCenter() {
  }
 
  const deleteNotification = async (id: string) => {
+ setProcessingIds(prev => new Set(prev).add(id))
  try {
  const response = await fetch(`/api/notifications?id=${id}`, {
  method: "DELETE",
@@ -155,6 +164,12 @@ export function NotificationCenter() {
  }
  } catch (err) {
  console.error("Failed to delete notification:", err)
+ } finally {
+ setProcessingIds(prev => {
+ const next = new Set(prev)
+ next.delete(id)
+ return next
+ })
  }
  }
 
@@ -260,9 +275,14 @@ export function NotificationCenter() {
  size="icon"
  className="h-6 w-6"
  onClick={() => markAsRead(notification.id)}
+ disabled={processingIds.has(notification.id)}
  aria-label="Mark as read"
  >
+ {processingIds.has(notification.id) ? (
+ <Loader2 className="h-3 w-3 animate-spin" />
+ ) : (
  <Check className="h-3 w-3" />
+ )}
  </Button>
  )}
  <Button
@@ -270,9 +290,14 @@ export function NotificationCenter() {
  size="icon"
  className="h-6 w-6 text-muted-foreground hover:text-destructive"
  onClick={() => deleteNotification(notification.id)}
+ disabled={processingIds.has(notification.id)}
  aria-label="Delete notification"
  >
+ {processingIds.has(notification.id) ? (
+ <Loader2 className="h-3 w-3 animate-spin" />
+ ) : (
  <Trash2 className="h-3 w-3" />
+ )}
  </Button>
  </div>
  </div>

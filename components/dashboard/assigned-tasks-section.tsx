@@ -5,7 +5,7 @@ import type { AssignedTask, Rock, TeamMember } from "@/lib/types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils/date-utils"
-import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, AlertCircle, Clock, Plus, Trash2 } from "lucide-react"
+import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, AlertCircle, Clock, Plus, Trash2, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useApp } from "@/lib/contexts/app-context"
 import { differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
@@ -84,6 +84,7 @@ export function AssignedTasksSection({
   const [visibleCompletedCount, setVisibleCompletedCount] = useState(5)
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState<AssignedTask | null>(null)
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null)
 
   // Sort tasks: platform-assigned (manual) first, then Asana tasks
   const sortBySource = (a: AssignedTask, b: AssignedTask) => {
@@ -176,6 +177,7 @@ export function AssignedTasksSection({
     e.stopPropagation()
     if (!onDeleteTask) return
 
+    setDeletingTaskId(taskId)
     try {
       await onDeleteTask(taskId)
       toast({
@@ -183,12 +185,15 @@ export function AssignedTasksSection({
         description: "Your task has been removed",
       })
       onTasksUpdated?.()
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to delete task"
       toast({
         title: "Error",
-        description: err.message || "Failed to delete task",
+        description: message,
         variant: "destructive",
       })
+    } finally {
+      setDeletingTaskId(null)
     }
   }
 
@@ -331,8 +336,14 @@ export function AssignedTasksSection({
                             size="sm"
                             className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 flex-shrink-0"
                             onClick={(e) => handleDeleteTask(task.id, e)}
+                            disabled={deletingTaskId === task.id}
+                            aria-label="Delete task"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            {deletingTaskId === task.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
                           </Button>
                         )}
                       </div>
