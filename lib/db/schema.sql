@@ -139,6 +139,7 @@ CREATE TABLE IF NOT EXISTS assigned_tasks (
 );
 
 -- EOD Reports table
+-- Note: Multiple reports per user per day are allowed (no UNIQUE constraint on org+user+date)
 CREATE TABLE IF NOT EXISTS eod_reports (
   id VARCHAR(255) PRIMARY KEY,
   organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -150,8 +151,7 @@ CREATE TABLE IF NOT EXISTS eod_reports (
   needs_escalation BOOLEAN DEFAULT FALSE,
   escalation_note TEXT,
   submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(organization_id, user_id, date)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Notifications table

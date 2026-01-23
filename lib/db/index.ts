@@ -1012,12 +1012,23 @@ export const db = {
       return rows.map(parseEODReport)
     },
     async findByUserAndDate(userId: string, orgId: string, date: string): Promise<EODReport | null> {
+      // Returns the most recent report for backward compatibility
       const { rows } = await sql`
         SELECT * FROM eod_reports
         WHERE user_id = ${userId} AND organization_id = ${orgId} AND date = ${date}
+        ORDER BY submitted_at DESC
         LIMIT 1
       `
       return rows[0] ? parseEODReport(rows[0]) : null
+    },
+    async findAllByUserAndDate(userId: string, orgId: string, date: string): Promise<EODReport[]> {
+      // Returns all reports for a user on a specific date (supports multiple reports per day)
+      const { rows } = await sql`
+        SELECT * FROM eod_reports
+        WHERE user_id = ${userId} AND organization_id = ${orgId} AND date = ${date}
+        ORDER BY submitted_at DESC
+      `
+      return rows.map(parseEODReport)
     },
     async findById(id: string): Promise<EODReport | null> {
       const { rows } = await sql`SELECT * FROM eod_reports WHERE id = ${id} LIMIT 1`
@@ -1053,7 +1064,7 @@ export const db = {
     },
     async update(id: string, updates: Partial<EODReport>): Promise<EODReport | null> {
       try {
-        // Try with metric_value_today column (requires migration)
+        // Try with metric_value_today and date columns (supports date changes)
         const { rows } = await sql`
           UPDATE eod_reports SET
             tasks = COALESCE(${updates.tasks ? JSON.stringify(updates.tasks) : null}::jsonb, tasks),
@@ -1062,6 +1073,7 @@ export const db = {
             needs_escalation = COALESCE(${updates.needsEscalation ?? null}, needs_escalation),
             escalation_note = COALESCE(${updates.escalationNote || null}, escalation_note),
             metric_value_today = COALESCE(${updates.metricValueToday ?? null}, metric_value_today),
+            date = COALESCE(${updates.date || null}, date),
             submitted_at = COALESCE(${updates.submittedAt || null}, submitted_at)
           WHERE id = ${id}
           RETURNING *
@@ -1077,6 +1089,7 @@ export const db = {
               tomorrow_priorities = COALESCE(${updates.tomorrowPriorities ? JSON.stringify(updates.tomorrowPriorities) : null}::jsonb, tomorrow_priorities),
               needs_escalation = COALESCE(${updates.needsEscalation ?? null}, needs_escalation),
               escalation_note = COALESCE(${updates.escalationNote || null}, escalation_note),
+              date = COALESCE(${updates.date || null}, date),
               submitted_at = COALESCE(${updates.submittedAt || null}, submitted_at)
             WHERE id = ${id}
             RETURNING *

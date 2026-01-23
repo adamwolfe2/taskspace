@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2, Paperclip } from "lucide-react"
+import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2, Paperclip, ChevronDown } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask, FileAttachment } from "@/lib/types"
 import { FileTray } from "@/components/ui/file-tray"
 import type { TeamMemberMetric } from "@/lib/metrics"
@@ -28,6 +28,36 @@ import { api } from "@/lib/api/client"
 function formatDisplayDate(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00")
   return date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
+}
+
+function formatShortDate(dateStr: string): string {
+  const date = new Date(dateStr + "T12:00:00")
+  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+}
+
+// Get valid date options for EOD submission (today, yesterday, 2 days ago)
+function getValidDateOptions(todayInOrgTz: string): { value: string; label: string; isToday: boolean }[] {
+  const today = new Date(todayInOrgTz + "T12:00:00")
+  const options = []
+
+  for (let i = 0; i <= 2; i++) {
+    const date = new Date(today)
+    date.setDate(today.getDate() - i)
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+    let label = formatShortDate(dateStr)
+    if (i === 0) label = `Today - ${label}`
+    else if (i === 1) label = `Yesterday - ${label}`
+    else label = `${i} days ago - ${label}`
+
+    options.push({
+      value: dateStr,
+      label,
+      isToday: i === 0
+    })
+  }
+
+  return options
 }
 
 interface EODSubmissionCardProps {
@@ -64,8 +94,16 @@ export function EODSubmissionCard({
   // Use organization timezone for date calculations
   const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
   const todayInOrgTz = getTodayInTimezone(orgTimezone)
-  const reportDate = selectedDate || todayInOrgTz
-  const isBackdatedReport = selectedDate && selectedDate !== todayInOrgTz
+
+  // Internal date state - allows user to select date with dropdown
+  const [internalSelectedDate, setInternalSelectedDate] = useState<string>(todayInOrgTz)
+
+  // Use external selectedDate if provided (from calendar click), otherwise use internal state
+  const reportDate = selectedDate || internalSelectedDate
+  const isBackdatedReport = reportDate !== todayInOrgTz
+
+  // Get valid date options
+  const dateOptions = getValidDateOptions(todayInOrgTz)
 
   const completedTasksForDate = assignedTasks.filter((t) => {
     if (t.assigneeId !== userId || t.status !== "completed" || !t.completedAt) {
@@ -273,13 +311,12 @@ export function EODSubmissionCard({
       setEscalationNote("")
       setMetricValueToday("")
       setAttachments([])
+      setInternalSelectedDate(todayInOrgTz) // Reset date to today
       onDateReset?.()
 
       toast({
         title: "EOD Report Submitted",
-        description: isBackdatedReport
-          ? `Your EOD report for ${formatDisplayDate(reportDate)} has been recorded`
-          : "Your end of day report has been recorded",
+        description: `Your EOD report for ${formatDisplayDate(reportDate)} has been recorded. You can submit another report for the same day if needed.`,
       })
     } catch (err: any) {
       // Check if this is a duplicate submission (409 conflict)
@@ -320,6 +357,7 @@ export function EODSubmissionCard({
           setEscalationNote("")
           setMetricValueToday("")
           setAttachments([])
+          setInternalSelectedDate(todayInOrgTz) // Reset date to today
           onDateReset?.()
 
           toast({
@@ -349,19 +387,51 @@ export function EODSubmissionCard({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-slate-900 text-lg">Submit EOD Report</h3>
-            {isBackdatedReport ? (
-              <p className="text-sm text-amber-600 mt-0.5 font-medium">
-                Submitting for: {formatDisplayDate(reportDate)}
-              </p>
-            ) : (
-              <p className="text-sm text-slate-500 mt-0.5">Share your daily progress and updates</p>
-            )}
+            <p className="text-sm text-slate-500 mt-0.5">Share your daily progress and updates</p>
           </div>
           {isBackdatedReport && onDateReset && (
-            <Button variant="ghost" size="sm" onClick={onDateReset} className="text-slate-500">
+            <Button variant="ghost" size="sm" onClick={() => {
+              setInternalSelectedDate(todayInOrgTz)
+              onDateReset()
+            }} className="text-slate-500">
               <X className="h-4 w-4 mr-1" />
-              Cancel
+              Reset to Today
             </Button>
+          )}
+        </div>
+      </div>
+      {/* Date Selection */}
+      <div className="px-5 pt-4">
+        <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <Calendar className="h-5 w-5 text-slate-500" />
+          <div className="flex-1">
+            <Label className="text-xs font-medium text-slate-600">Report Date</Label>
+            <Select
+              value={reportDate}
+              onValueChange={(value) => {
+                setInternalSelectedDate(value)
+                // Clear external selected date if parent provided onDateReset
+                if (value === todayInOrgTz && onDateReset) {
+                  onDateReset()
+                }
+              }}
+            >
+              <SelectTrigger className="mt-1 bg-white border-slate-200 h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {dateOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {isBackdatedReport && (
+            <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded">
+              Past Date
+            </span>
           )}
         </div>
       </div>
