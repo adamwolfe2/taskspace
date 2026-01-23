@@ -16,6 +16,7 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { logIntegrationEvent, logSecurityEvent } from "@/lib/audit/logger"
 import { z } from "zod"
 import crypto from "crypto"
+import { logger, logError } from "@/lib/logger"
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -140,7 +141,7 @@ export async function GET(request: NextRequest) {
 
     return successResponse({ webhooks: formattedWebhooks })
   } catch (error) {
-    console.error("Webhook list error:", error)
+    logError(logger, "Webhook list error", error)
     return Errors.internal().toResponse()
   }
 }
@@ -227,7 +228,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof ValidationError) {
       return Errors.validationError(error.message).toResponse()
     }
-    console.error("Webhook creation error:", error)
+    logError(logger, "Webhook creation error", error)
     return Errors.internal().toResponse()
   }
 }
@@ -303,7 +304,7 @@ export async function PATCH(request: NextRequest) {
     if (error instanceof ValidationError) {
       return Errors.validationError(error.message).toResponse()
     }
-    console.error("Webhook update error:", error)
+    logError(logger, "Webhook update error", error)
     return Errors.internal().toResponse()
   }
 }
@@ -363,7 +364,7 @@ export async function DELETE(request: NextRequest) {
       message: "Webhook deleted successfully",
     })
   } catch (error) {
-    console.error("Webhook deletion error:", error)
+    logError(logger, "Webhook deletion error", error)
     return Errors.internal().toResponse()
   }
 }

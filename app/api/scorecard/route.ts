@@ -17,6 +17,8 @@ import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { getScorecardData } from "@/lib/metrics"
 import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
+import { logger, logError } from "@/lib/logger"
+import { safeParseInt, clamp } from "@/lib/utils"
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,7 +33,7 @@ export async function GET(request: NextRequest) {
     // All authenticated members can view the scorecard
     const url = new URL(request.url)
     const weeksParam = url.searchParams.get("weeks")
-    const weeks = weeksParam ? parseInt(weeksParam, 10) : 8
+    const weeks = clamp(safeParseInt(weeksParam, 8), 1, 52)
 
     const data = await getScorecardData(auth.organization.id, weeks)
 
@@ -41,7 +43,7 @@ export async function GET(request: NextRequest) {
       isAdmin: isAdmin(auth), // Tell frontend if user can edit
     })
   } catch (error) {
-    console.error("Error fetching scorecard:", error)
+    logError(logger, "Error fetching scorecard", error)
     return NextResponse.json(
       {
         success: false,
@@ -157,7 +159,7 @@ export async function PATCH(request: NextRequest) {
       message: "Scorecard entry updated successfully",
     })
   } catch (error) {
-    console.error("Error updating scorecard entry:", error)
+    logError(logger, "Error updating scorecard entry", error)
     return NextResponse.json(
       {
         success: false,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface IntegrationStatus {
   email: {
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
       data: status,
     })
   } catch (error) {
-    console.error("Get integration status error:", error)
+    logError(logger, "Get integration status error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get integration status" },
       { status: 500 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { MA_EMPLOYEES_SEED, TOTAL_EMPLOYEES } from "@/lib/org-chart/seed-data"
+import { logger, logError } from "@/lib/logger"
 
 // POST - Seed the database with all MA employees
 // This will clear existing employees and insert fresh data
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error("Error seeding MA employees:", error)
+    logError(logger, "Error seeding MA employees", error)
     return NextResponse.json(
       {
         success: false,
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
       needsSeeding: count === 0 || count < TOTAL_EMPLOYEES,
     })
   } catch (error) {
-    console.error("Error checking MA employees count:", error)
+    logError(logger, "Error checking MA employees count", error)
     return NextResponse.json(
       { success: false, error: "Failed to check employee count" },
       { status: 500 }

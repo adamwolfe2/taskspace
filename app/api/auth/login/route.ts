@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json<ApiResponse<AuthResponse>>({
       success: true,
       data: {
-        user: safeUser as any,
+        user: safeUser,
         organization,
         member: membership,
         token: sessionToken,

@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { createCheckoutSession, getOrCreateCustomer } from "@/lib/integrations/stripe"
 import { getStripeConfig } from "@/lib/integrations/stripe-config"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * POST /api/billing/checkout
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Checkout error:", error)
+    logError(logger, "Checkout error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,

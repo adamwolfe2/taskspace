@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { logger, logError } from "@/lib/logger"
 
 // GET - Fetch all MA employees
 export async function GET() {
@@ -12,7 +13,7 @@ export async function GET() {
       count: employees.length,
     })
   } catch (error) {
-    console.error("Error fetching MA employees:", error)
+    logError(logger, "Error fetching MA employees", error)
     return NextResponse.json(
       { success: false, error: "Failed to fetch employees" },
       { status: 500 }
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
       message: "Employee created successfully",
     })
   } catch (error) {
-    console.error("Error creating MA employee:", error)
+    logError(logger, "Error creating MA employee", error)
     return NextResponse.json(
       { success: false, error: "Failed to create employee" },
       { status: 500 }

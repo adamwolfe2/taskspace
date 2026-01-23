@@ -341,9 +341,10 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
                   variant="secondary"
                   onClick={saveTemplate}
                   disabled={!templateName.trim() || isSavingTemplate}
+                  aria-label={isSavingTemplate ? "Saving template" : "Save template"}
                 >
                   {isSavingTemplate ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" role="status" aria-label="Saving" />
                   ) : (
                     "Save"
                   )}

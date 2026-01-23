@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // POST /api/test-email - Test email configuration
 export async function POST(request: NextRequest) {
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
       debug: debugInfo,
     })
   } catch (error: any) {
-    console.error("Test email error:", error)
+    logError(logger, "Test email error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error.message || "Failed to send test email" },
       { status: 500 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import type { ApiResponse, TeamMember } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/manager/direct-reports - Get direct reports for the current user
 export async function GET(request: NextRequest) {
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
       data: teamMembers,
     })
   } catch (error) {
-    console.error("Get direct reports error:", error)
+    logError(logger, "Get direct reports error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get direct reports" },
       { status: 500 }
@@ -122,7 +123,7 @@ export async function PATCH(request: NextRequest) {
       message: managerId ? "Manager assigned successfully" : "Manager unassigned successfully",
     })
   } catch (error) {
-    console.error("Assign manager error:", error)
+    logError(logger, "Assign manager error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to assign manager" },
       { status: 500 }

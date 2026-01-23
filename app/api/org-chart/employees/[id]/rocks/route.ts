@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { updateEmployeeRocks } from "@/lib/org-chart/airtable"
+import { logger, logError } from "@/lib/logger"
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -33,7 +34,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       message: "Rocks updated successfully",
     })
   } catch (error) {
-    console.error("Error updating rocks:", error)
+    logError(logger, "Error updating rocks", error)
     return NextResponse.json(
       { success: false, error: "Failed to update rocks" },
       { status: 500 }

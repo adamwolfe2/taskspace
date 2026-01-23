@@ -3,6 +3,7 @@ import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { userHasWorkspaceAccess, getWorkspaceById } from "@/lib/db/workspaces"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface DashboardMetrics {
   tasksCreated: number
@@ -165,7 +166,7 @@ export async function GET(request: NextRequest) {
       data: metrics,
     })
   } catch (error) {
-    console.error("Dashboard metrics error:", error)
+    logError(logger, "Dashboard metrics error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to fetch dashboard metrics" },
       { status: 500 }

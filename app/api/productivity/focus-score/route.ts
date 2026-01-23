@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { calculateFocusScore, calculateTrend } from "@/lib/productivity/calculations"
 import type { ApiResponse, FocusScore, FocusScoreInput } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/productivity/focus-score - Calculate and return current focus score
 export async function GET(request: NextRequest) {
@@ -140,7 +141,7 @@ export async function GET(request: NextRequest) {
       data: focusScore,
     })
   } catch (error) {
-    console.error("Get focus score error:", error)
+    logError(logger, "Get focus score error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to calculate focus score" },
       { status: 500 }

@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import type { Rock, ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/rocks - Get rocks
 export async function GET(request: NextRequest) {
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
       data: rocks,
     })
   } catch (error) {
-    console.error("Get rocks error:", error)
+    logError(logger, "Get rocks error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get rocks" },
       { status: 500 }
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
       message: "Rock created successfully",
     })
   } catch (error) {
-    console.error("Create rock error:", error)
+    logError(logger, "Create rock error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create rock" },
       { status: 500 }
@@ -202,7 +203,7 @@ export async function PATCH(request: NextRequest) {
       message: "Rock updated successfully",
     })
   } catch (error) {
-    console.error("Update rock error:", error)
+    logError(logger, "Update rock error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update rock" },
       { status: 500 }
@@ -262,7 +263,7 @@ export async function DELETE(request: NextRequest) {
       message: "Rock deleted successfully",
     })
   } catch (error) {
-    console.error("Delete rock error:", error)
+    logError(logger, "Delete rock error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to delete rock" },
       { status: 500 }

@@ -7,6 +7,7 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { Errors } from "@/lib/api/errors"
 import { z } from "zod"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -214,7 +215,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Export error:", error)
+    logError(logger, "Export error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to export data" },
       { status: 500 }
@@ -541,7 +542,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof ValidationError) {
       return Errors.validationError(error.message).toResponse()
     }
-    console.error("Advanced export error:", error)
+    logError(logger, "Advanced export error", error)
     return Errors.internal().toResponse()
   }
 }

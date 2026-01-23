@@ -55,9 +55,13 @@ export async function validateBody<T extends ZodSchema>(
   try {
     const body = await request.json()
     // Check if strict mode is requested and schema supports it (ZodObject)
-    const schemaToUse = options.strict && 'strict' in schema && typeof (schema as any).strict === 'function'
-      ? (schema as any).strict()
-      : schema
+    let schemaToUse: ZodSchema = schema
+    if (options.strict && 'strict' in schema) {
+      const strictMethod = (schema as { strict?: () => ZodSchema }).strict
+      if (typeof strictMethod === 'function') {
+        schemaToUse = strictMethod.call(schema)
+      }
+    }
     const result = schemaToUse.safeParse(body)
 
     if (!result.success) {

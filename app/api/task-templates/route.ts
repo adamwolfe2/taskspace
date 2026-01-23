@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import type { TaskTemplate, ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/task-templates - Get all templates for the user
 export async function GET(request: NextRequest) {
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
       data: templates,
     })
   } catch (error) {
-    console.error("Get task templates error:", error)
+    logError(logger, "Get task templates error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get task templates" },
       { status: 500 }
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       data: template,
     })
   } catch (error) {
-    console.error("Create task template error:", error)
+    logError(logger, "Create task template error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create task template" },
       { status: 500 }
@@ -127,7 +128,7 @@ export async function DELETE(request: NextRequest) {
       data: { deleted: true },
     })
   } catch (error) {
-    console.error("Delete task template error:", error)
+    logError(logger, "Delete task template error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to delete task template" },
       { status: 500 }

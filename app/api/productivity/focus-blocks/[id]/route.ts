@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import type { ApiResponse, FocusBlock } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       data: focusBlock,
     })
   } catch (error) {
-    console.error("Get focus block error:", error)
+    logError(logger, "Get focus block error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get focus block" },
       { status: 500 }
@@ -122,7 +123,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       data: { updated: true },
     })
   } catch (error) {
-    console.error("Update focus block error:", error)
+    logError(logger, "Update focus block error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update focus block" },
       { status: 500 }
@@ -173,7 +174,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       data: { deleted: true },
     })
   } catch (error) {
-    console.error("Delete focus block error:", error)
+    logError(logger, "Delete focus block error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to delete focus block" },
       { status: 500 }

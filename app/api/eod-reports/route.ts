@@ -11,6 +11,7 @@ import { getActiveMetricForUser, upsertWeeklyMetricEntry } from "@/lib/metrics"
 import { getTodayInTimezone, isValidEODDate, formatDateForDisplay } from "@/lib/utils/date-utils"
 import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
 import { format, subDays } from "date-fns"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/eod-reports - Get EOD reports
 export async function GET(request: NextRequest) {
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
       data: reports,
     })
   } catch (error) {
-    console.error("Get EOD reports error:", error)
+    logError(logger, "Get EOD reports error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get EOD reports" },
       { status: 500 }
@@ -151,7 +152,7 @@ export async function POST(request: NextRequest) {
             orgTimezone,
             suggestedDate: dateValidation.suggestedDate,
           }
-        } as any,
+        },
         { status: 400 }
       )
     }
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
       if (activeMetric) {
         // Fire-and-forget - don't block EOD submission
         upsertWeeklyMetricEntry(auth.user.id, auth.organization.id, activeMetric.id)
-          .catch(err => console.error("[Metrics] Failed to update weekly entry:", err))
+          .catch(err => logError(logger, "Failed to update weekly metric entry", err, { userId: auth.user.id }))
       }
     }
 
@@ -213,10 +214,10 @@ export async function POST(request: NextRequest) {
           if (assignedTask.asanaGid && asanaClient.isConfigured()) {
             try {
               await asanaClient.completeTask(assignedTask.asanaGid)
-              console.log(`Synced task ${task.taskId} completion to Asana (${assignedTask.asanaGid})`)
+              logger.info({ taskId: task.taskId, asanaGid: assignedTask.asanaGid }, "Synced task completion to Asana")
             } catch (asanaErr) {
               // Log but don't fail - Asana sync is best-effort
-              console.error(`Failed to sync task ${task.taskId} completion to Asana:`, asanaErr)
+              logError(logger, "Failed to sync task completion to Asana", asanaErr, { taskId: task.taskId, asanaGid: assignedTask.asanaGid })
             }
           }
         }
@@ -257,11 +258,11 @@ export async function POST(request: NextRequest) {
               department: member.department,
             },
             adminIds: admins.map(a => a.id),
-          }).catch(err => console.error("[AI Suggestions] Generation failed:", err))
+          }).catch(err => logError(logger, "AI suggestions generation failed", err, { reportId: report.id }))
 
           // Log if admin alert is needed
           if (result.alertAdmin && result.alertReason) {
-            console.log(`[AI Alert] ${member.name}: ${result.alertReason}`)
+            logger.info({ memberName: member.name, reason: result.alertReason }, "AI alert triggered for admin")
             // Send email notification to admins
             if (isEmailConfigured()) {
               const adminMembers: TeamMember[] = admins.map(a => ({
@@ -286,12 +287,12 @@ export async function POST(request: NextRequest) {
                 result.alertReason,
                 result.insight.aiSummary,
                 adminMembers
-              ).catch(err => console.error("[Email] AI alert failed:", err))
+              ).catch(err => logError(logger, "AI alert email failed", err, { memberName: member.name }))
             }
           }
         })
         .catch((err) => {
-          console.error("AI EOD parsing failed:", err)
+          logError(logger, "AI EOD parsing failed", err, { reportId: report.id })
         })
     }
 
@@ -322,7 +323,7 @@ export async function POST(request: NextRequest) {
         report.escalationNote
       )
       sendSlackMessage(webhookUrl!, fullEODMessage)
-        .catch(err => console.error("[Slack] Full EOD report notification failed:", err))
+        .catch(err => logError(logger, "Slack EOD report notification failed", err))
     }
 
     // Send escalation email notification if needed
@@ -347,7 +348,7 @@ export async function POST(request: NextRequest) {
       }
 
       sendEscalationNotification(report, memberInfo, adminMembers)
-        .catch(err => console.error("[Email] Escalation notification failed:", err))
+        .catch(err => logError(logger, "Escalation email notification failed", err, { reportId: report.id }))
 
       // Note: Escalation is now included in the full EOD report sent to Slack above
 
@@ -366,7 +367,7 @@ export async function POST(request: NextRequest) {
           metadata: { reportId: report.id, memberName: member.name },
         }
         await db.notifications.create(notification).catch(err => {
-          console.error("Failed to create escalation notification:", err)
+          logError(logger, "Failed to create escalation notification", err, { adminId: admin.id })
         })
       }
     }
@@ -377,7 +378,7 @@ export async function POST(request: NextRequest) {
       message: "EOD report submitted successfully",
     })
   } catch (error) {
-    console.error("Submit EOD report error:", error)
+    logError(logger, "Submit EOD report error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to submit EOD report" },
       { status: 500 }
@@ -472,7 +473,7 @@ export async function PATCH(request: NextRequest) {
       message,
     })
   } catch (error) {
-    console.error("Update EOD report error:", error)
+    logError(logger, "Update EOD report error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update EOD report" },
       { status: 500 }
@@ -531,7 +532,7 @@ export async function DELETE(request: NextRequest) {
       message: "EOD report deleted successfully",
     })
   } catch (error) {
-    console.error("Delete EOD report error:", error)
+    logError(logger, "Delete EOD report error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to delete EOD report" },
       { status: 500 }

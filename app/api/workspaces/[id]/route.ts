@@ -21,6 +21,7 @@ import {
   type WorkspaceMember,
   type UpdateWorkspaceParams,
 } from "@/lib/db/workspaces"
+import { logger, logError } from "@/lib/logger"
 
 interface WorkspaceDetailResponse {
   workspace: Workspace
@@ -92,7 +93,7 @@ export async function GET(
       data: response,
     })
   } catch (error) {
-    console.error("Get workspace error:", error)
+    logError(logger, "Get workspace error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get workspace" },
       { status: 500 }
@@ -203,7 +204,7 @@ export async function PATCH(
       message: "Workspace updated successfully",
     })
   } catch (error) {
-    console.error("Update workspace error:", error)
+    logError(logger, "Update workspace error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update workspace" },
       { status: 500 }
@@ -279,7 +280,7 @@ export async function DELETE(
       message: "Workspace deleted successfully",
     })
   } catch (error) {
-    console.error("Delete workspace error:", error)
+    logError(logger, "Delete workspace error", error)
 
     if (error instanceof Error && error.message.includes("default workspace")) {
       return NextResponse.json<ApiResponse<null>>(

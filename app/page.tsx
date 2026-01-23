@@ -37,6 +37,7 @@ import {
   TasksPageSkeleton,
   RocksPageSkeleton,
 } from "@/components/dashboard/skeletons"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 
 function AppContent() {
   const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization } = useApp()
@@ -257,7 +258,13 @@ function AppContent() {
           aria-label="Main content"
         >
           <div className="max-w-6xl mx-auto">
-            {renderPage()}
+            <ErrorBoundary
+              title="Something went wrong"
+              description="An error occurred while loading this page. Please try refreshing."
+              showRetry
+            >
+              {renderPage()}
+            </ErrorBoundary>
           </div>
         </main>
       </div>

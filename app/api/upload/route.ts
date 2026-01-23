@@ -3,6 +3,7 @@ import { put } from "@vercel/blob"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, FileAttachment } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // Max file size: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
       data: attachment,
     })
   } catch (error) {
-    console.error("File upload error:", error)
+    logError(logger, "File upload error", error)
 
     // Check if Vercel Blob is not configured
     if (error instanceof Error && error.message.includes("BLOB_READ_WRITE_TOKEN")) {

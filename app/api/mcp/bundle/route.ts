@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import JSZip from "jszip"
+import { logger, logError } from "@/lib/logger"
 
 // MCP Server code template - this runs locally but connects to our remote API
 const getMcpServerCode = (apiUrl: string, apiKey: string) => `#!/usr/bin/env node
@@ -358,7 +359,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error("Error generating MCPB bundle:", error)
+    logError(logger, "Error generating MCPB bundle", error)
     return NextResponse.json(
       { success: false, error: error.message || "Failed to generate bundle" },
       { status: 500 }

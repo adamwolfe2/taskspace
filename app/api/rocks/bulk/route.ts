@@ -4,6 +4,7 @@ import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
 import type { Rock, ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface BulkRockInput {
   title: string
@@ -155,14 +156,14 @@ export async function POST(request: NextRequest) {
             await db.rockMilestones.createMany(rockId, rockInput.milestones)
           } catch (milestoneErr) {
             // Log but don't fail the rock creation if milestone table doesn't exist yet
-            console.warn(`Note: Could not create milestones in rock_milestones table for rock "${rockInput.title}":`, milestoneErr)
+            logger.warn({ rockTitle: rockInput.title, error: milestoneErr }, "Could not create milestones in rock_milestones table")
             // Milestones are still saved in doneWhen JSONB, so this is not a critical failure
           }
         }
 
         result.created.push(rock)
       } catch (err) {
-        console.error(`Failed to create rock "${rockInput.title}":`, err)
+        logError(logger, `Failed to create rock "${rockInput.title}"`, err)
         result.failed.push({
           title: rockInput.title,
           error: err instanceof Error ? err.message : "Unknown error",
@@ -190,7 +191,7 @@ export async function POST(request: NextRequest) {
             metricsSetCount++
           }
         } catch (err) {
-          console.error(`Failed to set metric for ${metricInput.assigneeName}:`, err)
+          logError(logger, `Failed to set metric for ${metricInput.assigneeName}`, err)
         }
       }
     }
@@ -217,7 +218,7 @@ export async function POST(request: NextRequest) {
           : `Created ${successCount} rock(s), ${failCount} failed${metricsMessage}`,
     })
   } catch (error) {
-    console.error("Bulk rock create error:", error)
+    logError(logger, "Bulk rock create error", error)
     const errorMessage = error instanceof Error
       ? error.message
       : "Failed to create rocks"

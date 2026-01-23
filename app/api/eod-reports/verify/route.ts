@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import type { ApiResponse, EODReport } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface UserEODStatus {
   userId: string
@@ -153,7 +154,7 @@ export async function GET(request: NextRequest) {
       data: response,
     })
   } catch (error) {
-    console.error("Verify EOD reports error:", error)
+    logError(logger, "Verify EOD reports error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to verify EOD reports" },
       { status: 500 }

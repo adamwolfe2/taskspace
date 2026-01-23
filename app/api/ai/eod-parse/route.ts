@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { parseEODTextDump, isClaudeConfigured, ParsedEODReport } from "@/lib/ai/claude-client"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // Get current quarter string
 function getCurrentQuarter(): string {
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       message: `Parsed ${parsedReport.tasks.length} tasks from your text dump`,
     })
   } catch (error) {
-    console.error("EOD text parse error:", error)
+    logError(logger, "EOD text parse error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to parse EOD text" },
       { status: 500 }

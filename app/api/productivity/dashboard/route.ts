@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { calculateFocusScore, calculateTrend } from "@/lib/productivity/calculations"
+import { logger, logError } from "@/lib/logger"
 import type {
   ApiResponse,
   FocusScore,
@@ -280,7 +281,7 @@ export async function GET(request: NextRequest) {
       data: response,
     })
   } catch (error) {
-    console.error("Get productivity dashboard error:", error)
+    logError(logger, "Get productivity dashboard error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get productivity data" },
       { status: 500 }

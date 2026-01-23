@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
+import { logger, logError } from "@/lib/logger"
 import type {
   ApiResponse,
   ManagerDashboard,
@@ -205,7 +206,7 @@ export async function GET(request: NextRequest) {
       data: dashboard,
     })
   } catch (error) {
-    console.error("Manager dashboard error:", error)
+    logError(logger, "Manager dashboard error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to load manager dashboard" },
       { status: 500 }

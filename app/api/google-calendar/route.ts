@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import * as googleCalendar from "@/lib/google-calendar"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/google-calendar - Get connection status and auth URL
 export async function GET(request: NextRequest) {
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
           calendars = await googleCalendar.getCalendarList(accessToken)
         }
       } catch (error) {
-        console.error("Failed to get calendars:", error)
+        logError(logger, "Failed to get calendars", error)
       }
     }
 
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Get Google Calendar status error:", error)
+    logError(logger, "Get Google Calendar status error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get Google Calendar status" },
       { status: 500 }
@@ -102,7 +103,7 @@ export async function PATCH(request: NextRequest) {
       message: "Settings updated successfully",
     })
   } catch (error) {
-    console.error("Update Google Calendar settings error:", error)
+    logError(logger, "Update Google Calendar settings error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update settings" },
       { status: 500 }
@@ -128,7 +129,7 @@ export async function DELETE(request: NextRequest) {
       message: "Google Calendar disconnected successfully",
     })
   } catch (error) {
-    console.error("Disconnect Google Calendar error:", error)
+    logError(logger, "Disconnect Google Calendar error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to disconnect Google Calendar" },
       { status: 500 }

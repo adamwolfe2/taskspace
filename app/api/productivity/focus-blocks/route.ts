@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import type { ApiResponse, FocusBlock } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/productivity/focus-blocks - List focus blocks for user
 export async function GET(request: NextRequest) {
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       data: focusBlocks,
     })
   } catch (error) {
-    console.error("Get focus blocks error:", error)
+    logError(logger, "Get focus blocks error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get focus blocks" },
       { status: 500 }
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
       data: result,
     })
   } catch (error) {
-    console.error("Create focus block error:", error)
+    logError(logger, "Create focus block error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create focus block" },
       { status: 500 }

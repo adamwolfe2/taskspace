@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { asanaClient } from "@/lib/integrations/asana"
 import { getAuthContext } from "@/lib/auth/middleware"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * GET /api/asana/users?workspace=<workspaceGid>
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
       })),
     })
   } catch (error) {
-    console.error("Asana users error:", error)
+    logError(logger, "Asana users error", error)
     return NextResponse.json(
       { error: "Failed to fetch Asana users" },
       { status: 500 }

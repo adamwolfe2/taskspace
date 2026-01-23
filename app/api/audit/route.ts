@@ -12,6 +12,7 @@ import { getAuthContext } from "@/lib/auth/middleware"
 import { sql } from "@/lib/db/sql"
 import { Errors, paginatedResponse, successResponse } from "@/lib/api/errors"
 import { z } from "zod"
+import { logger, logError } from "@/lib/logger"
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -132,7 +133,7 @@ export async function GET(request: NextRequest) {
 
     return paginatedResponse(formattedLogs, total, page, limit)
   } catch (error) {
-    console.error("Audit log query error:", error)
+    logError(logger, "Audit log query error", error)
     return Errors.internal().toResponse()
   }
 }
@@ -240,7 +241,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Audit statistics error:", error)
+    logError(logger, "Audit statistics error", error)
     return Errors.internal().toResponse()
   }
 }

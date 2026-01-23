@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import type { Notification, ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/notifications - Get user's notifications
 export async function GET(request: NextRequest) {
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       data: notifications,
     })
   } catch (error) {
-    console.error("Get notifications error:", error)
+    logError(logger, "Get notifications error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get notifications" },
       { status: 500 }
@@ -86,7 +87,7 @@ export async function PATCH(request: NextRequest) {
       data: notification,
     })
   } catch (error) {
-    console.error("Update notification error:", error)
+    logError(logger, "Update notification error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update notification" },
       { status: 500 }
@@ -128,7 +129,7 @@ export async function DELETE(request: NextRequest) {
       message: "Notification deleted",
     })
   } catch (error) {
-    console.error("Delete notification error:", error)
+    logError(logger, "Delete notification error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to delete notification" },
       { status: 500 }

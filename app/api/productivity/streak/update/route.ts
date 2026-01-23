@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface StreakUpdateResponse {
   currentStreak: number
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       data: result,
     })
   } catch (error) {
-    console.error("Update streak error:", error)
+    logError(logger, "Update streak error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update streak" },
       { status: 500 }

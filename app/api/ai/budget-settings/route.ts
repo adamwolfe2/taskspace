@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { getBudgetSettings, updateBudgetSettings } from "@/lib/ai/suggestions"
 import type { ApiResponse, AIBudgetSettings } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * GET /api/ai/budget-settings
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
       data: settings,
     })
   } catch (error) {
-    console.error("Get budget settings error:", error)
+    logError(logger, "Get budget settings error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
@@ -108,7 +109,7 @@ export async function PUT(request: NextRequest) {
       data: updatedSettings,
     })
   } catch (error) {
-    console.error("Update budget settings error:", error)
+    logError(logger, "Update budget settings error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,

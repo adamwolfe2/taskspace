@@ -215,6 +215,8 @@ export function FocusTimer({
  size="icon"
  className="h-8 w-8"
  onClick={() => setSoundEnabled(!soundEnabled)}
+ aria-label={soundEnabled ? "Mute sound" : "Unmute sound"}
+ aria-pressed={soundEnabled}
  >
  {soundEnabled ? (
  <Volume2 className="h-4 w-4" />
@@ -281,10 +283,10 @@ export function FocusTimer({
  Pause
  </Button>
  )}
- <Button onClick={stopTimer} variant="outline" size="icon">
+ <Button onClick={stopTimer} variant="outline" size="icon" aria-label="Stop timer">
  <Square className="h-4 w-4" />
  </Button>
- <Button onClick={resetTimer} variant="ghost" size="icon">
+ <Button onClick={resetTimer} variant="ghost" size="icon" aria-label="Reset timer">
  <RotateCcw className="h-4 w-4" />
  </Button>
  </div>
@@ -412,11 +414,12 @@ export function CompactFocusTimer({
  : "bg-slate-100 text-slate-600   hover:bg-slate-200 ",
  className
  )}
+ aria-label={`Focus timer: ${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")} ${isActive && !isPaused ? "(active)" : isPaused ? "(paused)" : ""}`}
  >
  {isActive ? (
- <Zap className="h-4 w-4" />
+ <Zap className="h-4 w-4" aria-hidden="true" />
  ) : (
- <Clock className="h-4 w-4" />
+ <Clock className="h-4 w-4" aria-hidden="true" />
  )}
  <span className="font-mono">
  {mins.toString().padStart(2, "0")}:{secs.toString().padStart(2, "0")}

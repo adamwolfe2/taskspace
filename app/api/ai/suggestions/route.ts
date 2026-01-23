@@ -6,6 +6,8 @@ import {
   type SuggestionFilters,
 } from "@/lib/ai/suggestions"
 import type { ApiResponse, AISuggestion, SuggestionStats } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
+import { safeParseFloat, safeParseInt, clamp } from "@/lib/utils"
 
 interface SuggestionsResponse {
   suggestions: AISuggestion[]
@@ -49,11 +51,11 @@ export async function GET(request: NextRequest) {
       targetUserId: searchParams.get("targetUserId") || undefined,
       priority: parseArrayParam(searchParams.get("priority")) as SuggestionFilters["priority"] || undefined,
       minConfidence: searchParams.get("minConfidence")
-        ? parseFloat(searchParams.get("minConfidence")!)
+        ? clamp(safeParseFloat(searchParams.get("minConfidence"), 0), 0, 1)
         : undefined,
       includeExpired: searchParams.get("includeExpired") === "true",
-      limit: parseInt(searchParams.get("limit") || "50", 10),
-      offset: parseInt(searchParams.get("offset") || "0", 10),
+      limit: clamp(safeParseInt(searchParams.get("limit"), 50), 1, 100),
+      offset: Math.max(0, safeParseInt(searchParams.get("offset"), 0)),
     }
 
     // Fetch suggestions and stats in parallel
@@ -75,7 +77,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Get suggestions error:", error)
+    logError(logger, "Get suggestions error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to fetch suggestions" },
       { status: 500 }

@@ -15,6 +15,7 @@ import {
   getMetricHistory,
   type TeamMemberMetric,
 } from "@/lib/metrics"
+import { logger, logError } from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -123,7 +124,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Error fetching metric:", error)
+    logError(logger, "Error fetching metric", error)
     return NextResponse.json(
       {
         success: false,
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     // Only admins can set metrics
     if (!isAdmin(auth)) {
-      console.log("Metrics API: Access denied, user role:", auth.member.role)
+      logger.info({ role: auth.member.role }, "Metrics API: Access denied")
       return NextResponse.json(
         { success: false, error: "Admin access required to set metrics" },
         { status: 403 }
@@ -156,7 +157,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { memberId, metricName, weeklyGoal } = body
 
-    console.log("Metrics API: Setting metric for member:", memberId, "name:", metricName, "goal:", weeklyGoal)
+    logger.info({ memberId, metricName, weeklyGoal }, "Metrics API: Setting metric for member")
 
     if (!memberId || !metricName || weeklyGoal === undefined) {
       return NextResponse.json(
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
     const member = members.find(m => m.id === memberId)
 
     if (!member) {
-      console.log("Metrics API: Member not found:", memberId, "in org:", auth.organization.id)
+      logger.info({ memberId, orgId: auth.organization.id }, "Metrics API: Member not found")
       return NextResponse.json(
         { success: false, error: "Team member not found" },
         { status: 404 }
@@ -185,14 +186,14 @@ export async function POST(request: NextRequest) {
     }
 
     const metric = await setTeamMemberMetric(memberId, metricName, weeklyGoal)
-    console.log("Metrics API: Successfully saved metric:", metric.id)
+    logger.info({ metricId: metric.id }, "Metrics API: Successfully saved metric")
 
     return NextResponse.json({
       success: true,
       data: metric,
     })
   } catch (error) {
-    console.error("Error setting metric:", error)
+    logError(logger, "Error setting metric", error)
     return NextResponse.json(
       {
         success: false,

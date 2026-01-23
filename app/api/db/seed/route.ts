@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { initialTeamMembers, initialRocks } from "@/lib/initial-data"
+import { logger, logError } from "@/lib/logger"
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -142,7 +143,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       data: results,
     })
   } catch (error) {
-    console.error("Seed error:", error)
+    logError(logger, "Seed error", error)
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : "Seed failed" },
       { status: 500 }

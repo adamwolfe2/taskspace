@@ -4,6 +4,7 @@ import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateDailyDigest, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, DailyDigest, TeamMember, EODInsight } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // POST /api/ai/digest - Generate a daily digest from EOD reports
 export async function POST(request: NextRequest) {
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
       message: `Daily digest generated from ${dateReports.length} EOD reports`,
     })
   } catch (error) {
-    console.error("Generate digest error:", error)
+    logError(logger, "Generate digest error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to generate daily digest" },
       { status: 500 }
@@ -164,7 +165,7 @@ export async function GET(request: NextRequest) {
       data: digests,
     })
   } catch (error) {
-    console.error("Get digests error:", error)
+    logError(logger, "Get digests error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get daily digests" },
       { status: 500 }

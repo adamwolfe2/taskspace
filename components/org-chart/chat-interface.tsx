@@ -192,6 +192,7 @@ export function ChatInterface({ employees, onMentionClick }: ChatInterfaceProps)
             type="button"
             onClick={() => setIsOpen(false)}
             className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+            aria-label="Close chat"
           >
             <X className="h-4 w-4" />
           </button>
@@ -202,15 +203,17 @@ export function ChatInterface({ employees, onMentionClick }: ChatInterfaceProps)
             placeholder="Ask about the team..."
             className="flex-1 border-none focus-visible:ring-0 text-sm"
             disabled={isLoading}
+            aria-label="Ask a question about the team"
           />
           <Button
             type="submit"
             size="icon"
             disabled={!input.trim() || isLoading}
             className="h-8 w-8 rounded-full"
+            aria-label={isLoading ? "Sending message" : "Send message"}
           >
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" role="status" aria-label="Loading" />
             ) : (
               <Send className="h-4 w-4" />
             )}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import type { UserOrganizationItem } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/user/organizations - List all organizations the user is a member of
 export async function GET(request: NextRequest) {
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Error fetching user organizations:", error)
+    logError(logger, "Error fetching user organizations", error)
     return NextResponse.json(
       { success: false, error: "Failed to fetch organizations" },
       { status: 500 }
@@ -165,7 +166,7 @@ export async function POST(request: NextRequest) {
       message: "Organization created successfully",
     })
   } catch (error) {
-    console.error("Error creating organization:", error)
+    logError(logger, "Error creating organization", error)
     return NextResponse.json(
       { success: false, error: "Failed to create organization" },
       { status: 500 }

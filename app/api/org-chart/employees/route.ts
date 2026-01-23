@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { fetchEmployeesFromAirtable } from "@/lib/org-chart/airtable"
 import type { OrgChartEmployee } from "@/lib/org-chart/types"
+import { logger, logError } from "@/lib/logger"
 
 // Fallback data in case database and Airtable are not available
 const FALLBACK_EMPLOYEES: OrgChartEmployee[] = [
@@ -71,7 +72,7 @@ export async function GET() {
 
     // Fallback #1: Try Airtable if database is empty
     if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) {
-      console.warn("Database empty, trying Airtable")
+      logger.warn({}, "Database empty, trying Airtable")
       try {
         const airtableEmployees = await fetchEmployeesFromAirtable()
         return NextResponse.json({
@@ -81,12 +82,12 @@ export async function GET() {
           count: airtableEmployees.length,
         })
       } catch (airtableError) {
-        console.error("Airtable fallback failed:", airtableError)
+        logError(logger, "Airtable fallback failed", airtableError)
       }
     }
 
     // Fallback #2: Return static demo data
-    console.warn("Using fallback data - run seed API to populate database")
+    logger.warn({}, "Using fallback data - run seed API to populate database")
     return NextResponse.json({
       success: true,
       employees: FALLBACK_EMPLOYEES,
@@ -95,7 +96,7 @@ export async function GET() {
       warning: "Database is empty. Run POST /api/ma-employees/seed to populate with MA employee data.",
     })
   } catch (error) {
-    console.error("Error fetching employees:", error)
+    logError(logger, "Error fetching employees", error)
 
     // Return fallback data on error
     return NextResponse.json({

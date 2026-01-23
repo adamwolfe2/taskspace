@@ -4,6 +4,7 @@ import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId, generateInviteToken, getExpirationDate, validateEmail } from "@/lib/auth/password"
 import { sendInvitationEmail } from "@/lib/email"
 import type { Invitation, ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/invitations - Get all pending invitations
 export async function GET(request: NextRequest) {
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
       data: pendingInvitations,
     })
   } catch (error) {
-    console.error("Get invitations error:", error)
+    logError(logger, "Get invitations error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get invitations" },
       { status: 500 }
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
     const emailResult = await sendInvitationEmail(invitation, auth.organization, auth.user.name)
 
     if (!emailResult.success) {
-      console.error("Failed to send invitation email:", emailResult.error)
+      logError(logger, "Failed to send invitation email", emailResult.error)
     }
 
     return NextResponse.json<ApiResponse<Invitation & { emailSent?: boolean; emailError?: string }>>({
@@ -149,7 +150,7 @@ export async function POST(request: NextRequest) {
           : `Invitation created but email failed: ${emailResult.error}. You can copy the invite link manually.`,
     })
   } catch (error) {
-    console.error("Create invitation error:", error)
+    logError(logger, "Create invitation error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to send invitation" },
       { status: 500 }
@@ -202,7 +203,7 @@ export async function DELETE(request: NextRequest) {
       message: "Invitation cancelled",
     })
   } catch (error) {
-    console.error("Cancel invitation error:", error)
+    logError(logger, "Cancel invitation error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to cancel invitation" },
       { status: 500 }

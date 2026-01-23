@@ -8,6 +8,7 @@ import {
   isSlackConfigured,
 } from "@/lib/integrations/slack"
 import type { ApiResponse, DailyDigest } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // POST /api/ai/slack - Send a Slack notification
 export async function POST(request: NextRequest) {
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
       message: "Slack notification sent successfully",
     })
   } catch (error) {
-    console.error("Slack notification error:", error)
+    logError(logger, "Slack notification error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to send Slack notification" },
       { status: 500 }

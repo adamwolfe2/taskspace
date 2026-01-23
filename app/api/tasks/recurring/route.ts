@@ -12,6 +12,7 @@ import { getAuthContext } from "@/lib/auth/middleware"
 import { Errors, successResponse } from "@/lib/api/errors"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { logTaskEvent } from "@/lib/audit/logger"
+import { logger, logError } from "@/lib/logger"
 import {
   createRecurringTask,
   updateRecurringTask,
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
       count: templates.length,
     })
   } catch (error) {
-    console.error("Error fetching recurring tasks:", error)
+    logError(logger, "Error fetching recurring tasks", error)
     return Errors.internal().toResponse()
   }
 }
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof ValidationError) {
       return Errors.validationError(error.message).toResponse()
     }
-    console.error("Error creating recurring task:", error)
+    logError(logger, "Error creating recurring task", error)
     return Errors.internal().toResponse()
   }
 }
@@ -191,7 +192,7 @@ export async function PATCH(request: NextRequest) {
     if (error instanceof ValidationError) {
       return Errors.validationError(error.message).toResponse()
     }
-    console.error("Error updating recurring task:", error)
+    logError(logger, "Error updating recurring task", error)
     return Errors.internal().toResponse()
   }
 }
@@ -232,7 +233,7 @@ export async function DELETE(request: NextRequest) {
       message: "Recurring task template deleted successfully",
     })
   } catch (error) {
-    console.error("Error deleting recurring task:", error)
+    logError(logger, "Error deleting recurring task", error)
     return Errors.internal().toResponse()
   }
 }
@@ -268,7 +269,7 @@ export async function PUT(request: NextRequest) {
       message: `Processed ${processed} recurring task(s)`,
     })
   } catch (error) {
-    console.error("Error processing recurring tasks:", error)
+    logError(logger, "Error processing recurring tasks", error)
     return Errors.internal().toResponse()
   }
 }

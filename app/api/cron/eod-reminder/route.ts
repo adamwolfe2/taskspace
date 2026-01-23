@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { sendMissingEODReminder, isEmailConfigured } from "@/lib/integrations/email"
 import { sendSlackMessage, buildEODReminderMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import type { ApiResponse, TeamMember, Organization } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // This endpoint is designed to be called by Vercel Cron
 // Runs every hour to check which organizations are at 5 PM in their timezone
@@ -17,7 +18,7 @@ import type { ApiResponse, TeamMember, Organization } from "@/lib/types"
 function verifyCronSecret(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
-    console.log("[Cron] CRON_SECRET not configured, allowing request")
+    logger.info("CRON_SECRET not configured, allowing request")
     return true // Allow in development
   }
 
@@ -61,7 +62,7 @@ function isReminderTime(org: Organization): boolean {
 
     return isCorrectHour && isWeekday
   } catch (error) {
-    console.error(`[Cron] Timezone error for ${org.id}:`, error)
+    logError(logger, `Timezone error for org ${org.id}`, error)
     // Fall back to checking if it's 5 PM UTC on a weekday
     const now = new Date()
     return now.getUTCHours() === 17 && now.getUTCDay() >= 1 && now.getUTCDay() <= 5
@@ -103,7 +104,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log(`[Cron] Running EOD reminder check at ${new Date().toISOString()}`)
+    logger.info({ timestamp: new Date().toISOString() }, "Running EOD reminder check")
 
     // Get all organizations
     const organizations = await db.organizations.findAll()
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest) {
         continue
       }
 
-      console.log(`[Cron] Processing org ${org.name} (timezone: ${timezone})`)
+      logger.info({ orgName: org.name, timezone }, "Processing org")
 
       try {
         const today = getTodayInTimezone(timezone)
@@ -155,7 +156,7 @@ export async function GET(request: NextRequest) {
         const missingMembers = activeMembers.filter(m => !submittedUserIds.has(m.id))
 
         if (missingMembers.length === 0) {
-          console.log(`[Cron] All members submitted for org ${org.name}`)
+          logger.info({ orgName: org.name }, "All members submitted for org")
           results.push({
             orgId: org.id,
             orgName: org.name,
@@ -200,7 +201,7 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        console.log(`[Cron] Sent ${remindersSent} email reminders for org ${org.name}`)
+        logger.info({ remindersSent, orgName: org.name }, "Sent email reminders for org")
 
         // Also send Slack reminder if configured
         const slackWebhookUrl = org.settings?.slackWebhookUrl
@@ -211,9 +212,9 @@ export async function GET(request: NextRequest) {
               org.name
             )
             await sendSlackMessage(slackWebhookUrl!, slackMessage)
-            console.log(`[Cron] Slack reminder sent for org ${org.name}`)
+            logger.info({ orgName: org.name }, "Slack reminder sent for org")
           } catch (slackError) {
-            console.error(`[Cron] Slack reminder failed for org ${org.name}:`, slackError)
+            logError(logger, `Slack reminder failed for org ${org.name}`, slackError)
             errors.push(`Slack: ${slackError instanceof Error ? slackError.message : "Unknown error"}`)
           }
         }
@@ -227,7 +228,7 @@ export async function GET(request: NextRequest) {
           errors,
         })
       } catch (error) {
-        console.error(`[Cron] Failed for org ${org.id}:`, error)
+        logError(logger, `Failed for org ${org.id}`, error)
         results.push({
           orgId: org.id,
           orgName: org.name,
@@ -248,7 +249,7 @@ export async function GET(request: NextRequest) {
       message: `Sent ${totalReminders} EOD reminders across ${processedOrgs} organizations (${organizations.length} total)`,
     })
   } catch (error) {
-    console.error("[Cron] EOD reminder error:", error)
+    logError(logger, "EOD reminder error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to send reminders" },
       { status: 500 }

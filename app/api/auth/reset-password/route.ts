@@ -6,6 +6,7 @@ import {
   isTokenExpired,
 } from "@/lib/auth/password"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
       message: "Password reset successfully. Please log in with your new password.",
     })
   } catch (error) {
-    console.error("Reset password error:", error)
+    logError(logger, "Reset password error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "An error occurred. Please try again later." },
       { status: 500 }
@@ -133,7 +134,7 @@ export async function GET(request: NextRequest) {
       data: { valid: true, email: resetToken.email },
     })
   } catch (error) {
-    console.error("Verify reset token error:", error)
+    logError(logger, "Verify reset token error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "An error occurred" },
       { status: 500 }

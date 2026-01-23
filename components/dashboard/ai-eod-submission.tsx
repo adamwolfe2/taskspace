@@ -494,15 +494,16 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
               onClick={handleParse}
               disabled={isParsing || !textDump.trim()}
               className="w-full bg-red-600 hover:bg-red-700 text-white"
+              aria-busy={isParsing}
             >
               {isParsing ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" role="status" aria-label="Parsing" />
                   Parsing with AI...
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-4 w-4 mr-2" />
+                  <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
                   Parse & Organize Tasks
                 </>
               )}
@@ -750,15 +751,16 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
               onClick={handleSubmit}
               disabled={isSubmitting || editedTasks.length === 0}
               className="w-full bg-slate-900 hover:bg-slate-800 text-white"
+              aria-busy={isSubmitting}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" role="status" aria-label="Submitting" />
                   Submitting...
                 </>
               ) : (
                 <>
-                  <Send className="h-4 w-4 mr-2" />
+                  <Send className="h-4 w-4 mr-2" aria-hidden="true" />
                   Submit EOD Report
                 </>
               )}

@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext, isOwner } from "@/lib/auth/middleware"
 import { generateId, slugify } from "@/lib/auth/password"
 import type { Organization, ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/organizations - Get current user's organizations
 export async function GET(request: NextRequest) {
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
       data: organizations,
     })
   } catch (error) {
-    console.error("Get organizations error:", error)
+    logError(logger, "Get organizations error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get organizations" },
       { status: 500 }
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
       message: "Organization created successfully",
     })
   } catch (error) {
-    console.error("Create organization error:", error)
+    logError(logger, "Create organization error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create organization" },
       { status: 500 }
@@ -175,7 +176,7 @@ export async function PATCH(request: NextRequest) {
       message: "Organization updated successfully",
     })
   } catch (error) {
-    console.error("Update organization error:", error)
+    logError(logger, "Update organization error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update organization" },
       { status: 500 }

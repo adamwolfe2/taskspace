@@ -98,6 +98,7 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
           onCheckedChange={() => !isCompleted && onComplete(task.id)}
           className="mt-1 flex-shrink-0"
           disabled={isCompleted}
+          aria-label={isCompleted ? `Task "${task.title}" completed` : `Mark task "${task.title}" as complete`}
         />
         <div className="flex-1 space-y-2 min-w-0 overflow-hidden">
           <div className="flex items-start justify-between gap-2">
@@ -110,12 +111,12 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
             {isPersonal && !isCompleted && (
               <div className="flex items-center gap-1 flex-shrink-0">
                 {onEdit && (
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onEdit(task)}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onEdit(task)} aria-label="Edit task">
                     <Pencil className="h-3 w-3" />
                   </Button>
                 )}
                 {onDelete && (
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onDelete(task.id)}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onDelete(task.id)} aria-label="Delete task">
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 )}
@@ -136,6 +137,8 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
                 <button
                   onClick={() => setShowFullDescription(!showFullDescription)}
                   className="text-xs text-blue-500 hover:text-blue-600 mt-1"
+                  aria-expanded={showFullDescription}
+                  aria-label={showFullDescription ? "Show less of description" : "Show more of description"}
                 >
                   {showFullDescription ? "Show less" : "Show more"}
                 </button>
@@ -197,8 +200,9 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
               <button
                 onClick={() => setShowDetail(true)}
                 className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors ml-auto"
+                aria-label={commentCount > 0 ? `View ${commentCount} note${commentCount > 1 ? "s" : ""}` : "Add note to task"}
               >
-                <MessageSquare className="h-3.5 w-3.5" />
+                <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
                 {commentCount > 0 ? `${commentCount} note${commentCount > 1 ? "s" : ""}` : "Add note"}
               </button>
             )}

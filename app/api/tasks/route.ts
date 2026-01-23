@@ -5,6 +5,7 @@ import { generateId } from "@/lib/auth/password"
 import { sendSlackMessage, buildTaskAssignmentMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import { asanaClient } from "@/lib/integrations/asana"
 import type { AssignedTask, ApiResponse, Notification } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/tasks - Get tasks
 export async function GET(request: NextRequest) {
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
       data: tasks,
     })
   } catch (error) {
-    console.error("Get tasks error:", error)
+    logError(logger, "Get tasks error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get tasks" },
       { status: 500 }
@@ -154,10 +155,10 @@ export async function POST(request: NextRequest) {
             due_on: dueDate ? dueDate.split("T")[0] : undefined,
           })
           asanaGid = asanaTask.gid
-          console.log(`Created Asana task ${asanaGid} for AIMS task ${taskId}`)
+          logger.info({ asanaGid, taskId }, "Created Asana task for AIMS task")
         } catch (asanaErr) {
           // Log but don't fail - Asana sync is best-effort
-          console.error(`Failed to create Asana task for AIMS task ${taskId}:`, asanaErr)
+          logError(logger, "Failed to create Asana task", asanaErr, { taskId })
         }
       }
     }
@@ -204,7 +205,7 @@ export async function POST(request: NextRequest) {
         metadata: { taskId: task.id, assignedBy: auth.user.name },
       }
       await db.notifications.create(notification).catch(err => {
-        console.error("Failed to create notification:", err)
+        logError(logger, "Failed to create notification", err, { taskId: task.id })
       })
 
       // Send Slack notification if configured
@@ -219,7 +220,7 @@ export async function POST(request: NextRequest) {
           auth.user.name
         )
         sendSlackMessage(webhookUrl!, slackMessage).catch(err => {
-          console.error("Failed to send Slack notification:", err)
+          logError(logger, "Failed to send Slack notification", err)
         })
       }
     }
@@ -230,7 +231,7 @@ export async function POST(request: NextRequest) {
       message: taskType === "assigned" ? "Task assigned successfully" : "Task created successfully",
     })
   } catch (error) {
-    console.error("Create task error:", error)
+    logError(logger, "Create task error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create task" },
       { status: 500 }
@@ -321,11 +322,11 @@ export async function PATCH(request: NextRequest) {
         // Only call Asana API if there are actual updates
         if (Object.keys(asanaUpdates).length > 0) {
           await asanaClient.updateTask(task.asanaGid, asanaUpdates)
-          console.log(`Synced task ${task.id} to Asana (${task.asanaGid})`)
+          logger.info({ taskId: task.id, asanaGid: task.asanaGid }, "Synced task to Asana")
         }
       } catch (asanaErr) {
         // Log but don't fail the request - Asana sync is best-effort
-        console.error(`Failed to sync task ${task.id} to Asana:`, asanaErr)
+        logError(logger, "Failed to sync task to Asana", asanaErr, { taskId: task.id, asanaGid: task.asanaGid })
       }
     }
 
@@ -335,7 +336,7 @@ export async function PATCH(request: NextRequest) {
       message: "Task updated successfully",
     })
   } catch (error) {
-    console.error("Update task error:", error)
+    logError(logger, "Update task error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update task" },
       { status: 500 }
@@ -395,10 +396,10 @@ export async function DELETE(request: NextRequest) {
     if (task.asanaGid && asanaClient.isConfigured()) {
       try {
         await asanaClient.deleteTask(task.asanaGid)
-        console.log(`Deleted Asana task ${task.asanaGid} for AIMS task ${id}`)
+        logger.info({ asanaGid: task.asanaGid, taskId: id }, "Deleted Asana task")
       } catch (asanaErr) {
         // Log but don't fail - Asana deletion is best-effort
-        console.error(`Failed to delete Asana task ${task.asanaGid}:`, asanaErr)
+        logError(logger, "Failed to delete Asana task", asanaErr, { asanaGid: task.asanaGid, taskId: id })
       }
     }
 
@@ -409,7 +410,7 @@ export async function DELETE(request: NextRequest) {
       message: "Task deleted successfully",
     })
   } catch (error) {
-    console.error("Delete task error:", error)
+    logError(logger, "Delete task error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to delete task" },
       { status: 500 }

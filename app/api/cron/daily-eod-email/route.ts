@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { sendDailyEODLinkEmail, isEmailConfigured } from "@/lib/integrations/email"
 import type { ApiResponse, TeamMember, Organization } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // This endpoint is designed to be called by Vercel Cron
 // Runs every hour to check which organizations are at 7 PM in their timezone
@@ -17,7 +18,7 @@ import type { ApiResponse, TeamMember, Organization } from "@/lib/types"
 function verifyCronSecret(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
-    console.log("[Cron] CRON_SECRET not configured, allowing request")
+    logger.info("CRON_SECRET not configured, allowing request")
     return true // Allow in development
   }
 
@@ -49,7 +50,7 @@ function isDailyEmailTime(org: Organization): boolean {
     // Check if we're in the 7 PM hour window (19:00 - 19:59)
     return currentHour === targetHour
   } catch (error) {
-    console.error(`[Cron] Timezone error for ${org.id}:`, error)
+    logError(logger, `Timezone error for org ${org.id}`, error)
     // Fall back to checking if it's 7 PM UTC
     const now = new Date()
     return now.getUTCHours() === targetHour
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log(`[Cron] Running daily EOD email check at ${new Date().toISOString()}`)
+    logger.info({ timestamp: new Date().toISOString() }, "Running daily EOD email check")
 
     // Get all organizations
     const organizations = await db.organizations.findAll()
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
         continue
       }
 
-      console.log(`[Cron] Processing daily EOD email for org ${org.name} (timezone: ${timezone})`)
+      logger.info({ orgName: org.name, timezone }, "Processing daily EOD email for org")
 
       try {
         const today = getTodayInTimezone(timezone)
@@ -170,7 +171,7 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        console.log(`[Cron] Sent ${emailsSent} daily EOD emails for org ${org.name}`)
+        logger.info({ emailsSent, orgName: org.name }, "Sent daily EOD emails for org")
 
         results.push({
           orgId: org.id,
@@ -181,7 +182,7 @@ export async function GET(request: NextRequest) {
           errors,
         })
       } catch (error) {
-        console.error(`[Cron] Failed for org ${org.id}:`, error)
+        logError(logger, `Failed for org ${org.id}`, error)
         results.push({
           orgId: org.id,
           orgName: org.name,
@@ -202,7 +203,7 @@ export async function GET(request: NextRequest) {
       message: `Sent ${totalEmails} daily EOD emails across ${processedOrgs} organizations (${organizations.length} total)`,
     })
   } catch (error) {
-    console.error("[Cron] Daily EOD email error:", error)
+    logError(logger, "Daily EOD email error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to send daily EOD emails" },
       { status: 500 }

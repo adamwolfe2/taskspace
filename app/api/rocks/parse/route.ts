@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface ParsedRock {
   title: string
@@ -139,8 +140,8 @@ Rules:
     })
 
     if (!response.ok) {
-      const error = await response.text()
-      console.error("Claude API error:", error)
+      const errorText = await response.text()
+      logger.error({ status: response.status, error: errorText }, "Claude API error")
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: `AI service error: ${response.status}` },
         { status: 500 }
@@ -192,7 +193,7 @@ Rules:
           weeklyGoal: Number(metric.weeklyGoal),
         }))
     } catch (parseError) {
-      console.error("Failed to parse AI response:", parseError, responseText)
+      logError(logger, "Failed to parse AI response", parseError, { responseText })
       return NextResponse.json<ApiResponse<null>>(
         {
           success: false,
@@ -216,7 +217,7 @@ Rules:
       message: `Successfully parsed ${parsedRocks.length} rock(s)${metricsMessage}`,
     })
   } catch (error) {
-    console.error("Rock parse error:", error)
+    logError(logger, "Rock parse error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,

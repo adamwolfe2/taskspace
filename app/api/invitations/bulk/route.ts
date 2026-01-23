@@ -4,6 +4,7 @@ import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId, generateInviteToken, getExpirationDate, validateEmail } from "@/lib/auth/password"
 import { sendInvitationEmail } from "@/lib/email"
 import type { Invitation, ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface BulkInviteResult {
   successful: Invitation[]
@@ -120,12 +121,12 @@ export async function POST(request: NextRequest) {
         sendInvitationEmail(invitation, auth.organization, auth.user.name)
           .then(emailResult => {
             if (!emailResult.success) {
-              console.warn(`Failed to send invitation email to ${trimmedEmail}:`, emailResult.error)
+              logger.warn({ email: trimmedEmail, error: emailResult.error }, "Failed to send invitation email")
             }
           })
-          .catch(err => console.error(`Email send error for ${trimmedEmail}:`, err))
+          .catch(err => logError(logger, `Email send error for ${trimmedEmail}`, err))
       } catch (err) {
-        console.error(`Failed to create invitation for ${trimmedEmail}:`, err)
+        logError(logger, `Failed to create invitation for ${trimmedEmail}`, err)
         result.failed.push({ email: trimmedEmail, error: "Failed to create invitation" })
       }
     }
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
       message: `Successfully sent ${result.successful.length} invitation(s)${result.failed.length > 0 ? `, ${result.failed.length} failed` : ""}`,
     })
   } catch (error) {
-    console.error("Bulk invite error:", error)
+    logError(logger, "Bulk invite error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to send invitations" },
       { status: 500 }

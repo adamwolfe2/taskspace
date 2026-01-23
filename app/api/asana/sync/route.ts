@@ -4,6 +4,7 @@ import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
 import type { AsanaUserMapping, AssignedTask } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface SyncResult {
   tasksCreatedInAsana: number
@@ -237,7 +238,7 @@ export async function POST(request: NextRequest) {
       syncedAt: new Date().toISOString(),
     })
   } catch (error) {
-    console.error("Asana sync error:", error)
+    logError(logger, "Asana sync error", error)
     return NextResponse.json(
       { error: "Failed to sync with Asana" },
       { status: 500 }
@@ -266,7 +267,7 @@ export async function GET(request: NextRequest) {
       userMappingsCount: asanaConfig?.userMappings?.length || 0,
     })
   } catch (error) {
-    console.error("Asana sync status error:", error)
+    logError(logger, "Asana sync status error", error)
     return NextResponse.json(
       { error: "Failed to get sync status" },
       { status: 500 }

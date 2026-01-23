@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db/sql"
+import { logger, logError } from "@/lib/logger"
 
 interface WeeklyTask {
   description: string
@@ -432,7 +433,7 @@ export async function GET(
       { headers }
     )
   } catch (error) {
-    console.error("Weekly EOD report error:", error)
+    logError(logger, "Weekly EOD report error", error)
     return NextResponse.json(
       { success: false, error: "Failed to load weekly report" },
       { status: 500 }

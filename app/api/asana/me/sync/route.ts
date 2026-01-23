@@ -4,6 +4,7 @@ import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import { db } from "@/lib/db"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 const ASANA_API_BASE = "https://app.asana.com/api/1.0"
 
@@ -171,7 +172,7 @@ export async function POST(request: NextRequest) {
     return processAsanaTasks(allTasks, auth, workspaceGid)
 
   } catch (error) {
-    console.error("Asana sync error:", error)
+    logError(logger, "Asana sync error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to sync with Asana" },
       { status: 500 }
@@ -224,9 +225,9 @@ async function processAsanaTasks(
           WHERE id = ${existingTask.id}
         `
         result.tasksDeleted++
-        console.log(`Deleted AIMS task ${existingTask.id} because it was deleted in Asana (gid: ${gid})`)
+        logger.info({ taskId: existingTask.id, asanaGid: gid }, "Deleted AIMS task because it was deleted in Asana")
       } catch (err) {
-        console.error(`Failed to delete task ${existingTask.id}:`, err)
+        logError(logger, `Failed to delete task ${existingTask.id}`, err)
         result.errors.push(`Failed to delete task that was removed from Asana`)
       }
     }
@@ -291,7 +292,7 @@ async function processAsanaTasks(
         result.tasksImported++
       }
     } catch (err) {
-      console.error(`Failed to sync task ${asanaTask.gid}:`, err)
+      logError(logger, `Failed to sync task ${asanaTask.gid}`, err)
       result.errors.push(`Failed to sync task: ${asanaTask.name}`)
     }
   }
@@ -363,7 +364,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Get sync status error:", error)
+    logError(logger, "Get sync status error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get sync status" },
       { status: 500 }

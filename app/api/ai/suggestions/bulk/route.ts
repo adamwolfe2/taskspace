@@ -9,6 +9,7 @@ import {
 } from "@/lib/ai/suggestions"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, AISuggestion, AssignedTask } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface BulkActionRequest {
   action: "approve" | "reject"
@@ -148,7 +149,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Bulk suggestion action error:", error)
+    logError(logger, "Bulk suggestion action error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,

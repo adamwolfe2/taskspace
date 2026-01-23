@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * PUT /api/organizations/settings
@@ -50,7 +51,7 @@ export async function PUT(request: NextRequest) {
       organization: updatedOrg,
     })
   } catch (error) {
-    console.error("Update organization settings error:", error)
+    logError(logger, "Update organization settings error", error)
     return NextResponse.json(
       { error: "Failed to update settings" },
       { status: 500 }
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
       settings: org.settings,
     })
   } catch (error) {
-    console.error("Get organization settings error:", error)
+    logError(logger, "Get organization settings error", error)
     return NextResponse.json(
       { error: "Failed to get settings" },
       { status: 500 }

@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/auth/api-key - List API keys for the organization
 export async function GET(request: NextRequest) {
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       data: maskedKeys,
     })
   } catch (error) {
-    console.error("Get API keys error:", error)
+    logError(logger, "Get API keys error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get API keys" },
       { status: 500 }
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
       message: "API key created. Save this key - it won't be shown again.",
     })
   } catch (error) {
-    console.error("Create API key error:", error)
+    logError(logger, "Create API key error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create API key" },
       { status: 500 }
@@ -148,7 +149,7 @@ export async function DELETE(request: NextRequest) {
       message: "API key deleted",
     })
   } catch (error) {
-    console.error("Delete API key error:", error)
+    logError(logger, "Delete API key error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to delete API key" },
       { status: 500 }

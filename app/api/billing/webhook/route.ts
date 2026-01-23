@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { constructWebhookEvent, getPlanFromPriceId } from "@/lib/integrations/stripe"
 import { STRIPE_EVENTS, PLAN_FEATURES } from "@/lib/integrations/stripe-config"
 import { auditLogger } from "@/lib/audit/logger"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * POST /api/billing/webhook
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get("stripe-signature")
 
     if (!signature) {
-      console.error("Webhook: Missing signature")
+      logger.error("Webhook: Missing signature")
       return NextResponse.json({ error: "Missing signature" }, { status: 400 })
     }
 
@@ -23,12 +24,12 @@ export async function POST(request: NextRequest) {
     try {
       event = await constructWebhookEvent(payload, signature)
     } catch (error) {
-      console.error("Webhook signature verification failed:", error)
+      logError(logger, "Webhook signature verification failed", error)
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
     }
 
     // Log the event
-    console.log(`Stripe webhook received: ${event.type}`)
+    logger.info({ eventType: event.type }, "Stripe webhook received")
 
     // Handle different event types
     switch (event.type) {
@@ -59,12 +60,12 @@ export async function POST(request: NextRequest) {
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        logger.info({ eventType: event.type }, "Unhandled event type")
     }
 
     return NextResponse.json({ received: true })
   } catch (error) {
-    console.error("Webhook error:", error)
+    logError(logger, "Webhook error", error)
     return NextResponse.json(
       { error: "Webhook processing failed" },
       { status: 500 }
@@ -82,11 +83,11 @@ async function handleCheckoutCompleted(session: any) {
   const billingCycle = session.metadata?.billingCycle
 
   if (!organizationId) {
-    console.error("Checkout completed: Missing organizationId in metadata")
+    logger.error("Checkout completed: Missing organizationId in metadata")
     return
   }
 
-  console.log(`Checkout completed for org ${organizationId}: ${plan} / ${billingCycle}`)
+  logger.info({ organizationId, plan, billingCycle }, "Checkout completed for org")
 
   // The subscription details will be handled by subscription.created event
   // Here we just ensure the customer ID is saved
@@ -118,7 +119,7 @@ async function handleSubscriptionUpdated(subscription: any) {
     // Try to find org by customer ID
     const org = await db.organizations.findByStripeCustomerId(subscription.customer)
     if (!org) {
-      console.error("Subscription updated: Cannot find organization for customer", subscription.customer)
+      logger.error({ customerId: subscription.customer }, "Subscription updated: Cannot find organization for customer")
       return
     }
   }
@@ -151,7 +152,7 @@ async function handleSubscriptionUpdated(subscription: any) {
     subscription: subscriptionData,
   })
 
-  console.log(`Subscription updated for org ${orgId}: ${plan} (${subscription.status})`)
+  logger.info({ orgId, plan, status: subscription.status }, "Subscription updated for org")
 
   // Log the event
   await auditLogger.log({
@@ -175,7 +176,7 @@ async function handleSubscriptionDeleted(subscription: any) {
     : await db.organizations.findByStripeCustomerId(subscription.customer)
 
   if (!org) {
-    console.error("Subscription deleted: Cannot find organization")
+    logger.error("Subscription deleted: Cannot find organization")
     return
   }
 
@@ -194,7 +195,7 @@ async function handleSubscriptionDeleted(subscription: any) {
     },
   })
 
-  console.log(`Subscription canceled for org ${org.id}, downgraded to free`)
+  logger.info({ orgId: org.id }, "Subscription canceled for org, downgraded to free")
 
   // Log the event
   await auditLogger.log({
@@ -235,10 +236,10 @@ async function handleInvoicePaid(invoice: any) {
     })
   } catch (error) {
     // Billing history table might not exist yet
-    console.error("Failed to record billing history:", error)
+    logError(logger, "Failed to record billing history", error)
   }
 
-  console.log(`Invoice paid for org ${org.id}: ${invoice.amount_paid / 100} ${invoice.currency}`)
+  logger.info({ orgId: org.id, amount: invoice.amount_paid / 100, currency: invoice.currency }, "Invoice paid for org")
 }
 
 /**
@@ -258,7 +259,7 @@ async function handleInvoicePaymentFailed(invoice: any) {
     })
   }
 
-  console.log(`Invoice payment failed for org ${org.id}`)
+  logger.info({ orgId: org.id }, "Invoice payment failed for org")
 
   // Log the event
   await auditLogger.log({

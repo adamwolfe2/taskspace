@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { asanaClient } from "@/lib/integrations/asana"
 import { getAuthContext } from "@/lib/auth/middleware"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * GET /api/asana/projects?workspace=<workspaceGid>
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
       })),
     })
   } catch (error) {
-    console.error("Asana projects error:", error)
+    logError(logger, "Asana projects error", error)
     return NextResponse.json(
       { error: "Failed to fetch Asana projects" },
       { status: 500 }

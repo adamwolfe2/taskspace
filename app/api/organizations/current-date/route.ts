@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { getTodayInTimezone, getCurrentTimeInTimezone, formatDateForDisplay } from "@/lib/utils/date-utils"
+import { logger, logError } from "@/lib/logger"
 
 interface CurrentDateResponse {
   date: string // YYYY-MM-DD format
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
       data: response,
     })
   } catch (error) {
-    console.error("Current date API error:", error)
+    logError(logger, "Current date API error", error)
     return NextResponse.json(
       { success: false, error: "Failed to get current date" },
       { status: 500 }

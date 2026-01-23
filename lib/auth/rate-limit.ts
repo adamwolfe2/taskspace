@@ -9,6 +9,7 @@
  */
 
 import { sql } from "../db/sql"
+import { logger } from "../logger"
 
 interface RateLimitEntry {
   count: number
@@ -78,7 +79,7 @@ async function checkRateLimitDb(
     sql`
       DELETE FROM rate_limit_attempts
       WHERE attempted_at < NOW() - INTERVAL '1 hour'
-    `.catch(() => {}) // Ignore cleanup errors
+    `.catch(err => logger.debug({ error: err?.message }, "Rate limit cleanup error (non-critical)"))
 
     const newCount = currentCount + 1
 
@@ -256,7 +257,9 @@ export function checkLoginRateLimit(request: Request): RateLimitResult {
   const result = checkRateLimitSync(`login:${ip}`, MAX_ATTEMPTS_LOGIN)
 
   // Trigger async DB update (fire and forget)
-  checkRateLimitDb(`login:${ip}`, MAX_ATTEMPTS_LOGIN).catch(() => {})
+  checkRateLimitDb(`login:${ip}`, MAX_ATTEMPTS_LOGIN).catch(err =>
+    logger.debug({ error: err?.message, ip }, "Rate limit DB update failed (non-critical)")
+  )
 
   return result
 }
@@ -275,7 +278,9 @@ export async function checkLoginRateLimitAsync(request: Request): Promise<RateLi
 export function checkRegisterRateLimit(request: Request): RateLimitResult {
   const ip = getClientIP(request)
   const result = checkRateLimitSync(`register:${ip}`, MAX_ATTEMPTS_REGISTER)
-  checkRateLimitDb(`register:${ip}`, MAX_ATTEMPTS_REGISTER).catch(() => {})
+  checkRateLimitDb(`register:${ip}`, MAX_ATTEMPTS_REGISTER).catch(err =>
+    logger.debug({ error: err?.message, ip }, "Rate limit DB update failed (non-critical)")
+  )
   return result
 }
 
@@ -285,7 +290,9 @@ export function checkRegisterRateLimit(request: Request): RateLimitResult {
 export function checkPasswordResetRateLimit(request: Request): RateLimitResult {
   const ip = getClientIP(request)
   const result = checkRateLimitSync(`password-reset:${ip}`, MAX_ATTEMPTS_PASSWORD_RESET)
-  checkRateLimitDb(`password-reset:${ip}`, MAX_ATTEMPTS_PASSWORD_RESET).catch(() => {})
+  checkRateLimitDb(`password-reset:${ip}`, MAX_ATTEMPTS_PASSWORD_RESET).catch(err =>
+    logger.debug({ error: err?.message, ip }, "Rate limit DB update failed (non-critical)")
+  )
   return result
 }
 
@@ -295,7 +302,9 @@ export function checkPasswordResetRateLimit(request: Request): RateLimitResult {
 export function checkPasswordResetEmailRateLimit(email: string): RateLimitResult {
   const key = `password-reset-email:${email.toLowerCase()}`
   const result = checkRateLimitSync(key, MAX_ATTEMPTS_PASSWORD_RESET)
-  checkRateLimitDb(key, MAX_ATTEMPTS_PASSWORD_RESET).catch(() => {})
+  checkRateLimitDb(key, MAX_ATTEMPTS_PASSWORD_RESET).catch(err =>
+    logger.debug({ error: err?.message }, "Rate limit DB update failed (non-critical)")
+  )
   return result
 }
 
@@ -316,7 +325,7 @@ export async function resetLoginRateLimit(request: Request): Promise<void> {
       WHERE identifier = ${key}
     `
   } catch (error) {
-    console.warn("Failed to reset rate limit in DB:", error)
+    logger.warn({ error: error instanceof Error ? error.message : String(error) }, "Failed to reset rate limit in DB")
   }
 }
 

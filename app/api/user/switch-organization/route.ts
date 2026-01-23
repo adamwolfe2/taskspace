@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { CONFIG } from "@/lib/config"
+import { logger, logError } from "@/lib/logger"
 
 // POST /api/user/switch-organization - Switch to a different organization
 export async function POST(request: NextRequest) {
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error("Error switching organization:", error)
+    logError(logger, "Error switching organization", error)
     return NextResponse.json(
       { success: false, error: "Failed to switch organization" },
       { status: 500 }

@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId, validateEmail } from "@/lib/auth/password"
 import type { TeamMember, OrganizationMember, ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // POST /api/members - Create a draft team member (before invitation)
 export async function POST(request: NextRequest) {
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
       message: "Team member created. You can now assign rocks and tasks, then send an invitation when ready.",
     })
   } catch (error) {
-    console.error("Create draft member error:", error)
+    logError(logger, "Create draft member error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create team member" },
       { status: 500 }
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
       data: teamMembers,
     })
   } catch (error) {
-    console.error("Get members error:", error)
+    logError(logger, "Get members error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get team members" },
       { status: 500 }
@@ -248,7 +249,7 @@ export async function PATCH(request: NextRequest) {
       message: "Member updated successfully",
     })
   } catch (error) {
-    console.error("Update member error:", error)
+    logError(logger, "Update member error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update member" },
       { status: 500 }
@@ -320,7 +321,7 @@ export async function DELETE(request: NextRequest) {
       message: "Member removed successfully",
     })
   } catch (error) {
-    console.error("Remove member error:", error)
+    logError(logger, "Remove member error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to remove member" },
       { status: 500 }
