@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/cross-workspace/tasks - Get all cross-workspace tasks for the user
 export async function GET(request: NextRequest) {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Error fetching cross-workspace tasks:", error)
+    logError(logger, "Error fetching cross-workspace tasks", error)
     return NextResponse.json(
       { success: false, error: "Failed to fetch cross-workspace tasks" },
       { status: 500 }
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
       message: `Task "${title}" created in ${targetOrg.name}`,
     })
   } catch (error) {
-    console.error("Error creating cross-workspace task:", error)
+    logError(logger, "Error creating cross-workspace task", error)
     return NextResponse.json(
       { success: false, error: "Failed to create cross-workspace task" },
       { status: 500 }

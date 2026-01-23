@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getDatabaseHealth, checkMigrationStatus } from "@/lib/db/migrate"
 import { getAuthContext } from "@/lib/auth/middleware"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface MigrationStatusResponse {
   initialized: boolean
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
         "Migration status retrieved. Migrations are run via CLI only for security.",
     })
   } catch (error) {
-    console.error("Migration status check error:", error)
+    logError(logger, "Migration status check error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,

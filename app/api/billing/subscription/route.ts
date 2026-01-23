@@ -10,6 +10,7 @@ import {
 } from "@/lib/integrations/stripe"
 import { getStripeConfig, PLAN_FEATURES } from "@/lib/integrations/stripe-config"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * GET /api/billing/subscription
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Get subscription error:", error)
+    logError(logger, "Get subscription error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get subscription" },
       { status: 500 }
@@ -186,7 +187,7 @@ export async function PATCH(request: NextRequest) {
         )
     }
   } catch (error) {
-    console.error("Update subscription error:", error)
+    logError(logger, "Update subscription error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,

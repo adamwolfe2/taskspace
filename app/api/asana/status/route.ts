@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { asanaClient } from "@/lib/integrations/asana"
 import { getAuthContext } from "@/lib/auth/middleware"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * GET /api/asana/status
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
       })
     }
   } catch (error) {
-    console.error("Asana status error:", error)
+    logError(logger, "Asana status error", error)
     return NextResponse.json(
       { error: "Failed to check Asana status" },
       { status: 500 }

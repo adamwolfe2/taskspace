@@ -27,28 +27,55 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   return bcrypt.compare(password, storedHash)
 }
 
+/**
+ * Generate a secure random token for session authentication
+ * @returns 64-character hex string (256 bits of entropy)
+ */
 export function generateToken(): string {
   return randomBytes(32).toString("hex")
 }
 
+/**
+ * Generate a unique identifier for database records
+ * @returns 24-character hex string (96 bits of entropy)
+ */
 export function generateId(): string {
   return randomBytes(12).toString("hex")
 }
 
+/**
+ * Generate a URL-safe token for invitation links
+ * @returns Base64url-encoded string (192 bits of entropy)
+ */
 export function generateInviteToken(): string {
   return randomBytes(24).toString("base64url")
 }
 
+/**
+ * Check if a token or session has expired
+ * @param expiresAt - ISO date string of expiration time
+ * @returns true if the expiration time has passed
+ */
 export function isTokenExpired(expiresAt: string): boolean {
   return new Date(expiresAt) < new Date()
 }
 
+/**
+ * Calculate an expiration date from now
+ * @param hours - Number of hours until expiration (default: 168 hours / 7 days)
+ * @returns ISO date string of the expiration time
+ */
 export function getExpirationDate(hours: number = 24 * 7): string {
   const date = new Date()
   date.setHours(date.getHours() + hours)
   return date.toISOString()
 }
 
+/**
+ * Validate email format using a basic regex pattern
+ * @param email - Email address to validate
+ * @returns true if email format is valid
+ */
 export function validateEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
@@ -105,6 +132,12 @@ export function validatePassword(password: string): { valid: boolean; message?: 
   return { valid: result.valid, message: result.message }
 }
 
+/**
+ * Convert text to a URL-safe slug
+ * @param text - Text to convert to slug
+ * @returns Lowercase slug with hyphens replacing spaces/underscores
+ * @example slugify("My Organization Name") // "my-organization-name"
+ */
 export function slugify(text: string): string {
   return text
     .toLowerCase()

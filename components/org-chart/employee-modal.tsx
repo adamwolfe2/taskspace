@@ -232,10 +232,11 @@ export function EmployeeModal({
                   <button
                     onClick={() => onEmployeeClick?.(supervisor)}
                     className="flex items-center gap-2 text-sm text-slate-600 hover:text-blue-600 transition-colors"
+                    aria-label={`View supervisor: ${supervisor.fullName}`}
                   >
                     <span className="text-slate-400">Reports to:</span>
                     <span className="font-medium">{supervisor.fullName}</span>
-                    <ChevronRight className="h-3 w-3" />
+                    <ChevronRight className="h-3 w-3" aria-hidden="true" />
                   </button>
                 ) : employee.supervisor ? (
                   <p className="text-sm text-slate-500">
@@ -260,6 +261,7 @@ export function EmployeeModal({
                           key={report.id}
                           onClick={() => onEmployeeClick?.(report)}
                           className="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
+                          aria-label={`View direct report: ${report.fullName}`}
                         >
                           {report.fullName}
                         </button>

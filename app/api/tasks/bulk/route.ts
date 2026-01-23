@@ -19,6 +19,7 @@ import { Errors, successResponse } from "@/lib/api/errors"
 import { invalidateTaskCache } from "@/lib/cache"
 import { z } from "zod"
 import type { AssignedTask } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof ValidationError) {
       return Errors.validationError(error.message).toResponse()
     }
-    console.error("Bulk operation error:", error)
+    logError(logger, "Bulk operation error", error)
     return Errors.internal().toResponse()
   }
 }

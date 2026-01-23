@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import type { ApiResponse, Organization } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/organizations/branding - Get organization branding settings
 export async function GET(request: NextRequest) {
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Get branding error:", error)
+    logError(logger, "Get branding error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get branding settings" },
       { status: 500 }
@@ -131,7 +132,7 @@ export async function PATCH(request: NextRequest) {
       message: "Branding settings updated successfully",
     })
   } catch (error) {
-    console.error("Update branding error:", error)
+    logError(logger, "Update branding error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update branding settings" },
       { status: 500 }

@@ -47,6 +47,7 @@ Examples:
           onChange={(e) => setContent(e.target.value)}
           className="min-h-[200px] resize-none"
           disabled={isProcessing}
+          aria-label="Brain dump - enter your thoughts to generate tasks"
         />
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
@@ -56,15 +57,16 @@ Examples:
             onClick={handleSubmit}
             disabled={!content.trim() || isProcessing}
             className="gap-2"
+            aria-busy={isProcessing}
           >
             {isProcessing ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" role="status" aria-label="Processing" />
                 Processing...
               </>
             ) : (
               <>
-                <Sparkles className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
                 Generate Tasks
               </>
             )}

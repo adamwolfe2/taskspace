@@ -201,6 +201,13 @@ function generateRequestId(): string {
 // API LOGGING HELPERS
 // ============================================
 
+/**
+ * Log the start of an API request
+ * @param reqLogger - Request-scoped logger instance
+ * @param method - HTTP method (GET, POST, etc.)
+ * @param path - Request path
+ * @param params - Optional request parameters
+ */
 export function logApiRequest(
   reqLogger: LoggerInterface,
   method: string,
@@ -210,6 +217,13 @@ export function logApiRequest(
   reqLogger.info({ method, path, params }, "API request started")
 }
 
+/**
+ * Log the completion of an API request
+ * Automatically selects log level based on status code
+ * @param reqLogger - Request-scoped logger instance
+ * @param statusCode - HTTP response status code
+ * @param durationMs - Request duration in milliseconds
+ */
 export function logApiResponse(
   reqLogger: LoggerInterface,
   statusCode: number,
@@ -219,6 +233,13 @@ export function logApiResponse(
   reqLogger[level]({ statusCode, durationMs }, "API request completed")
 }
 
+/**
+ * Log authentication-related events
+ * @param event - Type of auth event
+ * @param userId - ID of user involved (if known)
+ * @param success - Whether the auth action succeeded
+ * @param details - Additional context
+ */
 export function logAuthEvent(
   event: "login" | "logout" | "register" | "password_reset" | "session_expired",
   userId?: string,
@@ -229,6 +250,12 @@ export function logAuthEvent(
   logger[level]({ event, userId, success, ...details }, `Auth event: ${event}`)
 }
 
+/**
+ * Log security-related events for monitoring
+ * @param event - Description of security event
+ * @param severity - Log severity level
+ * @param details - Event details and context
+ */
 export function logSecurityEvent(
   event: string,
   severity: "info" | "warn" | "error",
@@ -241,6 +268,12 @@ export function logSecurityEvent(
 // ERROR LOGGING
 // ============================================
 
+/**
+ * Format an error object for structured logging
+ * Extracts name, message, and stack (in development only)
+ * @param error - Error to format (Error, object, or primitive)
+ * @returns Structured error object safe for logging
+ */
 export function formatError(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
     return {
@@ -252,6 +285,14 @@ export function formatError(error: unknown): Record<string, unknown> {
   return { message: String(error) }
 }
 
+/**
+ * Log an error with standardized formatting
+ * @param reqLogger - Logger instance (global or request-scoped)
+ * @param message - Human-readable error description
+ * @param error - The error object to log
+ * @param context - Additional context for debugging
+ * @example logError(logger, "Failed to create user", err, { email })
+ */
 export function logError(
   reqLogger: LoggerInterface | typeof logger,
   message: string,

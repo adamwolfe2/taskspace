@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error("Logout error:", error)
+    logError(logger, "Logout error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "An error occurred during logout" },
       { status: 500 }

@@ -269,8 +269,9 @@ export function QuickCapture({
  placeholder={mode === "task" ? "What needs to be done?" : "What's your quarterly goal?"}
  className="pr-10 text-base h-12"
  disabled={isSubmitting}
+ aria-label={mode === "task" ? "Task title" : "Rock title"}
  />
- <Sparkles className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-purple-400" />
+ <Sparkles className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-purple-400" aria-hidden="true" />
  </div>
 
  {/* Parsed Preview */}
@@ -449,6 +450,7 @@ export function FloatingQuickCapture({
  className
  )}
  onClick={() => setOpen(true)}
+ aria-label="Add new task"
  >
  <Plus className="h-6 w-6" />
  </Button>
@@ -468,11 +470,13 @@ export function FloatingQuickCapture({
  placeholder="Quick task..."
  className="flex-1"
  autoFocus
+ aria-label="Task title"
  />
  <Button
  size="icon"
  onClick={handleSubmit}
  disabled={!input.trim() || isSubmitting}
+ aria-label="Submit task"
  >
  <ArrowUp className="h-4 w-4" />
  </Button>
@@ -480,6 +484,7 @@ export function FloatingQuickCapture({
  size="icon"
  variant="ghost"
  onClick={() => setOpen(false)}
+ aria-label="Close"
  >
  <X className="h-4 w-4" />
  </Button>

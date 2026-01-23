@@ -15,6 +15,7 @@ import { z } from "zod"
 import { sql } from "@/lib/db/sql"
 import { db } from "@/lib/db"
 import { headers } from "next/headers"
+import { logger, logError } from "@/lib/logger"
 
 // Get organization from API key in Authorization header
 async function getOrgIdFromAuth(): Promise<string | null> {
@@ -41,7 +42,7 @@ async function getOrgIdFromAuth(): Promise<string | null> {
 
     return null
   } catch (error) {
-    console.error("MCP auth error:", error)
+    logError(logger, "MCP auth error", error)
     return null
   }
 }

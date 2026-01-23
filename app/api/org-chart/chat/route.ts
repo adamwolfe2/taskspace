@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { findRelevantEmployees } from "@/lib/org-chart/utils"
 import type { OrgChartEmployee } from "@/lib/org-chart/types"
+import { logger, logError } from "@/lib/logger"
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 const MODEL = "claude-sonnet-4-20250514"
@@ -48,8 +49,8 @@ async function callClaude(context: string, userMessage: string): Promise<string>
   })
 
   if (!response.ok) {
-    const error = await response.text()
-    console.error("Claude API error:", error)
+    const errorText = await response.text()
+    logger.error({ status: response.status, error: errorText }, "Claude API error")
     throw new Error(`Claude API error: ${response.status}`)
   }
 
@@ -139,7 +140,7 @@ export async function POST(request: Request) {
       mentionedEmployees,
     })
   } catch (error) {
-    console.error("Chat error:", error)
+    logError(logger, "Chat error", error)
     return NextResponse.json(
       { success: false, error: "Failed to process chat message" },
       { status: 500 }

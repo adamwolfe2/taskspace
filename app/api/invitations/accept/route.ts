@@ -6,9 +6,10 @@ import {
   generateToken,
   getExpirationDate,
   isTokenExpired,
-  validatePassword,
+  validatePasswordStrength,
 } from "@/lib/auth/password"
 import type { OrganizationMember, Session, ApiResponse, AuthResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // POST /api/invitations/accept - Accept an invitation
 export async function POST(request: NextRequest) {
@@ -78,10 +79,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Validate password
-      const passwordValidation = validatePassword(password)
+      const passwordValidation = validatePasswordStrength(password)
       if (!passwordValidation.valid) {
         return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: passwordValidation.message },
+          { success: false, error: passwordValidation.errors.join(". ") },
           { status: 400 }
         )
       }
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json<ApiResponse<AuthResponse>>({
       success: true,
       data: {
-        user: safeUser as any,
+        user: safeUser,
         organization,
         member,
         token: sessionToken,
@@ -191,7 +192,7 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error("Accept invitation error:", error)
+    logError(logger, "Accept invitation error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to accept invitation" },
       { status: 500 }
@@ -262,7 +263,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Get invitation error:", error)
+    logError(logger, "Get invitation error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get invitation details" },
       { status: 500 }

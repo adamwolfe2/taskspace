@@ -5,6 +5,7 @@
 
 import { Resend } from "resend"
 import type { EODReport, DailyDigest, TeamMember, AIGeneratedTask } from "../types"
+import { logger, logError } from "../logger"
 
 // Initialize Resend client
 const getResendClient = () => {
@@ -29,6 +30,21 @@ interface EmailResult {
 }
 
 /**
+ * Escape HTML special characters to prevent XSS attacks
+ * Must be used on all user-generated content in email templates
+ */
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }
+  return text.replace(/[&<>"']/g, (m) => map[m])
+}
+
+/**
  * Send an escalation notification to admins
  */
 export async function sendEscalationNotification(
@@ -38,7 +54,7 @@ export async function sendEscalationNotification(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping escalation notification")
+    logger.debug("Email not configured, skipping escalation notification")
     return { success: false, error: "Email not configured" }
   }
 
@@ -47,7 +63,7 @@ export async function sendEscalationNotification(
     return { success: false, error: "No admin emails found" }
   }
 
-  const subject = `🚨 Escalation Required: ${member.name} - ${report.date}`
+  const subject = `🚨 Escalation Required: ${escapeHtml(member.name)} - ${report.date}`
 
   const html = `
 <!DOCTYPE html>
@@ -55,7 +71,7 @@ export async function sendEscalationNotification(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
+  <title>${escapeHtml(subject)}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); padding: 20px; border-radius: 8px 8px 0 0;">
@@ -63,21 +79,21 @@ export async function sendEscalationNotification(
   </div>
 
   <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <p style="margin-top: 0;"><strong>${member.name}</strong> (${member.department}) has flagged their EOD report for escalation.</p>
+    <p style="margin-top: 0;"><strong>${escapeHtml(member.name)}</strong> (${escapeHtml(member.department)}) has flagged their EOD report for escalation.</p>
 
     <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
       <h3 style="margin: 0 0 8px 0; color: #dc2626;">Escalation Note:</h3>
-      <p style="margin: 0; color: #991b1b;">${report.escalationNote || "No specific details provided"}</p>
+      <p style="margin: 0; color: #991b1b;">${escapeHtml(report.escalationNote || "No specific details provided")}</p>
     </div>
 
     <h3 style="margin: 20px 0 10px 0;">Today's Tasks:</h3>
     <ul style="margin: 0; padding-left: 20px;">
-      ${report.tasks?.map(t => `<li>${t.text}</li>`).join("") || "<li>No tasks listed</li>"}
+      ${report.tasks?.map(t => `<li>${escapeHtml(t.text)}</li>`).join("") || "<li>No tasks listed</li>"}
     </ul>
 
     ${report.challenges ? `
     <h3 style="margin: 20px 0 10px 0;">Challenges:</h3>
-    <p style="margin: 0; color: #666;">${report.challenges}</p>
+    <p style="margin: 0; color: #666;">${escapeHtml(report.challenges)}</p>
     ` : ""}
 
     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
@@ -101,14 +117,14 @@ export async function sendEscalationNotification(
     })
 
     if (result.error) {
-      console.error("[Email] Escalation notification failed:", result.error)
+      logger.error("Escalation notification failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] Escalation notification sent: ${result.data?.id}`)
+    logger.info("Escalation notification sent", { emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] Escalation notification error:", error)
+    logError(logger, "Escalation notification error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
@@ -124,7 +140,7 @@ export async function sendDailySummaryEmail(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping daily summary")
+    logger.debug("Email not configured, skipping daily summary")
     return { success: false, error: "Email not configured" }
   }
 
@@ -180,14 +196,14 @@ export async function sendDailySummaryEmail(
 
     <!-- Summary -->
     <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <p style="margin: 0;">${digest.summary}</p>
+      <p style="margin: 0;">${escapeHtml(digest.summary)}</p>
     </div>
 
     ${digest.wins && digest.wins.length > 0 ? `
     <!-- Wins -->
     <h3 style="margin: 20px 0 10px 0; color: #22c55e;">✅ Wins (${digest.wins.length})</h3>
     <ul style="margin: 0; padding-left: 20px;">
-      ${digest.wins.map(w => `<li><strong>${w.memberName}:</strong> ${w.text}</li>`).join("")}
+      ${digest.wins.map(w => `<li><strong>${escapeHtml(w.memberName)}:</strong> ${escapeHtml(w.text)}</li>`).join("")}
     </ul>
     ` : ""}
 
@@ -195,7 +211,7 @@ export async function sendDailySummaryEmail(
     <!-- Blockers -->
     <h3 style="margin: 20px 0 10px 0; color: #dc2626;">🚧 Blockers (${digest.blockers.length})</h3>
     <ul style="margin: 0; padding-left: 20px;">
-      ${digest.blockers.map(b => `<li><strong>${b.memberName}:</strong> ${b.text} <span style="color: ${b.severity === "high" ? "#dc2626" : b.severity === "medium" ? "#f59e0b" : "#6b7280"};">[${b.severity}]</span></li>`).join("")}
+      ${digest.blockers.map(b => `<li><strong>${escapeHtml(b.memberName)}:</strong> ${escapeHtml(b.text)} <span style="color: ${b.severity === "high" ? "#dc2626" : b.severity === "medium" ? "#f59e0b" : "#6b7280"};">[${b.severity}]</span></li>`).join("")}
     </ul>
     ` : ""}
 
@@ -203,7 +219,7 @@ export async function sendDailySummaryEmail(
     <!-- Concerns -->
     <h3 style="margin: 20px 0 10px 0; color: #f59e0b;">⚠️ Concerns</h3>
     <ul style="margin: 0; padding-left: 20px;">
-      ${digest.concerns.map(c => `<li>${c.text} <span style="color: #9ca3af;">(${c.type})</span></li>`).join("")}
+      ${digest.concerns.map(c => `<li>${escapeHtml(c.text)} <span style="color: #9ca3af;">(${escapeHtml(c.type)})</span></li>`).join("")}
     </ul>
     ` : ""}
 
@@ -211,7 +227,7 @@ export async function sendDailySummaryEmail(
     <!-- Follow-ups -->
     <h3 style="margin: 20px 0 10px 0; color: #3b82f6;">💬 Suggested Follow-ups</h3>
     <ul style="margin: 0; padding-left: 20px;">
-      ${digest.followUps.map(f => `<li><strong>${f.targetMemberName}:</strong> ${f.text}</li>`).join("")}
+      ${digest.followUps.map(f => `<li><strong>${escapeHtml(f.targetMemberName)}:</strong> ${escapeHtml(f.text)}</li>`).join("")}
     </ul>
     ` : ""}
 
@@ -219,7 +235,7 @@ export async function sendDailySummaryEmail(
     <!-- Missing Reports -->
     <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
       <h4 style="margin: 0 0 8px 0; color: #92400e;">📝 Missing EOD Reports</h4>
-      <p style="margin: 0; color: #78350f;">${missingMembers.map(m => m.name).join(", ")}</p>
+      <p style="margin: 0; color: #78350f;">${missingMembers.map(m => escapeHtml(m.name)).join(", ")}</p>
     </div>
     ` : ""}
 
@@ -228,7 +244,7 @@ export async function sendDailySummaryEmail(
     <div style="background: #faf5ff; border-left: 4px solid #9333ea; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
       <h4 style="margin: 0 0 8px 0; color: #7c3aed;">🤔 Questions to Consider</h4>
       <ul style="margin: 0; padding-left: 20px; color: #6b21a8;">
-        ${digest.challengeQuestions.map(q => `<li>${q}</li>`).join("")}
+        ${digest.challengeQuestions.map(q => `<li>${escapeHtml(q)}</li>`).join("")}
       </ul>
     </div>
     ` : ""}
@@ -254,14 +270,14 @@ export async function sendDailySummaryEmail(
     })
 
     if (result.error) {
-      console.error("[Email] Daily summary failed:", result.error)
+      logger.error("Daily summary email failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] Daily summary sent: ${result.data?.id}`)
+    logger.info("Daily summary email sent", { emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] Daily summary error:", error)
+    logError(logger, "Daily summary email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
@@ -279,7 +295,7 @@ export async function sendAIAlertEmail(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping AI alert")
+    logger.debug("Email not configured, skipping AI alert")
     return { success: false, error: "Email not configured" }
   }
 
@@ -295,7 +311,7 @@ export async function sendAIAlertEmail(
   }
 
   const color = alertColors[alertType]
-  const subject = `${color.emoji} AI Alert: ${alertType.charAt(0).toUpperCase() + alertType.slice(1)} detected for ${memberName}`
+  const subject = `${color.emoji} AI Alert: ${alertType.charAt(0).toUpperCase() + alertType.slice(1)} detected for ${escapeHtml(memberName)}`
 
   const html = `
 <!DOCTYPE html>
@@ -303,7 +319,7 @@ export async function sendAIAlertEmail(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
+  <title>${escapeHtml(subject)}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: ${color.border}; padding: 20px; border-radius: 8px 8px 0 0;">
@@ -311,15 +327,15 @@ export async function sendAIAlertEmail(
   </div>
 
   <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <p style="margin-top: 0;"><strong>${memberName}</strong> (${memberDepartment})</p>
+    <p style="margin-top: 0;"><strong>${escapeHtml(memberName)}</strong> (${escapeHtml(memberDepartment)})</p>
 
     <div style="background: ${color.bg}; border-left: 4px solid ${color.border}; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
       <h3 style="margin: 0 0 8px 0;">Alert:</h3>
-      <p style="margin: 0;">${alertMessage}</p>
+      <p style="margin: 0;">${escapeHtml(alertMessage)}</p>
     </div>
 
     <h3 style="margin: 20px 0 10px 0;">Details:</h3>
-    <p style="margin: 0; color: #666;">${details}</p>
+    <p style="margin: 0; color: #666;">${escapeHtml(details)}</p>
 
     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
       <a href="${APP_URL}" style="display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">View in Dashboard</a>
@@ -342,14 +358,14 @@ export async function sendAIAlertEmail(
     })
 
     if (result.error) {
-      console.error("[Email] AI alert failed:", result.error)
+      logger.error("AI alert email failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] AI alert sent: ${result.data?.id}`)
+    logger.info("AI alert email sent", { emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] AI alert error:", error)
+    logError(logger, "AI alert email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
@@ -364,11 +380,11 @@ export async function sendTaskAssignmentEmail(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping task notification")
+    logger.debug("Email not configured, skipping task notification")
     return { success: false, error: "Email not configured" }
   }
 
-  const subject = `📋 New Task Assigned: ${task.title}`
+  const subject = `📋 New Task Assigned: ${escapeHtml(task.title)}`
 
   const priorityColors = {
     low: "#22c55e",
@@ -383,7 +399,7 @@ export async function sendTaskAssignmentEmail(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
+  <title>${escapeHtml(subject)}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; border-radius: 8px 8px 0 0;">
@@ -391,21 +407,21 @@ export async function sendTaskAssignmentEmail(
   </div>
 
   <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <p style="margin-top: 0;">Hi ${assignee.name},</p>
-    <p>${assignedBy.name} has assigned you a new task:</p>
+    <p style="margin-top: 0;">Hi ${escapeHtml(assignee.name)},</p>
+    <p>${escapeHtml(assignedBy.name)} has assigned you a new task:</p>
 
     <div style="background: #f8fafc; border: 1px solid #e5e7eb; padding: 16px; margin: 20px 0; border-radius: 8px;">
-      <h2 style="margin: 0 0 8px 0;">${task.title}</h2>
-      ${task.description ? `<p style="margin: 0 0 12px 0; color: #666;">${task.description}</p>` : ""}
+      <h2 style="margin: 0 0 8px 0;">${escapeHtml(task.title)}</h2>
+      ${task.description ? `<p style="margin: 0 0 12px 0; color: #666;">${escapeHtml(task.description)}</p>` : ""}
       <div style="display: flex; gap: 16px; margin-top: 12px;">
         <span style="background: ${priorityColors[task.priority]}; color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">${task.priority.toUpperCase()}</span>
-        ${task.dueDate ? `<span style="color: #666; font-size: 14px;">Due: ${task.dueDate}</span>` : ""}
+        ${task.dueDate ? `<span style="color: #666; font-size: 14px;">Due: ${escapeHtml(task.dueDate)}</span>` : ""}
       </div>
     </div>
 
     ${task.context ? `
     <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <p style="margin: 0; font-size: 14px; color: #0369a1;"><strong>Context:</strong> ${task.context}</p>
+      <p style="margin: 0; font-size: 14px; color: #0369a1;"><strong>Context:</strong> ${escapeHtml(task.context)}</p>
     </div>
     ` : ""}
 
@@ -430,14 +446,14 @@ export async function sendTaskAssignmentEmail(
     })
 
     if (result.error) {
-      console.error("[Email] Task notification failed:", result.error)
+      logger.error("Task notification email failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] Task notification sent: ${result.data?.id}`)
+    logger.info("Task notification email sent", { emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] Task notification error:", error)
+    logError(logger, "Task notification email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
@@ -455,7 +471,7 @@ export async function sendDailyEODLinkEmail(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping daily EOD link email")
+    logger.debug("Email not configured, skipping daily EOD link email")
     return { success: false, error: "Email not configured" }
   }
 
@@ -487,7 +503,7 @@ export async function sendDailyEODLinkEmail(
   </div>
 
   <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <p style="margin-top: 0;">Hi ${member.name},</p>
+    <p style="margin-top: 0;">Hi ${escapeHtml(member.name)},</p>
 
     <p>Here's the end of day report to view the entire team's progress:</p>
 
@@ -515,7 +531,7 @@ export async function sendDailyEODLinkEmail(
     </p>
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from AIMS EOD Tracker • ${organizationName}
+      Sent from AIMS EOD Tracker • ${escapeHtml(organizationName)}
     </p>
   </div>
 </body>
@@ -531,14 +547,14 @@ export async function sendDailyEODLinkEmail(
     })
 
     if (result.error) {
-      console.error("[Email] Daily EOD link email failed:", result.error)
+      logger.error("Daily EOD link email failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] Daily EOD link email sent to ${member.name}: ${result.data?.id}`)
+    logger.info("Daily EOD link email sent", { memberName: member.name, emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] Daily EOD link email error:", error)
+    logError(logger, "Daily EOD link email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
@@ -553,7 +569,7 @@ export async function sendMissingEODReminder(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping EOD reminder")
+    logger.debug("Email not configured, skipping EOD reminder")
     return { success: false, error: "Email not configured" }
   }
 
@@ -573,7 +589,7 @@ export async function sendMissingEODReminder(
   </div>
 
   <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <p style="margin-top: 0;">Hi ${member.name},</p>
+    <p style="margin-top: 0;">Hi ${escapeHtml(member.name)},</p>
 
     <p>This is a friendly reminder that you haven't submitted your End of Day (EOD) report for today.</p>
 
@@ -595,7 +611,7 @@ export async function sendMissingEODReminder(
     </div>
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from AIMS EOD Tracker • ${organizationName}
+      Sent from AIMS EOD Tracker • ${escapeHtml(organizationName)}
     </p>
   </div>
 </body>
@@ -615,14 +631,14 @@ export async function sendMissingEODReminder(
     })
 
     if (result.error) {
-      console.error("[Email] EOD reminder failed:", result.error)
+      logger.error("EOD reminder email failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] EOD reminder sent to ${member.name}: ${result.data?.id}`)
+    logger.info("EOD reminder email sent", { memberName: member.name, emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] EOD reminder error:", error)
+    logError(logger, "EOD reminder email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }

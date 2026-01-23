@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db/sql"
+import { logger, logError } from "@/lib/logger"
 
 interface PublicEODTask {
   description: string
@@ -269,7 +270,7 @@ export async function GET(
       { headers }
     )
   } catch (error) {
-    console.error("Public EOD report error:", error)
+    logError(logger, "Public EOD report error", error)
     return NextResponse.json(
       { success: false, error: "Failed to load daily report" },
       { status: 500 }

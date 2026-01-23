@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { checkAICredits } from "@/lib/billing/stripe"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface CreditUsage {
   creditsUsed: number
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
       data: usage,
     })
   } catch (error) {
-    console.error("Get AI usage error:", error)
+    logError(logger, "Get AI usage error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,

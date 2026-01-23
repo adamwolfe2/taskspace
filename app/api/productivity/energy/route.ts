@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import type { ApiResponse, DailyEnergy } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/productivity/energy - Get energy data for user
 export async function GET(request: NextRequest) {
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
       data: energyData,
     })
   } catch (error) {
-    console.error("Get energy data error:", error)
+    logError(logger, "Get energy data error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get energy data" },
       { status: 500 }
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
       data: result,
     })
   } catch (error) {
-    console.error("Create/update energy error:", error)
+    logError(logger, "Create/update energy error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to save energy data" },
       { status: 500 }

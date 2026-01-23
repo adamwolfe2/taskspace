@@ -4,6 +4,7 @@ import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { sendTaskAssignmentEmail, isEmailConfigured } from "@/lib/integrations/email"
 import type { ApiResponse, AIGeneratedTask, AssignedTask, TeamMember } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/ai/tasks - Get pending AI-generated tasks
 export async function GET(request: NextRequest) {
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
       data: tasks,
     })
   } catch (error) {
-    console.error("Get AI tasks error:", error)
+    logError(logger, "Get AI tasks error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get AI-generated tasks" },
       { status: 500 }
@@ -160,7 +161,7 @@ export async function PATCH(request: NextRequest) {
             }
 
             sendTaskAssignmentEmail(task, assignee, assignedBy)
-              .catch(err => console.error("[Email] Task assignment email failed:", err))
+              .catch(err => logError(logger, "Task assignment email failed", err))
           }
         }
 
@@ -205,7 +206,7 @@ export async function PATCH(request: NextRequest) {
         )
     }
   } catch (error) {
-    console.error("Update AI task error:", error)
+    logError(logger, "Update AI task error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update AI-generated task" },
       { status: 500 }
@@ -255,7 +256,7 @@ export async function DELETE(request: NextRequest) {
       message: "Task deleted",
     })
   } catch (error) {
-    console.error("Delete AI task error:", error)
+    logError(logger, "Delete AI task error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to delete AI-generated task" },
       { status: 500 }

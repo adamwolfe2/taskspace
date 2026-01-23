@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { isTokenExpired } from "@/lib/auth/password"
 import type { ApiResponse, TeamMember } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Session check error:", error)
+    logError(logger, "Session check error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "An error occurred while checking session" },
       { status: 500 }

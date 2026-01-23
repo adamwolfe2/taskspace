@@ -200,12 +200,12 @@ export function AICopilotChat({
                 </div>
               ))}
               {isLoading && (
-                <div className="flex gap-3">
+                <div className="flex gap-3" role="status" aria-label="AI is thinking">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-primary" />
+                    <Bot className="h-4 w-4 text-primary" aria-hidden="true" />
                   </div>
                   <div className="bg-muted rounded-lg p-3">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                   </div>
                 </div>
               )}
@@ -224,14 +224,16 @@ export function AICopilotChat({
               placeholder="Ask about your team..."
               disabled={isLoading}
               className="flex-1"
+              aria-label="Ask AI Copilot a question"
             />
             <Button
               onClick={() => handleSubmit()}
               disabled={!input.trim() || isLoading}
               size="icon"
+              aria-label={isLoading ? "Sending message" : "Send message"}
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" role="status" aria-label="Loading" />
               ) : (
                 <Send className="h-4 w-4" />
               )}

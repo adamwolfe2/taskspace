@@ -263,12 +263,11 @@ export function handleError(error: unknown): NextResponse<ApiResponse<null>> {
  * Checks if an error is a Postgres error
  */
 function isPostgresError(error: unknown): error is { code: string; message: string } {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    typeof (error as any).code === "string"
-  )
+  if (typeof error !== "object" || error === null) {
+    return false
+  }
+  const errorObj = error as Record<string, unknown>
+  return typeof errorObj.code === "string"
 }
 
 /**

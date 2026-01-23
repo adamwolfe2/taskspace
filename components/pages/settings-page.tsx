@@ -46,6 +46,7 @@ import {
  Sparkles,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { getErrorMessage } from "@/lib/utils"
 import type { TeamMember, Invitation, ApiKey } from "@/lib/types"
 import { AsanaIntegration } from "@/components/settings/asana-integration"
 import { AsanaMemberConnection } from "@/components/settings/asana-member-connection"
@@ -258,10 +259,10 @@ export function SettingsPage() {
  variant: "destructive",
  })
  }
- } catch (err: any) {
+ } catch (err: unknown) {
  setTestEmailResult({
  success: false,
- message: err.message || "Network error",
+ message: getErrorMessage(err, "Network error"),
  })
  toast({
  title: "Error",
@@ -307,10 +308,10 @@ export function SettingsPage() {
  title: "Preferences saved",
  description: "Your personal notification settings have been updated.",
  })
- } catch (err: any) {
+ } catch (err: unknown) {
  toast({
  title: "Error",
- description: err.message || "Failed to save preferences",
+ description: getErrorMessage(err, "Failed to save preferences"),
  variant: "destructive",
  })
  } finally {
@@ -429,10 +430,10 @@ export function SettingsPage() {
  title: "Settings saved",
  description: "Your organization settings have been updated.",
  })
- } catch (err: any) {
+ } catch (err: unknown) {
  toast({
  title: "Error",
- description: err.message || "Failed to save settings",
+ description: getErrorMessage(err, "Failed to save settings"),
  variant: "destructive",
  })
  } finally {
@@ -480,10 +481,10 @@ export function SettingsPage() {
      // Clipboard API not available
    }
  }
- } catch (err: any) {
+ } catch (err: unknown) {
  toast({
  title: "Failed to send invitation",
- description: err.message || "An error occurred",
+ description: getErrorMessage(err, "An error occurred"),
  variant: "destructive",
  })
  } finally {
@@ -528,10 +529,10 @@ export function SettingsPage() {
  title: "Invitation cancelled",
  description: "The invitation has been removed",
  })
- } catch (err: any) {
+ } catch (err: unknown) {
  toast({
  title: "Error",
- description: err.message || "Failed to cancel invitation",
+ description: getErrorMessage(err, "Failed to cancel invitation"),
  variant: "destructive",
  })
  }
@@ -569,10 +570,10 @@ export function SettingsPage() {
  title: "API key created",
  description: "Make sure to copy your key - it won't be shown again!",
  })
- } catch (err: any) {
+ } catch (err: unknown) {
  toast({
  title: "Failed to create API key",
- description: err.message,
+ description: getErrorMessage(err),
  variant: "destructive",
  })
  } finally {
@@ -596,10 +597,10 @@ export function SettingsPage() {
  title: "API key deleted",
  description: "The API key has been revoked",
  })
- } catch (err: any) {
+ } catch (err: unknown) {
  toast({
  title: "Failed to delete API key",
- description: err.message,
+ description: getErrorMessage(err),
  variant: "destructive",
  })
  }

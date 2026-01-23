@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import type { TeamMember, Rock, AssignedTask, EODReport } from "../types"
 import { api } from "../api/client"
 import { useApp } from "../contexts/app-context"
+import { getErrorMessage } from "../utils"
 
 // Demo data for the demo mode
 // Use local timezone for date strings to match EOD report format
@@ -186,8 +187,8 @@ export function useTeamData() {
       setRocks(rocksData)
       setAssignedTasks(tasksData)
       setEODReports(reportsData)
-    } catch (err: any) {
-      setError(err.message || "Failed to load data")
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to load data"))
       console.error("Failed to load team data:", err)
     } finally {
       setIsLoading(false)
@@ -234,8 +235,8 @@ export function useTeamData() {
       const newRock = await api.rocks.create(rock)
       setRocks((prev) => [...prev, newRock])
       return newRock
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       throw err
     }
   }, [isDemoMode])
@@ -254,8 +255,8 @@ export function useTeamData() {
       const updatedRock = await api.rocks.update(id, updates)
       setRocks((prev) => prev.map((r) => (r.id === id ? updatedRock : r)))
       return updatedRock
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       throw err
     }
   }, [isDemoMode, rocks])
@@ -268,8 +269,8 @@ export function useTeamData() {
     try {
       await api.rocks.delete(id)
       setRocks((prev) => prev.filter((r) => r.id !== id))
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       throw err
     }
   }, [isDemoMode])
@@ -285,8 +286,8 @@ export function useTeamData() {
       const newTask = await api.tasks.create(task)
       setAssignedTasks((prev) => [...prev, newTask])
       return newTask
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       throw err
     }
   }, [isDemoMode])
@@ -305,8 +306,8 @@ export function useTeamData() {
       const updatedTask = await api.tasks.update(id, updates)
       setAssignedTasks((prev) => prev.map((t) => (t.id === id ? updatedTask : t)))
       return updatedTask
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       throw err
     }
   }, [isDemoMode, assignedTasks])
@@ -319,8 +320,8 @@ export function useTeamData() {
     try {
       await api.tasks.delete(id)
       setAssignedTasks((prev) => prev.filter((t) => t.id !== id))
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       throw err
     }
   }, [isDemoMode])
@@ -336,8 +337,8 @@ export function useTeamData() {
       const newReport = await api.eodReports.create(report)
       setEODReports((prev) => [newReport, ...prev])
       return newReport
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       throw err
     }
   }, [isDemoMode])
@@ -356,8 +357,8 @@ export function useTeamData() {
       const updatedReport = await api.eodReports.update(id, updates)
       setEODReports((prev) => prev.map((r) => (r.id === id ? updatedReport : r)))
       return updatedReport
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       throw err
     }
   }, [isDemoMode, eodReports])
@@ -370,8 +371,8 @@ export function useTeamData() {
     try {
       await api.eodReports.delete(id)
       setEODReports((prev) => prev.filter((r) => r.id !== id))
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       throw err
     }
   }, [isDemoMode])
@@ -391,8 +392,8 @@ export function useTeamData() {
       const updatedMember = await api.members.update(memberId, updates)
       setTeamMembers((prev) => prev.map((m) => (m.id === memberId ? updatedMember : m)))
       return updatedMember
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       throw err
     }
   }, [isDemoMode, teamMembers])
@@ -405,8 +406,8 @@ export function useTeamData() {
     try {
       await api.members.remove(memberId)
       setTeamMembers((prev) => prev.filter((m) => m.id !== memberId))
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       throw err
     }
   }, [isDemoMode])

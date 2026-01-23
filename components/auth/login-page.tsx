@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Target, AlertCircle, Play } from "lucide-react"
+import { getErrorMessage } from "@/lib/utils"
 
 export function LoginPage() {
   const { login, setCurrentPage, error, clearError, isLoading, enterDemoMode } = useApp()
@@ -27,8 +28,8 @@ export function LoginPage() {
 
     try {
       await login(email, password)
-    } catch (err: any) {
-      setLocalError(err.message || "Login failed")
+    } catch (err: unknown) {
+      setLocalError(getErrorMessage(err, "Login failed"))
     }
   }
 

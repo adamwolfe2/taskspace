@@ -19,6 +19,7 @@ import {
   type WorkspaceWithMemberInfo,
   type CreateWorkspaceParams,
 } from "@/lib/db/workspaces"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * GET /api/workspaces
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
       data: workspaces,
     })
   } catch (error) {
-    console.error("Get workspaces error:", error)
+    logError(logger, "Get workspaces error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get workspaces" },
       { status: 500 }
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
       message: "Workspace created successfully",
     })
   } catch (error) {
-    console.error("Create workspace error:", error)
+    logError(logger, "Create workspace error", error)
 
     // Handle unique constraint violation
     if (error instanceof Error && error.message.includes("unique")) {

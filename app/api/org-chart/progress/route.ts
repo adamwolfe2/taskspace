@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
+import { logger, logError } from "@/lib/logger"
 
 // GET - Fetch all rock progress or for a specific employee
 export async function GET(request: NextRequest) {
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
       progress,
     })
   } catch (error) {
-    console.error("Error fetching rock progress:", error)
+    logError(logger, "Error fetching rock progress", error)
     return NextResponse.json(
       { success: false, error: "Failed to fetch rock progress" },
       { status: 500 }
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       message: "Progress updated successfully",
     })
   } catch (error) {
-    console.error("Error updating rock progress:", error)
+    logError(logger, "Error updating rock progress", error)
     return NextResponse.json(
       { success: false, error: "Failed to update rock progress" },
       { status: 500 }
@@ -111,7 +112,7 @@ export async function DELETE(request: NextRequest) {
       message: "Progress deleted successfully",
     })
   } catch (error) {
-    console.error("Error deleting rock progress:", error)
+    logError(logger, "Error deleting rock progress", error)
     return NextResponse.json(
       { success: false, error: "Failed to delete rock progress" },
       { status: 500 }

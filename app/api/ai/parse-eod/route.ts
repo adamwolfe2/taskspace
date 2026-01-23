@@ -4,6 +4,7 @@ import { getAuthContext } from "@/lib/auth/middleware"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, EODInsight } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // POST /api/ai/parse-eod - Parse an EOD report and extract insights
 export async function POST(request: NextRequest) {
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
       message: "EOD report parsed successfully",
     })
   } catch (error) {
-    console.error("Parse EOD error:", error)
+    logError(logger, "Parse EOD error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to parse EOD report" },
       { status: 500 }
@@ -139,7 +140,7 @@ export async function GET(request: NextRequest) {
       data: insights,
     })
   } catch (error) {
-    console.error("Get insights error:", error)
+    logError(logger, "Get insights error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get EOD insights" },
       { status: 500 }
@@ -242,7 +243,7 @@ export async function PUT(request: NextRequest) {
       message: `Processed ${dateReports.length} EOD reports`,
     })
   } catch (error) {
-    console.error("Batch parse error:", error)
+    logError(logger, "Batch parse error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to batch parse EOD reports" },
       { status: 500 }

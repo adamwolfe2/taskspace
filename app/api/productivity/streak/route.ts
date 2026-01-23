@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { getStreakMilestoneInfo } from "@/lib/productivity/calculations"
 import type { ApiResponse, UserStreak } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/productivity/streak - Get user's streak data
 export async function GET(request: NextRequest) {
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
       data: streakData,
     })
   } catch (error) {
-    console.error("Get streak error:", error)
+    logError(logger, "Get streak error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get streak data" },
       { status: 500 }

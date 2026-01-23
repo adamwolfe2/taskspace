@@ -5,6 +5,7 @@ import { answerQuery, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import type { ApiResponse, AIQueryResponse, AIConversation, TeamMember } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // POST /api/ai/query - Ask a natural language question about team data
 export async function POST(request: NextRequest) {
@@ -131,7 +132,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("AI query error:", error)
+    logError(logger, "AI query error", error)
 
     // Handle credit exhaustion error
     if ((error as Error & { code?: string }).code === "CREDITS_EXHAUSTED") {
@@ -177,7 +178,7 @@ export async function GET(request: NextRequest) {
       data: conversations,
     })
   } catch (error) {
-    console.error("Get conversations error:", error)
+    logError(logger, "Get conversations error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get conversation history" },
       { status: 500 }

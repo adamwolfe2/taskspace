@@ -3,6 +3,7 @@ import { getAuthContext } from "@/lib/auth/middleware"
 import { sql } from "@/lib/db/sql"
 import { db } from "@/lib/db"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 const ASANA_API_BASE = "https://app.asana.com/api/1.0"
 
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Check Asana connection error:", error)
+    logError(logger, "Check Asana connection error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to check Asana connection" },
       { status: 500 }
@@ -156,7 +157,7 @@ export async function POST(request: NextRequest) {
       message: "Asana account connected successfully",
     })
   } catch (error) {
-    console.error("Connect Asana error:", error)
+    logError(logger, "Connect Asana error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to connect Asana account" },
       { status: 500 }
@@ -192,7 +193,7 @@ export async function DELETE(request: NextRequest) {
       message: "Asana account disconnected",
     })
   } catch (error) {
-    console.error("Disconnect Asana error:", error)
+    logError(logger, "Disconnect Asana error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to disconnect Asana account" },
       { status: 500 }

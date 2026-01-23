@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // Generate iCalendar (ICS) format for calendar apps
 function generateICS(events: Array<{
@@ -154,7 +155,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Calendar export error:", error)
+    logError(logger, "Calendar export error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to export calendar" },
       { status: 500 }

@@ -7,6 +7,7 @@ import { generateConsolidatedDigest, formatConsolidatedDigestHTML } from "@/lib/
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, DailyDigest, TeamMember, EODInsight, Organization } from "@/lib/types"
 import { Resend } from "resend"
+import { logger, logError } from "@/lib/logger"
 
 // This endpoint is designed to be called by Vercel Cron
 // Runs every hour to check which organizations are at 6 PM in their timezone
@@ -21,7 +22,7 @@ import { Resend } from "resend"
 function verifyCronSecret(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
-    console.log("[Cron] CRON_SECRET not configured, allowing request")
+    logger.info("CRON_SECRET not configured, allowing request")
     return true // Allow in development
   }
 
@@ -58,7 +59,7 @@ function isDigestTime(org: Organization): boolean {
 
     return isCorrectHour && isWeekday
   } catch (error) {
-    console.error(`[Cron] Timezone error for ${org.id}:`, error)
+    logError(logger, `Timezone error for org ${org.id}`, error)
     const now = new Date()
     return now.getUTCHours() === 18 && now.getUTCDay() >= 1 && now.getUTCDay() <= 5
   }
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log(`[Cron] Running daily digest check at ${new Date().toISOString()}`)
+    logger.info({ timestamp: new Date().toISOString() }, "Running daily digest check")
 
     // Get all organizations
     const organizations = await db.organizations.findAll()
@@ -114,14 +115,14 @@ export async function GET(request: NextRequest) {
         continue
       }
 
-      console.log(`[Cron] Processing digest for org ${org.name} (timezone: ${timezone})`)
+      logger.info({ orgName: org.name, timezone }, "Processing digest for org")
       const today = getTodayInTimezone(timezone)
 
       try {
         // Check if digest already exists
         const existingDigest = await db.dailyDigests.findByDate(org.id, today)
         if (existingDigest) {
-          console.log(`[Cron] Digest already exists for org ${org.name}`)
+          logger.info({ orgName: org.name }, "Digest already exists for org")
           results.push({ orgId: org.id, orgName: org.name, success: true, skipped: "Already exists" })
           continue
         }
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
         const todayReports = allReports.filter(r => r.date === today)
 
         if (todayReports.length === 0) {
-          console.log(`[Cron] No reports for org ${org.name}`)
+          logger.info({ orgName: org.name }, "No reports for org")
           results.push({ orgId: org.id, orgName: org.name, success: true, skipped: "No reports" })
           continue
         }
@@ -179,7 +180,7 @@ export async function GET(request: NextRequest) {
         }
 
         await db.dailyDigests.create(digest)
-        console.log(`[Cron] Digest created for org ${org.name}`)
+        logger.info({ orgName: org.name }, "Digest created for org")
 
         // Find members who haven't submitted EOD
         const submittedUserIds = new Set(todayReports.map(r => r.userId))
@@ -190,7 +191,7 @@ export async function GET(request: NextRequest) {
         // Send email summary to admins
         if (isEmailConfigured()) {
           await sendDailySummaryEmail(digest, teamMembers, admins, missingMembers)
-          console.log(`[Cron] Email sent for org ${org.name}`)
+          logger.info({ orgName: org.name }, "Email sent for org")
 
           // Also send Rock-organized digest email to admins
           const adminUser = admins[0]
@@ -212,9 +213,9 @@ export async function GET(request: NextRequest) {
                 subject: `📊 Daily Rock Progress Summary - ${consolidatedDigest.formattedDate}`,
                 html: formatConsolidatedDigestHTML(consolidatedDigest),
               })
-              console.log(`[Cron] Rock-organized digest email sent for org ${org.name}`)
+              logger.info({ orgName: org.name }, "Rock-organized digest email sent for org")
             } catch (digestError) {
-              console.error(`[Cron] Rock digest email failed for org ${org.name}:`, digestError)
+              logError(logger, `Rock digest email failed for org ${org.name}`, digestError)
             }
           }
         }
@@ -265,15 +266,15 @@ export async function GET(request: NextRequest) {
             )
 
             await sendSlackMessage(slackWebhookUrl!, slackMessage)
-            console.log(`[Cron] Slack digest sent for org ${org.name}`)
+            logger.info({ orgName: org.name }, "Slack digest sent for org")
           } catch (slackError) {
-            console.error(`[Cron] Slack digest failed for org ${org.name}:`, slackError)
+            logError(logger, `Slack digest failed for org ${org.name}`, slackError)
           }
         }
 
         results.push({ orgId: org.id, orgName: org.name, success: true })
       } catch (error) {
-        console.error(`[Cron] Failed for org ${org.name}:`, error)
+        logError(logger, `Failed for org ${org.name}`, error)
         results.push({
           orgId: org.id,
           orgName: org.name,
@@ -292,7 +293,7 @@ export async function GET(request: NextRequest) {
       message: `Processed ${processedCount} orgs (${failCount} failed) out of ${organizations.length} total`,
     })
   } catch (error) {
-    console.error("[Cron] Daily digest error:", error)
+    logError(logger, "Daily digest error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to generate digests" },
       { status: 500 }

@@ -171,6 +171,7 @@ export function TimeTracker({
  placeholder="What are you working on?"
  className="flex-1"
  disabled={disabled}
+ aria-label="Time entry description"
  />
  </div>
  <Button
@@ -295,6 +296,7 @@ function TimeEntryRow({
  variant="ghost"
  className="h-6 w-6"
  onClick={handleSave}
+ aria-label="Save description"
  >
  <Check className="h-3.5 w-3.5" />
  </Button>
@@ -306,6 +308,7 @@ function TimeEntryRow({
  setEditDescription(entry.description || "")
  setIsEditing(false)
  }}
+ aria-label="Cancel editing"
  >
  <X className="h-3.5 w-3.5" />
  </Button>
@@ -342,6 +345,7 @@ function TimeEntryRow({
  variant="ghost"
  className="h-6 w-6"
  onClick={() => setIsEditing(true)}
+ aria-label="Edit time entry"
  >
  <Edit2 className="h-3.5 w-3.5" />
  </Button>
@@ -350,6 +354,7 @@ function TimeEntryRow({
  variant="ghost"
  className="h-6 w-6 text-red-500 hover:text-red-600"
  onClick={onDelete}
+ aria-label="Delete time entry"
  >
  <Trash2 className="h-3.5 w-3.5" />
  </Button>

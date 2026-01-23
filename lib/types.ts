@@ -80,6 +80,9 @@ export interface User {
   lastLoginAt?: string
 }
 
+/** User type without password hash - safe for API responses */
+export type SafeUser = Omit<User, "passwordHash">
+
 // Notification preferences for each event type
 export interface NotificationChannels {
   email: boolean
@@ -354,6 +357,7 @@ export interface ApiResponse<T> {
   error?: string
   message?: string
   code?: string // Error code for programmatic handling (e.g., CREDITS_EXHAUSTED)
+  meta?: Record<string, unknown> // Additional metadata for debugging or context
 }
 
 export interface PaginatedResponse<T> {
@@ -378,7 +382,7 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
-  user: User
+  user: SafeUser
   organization?: Organization
   member?: OrganizationMember
   token: string

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import crypto from "crypto"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * GET /api/asana/oauth/callback
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     // Handle errors from Asana
     if (error) {
-      console.error("Asana OAuth error:", error, errorDescription)
+      logger.error({ error, errorDescription }, "Asana OAuth error")
       return NextResponse.redirect(
         new URL(`/settings?asana_error=${encodeURIComponent(errorDescription || error)}`, request.url)
       )
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     // CSRF Protection: Validate state parameter
     if (!state) {
-      console.error("Asana OAuth: Missing state parameter - potential CSRF attack")
+      logger.error({}, "Asana OAuth: Missing state parameter - potential CSRF attack")
       return NextResponse.redirect(
         new URL("/settings?asana_error=Invalid OAuth request - missing state parameter", request.url)
       )
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     try {
       stateData = JSON.parse(Buffer.from(state, "base64").toString("utf-8"))
     } catch {
-      console.error("Asana OAuth: Invalid state parameter format")
+      logger.error({}, "Asana OAuth: Invalid state parameter format")
       return NextResponse.redirect(
         new URL("/settings?asana_error=Invalid OAuth state", request.url)
       )
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
     // Check state is not too old (max 10 minutes)
     const maxAge = 10 * 60 * 1000 // 10 minutes
     if (!stateData.timestamp || Date.now() - stateData.timestamp > maxAge) {
-      console.error("Asana OAuth: State parameter expired")
+      logger.error({}, "Asana OAuth: State parameter expired")
       return NextResponse.redirect(
         new URL("/settings?asana_error=OAuth session expired - please try again", request.url)
       )
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     // Verify the user/org from state exists
     if (!stateData.userId || !stateData.orgId) {
-      console.error("Asana OAuth: Missing user/org in state")
+      logger.error({}, "Asana OAuth: Missing user/org in state")
       return NextResponse.redirect(
         new URL("/settings?asana_error=Invalid OAuth state - missing user info", request.url)
       )
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
     const redirectUri = `${new URL(request.url).origin}/api/asana/oauth/callback`
 
     if (!clientId || !clientSecret) {
-      console.error("Asana OAuth: Missing client credentials")
+      logger.error({}, "Asana OAuth: Missing client credentials")
       return NextResponse.redirect(
         new URL("/settings?asana_error=Asana integration not configured", request.url)
       )
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json().catch(() => ({}))
-      console.error("Asana token exchange failed:", errorData)
+      logger.error({ errorData }, "Asana token exchange failed")
       return NextResponse.redirect(
         new URL(`/settings?asana_error=${encodeURIComponent(errorData.error_description || "Token exchange failed")}`, request.url)
       )
@@ -114,7 +115,7 @@ export async function GET(request: NextRequest) {
     // - token_type: "bearer"
     // - data: { id, gid, name, email } - User info
 
-    console.log("Asana OAuth successful for user:", tokenData.data?.email)
+    logger.info({ email: tokenData.data?.email }, "Asana OAuth successful for user")
 
     // Store the tokens in the database for the user from state
     // Note: In production, encrypt tokens before storing
@@ -133,7 +134,7 @@ export async function GET(request: NextRequest) {
       new URL(`/settings?asana_success=true&asana_user=${encodeURIComponent(tokenData.data?.email || "")}`, request.url)
     )
   } catch (error) {
-    console.error("Asana OAuth callback error:", error)
+    logError(logger, "Asana OAuth callback error", error)
     return NextResponse.redirect(
       new URL("/settings?asana_error=An unexpected error occurred", request.url)
     )

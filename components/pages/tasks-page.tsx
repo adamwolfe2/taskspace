@@ -14,6 +14,7 @@ import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid } from "
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useToast } from "@/hooks/use-toast"
 import { addDays, addWeeks, addMonths } from "date-fns"
+import { getErrorMessage } from "@/lib/utils"
 
 interface TasksPageProps {
   currentUser: TeamMember
@@ -119,10 +120,10 @@ export function TasksPage({
         title: "Task completed!",
         description: "Added to today's EOD report",
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to complete task",
+        description: getErrorMessage(err, "Failed to complete task"),
         variant: "destructive",
       })
     }
@@ -153,10 +154,10 @@ export function TasksPage({
           ? `Recurring task created (${taskData.recurrence.type})`
           : "Your personal task has been added",
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to create task",
+        description: getErrorMessage(err, "Failed to create task"),
         variant: "destructive",
       })
     }
@@ -174,10 +175,10 @@ export function TasksPage({
         title: "Task deleted",
         description: "Your task has been removed",
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to delete task",
+        description: getErrorMessage(err, "Failed to delete task"),
         variant: "destructive",
       })
     }
@@ -197,10 +198,10 @@ export function TasksPage({
           description: "Added to today's EOD report",
         })
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to update task status",
+        description: getErrorMessage(err, "Failed to update task status"),
         variant: "destructive",
       })
     }

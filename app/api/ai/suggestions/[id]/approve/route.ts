@@ -8,6 +8,7 @@ import {
 } from "@/lib/ai/suggestions"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, AISuggestion, AssignedTask } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * POST /api/ai/suggestions/[id]/approve
@@ -81,7 +82,7 @@ export async function POST(
       data: result,
     })
   } catch (error) {
-    console.error("Approve suggestion error:", error)
+    logError(logger, "Approve suggestion error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,

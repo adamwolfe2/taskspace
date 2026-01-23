@@ -10,6 +10,7 @@ import { DailyDigestCard } from "@/components/ai/daily-digest-card"
 import { BulkRockImport } from "@/components/ai/bulk-rock-import"
 import { api } from "@/lib/api/client"
 import { useToast } from "@/hooks/use-toast"
+import { getErrorMessage } from "@/lib/utils"
 import { Brain, Sparkles, MessageSquare, Calendar, AlertCircle, Zap, Mountain } from "lucide-react"
 import type {
   TeamMember,
@@ -120,8 +121,8 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
       if (data.data.tasks.length > 0) {
         setActiveTab("tasks")
       }
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
       toast({
         title: "Error",
         description: err.message,
@@ -153,10 +154,10 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
         title: "Task approved",
         description: "Task has been added to the assignee's list",
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message,
+        description: getErrorMessage(err),
         variant: "destructive",
       })
     }
@@ -183,10 +184,10 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
         title: "Task rejected",
         description: "Task has been removed",
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message,
+        description: getErrorMessage(err),
         variant: "destructive",
       })
     }
@@ -220,10 +221,10 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
         title: "Digest generated",
         description: data.message,
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message,
+        description: getErrorMessage(err),
         variant: "destructive",
       })
     } finally {

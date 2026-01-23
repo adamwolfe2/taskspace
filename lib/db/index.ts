@@ -283,7 +283,7 @@ export const db = {
   // Organizations
   organizations: {
     async findAll(): Promise<Organization[]> {
-      const { rows } = await sql`SELECT * FROM organizations`
+      const { rows } = await sql`SELECT * FROM organizations ORDER BY created_at DESC LIMIT 1000`
       return rows.map(parseOrganization)
     },
     async findById(id: string): Promise<Organization | null> {
@@ -405,7 +405,7 @@ export const db = {
   // Organization Members
   members: {
     async findAll(): Promise<OrganizationMember[]> {
-      const { rows } = await sql`SELECT * FROM organization_members`
+      const { rows } = await sql`SELECT * FROM organization_members ORDER BY created_at DESC LIMIT 5000`
       return rows.map(parseMember)
     },
     async findById(id: string): Promise<OrganizationMember | null> {
@@ -657,7 +657,7 @@ export const db = {
       return rows[0] ? parseInvitation(rows[0]) : null
     },
     async findByOrganizationId(orgId: string): Promise<Invitation[]> {
-      const { rows } = await sql`SELECT * FROM invitations WHERE organization_id = ${orgId}`
+      const { rows } = await sql`SELECT * FROM invitations WHERE organization_id = ${orgId} ORDER BY created_at DESC LIMIT 1000`
       return rows.map(parseInvitation)
     },
     async findPendingByEmail(email: string): Promise<Invitation[]> {
@@ -1150,6 +1150,7 @@ export const db = {
         SELECT * FROM notifications
         WHERE user_id = ${userId} AND organization_id = ${orgId} AND read = FALSE
         ORDER BY created_at DESC
+        LIMIT 100
       `
       return rows.map(row => ({
         id: row.id as string,

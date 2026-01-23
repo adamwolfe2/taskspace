@@ -60,6 +60,7 @@ export function DashboardPage({
  const [selectedEodDate, setSelectedEodDate] = useState<string | null>(null)
  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false)
  const eodCardRef = useRef<HTMLDivElement>(null)
+ const tasksRef = useRef<HTMLDivElement>(null)
  const { currentOrganization } = useApp()
 
  // Productivity data
@@ -115,7 +116,8 @@ export function DashboardPage({
  }
 
  const handleViewTask = (_taskId: string) => {
- // TODO: Open task detail modal
+   // Scroll to tasks section where user can interact with the task
+   tasksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
  }
 
  const handleUpdateProgress = async (rockId: string, progress: number) => {
@@ -227,6 +229,7 @@ export function DashboardPage({
  onUpdateRock={updateRock}
  />
  </ErrorBoundary>
+ <div ref={tasksRef}>
  <ErrorBoundary title="Tasks section unavailable">
  <AssignedTasksSection
  tasks={userTasks}
@@ -239,6 +242,7 @@ export function DashboardPage({
  onDeleteTask={deleteTask}
  />
  </ErrorBoundary>
+ </div>
  </div>
 
  {/* EOD Submission Card */}

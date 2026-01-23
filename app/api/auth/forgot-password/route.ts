@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth/rate-limit"
 import { sendPasswordResetEmail } from "@/lib/email"
 import type { PasswordResetToken, ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {
@@ -78,10 +79,10 @@ export async function POST(request: NextRequest) {
       sendPasswordResetEmail(resetToken, user.name)
         .then((result) => {
           if (!result.success) {
-            console.warn("Failed to send password reset email:", result.error)
+            logger.warn({ error: result.error }, "Failed to send password reset email")
           }
         })
-        .catch((err) => console.error("Email send error:", err))
+        .catch((err) => logError(logger, "Email send error", err))
     }
 
     // Always return success to prevent email enumeration
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
       message: "If an account with that email exists, we've sent a password reset link.",
     })
   } catch (error) {
-    console.error("Forgot password error:", error)
+    logError(logger, "Forgot password error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "An error occurred. Please try again later." },
       { status: 500 }

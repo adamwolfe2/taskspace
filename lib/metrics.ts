@@ -6,6 +6,7 @@
  */
 
 import { sql } from "./db/sql"
+import { logger, logError } from "./logger"
 
 export interface TeamMemberMetric {
   id: string
@@ -114,9 +115,9 @@ export function formatDateString(date: Date): string {
 }
 
 /**
- * Parse date string to Date object
+ * Parse date string to Date object (internal use)
  */
-export function parseDateString(dateStr: string): Date {
+function parseDateString(dateStr: string): Date {
   const [year, month, day] = dateStr.split('-').map(Number)
   return new Date(year, month - 1, day)
 }
@@ -264,15 +265,14 @@ export async function getScorecardData(
   // Get all weekly entries for these members within the date range
   const memberIds = metricsResult.rows.map(r => r.member_id)
 
-  // Convert array to comma-separated string for PostgreSQL ANY
-  const memberIdsStr = memberIds.join(',')
+  // Use native PostgreSQL array for efficient querying
   const entriesResult = await sql`
     SELECT
       team_member_id,
       week_ending,
       actual_value
     FROM weekly_metric_entries
-    WHERE team_member_id = ANY(string_to_array(${memberIdsStr}, ','))
+    WHERE team_member_id = ANY(${memberIds}::text[])
     AND week_ending >= ${oldestWeek}::date
     ORDER BY week_ending DESC
   `
@@ -323,7 +323,7 @@ export async function setTeamMemberMetric(
   metricName: string,
   weeklyGoal: number
 ): Promise<TeamMemberMetric> {
-  console.log("setTeamMemberMetric: Deactivating existing metrics for member:", memberId)
+logger.debug("setTeamMemberMetric: Deactivating existing metrics", { memberId })
 
   // Deactivate existing active metric
   const deactivateResult = await sql`
@@ -332,10 +332,10 @@ export async function setTeamMemberMetric(
     WHERE team_member_id = ${memberId}
     AND is_active = true
   `
-  console.log("setTeamMemberMetric: Deactivated", deactivateResult.rowCount, "existing metrics")
+  logger.debug("setTeamMemberMetric: Deactivated existing metrics", { memberId, count: deactivateResult.rowCount })
 
   // Insert new metric
-  console.log("setTeamMemberMetric: Inserting new metric:", metricName, "goal:", weeklyGoal)
+  logger.debug("setTeamMemberMetric: Inserting new metric", { memberId, metricName, weeklyGoal })
   const result = await sql`
     INSERT INTO team_member_metrics (id, team_member_id, metric_name, weekly_goal, is_active, created_at, updated_at)
     VALUES (
@@ -351,12 +351,12 @@ export async function setTeamMemberMetric(
   `
 
   if (result.rows.length === 0) {
-    console.error("setTeamMemberMetric: INSERT returned no rows!")
+    logError(logger, "setTeamMemberMetric: INSERT returned no rows", new Error("No rows returned"))
     throw new Error("Failed to insert metric - no rows returned")
   }
 
   const row = result.rows[0]
-  console.log("setTeamMemberMetric: Successfully inserted metric with id:", row.id)
+  logger.debug("setTeamMemberMetric: Successfully inserted metric", { metricId: row.id })
 
   return {
     id: row.id,

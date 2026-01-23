@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
 import * as googleCalendar from "@/lib/google-calendar"
+import { logger, logError } from "@/lib/logger"
 
 // GET /api/google-calendar/callback - OAuth callback
 export async function GET(request: NextRequest) {
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     return NextResponse.redirect(`${appUrl}?page=settings&tab=integrations&calendar_connected=true`)
   } catch (error) {
-    console.error("Google Calendar OAuth callback error:", error)
+    logError(logger, "Google Calendar OAuth callback error", error)
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     return NextResponse.redirect(`${appUrl}?page=settings&tab=integrations&calendar_error=failed`)
   }

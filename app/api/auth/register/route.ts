@@ -6,7 +6,7 @@ import {
   generateToken,
   getExpirationDate,
   validateEmail,
-  validatePassword,
+  validatePasswordStrength,
   slugify,
 } from "@/lib/auth/password"
 import {
@@ -55,10 +55,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate password strength
-    const passwordValidation = validatePassword(password)
+    const passwordValidation = validatePasswordStrength(password)
     if (!passwordValidation.valid) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: passwordValidation.message },
+        { success: false, error: passwordValidation.errors.join(". ") },
         { status: 400 }
       )
     }
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json<ApiResponse<AuthResponse>>({
       success: true,
       data: {
-        user: safeUser as any,
+        user: safeUser,
         organization,
         member,
         token: sessionToken,

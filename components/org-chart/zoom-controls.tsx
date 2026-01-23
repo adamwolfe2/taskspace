@@ -18,6 +18,7 @@ export function ZoomControls({ onZoomIn, onZoomOut, onReset }: ZoomControlsProps
         onClick={onZoomIn}
         className="h-10 w-10 rounded-full bg-white shadow-lg hover:bg-slate-50 border-slate-200"
         title="Zoom In"
+        aria-label="Zoom in"
       >
         <ZoomIn className="h-4 w-4" />
       </Button>
@@ -27,6 +28,7 @@ export function ZoomControls({ onZoomIn, onZoomOut, onReset }: ZoomControlsProps
         onClick={onZoomOut}
         className="h-10 w-10 rounded-full bg-white shadow-lg hover:bg-slate-50 border-slate-200"
         title="Zoom Out"
+        aria-label="Zoom out"
       >
         <ZoomOut className="h-4 w-4" />
       </Button>
@@ -36,6 +38,7 @@ export function ZoomControls({ onZoomIn, onZoomOut, onReset }: ZoomControlsProps
         onClick={onReset}
         className="h-10 w-10 rounded-full bg-white shadow-lg hover:bg-slate-50 border-slate-200"
         title="Reset View"
+        aria-label="Reset view"
       >
         <Maximize2 className="h-4 w-4" />
       </Button>

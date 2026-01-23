@@ -10,6 +10,7 @@
 
 import { sql } from "../db/sql"
 import crypto from "crypto"
+import { logger, logError } from "../logger"
 
 // ============================================
 // TYPES
@@ -183,7 +184,7 @@ class RecurringTaskProcessor {
       return
     }
 
-    console.log("Starting recurring task processor...")
+    logger.info("Starting recurring task processor")
     this.processInterval = setInterval(() => {
       this.processDueTasks()
     }, intervalMs)
@@ -230,7 +231,7 @@ class RecurringTaskProcessor {
           await this.processTemplate(template as RecurringTaskTemplate)
           processed++
         } catch (error) {
-          console.error(`Error processing recurring task ${template.id}:`, error)
+          logError(logger, `Error processing recurring task ${template.id}`, error)
         }
       }
     } finally {
@@ -238,7 +239,7 @@ class RecurringTaskProcessor {
     }
 
     if (processed > 0) {
-      console.log(`Processed ${processed} recurring tasks`)
+      logger.info("Processed recurring tasks", { count: processed })
     }
 
     return processed

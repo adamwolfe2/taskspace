@@ -5,6 +5,7 @@ import { parseBrainDump, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
 import type { ApiResponse, AdminBrainDump, AIGeneratedTask, TeamMember, ParsedScorecardMetric } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 // POST /api/ai/brain-dump - Process a brain dump and generate task suggestions
 export async function POST(request: NextRequest) {
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
               weeklyGoal: metricData.weeklyGoal,
             })
           } catch (err) {
-            console.error(`Failed to save metric for ${member.name}:`, err)
+            logError(logger, `Failed to save metric for ${member.name}`, err)
           }
         }
       }
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
       message: `Generated ${generatedTasks.length} task suggestions${metricsMessage}`,
     })
   } catch (error) {
-    console.error("Brain dump processing error:", error)
+    logError(logger, "Brain dump processing error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to process brain dump" },
       { status: 500 }
@@ -193,7 +194,7 @@ export async function GET(request: NextRequest) {
       data: brainDumps,
     })
   } catch (error) {
-    console.error("Get brain dumps error:", error)
+    logError(logger, "Get brain dumps error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get brain dump history" },
       { status: 500 }

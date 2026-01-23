@@ -113,6 +113,8 @@ export function MeetingTimer({
           size="icon"
           onClick={() => setIsRunning(!isRunning)}
           className="h-8 w-8"
+          aria-label={isRunning ? "Pause timer" : "Start timer"}
+          aria-pressed={isRunning}
         >
           {isRunning ? (
             <Pause className="h-4 w-4" />
@@ -125,6 +127,7 @@ export function MeetingTimer({
           size="icon"
           onClick={reset}
           className="h-8 w-8"
+          aria-label="Reset timer"
         >
           <RotateCcw className="h-4 w-4" />
         </Button>

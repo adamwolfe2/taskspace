@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 import type { TeamMember, Organization, PageType } from "../types"
 import { api } from "../api/client"
+import { getErrorMessage } from "../utils"
 
 interface AppContextType {
   // Auth state
@@ -138,8 +139,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setCurrentUser(teamMember)
       setCurrentOrganization(data.organization)
       setCurrentPage("dashboard")
-    } catch (err: any) {
-      setError(err.message || "Login failed")
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Login failed"))
       throw err
     } finally {
       setIsLoading(false)
@@ -173,8 +174,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // User created but no organization - go to setup
         setCurrentPage("setup-organization")
       }
-    } catch (err: any) {
-      setError(err.message || "Registration failed")
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Registration failed"))
       throw err
     } finally {
       setIsLoading(false)

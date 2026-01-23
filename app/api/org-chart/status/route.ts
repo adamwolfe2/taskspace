@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { checkAirtableConnection } from "@/lib/org-chart/airtable"
+import { logger, logError } from "@/lib/logger"
 
 export async function GET() {
   try {
@@ -36,7 +37,7 @@ export async function GET() {
         : "Using fallback data",
     })
   } catch (error) {
-    console.error("Status check error:", error)
+    logError(logger, "Status check error", error)
     return NextResponse.json({
       success: true,
       connected: false,

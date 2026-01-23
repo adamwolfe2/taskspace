@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import type { Rock, RockMilestone } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * Formats workspace rocks (with milestones) into the org chart string format
@@ -205,7 +206,7 @@ export async function POST(request: NextRequest) {
       results,
     })
   } catch (error) {
-    console.error("Rocks sync error:", error)
+    logError(logger, "Rocks sync error", error)
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : "Sync failed" },
       { status: 500 }
@@ -309,7 +310,7 @@ export async function GET(request: NextRequest) {
       mappingStatus,
     })
   } catch (error) {
-    console.error("Rocks sync status error:", error)
+    logError(logger, "Rocks sync status error", error)
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : "Failed to get status" },
       { status: 500 }

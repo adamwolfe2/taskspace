@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { getSuggestionById, rejectSuggestion } from "@/lib/ai/suggestions"
 import type { ApiResponse, AISuggestion } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * POST /api/ai/suggestions/[id]/reject
@@ -61,7 +62,7 @@ export async function POST(
       data: result,
     })
   } catch (error) {
-    console.error("Reject suggestion error:", error)
+    logError(logger, "Reject suggestion error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
