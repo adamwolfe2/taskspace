@@ -75,14 +75,24 @@ export const ENV = {
   isDevelopment: process.env.NODE_ENV === "development",
 } as const
 
-// Get the expiration date for a given number of hours from now
+/**
+ * Calculate a future expiration date from now
+ * @param hours - Number of hours until expiration
+ * @returns ISO 8601 date string
+ * @example getExpirationDate(24) // 24 hours from now
+ */
 export function getExpirationDate(hours: number): string {
   const date = new Date()
   date.setHours(date.getHours() + hours)
   return date.toISOString()
 }
 
-// Get the expiration date for a given number of days from now
+/**
+ * Calculate a future expiration date from now (in days)
+ * @param days - Number of days until expiration
+ * @returns ISO 8601 date string
+ * @example getExpirationDateDays(7) // 1 week from now
+ */
 export function getExpirationDateDays(days: number): string {
   return getExpirationDate(days * 24)
 }

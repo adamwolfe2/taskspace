@@ -4,6 +4,8 @@ import { getAuthContext } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import type { PushSubscription, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createPushSubscriptionSchema } from "@/lib/validation/schemas"
 
 // GET /api/push-subscriptions - Get VAPID public key and current subscriptions
 export async function GET(request: NextRequest) {
@@ -54,15 +56,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { subscription } = body
-
-    if (!subscription || !subscription.endpoint || !subscription.keys) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid subscription data" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { subscription } = await validateBody(request, createPushSubscriptionSchema, {
+      errorPrefix: "Invalid subscription data",
+    })
 
     const now = new Date().toISOString()
 
@@ -85,6 +82,12 @@ export async function POST(request: NextRequest) {
       message: "Successfully subscribed to push notifications",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Subscribe push error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to subscribe to push notifications" },

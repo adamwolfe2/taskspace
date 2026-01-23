@@ -329,6 +329,116 @@ export const calendarExportSchema = z.object({
 })
 
 // ============================================
+// INVITATION SCHEMAS
+// ============================================
+
+export const acceptInvitationSchema = z.object({
+  token: z.string().min(1, "Invitation token is required"),
+  name: z.string().min(2, "Name must be at least 2 characters").max(100),
+  password: passwordSchema,
+})
+
+export const switchOrganizationSchema = z.object({
+  organizationId: z.string().min(1, "Organization ID is required"),
+})
+
+// ============================================
+// BRANDING SCHEMAS
+// ============================================
+
+const hexColorSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color format").optional()
+
+export const updateBrandingSchema = z.object({
+  logoUrl: z.string().url().nullable().optional(),
+  primaryColor: hexColorSchema,
+  secondaryColor: hexColorSchema,
+  accentColor: hexColorSchema,
+  faviconUrl: z.string().url().nullable().optional(),
+  customDomain: z.string().max(253).nullable().optional(),
+})
+
+// ============================================
+// SCORECARD SCHEMAS
+// ============================================
+
+export const updateScorecardEntrySchema = z.object({
+  memberId: z.string().min(1, "Member ID is required"),
+  weekEnding: dateSchema,
+  value: z.coerce.number({ invalid_type_error: "Value must be a number" }),
+})
+
+// ============================================
+// WORKSPACE SCHEMAS
+// ============================================
+
+export const workspaceTypeSchema = z.enum(["personal", "team", "project"])
+
+export const createWorkspaceSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  type: workspaceTypeSchema.default("personal"),
+  description: z.string().max(500).optional(),
+  isDefault: z.boolean().default(false),
+  settings: z.record(z.unknown()).optional(),
+})
+
+export const updateWorkspaceSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  type: workspaceTypeSchema.optional(),
+  description: z.string().max(500).optional(),
+  isDefault: z.boolean().optional(),
+  settings: z.record(z.unknown()).optional(),
+})
+
+// ============================================
+// NOTIFICATION UPDATE SCHEMA
+// ============================================
+
+export const updateNotificationSchema = z.object({
+  id: z.string().optional(),
+  markAllRead: z.boolean().optional(),
+})
+
+// ============================================
+// PUSH SUBSCRIPTION SCHEMAS
+// ============================================
+
+export const createPushSubscriptionSchema = z.object({
+  subscription: z.object({
+    endpoint: z.string().url(),
+    keys: z.object({
+      p256dh: z.string().min(1),
+      auth: z.string().min(1),
+    }),
+  }),
+})
+
+// ============================================
+// FOCUS BLOCK SCHEMAS
+// ============================================
+
+export const focusCategorySchema = z.enum(["deep_work", "meetings", "admin", "collaboration", "learning", "planning"])
+export const focusQualitySchema = z.number().int().min(1).max(5).optional()
+
+export const createFocusBlockSchema = z.object({
+  startTime: isoDateSchema,
+  endTime: isoDateSchema,
+  category: focusCategorySchema,
+  quality: focusQualitySchema,
+  interruptions: z.number().int().min(0).default(0),
+  notes: z.string().max(1000).optional(),
+  taskId: z.string().optional(),
+  rockId: z.string().optional(),
+})
+
+// ============================================
+// TEST EMAIL SCHEMA
+// ============================================
+
+export const testEmailSchema = z.object({
+  testEmail: emailSchema,
+})
+
+// ============================================
 // TYPE EXPORTS
 // ============================================
 
@@ -343,3 +453,13 @@ export type UpdateEODReportInput = z.infer<typeof updateEODReportSchema>
 export type PaginationInput = z.infer<typeof paginationSchema>
 export type BrainDumpInput = z.infer<typeof brainDumpSchema>
 export type AIQueryInput = z.infer<typeof aiQuerySchema>
+export type AcceptInvitationInput = z.infer<typeof acceptInvitationSchema>
+export type SwitchOrganizationInput = z.infer<typeof switchOrganizationSchema>
+export type UpdateBrandingInput = z.infer<typeof updateBrandingSchema>
+export type UpdateScorecardEntryInput = z.infer<typeof updateScorecardEntrySchema>
+export type CreateWorkspaceInput = z.infer<typeof createWorkspaceSchema>
+export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>
+export type UpdateNotificationInput = z.infer<typeof updateNotificationSchema>
+export type CreatePushSubscriptionInput = z.infer<typeof createPushSubscriptionSchema>
+export type CreateFocusBlockInput = z.infer<typeof createFocusBlockSchema>
+export type TestEmailInput = z.infer<typeof testEmailSchema>

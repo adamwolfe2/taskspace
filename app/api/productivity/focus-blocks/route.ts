@@ -3,6 +3,8 @@ import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
 import type { ApiResponse, FocusBlock } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createFocusBlockSchema } from "@/lib/validation/schemas"
 
 // GET /api/productivity/focus-blocks - List focus blocks for user
 export async function GET(request: NextRequest) {
@@ -55,32 +57,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-
-    // Validate required fields
-    if (!body.startTime || !body.endTime || !body.category) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Missing required fields: startTime, endTime, category" },
-        { status: 400 }
-      )
-    }
-
-    // Validate category
-    const validCategories = ["deep_work", "meetings", "admin", "collaboration", "learning", "planning"]
-    if (!validCategories.includes(body.category)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `Invalid category. Must be one of: ${validCategories.join(", ")}` },
-        { status: 400 }
-      )
-    }
-
-    // Validate quality if provided
-    if (body.quality !== undefined && (body.quality < 1 || body.quality > 5)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Quality must be between 1 and 5" },
-        { status: 400 }
-      )
-    }
+    // Validate request body using Zod schema
+    const body = await validateBody(request, createFocusBlockSchema, {
+      errorPrefix: "Invalid focus block",
+    })
 
     const focusBlock: Omit<FocusBlock, "id" | "createdAt" | "updatedAt"> = {
       organizationId: auth.organization.id,
@@ -89,7 +69,7 @@ export async function POST(request: NextRequest) {
       endTime: body.endTime,
       category: body.category,
       quality: body.quality,
-      interruptions: body.interruptions || 0,
+      interruptions: body.interruptions,
       notes: body.notes,
       taskId: body.taskId,
       rockId: body.rockId,
@@ -102,6 +82,12 @@ export async function POST(request: NextRequest) {
       data: result,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Create focus block error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create focus block" },

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { logger, logError } from "@/lib/logger"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateOrganizationSettingsSchema } from "@/lib/validation/schemas"
 
 /**
  * PUT /api/organizations/settings
@@ -19,7 +21,10 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 })
     }
 
-    const body = await request.json()
+    // Validate request body using Zod schema
+    const body = await validateBody(request, updateOrganizationSettingsSchema, {
+      errorPrefix: "Invalid settings",
+    })
 
     // Get current organization
     const org = await db.organizations.findById(auth.organization.id)
@@ -51,6 +56,12 @@ export async function PUT(request: NextRequest) {
       organization: updatedOrg,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Update organization settings error", error)
     return NextResponse.json(
       { error: "Failed to update settings" },

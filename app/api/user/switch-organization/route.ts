@@ -3,6 +3,8 @@ import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { CONFIG } from "@/lib/config"
 import { logger, logError } from "@/lib/logger"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { switchOrganizationSchema } from "@/lib/validation/schemas"
 
 // POST /api/user/switch-organization - Switch to a different organization
 export async function POST(request: NextRequest) {
@@ -15,15 +17,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { organizationId } = body
-
-    if (!organizationId || typeof organizationId !== "string") {
-      return NextResponse.json(
-        { success: false, error: "Organization ID is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { organizationId } = await validateBody(request, switchOrganizationSchema, {
+      errorPrefix: "Invalid request",
+    })
 
     // Check if user is a member of the target organization
     const member = await db.members.findByOrgAndUser(organizationId, auth.user.id)
@@ -128,6 +125,12 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Error switching organization", error)
     return NextResponse.json(
       { success: false, error: "Failed to switch organization" },

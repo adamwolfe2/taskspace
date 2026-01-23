@@ -86,12 +86,12 @@ export async function sendInvitationEmail(
     <div class="card">
       <div class="header">
         <h1>You're Invited!</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9;">Join ${organization.name} on AIMS Dashboard</p>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Join ${escapeHtml(organization.name)} on AIMS Dashboard</p>
       </div>
 
       <div class="content">
         <p>Hi there,</p>
-        <p><strong>${inviterName}</strong> has invited you to join <strong>${organization.name}</strong> on AIMS Dashboard - the team accountability and management platform.</p>
+        <p><strong>${escapeHtml(inviterName)}</strong> has invited you to join <strong>${escapeHtml(organization.name)}</strong> on AIMS Dashboard - the team accountability and management platform.</p>
 
         <div class="invite-box">
           <p style="margin: 0 0 15px 0;">Click the button below to accept your invitation:</p>
@@ -102,7 +102,7 @@ export async function sendInvitationEmail(
         <div class="details">
           <div class="details-row">
             <span class="label">Organization</span>
-            <span class="value">${organization.name}</span>
+            <span class="value">${escapeHtml(organization.name)}</span>
           </div>
           <div class="details-row">
             <span class="label">Role</span>
@@ -110,7 +110,7 @@ export async function sendInvitationEmail(
           </div>
           <div class="details-row">
             <span class="label">Department</span>
-            <span class="value">${invitation.department}</span>
+            <span class="value">${escapeHtml(invitation.department)}</span>
           </div>
         </div>
 
@@ -130,7 +130,7 @@ export async function sendInvitationEmail(
 
   return sendEmail(
     [invitation.email],
-    `You're invited to join ${organization.name} on AIMS Dashboard`,
+    `You're invited to join ${escapeHtml(organization.name)} on AIMS Dashboard`,
     html
   )
 }
@@ -165,31 +165,31 @@ export async function sendEscalationNotification(
         <span class="alert-icon">⚠️</span>
         <h1 class="alert-title">Escalation Required</h1>
       </div>
-      <p><strong>${submittedBy.name}</strong> has flagged an issue that needs your attention.</p>
+      <p><strong>${escapeHtml(submittedBy.name)}</strong> has flagged an issue that needs your attention.</p>
 
       <div class="content">
         <div class="meta">
           <strong>Date:</strong> ${new Date(eodReport.date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}<br/>
-          <strong>Department:</strong> ${submittedBy.department}<br/>
+          <strong>Department:</strong> ${escapeHtml(submittedBy.department)}<br/>
           <strong>Submitted:</strong> ${new Date(eodReport.submittedAt).toLocaleString()}
         </div>
 
         <div class="note">
           <strong>Escalation Note:</strong><br/>
-          ${eodReport.escalationNote || "No details provided"}
+          ${escapeHtml(eodReport.escalationNote || "No details provided")}
         </div>
 
         ${eodReport.challenges ? `
         <div style="margin-top: 15px;">
           <strong>Challenges Mentioned:</strong><br/>
-          ${eodReport.challenges}
+          ${escapeHtml(eodReport.challenges)}
         </div>
         ` : ""}
       </div>
     </div>
 
     <div class="footer">
-      <p>AIMS Dashboard - ${organization.name}</p>
+      <p>AIMS Dashboard - ${escapeHtml(organization.name)}</p>
     </div>
   </div>
 </body>
@@ -198,7 +198,7 @@ export async function sendEscalationNotification(
 
   return sendEmail(
     [ADMIN_EMAIL],
-    `⚠️ Escalation from ${submittedBy.name} - ${organization.name}`,
+    `⚠️ Escalation from ${escapeHtml(submittedBy.name)} - ${escapeHtml(organization.name)}`,
     html
   )
 }
@@ -234,7 +234,7 @@ export async function sendEODNotification(
 
         return `
           <div class="rock-section">
-            <div class="rock-title">${data.title}</div>
+            <div class="rock-title">${escapeHtml(data.title)}</div>
             <span class="status status-ontrack">${rock?.status === "completed" ? "Completed" : "On Track"}</span>
             <h4>Today's Key Activities:</h4>
             <ul class="task-list">
@@ -449,7 +449,12 @@ export async function sendPasswordResetEmail(
   )
 }
 
-// Utility function to escape HTML
+/**
+ * Escape HTML special characters to prevent XSS attacks
+ * Must be used on all user-generated content in email templates
+ * @param text - Text to escape
+ * @returns Safe HTML string
+ */
 function escapeHtml(text: string): string {
   const map: Record<string, string> = {
     '&': '&amp;',

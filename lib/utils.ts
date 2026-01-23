@@ -1,6 +1,14 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
+/**
+ * Merge class names with Tailwind CSS conflict resolution
+ * Combines clsx for conditional classes with tailwind-merge for deduplication
+ *
+ * @param inputs - Class values (strings, objects, arrays, conditionals)
+ * @returns Merged class string with conflicts resolved
+ * @example cn("px-2 py-1", className, { "bg-blue-500": isActive })
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -31,6 +39,14 @@ export function safeParseFloat(value: string | null | undefined, defaultValue: n
 
 /**
  * Clamp a number between a minimum and maximum value.
+ *
+ * @param value - The number to clamp
+ * @param min - The minimum allowed value
+ * @param max - The maximum allowed value
+ * @returns The clamped value within [min, max]
+ * @example clamp(150, 0, 100) // 100
+ * @example clamp(-5, 0, 100) // 0
+ * @example clamp(50, 0, 100) // 50
  */
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)

@@ -127,6 +127,90 @@ export async function getDatabaseHealth(): Promise<{
 }
 
 /**
+ * Create performance optimization indexes
+ * These indexes improve query performance for common access patterns
+ * Safe to run multiple times (uses IF NOT EXISTS)
+ */
+export async function createOptimizationIndexes(): Promise<{
+  created: string[]
+  existing: string[]
+  errors: string[]
+}> {
+  const created: string[] = []
+  const existing: string[] = []
+  const errors: string[] = []
+
+  const indexes = [
+    // Organization members - manager lookups
+    {
+      name: "idx_members_manager_id",
+      sql: `CREATE INDEX IF NOT EXISTS idx_members_manager_id ON organization_members(organization_id, manager_id) WHERE manager_id IS NOT NULL`,
+    },
+    // Organization members - status filtering
+    {
+      name: "idx_members_org_status",
+      sql: `CREATE INDEX IF NOT EXISTS idx_members_org_status ON organization_members(organization_id, status)`,
+    },
+    // Rocks - quarter-based queries
+    {
+      name: "idx_rocks_org_quarter",
+      sql: `CREATE INDEX IF NOT EXISTS idx_rocks_org_quarter ON rocks(organization_id, quarter, status)`,
+    },
+    // Tasks - date range filtering
+    {
+      name: "idx_tasks_org_created",
+      sql: `CREATE INDEX IF NOT EXISTS idx_tasks_org_created ON assigned_tasks(organization_id, created_at DESC)`,
+    },
+    // Tasks - assignee and status filtering
+    {
+      name: "idx_tasks_assignee_status",
+      sql: `CREATE INDEX IF NOT EXISTS idx_tasks_assignee_status ON assigned_tasks(assignee_id, status)`,
+    },
+    // EOD reports - organization-wide date queries
+    {
+      name: "idx_eod_org_date",
+      sql: `CREATE INDEX IF NOT EXISTS idx_eod_org_date ON eod_reports(organization_id, date DESC)`,
+    },
+    // Notifications - unread filtering
+    {
+      name: "idx_notifications_unread",
+      sql: `CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id, organization_id, read) WHERE read = FALSE`,
+    },
+    // Issues - workspace priority sorting
+    {
+      name: "idx_issues_workspace_priority",
+      sql: `CREATE INDEX IF NOT EXISTS idx_issues_workspace_priority ON issues(workspace_id, priority DESC, created_at DESC)`,
+    },
+    // Weekly metric entries - member and date queries
+    {
+      name: "idx_metric_entries_member_week",
+      sql: `CREATE INDEX IF NOT EXISTS idx_metric_entries_member_week ON weekly_metric_entries(team_member_id, week_ending DESC)`,
+    },
+  ]
+
+  for (const index of indexes) {
+    try {
+      // Check if index exists
+      const { rows } = await sql`
+        SELECT 1 FROM pg_indexes WHERE indexname = ${index.name}
+      `
+
+      if (rows.length > 0) {
+        existing.push(index.name)
+      } else {
+        // Create the index using raw SQL (tagged template handles escaping)
+        await sql.unsafe(index.sql)
+        created.push(index.name)
+      }
+    } catch (error) {
+      errors.push(`${index.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  return { created, existing, errors }
+}
+
+/**
  * Log migration activity to audit logs
  */
 export async function logMigrationActivity(
