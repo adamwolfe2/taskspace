@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { UserInitials } from "@/components/shared/user-initials"
 import { RoleBadge } from "@/components/shared/role-badge"
 import { formatDate } from "@/lib/utils/date-utils"
+import { getErrorMessage } from "@/lib/utils"
 import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle, Send, Target, KeyRound } from "lucide-react"
 import {
   Dialog,
@@ -193,10 +194,10 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         description: `${formData.name} has been updated successfully`,
       })
       setDialogOpen(false)
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to update member",
+        description: getErrorMessage(err, "Failed to update member"),
         variant: "destructive",
       })
     } finally {
@@ -228,10 +229,10 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       })
       setInviteDialogOpen(false)
       setInviteData({ email: "", department: "General", role: "member" })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to send invitation",
+        description: getErrorMessage(err, "Failed to send invitation"),
         variant: "destructive",
       })
     } finally {
@@ -247,10 +248,10 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         title: "Invitation Cancelled",
         description: "The invitation has been cancelled",
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to cancel invitation",
+        description: getErrorMessage(err, "Failed to cancel invitation"),
         variant: "destructive",
       })
     }
@@ -305,10 +306,10 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         setBulkInviteData({ emails: "", department: "General", role: "member" })
         setBulkInviteResult(null)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to send invitations",
+        description: getErrorMessage(err, "Failed to send invitations"),
         variant: "destructive",
       })
     } finally {
@@ -349,10 +350,10 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       })
       setAddMemberDialogOpen(false)
       setNewMemberData({ name: "", email: "", department: "General", role: "member" })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to create team member",
+        description: getErrorMessage(err, "Failed to create team member"),
         variant: "destructive",
       })
     } finally {
@@ -378,10 +379,10 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         title: "Invitation Sent",
         description: `An invitation has been sent to ${member.email}`,
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to send invitation",
+        description: getErrorMessage(err, "Failed to send invitation"),
         variant: "destructive",
       })
     } finally {
@@ -410,10 +411,10 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         title: "Member Removed",
         description: `${memberName} has been removed from the workspace`,
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to remove member",
+        description: getErrorMessage(err, "Failed to remove member"),
         variant: "destructive",
       })
     }
@@ -438,10 +439,10 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         title: "Login Link Sent",
         description: `A password reset link has been sent to ${member.email}. They can use it to set a new password and log in.`,
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to send login link",
+        description: getErrorMessage(err, "Failed to send login link"),
         variant: "destructive",
       })
     } finally {

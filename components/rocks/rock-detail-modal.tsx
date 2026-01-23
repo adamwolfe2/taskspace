@@ -18,6 +18,7 @@ import { RockMilestoneManager } from "./rock-milestone-manager"
 import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { Target, Calendar, AlertCircle, CheckCircle2, Clock, Pencil, Save, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { getErrorMessage } from "@/lib/utils"
 
 // Calculate quarter from a date string (YYYY-MM-DD or ISO format)
 function getQuarterFromDate(dateStr: string): string {
@@ -82,10 +83,10 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock }: Rock
         title: "Rock updated",
         description: "Your changes have been saved",
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Update failed",
-        description: err.message || "Failed to update rock",
+        description: getErrorMessage(err, "Failed to update rock"),
         variant: "destructive",
       })
     } finally {
@@ -100,10 +101,10 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock }: Rock
 
     try {
       await onUpdateRock(rockId, { milestones, progress })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Update failed",
-        description: err.message || "Failed to update milestones",
+        description: getErrorMessage(err, "Failed to update milestones"),
         variant: "destructive",
       })
       throw err

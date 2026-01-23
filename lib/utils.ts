@@ -155,3 +155,26 @@ export function isTransientError(error: unknown): boolean {
   }
   return false
 }
+
+/**
+ * Safely extract an error message from an unknown error type.
+ * Handles Error objects, strings, and objects with a message property.
+ *
+ * @param error - The unknown error to extract a message from
+ * @param fallback - Fallback message if no message can be extracted
+ * @returns A string error message
+ * @example
+ * try { ... } catch (err) { const message = getErrorMessage(err) }
+ */
+export function getErrorMessage(error: unknown, fallback = "An unexpected error occurred"): string {
+  if (error instanceof Error) {
+    return error.message
+  }
+  if (typeof error === "string") {
+    return error
+  }
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message
+  }
+  return fallback
+}

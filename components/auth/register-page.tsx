@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Target, AlertCircle, Check } from "lucide-react"
+import { getErrorMessage } from "@/lib/utils"
 
 export function RegisterPage() {
   const { register, setCurrentPage, error, clearError, isLoading } = useApp()
@@ -40,8 +41,8 @@ export function RegisterPage() {
 
     try {
       await register(email, password, name, organizationName || undefined)
-    } catch (err: any) {
-      setLocalError(err.message || "Registration failed")
+    } catch (err: unknown) {
+      setLocalError(getErrorMessage(err, "Registration failed"))
     }
   }
 
