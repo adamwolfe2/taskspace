@@ -5,6 +5,7 @@
 
 import { Resend } from "resend"
 import type { EODReport, DailyDigest, TeamMember, AIGeneratedTask } from "../types"
+import { logger, logError } from "../logger"
 
 // Initialize Resend client
 const getResendClient = () => {
@@ -53,7 +54,7 @@ export async function sendEscalationNotification(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping escalation notification")
+    logger.debug("Email not configured, skipping escalation notification")
     return { success: false, error: "Email not configured" }
   }
 
@@ -116,14 +117,14 @@ export async function sendEscalationNotification(
     })
 
     if (result.error) {
-      console.error("[Email] Escalation notification failed:", result.error)
+      logger.error("Escalation notification failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] Escalation notification sent: ${result.data?.id}`)
+    logger.info("Escalation notification sent", { emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] Escalation notification error:", error)
+    logError(logger, "Escalation notification error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
@@ -139,7 +140,7 @@ export async function sendDailySummaryEmail(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping daily summary")
+    logger.debug("Email not configured, skipping daily summary")
     return { success: false, error: "Email not configured" }
   }
 
@@ -269,14 +270,14 @@ export async function sendDailySummaryEmail(
     })
 
     if (result.error) {
-      console.error("[Email] Daily summary failed:", result.error)
+      logger.error("Daily summary email failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] Daily summary sent: ${result.data?.id}`)
+    logger.info("Daily summary email sent", { emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] Daily summary error:", error)
+    logError(logger, "Daily summary email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
@@ -294,7 +295,7 @@ export async function sendAIAlertEmail(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping AI alert")
+    logger.debug("Email not configured, skipping AI alert")
     return { success: false, error: "Email not configured" }
   }
 
@@ -357,14 +358,14 @@ export async function sendAIAlertEmail(
     })
 
     if (result.error) {
-      console.error("[Email] AI alert failed:", result.error)
+      logger.error("AI alert email failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] AI alert sent: ${result.data?.id}`)
+    logger.info("AI alert email sent", { emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] AI alert error:", error)
+    logError(logger, "AI alert email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
@@ -379,7 +380,7 @@ export async function sendTaskAssignmentEmail(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping task notification")
+    logger.debug("Email not configured, skipping task notification")
     return { success: false, error: "Email not configured" }
   }
 
@@ -445,14 +446,14 @@ export async function sendTaskAssignmentEmail(
     })
 
     if (result.error) {
-      console.error("[Email] Task notification failed:", result.error)
+      logger.error("Task notification email failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] Task notification sent: ${result.data?.id}`)
+    logger.info("Task notification email sent", { emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] Task notification error:", error)
+    logError(logger, "Task notification email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
@@ -470,7 +471,7 @@ export async function sendDailyEODLinkEmail(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping daily EOD link email")
+    logger.debug("Email not configured, skipping daily EOD link email")
     return { success: false, error: "Email not configured" }
   }
 
@@ -546,14 +547,14 @@ export async function sendDailyEODLinkEmail(
     })
 
     if (result.error) {
-      console.error("[Email] Daily EOD link email failed:", result.error)
+      logger.error("Daily EOD link email failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] Daily EOD link email sent to ${member.name}: ${result.data?.id}`)
+    logger.info("Daily EOD link email sent", { memberName: member.name, emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] Daily EOD link email error:", error)
+    logError(logger, "Daily EOD link email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
@@ -568,7 +569,7 @@ export async function sendMissingEODReminder(
 ): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {
-    console.log("[Email] Resend not configured, skipping EOD reminder")
+    logger.debug("Email not configured, skipping EOD reminder")
     return { success: false, error: "Email not configured" }
   }
 
@@ -630,14 +631,14 @@ export async function sendMissingEODReminder(
     })
 
     if (result.error) {
-      console.error("[Email] EOD reminder failed:", result.error)
+      logger.error("EOD reminder email failed", { error: result.error.message })
       return { success: false, error: result.error.message }
     }
 
-    console.log(`[Email] EOD reminder sent to ${member.name}: ${result.data?.id}`)
+    logger.info("EOD reminder email sent", { memberName: member.name, emailId: result.data?.id })
     return { success: true, id: result.data?.id }
   } catch (error) {
-    console.error("[Email] EOD reminder error:", error)
+    logError(logger, "EOD reminder email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }

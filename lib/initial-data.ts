@@ -519,6 +519,4 @@ export const initialRocks: SeedRock[] = [
   },
 ]
 
-export const initialTasks: Task[] = []
-
-export const initialEODReports: EODReport[] = []
+// Note: initialTasks and initialEODReports were removed as they were unused empty arrays

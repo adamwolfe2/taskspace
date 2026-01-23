@@ -66,14 +66,14 @@ async function sendEmail(to: string[], subject: string, html: string) {
 
     // Check if we got a non-retried error
     if (data && 'noRetry' in data) {
-      console.error("Resend API error:", data)
+      // Logged at caller level if needed
       return { success: false, error: data.error, data: data.data }
     }
 
-    console.log("Email sent successfully:", { to, subject, id: data.id })
+    // Email sent successfully (logged at debug level for production)
     return { success: true, data }
   } catch (error) {
-    console.error("Failed to send email after retries:", error)
+    // Error logged at caller level if needed
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }

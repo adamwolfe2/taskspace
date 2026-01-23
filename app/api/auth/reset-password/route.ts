@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import {
   hashPassword,
-  validatePassword,
+  validatePasswordStrength,
   isTokenExpired,
 } from "@/lib/auth/password"
 import type { ApiResponse } from "@/lib/types"
@@ -22,10 +22,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate password strength
-    const passwordValidation = validatePassword(password)
+    const passwordValidation = validatePasswordStrength(password)
     if (!passwordValidation.valid) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: passwordValidation.message },
+        { success: false, error: passwordValidation.errors.join(". ") },
         { status: 400 }
       )
     }

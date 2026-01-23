@@ -8,6 +8,7 @@
 import { createSuggestion, createSuggestions, type CreateSuggestionParams } from "./suggestions"
 import { AI_CREDIT_COSTS } from "./credits"
 import type { EODInsight, EODReport, TeamMember } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 interface GenerateSuggestionsParams {
   organizationId: string
@@ -153,9 +154,9 @@ export async function generateEODSuggestions(
   if (suggestions.length > 0) {
     try {
       await createSuggestions(suggestions)
-      console.log(`[AI Suggestions] Created ${suggestions.length} suggestions from EOD report ${report.id}`)
+      logger.info("AI suggestions created from EOD report", { count: suggestions.length, reportId: report.id })
     } catch (error) {
-      console.error("[AI Suggestions] Failed to create suggestions:", error)
+      logError(logger, "Failed to create AI suggestions", error)
     }
   }
 }
@@ -169,7 +170,7 @@ export async function shouldGenerateSuggestions(
 ): Promise<boolean> {
   // Don't generate suggestions if credits are very low (< 10)
   if (creditsRemaining < 10) {
-    console.log(`[AI Suggestions] Skipping - low credits (${creditsRemaining})`)
+    logger.debug("AI suggestions skipped due to low credits", { creditsRemaining })
     return false
   }
 

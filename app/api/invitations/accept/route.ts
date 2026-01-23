@@ -6,7 +6,7 @@ import {
   generateToken,
   getExpirationDate,
   isTokenExpired,
-  validatePassword,
+  validatePasswordStrength,
 } from "@/lib/auth/password"
 import type { OrganizationMember, Session, ApiResponse, AuthResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Validate password
-      const passwordValidation = validatePassword(password)
+      const passwordValidation = validatePasswordStrength(password)
       if (!passwordValidation.valid) {
         return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: passwordValidation.message },
+          { success: false, error: passwordValidation.errors.join(". ") },
           { status: 400 }
         )
       }
