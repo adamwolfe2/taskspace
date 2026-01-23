@@ -340,6 +340,9 @@ export async function GET(
         return reportDate === dateStr
       })
 
+      // Count unique users who submitted (a user might submit multiple reports per day)
+      const uniqueSubmitters = new Set(dayReports.map(r => r.user_id))
+
       const displayDate = new Date(dateStr + "T12:00:00Z").toLocaleDateString("en-US", {
         weekday: "short",
         month: "short",
@@ -349,7 +352,7 @@ export async function GET(
       submissionsByDay.push({
         date: dateStr,
         displayDate,
-        count: dayReports.length,
+        count: uniqueSubmitters.size,
         total: totalMembers,
       })
     }

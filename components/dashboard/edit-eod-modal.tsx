@@ -14,9 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, X, Save, Paperclip } from "lucide-react"
+import { Plus, X, Save, Paperclip, Calendar, AlertTriangle } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, FileAttachment } from "@/lib/types"
-import { formatDate } from "@/lib/utils/date-utils"
+import { formatDate, getTodayInTimezone } from "@/lib/utils/date-utils"
+import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
 import { FileTray } from "@/components/ui/file-tray"
 
@@ -28,15 +29,51 @@ interface EditEODModalProps {
   onSave: (id: string, updates: Partial<EODReport>) => Promise<EODReport>
 }
 
+function formatShortDate(dateStr: string): string {
+  const date = new Date(dateStr + "T12:00:00")
+  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+}
+
+// Get valid date options for EOD (today, yesterday, 2 days ago)
+function getValidDateOptions(todayInOrgTz: string): { value: string; label: string }[] {
+  const today = new Date(todayInOrgTz + "T12:00:00")
+  const options = []
+
+  for (let i = 0; i <= 2; i++) {
+    const date = new Date(today)
+    date.setDate(today.getDate() - i)
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+    let label = formatShortDate(dateStr)
+    if (i === 0) label = `Today - ${label}`
+    else if (i === 1) label = `Yesterday - ${label}`
+    else label = `${i} days ago - ${label}`
+
+    options.push({ value: dateStr, label })
+  }
+
+  return options
+}
+
 export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: EditEODModalProps) {
+  const { currentOrganization } = useApp()
+  const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
+  const todayInOrgTz = getTodayInTimezone(orgTimezone)
+  const dateOptions = getValidDateOptions(todayInOrgTz)
+
   const [tasks, setTasks] = useState<EODTask[]>([])
   const [challenges, setChallenges] = useState("")
   const [tomorrowPriorities, setTomorrowPriorities] = useState<EODPriority[]>([])
   const [needsEscalation, setNeedsEscalation] = useState(false)
   const [escalationNote, setEscalationNote] = useState("")
   const [attachments, setAttachments] = useState<FileAttachment[]>([])
+  const [reportDate, setReportDate] = useState<string>("")
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
+
+  // Check if the current date is valid (within the 3-day window)
+  const isDateValid = dateOptions.some(opt => opt.value === reportDate)
+  const isDateChanged = reportDate !== report.date
 
   // Initialize form with report data when modal opens
   useEffect(() => {
@@ -51,6 +88,7 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
       setNeedsEscalation(report.needsEscalation)
       setEscalationNote(report.escalationNote || "")
       setAttachments(report.attachments || [])
+      setReportDate(report.date)
     }
   }, [open, report])
 
@@ -150,11 +188,16 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
         needsEscalation,
         escalationNote: needsEscalation ? escalationNote.trim() : null,
         attachments: attachments.length > 0 ? attachments : undefined,
+        date: reportDate, // Include date change
       })
 
+      const message = isDateChanged
+        ? `EOD report moved from ${formatDate(report.date)} to ${formatDate(reportDate)}`
+        : `EOD report for ${formatDate(report.date)} has been updated`
+
       toast({
-        title: "Report Updated",
-        description: `EOD report for ${formatDate(report.date)} has been updated`,
+        title: isDateChanged ? "Report Moved" : "Report Updated",
+        description: message,
       })
       onOpenChange(false)
     } catch (err: any) {
@@ -179,6 +222,44 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Report Date Selection */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-slate-500" />
+              Report Date
+            </Label>
+            <Select value={reportDate} onValueChange={setReportDate}>
+              <SelectTrigger className={`bg-white border-slate-200 ${isDateChanged ? 'border-amber-400 ring-1 ring-amber-200' : ''}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {dateOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+                {/* Show current date if it's outside the valid window */}
+                {!isDateValid && (
+                  <SelectItem value={report.date} disabled>
+                    {formatDate(report.date)} (original - cannot edit)
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            {isDateChanged && (
+              <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
+                <AlertTriangle className="h-3 w-3" />
+                Report will be moved from {formatDate(report.date)} to {formatDate(reportDate)}
+              </p>
+            )}
+            {!isDateValid && (
+              <p className="text-xs text-slate-500 mt-1">
+                This report is from {formatDate(report.date)} which is outside the editable window.
+                You can still edit the content, but the date cannot be changed.
+              </p>
+            )}
+          </div>
+
           {/* Tasks */}
           <div className="space-y-3">
             <Label className="text-sm font-semibold text-slate-700">Completed Tasks</Label>

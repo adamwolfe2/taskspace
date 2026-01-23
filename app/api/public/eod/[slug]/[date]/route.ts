@@ -229,8 +229,10 @@ export async function GET(
     }
 
     // Calculate submission stats
+    // Count unique users who have submitted (a user might submit multiple reports per day)
     const activeMembers = members.filter(m => m.status === "active")
-    const submittedCount = publicReports.length
+    const uniqueSubmitters = new Set(publicReports.map(r => r.userName))
+    const submittedCount = uniqueSubmitters.size
     const totalCount = activeMembers.length
     const percentage = totalCount > 0 ? Math.round((submittedCount / totalCount) * 100) : 0
 

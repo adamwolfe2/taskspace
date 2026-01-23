@@ -156,23 +156,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if report already exists for this date
-    const existingReport = await db.eodReports.findByUserAndDate(
-      auth.user.id,
-      auth.organization.id,
-      reportDate
-    )
-
-    if (existingReport) {
-      return NextResponse.json<ApiResponse<EODReport>>(
-        {
-          success: false,
-          error: `You have already submitted an EOD report for ${formatDateForDisplay(reportDate)}. You can edit your existing report instead.`,
-          data: existingReport,
-        },
-        { status: 409 }
-      )
-    }
+    // Multiple EOD reports per day are allowed - no duplicate check needed
+    // Users can submit as many reports as they want for any valid date
 
     const now = new Date().toISOString()
 
@@ -400,7 +385,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH /api/eod-reports - Update an EOD report (same day only)
+// PATCH /api/eod-reports - Update an EOD report (supports date changes to move reports between days)
 export async function PATCH(request: NextRequest) {
   try {
     const auth = await getAuthContext(request)
@@ -412,7 +397,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, ...updates } = body
+    const { id, date: newDate, ...updates } = body
 
     if (!id) {
       return NextResponse.json<ApiResponse<null>>(
@@ -445,25 +430,46 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Can only update reports within the valid submission window (today or up to 2 days back)
     const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"
-    const dateValidation = isValidEODDate(report.date, orgTimezone)
-    if (!dateValidation.valid) {
+
+    // If changing the date, validate the new date
+    if (newDate && newDate !== report.date) {
+      const newDateValidation = isValidEODDate(newDate, orgTimezone)
+      if (!newDateValidation.valid) {
+        return NextResponse.json<ApiResponse<null>>(
+          {
+            success: false,
+            error: `Cannot move report to ${formatDateForDisplay(newDate)}: ${newDateValidation.reason}`
+          },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Can only update reports within the valid submission window (today or up to 2 days back)
+    // Check the original date is still editable
+    const originalDateValidation = isValidEODDate(report.date, orgTimezone)
+    if (!originalDateValidation.valid) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `Cannot update this report: ${dateValidation.reason}` },
+        { success: false, error: `Cannot update this report: ${originalDateValidation.reason}` },
         { status: 400 }
       )
     }
 
     const updatedReport = await db.eodReports.update(id, {
       ...updates,
+      date: newDate || report.date,
       submittedAt: new Date().toISOString(),
     })
+
+    const message = newDate && newDate !== report.date
+      ? `EOD report moved to ${formatDateForDisplay(newDate)}`
+      : "EOD report updated successfully"
 
     return NextResponse.json<ApiResponse<EODReport | null>>({
       success: true,
       data: updatedReport,
-      message: "EOD report updated successfully",
+      message,
     })
   } catch (error) {
     console.error("Update EOD report error:", error)

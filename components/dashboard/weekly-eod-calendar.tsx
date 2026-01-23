@@ -129,12 +129,15 @@ export function WeeklyEODCalendar({
  [eodReports, userId, todayString]
  )
 
- // Create a map of date -> report for quick lookup
+ // Create a map of date -> reports array for quick lookup (supports multiple reports per day)
  const reportsByDate = useMemo(() => {
- const map = new Map<string, EODReport>()
+ const map = new Map<string, EODReport[]>()
  eodReports
  .filter(r => r.userId === userId)
- .forEach(r => map.set(r.date, r))
+ .forEach(r => {
+ const existing = map.get(r.date) || []
+ map.set(r.date, [...existing, r])
+ })
  return map
  }, [eodReports, userId])
 
@@ -147,9 +150,9 @@ export function WeeklyEODCalendar({
  const moods = weekDays
  .filter(d => d.hasSubmission)
  .map(d => {
- const report = reportsByDate.get(d.date)
- // Try to infer mood from escalation
- if (report?.needsEscalation) return 'stressed'
+ const reports = reportsByDate.get(d.date) || []
+ // Try to infer mood from escalation (any report with escalation = stressed)
+ if (reports.some(r => r.needsEscalation)) return 'stressed'
  return 'neutral' // Default
  })
  return moods
@@ -192,18 +195,23 @@ export function WeeklyEODCalendar({
  const isSelected = selectedDate === day.date
  const isClickable = !day.isFuture && onSelectDate
  const showAsSelected = isSelected || (selectedDate === null && day.isToday)
- const report = reportsByDate.get(day.date)
+ const reports = reportsByDate.get(day.date) || []
+ const reportCount = reports.length
+ const hasMultipleReports = reportCount > 1
+ const latestReport = reports[0] // Already sorted by date desc
+ const hasEscalation = reports.some(r => r.needsEscalation)
+ const totalTasks = reports.reduce((sum, r) => sum + (r.tasks?.length || 0), 0)
 
  const dayButton = (
  <button
  key={day.date}
  onClick={() => {
  if (isClickable) onSelectDate(day.date)
- if (report && onViewReport) onViewReport(report.id)
+ if (latestReport && onViewReport) onViewReport(latestReport.id)
  }}
  disabled={day.isFuture}
  className={cn(
- "flex-1 flex flex-col items-center p-3 rounded-lg transition-all",
+ "flex-1 flex flex-col items-center p-3 rounded-lg transition-all relative",
  showAsSelected
  ? "bg-gradient-to-br from-slate-500 to-slate-600 text-white ring-2 ring-slate-400 ring-offset-2"
  : day.isFuture
@@ -213,6 +221,15 @@ export function WeeklyEODCalendar({
  : "bg-red-50 hover:bg-red-100 cursor-pointer"
  )}
  >
+ {/* Badge for multiple reports */}
+ {hasMultipleReports && (
+ <span className={cn(
+ "absolute -top-1 -right-1 text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center",
+ showAsSelected ? "bg-white text-slate-600" : "bg-emerald-600 text-white"
+ )}>
+ {reportCount}
+ </span>
+ )}
  <span
  className={cn(
  "text-xs font-medium",
@@ -253,8 +270,8 @@ export function WeeklyEODCalendar({
  </button>
  )
 
- // Add tooltip with report preview if report exists
- if (report && !day.isFuture) {
+ // Add tooltip with report preview if reports exist
+ if (reports.length > 0 && !day.isFuture) {
  return (
  <Tooltip key={day.date}>
  <TooltipTrigger asChild>
@@ -263,8 +280,10 @@ export function WeeklyEODCalendar({
  <TooltipContent side="top" className="max-w-xs p-3">
  <div className="space-y-2">
  <div className="flex items-center justify-between">
- <span className="font-medium text-sm">EOD Report</span>
- {report.needsEscalation && (
+ <span className="font-medium text-sm">
+ {hasMultipleReports ? `${reportCount} EOD Reports` : "EOD Report"}
+ </span>
+ {hasEscalation && (
  <Badge variant="destructive" className="text-xs">
  <AlertTriangle className="h-3 w-3 mr-1" />
  Escalation
@@ -273,26 +292,26 @@ export function WeeklyEODCalendar({
  </div>
  <div className="text-xs text-slate-500 ">
  <p className="font-medium text-slate-700  mb-1">
- Tasks completed: {report.tasks?.length || 0}
+ Tasks completed: {totalTasks}
  </p>
- {report.tasks && report.tasks.length > 0 && (
+ {latestReport?.tasks && latestReport.tasks.length > 0 && (
  <ul className="list-disc list-inside space-y-0.5">
- {report.tasks.slice(0, 3).map((task, i) => (
+ {latestReport.tasks.slice(0, 3).map((task, i) => (
  <li key={i} className="truncate">{task.text}</li>
  ))}
- {report.tasks.length > 3 && (
- <li className="text-slate-400">+{report.tasks.length - 3} more</li>
+ {(totalTasks > 3) && (
+ <li className="text-slate-400">+{totalTasks - 3} more tasks</li>
  )}
  </ul>
  )}
- {report.challenges && (
+ {latestReport?.challenges && (
  <p className="mt-2 italic text-slate-400 truncate">
- "{report.challenges}"
+ "{latestReport.challenges}"
  </p>
  )}
  </div>
  <p className="text-xs text-slate-400 pt-1 border-t ">
- Click to view full report
+ Click to {hasMultipleReports ? "view reports" : "view full report"}
  </p>
  </div>
  </TooltipContent>
@@ -311,8 +330,8 @@ export function WeeklyEODCalendar({
  <div className="flex items-center gap-1">
  {weekDays.map((day, i) => {
  if (!day.hasSubmission) return null
- const report = reportsByDate.get(day.date)
- const mood = report?.needsEscalation ? 'stressed' : 'neutral'
+ const reports = reportsByDate.get(day.date) || []
+ const mood = reports.some(r => r.needsEscalation) ? 'stressed' : 'neutral'
  return (
  <div key={day.date} className="flex items-center">
  {getMoodIcon(mood)}
