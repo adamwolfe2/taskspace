@@ -24,14 +24,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Admin only feature
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can use the AI EOD parser" },
-        { status: 403 }
-      )
-    }
-
+    // AI EOD parsing is available to all members
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },

@@ -414,7 +414,7 @@ export function AIEODSubmission({
     <div className="section-card">
       <div className="section-header">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-purple-600" />
+          <Sparkles className="h-5 w-5 text-red-600" />
           <div>
             <h3 className="font-semibold text-slate-900 text-lg">AI EOD Report Generator</h3>
             <p className="text-sm text-slate-500 mt-0.5">
@@ -436,7 +436,7 @@ export function AIEODSubmission({
           <>
             {/* Date Selection */}
             <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-              <Calendar className="h-5 w-5 text-purple-500" />
+              <Calendar className="h-5 w-5 text-red-500" />
               <div className="flex-1">
                 <Label className="text-xs font-medium text-slate-600">Report Date</Label>
                 <Select value={selectedDate} onValueChange={setSelectedDate}>
@@ -483,7 +483,7 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
                 value={textDump}
                 onChange={(e) => setTextDump(e.target.value)}
                 rows={12}
-                className="bg-white border-slate-200 focus:border-purple-300 font-mono text-sm"
+                className="bg-white border-slate-200 focus:border-red-300 font-mono text-sm"
               />
               <p className="text-xs text-slate-500">
                 Include tasks, blockers, challenges, and tomorrow's priorities. The AI will match them to your {currentQuarter} rocks.
@@ -493,7 +493,7 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
             <Button
               onClick={handleParse}
               disabled={isParsing || !textDump.trim()}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
             >
               {isParsing ? (
                 <>
@@ -513,7 +513,7 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
           <>
             {/* Date Selection */}
             <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-              <Calendar className="h-5 w-5 text-purple-500" />
+              <Calendar className="h-5 w-5 text-red-500" />
               <div className="flex-1">
                 <Label className="text-xs font-medium text-slate-600">Report Date</Label>
                 <Select value={selectedDate} onValueChange={setSelectedDate}>
@@ -546,8 +546,8 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
             {parsedData && (
               <div className="space-y-3">
                 {parsedData.summary && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                    <p className="text-sm font-medium text-purple-800">{parsedData.summary}</p>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="text-sm font-medium text-red-800">{parsedData.summary}</p>
                   </div>
                 )}
                 {parsedData.warnings && parsedData.warnings.length > 0 && (
@@ -582,7 +582,7 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
                   <CardHeader className="py-3 px-4 bg-slate-50">
                     <div className="flex items-center gap-2">
                       {key !== "general" && (
-                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
                           Rock
                         </Badge>
                       )}
@@ -650,7 +650,7 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
             {activeMetric && (
               <div className="space-y-2">
                 <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <Target className="h-4 w-4 text-purple-600" />
+                  <Target className="h-4 w-4 text-red-600" />
                   {activeMetric.metricName}
                 </Label>
                 <div className="flex items-center gap-3">
