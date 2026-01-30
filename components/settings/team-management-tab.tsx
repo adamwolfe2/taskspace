@@ -1,0 +1,344 @@
+"use client"
+
+import React, { useState, useEffect } from "react"
+import { useApp } from "@/lib/contexts/app-context"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Loader2, Mail, UserPlus, Copy, Trash2, AlertTriangle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { getErrorMessage } from "@/lib/utils"
+import { api } from "@/lib/api/client"
+import type { TeamMember, Invitation } from "@/lib/types"
+
+interface IntegrationStatus {
+  email: {
+    configured: boolean
+    provider: string
+    fromAddress: string | null
+    appUrl?: string
+    appUrlConfigured?: boolean
+  }
+  slack: {
+    configured: boolean
+    webhookSet: boolean
+  }
+  ai: {
+    configured: boolean
+    provider: string
+  }
+}
+
+export function TeamManagementTab() {
+  const { currentUser, currentOrganization } = useApp()
+  const { toast } = useToast()
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>([])
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteRole, setInviteRole] = useState<"member" | "admin">("member")
+  const [inviteDepartment, setInviteDepartment] = useState("General")
+  const [isInviting, setIsInviting] = useState(false)
+  const [showInviteDialog, setShowInviteDialog] = useState(false)
+  const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
+
+  const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
+
+  // Load team members and invitations
+  useEffect(() => {
+    const loadTeamData = async () => {
+      try {
+        const [members, invitations] = await Promise.all([
+          api.members.list(),
+          api.invitations.list().catch(() => []),
+        ])
+        setTeamMembers(members)
+        setPendingInvitations(invitations)
+      } catch (err) {
+        console.error("Failed to load team data:", err)
+      }
+    }
+    loadTeamData()
+  }, [])
+
+  // Load integration status
+  useEffect(() => {
+    const loadIntegrationStatus = async () => {
+      if (!isAdmin) return
+      try {
+        const response = await fetch("/api/integrations/status")
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            setIntegrationStatus(data.data)
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load integration status:", err)
+      }
+    }
+    loadIntegrationStatus()
+  }, [isAdmin])
+
+  const handleSendInvite = async () => {
+    if (!inviteEmail.trim()) {
+      toast({
+        title: "Email required",
+        description: "Please enter an email address",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsInviting(true)
+      const invitation = await api.invitations.create({
+        email: inviteEmail.trim().toLowerCase(),
+        role: inviteRole,
+        department: inviteDepartment,
+      })
+
+      setPendingInvitations([...pendingInvitations, invitation])
+      setInviteEmail("")
+      setShowInviteDialog(false)
+
+      toast({
+        title: "Invitation sent",
+        description: `An invitation has been sent to ${invitation.email}`,
+      })
+
+      // Copy invite link to clipboard
+      if (typeof window !== "undefined") {
+        const inviteLink = `${window.location.origin}?invite=${invitation.token}`
+        try {
+          await navigator.clipboard.writeText(inviteLink)
+          toast({
+            title: "Link copied",
+            description: "Invitation link also copied to clipboard",
+          })
+        } catch {
+          // Clipboard API not available
+        }
+      }
+    } catch (err: unknown) {
+      toast({
+        title: "Failed to send invitation",
+        description: getErrorMessage(err, "An error occurred"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsInviting(false)
+    }
+  }
+
+  const copyInviteLink = async (token: string) => {
+    if (typeof window === "undefined") return
+    const baseUrl = window.location.origin
+    const inviteLink = `${baseUrl}?invite=${token}`
+    try {
+      await navigator.clipboard.writeText(inviteLink)
+      toast({
+        title: "Link copied",
+        description: "Invitation link copied to clipboard",
+      })
+    } catch {
+      toast({
+        title: "Failed to copy",
+        description: "Please copy the link manually",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const cancelInvitation = async (invitationId: string) => {
+    try {
+      const response = await fetch(`/api/invitations?id=${invitationId}`, {
+        method: "DELETE",
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to cancel invitation")
+      }
+
+      // Remove from local state
+      setPendingInvitations((prev) => prev.filter((inv) => inv.id !== invitationId))
+
+      toast({
+        title: "Invitation cancelled",
+        description: "The invitation has been removed",
+      })
+    } catch (err: unknown) {
+      toast({
+        title: "Error",
+        description: getErrorMessage(err, "Failed to cancel invitation"),
+        variant: "destructive",
+      })
+    }
+  }
+
+  const teamCount = teamMembers.length + pendingInvitations.length
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Invite Team Members</CardTitle>
+          <CardDescription>Add new members to your organization</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                Send Invitation
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Invite Team Member</DialogTitle>
+                <DialogDescription>Send an invitation email to add a new team member</DialogDescription>
+              </DialogHeader>
+              {integrationStatus && !integrationStatus.email.configured && (
+                <Alert className="border-amber-500 bg-amber-50">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800">
+                    <strong>Email not configured.</strong> Invitation emails won't be sent, but you can
+                    still copy and share the invite link manually.
+                    <a
+                      href="#integrations"
+                      className="underline ml-1"
+                      onClick={() => setShowInviteDialog(false)}
+                    >
+                      Set up email →
+                    </a>
+                  </AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="inviteEmail">Email Address</Label>
+                  <Input
+                    id="inviteEmail"
+                    type="email"
+                    placeholder="colleague@company.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Role</Label>
+                  <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as "member" | "admin")}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="member">Team Member</SelectItem>
+                      <SelectItem value="admin">Administrator</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Department</Label>
+                  <Input
+                    placeholder="e.g., Engineering, Marketing"
+                    value={inviteDepartment}
+                    onChange={(e) => setInviteDepartment(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSendInvite} disabled={isInviting}>
+                  {isInviting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Send Invitation
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {pendingInvitations.length > 0 && (
+            <div className="space-y-2">
+              <Label>Pending Invitations</Label>
+              <div className="space-y-2">
+                {pendingInvitations.map((inv) => (
+                  <div key={inv.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div>
+                      <p className="font-medium">{inv.email}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {inv.role} • {inv.department}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyInviteLink(inv.token)}
+                        title="Copy invite link"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => cancelInvitation(inv.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        title="Cancel invitation"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Team Limits</CardTitle>
+          <CardDescription>Your current plan's team member limits</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+            <div>
+              <p className="font-medium">Team Members</p>
+              <p className="text-sm text-muted-foreground">
+                {teamMembers.length} active + {pendingInvitations.length} pending
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold">
+                {teamCount} / {currentOrganization?.subscription.maxUsers || 100}
+              </p>
+              <p className="text-sm text-muted-foreground">members</p>
+            </div>
+          </div>
+          {teamCount >= (currentOrganization?.subscription.maxUsers || 100) && (
+            <Alert className="mt-4">
+              <AlertDescription>
+                You've reached your team member limit. Upgrade your plan to add more members.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
