@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Pencil, Trash2, Plus, X, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface ManageRocksDialogProps {
@@ -37,6 +38,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
     quarter: "Q1 2025",
   })
   const { toast } = useToast()
+  const { currentWorkspace } = useWorkspaces()
 
   const handleSelectUser = (userId: string) => {
     setSelectedUserId(userId)
@@ -121,6 +123,15 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
       return
     }
 
+    if (!currentWorkspace) {
+      toast({
+        title: "Error",
+        description: "No workspace selected",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
     const doneWhenFiltered = formData.doneWhen.filter((item) => item.trim() !== "")
 
@@ -172,6 +183,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
             dueDate: formData.dueDate,
             quarter: formData.quarter,
             userId: selectedUserId,
+            workspaceId: currentWorkspace.id,
           }),
         })
 

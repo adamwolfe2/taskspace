@@ -9,6 +9,7 @@ import { sendSlackMessage, buildFullEODReportMessage, isSlackConfigured } from "
 import { asanaClient } from "@/lib/integrations/asana"
 import { getActiveMetricForUser, upsertWeeklyMetricEntry } from "@/lib/metrics"
 import { getTodayInTimezone, isValidEODDate, formatDateForDisplay } from "@/lib/utils/date-utils"
+import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
 import { format, subDays } from "date-fns"
 import { logger, logError } from "@/lib/logger"
@@ -30,6 +31,25 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
     const workspaceId = searchParams.get("workspaceId")
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
 
     let reports: EODReport[]
 
@@ -78,10 +98,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Filter by workspace if specified
-    if (workspaceId) {
-      reports = reports.filter((report) => report.workspaceId === workspaceId)
-    }
+    // ALWAYS filter by workspace - enforce workspace isolation
+    reports = reports.filter((report) => report.workspaceId === workspaceId)
 
     // Sort by date descending (already done in DB, but ensure consistency)
     reports.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -137,6 +155,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
+
     // Get the organization's timezone (default to PST)
     const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"
     const todayInOrgTz = getTodayInTimezone(orgTimezone)
@@ -180,7 +217,7 @@ export async function POST(request: NextRequest) {
     const report: EODReport = {
       id: generateId(),
       organizationId: auth.organization.id,
-      workspaceId: workspaceId || null,
+      workspaceId: workspaceId, // Required - validated above
       userId: auth.user.id,
       date: reportDate,
       tasks,

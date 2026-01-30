@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { Plus, Calendar, Loader2 } from "lucide-react"
 
 interface QuickTaskDialogProps {
@@ -25,6 +26,7 @@ export function QuickTaskDialog({ open, onOpenChange, userId }: QuickTaskDialogP
   const [isLoading, setIsLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+  const { currentWorkspace } = useWorkspaces()
 
   // Focus input when dialog opens
   useEffect(() => {
@@ -52,6 +54,15 @@ export function QuickTaskDialog({ open, onOpenChange, userId }: QuickTaskDialogP
     e.preventDefault()
     if (!title.trim()) return
 
+    if (!currentWorkspace) {
+      toast({
+        title: "Error",
+        description: "No workspace selected",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
     try {
       const response = await fetch("/api/tasks", {
@@ -63,6 +74,7 @@ export function QuickTaskDialog({ open, onOpenChange, userId }: QuickTaskDialogP
           priority: "normal",
           dueDate: dueDate || new Date().toISOString().split("T")[0],
           type: "personal",
+          workspaceId: currentWorkspace.id,
         }),
       })
 

@@ -233,10 +233,16 @@ export function useTeamData() {
       setRocks((prev) => [...prev, newRock])
       return newRock
     }
+    // CRITICAL: Workspace is required for data isolation
+    if (!currentWorkspaceId) {
+      const error = new Error("No workspace selected. Please select a workspace to create rock.")
+      setError(getErrorMessage(error))
+      throw error
+    }
     try {
       const rockWithWorkspace = {
         ...rock,
-        workspaceId: currentWorkspaceId || null,
+        workspaceId: currentWorkspaceId,
       }
       const newRock = await api.rocks.create(rockWithWorkspace)
       setRocks((prev) => [...prev, newRock])
@@ -288,10 +294,16 @@ export function useTeamData() {
       setAssignedTasks((prev) => [...prev, newTask])
       return newTask
     }
+    // CRITICAL: Workspace is required for data isolation
+    if (!currentWorkspaceId) {
+      const error = new Error("No workspace selected. Please select a workspace to create task.")
+      setError(getErrorMessage(error))
+      throw error
+    }
     try {
       const taskWithWorkspace = {
         ...task,
-        workspaceId: currentWorkspaceId || null,
+        workspaceId: currentWorkspaceId,
       }
       const newTask = await api.tasks.create(taskWithWorkspace)
       setAssignedTasks((prev) => [...prev, newTask])
@@ -343,10 +355,16 @@ export function useTeamData() {
       setEODReports((prev) => [newReport, ...prev])
       return newReport
     }
+    // CRITICAL: Workspace is required for data isolation
+    if (!currentWorkspaceId) {
+      const error = new Error("No workspace selected. Please select a workspace to submit EOD report.")
+      setError(getErrorMessage(error))
+      throw error
+    }
     try {
       const reportWithWorkspace = {
         ...report,
-        workspaceId: currentWorkspaceId || null,
+        workspaceId: currentWorkspaceId,
       }
       const newReport = await api.eodReports.create(reportWithWorkspace)
       setEODReports((prev) => [newReport, ...prev])

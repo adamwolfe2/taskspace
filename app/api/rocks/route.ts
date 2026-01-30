@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
+import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import type { Rock, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -21,6 +22,25 @@ export async function GET(request: NextRequest) {
     const quarter = searchParams.get("quarter")
     const workspaceId = searchParams.get("workspaceId")
 
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
+
     let rocks: Rock[]
 
     if (userId) {
@@ -33,17 +53,15 @@ export async function GET(request: NextRequest) {
       }
       rocks = await db.rocks.findByUserId(userId, auth.organization.id)
     } else if (isAdmin(auth)) {
-      // Admins can see all rocks
+      // Admins can see all rocks in the workspace
       rocks = await db.rocks.findByOrganizationId(auth.organization.id)
     } else {
       // Regular members see only their rocks
       rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
     }
 
-    // Filter by workspace if specified
-    if (workspaceId) {
-      rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
-    }
+    // ALWAYS filter by workspace - enforce workspace isolation
+    rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
 
     // Filter by quarter if specified
     if (quarter) {
@@ -94,6 +112,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
+
     // Determine which user the rock belongs to
     let targetUserId = auth.user.id
     if (userId && userId !== auth.user.id) {
@@ -118,7 +155,7 @@ export async function POST(request: NextRequest) {
     const rock: Rock = {
       id: generateId(),
       organizationId: auth.organization.id,
-      workspaceId: workspaceId || null,
+      workspaceId: workspaceId, // Required - validated above
       userId: targetUserId,
       title: title.trim(),
       description: description.trim(),
