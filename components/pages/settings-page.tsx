@@ -4,13 +4,14 @@ import React, { useState, useEffect } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Toaster } from "@/components/ui/toaster"
-import { Building, Bell, Users, CreditCard, Key, Download, Sparkles } from "lucide-react"
+import { Building, Bell, Users, CreditCard, Key, Download, Sparkles, Briefcase } from "lucide-react"
 import { api } from "@/lib/api/client"
 import type { TeamMember } from "@/lib/types"
 import { WorkspaceSwitcher } from "@/components/workspace"
 import {
   OrganizationSettingsTab,
   TeamManagementTab,
+  WorkspaceSettingsTab,
   NotificationsTab,
   IntegrationsApiTab,
   DataExportTab,
@@ -57,6 +58,13 @@ export function SettingsPage() {
               <Building className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               General
             </TabsTrigger>
+
+            {isAdmin && (
+              <TabsTrigger value="workspace" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+                <Briefcase className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Workspace
+              </TabsTrigger>
+            )}
 
             {isAdmin && (
               <TabsTrigger value="team" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
@@ -108,6 +116,13 @@ export function SettingsPage() {
         <TabsContent value="general" className="space-y-6">
           <OrganizationSettingsTab />
         </TabsContent>
+
+        {/* Workspace Tab - Workspace members & settings */}
+        {isAdmin && (
+          <TabsContent value="workspace" className="space-y-6">
+            <WorkspaceSettingsTab teamMembers={teamMembers} />
+          </TabsContent>
+        )}
 
         {/* Team Tab - Invitations + team limits */}
         {isAdmin && (

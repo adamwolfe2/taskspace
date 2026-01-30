@@ -11,6 +11,7 @@ export { PushNotificationsCard } from "./push-notifications"
 // Settings tab component exports
 export { OrganizationSettingsTab } from "./organization-settings-tab"
 export { TeamManagementTab } from "./team-management-tab"
+export { WorkspaceSettingsTab } from "./workspace-settings-tab"
 export { NotificationsTab } from "./notifications-tab"
 export { IntegrationsApiTab } from "./integrations-api-tab"
 export { DataExportTab } from "./data-export-tab"
