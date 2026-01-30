@@ -91,68 +91,67 @@ export function WorkspaceSwitcher({
   }
 
   return (
-    <Select
-      value={currentWorkspaceId || undefined}
-      onValueChange={(value) => switchWorkspace(value)}
-    >
-      <SelectTrigger className={cn("w-[220px]", className)} size={size}>
-        <SelectValue placeholder="Select workspace">
-          {currentWorkspace && (
-            <div className="flex items-center gap-2">
-              <WorkspaceIcon type={currentWorkspace.type} className="text-muted-foreground" />
-              <span className="truncate">{currentWorkspace.name}</span>
-              {currentWorkspace.isDefault && (
-                <Badge variant="secondary" className="text-xs ml-1">
-                  Default
-                </Badge>
-              )}
-            </div>
-          )}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {workspaces.map((workspace) => (
-          <SelectItem key={workspace.id} value={workspace.id}>
-            <div className="flex items-center justify-between gap-3 w-full">
+    <>
+      <Select
+        value={currentWorkspaceId || undefined}
+        onValueChange={(value) => switchWorkspace(value)}
+      >
+        <SelectTrigger className={cn("w-[220px]", className)} size={size}>
+          <SelectValue placeholder="Select workspace">
+            {currentWorkspace && (
               <div className="flex items-center gap-2">
-                <WorkspaceIcon type={workspace.type} className="text-muted-foreground" />
-                <span className="truncate">{workspace.name}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {workspace.isDefault && (
-                  <Badge variant="secondary" className="text-xs">
+                <WorkspaceIcon type={currentWorkspace.type} className="text-muted-foreground" />
+                <span className="truncate">{currentWorkspace.name}</span>
+                {currentWorkspace.isDefault && (
+                  <Badge variant="secondary" className="text-xs ml-1">
                     Default
                   </Badge>
                 )}
-                {showMemberCount && (
-                  <span className="text-xs text-muted-foreground">
-                    {workspace.memberCount} members
-                  </span>
-                )}
               </div>
-            </div>
-          </SelectItem>
-        ))}
+            )}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {workspaces.map((workspace) => (
+            <SelectItem key={workspace.id} value={workspace.id}>
+              <div className="flex items-center justify-between gap-3 w-full">
+                <div className="flex items-center gap-2">
+                  <WorkspaceIcon type={workspace.type} className="text-muted-foreground" />
+                  <span className="truncate">{workspace.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {workspace.isDefault && (
+                    <Badge variant="secondary" className="text-xs">
+                      Default
+                    </Badge>
+                  )}
+                  {showMemberCount && (
+                    <span className="text-xs text-muted-foreground">
+                      {workspace.memberCount} members
+                    </span>
+                  )}
+                </div>
+              </div>
+            </SelectItem>
+          ))}
 
-        {/* Create New Workspace Button */}
-        <div className="border-t border-border mt-1 pt-1">
-          <button
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setCreateModalOpen(true)
-            }}
-            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent transition-colors cursor-pointer"
-          >
-            <Plus className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">Create new workspace</span>
-          </button>
-        </div>
-      </SelectContent>
-    </Select>
+          {/* Create New Workspace Button */}
+          <div className="border-t border-border mt-1 pt-1">
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setCreateModalOpen(true)
+              }}
+              className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent transition-colors cursor-pointer"
+            >
+              <Plus className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">Create new workspace</span>
+            </button>
+          </div>
+        </SelectContent>
+      </Select>
 
-    {/* Create Workspace Modal */}
-    <>
       <CreateWorkspaceModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
     </>
   )
