@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
 import { useApp } from "./app-context"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import {
   ExtractedColors,
   defaultBrandColors,
@@ -25,30 +26,39 @@ interface BrandThemeProviderProps {
 
 export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
   const { currentOrganization } = useApp()
+  const { currentWorkspace } = useWorkspaces()
   const [colors, setColors] = useState<ExtractedColors>(defaultBrandColors)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load brand colors from organization settings
+  // Load brand colors from workspace settings (workspace-level branding)
   useEffect(() => {
-    if (currentOrganization) {
-      const orgPrimaryColor = currentOrganization.primaryColor
+    // Priority: Workspace branding > Organization branding > Default
+    let primaryColor: string | null = null
 
-      if (orgPrimaryColor) {
-        // Generate palette from organization's primary color
-        try {
-          const hsl = hexToHsl(orgPrimaryColor)
-          const palette = generateColorPalette(hsl)
-          setColors(palette)
-        } catch (error) {
-          console.error("Failed to parse organization color:", error)
-          setColors(defaultBrandColors)
-        }
-      } else {
+    if (currentWorkspace) {
+      // Use workspace-specific branding (highest priority)
+      primaryColor = currentWorkspace.primaryColor || null
+    } else if (currentOrganization) {
+      // Fallback to organization branding if no workspace selected
+      primaryColor = currentOrganization.primaryColor || null
+    }
+
+    if (primaryColor) {
+      // Generate palette from primary color
+      try {
+        const hsl = hexToHsl(primaryColor)
+        const palette = generateColorPalette(hsl)
+        setColors(palette)
+      } catch (error) {
+        console.error("Failed to parse brand color:", error)
         setColors(defaultBrandColors)
       }
+    } else {
+      setColors(defaultBrandColors)
     }
+
     setIsLoading(false)
-  }, [currentOrganization])
+  }, [currentOrganization, currentWorkspace])
 
   // Apply CSS variables to document
   useEffect(() => {

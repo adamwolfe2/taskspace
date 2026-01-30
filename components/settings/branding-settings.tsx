@@ -9,6 +9,7 @@ import { Upload, Palette, Loader2, Check, X, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useBrandTheme } from "@/lib/contexts/brand-theme-context"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { api } from "@/lib/api/client"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -21,6 +22,7 @@ import {
 
 export function BrandingSettings() {
   const { currentOrganization, refreshSession } = useApp()
+  const { currentWorkspace, refresh: refreshWorkspaces } = useWorkspaces()
   const { colors, updateBrandColors } = useBrandTheme()
   const { toast } = useToast()
 
@@ -28,7 +30,7 @@ export function BrandingSettings() {
   const [isSaving, setIsSaving] = useState(false)
   const [isExtractingColors, setIsExtractingColors] = useState(false)
   const [logoPreview, setLogoPreview] = useState<string | null>(
-    currentOrganization?.logoUrl || null
+    currentWorkspace?.logoUrl || null
   )
   const [pendingColors, setPendingColors] = useState<ExtractedColors>(colors)
   const [hasChanges, setHasChanges] = useState(false)
@@ -127,17 +129,36 @@ export function BrandingSettings() {
   }
 
   const handleSave = async () => {
+    if (!currentWorkspace) {
+      toast({
+        title: "No workspace selected",
+        description: "Please select a workspace to update branding",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSaving(true)
     try {
-      await api.organizations.updateBranding({
-        logoUrl: logoPreview || undefined,
-        primaryColor: pendingColors.primary,
-        secondaryColor: pendingColors.secondary,
-        accentColor: pendingColors.accent,
+      // Update workspace branding via API
+      const response = await fetch(`/api/workspaces/${currentWorkspace.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          logoUrl: logoPreview,
+          primaryColor: pendingColors.primary,
+          secondaryColor: pendingColors.secondary,
+          accentColor: pendingColors.accent,
+        }),
       })
 
+      const data = await response.json()
+      if (!data.success) {
+        throw new Error(data.error || "Failed to update workspace")
+      }
+
       updateBrandColors(pendingColors)
-      await refreshSession()
+      await refreshWorkspaces()
 
       toast({
         title: "Branding updated",
@@ -148,7 +169,7 @@ export function BrandingSettings() {
       console.error("Save failed:", error)
       toast({
         title: "Save failed",
-        description: "Failed to save branding settings",
+        description: error instanceof Error ? error.message : "Failed to save branding settings",
         variant: "destructive",
       })
     } finally {
@@ -164,7 +185,7 @@ export function BrandingSettings() {
 
   const handleDiscard = () => {
     setPendingColors(colors)
-    setLogoPreview(currentOrganization?.logoUrl || null)
+    setLogoPreview(currentWorkspace?.logoUrl || null)
     setHasChanges(false)
   }
 
@@ -261,7 +282,7 @@ export function BrandingSettings() {
                   <div className="h-5 w-5 rounded bg-white/20" />
                 )}
                 <span className="font-medium text-white text-sm">
-                  {currentOrganization?.name || "Your Workspace"}
+                  {currentWorkspace?.name || "Your Workspace"}
                 </span>
               </div>
             </div>

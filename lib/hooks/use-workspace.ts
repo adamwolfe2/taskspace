@@ -25,6 +25,12 @@ export interface Workspace {
   description?: string
   settings: Record<string, unknown>
   isDefault: boolean
+  // Workspace-level branding
+  logoUrl?: string | null
+  primaryColor?: string | null
+  secondaryColor?: string | null
+  accentColor?: string | null
+  faviconUrl?: string | null
   createdAt: string
   updatedAt: string
 }

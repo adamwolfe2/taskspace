@@ -147,7 +147,18 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { name, type, description, settings, isDefault } = body
+    const {
+      name,
+      type,
+      description,
+      settings,
+      isDefault,
+      logoUrl,
+      primaryColor,
+      secondaryColor,
+      accentColor,
+      faviconUrl
+    } = body
 
     // Validation
     if (name !== undefined) {
@@ -174,6 +185,27 @@ export async function PATCH(
       )
     }
 
+    // Validate color format (if provided)
+    const colorRegex = /^#[0-9A-Fa-f]{6}$/
+    if (primaryColor !== undefined && primaryColor !== null && !colorRegex.test(primaryColor)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Primary color must be in hex format (#RRGGBB)" },
+        { status: 400 }
+      )
+    }
+    if (secondaryColor !== undefined && secondaryColor !== null && !colorRegex.test(secondaryColor)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Secondary color must be in hex format (#RRGGBB)" },
+        { status: 400 }
+      )
+    }
+    if (accentColor !== undefined && accentColor !== null && !colorRegex.test(accentColor)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Accent color must be in hex format (#RRGGBB)" },
+        { status: 400 }
+      )
+    }
+
     // Prevent un-defaulting the default workspace without setting another as default
     if (isDefault === false && workspace.isDefault) {
       return NextResponse.json<ApiResponse<null>>(
@@ -188,6 +220,12 @@ export async function PATCH(
     if (description !== undefined) updates.description = description?.trim() || undefined
     if (settings !== undefined) updates.settings = settings
     if (isDefault !== undefined) updates.isDefault = isDefault
+    // Branding updates
+    if (logoUrl !== undefined) updates.logoUrl = logoUrl
+    if (primaryColor !== undefined) updates.primaryColor = primaryColor
+    if (secondaryColor !== undefined) updates.secondaryColor = secondaryColor
+    if (accentColor !== undefined) updates.accentColor = accentColor
+    if (faviconUrl !== undefined) updates.faviconUrl = faviconUrl
 
     const updatedWorkspace = await updateWorkspace(id, updates)
 

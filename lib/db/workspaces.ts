@@ -21,6 +21,12 @@ export interface Workspace {
   settings: Record<string, unknown>
   isDefault: boolean
   createdBy?: string
+  // Workspace-level branding
+  logoUrl?: string | null
+  primaryColor?: string | null
+  secondaryColor?: string | null
+  accentColor?: string | null
+  faviconUrl?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -53,6 +59,12 @@ function parseWorkspace(row: Record<string, unknown>): Workspace {
     settings: (row.settings as Record<string, unknown>) || {},
     isDefault: row.is_default as boolean,
     createdBy: row.created_by as string | undefined,
+    // Workspace-level branding
+    logoUrl: row.logo_url as string | null | undefined,
+    primaryColor: row.primary_color as string | null | undefined,
+    secondaryColor: row.secondary_color as string | null | undefined,
+    accentColor: row.accent_color as string | null | undefined,
+    faviconUrl: row.favicon_url as string | null | undefined,
     createdAt: (row.created_at as Date)?.toISOString() || "",
     updatedAt: (row.updated_at as Date)?.toISOString() || "",
   }
@@ -191,6 +203,12 @@ export interface UpdateWorkspaceParams {
   description?: string
   settings?: Record<string, unknown>
   isDefault?: boolean
+  // Branding fields
+  logoUrl?: string | null
+  primaryColor?: string | null
+  secondaryColor?: string | null
+  accentColor?: string | null
+  faviconUrl?: string | null
 }
 
 /**
@@ -212,6 +230,11 @@ export async function updateWorkspace(
       description = ${updates.description ?? workspace.description ?? null},
       settings = ${JSON.stringify(updates.settings ?? workspace.settings)}::jsonb,
       is_default = ${updates.isDefault ?? workspace.isDefault},
+      logo_url = ${updates.logoUrl !== undefined ? updates.logoUrl : workspace.logoUrl ?? null},
+      primary_color = ${updates.primaryColor !== undefined ? updates.primaryColor : workspace.primaryColor ?? null},
+      secondary_color = ${updates.secondaryColor !== undefined ? updates.secondaryColor : workspace.secondaryColor ?? null},
+      accent_color = ${updates.accentColor !== undefined ? updates.accentColor : workspace.accentColor ?? null},
+      favicon_url = ${updates.faviconUrl !== undefined ? updates.faviconUrl : workspace.faviconUrl ?? null},
       updated_at = NOW()
     WHERE id = ${id}
     RETURNING *
