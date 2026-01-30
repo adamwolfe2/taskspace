@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import {
   sendSlackMessage,
   buildTaskAssignmentMessage,
@@ -28,17 +29,43 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if Slack is configured
-    const webhookUrl = auth.organization.settings?.slackWebhookUrl
-    if (!isSlackConfigured(webhookUrl)) {
+    const body = await request.json()
+    const { type, data, workspaceId } = body
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Slack is not configured. Add a webhook URL in organization settings." },
+        { success: false, error: "workspaceId is required" },
         { status: 400 }
       )
     }
 
-    const body = await request.json()
-    const { type, data } = body
+    // Validate workspace access
+    const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+    if (!hasAccess) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "You don't have access to this workspace" },
+        { status: 403 }
+      )
+    }
+
+    // Get workspace for workspace-specific Slack webhook
+    const workspace = await db.workspaces.findById(workspaceId)
+    if (!workspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
+    // Check if Slack is configured for this workspace (or fallback to org level)
+    const webhookUrl = workspace.settings?.slackWebhookUrl || auth.organization.settings?.slackWebhookUrl
+    if (!isSlackConfigured(webhookUrl)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Slack is not configured for this workspace. Add a webhook URL in workspace settings." },
+        { status: 400 }
+      )
+    }
 
     if (!type) {
       return NextResponse.json<ApiResponse<null>>(
