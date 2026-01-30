@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
+import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { subDays, subMonths, startOfDay, endOfDay, eachDayOfInterval, format } from "date-fns"
@@ -23,6 +24,25 @@ export async function GET(request: NextRequest) {
     const workspaceId = searchParams.get("workspaceId")
     const dateRange = searchParams.get("dateRange") || "30d" // 7d, 30d, 90d, 1y
 
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
+
     // Calculate date range
     const now = new Date()
     let startDate: Date
@@ -43,24 +63,25 @@ export async function GET(request: NextRequest) {
         break
     }
 
-    // Fetch data
-    const [rocks, tasks, eodReports, members] = await Promise.all([
+    // Fetch workspace-specific data
+    const [rocks, tasks, eodReports, workspaceMembers, orgMembers] = await Promise.all([
       db.rocks.findByOrganizationId(auth.organization.id),
       db.assignedTasks.findByOrganizationId(auth.organization.id),
       db.eodReports.findByOrganizationId(auth.organization.id),
+      getWorkspaceMembers(workspaceId),
       db.members.findWithUsersByOrganizationId(auth.organization.id),
     ])
 
-    // Filter by workspace if specified
-    const filteredRocks = workspaceId
-      ? rocks.filter((r) => r.workspaceId === workspaceId)
-      : rocks
-    const filteredTasks = workspaceId
-      ? tasks.filter((t) => t.workspaceId === workspaceId)
-      : tasks
-    const filteredReports = workspaceId
-      ? eodReports.filter((r) => r.workspaceId === workspaceId)
-      : eodReports
+    // ALWAYS filter by workspace - enforce workspace isolation
+    const filteredRocks = rocks.filter((r) => r.workspaceId === workspaceId)
+    const filteredTasks = tasks.filter((t) => t.workspaceId === workspaceId)
+    const filteredReports = eodReports.filter((r) => r.workspaceId === workspaceId)
+
+    // Get workspace member user IDs for filtering
+    const workspaceMemberUserIds = new Set(workspaceMembers.map((wm) => wm.userId))
+
+    // Get full member details for workspace members only
+    const members = orgMembers.filter((m) => workspaceMemberUserIds.has(m.userId))
 
     // Filter by date range
     const rocksInRange = filteredRocks.filter(

@@ -65,19 +65,36 @@ export function AnalyticsPage() {
     { value: "1y", label: "Last year" },
   ]
 
+  // Sync selected workspace with current workspace
   useEffect(() => {
-    fetchAnalytics()
+    if (currentWorkspace && !selectedWorkspaceId) {
+      setSelectedWorkspaceId(currentWorkspace.id)
+    }
+  }, [currentWorkspace, selectedWorkspaceId])
+
+  useEffect(() => {
+    if (selectedWorkspaceId) {
+      fetchAnalytics()
+    }
   }, [dateRange, selectedWorkspaceId])
 
   const fetchAnalytics = async () => {
+    // CRITICAL: Workspace is required for data isolation
+    if (!selectedWorkspaceId) {
+      setError("No workspace selected")
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       setError(null)
 
-      const params = new URLSearchParams({ dateRange })
-      if (selectedWorkspaceId) {
-        params.append("workspaceId", selectedWorkspaceId)
-      }
+      // ALWAYS include workspaceId - required for workspace isolation
+      const params = new URLSearchParams({
+        dateRange,
+        workspaceId: selectedWorkspaceId,
+      })
 
       const response = await fetch(`/api/analytics?${params.toString()}`)
       const result = await response.json()
