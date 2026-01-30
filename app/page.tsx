@@ -190,12 +190,7 @@ function AppContent() {
         )
       case "analytics":
         return isAdmin ? (
-          <AnalyticsPage
-            teamMembers={teamData.teamMembers}
-            eodReports={teamData.eodReports}
-            rocks={teamData.rocks}
-            assignedTasks={teamData.assignedTasks}
-          />
+          <AnalyticsPage />
         ) : (
           <DashboardPage {...dashboardProps} />
         )
