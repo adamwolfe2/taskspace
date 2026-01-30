@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { getStreakMilestoneInfo } from "@/lib/productivity/calculations"
 import type { ApiResponse, UserStreak } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -17,10 +18,33 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
     const userId = searchParams.get("userId") || auth.user.id
 
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
+
     // Fetch EOD reports for streak calculation
-    const reports = await db.eodReports.findByUserId(userId, auth.organization.id)
+    const allReports = await db.eodReports.findByUserId(userId, auth.organization.id)
+
+    // Filter by workspace - EOD reports already have workspace_id!
+    const reports = allReports.filter(r => r.workspaceId === workspaceId)
 
     // Sort reports by date descending
     const sortedReports = [...reports].sort(
@@ -113,9 +137,10 @@ export async function GET(request: NextRequest) {
     }
 
     const streakData: UserStreak = {
-      id: `${auth.organization.id}-${userId}`,
+      id: `${auth.organization.id}-${userId}-${workspaceId}`,
       organizationId: auth.organization.id,
       userId,
+      workspaceId,
       currentStreak,
       longestStreak,
       lastSubmissionDate,

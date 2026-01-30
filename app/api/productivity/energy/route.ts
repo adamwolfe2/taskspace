@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import type { ApiResponse, DailyEnergy } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -16,14 +17,34 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
     const requestedUserId = searchParams.get("userId")
     const date = searchParams.get("date")
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
 
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
+
     // Users can only view their own data unless they're admin/owner
-    const isAdmin = auth.member.role === "admin" || auth.member.role === "owner"
-    const userId = requestedUserId && isAdmin ? requestedUserId : auth.user.id
+    const userIsAdmin = isAdmin(auth)
+    const userId = requestedUserId && userIsAdmin ? requestedUserId : auth.user.id
 
     // If specific date requested, return single entry
     if (date) {
@@ -32,6 +53,14 @@ export async function GET(request: NextRequest) {
         auth.organization.id,
         date
       )
+
+      // Filter by workspace
+      if (energy && energy.workspaceId !== workspaceId) {
+        return NextResponse.json<ApiResponse<DailyEnergy | null>>({
+          success: true,
+          data: null,
+        })
+      }
 
       return NextResponse.json<ApiResponse<DailyEnergy | null>>({
         success: true,
@@ -48,9 +77,12 @@ export async function GET(request: NextRequest) {
         endDate
       )
 
+      // Filter by workspace
+      const workspaceEnergyData = energyData.filter(e => e.workspaceId === workspaceId)
+
       return NextResponse.json<ApiResponse<DailyEnergy[]>>({
         success: true,
-        data: energyData,
+        data: workspaceEnergyData,
       })
     }
 
@@ -66,9 +98,12 @@ export async function GET(request: NextRequest) {
       defaultEndDate
     )
 
+    // Filter by workspace
+    const workspaceEnergyData = energyData.filter(e => e.workspaceId === workspaceId)
+
     return NextResponse.json<ApiResponse<DailyEnergy[]>>({
       success: true,
-      data: energyData,
+      data: workspaceEnergyData,
     })
   } catch (error) {
     logError(logger, "Get energy data error", error)
@@ -100,6 +135,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!body.workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access
+    const hasAccess = await userHasWorkspaceAccess(auth.user.id, body.workspaceId)
+    if (!hasAccess) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "You don't have access to this workspace" },
+        { status: 403 }
+      )
+    }
+
     // Validate energy level if provided
     if (body.energyLevel) {
       const validLevels = ["low", "medium", "high", "peak"]
@@ -114,6 +166,7 @@ export async function POST(request: NextRequest) {
     const energy: Omit<DailyEnergy, "id" | "createdAt" | "updatedAt"> = {
       organizationId: auth.organization.id,
       userId: auth.user.id,
+      workspaceId: body.workspaceId,
       date: body.date,
       energyLevel: body.energyLevel,
       mood: body.mood,

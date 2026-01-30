@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { calculateFocusScore, calculateTrend } from "@/lib/productivity/calculations"
 import type { ApiResponse, FocusScore, FocusScoreInput } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -17,7 +18,27 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
     const userId = searchParams.get("userId") || auth.user.id
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
 
     // Get the last 30 days of data for calculations
     const thirtyDaysAgo = new Date()
@@ -25,11 +46,16 @@ export async function GET(request: NextRequest) {
     const startDate = thirtyDaysAgo.toISOString().split("T")[0]
 
     // Fetch user data
-    const [reports, tasks, rocks] = await Promise.all([
+    const [allReports, allTasks, allRocks] = await Promise.all([
       db.eodReports.findByUserId(userId, auth.organization.id),
       db.tasks.findByUserId(userId, auth.organization.id),
       db.rocks.findByUserId(userId, auth.organization.id),
     ])
+
+    // Filter by workspace - these tables already have workspace_id!
+    const reports = allReports.filter(r => r.workspaceId === workspaceId)
+    const tasks = allTasks.filter(t => t.workspaceId === workspaceId)
+    const rocks = allRocks.filter(r => r.workspaceId === workspaceId)
 
     // Filter to last 30 days
     const recentReports = reports.filter((r) => r.date >= startDate)
