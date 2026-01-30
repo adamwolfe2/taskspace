@@ -210,7 +210,7 @@ interface CreateWorkspaceParams {
 }
 
 export function useCreateWorkspace() {
-  const { refresh } = useWorkspaces()
+  const { refresh, switchWorkspace } = useWorkspaces()
 
   const createWorkspace = async (params: CreateWorkspaceParams): Promise<Workspace> => {
     const res = await fetch("/api/workspaces", {
@@ -225,10 +225,15 @@ export function useCreateWorkspace() {
       throw new Error(json.error || "Failed to create workspace")
     }
 
-    // Refresh workspaces list
+    const newWorkspace = json.data
+
+    // Refresh workspaces list to include the new workspace
     await refresh()
 
-    return json.data
+    // Automatically switch to the newly created workspace
+    switchWorkspace(newWorkspace.id)
+
+    return newWorkspace
   }
 
   return { createWorkspace }

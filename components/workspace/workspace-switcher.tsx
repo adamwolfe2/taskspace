@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Briefcase, Building2, Users, Folder, ChevronDown } from "lucide-react"
+import { Briefcase, Building2, Users, Folder, ChevronDown, Plus } from "lucide-react"
 import { useWorkspaces, type WorkspaceWithMemberInfo } from "@/lib/hooks/use-workspace"
+import { CreateWorkspaceModal } from "./create-workspace-modal"
 import { cn } from "@/lib/utils"
 
 // ============================================
@@ -54,6 +55,7 @@ export function WorkspaceSwitcher({
 }: WorkspaceSwitcherProps) {
   const { workspaces, currentWorkspace, currentWorkspaceId, isLoading, switchWorkspace } =
     useWorkspaces()
+  const [createModalOpen, setCreateModalOpen] = React.useState(false)
 
   if (isLoading) {
     return (
@@ -131,8 +133,28 @@ export function WorkspaceSwitcher({
             </div>
           </SelectItem>
         ))}
+
+        {/* Create New Workspace Button */}
+        <div className="border-t border-border mt-1 pt-1">
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setCreateModalOpen(true)
+            }}
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent transition-colors cursor-pointer"
+          >
+            <Plus className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium">Create new workspace</span>
+          </button>
+        </div>
       </SelectContent>
     </Select>
+
+    {/* Create Workspace Modal */}
+    <>
+      <CreateWorkspaceModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
+    </>
   )
 }
 

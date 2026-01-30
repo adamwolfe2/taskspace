@@ -15,6 +15,7 @@ import {
   createWorkspace,
   generateSlug,
   ensureUniqueSlug,
+  addWorkspaceMember,
   type Workspace,
   type WorkspaceWithMemberInfo,
   type CreateWorkspaceParams,
@@ -118,6 +119,9 @@ export async function POST(request: NextRequest) {
     }
 
     const workspace = await createWorkspace(params)
+
+    // Add the creator as a workspace admin
+    await addWorkspaceMember(workspace.id, auth.user.id, "admin")
 
     return NextResponse.json<ApiResponse<Workspace>>({
       success: true,
