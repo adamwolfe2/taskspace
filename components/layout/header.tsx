@@ -5,6 +5,7 @@ import { UserInitials } from "@/components/shared/user-initials"
 import { NotificationCenter } from "@/components/shared/notification-center"
 import { DemoModeIndicator } from "@/components/shared/demo-mode-banner"
 import { OrganizationSwitcher } from "@/components/shared/organization-switcher"
+import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { LogOut, Menu, Settings, Building, Search, ChevronDown } from "lucide-react"
@@ -44,7 +45,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
       <div className="flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6">
-        {/* Left side - Organization switcher */}
+        {/* Left side - Organization & Workspace switchers */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onMenuClick && (
             <Button
@@ -64,6 +65,11 @@ export function Header({ onMenuClick }: HeaderProps) {
           {/* Desktop organization switcher */}
           <div className="hidden md:block">
             <OrganizationSwitcher />
+          </div>
+
+          {/* Workspace switcher - visible on both mobile and desktop */}
+          <div className="border-l border-gray-200 pl-2 sm:pl-3">
+            <WorkspaceSwitcher compact />
           </div>
         </div>
 
