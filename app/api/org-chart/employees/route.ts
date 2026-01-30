@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { fetchEmployeesFromAirtable } from "@/lib/org-chart/airtable"
 import type { OrgChartEmployee } from "@/lib/org-chart/types"
+import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // Fallback data in case database and Airtable are not available
@@ -41,14 +44,47 @@ const FALLBACK_EMPLOYEES: OrgChartEmployee[] = [
   },
 ]
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Primary source: ma_employees database table
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
+
+    // Primary source: ma_employees database table filtered by workspace
     const dbEmployees = await db.maEmployees.findAll()
 
-    if (dbEmployees.length > 0) {
+    // Filter by workspace
+    const workspaceEmployees = dbEmployees.filter(emp => emp.workspaceId === workspaceId)
+
+    if (workspaceEmployees.length > 0) {
       // Transform to OrgChartEmployee format
-      const employees: OrgChartEmployee[] = dbEmployees.map(emp => ({
+      const employees: OrgChartEmployee[] = workspaceEmployees.map(emp => ({
         id: emp.id,
         firstName: emp.firstName,
         lastName: emp.lastName,

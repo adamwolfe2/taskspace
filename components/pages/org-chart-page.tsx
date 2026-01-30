@@ -13,12 +13,14 @@ import type { OrgChartEmployee, OrgChartEmployeeNode } from "@/lib/org-chart/typ
 import { Loader2, RefreshCw, Users, ArrowRightLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/lib/contexts/app-context"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useToast } from "@/hooks/use-toast"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export function OrgChartPage() {
   const { currentUser } = useApp()
+  const { currentWorkspace } = useWorkspaces()
   const { toast } = useToast()
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
 
@@ -29,14 +31,14 @@ export function OrgChartPage() {
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const transformRef = useRef<any>(null)
 
-  // Fetch employees
+  // Fetch employees for current workspace
   const {
     data: employeeData,
     error: employeeError,
     isLoading: employeesLoading,
     mutate: refreshEmployees,
   } = useSWR<{ success: boolean; employees: OrgChartEmployee[] }>(
-    "/api/org-chart/employees",
+    currentWorkspace ? `/api/org-chart/employees?workspaceId=${currentWorkspace.id}` : null,
     fetcher,
     { refreshInterval: 30000 } // Refresh every 30 seconds
   )
