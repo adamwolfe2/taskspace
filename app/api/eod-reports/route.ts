@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
     const date = searchParams.get("date")
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
+    const workspaceId = searchParams.get("workspaceId")
 
     let reports: EODReport[]
 
@@ -77,6 +78,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Filter by workspace if specified
+    if (workspaceId) {
+      reports = reports.filter((report) => report.workspaceId === workspaceId)
+    }
+
     // Sort by date descending (already done in DB, but ensure consistency)
     reports.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
@@ -114,6 +120,7 @@ export async function POST(request: NextRequest) {
       metricValueToday,
       date,
       attachments,
+      workspaceId,
     } = body
 
     if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
@@ -173,6 +180,7 @@ export async function POST(request: NextRequest) {
     const report: EODReport = {
       id: generateId(),
       organizationId: auth.organization.id,
+      workspaceId: workspaceId || null,
       userId: auth.user.id,
       date: reportDate,
       tasks,

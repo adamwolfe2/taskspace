@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
     const status = searchParams.get("status")
+    const workspaceId = searchParams.get("workspaceId")
 
     let tasks: AssignedTask[]
 
@@ -33,6 +34,11 @@ export async function GET(request: NextRequest) {
     } else {
       // Regular members see only their tasks
       tasks = await db.assignedTasks.findByAssigneeId(auth.user.id, auth.organization.id)
+    }
+
+    // Filter by workspace if specified
+    if (workspaceId) {
+      tasks = tasks.filter(t => t.workspaceId === workspaceId)
     }
 
     // Filter by status if specified
@@ -73,6 +79,7 @@ export async function POST(request: NextRequest) {
       priority = "normal",
       dueDate,
       type: _type = "personal",
+      workspaceId,
     } = body
 
     if (!title) {
@@ -166,6 +173,7 @@ export async function POST(request: NextRequest) {
     const task: AssignedTask = {
       id: taskId,
       organizationId: auth.organization.id,
+      workspaceId: workspaceId || null,
       title: title.trim(),
       description: description?.trim(),
       assigneeId: targetUserId,

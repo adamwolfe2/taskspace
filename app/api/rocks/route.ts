@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
     const quarter = searchParams.get("quarter")
+    const workspaceId = searchParams.get("workspaceId")
 
     let rocks: Rock[]
 
@@ -37,6 +38,11 @@ export async function GET(request: NextRequest) {
     } else {
       // Regular members see only their rocks
       rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
+    }
+
+    // Filter by workspace if specified
+    if (workspaceId) {
+      rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
     }
 
     // Filter by quarter if specified
@@ -78,6 +84,7 @@ export async function POST(request: NextRequest) {
       doneWhen,
       userId,
       quarter,
+      workspaceId,
     } = body
 
     if (!title || !description || !dueDate) {
@@ -111,6 +118,7 @@ export async function POST(request: NextRequest) {
     const rock: Rock = {
       id: generateId(),
       organizationId: auth.organization.id,
+      workspaceId: workspaceId || null,
       userId: targetUserId,
       title: title.trim(),
       description: description.trim(),
