@@ -648,6 +648,13 @@ export const db = {
       const { rowCount } = await sql`DELETE FROM sessions WHERE expires_at < NOW()`
       return rowCount ?? 0
     },
+    async updateOrganization(token: string, organizationId: string): Promise<boolean> {
+      const { rowCount } = await sql`
+        UPDATE sessions SET organization_id = ${organizationId}
+        WHERE token = ${token}
+      `
+      return (rowCount ?? 0) > 0
+    },
   },
 
   // Invitations
@@ -2995,6 +3002,68 @@ export const db = {
         updated_at = NOW()
         WHERE organization_id = ${orgId}
       `
+    },
+  },
+
+  // Workspaces
+  workspaces: {
+    async create(workspace: {
+      id: string
+      organizationId: string
+      name: string
+      slug: string
+      type: string
+      description?: string
+      isDefault?: boolean
+      createdBy?: string
+      createdAt: string
+      updatedAt: string
+      settings?: any
+    }): Promise<void> {
+      await sql`
+        INSERT INTO workspaces (id, organization_id, name, slug, type, description, is_default, created_by, created_at, updated_at, settings)
+        VALUES (${workspace.id}, ${workspace.organizationId}, ${workspace.name}, ${workspace.slug}, ${workspace.type},
+                ${workspace.description || null}, ${workspace.isDefault ?? false}, ${workspace.createdBy || null},
+                ${workspace.createdAt}, ${workspace.updatedAt}, ${JSON.stringify(workspace.settings || {})})
+      `
+    },
+    async findByOrganizationId(orgId: string): Promise<any[]> {
+      const { rows } = await sql`
+        SELECT * FROM workspaces WHERE organization_id = ${orgId} ORDER BY is_default DESC, name ASC
+      `
+      return rows
+    },
+    async findById(id: string): Promise<any | null> {
+      const { rows } = await sql`SELECT * FROM workspaces WHERE id = ${id}`
+      return rows[0] || null
+    },
+  },
+
+  // Workspace Members
+  workspaceMembers: {
+    async create(member: {
+      id: string
+      workspaceId: string
+      userId: string
+      role: string
+      joinedAt: string
+    }): Promise<void> {
+      await sql`
+        INSERT INTO workspace_members (id, workspace_id, user_id, role, joined_at)
+        VALUES (${member.id}, ${member.workspaceId}, ${member.userId}, ${member.role}, ${member.joinedAt})
+      `
+    },
+    async findByWorkspaceId(workspaceId: string): Promise<any[]> {
+      const { rows } = await sql`
+        SELECT * FROM workspace_members WHERE workspace_id = ${workspaceId}
+      `
+      return rows
+    },
+    async findByUserId(userId: string): Promise<any[]> {
+      const { rows } = await sql`
+        SELECT * FROM workspace_members WHERE user_id = ${userId}
+      `
+      return rows
     },
   },
 }

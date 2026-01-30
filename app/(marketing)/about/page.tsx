@@ -95,7 +95,7 @@ const team = [
 ]
 
 const milestones = [
-  { year: "2021", title: "Founded", description: "AIMS was born from a simple idea: make team accountability effortless." },
+  { year: "2021", title: "Founded", description: "Align was born from a simple idea: make team accountability effortless." },
   { year: "2022", title: "First 100 Teams", description: "Rapid growth as teams discovered the power of AI-assisted EOD reports." },
   { year: "2023", title: "Series A", description: "Raised $15M to accelerate product development and global expansion." },
   { year: "2024", title: "500+ Teams", description: "Trusted by teams worldwide, from startups to Fortune 500 companies." },
@@ -167,7 +167,7 @@ export default function AboutPage() {
                 variants={fadeInUp}
                 className="text-lg text-slate-600 mb-6 leading-relaxed"
               >
-                AIMS was founded on a simple observation: the best teams are built
+                Align was founded on a simple observation: the best teams are built
                 on accountability, but most tools make accountability feel like a
                 burden rather than a superpower.
               </motion.p>
@@ -184,7 +184,7 @@ export default function AboutPage() {
                 variants={fadeInUp}
                 className="text-lg text-slate-600 leading-relaxed"
               >
-                Today, AIMS powers hundreds of teams around the world, from
+                Today, Align powers hundreds of teams around the world, from
                 fast-growing startups to established enterprises. But we&apos;re
                 just getting started.
               </motion.p>
@@ -264,7 +264,7 @@ export default function AboutPage() {
                 Our Journey
               </h2>
               <p className="text-lg text-slate-600">
-                Key milestones in the AIMS story
+                Key milestones in the Align story
               </p>
             </motion.div>
 

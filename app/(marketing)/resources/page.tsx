@@ -52,7 +52,7 @@ const featuredResources = [
   },
   {
     type: "video",
-    title: "Getting Started with AIMS",
+    title: "Getting Started with Align",
     description:
       "A comprehensive walkthrough of setting up your organization and inviting your first team members.",
     image: "/resources/getting-started.jpg",
@@ -99,7 +99,7 @@ const resources = [
   {
     type: "guide",
     title: "Setting Up Teams for Success",
-    description: "Best practices for organizing your team structure in AIMS.",
+    description: "Best practices for organizing your team structure in Align.",
     readTime: "6 min read",
     icon: Users,
     category: "guides",
@@ -123,7 +123,7 @@ const resources = [
   {
     type: "video",
     title: "Advanced Reporting Features",
-    description: "Unlock the full potential of AIMS reporting capabilities.",
+    description: "Unlock the full potential of Align reporting capabilities.",
     readTime: "15 min watch",
     icon: Video,
     category: "videos",
@@ -140,7 +140,7 @@ const resources = [
 
 const webinars = [
   {
-    title: "Building High-Performance Teams with AIMS",
+    title: "Building High-Performance Teams with Align",
     date: "February 15, 2026",
     time: "2:00 PM ET",
     speaker: "Sarah Chen, CTO",
@@ -186,7 +186,7 @@ export default function ResourcesPage() {
               className="text-lg sm:text-xl text-slate-600 leading-relaxed"
             >
               Guides, templates, videos, and case studies to help you get the
-              most out of AIMS and build a world-class team.
+              most out of Align and build a world-class team.
             </motion.p>
           </motion.div>
         </div>

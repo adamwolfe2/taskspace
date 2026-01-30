@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
 
-// Plan configurations matching stripe-config.ts
+// Plan configurations matching stripe-config.ts and database
 const PLANS = {
   free: {
     name: "Free",
@@ -27,40 +27,39 @@ const PLANS = {
     monthlyPrice: 0,
     yearlyPrice: 0,
     features: [
-      "3 team members",
+      "5 team members",
       "Basic rocks & tasks",
       "EOD reports",
-      "7-day history",
+      "100 AI credits/month",
     ],
     icon: null,
   },
-  starter: {
-    name: "Starter",
+  pro: {
+    name: "Pro",
     description: "For small teams",
-    monthlyPrice: 29,
-    yearlyPrice: 290,
+    monthlyPrice: 15,
+    yearlyPrice: 144,
     features: [
-      "10 team members",
-      "Email notifications",
-      "Basic analytics",
-      "30-day history",
-      "Email support",
+      "20 team members",
+      "AI insights",
+      "Team analytics",
+      "Asana integration",
+      "1,000 AI credits/month",
     ],
     icon: Sparkles,
   },
-  professional: {
-    name: "Professional",
+  team: {
+    name: "Team",
     description: "For growing organizations",
-    monthlyPrice: 79,
-    yearlyPrice: 790,
+    monthlyPrice: 25,
+    yearlyPrice: 240,
     features: [
-      "50 team members",
-      "Advanced analytics",
-      "AI insights",
+      "100 team members",
+      "Everything in Pro",
       "Custom branding",
       "API access",
       "Priority support",
-      "Unlimited history",
+      "5,000 AI credits/month",
     ],
     icon: Crown,
     popular: true,
@@ -68,15 +67,15 @@ const PLANS = {
   enterprise: {
     name: "Enterprise",
     description: "For large organizations",
-    monthlyPrice: 199,
-    yearlyPrice: 1990,
+    monthlyPrice: 75,
+    yearlyPrice: 720,
     features: [
       "Unlimited team members",
+      "Everything in Team",
       "SSO/SAML",
-      "Custom integrations",
       "Dedicated support",
       "SLA guarantee",
-      "Custom contracts",
+      "Unlimited AI credits",
     ],
     icon: Building2,
   },
@@ -429,7 +428,7 @@ export function BillingSettings() {
               >
                 Yearly
                 <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700">
-                  Save 17%
+                  Save 20%
                 </Badge>
               </button>
             </div>

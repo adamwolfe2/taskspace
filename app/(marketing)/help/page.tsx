@@ -41,7 +41,7 @@ const categories = [
     id: "getting-started",
     icon: Zap,
     title: "Getting Started",
-    description: "New to AIMS? Start here.",
+    description: "New to Align? Start here.",
     articles: [
       "Creating your organization",
       "Inviting team members",

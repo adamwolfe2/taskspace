@@ -1,99 +1,105 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
-import type { UserOrganizationItem } from "@/lib/types"
+import { generateId, slugify } from "@/lib/auth/password"
+import type { ApiResponse, UserOrganizationItem } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
-// GET /api/user/organizations - List all organizations the user is a member of
+/**
+ * GET /api/user/organizations
+ * Get all organizations the current user is a member of
+ */
 export async function GET(request: NextRequest) {
   try {
     const auth = await getAuthContext(request)
     if (!auth) {
-      return NextResponse.json(
+      return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
 
-    // Get all organizations the user is a member of
-    const organizations = await db.userOrganizations.findByUserId(auth.user.id)
+    // Get all organization memberships for this user
+    const memberships = await db.members.findByUserId(auth.user.id)
 
-    // Mark the current organization
-    const orgList: UserOrganizationItem[] = organizations.map((org) => ({
-      ...org,
-      isCurrent: org.id === auth.organization.id,
-    }))
+    // Fetch full organization details for each membership
+    const organizations: UserOrganizationItem[] = []
 
-    // Sort to put current org first, then by join date
-    orgList.sort((a, b) => {
-      if (a.isCurrent) return -1
-      if (b.isCurrent) return 1
-      return new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
-    })
+    for (const membership of memberships) {
+      if (membership.status !== "active") continue
 
-    return NextResponse.json({
+      const org = await db.organizations.findById(membership.organizationId)
+      if (org) {
+        organizations.push({
+          id: org.id,
+          name: org.name,
+          slug: org.slug,
+          logoUrl: org.logoUrl,
+          primaryColor: org.primaryColor,
+          role: membership.role,
+          subscriptionTier: org.subscription?.plan || "free",
+          isCurrent: org.id === auth.organization.id,
+        })
+      }
+    }
+
+    return NextResponse.json<ApiResponse<{ organizations: UserOrganizationItem[] }>>({
       success: true,
-      data: {
-        organizations: orgList,
-        currentOrganizationId: auth.organization.id,
-        totalCount: orgList.length,
-      },
+      data: { organizations },
     })
   } catch (error) {
-    logError(logger, "Error fetching user organizations", error)
-    return NextResponse.json(
+    logError(logger, "Get user organizations error", error)
+    return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to fetch organizations" },
       { status: 500 }
     )
   }
 }
 
-// POST /api/user/organizations - Create a new organization
+/**
+ * POST /api/user/organizations
+ * Create a new organization for the current user
+ */
 export async function POST(request: NextRequest) {
   try {
     const auth = await getAuthContext(request)
     if (!auth) {
-      return NextResponse.json(
+      return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
 
     const body = await request.json()
-    const { name, slug, logoUrl, primaryColor, billingEmail } = body
+    const { name } = body
 
-    if (!name || typeof name !== "string" || name.trim().length < 2) {
-      return NextResponse.json(
-        { success: false, error: "Organization name is required (min 2 characters)" },
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Organization name is required" },
         { status: 400 }
       )
     }
 
-    // Generate slug from name if not provided
-    const orgSlug = slug || name.toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .substring(0, 50)
+    const now = new Date().toISOString()
+    const orgId = generateId()
+    let slug = slugify(name)
 
-    // Check if slug is already taken
-    const existingOrg = await db.organizations.findBySlug(orgSlug)
-    if (existingOrg) {
-      return NextResponse.json(
-        { success: false, error: "Organization slug is already taken" },
-        { status: 409 }
-      )
+    // Ensure unique slug
+    let existingOrg = await db.organizations.findBySlug(slug)
+    let counter = 1
+    while (existingOrg) {
+      slug = `${slugify(name)}-${counter}`
+      existingOrg = await db.organizations.findBySlug(slug)
+      counter++
     }
 
-    const now = new Date().toISOString()
-    const orgId = `org_${crypto.randomUUID()}`
-    const memberId = `mem_${crypto.randomUUID()}`
-
-    // Create the organization
-    const newOrg = await db.organizations.create({
+    // Create organization
+    const organization = {
       id: orgId,
       name: name.trim(),
-      slug: orgSlug,
+      slug,
+      createdAt: now,
+      updatedAt: now,
       ownerId: auth.user.id,
       settings: {
         timezone: "America/New_York",
@@ -101,25 +107,39 @@ export async function POST(request: NextRequest) {
         eodReminderTime: "17:00",
         enableEmailNotifications: true,
         enableSlackIntegration: false,
-        customBranding: {
-          logo: logoUrl || undefined,
-          primaryColor: primaryColor || "#dc2626",
-        },
       },
       subscription: {
         plan: "free",
         status: "active",
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         maxUsers: 5,
-        features: ["Basic task management", "EOD reports", "1 rock per user"],
+        features: ["basic_rocks", "basic_tasks", "eod_reports"],
       },
+    }
+
+    await db.organizations.create(organization)
+
+    // Create default workspace
+    const defaultWorkspaceId = generateId()
+    const defaultWorkspace = {
+      id: defaultWorkspaceId,
+      organizationId: orgId,
+      name: "Default",
+      slug: "default",
+      type: "team",
+      description: "Default workspace for all organization members",
+      isDefault: true,
+      createdBy: auth.user.id,
       createdAt: now,
       updatedAt: now,
-    })
+      settings: {},
+    }
 
-    // Create the owner member record
-    await db.members.create({
-      id: memberId,
+    await db.workspaces.create(defaultWorkspace)
+
+    // Create member record
+    const member = {
+      id: generateId(),
       organizationId: orgId,
       userId: auth.user.id,
       email: auth.user.email,
@@ -128,46 +148,29 @@ export async function POST(request: NextRequest) {
       department: "Leadership",
       joinedAt: now,
       status: "active",
-    })
-
-    // Create a free subscription for the new org
-    try {
-      await db.orgSubscriptions.create({
-        organizationId: orgId,
-        tierId: "tier_free",
-        seatsPurchased: 5,
-      })
-    } catch {
-      // Subscription table might not exist yet, that's ok
     }
 
-    // Log the action
-    try {
-      await db.auditLogs.create({
-        organizationId: orgId,
-        userId: auth.user.id,
-        action: "organization_created",
-        resourceType: "organization",
-        resourceId: orgId,
-        newValues: { name: newOrg.name, slug: newOrg.slug },
-        ipAddress: request.headers.get("x-forwarded-for") || undefined,
-        userAgent: request.headers.get("user-agent") || undefined,
-      })
-    } catch {
-      // Audit log table might not exist yet, that's ok
+    await db.members.create(member)
+
+    // Add to default workspace
+    const workspaceMember = {
+      id: generateId(),
+      workspaceId: defaultWorkspaceId,
+      userId: auth.user.id,
+      role: "admin",
+      joinedAt: now,
     }
 
-    return NextResponse.json({
+    await db.workspaceMembers.create(workspaceMember)
+
+    return NextResponse.json<ApiResponse<{ organization: typeof organization }>>({
       success: true,
-      data: {
-        organization: newOrg,
-        memberId,
-      },
+      data: { organization },
       message: "Organization created successfully",
     })
   } catch (error) {
-    logError(logger, "Error creating organization", error)
-    return NextResponse.json(
+    logError(logger, "Create organization error", error)
+    return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create organization" },
       { status: 500 }
     )

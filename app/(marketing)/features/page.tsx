@@ -138,7 +138,7 @@ const additionalFeatures = [
   {
     icon: Settings,
     title: "Customization",
-    description: "Tailor AIMS to your workflow with extensive customization options.",
+    description: "Tailor Align to your workflow with extensive customization options.",
   },
   {
     icon: Lock,
@@ -199,7 +199,7 @@ export default function FeaturesPage() {
               variants={fadeInUp}
               className="text-lg sm:text-xl text-slate-600 leading-relaxed"
             >
-              AIMS provides a comprehensive suite of tools designed to enhance
+              Align provides a comprehensive suite of tools designed to enhance
               accountability, streamline communication, and drive results across
               your organization.
             </motion.p>
@@ -328,7 +328,7 @@ export default function FeaturesPage() {
               variants={fadeInUp}
               className="text-lg text-slate-600 max-w-2xl mx-auto"
             >
-              AIMS is packed with features designed to make your team more
+              Align is packed with features designed to make your team more
               productive and accountable.
             </motion.p>
           </motion.div>
@@ -372,13 +372,13 @@ export default function FeaturesPage() {
               variants={fadeInUp}
               className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4"
             >
-              Ready to See AIMS in Action?
+              Ready to See Align in Action?
             </motion.h2>
             <motion.p
               variants={fadeInUp}
               className="text-lg text-slate-600 mb-8"
             >
-              Start your free trial today and experience the difference AIMS can
+              Start your free trial today and experience the difference Align can
               make for your team.
             </motion.p>
             <motion.div

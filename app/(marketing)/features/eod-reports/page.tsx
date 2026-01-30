@@ -468,7 +468,7 @@ export default function EODReportsPage() {
                 className="text-lg text-slate-300 mb-8"
               >
                 Join hundreds of teams who have transformed their daily
-                accountability with AIMS.
+                accountability with Align.
               </motion.p>
               <motion.ul variants={staggerContainer} className="space-y-4">
                 {benefits.map((benefit) => (

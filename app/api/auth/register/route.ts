@@ -131,6 +131,24 @@ export async function POST(request: NextRequest) {
 
       await db.organizations.create(organization)
 
+      // Create default workspace for the organization
+      const defaultWorkspaceId = generateId()
+      const defaultWorkspace = {
+        id: defaultWorkspaceId,
+        organizationId: orgId,
+        name: "Default",
+        slug: "default",
+        type: "team",
+        description: "Default workspace for all organization members",
+        isDefault: true,
+        createdBy: userId,
+        createdAt: now,
+        updatedAt: now,
+        settings: {},
+      }
+
+      await db.workspaces.create(defaultWorkspace)
+
       // Create member record for owner
       member = {
         id: generateId(),
@@ -145,6 +163,17 @@ export async function POST(request: NextRequest) {
       }
 
       await db.members.create(member)
+
+      // Add owner to default workspace as admin
+      const workspaceMember = {
+        id: generateId(),
+        workspaceId: defaultWorkspaceId,
+        userId,
+        role: "admin",
+        joinedAt: now,
+      }
+
+      await db.workspaceMembers.create(workspaceMember)
     }
 
     // Create session

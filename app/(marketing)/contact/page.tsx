@@ -87,7 +87,7 @@ export default function ContactPage() {
               variants={fadeInUp}
               className="text-lg sm:text-xl text-slate-600 leading-relaxed"
             >
-              Have questions about AIMS? Want to schedule a demo? Our team is here
+              Have questions about Align? Want to schedule a demo? Our team is here
               to help.
             </motion.p>
           </motion.div>
@@ -439,7 +439,7 @@ export default function ContactPage() {
             {[
               {
                 q: "How quickly can I get started?",
-                a: "You can sign up and start using AIMS in under 5 minutes. No credit card required for the free trial.",
+                a: "You can sign up and start using Align in under 5 minutes. No credit card required for the free trial.",
               },
               {
                 q: "Do you offer demos?",

@@ -111,7 +111,7 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            AIMS helps teams track progress, achieve quarterly goals, and maintain
+            Align helps teams track progress, achieve quarterly goals, and maintain
             accountability with AI-powered end-of-day reports and intelligent insights.
           </motion.p>
 
@@ -158,7 +158,7 @@ function HeroSection() {
                   />
                 ))}
               </div>
-              <span>500+ teams trust AIMS</span>
+              <span>500+ teams trust Align</span>
             </div>
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -562,7 +562,7 @@ function HowItWorksSection() {
             variants={fadeInUp}
             className="text-lg text-slate-600 max-w-2xl mx-auto"
           >
-            AIMS makes it easy to transform how your team tracks progress and
+            Align makes it easy to transform how your team tracks progress and
             achieves goals.
           </motion.p>
         </motion.div>
@@ -611,7 +611,7 @@ function TestimonialsSection() {
   const testimonials = [
     {
       quote:
-        "AIMS has transformed how our team communicates. The AI-powered EOD reports save us hours every week and keep everyone aligned.",
+        "Align has transformed how our team communicates. The AI-powered EOD reports save us hours every week and keep everyone aligned.",
       author: "Sarah Chen",
       role: "VP of Engineering",
       company: "TechCorp",
@@ -619,7 +619,7 @@ function TestimonialsSection() {
     },
     {
       quote:
-        "The quarterly rocks feature is a game-changer. We've seen a 40% improvement in goal completion since adopting AIMS.",
+        "The quarterly rocks feature is a game-changer. We've seen a 40% improvement in goal completion since adopting Align.",
       author: "Michael Rodriguez",
       role: "COO",
       company: "GrowthCo",
@@ -662,7 +662,7 @@ function TestimonialsSection() {
             variants={fadeInUp}
             className="text-lg text-slate-400 max-w-2xl mx-auto"
           >
-            See what leaders are saying about how AIMS has transformed their team
+            See what leaders are saying about how Align has transformed their team
             operations.
           </motion.p>
         </motion.div>
@@ -717,7 +717,7 @@ function StatsSection() {
   const stats = [
     { value: "94%", label: "Increase in accountability" },
     { value: "2.5x", label: "Faster goal completion" },
-    { value: "500+", label: "Teams using AIMS" },
+    { value: "500+", label: "Teams using Align" },
     { value: "4.9/5", label: "Average satisfaction" },
   ]
 
@@ -786,7 +786,7 @@ function CTASection() {
             variants={fadeInUp}
             className="text-lg text-red-100 max-w-2xl mx-auto mb-10"
           >
-            Join hundreds of teams already using AIMS to track progress, achieve
+            Join hundreds of teams already using Align to track progress, achieve
             goals, and build a culture of accountability.
           </motion.p>
 

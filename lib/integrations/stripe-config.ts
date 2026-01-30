@@ -20,13 +20,13 @@ export interface PriceConfig {
 
 // Price IDs for each plan (configure in Stripe Dashboard)
 export const STRIPE_PRICE_IDS: Record<string, PriceConfig> = {
-  starter: {
-    monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY || "",
-    yearly: process.env.STRIPE_PRICE_STARTER_YEARLY || "",
+  pro: {
+    monthly: process.env.STRIPE_PRICE_PRO_MONTHLY || "",
+    yearly: process.env.STRIPE_PRICE_PRO_YEARLY || "",
   },
-  professional: {
-    monthly: process.env.STRIPE_PRICE_PROFESSIONAL_MONTHLY || "",
-    yearly: process.env.STRIPE_PRICE_PROFESSIONAL_YEARLY || "",
+  team: {
+    monthly: process.env.STRIPE_PRICE_TEAM_MONTHLY || "",
+    yearly: process.env.STRIPE_PRICE_TEAM_YEARLY || "",
   },
   enterprise: {
     monthly: process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY || "",
@@ -48,7 +48,7 @@ export function getStripeConfig(): StripeConfig {
   }
 }
 
-// Plan feature definitions
+// Plan feature definitions (matches database plan_configs table)
 export const PLAN_FEATURES: Record<string, {
   name: string
   maxSeats: number | null
@@ -65,31 +65,38 @@ export const PLAN_FEATURES: Record<string, {
     monthlyPrice: 0,
     yearlyPrice: 0,
   },
-  starter: {
-    name: "Starter",
-    maxSeats: 15,
-    aiCreditsMonthly: 500,
-    features: ["basic_rocks", "basic_tasks", "eod_reports", "email_notifications", "basic_analytics"],
-    monthlyPrice: 2900, // $29/month
-    yearlyPrice: 29000, // $290/year (save ~17%)
-  },
-  professional: {
-    name: "Professional",
-    maxSeats: 50,
-    aiCreditsMonthly: 2000,
+  pro: {
+    name: "Pro",
+    maxSeats: 20,
+    aiCreditsMonthly: 1000,
     features: [
       "basic_rocks",
       "basic_tasks",
       "eod_reports",
-      "email_notifications",
-      "advanced_analytics",
       "ai_insights",
+      "team_analytics",
+      "asana_integration",
+    ],
+    monthlyPrice: 1500, // $15/month
+    yearlyPrice: 14400, // $144/year (save 20%)
+  },
+  team: {
+    name: "Team",
+    maxSeats: 100,
+    aiCreditsMonthly: 5000,
+    features: [
+      "basic_rocks",
+      "basic_tasks",
+      "eod_reports",
+      "ai_insights",
+      "team_analytics",
+      "asana_integration",
       "custom_branding",
       "api_access",
       "priority_support",
     ],
-    monthlyPrice: 7900, // $79/month
-    yearlyPrice: 79000, // $790/year
+    monthlyPrice: 2500, // $25/month
+    yearlyPrice: 24000, // $240/year (save 20%)
   },
   enterprise: {
     name: "Enterprise",
@@ -99,20 +106,19 @@ export const PLAN_FEATURES: Record<string, {
       "basic_rocks",
       "basic_tasks",
       "eod_reports",
-      "email_notifications",
-      "advanced_analytics",
       "ai_insights",
+      "team_analytics",
+      "asana_integration",
       "custom_branding",
       "api_access",
       "priority_support",
       "sso_saml",
-      "custom_integrations",
       "dedicated_support",
       "sla_guarantee",
       "unlimited_ai",
     ],
-    monthlyPrice: 19900, // $199/month
-    yearlyPrice: 199000, // $1990/year
+    monthlyPrice: 7500, // $75/month
+    yearlyPrice: 72000, // $720/year (save 20%)
   },
 }
 
