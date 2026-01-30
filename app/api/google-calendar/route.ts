@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import * as googleCalendar from "@/lib/google-calendar"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -16,13 +17,43 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
+
     const isConfigured = googleCalendar.isConfigured()
-    const token = await db.googleCalendarTokens.findByUserId(auth.user.id, auth.organization.id)
+    const token = await db.googleCalendarTokens.findByUserIdAndWorkspace(
+      auth.user.id,
+      auth.organization.id,
+      workspaceId
+    )
 
     let calendars: Array<{ id: string; summary: string; primary?: boolean }> = []
     if (token && isConfigured) {
       try {
-        const accessToken = await googleCalendar.getValidAccessToken(auth.user.id, auth.organization.id)
+        const accessToken = await googleCalendar.getValidAccessToken(
+          auth.user.id,
+          auth.organization.id,
+          workspaceId
+        )
         if (accessToken) {
           calendars = await googleCalendar.getCalendarList(accessToken)
         }
@@ -37,6 +68,7 @@ export async function GET(request: NextRequest) {
       const state = Buffer.from(JSON.stringify({
         userId: auth.user.id,
         orgId: auth.organization.id,
+        workspaceId,
         timestamp: Date.now(),
       })).toString('base64')
       authUrl = googleCalendar.getAuthUrl(state)
@@ -83,9 +115,30 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { syncEnabled, calendarId } = body
+    const { syncEnabled, calendarId, workspaceId } = body
 
-    const token = await db.googleCalendarTokens.findByUserId(auth.user.id, auth.organization.id)
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access
+    const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+    if (!hasAccess) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "You don't have access to this workspace" },
+        { status: 403 }
+      )
+    }
+
+    const token = await db.googleCalendarTokens.findByUserIdAndWorkspace(
+      auth.user.id,
+      auth.organization.id,
+      workspaceId
+    )
     if (!token) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Google Calendar is not connected" },
@@ -93,10 +146,15 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    await db.googleCalendarTokens.update(auth.user.id, auth.organization.id, {
-      syncEnabled: syncEnabled ?? token.syncEnabled,
-      calendarId: calendarId ?? token.calendarId,
-    })
+    await db.googleCalendarTokens.updateByWorkspace(
+      auth.user.id,
+      auth.organization.id,
+      workspaceId,
+      {
+        syncEnabled: syncEnabled ?? token.syncEnabled,
+        calendarId: calendarId ?? token.calendarId,
+      }
+    )
 
     return NextResponse.json<ApiResponse<null>>({
       success: true,
@@ -122,7 +180,27 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    await db.googleCalendarTokens.delete(auth.user.id, auth.organization.id)
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access
+    const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+    if (!hasAccess) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "You don't have access to this workspace" },
+        { status: 403 }
+      )
+    }
+
+    await db.googleCalendarTokens.deleteByWorkspace(auth.user.id, auth.organization.id, workspaceId)
 
     return NextResponse.json<ApiResponse<null>>({
       success: true,

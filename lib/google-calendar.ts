@@ -106,7 +106,32 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
   }
 }
 
-export async function getValidAccessToken(userId: string, orgId: string): Promise<string | null> {
+// Legacy method - for backward compatibility
+export async function getValidAccessToken(userId: string, orgId: string, workspaceId?: string): Promise<string | null> {
+  // If workspaceId is provided, use workspace-scoped method
+  if (workspaceId) {
+    const token = await db.googleCalendarTokens.findByUserIdAndWorkspace(userId, orgId, workspaceId)
+    if (!token) return null
+
+    // Check if token is expired (with 5 min buffer)
+    if (token.expiryDate < Date.now() + 5 * 60 * 1000) {
+      try {
+        const refreshed = await refreshAccessToken(token.refreshToken)
+        await db.googleCalendarTokens.updateByWorkspace(userId, orgId, workspaceId, {
+          accessToken: refreshed.access_token,
+          expiryDate: refreshed.expiry_date,
+        })
+        return refreshed.access_token
+      } catch (error) {
+        console.error('Failed to refresh token:', error)
+        return null
+      }
+    }
+
+    return token.accessToken
+  }
+
+  // Legacy: org-scoped lookup
   const token = await db.googleCalendarTokens.findByUserId(userId, orgId)
   if (!token) return null
 

@@ -26,12 +26,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Decode and validate state
-    let stateData: { userId: string; orgId: string; timestamp: number }
+    let stateData: { userId: string; orgId: string; workspaceId: string; timestamp: number }
     try {
       stateData = JSON.parse(Buffer.from(state, 'base64').toString())
     } catch {
       return NextResponse.json(
         { success: false, error: "Invalid state" },
+        { status: 400 }
+      )
+    }
+
+    // Validate required state fields
+    if (!stateData.workspaceId) {
+      return NextResponse.json(
+        { success: false, error: "Invalid state: missing workspaceId" },
         { status: 400 }
       )
     }
@@ -49,11 +57,12 @@ export async function GET(request: NextRequest) {
 
     const now = new Date().toISOString()
 
-    // Save tokens to database
+    // Save tokens to database with workspace context
     await db.googleCalendarTokens.create({
       id: generateId(),
       userId: stateData.userId,
       organizationId: stateData.orgId,
+      workspaceId: stateData.workspaceId,
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
       tokenType: tokens.token_type,

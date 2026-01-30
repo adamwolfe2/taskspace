@@ -1835,10 +1835,12 @@ export const db = {
 
   // Google Calendar tokens
   googleCalendarTokens: {
+    // Legacy method - for backward compatibility (org-scoped)
     async findByUserId(userId: string, orgId: string): Promise<GoogleCalendarToken | null> {
       const { rows } = await sql`
         SELECT * FROM google_calendar_tokens
         WHERE user_id = ${userId} AND organization_id = ${orgId}
+        LIMIT 1
       `
       if (!rows[0]) return null
       const row = rows[0]
@@ -1846,6 +1848,32 @@ export const db = {
         id: row.id as string,
         userId: row.user_id as string,
         organizationId: row.organization_id as string,
+        workspaceId: row.workspace_id as string | undefined,
+        accessToken: row.access_token as string,
+        refreshToken: row.refresh_token as string,
+        tokenType: row.token_type as string,
+        expiryDate: Number(row.expiry_date),
+        scope: row.scope as string | undefined,
+        calendarId: row.calendar_id as string,
+        syncEnabled: row.sync_enabled as boolean,
+        lastSyncAt: row.last_sync_at ? (row.last_sync_at as Date).toISOString() : undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }
+    },
+    // New workspace-scoped method
+    async findByUserIdAndWorkspace(userId: string, orgId: string, workspaceId: string): Promise<GoogleCalendarToken | null> {
+      const { rows } = await sql`
+        SELECT * FROM google_calendar_tokens
+        WHERE user_id = ${userId} AND organization_id = ${orgId} AND workspace_id = ${workspaceId}
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        userId: row.user_id as string,
+        organizationId: row.organization_id as string,
+        workspaceId: row.workspace_id as string,
         accessToken: row.access_token as string,
         refreshToken: row.refresh_token as string,
         tokenType: row.token_type as string,
@@ -1860,12 +1888,12 @@ export const db = {
     },
     async create(token: GoogleCalendarToken): Promise<GoogleCalendarToken> {
       await sql`
-        INSERT INTO google_calendar_tokens (id, user_id, organization_id, access_token, refresh_token,
+        INSERT INTO google_calendar_tokens (id, user_id, organization_id, workspace_id, access_token, refresh_token,
           token_type, expiry_date, scope, calendar_id, sync_enabled, created_at, updated_at)
-        VALUES (${token.id}, ${token.userId}, ${token.organizationId}, ${token.accessToken},
+        VALUES (${token.id}, ${token.userId}, ${token.organizationId}, ${token.workspaceId || null}, ${token.accessToken},
           ${token.refreshToken}, ${token.tokenType}, ${token.expiryDate}, ${token.scope || null},
           ${token.calendarId}, ${token.syncEnabled}, ${token.createdAt}, ${token.updatedAt})
-        ON CONFLICT (user_id, organization_id) DO UPDATE SET
+        ON CONFLICT (user_id, organization_id, workspace_id) DO UPDATE SET
           access_token = ${token.accessToken},
           refresh_token = ${token.refreshToken},
           expiry_date = ${token.expiryDate},
@@ -1874,6 +1902,7 @@ export const db = {
       `
       return token
     },
+    // Legacy update method - for backward compatibility
     async update(userId: string, orgId: string, updates: Partial<GoogleCalendarToken>): Promise<GoogleCalendarToken | null> {
       const now = new Date().toISOString()
       const { rows } = await sql`
@@ -1910,6 +1939,48 @@ export const db = {
       const { rowCount } = await sql`
         DELETE FROM google_calendar_tokens
         WHERE user_id = ${userId} AND organization_id = ${orgId}
+      `
+      return (rowCount ?? 0) > 0
+    },
+    // New workspace-scoped update method
+    async updateByWorkspace(userId: string, orgId: string, workspaceId: string, updates: Partial<GoogleCalendarToken>): Promise<GoogleCalendarToken | null> {
+      const now = new Date().toISOString()
+      const { rows } = await sql`
+        UPDATE google_calendar_tokens SET
+          access_token = COALESCE(${updates.accessToken || null}, access_token),
+          refresh_token = COALESCE(${updates.refreshToken || null}, refresh_token),
+          expiry_date = COALESCE(${updates.expiryDate ?? null}, expiry_date),
+          calendar_id = COALESCE(${updates.calendarId || null}, calendar_id),
+          sync_enabled = COALESCE(${updates.syncEnabled ?? null}, sync_enabled),
+          last_sync_at = COALESCE(${updates.lastSyncAt || null}, last_sync_at),
+          updated_at = ${now}
+        WHERE user_id = ${userId} AND organization_id = ${orgId} AND workspace_id = ${workspaceId}
+        RETURNING *
+      `
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        id: row.id as string,
+        userId: row.user_id as string,
+        organizationId: row.organization_id as string,
+        workspaceId: row.workspace_id as string,
+        accessToken: row.access_token as string,
+        refreshToken: row.refresh_token as string,
+        tokenType: row.token_type as string,
+        expiryDate: Number(row.expiry_date),
+        scope: row.scope as string | undefined,
+        calendarId: row.calendar_id as string,
+        syncEnabled: row.sync_enabled as boolean,
+        lastSyncAt: row.last_sync_at ? (row.last_sync_at as Date).toISOString() : undefined,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }
+    },
+    // New workspace-scoped delete method
+    async deleteByWorkspace(userId: string, orgId: string, workspaceId: string): Promise<boolean> {
+      const { rowCount } = await sql`
+        DELETE FROM google_calendar_tokens
+        WHERE user_id = ${userId} AND organization_id = ${orgId} AND workspace_id = ${workspaceId}
       `
       return (rowCount ?? 0) > 0
     },
