@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces"
 import { getScorecardData } from "@/lib/metrics"
 import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
@@ -32,16 +33,46 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // All authenticated members can view the scorecard
     const url = new URL(request.url)
+    const workspaceId = url.searchParams.get("workspaceId")
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
+
+    // All authenticated workspace members can view the scorecard
     const weeksParam = url.searchParams.get("weeks")
     const weeks = clamp(safeParseInt(weeksParam, 8), 1, 52)
 
+    // Get org-wide data then filter by workspace
     const data = await getScorecardData(auth.organization.id, weeks)
+
+    // Filter rows to only workspace members
+    const workspaceMembers = await getWorkspaceMembers(workspaceId)
+    const workspaceMemberIds = new Set(workspaceMembers.map(wm => wm.id))
+    const filteredRows = data.rows.filter(row => workspaceMemberIds.has(row.memberId))
 
     return NextResponse.json({
       success: true,
-      data,
+      data: {
+        weeks: data.weeks,
+        rows: filteredRows,
+      },
       isAdmin: isAdmin(auth), // Tell frontend if user can edit
     })
   } catch (error) {
@@ -78,11 +109,20 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Validate request body using Zod schema
-    const { memberId, weekEnding, value: numericValue } = await validateBody(
+    const body = await validateBody(
       request,
       updateScorecardEntrySchema,
       { errorPrefix: "Invalid scorecard entry" }
     )
+    const { memberId, weekEnding, value: numericValue, workspaceId } = body
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
 
     // Verify the member belongs to this organization
     const memberCheck = await sql`
@@ -93,6 +133,16 @@ export async function PATCH(request: NextRequest) {
     if (memberCheck.rows.length === 0) {
       return NextResponse.json(
         { success: false, error: "Member not found in this organization" },
+        { status: 404 }
+      )
+    }
+
+    // CRITICAL: Verify the member is in the specified workspace
+    const workspaceMembers = await getWorkspaceMembers(workspaceId)
+    const workspaceMemberIds = new Set(workspaceMembers.map(wm => wm.id))
+    if (!workspaceMemberIds.has(memberId)) {
+      return NextResponse.json(
+        { success: false, error: "Member not found in this workspace" },
         { status: 404 }
       )
     }
