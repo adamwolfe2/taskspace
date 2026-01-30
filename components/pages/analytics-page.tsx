@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useWorkspaceContext } from "@/lib/contexts/workspace-context"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -51,7 +51,7 @@ interface AnalyticsData {
 }
 
 export function AnalyticsPage() {
-  const { currentWorkspace, workspaces } = useWorkspaceContext()
+  const { currentWorkspace, workspaces } = useWorkspaces()
   const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "1y">("30d")
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null)
   const [data, setData] = useState<AnalyticsData | null>(null)
