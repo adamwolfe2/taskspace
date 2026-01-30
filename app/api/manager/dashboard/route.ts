@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces"
 import { logger, logError } from "@/lib/logger"
 import type {
   ApiResponse,
@@ -50,13 +51,43 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get workspaceId from query params
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
+
     // Use member ID (not user ID) since manager_id stores organization_members.id
     const managerId = auth.member.id
     const orgId = auth.organization.id
     const today = new Date()
 
     // Get all direct reports
-    const directReportMembers = await db.members.findDirectReports(orgId, managerId)
+    const allDirectReportMembers = await db.members.findDirectReports(orgId, managerId)
+
+    // Filter direct reports to only those in the current workspace
+    const workspaceMembers = await getWorkspaceMembers(workspaceId)
+    const workspaceMemberUserIds = new Set(workspaceMembers.map((wm) => wm.userId))
+    const directReportMembers = allDirectReportMembers.filter((member) =>
+      workspaceMemberUserIds.has(member.userId || member.id)
+    )
 
     if (directReportMembers.length === 0) {
       // Return empty dashboard if no direct reports

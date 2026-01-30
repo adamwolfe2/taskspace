@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select"
 import { DirectReportCard, DirectReportCardCompact } from "@/components/manager/direct-report-card"
 import { DirectReportDetailSheet } from "@/components/manager/direct-report-detail-sheet"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { cn } from "@/lib/utils"
 import type { TeamMember, ManagerDashboard, DirectReport, ManagerAlert } from "@/lib/types"
 import {
@@ -42,6 +43,7 @@ interface ManagerDashboardPageProps {
 }
 
 export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps) {
+  const { currentWorkspace } = useWorkspaces()
   const [dashboard, setDashboard] = useState<ManagerDashboard | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -53,9 +55,20 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
 
   // Fetch dashboard data
   const fetchDashboard = async () => {
+    // CRITICAL: Workspace is required for data isolation
+    if (!currentWorkspace) {
+      setError("No workspace selected")
+      setIsLoading(false)
+      return
+    }
+
     try {
       setIsRefreshing(true)
-      const response = await fetch("/api/manager/dashboard")
+      // ALWAYS include workspaceId - required for workspace isolation
+      const params = new URLSearchParams({
+        workspaceId: currentWorkspace.id,
+      })
+      const response = await fetch(`/api/manager/dashboard?${params.toString()}`)
       const data = await response.json()
 
       if (data.success) {
@@ -74,8 +87,10 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
   }
 
   useEffect(() => {
-    fetchDashboard()
-  }, [])
+    if (currentWorkspace) {
+      fetchDashboard()
+    }
+  }, [currentWorkspace?.id])
 
   // Filter direct reports
   const filteredReports = useMemo(() => {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces"
 import type { ApiResponse, TeamMember } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -15,9 +16,29 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get managerId from query params or use current user
+    // Get managerId and workspaceId from query params
     const { searchParams } = new URL(request.url)
     const managerId = searchParams.get("managerId") || auth.user.id
+    const workspaceId = searchParams.get("workspaceId")
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
 
     // Only admins can view other managers' direct reports
     if (managerId !== auth.user.id && !isAdmin(auth)) {
@@ -27,10 +48,18 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get direct reports and filter by workspace membership
     const directReports = await db.members.findDirectReports(auth.organization.id, managerId)
+    const workspaceMembers = await getWorkspaceMembers(workspaceId)
+    const workspaceMemberUserIds = new Set(workspaceMembers.map((wm) => wm.userId))
+
+    // Filter direct reports to only those in the current workspace
+    const workspaceDirectReports = directReports.filter((member) =>
+      workspaceMemberUserIds.has(member.userId || member.id)
+    )
 
     // Convert to TeamMember format
-    const teamMembers: TeamMember[] = directReports.map((member) => ({
+    const teamMembers: TeamMember[] = workspaceDirectReports.map((member) => ({
       id: member.userId || member.id,
       name: member.name,
       email: member.email,
