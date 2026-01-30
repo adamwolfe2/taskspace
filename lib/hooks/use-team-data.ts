@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import type { TeamMember, Rock, AssignedTask, EODReport } from "../types"
 import { api } from "../api/client"
 import { useApp } from "../contexts/app-context"
+import { useWorkspaceStore } from "./use-workspace"
 import { getErrorMessage } from "../utils"
 
 // Demo data for the demo mode
@@ -135,6 +136,7 @@ const DEMO_EOD_REPORTS: EODReport[] = [
 
 export function useTeamData() {
   const { isAuthenticated, currentOrganization, isDemoMode } = useApp()
+  const { currentWorkspaceId } = useWorkspaceStore()
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [rocks, setRocks] = useState<Rock[]>([])
   const [assignedTasks, setAssignedTasks] = useState<AssignedTask[]>([])
@@ -178,9 +180,9 @@ export function useTeamData() {
 
       const [membersData, rocksData, tasksData, reportsData] = await Promise.all([
         api.members.list(),
-        api.rocks.list(),
-        api.tasks.list(),
-        api.eodReports.list(),
+        api.rocks.list(undefined, currentWorkspaceId || undefined),
+        api.tasks.list(undefined, undefined, currentWorkspaceId || undefined),
+        api.eodReports.list(currentWorkspaceId ? { workspaceId: currentWorkspaceId } : undefined),
       ])
 
       setTeamMembers(membersData)
@@ -193,7 +195,7 @@ export function useTeamData() {
     } finally {
       setIsLoading(false)
     }
-  }, [isAuthenticated, currentOrganization, isDemoMode])
+  }, [isAuthenticated, currentOrganization, isDemoMode, currentWorkspaceId])
 
   useEffect(() => {
     fetchData()
@@ -232,14 +234,18 @@ export function useTeamData() {
       return newRock
     }
     try {
-      const newRock = await api.rocks.create(rock)
+      const rockWithWorkspace = {
+        ...rock,
+        workspaceId: currentWorkspaceId || null,
+      }
+      const newRock = await api.rocks.create(rockWithWorkspace)
       setRocks((prev) => [...prev, newRock])
       return newRock
     } catch (err: unknown) {
       setError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode])
+  }, [isDemoMode, currentWorkspaceId])
 
   const updateRock = useCallback(async (id: string, updates: Partial<Rock>) => {
     if (isDemoMode) {
@@ -283,14 +289,18 @@ export function useTeamData() {
       return newTask
     }
     try {
-      const newTask = await api.tasks.create(task)
+      const taskWithWorkspace = {
+        ...task,
+        workspaceId: currentWorkspaceId || null,
+      }
+      const newTask = await api.tasks.create(taskWithWorkspace)
       setAssignedTasks((prev) => [...prev, newTask])
       return newTask
     } catch (err: unknown) {
       setError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode])
+  }, [isDemoMode, currentWorkspaceId])
 
   const updateTask = useCallback(async (id: string, updates: Partial<AssignedTask>) => {
     if (isDemoMode) {
@@ -334,14 +344,18 @@ export function useTeamData() {
       return newReport
     }
     try {
-      const newReport = await api.eodReports.create(report)
+      const reportWithWorkspace = {
+        ...report,
+        workspaceId: currentWorkspaceId || null,
+      }
+      const newReport = await api.eodReports.create(reportWithWorkspace)
       setEODReports((prev) => [newReport, ...prev])
       return newReport
     } catch (err: unknown) {
       setError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode])
+  }, [isDemoMode, currentWorkspaceId])
 
   const updateEODReport = useCallback(async (id: string, updates: Partial<EODReport>) => {
     if (isDemoMode) {

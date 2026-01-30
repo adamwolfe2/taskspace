@@ -224,9 +224,10 @@ export const api = {
 
   // Rocks
   rocks: {
-    async list(userId?: string) {
+    async list(userId?: string, workspaceId?: string) {
       const params = new URLSearchParams()
       if (userId) params.set("userId", userId)
+      if (workspaceId) params.set("workspaceId", workspaceId)
       const response = await fetch(`${API_BASE}/rocks?${params}`)
       return handleResponse<any[]>(response)
     },
@@ -259,10 +260,11 @@ export const api = {
 
   // Tasks
   tasks: {
-    async list(userId?: string, status?: string) {
+    async list(userId?: string, status?: string, workspaceId?: string) {
       const params = new URLSearchParams()
       if (userId) params.set("userId", userId)
       if (status) params.set("status", status)
+      if (workspaceId) params.set("workspaceId", workspaceId)
       const response = await fetch(`${API_BASE}/tasks?${params}`)
       return handleResponse<any[]>(response)
     },
@@ -295,12 +297,13 @@ export const api = {
 
   // EOD Reports
   eodReports: {
-    async list(params?: { userId?: string; date?: string; startDate?: string; endDate?: string }) {
+    async list(params?: { userId?: string; date?: string; startDate?: string; endDate?: string; workspaceId?: string }) {
       const searchParams = new URLSearchParams()
       if (params?.userId) searchParams.set("userId", params.userId)
       if (params?.date) searchParams.set("date", params.date)
       if (params?.startDate) searchParams.set("startDate", params.startDate)
       if (params?.endDate) searchParams.set("endDate", params.endDate)
+      if (params?.workspaceId) searchParams.set("workspaceId", params.workspaceId)
       const response = await fetch(`${API_BASE}/eod-reports?${searchParams}`)
       return handleResponse<any[]>(response)
     },
