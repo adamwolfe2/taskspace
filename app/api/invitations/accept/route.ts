@@ -8,6 +8,7 @@ import {
   isTokenExpired,
   validatePasswordStrength,
 } from "@/lib/auth/password"
+import { addWorkspaceMember, getDefaultWorkspace } from "@/lib/db/workspaces"
 import type { OrganizationMember, Session, ApiResponse, AuthResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -149,6 +150,26 @@ export async function POST(request: NextRequest) {
 
     // Mark invitation as accepted
     await db.invitations.update(invitation.id, { status: "accepted" })
+
+    // Add user to workspace
+    try {
+      let targetWorkspaceId = invitation.workspaceId
+
+      // If no workspace specified, use default workspace
+      if (!targetWorkspaceId) {
+        const defaultWorkspace = await getDefaultWorkspace(organization.id)
+        targetWorkspaceId = defaultWorkspace?.id || null
+      }
+
+      // Add user to the workspace as a member
+      if (targetWorkspaceId) {
+        await addWorkspaceMember(targetWorkspaceId, user.id, "member")
+        logger.info(`Added user ${user.id} to workspace ${targetWorkspaceId}`)
+      }
+    } catch (error) {
+      // Log error but don't fail the invitation acceptance
+      logError(logger, "Failed to add user to workspace", error)
+    }
 
     // Create session
     const sessionToken = generateToken()

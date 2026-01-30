@@ -128,6 +128,7 @@ export interface Invitation {
   createdAt: string
   invitedBy: string
   status: "pending" | "accepted" | "expired"
+  workspaceId?: string | null
 }
 
 // Password Reset Token

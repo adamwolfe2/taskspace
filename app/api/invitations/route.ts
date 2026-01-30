@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, role = "member", department = "General", name: _name } = body
+    const { email, role = "member", department = "General", workspaceId, name: _name } = body
 
     if (!email || !validateEmail(email)) {
       return NextResponse.json<ApiResponse<null>>(
@@ -120,6 +120,7 @@ export async function POST(request: NextRequest) {
       createdAt: now,
       invitedBy: auth.user.id,
       status: "pending",
+      workspaceId: workspaceId || null,
     }
 
     await db.invitations.create(invitation)

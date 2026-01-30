@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useApp } from "@/lib/contexts/app-context"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -35,17 +36,26 @@ interface IntegrationStatus {
 
 export function TeamManagementTab() {
   const { currentUser, currentOrganization } = useApp()
+  const { workspaces, currentWorkspace } = useWorkspaces()
   const { toast } = useToast()
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>([])
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteRole, setInviteRole] = useState<"member" | "admin">("member")
   const [inviteDepartment, setInviteDepartment] = useState("General")
+  const [inviteWorkspaceId, setInviteWorkspaceId] = useState<string>(currentWorkspace?.id || "")
   const [isInviting, setIsInviting] = useState(false)
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
 
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
+
+  // Update inviteWorkspaceId when currentWorkspace changes
+  useEffect(() => {
+    if (currentWorkspace?.id) {
+      setInviteWorkspaceId(currentWorkspace.id)
+    }
+  }, [currentWorkspace])
 
   // Load team members and invitations
   useEffect(() => {
@@ -99,6 +109,7 @@ export function TeamManagementTab() {
         email: inviteEmail.trim().toLowerCase(),
         role: inviteRole,
         department: inviteDepartment,
+        workspaceId: inviteWorkspaceId || undefined,
       })
 
       setPendingInvitations([...pendingInvitations, invitation])
@@ -248,6 +259,25 @@ export function TeamManagementTab() {
                     value={inviteDepartment}
                     onChange={(e) => setInviteDepartment(e.target.value)}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Workspace</Label>
+                  <Select value={inviteWorkspaceId} onValueChange={setInviteWorkspaceId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select workspace..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {workspaces.map((workspace) => (
+                        <SelectItem key={workspace.id} value={workspace.id}>
+                          {workspace.name}
+                          {workspace.isDefault && " (Default)"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Invitee will be added to this workspace upon accepting the invitation
+                  </p>
                 </div>
               </div>
               <DialogFooter>

@@ -125,6 +125,7 @@ function parseInvitation(row: Record<string, unknown>): Invitation {
     createdAt: (row.created_at as Date)?.toISOString() || "",
     invitedBy: row.invited_by as string,
     status: row.status as Invitation["status"],
+    workspaceId: row.workspace_id as string | null | undefined,
   }
 }
 
@@ -676,10 +677,10 @@ export const db = {
     },
     async create(invitation: Invitation): Promise<Invitation> {
       await sql`
-        INSERT INTO invitations (id, organization_id, email, role, department, token, expires_at, created_at, invited_by, status)
+        INSERT INTO invitations (id, organization_id, email, role, department, token, expires_at, created_at, invited_by, status, workspace_id)
         VALUES (${invitation.id}, ${invitation.organizationId}, ${invitation.email}, ${invitation.role},
                 ${invitation.department}, ${invitation.token}, ${invitation.expiresAt},
-                ${invitation.createdAt}, ${invitation.invitedBy}, ${invitation.status})
+                ${invitation.createdAt}, ${invitation.invitedBy}, ${invitation.status}, ${invitation.workspaceId || null})
       `
       return invitation
     },
