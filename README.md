@@ -1,6 +1,6 @@
-# AIMS Team Dashboard
+# Align - Team Productivity Platform
 
-A multi-tenant SaaS application for team accountability and internal management.
+A multi-tenant SaaS application for team accountability and productivity management.
 
 ## Features
 

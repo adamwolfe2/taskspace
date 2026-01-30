@@ -1,13 +1,14 @@
 import type { TeamMember, Rock, Task, EODReport } from "./types"
 
-// Legacy seed data - not currently used in production (multi-tenant uses database)
+// Legacy seed data - NOT CURRENTLY USED (multi-tenant uses database)
+// This is example/test data only - actual organizations create their own data
 type SeedRock = Omit<Rock, "organizationId" | "updatedAt">
 
 export const initialTeamMembers: TeamMember[] = [
   {
     id: "adam-wolfe",
     name: "Adam Wolfe",
-    email: "adam@aims.com",
+    email: "adam@example.com",
     role: "admin",
     department: "Leadership",
     weeklyMeasurable: "# of leads, MRR, playbooks, tools for MP, MA, & Others",

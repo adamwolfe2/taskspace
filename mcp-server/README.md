@@ -1,6 +1,6 @@
-# AIMS EOD Tracker MCP Server
+# Align MCP Server
 
-This MCP (Model Context Protocol) server enables Claude Desktop to interact with the AIMS EOD Tracker platform.
+This MCP (Model Context Protocol) server enables Claude Desktop to interact with your Align workspace.
 
 ## Features
 
@@ -15,14 +15,14 @@ Claude can use this server to:
 
 ## Easiest Setup: Remote Connector (No Installation!)
 
-The simplest way to connect Claude Desktop to AIMS - no local installation required:
+The simplest way to connect Claude Desktop - no local installation required:
 
 ### Step 1: Get your API Key
 
-1. Log into your AIMS dashboard at https://eod.aimanagingservices.com
+1. Log into your Align dashboard
 2. Go to **Settings** → **API Keys**
 3. Click **Generate API Key**
-4. Copy the key (starts with `aims_...`)
+4. Copy the key
 
 ### Step 2: Add Connector in Claude Desktop
 
@@ -30,9 +30,9 @@ The simplest way to connect Claude Desktop to AIMS - no local installation requi
 2. Go to **Settings** → **Extensions** → **Connectors** (or **Connections**)
 3. Click **Add custom connector**
 4. Fill in:
-   - **Name**: `AIMS EOD Tracker`
-   - **Remote MCP server URL**: `https://eod.aimanagingservices.com/api/mcp`
-   - **OAuth Client Secret**: Your API key (`aims_...`)
+   - **Name**: `Align`
+   - **Remote MCP server URL**: `https://your-domain.com/api/mcp`
+   - **OAuth Client Secret**: Your API key
 5. Click **Add**
 
 That's it! Claude can now check EOD status, view rocks, and manage your team.
@@ -63,7 +63,7 @@ This will:
 
 ### Step 1: Generate an API Key
 
-1. Log into your AIMS EOD Tracker dashboard
+1. Log into your Align dashboard
 2. Go to **Settings** (gear icon in sidebar)
 3. Scroll down to **API Keys** section
 4. Click **Generate API Key**
@@ -90,7 +90,7 @@ Copy this configuration (replace the placeholders):
 ```json
 {
   "mcpServers": {
-    "aims-eod-tracker": {
+    "align": {
       "command": "node",
       "args": ["/FULL/PATH/TO/aimseod/mcp-server/dist/index.js"],
       "env": {
@@ -119,7 +119,7 @@ If you're using Claude Code (CLI), add to your `~/.claude/settings.json`:
 ```json
 {
   "mcpServers": {
-    "aims-eod-tracker": {
+    "align": {
       "command": "node",
       "args": ["/path/to/aimseod/mcp-server/dist/index.js"],
       "env": {
@@ -147,7 +147,7 @@ claude --mcp /path/to/aimseod/mcp-server/dist/index.js
 
 1. **Check the path**: Make sure the path to `dist/index.js` is correct and absolute
 2. **Check the API key**: Verify your API key is valid and starts with `aims_`
-3. **Check the URL**: Ensure `AIMS_API_URL` points to your AIMS deployment
+3. **Check the URL**: Ensure `AIMS_API_URL` points to your Align deployment
 4. **Check the build**: Run `npm run build` in the mcp-server folder again
 
 ### Testing the Server Locally
@@ -201,7 +201,7 @@ Once configured, you can ask Claude:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `AIMS_API_URL` | URL of your AIMS deployment | `http://localhost:3000` |
+| `AIMS_API_URL` | URL of your Align deployment | `http://localhost:3000` |
 | `AIMS_API_KEY` | API key for authentication | (required) |
 
 ---

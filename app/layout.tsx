@@ -5,8 +5,8 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   title: {
-    default: "AIMS - Team Accountability & Management",
-    template: "%s | AIMS",
+    default: "Align - Team Productivity Platform",
+    template: "%s | Align",
   },
   description: "Transform how your team tracks progress and achieves goals with AI-powered end-of-day reports, quarterly rocks tracking, and intelligent team analytics.",
   keywords: [
@@ -22,32 +22,32 @@ export const metadata: Metadata = {
     "AI productivity",
     "remote team management",
   ],
-  authors: [{ name: "AIMS Team" }],
-  creator: "AIMS",
-  publisher: "AIMS",
-  metadataBase: new URL("https://aims.io"),
+  authors: [{ name: "Align Team" }],
+  creator: "Align",
+  publisher: "Align",
+  metadataBase: new URL("https://align.app"),
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://aims.io",
-    siteName: "AIMS",
-    title: "AIMS - Team Accountability & Management",
+    url: "https://align.app",
+    siteName: "Align",
+    title: "Align - Team Productivity Platform",
     description: "Transform how your team tracks progress and achieves goals with AI-powered accountability tools.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "AIMS - Team Accountability",
+        alt: "Align - Team Productivity Platform",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AIMS - Team Accountability & Management",
+    title: "Align - Team Productivity Platform",
     description: "Transform how your team tracks progress and achieves goals with AI-powered accountability tools.",
     images: ["/og-image.png"],
-    creator: "@aimsapp",
+    creator: "@alignapp",
   },
   robots: {
     index: true,

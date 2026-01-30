@@ -7,8 +7,8 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@example.com"
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 // Default to Resend's testing email - works without domain verification
-// For production, set EMAIL_FROM to your verified domain (e.g., "AIMS <noreply@yourdomain.com>")
-const EMAIL_FROM = process.env.EMAIL_FROM || "AIMS Dashboard <onboarding@resend.dev>"
+// For production, set EMAIL_FROM to your verified domain (e.g., "Align <noreply@yourdomain.com>")
+const EMAIL_FROM = process.env.EMAIL_FROM || "Align <onboarding@resend.dev>"
 
 // Check if email is configured
 function isEmailConfigured(): boolean {
@@ -114,12 +114,12 @@ export async function sendInvitationEmail(
     <div class="card">
       <div class="header">
         <h1>You're Invited!</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9;">Join ${escapeHtml(organization.name)} on AIMS Dashboard</p>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Join ${escapeHtml(organization.name)}</p>
       </div>
 
       <div class="content">
         <p>Hi there,</p>
-        <p><strong>${escapeHtml(inviterName)}</strong> has invited you to join <strong>${escapeHtml(organization.name)}</strong> on AIMS Dashboard - the team accountability and management platform.</p>
+        <p><strong>${escapeHtml(inviterName)}</strong> has invited you to join <strong>${escapeHtml(organization.name)}</strong> - a team productivity and accountability platform.</p>
 
         <div class="invite-box">
           <p style="margin: 0 0 15px 0;">Click the button below to accept your invitation:</p>
@@ -146,7 +146,7 @@ export async function sendInvitationEmail(
       </div>
 
       <div class="footer">
-        <p>AIMS Dashboard - Team Accountability & Management</p>
+        <p>${escapeHtml(organization.name)} - Powered by Align</p>
         <p style="margin-top: 10px;">If the button doesn't work, copy and paste this link:<br/>
         <a href="${inviteLink}" style="color: #2563EB; word-break: break-all;">${inviteLink}</a></p>
       </div>
@@ -158,7 +158,7 @@ export async function sendInvitationEmail(
 
   return sendEmail(
     [invitation.email],
-    `You're invited to join ${escapeHtml(organization.name)} on AIMS Dashboard`,
+    `You're invited to join ${escapeHtml(organization.name)}`,
     html
   )
 }
@@ -217,7 +217,7 @@ export async function sendEscalationNotification(
     </div>
 
     <div class="footer">
-      <p>AIMS Dashboard - ${escapeHtml(organization.name)}</p>
+      <p>${escapeHtml(organization.name)}</p>
     </div>
   </div>
 </body>
@@ -350,7 +350,7 @@ export async function sendEODNotification(
     </div>
 
     <div class="footer">
-      AIMS Dashboard${organization ? ` - ${escapeHtml(organization.name)}` : ""} • Submitted at ${new Date(eodReport.submittedAt).toLocaleTimeString()}
+      ${organization ? escapeHtml(organization.name) : "Align"} • Submitted at ${new Date(eodReport.submittedAt).toLocaleTimeString()}
     </div>
   </div>
 </body>
@@ -393,7 +393,7 @@ export async function sendEODReminder(user: TeamMember, organization: Organizati
         <a href="${APP_URL}" class="button">Submit EOD Report</a>
       </div>
       <div class="footer">
-        <p>AIMS Dashboard - ${escapeHtml(organization.name)}</p>
+        <p>${escapeHtml(organization.name)}</p>
       </div>
     </div>
   </div>
@@ -439,12 +439,12 @@ export async function sendPasswordResetEmail(
     <div class="card">
       <div class="header">
         <h1>Password Reset Request</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9;">AIMS Dashboard</p>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Align</p>
       </div>
 
       <div class="content">
         <p>Hi ${escapeHtml(userName.split(" ")[0])},</p>
-        <p>We received a request to reset your password for your AIMS Dashboard account. Click the button below to create a new password:</p>
+        <p>We received a request to reset your password for your account. Click the button below to create a new password:</p>
 
         <div class="reset-box">
           <a href="${resetLink}" class="button">Reset Password</a>
@@ -460,7 +460,7 @@ export async function sendPasswordResetEmail(
       </div>
 
       <div class="footer">
-        <p>AIMS Dashboard - Team Accountability & Management</p>
+        <p>Align - Team Productivity Platform</p>
         <p style="margin-top: 10px;">If the button doesn't work, copy and paste this link:<br/>
         <a href="${resetLink}" style="color: #dc2626; word-break: break-all;">${resetLink}</a></p>
       </div>
@@ -472,7 +472,7 @@ export async function sendPasswordResetEmail(
 
   return sendEmail(
     [resetToken.email],
-    "Reset your AIMS Dashboard password",
+    "Reset your Align password",
     html
   )
 }
