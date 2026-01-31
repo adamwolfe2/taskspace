@@ -87,14 +87,19 @@ export async function POST(request: NextRequest) {
 
     for (const table of tables) {
       try {
-        await sql`
-          ALTER TABLE ${sql(table)}
+        // Use raw SQL query since table names can't be parameterized
+        await sql.query(`
+          ALTER TABLE ${table}
           ADD COLUMN IF NOT EXISTS workspace_id VARCHAR(255) REFERENCES workspaces(id) ON DELETE SET NULL
-        `
+        `)
         steps.push(`✓ Added workspace_id to ${table}`)
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error)
-        steps.push(`⚠ ${table}: ${msg.substring(0, 50)}`)
+        if (msg.includes("already exists")) {
+          steps.push(`⚠ ${table}: workspace_id already exists`)
+        } else {
+          steps.push(`⚠ ${table}: ${msg.substring(0, 100)}`)
+        }
       }
     }
 
