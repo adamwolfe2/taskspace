@@ -124,7 +124,30 @@ export function useWorkspaces() {
   // Auto-select default workspace on initial load
   useEffect(() => {
     if (hasInitialized.current) return
-    if (isLoading || !workspaces || workspaces.length === 0) return
+    if (isLoading) return
+
+    // CRITICAL FIX: If no workspaces exist, create a default one
+    if (workspaces && workspaces.length === 0) {
+      hasInitialized.current = true
+
+      // Call API to ensure default workspace exists
+      fetch("/api/workspaces/ensure-default", {
+        method: "POST",
+        credentials: "include",
+      })
+        .then((res) => res.json())
+        .then(() => {
+          // Refresh workspaces after creation
+          mutate()
+        })
+        .catch((err) => {
+          console.error("Failed to create default workspace:", err)
+        })
+
+      return
+    }
+
+    if (!workspaces || workspaces.length === 0) return
 
     hasInitialized.current = true
 
@@ -145,7 +168,7 @@ export function useWorkspaces() {
       // Fallback to first workspace
       setCurrentWorkspace(workspaces[0])
     }
-  }, [workspaces, isLoading, currentWorkspaceId, setCurrentWorkspace])
+  }, [workspaces, isLoading, currentWorkspaceId, setCurrentWorkspace, mutate])
 
   // Sync current workspace data when workspaces list updates
   useEffect(() => {
