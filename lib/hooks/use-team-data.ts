@@ -154,13 +154,6 @@ export function useTeamData() {
       return
     }
 
-    // CRITICAL FIX: Wait for workspace to be initialized before fetching data
-    // In non-demo mode, we MUST have a workspace selected
-    if (!isDemoMode && !currentWorkspaceId) {
-      setIsLoading(true)
-      return // Don't fetch until workspace is ready
-    }
-
     // Use demo data in demo mode - load from localStorage if available, fallback to defaults
     if (isDemoMode) {
       const savedMembers = loadFromStorage<TeamMember[]>(DEMO_STORAGE_KEYS.teamMembers, DEMO_TEAM_MEMBERS)
