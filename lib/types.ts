@@ -343,6 +343,7 @@ export type PageType =
   | "admin"
   | "admin-team"
   | "admin-tasks"
+  | "admin-database"
   | "command-center"
   | "analytics"
   | "scorecard"

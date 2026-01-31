@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
-import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 
@@ -36,6 +36,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     { id: "analytics", label: "Team Analytics", icon: TableProperties },
     { id: "admin", label: "Admin Dashboard", icon: Shield },
     { id: "admin-team", label: "Team Management", icon: Users },
+    { id: "admin-database", label: "Database Management", icon: Database },
   ]
 
   return (

@@ -15,6 +15,7 @@ import { HistoryPage } from "@/components/pages/history-page"
 import { RocksPage } from "@/components/pages/rocks-page"
 import { AdminPage } from "@/components/pages/admin-page"
 import { AdminTeamPage } from "@/components/pages/admin-team-page"
+import { AdminDatabasePage } from "@/components/pages/admin-database-page"
 import { TasksPage } from "@/components/pages/tasks-page"
 import { SettingsPage } from "@/components/pages/settings-page"
 import { CommandCenterPage } from "@/components/pages/command-center-page"
@@ -176,6 +177,12 @@ function AppContent() {
             rocks={teamData.rocks}
             setRocks={teamData.setRocks}
           />
+        ) : (
+          <DashboardPage {...dashboardProps} />
+        )
+      case "admin-database":
+        return isAdmin ? (
+          <AdminDatabasePage />
         ) : (
           <DashboardPage {...dashboardProps} />
         )
