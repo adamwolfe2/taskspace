@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
@@ -141,16 +142,16 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
     return (
       <div className="space-y-6">
         {/* Skeleton loading state */}
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-slate-200 rounded w-1/4"></div>
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-1/4" />
           <div className="grid grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-24 bg-slate-200 rounded-xl"></div>
+              <Skeleton key={i} className="h-24 rounded-xl" />
             ))}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-48 bg-slate-200 rounded-xl"></div>
+              <Skeleton key={i} className="h-48 rounded-xl" />
             ))}
           </div>
         </div>
