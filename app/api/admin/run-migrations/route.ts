@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
         const filePath = join(migrationsDir, file)
         const sqlContent = readFileSync(filePath, "utf-8")
 
-        // Execute the SQL
-        await sql.unsafe(sqlContent)
+        // Execute the SQL using sql.query() method
+        await sql.query(sqlContent)
 
         logger.info(`✓ Completed: ${file}`)
         results.push({ file, status: "success" })

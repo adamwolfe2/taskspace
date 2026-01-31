@@ -12,11 +12,11 @@ export default function RunMigrationsPage() {
 
   const handleRunMigrations = async () => {
     setStatus("loading")
-    setMessage("Running database migrations...")
+    setMessage("Creating workspace tables and migrating data...")
     setResults(null)
 
     try {
-      const response = await fetch("/api/admin/run-migrations", {
+      const response = await fetch("/api/admin/emergency-setup", {
         method: "POST",
         credentials: "include",
       })
@@ -25,11 +25,11 @@ export default function RunMigrationsPage() {
 
       if (data.success) {
         setStatus("success")
-        setMessage(data.message || "Migrations completed successfully!")
+        setMessage(data.message || "Setup completed successfully!")
         setResults(data.data)
       } else {
         setStatus("error")
-        setMessage(data.error || "Migration failed")
+        setMessage(data.error || "Setup failed")
         setResults(data.data)
       }
     } catch (error) {
@@ -54,8 +54,8 @@ export default function RunMigrationsPage() {
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
             <p className="text-sm font-medium text-amber-900">⚠️ Important</p>
             <p className="text-sm text-amber-700 mt-1">
-              This will create the workspace tables and columns in your database. This is safe to run
-              and will NOT delete any existing data.
+              This will create the workspace tables and migrate your existing data. This is safe to run
+              and will NOT delete any existing data. Your EOD reports, tasks, and rocks will be restored.
             </p>
           </div>
 
@@ -66,7 +66,7 @@ export default function RunMigrationsPage() {
             size="lg"
           >
             {status === "loading" && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-            {status === "loading" ? "Running Migrations..." : "🚀 Run Database Migrations"}
+            {status === "loading" ? "Setting up database..." : "🚀 FIX DATABASE NOW"}
           </Button>
 
           {status === "success" && results && (
@@ -84,31 +84,22 @@ export default function RunMigrationsPage() {
               </div>
 
               <div className="bg-slate-50 border rounded-lg p-4">
-                <p className="font-medium text-sm mb-2">Migration Results:</p>
+                <p className="font-medium text-sm mb-2">Setup Steps:</p>
                 <div className="space-y-1">
-                  {results.migrations?.map((m: any, i: number) => (
-                    <div key={i} className="flex items-center gap-2 text-xs font-mono">
-                      {m.status === "success" ? (
-                        <CheckCircle className="h-3 w-3 text-green-600" />
-                      ) : (
-                        <XCircle className="h-3 w-3 text-red-600" />
-                      )}
-                      <span className={m.status === "success" ? "text-green-700" : "text-red-700"}>
-                        {m.file}
-                      </span>
-                      {m.error && <span className="text-red-600">- {m.error}</span>}
+                  {results.steps?.map((step: string, i: number) => (
+                    <div key={i} className="text-xs font-mono text-slate-700">
+                      {step}
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="font-medium text-blue-900">Next Steps:</p>
-                <ol className="text-sm text-blue-700 mt-2 space-y-1 list-decimal list-inside">
-                  <li>Go back to /admin/fix-workspace</li>
-                  <li>Click the "Create Default Workspace" button</li>
-                  <li>Your data will be restored!</li>
-                </ol>
+                <p className="font-medium text-blue-900">✅ DONE! Your data is restored.</p>
+                <p className="text-sm text-blue-700 mt-2">
+                  Go back to the dashboard and refresh. All your data should now be visible.
+                  Your team can submit EOD reports again.
+                </p>
               </div>
             </div>
           )}
