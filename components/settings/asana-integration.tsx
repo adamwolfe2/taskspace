@@ -14,11 +14,11 @@ import {
   RefreshCw,
   CheckCircle2,
   XCircle,
-  Link2,
   Users,
   ArrowRightLeft,
   Settings2,
 } from "lucide-react"
+import { IntegrationLogo } from "@/components/ui/integration-logo"
 import { useToast } from "@/hooks/use-toast"
 import type { TeamMember, AsanaUserMapping } from "@/lib/types"
 
@@ -249,7 +249,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Link2 className="h-5 w-5" />
+          <IntegrationLogo integration="asana" size="md" />
           Asana Integration
         </CardTitle>
         <CardDescription>

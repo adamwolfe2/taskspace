@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
-  CreditCard,
   Check,
   Loader2,
   ArrowRight,
@@ -15,6 +14,7 @@ import {
   Sparkles,
   ExternalLink,
 } from "lucide-react"
+import { IntegrationLogo } from "@/components/ui/integration-logo"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
@@ -296,7 +296,7 @@ export function BillingSettings() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
+            <IntegrationLogo integration="stripe" size="md" />
             Subscription
           </CardTitle>
           <CardDescription>

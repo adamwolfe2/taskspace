@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
-  Mail,
   Key,
   Loader2,
   Copy,
@@ -26,6 +25,7 @@ import {
   Send,
   AlertTriangle,
 } from "lucide-react"
+import { IntegrationLogo } from "@/components/ui/integration-logo"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import type { TeamMember, ApiKey } from "@/lib/types"
@@ -302,7 +302,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
+            <IntegrationLogo integration="resend" size="md" />
             Email Service (Invitations & Notifications)
           </CardTitle>
           <CardDescription>
@@ -590,7 +590,7 @@ EMAIL_FROM=Align <noreply@yourdomain.com>`}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Terminal className="h-5 w-5" />
+            <IntegrationLogo integration="claude" size="md" />
             Connect to Claude Desktop
           </CardTitle>
           <CardDescription>Use the MCP server to interact with your team from Claude Desktop</CardDescription>

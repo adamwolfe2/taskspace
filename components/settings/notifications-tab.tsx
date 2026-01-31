@@ -15,6 +15,7 @@ import { api } from "@/lib/api/client"
 import { NotificationPreferencesCard } from "./notification-preferences"
 import { PushNotificationsCard } from "./push-notifications"
 import { AsanaMemberConnection } from "./asana-member-connection"
+import { IntegrationLogo } from "@/components/ui/integration-logo"
 import type { TeamMember } from "@/lib/types"
 
 const timezones = [
@@ -276,7 +277,10 @@ export function NotificationsTab({ teamMembers, setTeamMembers }: NotificationsT
       {/* Slack Integration (Owner only) */}
       <Card>
         <CardHeader>
-          <CardTitle>Slack Integration</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <IntegrationLogo integration="slack" size="md" />
+            Slack Integration
+          </CardTitle>
           <CardDescription>Connect your Slack workspace to receive notifications</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

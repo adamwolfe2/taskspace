@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import {
-  Calendar,
   CheckCircle2,
   XCircle,
   Loader2,
@@ -17,6 +16,7 @@ import {
   RefreshCcw,
   AlertTriangle,
 } from "lucide-react"
+import { IntegrationLogo } from "@/components/ui/integration-logo"
 
 interface GoogleCalendarIntegrationProps {
   userId: string
@@ -142,7 +142,7 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+            <IntegrationLogo integration="google-calendar" size="md" />
             Google Calendar
           </CardTitle>
         </CardHeader>
@@ -161,7 +161,7 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-muted-foreground" />
+            <IntegrationLogo integration="google-calendar" size="md" />
             Google Calendar
           </CardTitle>
           <CardDescription>
@@ -193,7 +193,7 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+              <IntegrationLogo integration="google-calendar" size="md" />
               Google Calendar
             </CardTitle>
             <CardDescription>
@@ -212,7 +212,7 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
         {!status.isConnected ? (
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
             <div className="h-16 w-16 rounded-full bg-blue-50 flex items-center justify-center">
-              <Calendar className="h-8 w-8 text-blue-500" />
+              <IntegrationLogo integration="google-calendar" size="xl" />
             </div>
             <div className="text-center">
               <p className="font-medium">Connect Google Calendar</p>
