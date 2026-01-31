@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -88,16 +89,103 @@ export async function POST(request: NextRequest) {
       memberCount: allMembers.length,
     })
 
+    // CRITICAL: Migrate existing data to this workspace
+    let migratedRecords = 0
+    try {
+      // Migrate all existing data with NULL workspace_id to the default workspace
+
+      // Org-based tables
+      const tasksResult = await sql`
+        UPDATE assigned_tasks SET workspace_id = ${defaultWorkspaceId}
+        WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+        RETURNING id
+      `
+      migratedRecords += tasksResult.rows.length
+
+      const rocksResult = await sql`
+        UPDATE rocks SET workspace_id = ${defaultWorkspaceId}
+        WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+        RETURNING id
+      `
+      migratedRecords += rocksResult.rows.length
+
+      const eodResult = await sql`
+        UPDATE eod_reports SET workspace_id = ${defaultWorkspaceId}
+        WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+        RETURNING id
+      `
+      migratedRecords += eodResult.rows.length
+
+      const meetingsResult = await sql`
+        UPDATE meetings SET workspace_id = ${defaultWorkspaceId}
+        WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+        RETURNING id
+      `
+      migratedRecords += meetingsResult.rows.length
+
+      // User-based tables (productivity features)
+      const focusBlocksResult = await sql`
+        UPDATE focus_blocks SET workspace_id = ${defaultWorkspaceId}
+        WHERE user_id IN (
+          SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+        ) AND workspace_id IS NULL
+        RETURNING id
+      `
+      migratedRecords += focusBlocksResult.rows.length
+
+      const energyResult = await sql`
+        UPDATE daily_energy SET workspace_id = ${defaultWorkspaceId}
+        WHERE user_id IN (
+          SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+        ) AND workspace_id IS NULL
+        RETURNING id
+      `
+      migratedRecords += energyResult.rows.length
+
+      const streaksResult = await sql`
+        UPDATE user_streaks SET workspace_id = ${defaultWorkspaceId}
+        WHERE user_id IN (
+          SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+        ) AND workspace_id IS NULL
+        RETURNING id
+      `
+      migratedRecords += streaksResult.rows.length
+
+      const focusScoreResult = await sql`
+        UPDATE focus_score_history SET workspace_id = ${defaultWorkspaceId}
+        WHERE user_id IN (
+          SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+        ) AND workspace_id IS NULL
+        RETURNING id
+      `
+      migratedRecords += focusScoreResult.rows.length
+
+      if (migratedRecords > 0) {
+        logger.info("Migrated existing data to default workspace", {
+          organizationId: auth.organization.id,
+          workspaceId: defaultWorkspaceId,
+          recordCount: migratedRecords,
+        })
+      }
+    } catch (migrationError) {
+      logger.error("Data migration failed but workspace created", {
+        error: migrationError,
+        workspaceId: defaultWorkspaceId,
+      })
+    }
+
     return NextResponse.json<ApiResponse<{
       workspace: typeof defaultWorkspace
       membersAdded: number
+      dataMigrated: number
     }>>({
       success: true,
       data: {
         workspace: defaultWorkspace,
         membersAdded: allMembers.length,
+        dataMigrated: migratedRecords,
       },
-      message: "Default workspace created successfully",
+      message: `Default workspace created successfully${migratedRecords > 0 ? ` and ${migratedRecords} records migrated` : ""}`,
     })
   } catch (error) {
     logError(logger, "Ensure default workspace error", error)
