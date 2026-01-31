@@ -130,19 +130,33 @@ export function useWorkspaces() {
     if (workspaces && workspaces.length === 0) {
       hasInitialized.current = true
 
-      // Call API to ensure default workspace exists
-      fetch("/api/workspaces/ensure-default", {
-        method: "POST",
-        credentials: "include",
-      })
-        .then((res) => res.json())
-        .then(() => {
-          // Refresh workspaces after creation
-          mutate()
-        })
-        .catch((err) => {
+      // Immediately create workspace and set it (blocking operation)
+      ;(async () => {
+        try {
+          const res = await fetch("/api/workspaces/ensure-default", {
+            method: "POST",
+            credentials: "include",
+          })
+          const data = await res.json()
+
+          if (data.success && data.data?.workspace) {
+            // Immediately set the new workspace without waiting for SWR
+            const workspace: WorkspaceWithMemberInfo = {
+              ...data.data.workspace,
+              memberRole: "admin" as const,
+              memberCount: data.data.membersAdded || 1,
+            }
+            setCurrentWorkspace(workspace)
+
+            // Also refresh in background
+            mutate()
+          } else {
+            console.error("Failed to create default workspace:", data.error)
+          }
+        } catch (err) {
           console.error("Failed to create default workspace:", err)
-        })
+        }
+      })()
 
       return
     }
