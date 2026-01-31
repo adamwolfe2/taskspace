@@ -43,6 +43,7 @@ const createWebhookSchema = z.object({
   secret: z.string().min(16).max(100).optional(),
   headers: z.record(z.string()).optional(),
   enabled: z.boolean().default(true),
+  workspaceId: z.string().optional(), // NULL = org-wide, otherwise workspace-specific
 })
 
 const updateWebhookSchema = createWebhookSchema.partial().extend({
@@ -77,23 +78,55 @@ export async function GET(request: NextRequest) {
       return Errors.insufficientPermissions("manage webhooks").toResponse()
     }
 
-    const { rows: webhooks } = await sql`
-      SELECT
-        id,
-        name,
-        url,
-        events,
-        secret,
-        headers,
-        enabled,
-        last_triggered_at,
-        failure_count,
-        created_at,
-        updated_at
-      FROM webhook_configs
-      WHERE organization_id = ${auth.organization.id}
-      ORDER BY created_at DESC
-    `
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
+
+    // Build query to get org-wide webhooks OR workspace-specific webhooks
+    let webhooks: any[]
+    if (workspaceId) {
+      // Get org-wide (NULL) + workspace-specific webhooks
+      const { rows } = await sql`
+        SELECT
+          id,
+          name,
+          url,
+          events,
+          secret,
+          headers,
+          enabled,
+          workspace_id,
+          last_triggered_at,
+          failure_count,
+          created_at,
+          updated_at
+        FROM webhook_configs
+        WHERE organization_id = ${auth.organization.id}
+          AND (workspace_id IS NULL OR workspace_id = ${workspaceId})
+        ORDER BY created_at DESC
+      `
+      webhooks = rows
+    } else {
+      // Get all webhooks for org
+      const { rows } = await sql`
+        SELECT
+          id,
+          name,
+          url,
+          events,
+          secret,
+          headers,
+          enabled,
+          workspace_id,
+          last_triggered_at,
+          failure_count,
+          created_at,
+          updated_at
+        FROM webhook_configs
+        WHERE organization_id = ${auth.organization.id}
+        ORDER BY created_at DESC
+      `
+      webhooks = rows
+    }
 
     // Get recent delivery stats for each webhook
     const webhookIds = webhooks.map((w: Record<string, unknown>) => w.id)
@@ -127,6 +160,8 @@ export async function GET(request: NextRequest) {
       secret: maskSecret(webhook.secret as string),
       headers: webhook.headers,
       enabled: webhook.enabled,
+      workspaceId: webhook.workspace_id || null,
+      scope: webhook.workspace_id ? 'workspace' : 'organization',
       lastTriggeredAt: webhook.last_triggered_at,
       failureCount: webhook.failure_count,
       deliveryStats: statsMap.get(webhook.id) || {
@@ -181,6 +216,7 @@ export async function POST(request: NextRequest) {
       INSERT INTO webhook_configs (
         id,
         organization_id,
+        workspace_id,
         name,
         url,
         events,
@@ -193,6 +229,7 @@ export async function POST(request: NextRequest) {
       ) VALUES (
         ${id},
         ${auth.organization.id},
+        ${body.workspaceId || null},
         ${body.name},
         ${body.url},
         ${JSON.stringify(body.events)},
@@ -220,6 +257,8 @@ export async function POST(request: NextRequest) {
         events: body.events,
         secret: maskSecret(secret),
         enabled: body.enabled,
+        workspaceId: body.workspaceId || null,
+        scope: body.workspaceId ? 'workspace' : 'organization',
         createdAt: new Date().toISOString(),
       },
       message: "Webhook created successfully",
@@ -257,14 +296,24 @@ export async function PATCH(request: NextRequest) {
 
     const body = await validateBody(request, updateWebhookSchema)
 
-    // Verify webhook belongs to org
+    // Verify webhook belongs to org and check workspace access
     const { rows: existing } = await sql`
-      SELECT id, secret FROM webhook_configs
+      SELECT id, secret, workspace_id FROM webhook_configs
       WHERE id = ${webhookId} AND organization_id = ${auth.organization.id}
     `
 
     if (existing.length === 0) {
       return Errors.notFound("Webhook").toResponse()
+    }
+
+    // If webhook is workspace-specific, validate access
+    const webhook = existing[0]
+    if (webhook.workspace_id) {
+      const { userHasWorkspaceAccess } = await import("@/lib/db/workspaces")
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, webhook.workspace_id)
+      if (!hasAccess && auth.member.role !== "admin" && auth.member.role !== "owner") {
+        return Errors.insufficientPermissions("access this workspace webhook").toResponse()
+      }
     }
 
     // Use parameterized update to prevent SQL injection
@@ -331,14 +380,24 @@ export async function DELETE(request: NextRequest) {
       return Errors.validationError("Webhook ID is required").toResponse()
     }
 
-    // Verify webhook belongs to org
+    // Verify webhook belongs to org and check workspace access
     const { rows: existingWebhook } = await sql`
-      SELECT id, name FROM webhook_configs
+      SELECT id, name, workspace_id FROM webhook_configs
       WHERE id = ${webhookId} AND organization_id = ${auth.organization.id}
     `
 
     if (existingWebhook.length === 0) {
       return Errors.notFound("Webhook").toResponse()
+    }
+
+    // If webhook is workspace-specific, validate access
+    const webhook = existingWebhook[0]
+    if (webhook.workspace_id) {
+      const { userHasWorkspaceAccess } = await import("@/lib/db/workspaces")
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, webhook.workspace_id)
+      if (!hasAccess && auth.member.role !== "admin" && auth.member.role !== "owner") {
+        return Errors.insufficientPermissions("access this workspace webhook").toResponse()
+      }
     }
 
     // Delete associated deliveries first
