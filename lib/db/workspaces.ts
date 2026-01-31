@@ -105,11 +105,33 @@ export async function getWorkspacesByOrg(orgId: string): Promise<Workspace[]> {
 }
 
 /**
- * Get all workspaces a user has access to (uses SQL function)
+ * Get all workspaces a user has access to
  */
 export async function getUserWorkspaces(userId: string): Promise<WorkspaceWithMemberInfo[]> {
   const { rows } = await sql`
-    SELECT * FROM get_user_workspaces(${userId})
+    SELECT
+      w.id,
+      w.organization_id,
+      w.name,
+      w.slug,
+      w.type,
+      w.description,
+      w.settings,
+      w.is_default,
+      w.created_by,
+      w.logo_url,
+      w.primary_color,
+      w.secondary_color,
+      w.accent_color,
+      w.favicon_url,
+      wm.role as member_role,
+      (SELECT COUNT(*) FROM workspace_members wm2 WHERE wm2.workspace_id = w.id) as member_count,
+      w.created_at,
+      w.updated_at
+    FROM workspaces w
+    JOIN workspace_members wm ON wm.workspace_id = w.id
+    WHERE wm.user_id = ${userId}
+    ORDER BY w.is_default DESC, w.name ASC
   `
   return rows.map(parseWorkspaceWithMemberInfo)
 }
