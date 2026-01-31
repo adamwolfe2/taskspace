@@ -15,16 +15,23 @@ import { logger, logError } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {
+    logger.info("Ensure default workspace called")
+
     const auth = await getAuthContext(request)
     if (!auth) {
+      logger.error("No auth context found")
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
 
+    logger.info("Auth context obtained", { userId: auth.user.id, orgId: auth.organization.id })
+
     // Check if organization already has a default workspace
+    logger.info("Checking for existing workspaces")
     const existingWorkspaces = await db.workspaces.findByOrganizationId(auth.organization.id)
+    logger.info("Existing workspaces found", { count: existingWorkspaces.length })
 
     if (existingWorkspaces.length > 0) {
       // Organization already has workspaces
@@ -37,6 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create default workspace for organization
+    logger.info("Creating default workspace")
     const now = new Date().toISOString()
     const defaultWorkspaceId = generateId()
     const defaultWorkspace = {
@@ -53,7 +61,9 @@ export async function POST(request: NextRequest) {
       settings: {},
     }
 
+    logger.info("About to insert workspace", { workspaceId: defaultWorkspaceId })
     await db.workspaces.create(defaultWorkspace)
+    logger.info("Workspace created successfully")
 
     // Add current user to the default workspace as admin
     const workspaceMember = {
@@ -189,8 +199,22 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     logError(logger, "Ensure default workspace error", error)
+
+    // Return detailed error for debugging
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    const errorStack = error instanceof Error ? error.stack : ""
+
+    logger.error("Detailed error info", {
+      message: errorMessage,
+      stack: errorStack,
+      error: JSON.stringify(error, null, 2)
+    })
+
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Failed to create default workspace" },
+      {
+        success: false,
+        error: `Failed to create default workspace: ${errorMessage}`
+      },
       { status: 500 }
     )
   }
