@@ -82,11 +82,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Step 3: Add workspace_id columns to existing tables
+    // Step 3: Add workspace_id columns to existing tables (only if tables exist)
     const tables = ["rocks", "assigned_tasks", "eod_reports", "meetings", "focus_blocks", "daily_energy", "user_streaks", "focus_score_history"]
 
     for (const table of tables) {
       try {
+        // First check if table exists
+        const { rows: tableCheck } = await sql`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables
+            WHERE table_schema = 'public'
+            AND table_name = ${table}
+          )
+        `
+
+        if (!tableCheck[0]?.exists) {
+          steps.push(`⊘ Skipped ${table} (table does not exist)`)
+          continue
+        }
+
         // Use raw SQL query since table names can't be parameterized
         await sql.query(`
           ALTER TABLE ${table}
@@ -154,66 +168,73 @@ export async function POST(request: NextRequest) {
     }
     steps.push(`✓ Added ${orgMembers.length} members to workspace`)
 
-    // Step 6: Migrate data
+    // Step 6: Migrate data (only from tables that exist)
     let migratedRecords = 0
 
-    // Org-based tables
-    const { rowCount: tasksCount } = await sql`
-      UPDATE assigned_tasks SET workspace_id = ${workspaceId}
-      WHERE organization_id = ${orgId} AND workspace_id IS NULL
-    `
-    migratedRecords += tasksCount || 0
+    // Helper function to safely migrate a table
+    const migrateTable = async (tableName: string, isUserBased: boolean) => {
+      try {
+        // Check if table exists
+        const { rows: tableCheck } = await sql`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables
+            WHERE table_schema = 'public'
+            AND table_name = ${tableName}
+          )
+        `
 
-    const { rowCount: rocksCount } = await sql`
-      UPDATE rocks SET workspace_id = ${workspaceId}
-      WHERE organization_id = ${orgId} AND workspace_id IS NULL
-    `
-    migratedRecords += rocksCount || 0
+        if (!tableCheck[0]?.exists) {
+          return 0
+        }
 
-    const { rowCount: eodCount } = await sql`
-      UPDATE eod_reports SET workspace_id = ${workspaceId}
-      WHERE organization_id = ${orgId} AND workspace_id IS NULL
-    `
-    migratedRecords += eodCount || 0
+        // Check if workspace_id column exists
+        const { rows: columnCheck } = await sql`
+          SELECT EXISTS (
+            SELECT FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = ${tableName}
+            AND column_name = 'workspace_id'
+          )
+        `
 
-    const { rowCount: meetingsCount } = await sql`
-      UPDATE meetings SET workspace_id = ${workspaceId}
-      WHERE organization_id = ${orgId} AND workspace_id IS NULL
-    `
-    migratedRecords += meetingsCount || 0
+        if (!columnCheck[0]?.exists) {
+          return 0
+        }
 
-    // User-based tables
-    const { rowCount: focusCount } = await sql`
-      UPDATE focus_blocks SET workspace_id = ${workspaceId}
-      WHERE user_id IN (
-        SELECT user_id FROM organization_members WHERE organization_id = ${orgId}
-      ) AND workspace_id IS NULL
-    `
-    migratedRecords += focusCount || 0
+        // Migrate based on table type
+        let result
+        if (isUserBased) {
+          result = await sql.query(`
+            UPDATE ${tableName} SET workspace_id = '${workspaceId}'
+            WHERE user_id IN (
+              SELECT user_id FROM organization_members WHERE organization_id = '${orgId}'
+            ) AND workspace_id IS NULL
+          `)
+        } else {
+          result = await sql.query(`
+            UPDATE ${tableName} SET workspace_id = '${workspaceId}'
+            WHERE organization_id = '${orgId}' AND workspace_id IS NULL
+          `)
+        }
 
-    const { rowCount: energyCount } = await sql`
-      UPDATE daily_energy SET workspace_id = ${workspaceId}
-      WHERE user_id IN (
-        SELECT user_id FROM organization_members WHERE organization_id = ${orgId}
-      ) AND workspace_id IS NULL
-    `
-    migratedRecords += energyCount || 0
+        return result.rowCount || 0
+      } catch (error) {
+        logger.error(`Failed to migrate ${tableName}`, { error })
+        return 0
+      }
+    }
 
-    const { rowCount: streaksCount } = await sql`
-      UPDATE user_streaks SET workspace_id = ${workspaceId}
-      WHERE user_id IN (
-        SELECT user_id FROM organization_members WHERE organization_id = ${orgId}
-      ) AND workspace_id IS NULL
-    `
-    migratedRecords += streaksCount || 0
+    // Migrate org-based tables
+    migratedRecords += await migrateTable('assigned_tasks', false)
+    migratedRecords += await migrateTable('rocks', false)
+    migratedRecords += await migrateTable('eod_reports', false)
+    migratedRecords += await migrateTable('meetings', false)
 
-    const { rowCount: focusScoreCount } = await sql`
-      UPDATE focus_score_history SET workspace_id = ${workspaceId}
-      WHERE user_id IN (
-        SELECT user_id FROM organization_members WHERE organization_id = ${orgId}
-      ) AND workspace_id IS NULL
-    `
-    migratedRecords += focusScoreCount || 0
+    // Migrate user-based tables
+    migratedRecords += await migrateTable('focus_blocks', true)
+    migratedRecords += await migrateTable('daily_energy', true)
+    migratedRecords += await migrateTable('user_streaks', true)
+    migratedRecords += await migrateTable('focus_score_history', true)
 
     steps.push(`✓ Migrated ${migratedRecords} total records`)
     logger.info(`✓ Migrated ${migratedRecords} records`)
