@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { sql } from "@/lib/db/sql"
 import { db } from "@/lib/db"
+import { generateId } from "@/lib/auth/password"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -14,7 +16,7 @@ interface AsanaWorkspace {
 
 /**
  * GET /api/asana/me/connect
- * Check if the current user has Asana connected (either via org mapping or personal PAT)
+ * Check if the current user has Asana connected for a specific workspace
  */
 export async function GET(request: NextRequest) {
   try {
@@ -26,43 +28,50 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // First check if user is mapped in org-level Asana config
-    const org = await db.organizations.findById(auth.organization.id)
-    const asanaConfig = org?.settings?.asanaIntegration
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
 
-    let isConnectedViaOrg = false
-    if (asanaConfig?.enabled && asanaConfig?.userMappings?.length > 0) {
-      const userMapping = asanaConfig.userMappings.find(
-        (m: any) => m.aimsUserId === auth.user.id || m.aimsUserEmail?.toLowerCase() === auth.user.email?.toLowerCase()
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
       )
-      isConnectedViaOrg = !!userMapping && !!process.env.ASANA_ACCESS_TOKEN
     }
 
-    // Also check member's personal PAT
+    // Validate workspace access
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
+
+    // Check for workspace-specific Asana connection
     const { rows } = await sql`
-      SELECT asana_pat, asana_workspace_gid, asana_last_sync_at
-      FROM organization_members
-      WHERE organization_id = ${auth.organization.id} AND user_id = ${auth.user.id}
+      SELECT personal_access_token, asana_workspace_gid, last_sync_at, sync_enabled
+      FROM asana_connections
+      WHERE user_id = ${auth.user.id} AND workspace_id = ${workspaceId}
     `
 
-    const member = rows[0]
-    const hasPersonalPat = !!member?.asana_pat
-    const isConnected = isConnectedViaOrg || hasPersonalPat
+    const connection = rows[0]
+    const isConnected = !!connection
 
     return NextResponse.json<ApiResponse<{
       connected: boolean
-      connectedViaOrg: boolean
-      connectedViaPersonal: boolean
       workspaceGid: string | null
       lastSyncAt: string | null
+      syncEnabled: boolean
     }>>({
       success: true,
       data: {
         connected: isConnected,
-        connectedViaOrg: isConnectedViaOrg,
-        connectedViaPersonal: hasPersonalPat,
-        workspaceGid: member?.asana_workspace_gid || asanaConfig?.workspaceGid || null,
-        lastSyncAt: member?.asana_last_sync_at?.toISOString() || null,
+        workspaceGid: connection?.asana_workspace_gid || null,
+        lastSyncAt: connection?.last_sync_at?.toISOString() || null,
+        syncEnabled: connection?.sync_enabled || false,
       },
     })
   } catch (error) {
@@ -76,7 +85,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/asana/me/connect
- * Connect the current user's Asana account using their PAT
+ * Connect the current user's Asana account for a specific workspace
  */
 export async function POST(request: NextRequest) {
   try {
@@ -89,12 +98,29 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { personalAccessToken, workspaceGid } = body
+    const { personalAccessToken, workspaceGid, aimsWorkspaceId } = body
 
     if (!personalAccessToken) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Personal Access Token is required" },
         { status: 400 }
+      )
+    }
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!aimsWorkspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access
+    const hasAccess = await userHasWorkspaceAccess(auth.user.id, aimsWorkspaceId)
+    if (!hasAccess) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "You don't have access to this workspace" },
+        { status: 403 }
       )
     }
 
@@ -133,12 +159,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Store the PAT and workspace in the member record
+    // Store the PAT and workspace in the asana_connections table
+    const connectionId = generateId()
     await sql`
-      UPDATE organization_members
-      SET asana_pat = ${personalAccessToken},
-          asana_workspace_gid = ${selectedWorkspaceGid || null}
-      WHERE organization_id = ${auth.organization.id} AND user_id = ${auth.user.id}
+      INSERT INTO asana_connections (
+        id,
+        organization_id,
+        workspace_id,
+        user_id,
+        personal_access_token,
+        asana_workspace_gid,
+        sync_enabled,
+        created_at,
+        updated_at
+      ) VALUES (
+        ${connectionId},
+        ${auth.organization.id},
+        ${aimsWorkspaceId},
+        ${auth.user.id},
+        ${personalAccessToken},
+        ${selectedWorkspaceGid || null},
+        true,
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT (user_id, workspace_id) DO UPDATE SET
+        personal_access_token = ${personalAccessToken},
+        asana_workspace_gid = ${selectedWorkspaceGid || null},
+        updated_at = NOW()
     `
 
     return NextResponse.json<ApiResponse<{
@@ -154,7 +202,7 @@ export async function POST(request: NextRequest) {
         asanaName: asanaUser.name,
         workspaceGid: selectedWorkspaceGid,
       },
-      message: "Asana account connected successfully",
+      message: "Asana account connected successfully for this workspace",
     })
   } catch (error) {
     logError(logger, "Connect Asana error", error)
@@ -167,7 +215,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * DELETE /api/asana/me/connect
- * Disconnect the current user's Asana account
+ * Disconnect the current user's Asana account for a specific workspace
  */
 export async function DELETE(request: NextRequest) {
   try {
@@ -179,18 +227,35 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Remove Asana credentials from member record
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
+
+    // CRITICAL: workspaceId is REQUIRED for data isolation
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // Validate workspace access
+    const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+    if (!hasAccess) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "You don't have access to this workspace" },
+        { status: 403 }
+      )
+    }
+
+    // Remove Asana connection for this workspace
     await sql`
-      UPDATE organization_members
-      SET asana_pat = NULL,
-          asana_workspace_gid = NULL,
-          asana_last_sync_at = NULL
-      WHERE organization_id = ${auth.organization.id} AND user_id = ${auth.user.id}
+      DELETE FROM asana_connections
+      WHERE user_id = ${auth.user.id} AND workspace_id = ${workspaceId}
     `
 
     return NextResponse.json<ApiResponse<null>>({
       success: true,
-      message: "Asana account disconnected",
+      message: "Asana account disconnected from this workspace",
     })
   } catch (error) {
     logError(logger, "Disconnect Asana error", error)
