@@ -1,18 +1,19 @@
 "use client"
 
-import { useState } from "react"
 import { motion } from "framer-motion"
+import { useState } from "react"
 import Link from "next/link"
 import {
-  Check,
-  X,
+  CheckCircle,
   ArrowRight,
-  Zap,
-  Building2,
   Users,
-  HelpCircle,
-  ChevronDown,
+  Zap,
+  Shield,
+  Crown,
+  Star,
 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 const fadeInUp = {
@@ -24,646 +25,390 @@ const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+    transition: { staggerChildren: 0.1 },
   },
 }
 
-const plans = [
-  {
-    name: "Free",
-    description: "Perfect for individuals and small teams getting started",
-    monthlyPrice: 0,
-    annualPrice: 0,
-    features: [
-      { name: "Up to 5 team members", included: true },
-      { name: "Basic rocks & tasks", included: true },
-      { name: "EOD reports", included: true },
-      { name: "100 AI credits/month", included: true },
-      { name: "Basic analytics", included: true },
-      { name: "Email support", included: true },
-      { name: "AI insights", included: false },
-      { name: "Team analytics", included: false },
-      { name: "Asana integration", included: false },
-      { name: "Custom branding", included: false },
-      { name: "API access", included: false },
-      { name: "SSO/SAML", included: false },
-    ],
-    cta: "Get Started Free",
-    href: "/register",
-    popular: false,
-  },
-  {
-    name: "Pro",
-    description: "For small teams that need advanced features",
-    monthlyPrice: 15,
-    annualPrice: 12,
-    features: [
-      { name: "Up to 20 team members", included: true },
-      { name: "Everything in Free", included: true },
-      { name: "AI insights", included: true },
-      { name: "Team analytics", included: true },
-      { name: "Asana integration", included: true },
-      { name: "1,000 AI credits/month", included: true },
-      { name: "Priority support", included: true },
-      { name: "Custom branding", included: false },
-      { name: "API access", included: false },
-      { name: "SSO/SAML", included: false },
-    ],
-    cta: "Start Free Trial",
-    href: "/register?plan=pro",
-    popular: false,
-  },
-  {
-    name: "Team",
-    description: "For growing organizations that need custom branding",
-    monthlyPrice: 25,
-    annualPrice: 20,
-    features: [
-      { name: "Up to 100 team members", included: true },
-      { name: "Everything in Pro", included: true },
-      { name: "Custom branding", included: true },
-      { name: "API access", included: true },
-      { name: "Priority support", included: true },
-      { name: "5,000 AI credits/month", included: true },
-      { name: "Dedicated support", included: true },
-      { name: "SSO/SAML", included: false },
-    ],
-    cta: "Start Free Trial",
-    href: "/register?plan=team",
-    popular: true,
-  },
-  {
-    name: "Enterprise",
-    description: "For organizations requiring advanced security and support",
-    monthlyPrice: 75,
-    annualPrice: 60,
-    features: [
-      { name: "Unlimited team members", included: true },
-      { name: "Everything in Team", included: true },
-      { name: "SSO/SAML & SCIM", included: true },
-      { name: "Dedicated support", included: true },
-      { name: "SLA guarantee", included: true },
-      { name: "Unlimited AI credits", included: true },
-      { name: "Custom contracts", included: true },
-      { name: "On-premise option", included: true },
-    ],
-    cta: "Contact Sales",
-    href: "/contact?type=enterprise",
-    popular: false,
-  },
-]
-
-const faqs = [
-  {
-    question: "How does the free trial work?",
-    answer:
-      "You can try any paid plan free for 14 days. No credit card required. At the end of your trial, you can choose to subscribe or continue with our free Starter plan.",
-  },
-  {
-    question: "Can I change plans later?",
-    answer:
-      "Yes, you can upgrade or downgrade your plan at any time. When upgrading, you'll be prorated for the remainder of your billing period. When downgrading, changes take effect at the next billing cycle.",
-  },
-  {
-    question: "What payment methods do you accept?",
-    answer:
-      "We accept all major credit cards (Visa, Mastercard, American Express, Discover) and can invoice annually for Enterprise customers.",
-  },
-  {
-    question: "Is there a discount for nonprofits or education?",
-    answer:
-      "Yes! We offer 50% off for verified nonprofits and educational institutions. Contact our sales team to learn more.",
-  },
-  {
-    question: "What happens to my data if I cancel?",
-    answer:
-      "Your data remains accessible for 30 days after cancellation. You can export all your data at any time. After 30 days, data is permanently deleted per our privacy policy.",
-  },
-  {
-    question: "Do you offer refunds?",
-    answer:
-      "We offer a full refund within the first 14 days of a paid subscription if you're not satisfied. After that, we don't provide refunds for partial months.",
-  },
-]
-
-const comparisonFeatures = [
-  { category: "Team Management", features: [
-    { name: "Team members", starter: "5", professional: "50", enterprise: "Unlimited" },
-    { name: "Teams/departments", starter: "1", professional: "10", enterprise: "Unlimited" },
-    { name: "Role-based permissions", starter: true, professional: true, enterprise: true },
-    { name: "Custom roles", starter: false, professional: true, enterprise: true },
-  ]},
-  { category: "EOD Reports", features: [
-    { name: "Daily reports", starter: true, professional: true, enterprise: true },
-    { name: "AI suggestions", starter: false, professional: true, enterprise: true },
-    { name: "Custom templates", starter: false, professional: true, enterprise: true },
-    { name: "Blocker escalation", starter: true, professional: true, enterprise: true },
-  ]},
-  { category: "Rocks & Goals", features: [
-    { name: "Active rocks per user", starter: "3", professional: "Unlimited", enterprise: "Unlimited" },
-    { name: "Milestone tracking", starter: true, professional: true, enterprise: true },
-    { name: "Goal alignment", starter: false, professional: true, enterprise: true },
-    { name: "OKR support", starter: false, professional: true, enterprise: true },
-  ]},
-  { category: "Analytics", features: [
-    { name: "Basic dashboards", starter: true, professional: true, enterprise: true },
-    { name: "Team analytics", starter: false, professional: true, enterprise: true },
-    { name: "Custom reports", starter: false, professional: true, enterprise: true },
-    { name: "Data export", starter: false, professional: true, enterprise: true },
-  ]},
-  { category: "Support & Security", features: [
-    { name: "Email support", starter: true, professional: true, enterprise: true },
-    { name: "Priority support", starter: false, professional: true, enterprise: true },
-    { name: "Phone support", starter: false, professional: false, enterprise: true },
-    { name: "SSO/SAML", starter: false, professional: false, enterprise: true },
-    { name: "Audit logs", starter: false, professional: false, enterprise: true },
-    { name: "SLA guarantee", starter: false, professional: false, enterprise: true },
-  ]},
-]
-
 export default function PricingPage() {
-  const [isAnnual, setIsAnnual] = useState(true)
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
+
+  const plans = [
+    {
+      name: "Free Forever",
+      price: "$0",
+      description: "Perfect for trying EOS methodology",
+      features: [
+        "Up to 5 team members",
+        "Unlimited EOD reports",
+        "3 Rocks per quarter",
+        "Basic scorecard",
+        "Level 10 meeting template",
+        "Community support",
+      ],
+      cta: "Get Started",
+      popular: false,
+      color: "slate",
+    },
+    {
+      name: "Unlimited",
+      price: billingCycle === "monthly" ? "$7" : "$5",
+      priceSubtext: "per user/month",
+      description: "For teams committed to EOS",
+      features: [
+        "Everything in Free +",
+        "Unlimited team members",
+        "Unlimited Rocks",
+        "Advanced scorecard with custom metrics",
+        "IDS process tracking",
+        "V/TO (Vision/Traction Organizer)",
+        "Accountability Chart",
+        "Email support",
+        "Data export",
+      ],
+      cta: "Get started",
+      popular: false,
+      color: "blue",
+    },
+    {
+      name: "Business",
+      price: billingCycle === "monthly" ? "$12" : "$9",
+      priceSubtext: "per user/month",
+      description: "For scaling EOS organizations",
+      features: [
+        "Everything in Unlimited +",
+        "EOS AI Agents (EOD, Rock, Scorecard)",
+        "Advanced analytics & insights",
+        "Custom integrations (Slack, Calendar)",
+        "Google SSO",
+        "Unlimited dashboards",
+        "API access",
+        "Priority support",
+        "Quarterly business reviews",
+      ],
+      cta: "Get started",
+      popular: true,
+      color: "purple",
+    },
+    {
+      name: "Enterprise",
+      price: "Custom",
+      description: "For large organizations",
+      features: [
+        "Everything in Business +",
+        "White label branding",
+        "Dedicated account manager",
+        "Custom onboarding & training",
+        "Advanced security (SAML SSO)",
+        "SLA guarantee",
+        "Custom integrations",
+        "Dedicated infrastructure",
+        "24/7 phone support",
+      ],
+      cta: "Get a Demo",
+      popular: false,
+      color: "gradient",
+    },
+  ]
 
   return (
-    <div className="pt-20">
-      {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-slate-50 via-white to-red-50/30">
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg" />
+              <span className="text-xl font-bold text-slate-900">Align</span>
+            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/app">
+                <Button variant="ghost" size="sm">
+                  Login
+                </Button>
+              </Link>
+              <Link href="/app?page=register">
+                <Button size="sm" className="bg-slate-900 text-white hover:bg-slate-800 rounded-full">
+                  Sign Up
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
-            className="text-center max-w-3xl mx-auto"
+            className="text-center mb-16"
           >
-            <motion.div
-              variants={fadeInUp}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-600 text-sm font-medium mb-6"
-            >
-              <Zap className="w-4 h-4" />
-              Simple, Transparent Pricing
+            <motion.div variants={fadeInUp}>
+              <h1 className="text-6xl font-bold text-slate-900 mb-4">
+                The best work solution,
+                <br />
+                for the best price.
+              </h1>
             </motion.div>
-            <motion.h1
-              variants={fadeInUp}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6"
-            >
-              Plans That Scale With{" "}
-              <span className="text-gradient-primary">Your Team</span>
-            </motion.h1>
-            <motion.p
-              variants={fadeInUp}
-              className="text-lg sm:text-xl text-slate-600 leading-relaxed mb-8"
-            >
-              Start free and upgrade as you grow. All plans include a 14-day free
-              trial with no credit card required.
-            </motion.p>
 
-            {/* Billing Toggle */}
-            <motion.div
-              variants={fadeInUp}
-              className="inline-flex items-center gap-4 p-1.5 bg-slate-100 rounded-xl"
-            >
+            <motion.div variants={fadeInUp} className="flex items-center justify-center gap-4 mb-6">
               <button
-                onClick={() => setIsAnnual(false)}
+                onClick={() => setBillingCycle("monthly")}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-lg transition-all",
-                  !isAnnual
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                  "text-lg font-medium transition-colors",
+                  billingCycle === "monthly" ? "text-slate-900" : "text-slate-400"
                 )}
               >
                 Monthly
               </button>
+              <div className="relative">
+                <button
+                  onClick={() => setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")}
+                  className={cn(
+                    "w-14 h-8 rounded-full transition-colors",
+                    billingCycle === "yearly" ? "bg-slate-900" : "bg-slate-300"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "absolute top-1 w-6 h-6 bg-white rounded-full transition-transform",
+                      billingCycle === "yearly" ? "translate-x-7" : "translate-x-1"
+                    )}
+                  />
+                </button>
+              </div>
               <button
-                onClick={() => setIsAnnual(true)}
+                onClick={() => setBillingCycle("yearly")}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2",
-                  isAnnual
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                  "text-lg font-medium transition-colors",
+                  billingCycle === "yearly" ? "text-slate-900" : "text-slate-400"
                 )}
               >
-                Annual
-                <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                  Save 17%
-                </span>
+                Yearly
               </button>
+              {billingCycle === "yearly" && (
+                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                  Save up to 30%
+                </Badge>
+              )}
+            </motion.div>
+
+            <motion.div variants={fadeInUp}>
+              <Badge variant="outline" className="border-slate-300">
+                <Shield className="w-4 h-4 mr-1" />
+                100% Money-back Guarantee
+              </Badge>
             </motion.div>
           </motion.div>
-        </div>
-      </section>
 
-      {/* Pricing Cards */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Pricing Cards */}
           <motion.div
             initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
+            animate="visible"
             variants={staggerContainer}
-            className="grid md:grid-cols-3 gap-8"
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto"
           >
-            {plans.map((plan) => (
+            {plans.map((plan, i) => (
               <motion.div
                 key={plan.name}
                 variants={fadeInUp}
                 className={cn(
-                  "relative rounded-2xl p-8 transition-all",
+                  "relative rounded-2xl border p-8 bg-white flex flex-col",
                   plan.popular
-                    ? "bg-slate-900 text-white shadow-2xl scale-105 z-10"
-                    : "bg-white border border-slate-200 hover:border-slate-300 hover:shadow-lg"
+                    ? "border-purple-500 shadow-2xl shadow-purple-500/20 scale-105"
+                    : "border-slate-200"
                 )}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <div className="px-4 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-medium rounded-full shadow-lg">
+                    <Badge className="bg-purple-600 text-white border-0 shadow-lg">
+                      <Crown className="w-3 h-3 mr-1" />
                       Most Popular
-                    </div>
+                    </Badge>
                   </div>
                 )}
 
                 <div className="mb-6">
-                  <h3
-                    className={cn(
-                      "text-xl font-semibold mb-2",
-                      plan.popular ? "text-white" : "text-slate-900"
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
+                  <div className="mb-2">
+                    <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
+                    {plan.priceSubtext && (
+                      <span className="text-slate-600 ml-2">{plan.priceSubtext}</span>
                     )}
-                  >
-                    {plan.name}
-                  </h3>
-                  <p
-                    className={cn(
-                      "text-sm",
-                      plan.popular ? "text-slate-300" : "text-slate-600"
-                    )}
-                  >
-                    {plan.description}
-                  </p>
+                  </div>
+                  <p className="text-sm text-slate-500">{plan.description}</p>
                 </div>
 
-                <div className="mb-6">
-                  {plan.monthlyPrice !== null ? (
-                    <div className="flex items-baseline gap-1">
-                      <span
-                        className={cn(
-                          "text-4xl font-bold",
-                          plan.popular ? "text-white" : "text-slate-900"
-                        )}
-                      >
-                        ${isAnnual ? plan.annualPrice : plan.monthlyPrice}
-                      </span>
-                      <span
-                        className={cn(
-                          "text-sm",
-                          plan.popular ? "text-slate-300" : "text-slate-600"
-                        )}
-                      >
-                        /user/month
-                      </span>
-                    </div>
-                  ) : (
-                    <div
-                      className={cn(
-                        "text-4xl font-bold",
-                        plan.popular ? "text-white" : "text-slate-900"
-                      )}
-                    >
-                      Custom
-                    </div>
-                  )}
-                  {plan.monthlyPrice !== null && isAnnual && (
-                    <p
-                      className={cn(
-                        "text-sm mt-1",
-                        plan.popular ? "text-slate-400" : "text-slate-500"
-                      )}
-                    >
-                      Billed annually
-                    </p>
-                  )}
-                </div>
-
-                <Link
-                  href={plan.href}
-                  className={cn(
-                    "block w-full py-3 text-center font-semibold rounded-xl transition-all mb-8",
-                    plan.popular
-                      ? "bg-white text-slate-900 hover:bg-slate-100"
-                      : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:shadow-lg hover:shadow-red-500/25"
-                  )}
-                >
-                  {plan.cta}
-                </Link>
-
-                <ul className="space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature.name} className="flex items-center gap-3">
-                      {feature.included ? (
-                        <Check
-                          className={cn(
-                            "w-5 h-5",
-                            plan.popular ? "text-emerald-400" : "text-emerald-600"
-                          )}
-                        />
-                      ) : (
-                        <X
-                          className={cn(
-                            "w-5 h-5",
-                            plan.popular ? "text-slate-500" : "text-slate-300"
-                          )}
-                        />
-                      )}
-                      <span
-                        className={cn(
-                          "text-sm",
-                          feature.included
-                            ? plan.popular
-                              ? "text-slate-200"
-                              : "text-slate-700"
-                            : plan.popular
-                            ? "text-slate-500"
-                            : "text-slate-400"
-                        )}
-                      >
-                        {feature.name}
-                      </span>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {plan.features.map((feature, j) => (
+                    <li key={j} className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-slate-600 text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
+
+                <Link href="/app?page=register" className="w-full">
+                  <Button
+                    className={cn(
+                      "w-full rounded-full",
+                      plan.popular
+                        ? "bg-purple-600 hover:bg-purple-700 text-white"
+                        : "border-slate-300 hover:bg-slate-50"
+                    )}
+                    variant={plan.popular ? "default" : "outline"}
+                    size="lg"
+                  >
+                    {plan.cta}
+                  </Button>
+                </Link>
               </motion.div>
             ))}
           </motion.div>
         </div>
       </section>
 
-      {/* Enterprise Section */}
-      <section className="py-16 bg-slate-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden"
-          >
-            <div className="grid md:grid-cols-2 gap-8 p-8 lg:p-12">
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-900">
-                      Enterprise
-                    </h2>
-                    <p className="text-slate-600">For large organizations</p>
-                  </div>
-                </div>
-                <p className="text-slate-600 mb-6">
-                  Need a custom solution for your organization? Our Enterprise plan
-                  includes advanced security features, dedicated support, and
-                  flexible deployment options.
-                </p>
-                <ul className="space-y-3 mb-8">
-                  {[
-                    "Custom contract & SLA",
-                    "Dedicated account manager",
-                    "SSO/SAML & SCIM provisioning",
-                    "Advanced audit logs",
-                    "Custom integrations",
-                    "On-premise deployment option",
-                  ].map((feature) => (
-                    <li key={feature} className="flex items-center gap-3">
-                      <Check className="w-5 h-5 text-emerald-600" />
-                      <span className="text-slate-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/contact?type=enterprise"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition-colors"
-                >
-                  Contact Sales
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-              <div className="flex items-center justify-center bg-slate-50 rounded-xl p-8">
-                <div className="text-center">
-                  <Users className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                  <p className="text-lg font-medium text-slate-700 mb-2">
-                    Trusted by 500+ teams
-                  </p>
-                  <p className="text-slate-500">
-                    Including Fortune 500 companies
-                  </p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Feature Comparison Table */}
-      <section className="py-16 bg-white">
+      {/* Feature Comparison */}
+      <section className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-          >
-            <motion.div variants={fadeInUp} className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">
-                Compare Plans
-              </h2>
-              <p className="text-lg text-slate-600">
-                See all features side-by-side
-              </p>
-            </motion.div>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+              Compare plans and features
+            </h2>
+            <p className="text-xl text-slate-600">
+              Everything you need to run on EOS, at every stage
+            </p>
+          </div>
 
-            <motion.div
-              variants={fadeInUp}
-              className="overflow-x-auto rounded-xl border border-slate-200"
-            >
-              <table className="w-full min-w-[800px]">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left py-4 px-6 font-semibold text-slate-900">
-                      Features
-                    </th>
-                    <th className="text-center py-4 px-6 font-semibold text-slate-900">
-                      Starter
-                    </th>
-                    <th className="text-center py-4 px-6 font-semibold text-slate-900 bg-red-50">
-                      Professional
-                    </th>
-                    <th className="text-center py-4 px-6 font-semibold text-slate-900">
-                      Enterprise
-                    </th>
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="text-left py-4 px-6 font-semibold text-slate-900">Features</th>
+                  <th className="py-4 px-6 font-semibold text-slate-900">Free</th>
+                  <th className="py-4 px-6 font-semibold text-slate-900">Unlimited</th>
+                  <th className="py-4 px-6 font-semibold text-purple-600 bg-purple-50">Business</th>
+                  <th className="py-4 px-6 font-semibold text-slate-900">Enterprise</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {[
+                  { feature: "Team members", free: "5", unlimited: "Unlimited", business: "Unlimited", enterprise: "Unlimited" },
+                  { feature: "EOD Reports", free: "✓", unlimited: "✓", business: "✓ + AI", enterprise: "✓ + AI" },
+                  { feature: "Quarterly Rocks", free: "3", unlimited: "Unlimited", business: "Unlimited", enterprise: "Unlimited" },
+                  { feature: "Scorecard", free: "Basic", unlimited: "Advanced", business: "Advanced + AI", enterprise: "Custom" },
+                  { feature: "Level 10 Meetings", free: "✓", unlimited: "✓", business: "✓", enterprise: "✓" },
+                  { feature: "IDS Process", free: "—", unlimited: "✓", business: "✓", enterprise: "✓" },
+                  { feature: "Accountability Chart", free: "—", unlimited: "✓", business: "✓", enterprise: "✓" },
+                  { feature: "Vision/Traction Organizer", free: "—", unlimited: "✓", business: "✓", enterprise: "✓" },
+                  { feature: "AI Agents", free: "—", unlimited: "—", business: "✓", enterprise: "✓" },
+                  { feature: "API Access", free: "—", unlimited: "—", business: "✓", enterprise: "✓" },
+                  { feature: "SSO", free: "—", unlimited: "—", business: "Google", enterprise: "SAML" },
+                  { feature: "Support", free: "Community", unlimited: "Email", business: "Priority", enterprise: "24/7 Phone" },
+                ].map((row, i) => (
+                  <tr key={i}>
+                    <td className="py-4 px-6 font-medium text-slate-900">{row.feature}</td>
+                    <td className="py-4 px-6 text-center text-slate-600">{row.free}</td>
+                    <td className="py-4 px-6 text-center text-slate-600">{row.unlimited}</td>
+                    <td className="py-4 px-6 text-center font-semibold text-purple-600 bg-purple-50">{row.business}</td>
+                    <td className="py-4 px-6 text-center text-slate-600">{row.enterprise}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {comparisonFeatures.map((category) => (
-                    <>
-                      <tr key={category.category} className="bg-slate-50/50">
-                        <td
-                          colSpan={4}
-                          className="py-3 px-6 font-semibold text-slate-700 text-sm uppercase tracking-wide"
-                        >
-                          {category.category}
-                        </td>
-                      </tr>
-                      {category.features.map((feature) => (
-                        <tr
-                          key={feature.name}
-                          className="border-b border-slate-100 hover:bg-slate-50/50"
-                        >
-                          <td className="py-3 px-6 text-slate-700">
-                            {feature.name}
-                          </td>
-                          <td className="text-center py-3 px-6">
-                            {typeof feature.starter === "boolean" ? (
-                              feature.starter ? (
-                                <Check className="w-5 h-5 text-emerald-600 mx-auto" />
-                              ) : (
-                                <X className="w-5 h-5 text-slate-300 mx-auto" />
-                              )
-                            ) : (
-                              <span className="text-slate-700">
-                                {feature.starter}
-                              </span>
-                            )}
-                          </td>
-                          <td className="text-center py-3 px-6 bg-red-50/30">
-                            {typeof feature.professional === "boolean" ? (
-                              feature.professional ? (
-                                <Check className="w-5 h-5 text-emerald-600 mx-auto" />
-                              ) : (
-                                <X className="w-5 h-5 text-slate-300 mx-auto" />
-                              )
-                            ) : (
-                              <span className="text-slate-700">
-                                {feature.professional}
-                              </span>
-                            )}
-                          </td>
-                          <td className="text-center py-3 px-6">
-                            {typeof feature.enterprise === "boolean" ? (
-                              feature.enterprise ? (
-                                <Check className="w-5 h-5 text-emerald-600 mx-auto" />
-                              ) : (
-                                <X className="w-5 h-5 text-slate-300 mx-auto" />
-                              )
-                            ) : (
-                              <span className="text-slate-700">
-                                {feature.enterprise}
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </>
-                  ))}
-                </tbody>
-              </table>
-            </motion.div>
-          </motion.div>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-16 bg-slate-50">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-          >
-            <motion.div variants={fadeInUp} className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-600 text-sm font-medium mb-4">
-                <HelpCircle className="w-4 h-4" />
-                FAQ
-              </div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">
-                Frequently Asked Questions
-              </h2>
-              <p className="text-lg text-slate-600">
-                Have questions? We&apos;ve got answers.
-              </p>
-            </motion.div>
+      {/* FAQ */}
+      <section className="py-24 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+              Frequently asked questions
+            </h2>
+          </div>
 
-            <motion.div variants={fadeInUp} className="space-y-4">
-              {faqs.map((faq, index) => (
-                <div
-                  key={faq.question}
-                  className="bg-white rounded-xl border border-slate-200 overflow-hidden"
-                >
-                  <button
-                    onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                    className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50 transition-colors"
-                  >
-                    <span className="font-medium text-slate-900">
-                      {faq.question}
-                    </span>
-                    <ChevronDown
-                      className={cn(
-                        "w-5 h-5 text-slate-400 transition-transform",
-                        openFaq === index && "rotate-180"
-                      )}
-                    />
-                  </button>
-                  {openFaq === index && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="px-6 pb-6 text-slate-600"
-                    >
-                      {faq.answer}
-                    </motion.div>
-                  )}
-                </div>
-              ))}
-            </motion.div>
-          </motion.div>
+          <div className="space-y-6">
+            {[
+              {
+                question: "What happens after my free trial?",
+                answer: "The Free Forever plan never expires. You can use it indefinitely with up to 5 team members. Upgrade anytime to unlock unlimited users and advanced features.",
+              },
+              {
+                question: "Can I change plans later?",
+                answer: "Absolutely. You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any charges.",
+              },
+              {
+                question: "What's included in EOS AI Agents?",
+                answer: "AI Agents automatically organize your EOD reports, track Rock progress, update your scorecard, and prepare Level 10 meetings. They learn your team's patterns and save hours of manual work every week.",
+              },
+              {
+                question: "Do you offer discounts for annual billing?",
+                answer: "Yes! Annual billing saves you up to 30% compared to monthly pricing. Plus you lock in your rate for the year.",
+              },
+              {
+                question: "Is my data secure?",
+                answer: "Yes. We're SOC 2 Type II certified with enterprise-grade encryption. Your data is backed up daily and never used to train AI models.",
+              },
+              {
+                question: "Can I get a custom plan?",
+                answer: "Enterprise customers can work with our team to create a custom plan with dedicated infrastructure, advanced security, and tailored features. Contact sales to discuss your needs.",
+              },
+            ].map((faq, i) => (
+              <div
+                key={i}
+                className="bg-slate-50 rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow"
+              >
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">{faq.question}</h3>
+                <p className="text-slate-600 leading-relaxed">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-white">
+      <section className="py-24 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-          >
-            <motion.h2
-              variants={fadeInUp}
-              className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4"
-            >
-              Still Have Questions?
-            </motion.h2>
-            <motion.p
-              variants={fadeInUp}
-              className="text-lg text-slate-600 mb-8"
-            >
-              Our team is here to help you find the perfect plan for your
-              organization.
-            </motion.p>
-            <motion.div variants={fadeInUp}>
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-shadow"
-              >
-                Contact Sales
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </motion.div>
-          </motion.div>
+          <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-3xl mx-auto mb-8" />
+          <h2 className="text-5xl font-bold text-white mb-6">
+            Start running on EOS today
+          </h2>
+          <p className="text-xl text-white/90 mb-8">
+            Join thousands of teams executing flawlessly with Align
+          </p>
+          <Link href="/app?page=register">
+            <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 rounded-full px-8 h-14 text-base font-semibold">
+              Get started FREE
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+          <p className="text-white/80 mt-4 text-sm">Free forever. No credit card required.</p>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
+            <div>© 2026 Align. All rights reserved.</div>
+            <div className="flex gap-6">
+              <a href="#" className="hover:text-white transition-colors">
+                Privacy Policy
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                Terms of Service
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                Security
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

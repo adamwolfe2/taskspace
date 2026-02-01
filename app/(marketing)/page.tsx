@@ -1,8 +1,9 @@
 "use client"
 
-import { motion, useScroll, useTransform } from "framer-motion"
+import { motion, useScroll, useTransform, useInView } from "framer-motion"
 import { useRef } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import {
   ArrowRight,
   CheckCircle,
@@ -20,7 +21,25 @@ import {
   Star,
   Building2,
   ChevronRight,
+  Sparkles,
+  Rocket,
+  Award,
+  Globe,
+  Lock,
+  Linkedin,
+  Twitter,
+  Github,
+  Mail,
+  Check,
+  X,
+  AlertCircle,
 } from "lucide-react"
+import { DemoEODForm } from "@/components/marketing/demo-eod-form"
+import { DemoKanban } from "@/components/marketing/demo-kanban"
+import { DemoRocks } from "@/components/marketing/demo-rocks"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 
 // Animation variants
 const fadeInUp = {
@@ -37,148 +56,178 @@ const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
   },
 }
 
 const scaleIn = {
-  hidden: { opacity: 0, scale: 0.9 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
 }
 
-// Hero Section
+// Navigation
+function Navigation() {
+  return (
+    <motion.nav
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200/50"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg" />
+            <span className="text-xl font-bold text-slate-900">Align</span>
+          </div>
+
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+              Features
+            </Link>
+            <Link href="#product" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+              Product
+            </Link>
+            <Link href="#pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+              Pricing
+            </Link>
+            <Link href="#customers" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+              Customers
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button size="sm" className="bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700">
+                Start Free Trial
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </motion.nav>
+  )
+}
+
+// Hero Section - Narrative-driven with embedded preview
 function HeroSection() {
   const ref = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"],
-  })
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"])
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
 
   return (
-    <section
-      ref={ref}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
-    >
-      {/* Background Elements */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-red-50/30" />
-        <motion.div
-          style={{ y }}
-          className="absolute top-20 left-10 w-72 h-72 bg-red-100/50 rounded-full blur-3xl"
-        />
-        <motion.div
-          style={{ y }}
-          className="absolute bottom-20 right-10 w-96 h-96 bg-red-200/30 rounded-full blur-3xl"
-        />
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
-      </div>
+    <section ref={ref} className="relative pt-32 pb-20 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white via-red-50/30 to-white" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-      <motion.div
-        style={{ opacity }}
-        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
-      >
-        <div className="text-center max-w-4xl mx-auto">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-4xl mx-auto mb-16">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-600 text-sm font-medium mb-8"
           >
-            <Zap className="w-4 h-4" />
-            <span>AI-Powered Team Accountability</span>
-            <ChevronRight className="w-4 h-4" />
+            <Sparkles className="w-4 h-4" />
+            <span>Trusted by 500+ high-performing teams</span>
           </motion.div>
 
           {/* Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 leading-tight tracking-tight mb-6"
+            transition={{ delay: 0.1 }}
+            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 leading-[1.1] tracking-tight mb-6"
           >
-            Transform Your Team&apos;s
+            Build a Culture of
             <br />
-            <span className="text-gradient-primary">Daily Accountability</span>
+            <span className="bg-gradient-to-r from-red-500 via-red-600 to-orange-500 bg-clip-text text-transparent">
+              Daily Accountability
+            </span>
           </motion.h1>
 
           {/* Subheadline */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed"
+            transition={{ delay: 0.2 }}
+            className="text-xl text-slate-600 max-w-3xl mx-auto mb-10 leading-relaxed"
           >
-            Align helps teams track progress, achieve quarterly goals, and maintain
-            accountability with AI-powered end-of-day reports and intelligent insights.
+            Align transforms how teams track progress with AI-powered EOD reports,
+            visual goal tracking, and intelligent insights. No more status meetings.
+            Just results.
           </motion.p>
 
           {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+            transition={{ delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
-              >
+            <Link href="/register">
+              <Button size="lg" className="bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/25 text-base px-8 h-12">
                 Start Free Trial
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Link
-                href="/demo"
-                className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:border-slate-300 hover:bg-slate-50 transition-all"
-              >
-                <Play className="w-5 h-5" />
-                Watch Demo
-              </Link>
-            </motion.div>
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="#demo">
+              <Button size="lg" variant="outline" className="border-slate-200 hover:bg-slate-50 text-base px-8 h-12">
+                <Play className="mr-2 h-5 w-5" />
+                See It In Action
+              </Button>
+            </Link>
           </motion.div>
 
           {/* Social Proof */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-slate-500"
+            transition={{ delay: 0.4 }}
+            className="mt-12 flex items-center justify-center gap-8 text-sm text-slate-600"
           >
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
-                {[1, 2, 3, 4, 5].map((i) => (
+                {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
                     className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 border-2 border-white"
                   />
                 ))}
               </div>
-              <span>500+ teams trust Align</span>
+              <span className="font-medium">500+ teams</span>
             </div>
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((i) => (
                 <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               ))}
-              <span className="ml-1">4.9/5 rating</span>
+              <span className="ml-1 font-medium">4.9/5 rating</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-green-600" />
+              <span className="font-medium">SOC 2 Certified</span>
             </div>
           </motion.div>
         </div>
 
-        {/* Hero Image/Dashboard Preview */}
+        {/* Product Screenshot - Embedded Demo */}
         <motion.div
           initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-16 relative"
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="relative max-w-6xl mx-auto"
         >
-          <div className="relative mx-auto max-w-5xl">
+          <div className="relative">
+            {/* Glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-t from-red-500/20 to-transparent blur-3xl" />
+
             {/* Browser Frame */}
-            <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/50 overflow-hidden">
+            <div className="relative bg-white rounded-2xl shadow-2xl border border-slate-200/50 overflow-hidden">
               {/* Browser Header */}
               <div className="flex items-center gap-2 px-4 py-3 bg-slate-100 border-b border-slate-200">
                 <div className="flex gap-1.5">
@@ -187,76 +236,120 @@ function HeroSection() {
                   <div className="w-3 h-3 rounded-full bg-green-400" />
                 </div>
                 <div className="flex-1 mx-4">
-                  <div className="bg-white rounded-lg px-4 py-1.5 text-sm text-slate-400 text-center">
-                    app.aims.io/dashboard
+                  <div className="bg-white rounded-lg px-4 py-1.5 text-sm text-slate-500 text-center font-medium">
+                    app.getalign.io/dashboard
                   </div>
                 </div>
               </div>
-              {/* Dashboard Preview */}
-              <div className="aspect-[16/10] bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-                <div className="h-full grid grid-cols-12 gap-4">
+
+              {/* Actual Product Screenshot */}
+              <div className="bg-gradient-to-br from-slate-50 to-white p-8">
+                <div className="grid grid-cols-12 gap-6">
                   {/* Sidebar */}
-                  <div className="col-span-2 bg-white rounded-xl shadow-sm p-4 space-y-4">
-                    <div className="w-8 h-8 rounded-lg bg-red-500" />
-                    <div className="space-y-2">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <div
-                          key={i}
-                          className={`h-8 rounded-lg ${i === 1 ? "bg-red-50" : "bg-slate-50"}`}
-                        />
-                      ))}
-                    </div>
+                  <div className="col-span-2 space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg" />
+                    {[
+                      { active: true, color: "bg-red-50 border-red-200" },
+                      { active: false, color: "bg-slate-50" },
+                      { active: false, color: "bg-slate-50" },
+                      { active: false, color: "bg-slate-50" },
+                      { active: false, color: "bg-slate-50" },
+                    ].map((item, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "h-10 rounded-lg border transition-all",
+                          item.color
+                        )}
+                      />
+                    ))}
                   </div>
+
                   {/* Main Content */}
-                  <div className="col-span-10 space-y-4">
-                    {/* Stats Row */}
+                  <div className="col-span-10 space-y-6">
+                    {/* Stats Cards */}
                     <div className="grid grid-cols-4 gap-4">
                       {[
-                        { color: "bg-red-500", value: "94%" },
-                        { color: "bg-emerald-500", value: "28" },
-                        { color: "bg-blue-500", value: "12" },
-                        { color: "bg-amber-500", value: "3" },
-                      ].map((stat, i) => (
-                        <div key={i} className="bg-white rounded-xl shadow-sm p-4">
-                          <div className={`w-8 h-8 rounded-lg ${stat.color} mb-2`} />
-                          <div className="text-2xl font-bold text-slate-900">
-                            {stat.value}
-                          </div>
-                          <div className="h-2 w-20 bg-slate-100 rounded mt-2" />
-                        </div>
-                      ))}
+                        { icon: Target, value: "94%", label: "On Track", color: "from-red-500 to-red-600" },
+                        { icon: CheckCircle, value: "28", label: "Completed", color: "from-emerald-500 to-emerald-600" },
+                        { icon: TrendingUp, value: "12", label: "In Progress", color: "from-blue-500 to-blue-600" },
+                        { icon: Users, value: "8", label: "Team Size", color: "from-purple-500 to-purple-600" },
+                      ].map((stat, i) => {
+                        const Icon = stat.icon
+                        return (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={isInView ? { opacity: 1, y: 0 } : {}}
+                            transition={{ delay: 0.4 + i * 0.1 }}
+                            className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"
+                          >
+                            <div className={cn("w-10 h-10 rounded-lg bg-gradient-to-br mb-3 flex items-center justify-center", stat.color)}>
+                              <Icon className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
+                            <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
+                          </motion.div>
+                        )
+                      })}
                     </div>
-                    {/* Content Area */}
-                    <div className="grid grid-cols-3 gap-4 flex-1">
-                      <div className="col-span-2 bg-white rounded-xl shadow-sm p-4">
-                        <div className="h-4 w-32 bg-slate-200 rounded mb-4" />
+
+                    {/* Content Grid */}
+                    <div className="grid grid-cols-3 gap-6">
+                      {/* EOD Reports */}
+                      <div className="col-span-2 bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-semibold text-slate-900">Recent EOD Reports</h3>
+                          <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">Live</Badge>
+                        </div>
                         <div className="space-y-3">
                           {[1, 2, 3].map((i) => (
-                            <div
+                            <motion.div
                               key={i}
-                              className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={isInView ? { opacity: 1, x: 0 } : {}}
+                              transition={{ delay: 0.6 + i * 0.1 }}
+                              className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
                             >
-                              <div className="w-10 h-10 rounded-full bg-slate-200" />
-                              <div className="flex-1 space-y-2">
-                                <div className="h-3 w-3/4 bg-slate-200 rounded" />
-                                <div className="h-2 w-1/2 bg-slate-100 rounded" />
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300" />
+                              <div className="flex-1 min-w-0">
+                                <div className="h-3 bg-slate-300 rounded w-3/4 mb-2" />
+                                <div className="h-2 bg-slate-200 rounded w-1/2" />
                               </div>
-                              <div className="w-16 h-6 bg-emerald-100 rounded-full" />
-                            </div>
+                              <Badge className="bg-emerald-100 text-emerald-700 border-0">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Done
+                              </Badge>
+                            </motion.div>
                           ))}
                         </div>
                       </div>
-                      <div className="bg-white rounded-xl shadow-sm p-4">
-                        <div className="h-4 w-24 bg-slate-200 rounded mb-4" />
-                        <div className="space-y-2">
-                          {[60, 80, 45, 90, 70].map((w, i) => (
-                            <div key={i} className="space-y-1">
-                              <div className="h-2 w-full bg-slate-100 rounded" />
-                              <div
-                                className="h-2 bg-red-200 rounded"
-                                style={{ width: `${w}%` }}
-                              />
-                            </div>
+
+                      {/* Rock Progress */}
+                      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                        <h3 className="font-semibold text-slate-900 mb-4">Rock Progress</h3>
+                        <div className="space-y-4">
+                          {[85, 62, 45].map((progress, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                              transition={{ delay: 0.8 + i * 0.1 }}
+                              className="space-y-2"
+                            >
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-slate-600">Q1 Goal {i + 1}</span>
+                                <span className="font-semibold text-slate-900">{progress}%</span>
+                              </div>
+                              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <motion.div
+                                  initial={{ width: 0 }}
+                                  animate={isInView ? { width: `${progress}%` } : {}}
+                                  transition={{ duration: 1, delay: 0.8 + i * 0.1 }}
+                                  className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full"
+                                />
+                              </div>
+                            </motion.div>
                           ))}
                         </div>
                       </div>
@@ -265,100 +358,39 @@ function HeroSection() {
                 </div>
               </div>
             </div>
-
-            {/* Floating Elements */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="absolute -left-8 top-1/4 bg-white rounded-xl shadow-lg p-4 border border-slate-100"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-slate-900">
-                    EOD Submitted
-                  </div>
-                  <div className="text-xs text-slate-500">Just now</div>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.9 }}
-              className="absolute -right-8 top-1/3 bg-white rounded-xl shadow-lg p-4 border border-slate-100"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-slate-900">
-                    +23% Productivity
-                  </div>
-                  <div className="text-xs text-slate-500">This week</div>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1 }}
-              className="absolute -bottom-4 left-1/4 bg-white rounded-xl shadow-lg p-4 border border-slate-100"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Brain className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-slate-900">
-                    AI Insight Ready
-                  </div>
-                  <div className="text-xs text-slate-500">3 suggestions</div>
-                </div>
-              </div>
-            </motion.div>
           </div>
         </motion.div>
-      </motion.div>
+      </div>
     </section>
   )
 }
 
-// Logos Section
-function LogosSection() {
+// Logo Cloud
+function LogoSection() {
   const logos = [
-    "Acme Corp",
-    "Globex",
-    "Initech",
-    "Umbrella",
-    "Hooli",
-    "Pied Piper",
+    { name: "Asana", icon: "/integrations/asana.svg" },
+    { name: "Slack", icon: "/integrations/slack.svg" },
+    { name: "Google", icon: "/integrations/google-calendar.svg" },
+    { name: "Stripe", icon: "/integrations/stripe.svg" },
   ]
 
   return (
     <section className="py-16 bg-white border-y border-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <p className="text-center text-sm font-medium text-slate-500 mb-8">
-          TRUSTED BY LEADING COMPANIES WORLDWIDE
+          INTEGRATES WITH YOUR EXISTING TOOLS
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-8">
+        <div className="flex flex-wrap items-center justify-center gap-12">
           {logos.map((logo) => (
-            <motion.div
-              key={logo}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="flex items-center gap-2 text-slate-400"
-            >
-              <Building2 className="w-6 h-6" />
-              <span className="text-lg font-semibold">{logo}</span>
-            </motion.div>
+            <div key={logo.name} className="flex items-center justify-center grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+              <Image
+                src={logo.icon}
+                alt={logo.name}
+                width={120}
+                height={40}
+                className="h-10 w-auto object-contain"
+              />
+            </div>
           ))}
         </div>
       </div>
@@ -366,133 +398,125 @@ function LogosSection() {
   )
 }
 
-// Features Section
-function FeaturesSection() {
-  const features = [
-    {
-      icon: CheckCircle,
-      title: "AI-Powered EOD Reports",
-      description:
-        "Generate intelligent end-of-day reports with AI assistance. Track accomplishments, blockers, and tomorrow's priorities effortlessly.",
-      color: "red",
-      href: "/features/eod-reports",
-    },
-    {
-      icon: Users,
-      title: "Team Management",
-      description:
-        "Organize teams with hierarchical structures, manage roles and permissions, and keep everyone aligned on objectives.",
-      color: "blue",
-      href: "/features/team-management",
-    },
-    {
-      icon: Target,
-      title: "Rocks & Quarterly Goals",
-      description:
-        "Set and track quarterly objectives with milestone tracking. Keep your team focused on what matters most.",
-      color: "emerald",
-      href: "/features/rocks",
-    },
-    {
-      icon: BarChart3,
-      title: "Analytics & Insights",
-      description:
-        "Gain deep visibility into team performance with real-time dashboards, trends, and actionable metrics.",
-      color: "purple",
-      href: "/features/analytics",
-    },
-    {
-      icon: Calendar,
-      title: "Integrated Calendar",
-      description:
-        "Sync deadlines, milestones, and team events. Never miss an important date or deadline again.",
-      color: "amber",
-      href: "/features/calendar",
-    },
-    {
-      icon: Brain,
-      title: "AI Suggestions",
-      description:
-        "Get intelligent recommendations for task prioritization, resource allocation, and team optimization.",
-      color: "pink",
-      href: "/features/ai",
-    },
-  ]
-
-  const colorClasses = {
-    red: { bg: "bg-red-50", icon: "text-red-600", hover: "group-hover:bg-red-100" },
-    blue: { bg: "bg-blue-50", icon: "text-blue-600", hover: "group-hover:bg-blue-100" },
-    emerald: { bg: "bg-emerald-50", icon: "text-emerald-600", hover: "group-hover:bg-emerald-100" },
-    purple: { bg: "bg-purple-50", icon: "text-purple-600", hover: "group-hover:bg-purple-100" },
-    amber: { bg: "bg-amber-50", icon: "text-amber-600", hover: "group-hover:bg-amber-100" },
-    pink: { bg: "bg-pink-50", icon: "text-pink-600", hover: "group-hover:bg-pink-100" },
-  }
-
+// Problem-Solution Split Section
+function ProblemSolutionSection() {
   return (
     <section className="py-24 bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          {/* Problem */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="space-y-6"
+          >
+            <motion.div variants={fadeInUp}>
+              <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50">
+                The Problem
+              </Badge>
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              Status meetings waste
+              <br />
+              <span className="text-red-600">20+ hours per week</span>
+            </motion.h2>
+            <motion.div variants={staggerContainer} className="space-y-4">
+              {[
+                "Team members don't know what others are working on",
+                "Managers lack visibility into progress and blockers",
+                "Goals drift without daily accountability check-ins",
+                "Context switching between Slack, email, and meetings kills productivity",
+              ].map((problem, i) => (
+                <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
+                  <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-600">{problem}</span>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+
+          {/* Solution */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="space-y-6"
+          >
+            <motion.div variants={fadeInUp}>
+              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                The Solution
+              </Badge>
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              Replace meetings with
+              <br />
+              <span className="text-emerald-600">async accountability</span>
+            </motion.h2>
+            <motion.div variants={staggerContainer} className="space-y-4">
+              {[
+                "AI organizes daily task dumps into structured EOD reports",
+                "Real-time dashboard shows team progress and blockers",
+                "Quarterly rocks keep everyone aligned on what matters",
+                "One platform for EODs, tasks, goals, and team visibility",
+              ].map((solution, i) => (
+                <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-600">{solution}</span>
+                </motion.div>
+              ))}
+            </motion.div>
+            <motion.div variants={fadeInUp} className="pt-4">
+              <Link href="/register">
+                <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700">
+                  See How It Works
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Stats Section
+function StatsSection() {
+  const stats = [
+    { value: "94%", label: "Increase in team accountability", icon: TrendingUp },
+    { value: "20hrs", label: "Saved per week on status meetings", icon: Clock },
+    { value: "2.5x", label: "Faster quarterly goal completion", icon: Rocket },
+    { value: "500+", label: "High-performing teams using Align", icon: Users },
+  ]
+
+  return (
+    <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
           variants={staggerContainer}
-          className="text-center mb-16"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-8"
         >
-          <motion.div
-            variants={fadeInUp}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-600 text-sm font-medium mb-4"
-          >
-            <Zap className="w-4 h-4" />
-            Powerful Features
-          </motion.div>
-          <motion.h2
-            variants={fadeInUp}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4"
-          >
-            Everything You Need to
-            <br />
-            <span className="text-gradient-primary">Manage Your Team</span>
-          </motion.h2>
-          <motion.p
-            variants={fadeInUp}
-            className="text-lg text-slate-600 max-w-2xl mx-auto"
-          >
-            A comprehensive platform designed to streamline accountability, enhance
-            communication, and drive results across your organization.
-          </motion.p>
-        </motion.div>
-
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={staggerContainer}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {features.map((feature) => {
-            const colors = colorClasses[feature.color as keyof typeof colorClasses]
+          {stats.map((stat) => {
+            const Icon = stat.icon
             return (
-              <motion.div key={feature.title} variants={fadeInUp}>
-                <Link
-                  href={feature.href}
-                  className="group block h-full bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:border-slate-200 transition-all duration-300"
-                >
-                  <div
-                    className={`w-12 h-12 rounded-xl ${colors.bg} ${colors.hover} flex items-center justify-center mb-4 transition-colors`}
-                  >
-                    <feature.icon className={`w-6 h-6 ${colors.icon}`} />
-                  </div>
-                  <h3 className="text-xl font-semibold text-slate-900 mb-2 group-hover:text-red-600 transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="text-slate-600 leading-relaxed">
-                    {feature.description}
-                  </p>
-                  <div className="mt-4 flex items-center gap-1 text-sm font-medium text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Learn more
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </Link>
+              <motion.div
+                key={stat.label}
+                variants={scaleIn}
+                className="text-center space-y-3"
+              >
+                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mx-auto">
+                  <Icon className="w-6 h-6 text-red-600" />
+                </div>
+                <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
+                  {stat.value}
+                </div>
+                <div className="text-slate-600 text-sm">{stat.label}</div>
               </motion.div>
             )
           })}
@@ -502,208 +526,432 @@ function FeaturesSection() {
   )
 }
 
-// How It Works Section
-function HowItWorksSection() {
-  const steps = [
+// Feature Cards
+function FeaturesSection() {
+  const features = [
     {
-      number: "01",
-      title: "Set Up Your Team",
-      description:
-        "Create your organization, invite team members, and configure roles and permissions in minutes.",
-      icon: Users,
+      icon: Brain,
+      title: "AI-Powered EOD Reports",
+      description: "Paste your daily task dump. AI instantly organizes it by your quarterly rocks, identifies blockers, and creates a structured report.",
+      color: "from-purple-500 to-purple-600",
+      badge: "Most Popular",
     },
     {
-      number: "02",
-      title: "Define Your Rocks",
-      description:
-        "Set quarterly objectives and break them down into actionable milestones for your team.",
       icon: Target,
+      title: "Quarterly Rocks (Goals)",
+      description: "Set 3-7 quarterly goals. Track progress with visual indicators, milestones, and automatic status updates based on daily activity.",
+      color: "from-red-500 to-red-600",
+      badge: "Core Feature",
     },
     {
-      number: "03",
-      title: "Track Daily Progress",
-      description:
-        "Team members submit end-of-day reports with AI assistance, keeping everyone accountable.",
-      icon: CheckCircle,
-    },
-    {
-      number: "04",
-      title: "Analyze & Improve",
-      description:
-        "Use powerful analytics to identify trends, celebrate wins, and address blockers quickly.",
       icon: BarChart3,
+      title: "Real-Time Team Dashboard",
+      description: "See exactly what your team is working on, who's blocked, and progress toward goals - all in one unified dashboard.",
+      color: "from-blue-500 to-blue-600",
+      badge: "Managers Love This",
+    },
+    {
+      icon: CheckCircle,
+      title: "Kanban Task Management",
+      description: "Drag-and-drop tasks across columns. Link tasks to rocks. Set priorities. See dependencies. All synced in real-time.",
+      color: "from-emerald-500 to-emerald-600",
+    },
+    {
+      icon: Users,
+      title: "Manager Insights",
+      description: "Get AI-generated insights on team velocity, at-risk goals, and who needs support - delivered weekly to your inbox.",
+      color: "from-orange-500 to-orange-600",
+    },
+    {
+      icon: Zap,
+      title: "Integrations That Matter",
+      description: "Sync with Slack for notifications, Google Calendar for deadlines, Asana for tasks. No manual data entry required.",
+      color: "from-cyan-500 to-cyan-600",
     },
   ]
 
   return (
-    <section className="py-24 bg-white">
+    <section id="features" className="py-24 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
           variants={staggerContainer}
           className="text-center mb-16"
         >
-          <motion.div
-            variants={fadeInUp}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-600 text-sm font-medium mb-4"
-          >
-            <Clock className="w-4 h-4" />
-            Simple Process
+          <motion.div variants={fadeInUp}>
+            <Badge className="bg-red-50 text-red-600 border-red-200 mb-4">
+              Features
+            </Badge>
           </motion.div>
-          <motion.h2
-            variants={fadeInUp}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4"
-          >
-            Get Started in Minutes
+          <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+            Everything you need for
+            <br />
+            team accountability
           </motion.h2>
-          <motion.p
-            variants={fadeInUp}
-            className="text-lg text-slate-600 max-w-2xl mx-auto"
-          >
-            Align makes it easy to transform how your team tracks progress and
-            achieves goals.
+          <motion.p variants={fadeInUp} className="text-lg text-slate-600 max-w-2xl mx-auto">
+            Replace spreadsheets, status meetings, and Slack chaos with one platform
+            designed for daily progress tracking.
           </motion.p>
         </motion.div>
 
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
           variants={staggerContainer}
-          className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          {steps.map((step, index) => (
-            <motion.div
-              key={step.number}
-              variants={fadeInUp}
-              className="relative text-center"
-            >
-              {/* Connector Line */}
-              {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-12 left-1/2 w-full h-0.5 bg-gradient-to-r from-red-200 to-red-100" />
-              )}
-
-              <div className="relative">
-                <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center mb-6">
-                  <step.icon className="w-10 h-10 text-red-600" />
+          {features.map((feature) => {
+            const Icon = feature.icon
+            return (
+              <motion.div
+                key={feature.title}
+                variants={scaleIn}
+                className="group relative bg-white rounded-2xl border border-slate-200 p-8 hover:shadow-xl hover:border-slate-300 transition-all duration-300"
+              >
+                {feature.badge && (
+                  <div className="absolute -top-3 left-8">
+                    <Badge className="bg-red-600 text-white border-0 shadow-lg">
+                      {feature.badge}
+                    </Badge>
+                  </div>
+                )}
+                <div className={cn("w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center mb-5 group-hover:scale-110 transition-transform", feature.color)}>
+                  <Icon className="w-6 h-6 text-white" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-600 text-white text-sm font-bold flex items-center justify-center shadow-lg">
-                  {step.number.replace("0", "")}
-                </div>
-              </div>
-
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">
-                {step.title}
-              </h3>
-              <p className="text-slate-600">{step.description}</p>
-            </motion.div>
-          ))}
+                <h3 className="text-xl font-semibold text-slate-900 mb-3">{feature.title}</h3>
+                <p className="text-slate-600 leading-relaxed">{feature.description}</p>
+              </motion.div>
+            )
+          })}
         </motion.div>
       </div>
     </section>
   )
 }
 
-// Testimonials Section
+// Interactive Product Demos
+function ProductDemoSection() {
+  return (
+    <section id="product" className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32">
+        {/* EOD Demo */}
+        <div>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="text-center mb-16"
+          >
+            <motion.div variants={fadeInUp}>
+              <Badge className="bg-purple-50 text-purple-600 border-purple-200 mb-4">
+                <Sparkles className="w-4 h-4 mr-1" />
+                AI-Powered
+              </Badge>
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+              Submit EOD Reports in 10 Seconds
+            </motion.h2>
+            <motion.p variants={fadeInUp} className="text-lg text-slate-600 max-w-3xl mx-auto">
+              Just paste your daily task dump. Our AI automatically organizes tasks by your quarterly rocks,
+              identifies blockers, and creates a professional report. Try it below:
+            </motion.p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <DemoEODForm />
+          </motion.div>
+        </div>
+
+        {/* Kanban Demo */}
+        <div>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="text-center mb-16"
+          >
+            <motion.div variants={fadeInUp}>
+              <Badge className="bg-blue-50 text-blue-600 border-blue-200 mb-4">
+                <Target className="w-4 h-4 mr-1" />
+                Task Management
+              </Badge>
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+              Visual Kanban Boards
+            </motion.h2>
+            <motion.p variants={fadeInUp} className="text-lg text-slate-600 max-w-3xl mx-auto">
+              Drag tasks between columns. See priority, deadlines, and rock alignment at a glance.
+              Everything syncs in real-time across your team.
+            </motion.p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <DemoKanban />
+          </motion.div>
+        </div>
+
+        {/* Rocks Demo */}
+        <div>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="text-center mb-16"
+          >
+            <motion.div variants={fadeInUp}>
+              <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200 mb-4">
+                <Target className="w-4 h-4 mr-1" />
+                Goal Tracking
+              </Badge>
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+              Quarterly Rocks That Actually Get Done
+            </motion.h2>
+            <motion.p variants={fadeInUp} className="text-lg text-slate-600 max-w-3xl mx-auto">
+              Set 3-7 quarterly goals. Track progress with interactive sliders, manage milestones,
+              and see real-time status indicators. Try dragging the progress bars:
+            </motion.p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <DemoRocks />
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Social Proof - Testimonials
 function TestimonialsSection() {
   const testimonials = [
     {
-      quote:
-        "Align has transformed how our team communicates. The AI-powered EOD reports save us hours every week and keep everyone aligned.",
+      quote: "Align replaced our daily standups. We save 2 hours per day and have better visibility than ever.",
       author: "Sarah Chen",
       role: "VP of Engineering",
       company: "TechCorp",
-      avatar: "SC",
+      avatar: "/avatars/1.jpg",
+      rating: 5,
     },
     {
-      quote:
-        "The quarterly rocks feature is a game-changer. We've seen a 40% improvement in goal completion since adopting Align.",
+      quote: "The AI EOD parsing is magic. My team actually enjoys submitting updates now instead of dreading status meetings.",
       author: "Michael Rodriguez",
-      role: "COO",
-      company: "GrowthCo",
-      avatar: "MR",
+      role: "Head of Product",
+      company: "StartupXYZ",
+      avatar: "/avatars/2.jpg",
+      rating: 5,
     },
     {
-      quote:
-        "Finally, a tool that makes daily standups and accountability feel effortless. Our remote team has never been more connected.",
+      quote: "We hit our quarterly goals 2.5x faster after adopting Align. The rock tracking keeps everyone accountable.",
       author: "Emily Watson",
-      role: "Director of Operations",
-      company: "RemoteFirst",
-      avatar: "EW",
+      role: "CEO",
+      company: "GrowthLabs",
+      avatar: "/avatars/3.jpg",
+      rating: 5,
     },
   ]
 
   return (
-    <section className="py-24 bg-slate-900">
+    <section id="customers" className="py-24 bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
           variants={staggerContainer}
           className="text-center mb-16"
         >
-          <motion.div
-            variants={fadeInUp}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium mb-4"
-          >
-            <MessageSquare className="w-4 h-4" />
-            Testimonials
+          <motion.div variants={fadeInUp}>
+            <Badge className="bg-white/10 text-white border-white/20 mb-4">
+              <Star className="w-4 h-4 mr-1 fill-yellow-400 text-yellow-400" />
+              Loved by Teams
+            </Badge>
           </motion.div>
-          <motion.h2
-            variants={fadeInUp}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4"
-          >
-            Loved by Teams Everywhere
+          <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold text-white mb-4">
+            Join 500+ teams building
+            <br />
+            better accountability habits
           </motion.h2>
-          <motion.p
-            variants={fadeInUp}
-            className="text-lg text-slate-400 max-w-2xl mx-auto"
-          >
-            See what leaders are saying about how Align has transformed their team
-            operations.
+        </motion.div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="grid md:grid-cols-3 gap-8"
+        >
+          {testimonials.map((testimonial, i) => (
+            <motion.div
+              key={i}
+              variants={scaleIn}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8"
+            >
+              <div className="flex gap-1 mb-4">
+                {[...Array(testimonial.rating)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+              <p className="text-white/90 mb-6 leading-relaxed">"{testimonial.quote}"</p>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-red-600" />
+                <div>
+                  <div className="font-semibold text-white">{testimonial.author}</div>
+                  <div className="text-sm text-white/60">{testimonial.role}, {testimonial.company}</div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// Pricing
+function PricingSection() {
+  const plans = [
+    {
+      name: "Starter",
+      price: "$49",
+      description: "Perfect for small teams getting started",
+      features: [
+        "Up to 10 team members",
+        "Unlimited EOD reports",
+        "Unlimited rocks & tasks",
+        "Basic analytics",
+        "Email support",
+      ],
+      cta: "Start Free Trial",
+      popular: false,
+    },
+    {
+      name: "Professional",
+      price: "$99",
+      description: "For growing teams that need more",
+      features: [
+        "Up to 50 team members",
+        "Everything in Starter",
+        "Advanced analytics & insights",
+        "Priority support",
+        "Custom integrations",
+        "API access",
+      ],
+      cta: "Start Free Trial",
+      popular: true,
+    },
+    {
+      name: "Enterprise",
+      price: "Custom",
+      description: "For large organizations",
+      features: [
+        "Unlimited team members",
+        "Everything in Professional",
+        "Dedicated account manager",
+        "Custom onboarding",
+        "SLA guarantee",
+        "Advanced security",
+      ],
+      cta: "Contact Sales",
+      popular: false,
+    },
+  ]
+
+  return (
+    <section id="pricing" className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="text-center mb-16"
+        >
+          <motion.div variants={fadeInUp}>
+            <Badge className="bg-red-50 text-red-600 border-red-200 mb-4">
+              Pricing
+            </Badge>
+          </motion.div>
+          <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+            Simple, transparent pricing
+          </motion.h2>
+          <motion.p variants={fadeInUp} className="text-lg text-slate-600 max-w-2xl mx-auto">
+            14-day free trial. No credit card required. Cancel anytime.
           </motion.p>
         </motion.div>
 
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
           variants={staggerContainer}
-          className="grid md:grid-cols-3 gap-8"
+          className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
         >
-          {testimonials.map((testimonial) => (
+          {plans.map((plan) => (
             <motion.div
-              key={testimonial.author}
-              variants={fadeInUp}
-              className="bg-slate-800/50 rounded-2xl p-8 border border-slate-700/50"
+              key={plan.name}
+              variants={scaleIn}
+              className={cn(
+                "relative rounded-2xl border p-8",
+                plan.popular
+                  ? "border-red-500 shadow-2xl shadow-red-500/20 bg-white scale-105"
+                  : "border-slate-200 bg-white"
+              )}
             >
-              <div className="flex gap-1 mb-6">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star
-                    key={i}
-                    className="w-5 h-5 fill-yellow-400 text-yellow-400"
-                  />
+              {plan.popular && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-red-600 text-white border-0 shadow-lg">
+                    Most Popular
+                  </Badge>
+                </div>
+              )}
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
+                <div className="text-4xl font-bold text-slate-900 mb-2">{plan.price}</div>
+                {plan.price !== "Custom" && <div className="text-slate-600">per month</div>}
+                <p className="text-sm text-slate-500 mt-2">{plan.description}</p>
+              </div>
+              <ul className="space-y-3 mb-8">
+                {plan.features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-slate-600">{feature}</span>
+                  </li>
                 ))}
-              </div>
-              <p className="text-slate-300 text-lg leading-relaxed mb-6">
-                &quot;{testimonial.quote}&quot;
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-semibold">
-                  {testimonial.avatar}
-                </div>
-                <div>
-                  <div className="font-semibold text-white">
-                    {testimonial.author}
-                  </div>
-                  <div className="text-sm text-slate-400">
-                    {testimonial.role}, {testimonial.company}
-                  </div>
-                </div>
-              </div>
+              </ul>
+              <Button
+                className={cn(
+                  "w-full",
+                  plan.popular
+                    ? "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700"
+                    : "border-slate-200"
+                )}
+                variant={plan.popular ? "default" : "outline"}
+                size="lg"
+              >
+                {plan.cta}
+              </Button>
             </motion.div>
           ))}
         </motion.div>
@@ -712,35 +960,70 @@ function TestimonialsSection() {
   )
 }
 
-// Stats Section
-function StatsSection() {
-  const stats = [
-    { value: "94%", label: "Increase in accountability" },
-    { value: "2.5x", label: "Faster goal completion" },
-    { value: "500+", label: "Teams using Align" },
-    { value: "4.9/5", label: "Average satisfaction" },
+// FAQ
+function FAQSection() {
+  const faqs = [
+    {
+      question: "How is Align different from Slack or Asana?",
+      answer: "Align is purpose-built for daily accountability. While Slack is for chat and Asana for task management, Align combines EOD reporting, goal tracking, and team visibility in one unified workflow. We integrate with both tools instead of replacing them.",
+    },
+    {
+      question: "How does the AI parsing work?",
+      answer: "Just paste your daily task dump (bullets, notes, whatever format). Our AI identifies tasks, links them to your quarterly rocks, extracts blockers and priorities, and structures everything into a professional EOD report. It takes 10 seconds.",
+    },
+    {
+      question: "Can we customize it for our workspace?",
+      answer: "Absolutely. Every workspace gets custom branding (colors, logo), custom rock naming (OKRs, goals, initiatives), custom metrics, and configurable workflows. We built it to adapt to how your team works.",
+    },
+    {
+      question: "What happens during the free trial?",
+      answer: "Full access to all features for 14 days. No credit card required. Invite your team, submit EODs, track rocks. If you love it, upgrade. If not, no hard feelings.",
+    },
+    {
+      question: "How do you handle data security?",
+      answer: "SOC 2 Type II certified. All data encrypted at rest and in transit. Role-based access controls. Annual penetration testing. Your data stays yours - we never train AI on customer data.",
+    },
+    {
+      question: "Do you offer implementation support?",
+      answer: "Professional and Enterprise plans include onboarding calls. We'll help you set up rocks, invite your team, configure integrations, and train your managers. Most teams are fully onboarded in under a week.",
+    },
   ]
 
   return (
-    <section className="py-20 bg-white border-y border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 bg-slate-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
           variants={staggerContainer}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-8"
+          className="text-center mb-16"
         >
-          {stats.map((stat) => (
+          <motion.div variants={fadeInUp}>
+            <Badge className="bg-red-50 text-red-600 border-red-200 mb-4">
+              FAQ
+            </Badge>
+          </motion.div>
+          <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+            Frequently asked questions
+          </motion.h2>
+        </motion.div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="space-y-6"
+        >
+          {faqs.map((faq, i) => (
             <motion.div
-              key={stat.label}
-              variants={scaleIn}
-              className="text-center"
+              key={i}
+              variants={fadeInUp}
+              className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow"
             >
-              <div className="text-4xl sm:text-5xl font-bold text-red-600 mb-2">
-                {stat.value}
-              </div>
-              <div className="text-slate-600">{stat.label}</div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-3">{faq.question}</h3>
+              <p className="text-slate-600 leading-relaxed">{faq.answer}</p>
             </motion.div>
           ))}
         </motion.div>
@@ -749,72 +1032,140 @@ function StatsSection() {
   )
 }
 
-// CTA Section
+// Final CTA
 function CTASection() {
   return (
-    <section className="py-24 bg-gradient-to-br from-red-500 to-red-600 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center" />
-      </div>
+    <section className="py-24 bg-gradient-to-br from-red-500 via-red-600 to-orange-500 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           variants={staggerContainer}
         >
-          <motion.div
-            variants={fadeInUp}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white text-sm font-medium mb-6"
-          >
-            <Shield className="w-4 h-4" />
-            14-day free trial, no credit card required
+          <motion.div variants={fadeInUp} className="mb-6">
+            <Badge className="bg-white/10 border-white/20 text-white">
+              <Shield className="w-4 h-4 mr-1" />
+              14-day free trial · No credit card required
+            </Badge>
           </motion.div>
 
-          <motion.h2
-            variants={fadeInUp}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6"
-          >
-            Ready to Transform Your
+          <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
+            Ready to transform your
             <br />
-            Team&apos;s Accountability?
+            team's accountability?
           </motion.h2>
 
-          <motion.p
-            variants={fadeInUp}
-            className="text-lg text-red-100 max-w-2xl mx-auto mb-10"
-          >
-            Join hundreds of teams already using Align to track progress, achieve
-            goals, and build a culture of accountability.
+          <motion.p variants={fadeInUp} className="text-xl text-white/90 max-w-2xl mx-auto mb-10">
+            Join 500+ teams using Align to replace status meetings with async accountability.
+            Start your free trial today.
           </motion.p>
 
-          <motion.div
-            variants={fadeInUp}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-          >
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-red-600 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all"
-              >
+          <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/register">
+              <Button size="lg" className="bg-white text-red-600 hover:bg-slate-50 shadow-xl text-base px-8 h-12">
                 Start Free Trial
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-white border-2 border-white/30 rounded-xl hover:bg-white/10 transition-all"
-              >
-                Talk to Sales
-              </Link>
-            </motion.div>
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="#demo">
+              <Button size="lg" variant="outline" className="border-2 border-white/30 text-white hover:bg-white/10 text-base px-8 h-12">
+                <Play className="mr-2 h-5 w-5" />
+                Watch Demo
+              </Button>
+            </Link>
+          </motion.div>
+
+          <motion.div variants={fadeInUp} className="mt-12 flex items-center justify-center gap-8 text-sm text-white/80">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              <span>Free 14-day trial</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              <span>No credit card</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              <span>Cancel anytime</span>
+            </div>
           </motion.div>
         </motion.div>
       </div>
     </section>
+  )
+}
+
+// Footer
+function Footer() {
+  return (
+    <footer className="bg-slate-900 text-white pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid md:grid-cols-4 gap-12 mb-12">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg" />
+              <span className="text-xl font-bold">Align</span>
+            </div>
+            <p className="text-slate-400 text-sm mb-4">
+              Transform your team's daily accountability with AI-powered progress tracking.
+            </p>
+            <div className="flex gap-4">
+              <a href="#" className="text-slate-400 hover:text-white transition-colors">
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a href="#" className="text-slate-400 hover:text-white transition-colors">
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a href="#" className="text-slate-400 hover:text-white transition-colors">
+                <Github className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4">Product</h4>
+            <ul className="space-y-3 text-sm text-slate-400">
+              <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
+              <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Changelog</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4">Company</h4>
+            <ul className="space-y-3 text-sm text-slate-400">
+              <li><a href="#" className="hover:text-white transition-colors">About</a></li>
+              <li><a href="#customers" className="hover:text-white transition-colors">Customers</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4">Resources</h4>
+            <ul className="space-y-3 text-sm text-slate-400">
+              <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">API Reference</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Contact Support</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
+          <div>© 2026 Align. All rights reserved.</div>
+          <div className="flex gap-6">
+            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-white transition-colors">Security</a>
+          </div>
+        </div>
+      </div>
+    </footer>
   )
 }
 
@@ -822,13 +1173,18 @@ function CTASection() {
 export default function HomePage() {
   return (
     <>
+      <Navigation />
       <HeroSection />
-      <LogosSection />
-      <FeaturesSection />
-      <HowItWorksSection />
+      <LogoSection />
+      <ProblemSolutionSection />
       <StatsSection />
+      <FeaturesSection />
+      <ProductDemoSection />
       <TestimonialsSection />
+      <PricingSection />
+      <FAQSection />
       <CTASection />
+      <Footer />
     </>
   )
 }

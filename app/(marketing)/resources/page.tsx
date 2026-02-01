@@ -1,423 +1,669 @@
 "use client"
 
 import { motion } from "framer-motion"
-import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import {
   ArrowRight,
+  Search,
   BookOpen,
-  FileText,
   Video,
+  FileText,
+  Headphones,
   Download,
   ExternalLink,
-  Zap,
   Clock,
+  TrendingUp,
   Users,
   Target,
+  Sparkles,
+  PlayCircle,
   CheckCircle,
-  BarChart3,
+  Star,
+  MessageSquare
 } from "lucide-react"
+import { useState } from "react"
 
 const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5 }
 }
 
 const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
-  },
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
 }
 
-const categories = [
-  { id: "all", label: "All Resources" },
-  { id: "guides", label: "Guides" },
-  { id: "videos", label: "Videos" },
-  { id: "templates", label: "Templates" },
-  { id: "case-studies", label: "Case Studies" },
-]
-
-const featuredResources = [
-  {
-    type: "guide",
-    title: "The Ultimate Guide to Team Accountability",
-    description:
-      "Learn the proven strategies top teams use to build a culture of accountability and achieve their goals.",
-    image: "/resources/accountability-guide.jpg",
-    readTime: "15 min read",
-    icon: BookOpen,
-    href: "/resources/accountability-guide",
-    featured: true,
-  },
-  {
-    type: "video",
-    title: "Getting Started with Align",
-    description:
-      "A comprehensive walkthrough of setting up your organization and inviting your first team members.",
-    image: "/resources/getting-started.jpg",
-    readTime: "8 min watch",
-    icon: Video,
-    href: "/resources/getting-started-video",
-    featured: true,
-  },
-]
-
-const resources = [
-  {
-    type: "guide",
-    title: "How to Write Effective EOD Reports",
-    description: "Best practices for writing end-of-day reports that drive accountability.",
-    readTime: "8 min read",
-    icon: FileText,
-    category: "guides",
-  },
-  {
-    type: "template",
-    title: "Quarterly Rock Planning Template",
-    description: "A ready-to-use template for planning and tracking quarterly objectives.",
-    readTime: "Download",
-    icon: Download,
-    category: "templates",
-  },
-  {
-    type: "video",
-    title: "Mastering Team Analytics",
-    description: "Deep dive into using analytics to improve team performance.",
-    readTime: "12 min watch",
-    icon: Video,
-    category: "videos",
-  },
-  {
-    type: "case-study",
-    title: "How TechCorp Increased Productivity by 40%",
-    description: "Learn how a 200-person engineering team transformed their accountability.",
-    readTime: "10 min read",
-    icon: BarChart3,
-    category: "case-studies",
-  },
-  {
-    type: "guide",
-    title: "Setting Up Teams for Success",
-    description: "Best practices for organizing your team structure in Align.",
-    readTime: "6 min read",
-    icon: Users,
-    category: "guides",
-  },
-  {
-    type: "template",
-    title: "Weekly Team Meeting Agenda",
-    description: "Structure your team meetings for maximum effectiveness.",
-    readTime: "Download",
-    icon: Download,
-    category: "templates",
-  },
-  {
-    type: "guide",
-    title: "Blocker Management Best Practices",
-    description: "How to identify, escalate, and resolve blockers quickly.",
-    readTime: "7 min read",
-    icon: Target,
-    category: "guides",
-  },
-  {
-    type: "video",
-    title: "Advanced Reporting Features",
-    description: "Unlock the full potential of Align reporting capabilities.",
-    readTime: "15 min watch",
-    icon: Video,
-    category: "videos",
-  },
-  {
-    type: "case-study",
-    title: "RemoteFirst's Journey to 98% Submission Rate",
-    description: "How a fully remote company achieved near-perfect accountability.",
-    readTime: "8 min read",
-    icon: CheckCircle,
-    category: "case-studies",
-  },
-]
-
-const webinars = [
-  {
-    title: "Building High-Performance Teams with Align",
-    date: "February 15, 2026",
-    time: "2:00 PM ET",
-    speaker: "Sarah Chen, CTO",
-    registered: 234,
-  },
-  {
-    title: "Q1 Planning: Setting Rocks That Stick",
-    date: "February 22, 2026",
-    time: "1:00 PM ET",
-    speaker: "Michael Rodriguez, VP Product",
-    registered: 189,
-  },
-]
-
 export default function ResourcesPage() {
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+
+  const categories = [
+    { id: "all", label: "All Resources", icon: BookOpen },
+    { id: "guides", label: "Guides", icon: FileText },
+    { id: "videos", label: "Videos", icon: Video },
+    { id: "webinars", label: "Webinars", icon: Headphones },
+    { id: "templates", label: "Templates", icon: Download }
+  ]
+
+  const featuredResources = [
+    {
+      title: "The Complete Guide to EOS",
+      description: "Learn how to implement the Entrepreneurial Operating System from scratch",
+      type: "guide",
+      duration: "45 min read",
+      image: "📘",
+      color: "from-blue-500 to-cyan-500",
+      popular: true
+    },
+    {
+      title: "Level 10 Meeting Mastery",
+      description: "How to run the most productive 90 minutes of your week",
+      type: "video",
+      duration: "23 min",
+      image: "🎥",
+      color: "from-purple-500 to-pink-500",
+      popular: true
+    },
+    {
+      title: "Rock Setting Workshop",
+      description: "Set quarterly rocks that actually get done",
+      type: "webinar",
+      duration: "60 min",
+      image: "🎯",
+      color: "from-orange-500 to-red-500",
+      popular: false
+    }
+  ]
+
+  const resources = [
+    {
+      category: "guides",
+      title: "Getting Started with Align",
+      description: "Everything you need to know to get your team up and running",
+      type: "Guide",
+      duration: "15 min read",
+      icon: BookOpen,
+      color: "blue"
+    },
+    {
+      category: "guides",
+      title: "Building Your Accountability Chart",
+      description: "Step-by-step guide to defining roles and responsibilities",
+      type: "Guide",
+      duration: "20 min read",
+      icon: BookOpen,
+      color: "blue"
+    },
+    {
+      category: "guides",
+      title: "Scorecard Metrics That Matter",
+      description: "How to choose the right KPIs for your business",
+      type: "Guide",
+      duration: "18 min read",
+      icon: BookOpen,
+      color: "blue"
+    },
+    {
+      category: "videos",
+      title: "Platform Walkthrough",
+      description: "Complete tour of Align's features and capabilities",
+      type: "Video",
+      duration: "12 min",
+      icon: Video,
+      color: "purple"
+    },
+    {
+      category: "videos",
+      title: "IDS Process in Action",
+      description: "See how high-performing teams solve issues",
+      type: "Video",
+      duration: "8 min",
+      icon: Video,
+      color: "purple"
+    },
+    {
+      category: "videos",
+      title: "AI Features Deep Dive",
+      description: "Discover how AI agents automate your workflows",
+      type: "Video",
+      duration: "15 min",
+      icon: Video,
+      color: "purple"
+    },
+    {
+      category: "webinars",
+      title: "Quarterly Planning Workshop",
+      description: "Plan your next 90 days with confidence",
+      type: "Webinar",
+      duration: "60 min",
+      icon: Headphones,
+      color: "orange"
+    },
+    {
+      category: "webinars",
+      title: "Scaling with EOS",
+      description: "How fast-growing companies use EOS to maintain clarity",
+      type: "Webinar",
+      duration: "45 min",
+      icon: Headphones,
+      color: "orange"
+    },
+    {
+      category: "templates",
+      title: "Vision/Traction Organizer",
+      description: "The 2-page strategic plan template",
+      type: "Template",
+      duration: "Download",
+      icon: Download,
+      color: "emerald"
+    },
+    {
+      category: "templates",
+      title: "Level 10 Meeting Agenda",
+      description: "Ready-to-use meeting agenda template",
+      type: "Template",
+      duration: "Download",
+      icon: Download,
+      color: "emerald"
+    },
+    {
+      category: "templates",
+      title: "Quarterly Rocks Worksheet",
+      description: "Plan and track your 90-day priorities",
+      type: "Template",
+      duration: "Download",
+      icon: Download,
+      color: "emerald"
+    },
+    {
+      category: "templates",
+      title: "Scorecard Builder",
+      description: "Create your weekly measurables in minutes",
+      type: "Template",
+      duration: "Download",
+      icon: Download,
+      color: "emerald"
+    }
+  ]
+
+  const filteredResources = selectedCategory === "all"
+    ? resources
+    : resources.filter(r => r.category === selectedCategory)
+
   return (
-    <div className="pt-20">
-      {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-slate-50 via-white to-red-50/30">
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="text-center max-w-3xl mx-auto"
-          >
-            <motion.div
-              variants={fadeInUp}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-600 text-sm font-medium mb-6"
-            >
-              <BookOpen className="w-4 h-4" />
-              Resources
-            </motion.div>
-            <motion.h1
-              variants={fadeInUp}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6"
-            >
-              Learn, Grow,{" "}
-              <span className="text-gradient-primary">Succeed</span>
-            </motion.h1>
-            <motion.p
-              variants={fadeInUp}
-              className="text-lg sm:text-xl text-slate-600 leading-relaxed"
-            >
-              Guides, templates, videos, and case studies to help you get the
-              most out of Align and build a world-class team.
-            </motion.p>
-          </motion.div>
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-8">
+              <div className="text-xl font-bold text-slate-900">Align</div>
+              <div className="hidden md:flex items-center gap-6">
+                <a href="#" className="text-sm text-slate-600 hover:text-slate-900">Product</a>
+                <a href="#" className="text-sm text-slate-600 hover:text-slate-900">Solutions</a>
+                <a href="#" className="text-sm text-slate-600 hover:text-slate-900">Learn</a>
+                <a href="#" className="text-sm text-slate-600 hover:text-slate-900">Pricing</a>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm">Log in</Button>
+              <Button size="sm" className="bg-slate-900 hover:bg-slate-800">
+                Get Started Free
+              </Button>
+            </div>
+          </div>
         </div>
-      </section>
+      </nav>
 
-      {/* Featured Resources */}
-      <section className="py-16 bg-white">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-          >
-            <motion.h2
-              variants={fadeInUp}
-              className="text-2xl font-bold text-slate-900 mb-8"
-            >
-              Featured Resources
-            </motion.h2>
+          <motion.div {...fadeInUp} className="text-center max-w-4xl mx-auto space-y-8">
+            <Badge className="bg-purple-100 text-purple-700 border-purple-200">
+              <BookOpen className="w-3 h-3 mr-1" />
+              Learning Center
+            </Badge>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              {featuredResources.map((resource) => (
-                <motion.div
-                  key={resource.title}
-                  variants={fadeInUp}
-                  className="group relative bg-slate-50 rounded-2xl overflow-hidden hover:shadow-lg transition-shadow"
-                >
-                  <div className="aspect-video bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center">
-                    <resource.icon className="w-16 h-16 text-red-300" />
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 text-sm text-red-600 font-medium mb-2">
-                      <resource.icon className="w-4 h-4" />
-                      {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
-                    </div>
-                    <h3 className="text-xl font-semibold text-slate-900 mb-2 group-hover:text-red-600 transition-colors">
-                      {resource.title}
-                    </h3>
-                    <p className="text-slate-600 mb-4">{resource.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-sm text-slate-500">
-                        <Clock className="w-4 h-4" />
-                        {resource.readTime}
-                      </span>
-                      <Link
-                        href={resource.href}
-                        className="flex items-center gap-1 text-red-600 font-medium hover:gap-2 transition-all"
-                      >
-                        Read More
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+            <h1 className="text-5xl lg:text-7xl font-bold text-slate-900 leading-tight">
+              Master EOS with
+              <br />
+              <span className="text-slate-400">expert resources</span>
+            </h1>
+
+            <p className="text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto">
+              Guides, videos, webinars, and templates to help you implement EOS and get the most out of Align.
+            </p>
+
+            <div className="relative max-w-xl mx-auto">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Input
+                type="text"
+                placeholder="Search resources..."
+                className="pl-12 h-14 text-base"
+              />
+            </div>
+
+            <div className="flex items-center justify-center gap-6 pt-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <span className="text-sm text-slate-600">100% free resources</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <span className="text-sm text-slate-600">Expert-created content</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <span className="text-sm text-slate-600">Updated weekly</span>
+              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* All Resources */}
-      <section className="py-16 bg-slate-50">
+      {/* Featured Resources */}
+      <section className="py-20 border-y border-slate-200 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-12">
+            <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200 mb-4">
+              <Star className="w-3 h-3 mr-1" />
+              Featured
+            </Badge>
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+              Start here
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl">
+              Our most popular resources to help you get started with EOS
+            </p>
+          </div>
+
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial="initial"
+            whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
+            className="grid lg:grid-cols-3 gap-8"
           >
-            <motion.div
-              variants={fadeInUp}
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8"
-            >
-              <h2 className="text-2xl font-bold text-slate-900">All Resources</h2>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    className="px-4 py-2 text-sm font-medium rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-red-200 hover:text-red-600 transition-colors"
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
+            {featuredResources.map((resource, index) => (
+              <motion.div
+                key={resource.title}
+                variants={fadeInUp}
+                className="group bg-white rounded-2xl overflow-hidden border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-300 cursor-pointer"
+              >
+                <div className={cn(
+                  "h-48 bg-gradient-to-br flex items-center justify-center text-7xl",
+                  resource.color
+                )}>
+                  {resource.image}
+                </div>
 
-            <motion.div
-              variants={staggerContainer}
-              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {resources.map((resource) => (
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Badge className="bg-slate-100 text-slate-700 text-xs">
+                      {resource.type}
+                    </Badge>
+                    {resource.popular && (
+                      <Badge className="bg-purple-100 text-purple-700 text-xs">
+                        <Star className="w-3 h-3 mr-1" />
+                        Popular
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-semibold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
+                      {resource.title}
+                    </h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      {resource.description}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <Clock className="w-4 h-4" />
+                      {resource.duration}
+                    </div>
+                    <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Category Filters */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap gap-3 mb-12">
+            {categories.map((category) => {
+              const Icon = category.icon
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-6 py-3 rounded-xl border font-medium transition-all",
+                    selectedCategory === category.id
+                      ? "bg-slate-900 border-slate-900 text-white shadow-lg"
+                      : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:shadow-md"
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  {category.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Resource Grid */}
+          <motion.div
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {filteredResources.map((resource, index) => {
+              const Icon = resource.icon
+              return (
                 <motion.div
                   key={resource.title}
                   variants={fadeInUp}
-                  className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all group"
+                  className="group bg-white rounded-xl p-6 border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all duration-300 cursor-pointer"
                 >
-                  <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
-                    <resource.icon className="w-4 h-4" />
-                    <span>
-                      {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
-                    </span>
-                    <span className="text-slate-300">·</span>
-                    <span>{resource.readTime}</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-red-600 transition-colors">
-                    {resource.title}
-                  </h3>
-                  <p className="text-slate-600 text-sm">{resource.description}</p>
-                </motion.div>
-              ))}
-            </motion.div>
+                  <div className="flex items-start gap-4">
+                    <div className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0",
+                      resource.color === "blue" && "bg-blue-100",
+                      resource.color === "purple" && "bg-purple-100",
+                      resource.color === "orange" && "bg-orange-100",
+                      resource.color === "emerald" && "bg-emerald-100"
+                    )}>
+                      <Icon className={cn(
+                        "w-6 h-6",
+                        resource.color === "blue" && "text-blue-600",
+                        resource.color === "purple" && "text-purple-600",
+                        resource.color === "orange" && "text-orange-600",
+                        resource.color === "emerald" && "text-emerald-600"
+                      )} />
+                    </div>
 
-            <motion.div variants={fadeInUp} className="text-center mt-12">
-              <button className="inline-flex items-center gap-2 px-6 py-3 text-red-600 font-medium hover:bg-red-50 rounded-xl transition-colors">
-                Load More Resources
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </motion.div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge className="bg-slate-100 text-slate-700 text-xs">
+                          {resource.type}
+                        </Badge>
+                      </div>
+                      <h3 className="text-base font-semibold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
+                        {resource.title}
+                      </h3>
+                      <p className="text-sm text-slate-600 leading-relaxed mb-3">
+                        {resource.description}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <Clock className="w-3 h-3" />
+                        {resource.duration}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })}
           </motion.div>
         </div>
       </section>
 
-      {/* Upcoming Webinars */}
-      <section className="py-16 bg-white">
+      {/* EOS Academy CTA */}
+      <section className="py-20 bg-slate-50 border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-6"
+            >
+              <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Coming Soon
+              </Badge>
+
+              <h2 className="text-4xl lg:text-5xl font-bold text-slate-900">
+                Introducing
+                <br />
+                <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Align Academy
+                </span>
+              </h2>
+
+              <p className="text-xl text-slate-600 leading-relaxed">
+                Structured courses, live workshops, and certification programs to help you become an EOS expert.
+              </p>
+
+              <div className="space-y-4">
+                {[
+                  "Self-paced courses on every EOS tool",
+                  "Live workshops with expert facilitators",
+                  "Certification programs for implementers",
+                  "Community forum with 10,000+ members"
+                ].map((feature, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <span className="text-slate-700">{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white mt-6">
+                Join Waitlist
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="grid grid-cols-2 gap-6"
+            >
+              {[
+                { icon: Video, label: "50+ Courses", color: "from-blue-400 to-blue-600" },
+                { icon: Users, label: "Live Workshops", color: "from-purple-400 to-purple-600" },
+                { icon: Target, label: "Certification", color: "from-orange-400 to-orange-600" },
+                { icon: MessageSquare, label: "Community", color: "from-emerald-400 to-emerald-600" }
+              ].map((item, index) => {
+                const Icon = item.icon
+                return (
+                  <div
+                    key={item.label}
+                    className="bg-white rounded-2xl p-8 border border-slate-200 text-center"
+                  >
+                    <div className={cn(
+                      "w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center mx-auto mb-4",
+                      item.color
+                    )}>
+                      <Icon className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="font-semibold text-slate-900">{item.label}</div>
+                  </div>
+                )
+              })}
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Support Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+              Need help?
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Our support team is here to help you succeed
+            </p>
+          </div>
+
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial="initial"
+            whileInView="animate"
             viewport={{ once: true }}
             variants={staggerContainer}
+            className="grid md:grid-cols-3 gap-8"
           >
-            <motion.div
-              variants={fadeInUp}
-              className="flex items-center justify-between mb-8"
-            >
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-600 text-sm font-medium mb-2">
-                  <Zap className="w-4 h-4" />
-                  Live Events
-                </div>
-                <h2 className="text-2xl font-bold text-slate-900">
-                  Upcoming Webinars
-                </h2>
-              </div>
-              <Link
-                href="/webinars"
-                className="text-red-600 font-medium hover:text-red-700 flex items-center gap-1"
-              >
-                View All
-                <ExternalLink className="w-4 h-4" />
-              </Link>
-            </motion.div>
-
-            <motion.div
-              variants={staggerContainer}
-              className="grid md:grid-cols-2 gap-6"
-            >
-              {webinars.map((webinar) => (
+            {[
+              {
+                icon: BookOpen,
+                title: "Documentation",
+                description: "Complete guides and API reference",
+                cta: "Browse Docs",
+                color: "blue"
+              },
+              {
+                icon: MessageSquare,
+                title: "Live Chat",
+                description: "Chat with our support team",
+                cta: "Start Chat",
+                color: "purple"
+              },
+              {
+                icon: Headphones,
+                title: "Onboarding Call",
+                description: "Get personalized setup help",
+                cta: "Schedule Call",
+                color: "emerald"
+              }
+            ].map((support, index) => {
+              const Icon = support.icon
+              return (
                 <motion.div
-                  key={webinar.title}
+                  key={support.title}
                   variants={fadeInUp}
-                  className="bg-slate-50 rounded-xl p-6 hover:bg-slate-100 transition-colors"
+                  className="group bg-white rounded-2xl p-8 border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all duration-300 text-center"
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-900 mb-1">
-                        {webinar.title}
-                      </h3>
-                      <p className="text-sm text-slate-500">{webinar.speaker}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-slate-900">
-                        {webinar.date}
-                      </div>
-                      <div className="text-sm text-slate-500">{webinar.time}</div>
-                    </div>
+                  <div className={cn(
+                    "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4",
+                    support.color === "blue" && "bg-blue-100",
+                    support.color === "purple" && "bg-purple-100",
+                    support.color === "emerald" && "bg-emerald-100"
+                  )}>
+                    <Icon className={cn(
+                      "w-8 h-8",
+                      support.color === "blue" && "text-blue-600",
+                      support.color === "purple" && "text-purple-600",
+                      support.color === "emerald" && "text-emerald-600"
+                    )} />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-500">
-                      {webinar.registered} registered
-                    </span>
-                    <button className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
-                      Register Now
-                    </button>
-                  </div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">{support.title}</h3>
+                  <p className="text-slate-600 mb-6">{support.description}</p>
+                  <Button variant="outline" className="w-full group-hover:border-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-all">
+                    {support.cta}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
                 </motion.div>
-              ))}
-            </motion.div>
+              )
+            })}
           </motion.div>
         </div>
       </section>
 
-      {/* Newsletter CTA */}
-      <section className="py-16 bg-slate-900">
+      {/* Final CTA */}
+      <section className="py-20 lg:py-32 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            variants={staggerContainer}
+            className="space-y-8"
           >
-            <motion.h2
-              variants={fadeInUp}
-              className="text-3xl font-bold text-white mb-4"
-            >
-              Stay Updated
-            </motion.h2>
-            <motion.p
-              variants={fadeInUp}
-              className="text-lg text-slate-300 mb-8"
-            >
-              Get the latest guides, tips, and best practices delivered to your
-              inbox.
-            </motion.p>
-            <motion.div
-              variants={fadeInUp}
-              className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
-            >
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none"
-              />
-              <button className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-red-500/25 transition-shadow">
-                Subscribe
-              </button>
-            </motion.div>
+            <h2 className="text-5xl lg:text-6xl font-bold text-white">
+              Ready to get started?
+            </h2>
+            <p className="text-xl text-white/90 max-w-2xl mx-auto">
+              Join 10,000+ teams running on EOS with Align. Free forever for up to 10 users.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 h-14 px-8 text-lg">
+                Get Started Free
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+              <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 h-14 px-8 text-lg">
+                Schedule Demo
+              </Button>
+            </div>
+            <p className="text-white/80 text-sm">
+              No credit card required • Free forever • 2 minute setup
+            </p>
           </motion.div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 border-t border-slate-800 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-5 gap-8 mb-12">
+            <div className="md:col-span-2">
+              <div className="text-xl font-bold text-white mb-4">Align</div>
+              <p className="text-slate-400 text-sm mb-4">
+                The all-in-one EOS platform for scaling companies.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-4">Product</h3>
+              <ul className="space-y-3">
+                {["Features", "Pricing", "Security", "Roadmap"].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-sm text-slate-400 hover:text-white">{item}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-4">Company</h3>
+              <ul className="space-y-3">
+                {["About", "Blog", "Careers", "Contact"].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-sm text-slate-400 hover:text-white">{item}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-4">Resources</h3>
+              <ul className="space-y-3">
+                {["Docs", "API", "Support", "Status"].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-sm text-slate-400 hover:text-white">{item}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-slate-400 text-sm">
+              © 2024 Align. All rights reserved.
+            </p>
+            <div className="flex items-center gap-6">
+              <a href="#" className="text-slate-400 hover:text-white text-sm">Privacy</a>
+              <a href="#" className="text-slate-400 hover:text-white text-sm">Terms</a>
+              <a href="#" className="text-slate-400 hover:text-white text-sm">Cookies</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
