@@ -82,7 +82,7 @@ function InteractiveTeamDemo() {
       <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-gray-500 flex items-center justify-center">
               <Users className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -90,7 +90,7 @@ function InteractiveTeamDemo() {
               <p className="text-sm text-slate-500">3 teams · 10 members</p>
             </div>
           </div>
-          <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
+          <button className="flex items-center gap-2 px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors">
             <UserPlus className="w-4 h-4" />
             Invite
           </button>
@@ -115,7 +115,7 @@ function InteractiveTeamDemo() {
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left",
                     selectedTeam === teamId
-                      ? "bg-blue-50 text-blue-600"
+                      ? "bg-blue-50 text-black"
                       : "hover:bg-slate-50 text-slate-700"
                   )}
                 >
@@ -154,7 +154,7 @@ function InteractiveTeamDemo() {
                               className={cn(
                                 "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white",
                                 member.status === "online"
-                                  ? "bg-emerald-500"
+                                  ? "bg-gray-500"
                                   : member.status === "away"
                                   ? "bg-amber-500"
                                   : "bg-slate-300"
@@ -198,14 +198,14 @@ function InteractiveTeamDemo() {
                       className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
                     >
                       <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-medium">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white font-medium">
                           {member.avatar}
                         </div>
                         <div
                           className={cn(
                             "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-50",
                             member.status === "online"
-                              ? "bg-emerald-500"
+                              ? "bg-gray-500"
                               : member.status === "away"
                               ? "bg-amber-500"
                               : "bg-slate-300"
@@ -236,7 +236,7 @@ function InteractiveTeamDemo() {
                 )}
               </div>
 
-              <button className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-500 hover:border-blue-300 hover:text-blue-600 transition-colors">
+              <button className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-500 hover:border-gray-300 hover:text-black transition-colors">
                 <UserPlus className="w-5 h-5" />
                 Add Team Member
               </button>
@@ -293,7 +293,7 @@ export default function TeamManagementPage() {
       <PageTransition>
       <div className="pt-20">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -303,7 +303,7 @@ export default function TeamManagementPage() {
             >
               <motion.div
                 variants={fadeInUp}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm font-medium mb-6"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-gray-200 text-black text-sm font-medium mb-6"
               >
                 <Users className="w-4 h-4" />
                 Team Management
@@ -328,7 +328,7 @@ export default function TeamManagementPage() {
               >
                 <Link
                   href="/register"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
                 >
                   Try It Free
                   <ArrowRight className="w-5 h-5" />
@@ -402,8 +402,8 @@ export default function TeamManagementPage() {
                 variants={fadeInUp}
                 className="bg-slate-50 rounded-2xl p-8 hover:bg-slate-100 transition-colors"
               >
-                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-4">
+                  <feature.icon className="w-6 h-6 text-black" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-900 mb-2">
                   {feature.title}
@@ -470,7 +470,7 @@ export default function TeamManagementPage() {
                         <CheckCircle
                           className={cn(
                             "w-5 h-5 mx-auto",
-                            perm.view ? "text-emerald-500" : "text-slate-200"
+                            perm.view ? "text-gray-700" : "text-slate-200"
                           )}
                         />
                       </td>
@@ -478,7 +478,7 @@ export default function TeamManagementPage() {
                         <CheckCircle
                           className={cn(
                             "w-5 h-5 mx-auto",
-                            perm.edit ? "text-emerald-500" : "text-slate-200"
+                            perm.edit ? "text-gray-700" : "text-slate-200"
                           )}
                         />
                       </td>
@@ -486,7 +486,7 @@ export default function TeamManagementPage() {
                         <CheckCircle
                           className={cn(
                             "w-5 h-5 mx-auto",
-                            perm.manage ? "text-emerald-500" : "text-slate-200"
+                            perm.manage ? "text-gray-700" : "text-slate-200"
                           )}
                         />
                       </td>
@@ -494,7 +494,7 @@ export default function TeamManagementPage() {
                         <CheckCircle
                           className={cn(
                             "w-5 h-5 mx-auto",
-                            perm.billing ? "text-emerald-500" : "text-slate-200"
+                            perm.billing ? "text-gray-700" : "text-slate-200"
                           )}
                         />
                       </td>
@@ -534,7 +534,7 @@ export default function TeamManagementPage() {
             >
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gray-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
               >
                 Get Started Free
                 <ArrowRight className="w-5 h-5" />

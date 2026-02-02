@@ -83,9 +83,9 @@ function InteractiveAnalyticsDemo() {
   ]
 
   const teamPerformance = [
-    { name: "Engineering", rate: 96, members: 8, color: "bg-emerald-500" },
-    { name: "Product", rate: 92, members: 4, color: "bg-blue-500" },
-    { name: "Marketing", rate: 88, members: 5, color: "bg-purple-500" },
+    { name: "Engineering", rate: 96, members: 8, color: "bg-gray-500" },
+    { name: "Product", rate: 92, members: 4, color: "bg-gray-500" },
+    { name: "Marketing", rate: 88, members: 5, color: "bg-gray-500" },
     { name: "Sales", rate: 85, members: 6, color: "bg-amber-500" },
   ]
 
@@ -95,7 +95,7 @@ function InteractiveAnalyticsDemo() {
       <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-gray-500 flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -156,7 +156,7 @@ function InteractiveAnalyticsDemo() {
                 <span
                   className={cn(
                     "text-sm font-medium flex items-center gap-0.5",
-                    metric.trend === "up" ? "text-emerald-600" : "text-red-600"
+                    metric.trend === "up" ? "text-black" : "text-black"
                   )}
                 >
                   {metric.trend === "up" ? (
@@ -187,7 +187,7 @@ function InteractiveAnalyticsDemo() {
                   initial={{ height: 0 }}
                   animate={{ height: `${d.value}%` }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="w-full bg-gradient-to-t from-purple-500 to-purple-400 rounded-t-lg relative group"
+                  className="w-full bg-gray-600 rounded-t-lg relative group"
                 >
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
                     {d.value}%
@@ -287,7 +287,7 @@ export default function AnalyticsPage() {
       <PageTransition>
       <div className="pt-20">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -297,7 +297,7 @@ export default function AnalyticsPage() {
             >
               <motion.div
                 variants={fadeInUp}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 border border-purple-100 text-purple-600 text-sm font-medium mb-6"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 border border-gray-200 text-black text-sm font-medium mb-6"
               >
                 <BarChart3 className="w-4 h-4" />
                 Analytics & Insights
@@ -322,7 +322,7 @@ export default function AnalyticsPage() {
               >
                 <Link
                   href="/register"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
                 >
                   Try It Free
                   <ArrowRight className="w-5 h-5" />
@@ -396,8 +396,8 @@ export default function AnalyticsPage() {
                 variants={fadeInUp}
                 className="bg-slate-50 rounded-2xl p-8 hover:bg-slate-100 transition-colors"
               >
-                <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-4">
+                  <feature.icon className="w-6 h-6 text-black" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-900 mb-2">
                   {feature.title}
@@ -421,7 +421,7 @@ export default function AnalyticsPage() {
             >
               <motion.div
                 variants={fadeInUp}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm font-medium mb-6"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-500/10 border border-purple-500/20 text-gray-400 text-sm font-medium mb-6"
               >
                 <Zap className="w-4 h-4" />
                 AI-Powered Insights
@@ -451,8 +451,8 @@ export default function AnalyticsPage() {
                     variants={fadeInUp}
                     className="flex items-center gap-3"
                   >
-                    <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center">
-                      <CheckCircle className="w-4 h-4 text-purple-400" />
+                    <div className="w-6 h-6 rounded-full bg-gray-500/20 flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-gray-400" />
                     </div>
                     <span className="text-slate-200">{item}</span>
                   </motion.li>
@@ -476,10 +476,10 @@ export default function AnalyticsPage() {
                   className={cn(
                     "p-4 rounded-xl border",
                     insight.type === "success"
-                      ? "bg-emerald-500/10 border-emerald-500/20"
+                      ? "bg-gray-500/10 border-emerald-500/20"
                       : insight.type === "warning"
                       ? "bg-amber-500/10 border-amber-500/20"
-                      : "bg-blue-500/10 border-blue-500/20"
+                      : "bg-gray-500/10 border-blue-500/20"
                   )}
                 >
                   <div className="flex items-start gap-3">
@@ -487,18 +487,18 @@ export default function AnalyticsPage() {
                       className={cn(
                         "w-8 h-8 rounded-lg flex items-center justify-center",
                         insight.type === "success"
-                          ? "bg-emerald-500/20"
+                          ? "bg-gray-500/20"
                           : insight.type === "warning"
                           ? "bg-amber-500/20"
-                          : "bg-blue-500/20"
+                          : "bg-gray-500/20"
                       )}
                     >
                       {insight.type === "success" ? (
-                        <TrendingUp className="w-4 h-4 text-emerald-400" />
+                        <TrendingUp className="w-4 h-4 text-gray-400" />
                       ) : insight.type === "warning" ? (
                         <TrendingDown className="w-4 h-4 text-amber-400" />
                       ) : (
-                        <Target className="w-4 h-4 text-blue-400" />
+                        <Target className="w-4 h-4 text-gray-400" />
                       )}
                     </div>
                     <div>
@@ -542,7 +542,7 @@ export default function AnalyticsPage() {
             >
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gray-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
               >
                 Get Started Free
                 <ArrowRight className="w-5 h-5" />

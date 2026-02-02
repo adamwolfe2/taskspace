@@ -218,7 +218,7 @@ export default function EODReportsPage() {
                   "Managers have no visibility into team progress",
                 ].map((problem, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <X className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{problem}</span>
                   </motion.div>
                 ))}
@@ -252,7 +252,7 @@ export default function EODReportsPage() {
                   "Team dashboard updated automatically",
                 ].map((solution, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-gray-700 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{solution}</span>
                   </motion.div>
                 ))}

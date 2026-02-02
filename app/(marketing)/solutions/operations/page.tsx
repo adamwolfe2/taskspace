@@ -79,7 +79,7 @@ export default function OperationsPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Column - Content */}
             <motion.div {...fadeInUp} className="space-y-8">
-              <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+              <Badge className="bg-gray-100 text-gray-700 border-blue-200">
                 <Settings className="w-3 h-3 mr-1" />
                 Operations
               </Badge>
@@ -171,7 +171,7 @@ export default function OperationsPage() {
                         <h3 className="text-lg font-semibold text-slate-900">Operational Metrics</h3>
                         <p className="text-sm text-slate-500">Week of Feb 1-7</p>
                       </div>
-                      <Badge className="bg-emerald-100 text-emerald-700">
+                      <Badge className="bg-gray-100 text-gray-700">
                         <TrendingUp className="w-3 h-3 mr-1" />
                         98% on target
                       </Badge>
@@ -186,7 +186,7 @@ export default function OperationsPage() {
                           className={cn(
                             "flex-1 px-4 py-2 rounded-lg border text-sm font-medium transition-all",
                             selectedMetric === key
-                              ? "bg-blue-50 border-blue-200 text-blue-700"
+                              ? "bg-blue-50 border-blue-200 text-gray-700"
                               : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300"
                           )}
                         >
@@ -199,8 +199,8 @@ export default function OperationsPage() {
                     <div className={cn(
                       "p-6 rounded-xl",
                       metrics[selectedMetric as keyof typeof metrics].status === "success"
-                        ? "bg-emerald-50 border border-emerald-200"
-                        : "bg-orange-50 border border-orange-200"
+                        ? "bg-gray-50 border border-gray-200"
+                        : "bg-gray-50 border border-gray-200"
                     )}>
                       <div className="flex items-start justify-between mb-4">
                         <div>
@@ -220,13 +220,13 @@ export default function OperationsPage() {
                       <div className="flex items-center gap-2">
                         {metrics[selectedMetric as keyof typeof metrics].status === "success" ? (
                           <>
-                            <TrendingUp className="w-5 h-5 text-emerald-600" />
-                            <span className="text-sm font-medium text-emerald-700">Above target - great work!</span>
+                            <TrendingUp className="w-5 h-5 text-black" />
+                            <span className="text-sm font-medium text-gray-700">Above target - great work!</span>
                           </>
                         ) : (
                           <>
-                            <AlertCircle className="w-5 h-5 text-orange-600" />
-                            <span className="text-sm font-medium text-orange-700">Below target - needs attention</span>
+                            <AlertCircle className="w-5 h-5 text-black" />
+                            <span className="text-sm font-medium text-gray-700">Below target - needs attention</span>
                           </>
                         )}
                       </div>
@@ -242,7 +242,7 @@ export default function OperationsPage() {
                         <div key={process.name} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
                           <div className={cn(
                             "w-2 h-2 rounded-full",
-                            process.status === "on-track" ? "bg-emerald-500" : "bg-orange-500"
+                            process.status === "on-track" ? "bg-gray-500" : "bg-orange-500"
                           )} />
                           <div className="flex-1">
                             <div className="text-sm font-medium text-slate-900">{process.name}</div>
@@ -285,7 +285,7 @@ export default function OperationsPage() {
             className="text-center mb-16"
           >
             <motion.div variants={fadeInUp}>
-              <Badge className="bg-purple-100 text-purple-700 border-purple-200 mb-4">
+              <Badge className="bg-gray-100 text-gray-700 border-purple-200 mb-4">
                 <Brain className="w-3 h-3 mr-1" />
                 AI-Powered Operations
               </Badge>
@@ -312,28 +312,28 @@ export default function OperationsPage() {
                 name: "Process Agent",
                 description: "Monitors SOPs and workflows, alerts when deviations occur, suggests process improvements",
                 icon: Settings,
-                color: "from-blue-400 to-blue-600",
+                color: "from-gray-400 to-gray-600",
                 stats: "Reduced errors by 42%"
               },
               {
                 name: "Resource Agent",
                 description: "Tracks capacity and utilization, predicts bottlenecks, optimizes allocation",
                 icon: Users,
-                color: "from-emerald-400 to-emerald-600",
+                color: "from-gray-400 to-gray-600",
                 stats: "15% efficiency gain"
               },
               {
                 name: "Quality Agent",
                 description: "Analyzes quality metrics, flags trends early, recommends corrective actions",
                 icon: Shield,
-                color: "from-purple-400 to-purple-600",
+                color: "from-gray-400 to-gray-600",
                 stats: "99.2% quality score"
               },
               {
                 name: "Efficiency Agent",
                 description: "Identifies waste and delays, suggests automation opportunities, tracks improvements",
                 icon: Zap,
-                color: "from-orange-400 to-orange-600",
+                color: "from-gray-400 to-gray-600",
                 stats: "23hrs saved per week"
               }
             ].map((agent, index) => (
@@ -361,7 +361,7 @@ export default function OperationsPage() {
                   </div>
 
                   <div className="pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                    <a href="#" className="text-sm font-medium text-black hover:text-gray-700 flex items-center gap-1">
                       Learn more
                       <ChevronRight className="w-3 h-3" />
                     </a>
@@ -386,7 +386,7 @@ export default function OperationsPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <Badge className="bg-red-100 text-red-700 border-red-200 mb-4">
+              <Badge className="bg-gray-100 text-gray-700 border-red-200 mb-4">
                 <AlertCircle className="w-3 h-3 mr-1" />
                 The Problem
               </Badge>
@@ -403,7 +403,7 @@ export default function OperationsPage() {
                 ].map((problem, index) => (
                   <div key={index} className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <AlertCircle className="w-4 h-4 text-red-600" />
+                      <AlertCircle className="w-4 h-4 text-black" />
                     </div>
                     <p className="text-slate-700">{problem}</p>
                   </div>
@@ -417,7 +417,7 @@ export default function OperationsPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 mb-4">
+              <Badge className="bg-gray-100 text-gray-700 border-emerald-200 mb-4">
                 <CheckCircle className="w-3 h-3 mr-1" />
                 The Solution
               </Badge>
@@ -433,8 +433,8 @@ export default function OperationsPage() {
                   "Scorecard integration ties daily work to company goals"
                 ].map((solution, index) => (
                   <div key={index} className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <CheckCircle className="w-4 h-4 text-black" />
                     </div>
                     <p className="text-slate-700">{solution}</p>
                   </div>
@@ -455,7 +455,7 @@ export default function OperationsPage() {
               viewport={{ once: true }}
               className="space-y-6"
             >
-              <Badge className="bg-blue-100 text-blue-700">
+              <Badge className="bg-gray-100 text-gray-700">
                 <FileText className="w-3 h-3 mr-1" />
                 Process Documentation
               </Badge>
@@ -489,8 +489,8 @@ export default function OperationsPage() {
                   }
                 ].map((feature) => (
                   <div key={feature.title} className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <feature.icon className="w-5 h-5 text-blue-600" />
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <feature.icon className="w-5 h-5 text-black" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-1">{feature.title}</h3>
@@ -515,7 +515,7 @@ export default function OperationsPage() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-slate-900">Order Fulfillment SOP</h3>
-                  <Badge className="bg-blue-100 text-blue-700">v2.1</Badge>
+                  <Badge className="bg-gray-100 text-gray-700">v2.1</Badge>
                 </div>
 
                 <div className="space-y-3">
@@ -538,8 +538,8 @@ export default function OperationsPage() {
                     >
                       <div className={cn(
                         "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0",
-                        item.status === "complete" && "bg-emerald-500",
-                        item.status === "in-progress" && "bg-blue-500",
+                        item.status === "complete" && "bg-gray-500",
+                        item.status === "in-progress" && "bg-gray-500",
                         item.status === "pending" && "bg-slate-300"
                       )}>
                         {item.status === "complete" && <CheckCircle className="w-4 h-4 text-white" />}
@@ -561,7 +561,7 @@ export default function OperationsPage() {
                     <span className="font-semibold text-slate-900">50% complete</span>
                   </div>
                   <div className="mt-2 h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full w-1/2 bg-gradient-to-r from-blue-500 to-cyan-500" />
+                    <div className="h-full w-1/2 bg-gray-600" />
                   </div>
                 </div>
               </div>
@@ -595,9 +595,9 @@ export default function OperationsPage() {
                       <div className="flex items-center gap-2">
                         <Badge className={cn(
                           "text-xs",
-                          dept.color === "emerald" && "bg-emerald-100 text-emerald-700",
-                          dept.color === "orange" && "bg-orange-100 text-orange-700",
-                          dept.color === "red" && "bg-red-100 text-red-700"
+                          dept.color === "emerald" && "bg-gray-100 text-gray-700",
+                          dept.color === "orange" && "bg-gray-100 text-gray-700",
+                          dept.color === "red" && "bg-gray-100 text-gray-700"
                         )}>
                           {dept.available}% available
                         </Badge>
@@ -608,9 +608,9 @@ export default function OperationsPage() {
                       <div
                         className={cn(
                           "h-full",
-                          dept.color === "emerald" && "bg-gradient-to-r from-emerald-500 to-emerald-600",
-                          dept.color === "orange" && "bg-gradient-to-r from-orange-500 to-orange-600",
-                          dept.color === "red" && "bg-gradient-to-r from-red-500 to-red-600"
+                          dept.color === "emerald" && "bg-gray-600",
+                          dept.color === "orange" && "bg-gray-600",
+                          dept.color === "red" && "bg-gray-600"
                         )}
                         style={{ width: `${dept.capacity}%` }}
                       />
@@ -619,11 +619,11 @@ export default function OperationsPage() {
                 ))}
 
                 <div className="pt-4 border-t border-slate-200">
-                  <div className="flex items-start gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                    <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <AlertCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <div className="text-sm">
                       <div className="font-medium text-orange-900 mb-1">Capacity Alert</div>
-                      <div className="text-orange-700">Customer Service team at 95% capacity. Consider reallocating resources or hiring.</div>
+                      <div className="text-gray-700">Customer Service team at 95% capacity. Consider reallocating resources or hiring.</div>
                     </div>
                   </div>
                 </div>
@@ -638,7 +638,7 @@ export default function OperationsPage() {
                     <div className="text-xs text-slate-500">Avg Utilization</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-emerald-600">+12%</div>
+                    <div className="text-2xl font-bold text-black">+12%</div>
                     <div className="text-xs text-slate-500">Efficiency</div>
                   </div>
                 </div>
@@ -651,7 +651,7 @@ export default function OperationsPage() {
               viewport={{ once: true }}
               className="space-y-6 order-1 lg:order-2"
             >
-              <Badge className="bg-emerald-100 text-emerald-700">
+              <Badge className="bg-gray-100 text-gray-700">
                 <Users className="w-3 h-3 mr-1" />
                 Resource Management
               </Badge>
@@ -685,8 +685,8 @@ export default function OperationsPage() {
                   }
                 ].map((feature) => (
                   <div key={feature.title} className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <feature.icon className="w-5 h-5 text-emerald-600" />
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <feature.icon className="w-5 h-5 text-black" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-1">{feature.title}</h3>
@@ -715,7 +715,7 @@ export default function OperationsPage() {
               viewport={{ once: true }}
               className="space-y-6"
             >
-              <Badge className="bg-purple-100 text-purple-700">
+              <Badge className="bg-gray-100 text-gray-700">
                 <BarChart3 className="w-3 h-3 mr-1" />
                 Operational Metrics
               </Badge>
@@ -749,8 +749,8 @@ export default function OperationsPage() {
                   }
                 ].map((feature) => (
                   <div key={feature.title} className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                      <feature.icon className="w-5 h-5 text-purple-600" />
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <feature.icon className="w-5 h-5 text-black" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-1">{feature.title}</h3>
@@ -775,7 +775,7 @@ export default function OperationsPage() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-slate-900">This Week's Metrics</h3>
-                  <Badge className="bg-emerald-100 text-emerald-700">
+                  <Badge className="bg-gray-100 text-gray-700">
                     5/6 on track
                   </Badge>
                 </div>
@@ -799,9 +799,9 @@ export default function OperationsPage() {
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-slate-900">{item.metric}</span>
                       {item.status === "success" ? (
-                        <CheckCircle className="w-5 h-5 text-emerald-600" />
+                        <CheckCircle className="w-5 h-5 text-black" />
                       ) : (
-                        <AlertCircle className="w-5 h-5 text-orange-600" />
+                        <AlertCircle className="w-5 h-5 text-black" />
                       )}
                     </div>
                     <div className="flex items-center justify-between">
@@ -812,11 +812,11 @@ export default function OperationsPage() {
                 ))}
 
                 <div className="pt-4 border-t border-slate-200">
-                  <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <Brain className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <Brain className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <div className="text-sm">
                       <div className="font-medium text-blue-900 mb-1">AI Insight</div>
-                      <div className="text-blue-700">Inventory Accuracy trending down. Review receiving process before next week.</div>
+                      <div className="text-gray-700">Inventory Accuracy trending down. Review receiving process before next week.</div>
                     </div>
                   </div>
                 </div>
@@ -839,7 +839,7 @@ export default function OperationsPage() {
             <motion.h2 variants={fadeInUp} className="text-4xl lg:text-5xl font-bold text-white mb-6">
               Operations teams love
               <br />
-              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="text-black">
                 measurable results
               </span>
             </motion.h2>
@@ -859,7 +859,7 @@ export default function OperationsPage() {
               { value: "15%", label: "Efficiency improvement" }
             ].map((stat, index) => (
               <motion.div key={index} variants={fadeInUp} className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold text-black mb-2">
                   {stat.value}
                 </div>
                 <div className="text-slate-400">{stat.label}</div>
@@ -922,7 +922,7 @@ export default function OperationsPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500">
+      <section className="py-20 lg:py-32 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

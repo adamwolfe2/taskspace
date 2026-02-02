@@ -52,8 +52,8 @@ export default function LeadershipSolutionPage() {
               variants={staggerContainer}
               className="space-y-6"
             >
-              <motion.div variants={fadeInUp}>
-                <Badge className="bg-purple-50 text-purple-600 border-purple-200 mb-4">
+              <parameter>
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   <Award className="w-4 h-4 mr-1" />
                   FOR LEADERSHIP TEAMS
                 </Badge>
@@ -119,12 +119,12 @@ export default function LeadershipSolutionPage() {
               <div className="relative">
                 {/* Back layer - Scorecard */}
                 <div className="absolute top-8 -right-4 w-[85%] bg-white rounded-xl shadow-xl border border-slate-200 p-4 rotate-3 opacity-80">
-                  <div className="h-32 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg" />
+                  <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg" />
                 </div>
 
                 {/* Middle layer - Rocks */}
                 <div className="absolute top-4 right-0 w-[85%] bg-white rounded-xl shadow-xl border border-slate-200 p-4 -rotate-2 opacity-90">
-                  <div className="h-32 bg-gradient-to-br from-red-50 to-orange-50 rounded-lg" />
+                  <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg" />
                 </div>
 
                 {/* Front layer - Dashboard */}
@@ -132,16 +132,16 @@ export default function LeadershipSolutionPage() {
                   <div className="p-6 space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-bold text-slate-900">Leadership Dashboard</h3>
-                      <Badge className="bg-emerald-500 text-white border-0">All Systems Go</Badge>
+                      <Badge className="bg-gray-600 text-white border-0">All Systems Go</Badge>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-                        <div className="text-3xl font-bold text-emerald-600">94%</div>
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="text-3xl font-bold text-black">94%</div>
                         <div className="text-xs text-slate-600 mt-1">Rocks On Track</div>
                       </div>
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <div className="text-3xl font-bold text-blue-600">8/8</div>
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="text-3xl font-bold text-black">8/8</div>
                         <div className="text-xs text-slate-600 mt-1">EODs Today</div>
                       </div>
                     </div>
@@ -149,11 +149,11 @@ export default function LeadershipSolutionPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <span className="text-sm font-medium text-slate-900">Q1 Revenue Rock</span>
-                        <Badge className="bg-emerald-100 text-emerald-700 text-xs">85%</Badge>
+                        <Badge className="bg-gray-100 text-gray-700 text-xs">85%</Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <span className="text-sm font-medium text-slate-900">Product Launch</span>
-                        <Badge className="bg-emerald-100 text-emerald-700 text-xs">72%</Badge>
+                        <Badge className="bg-gray-100 text-gray-700 text-xs">72%</Badge>
                       </div>
                     </div>
                   </div>
@@ -182,7 +182,7 @@ export default function LeadershipSolutionPage() {
       <section className="py-20 lg:py-32 bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <Badge className="bg-purple-600 text-white mb-6">
+            <Badge className="bg-black text-white mb-6">
               <Brain className="w-4 h-4 mr-1" />
               AI AGENTS FOR LEADERSHIP
             </Badge>
@@ -196,22 +196,22 @@ export default function LeadershipSolutionPage() {
               {
                 name: "Goal Reminder Agent",
                 description: "Automatically reminds team members of quarterly rock deadlines and milestones",
-                color: "from-purple-400 to-purple-600",
+                color: "from-gray-400 to-gray-600",
               },
               {
                 name: "Alignment Agent",
                 description: "Detects when department goals drift from company vision and alerts leadership",
-                color: "from-blue-400 to-blue-600",
+                color: "from-gray-400 to-gray-600",
               },
               {
                 name: "Key Results Agent",
                 description: "Tracks KPIs across all departments and flags metrics trending off-target",
-                color: "from-emerald-400 to-emerald-600",
+                color: "from-gray-400 to-gray-600",
               },
               {
                 name: "Status Update Agent",
                 description: "Compiles weekly leadership summaries from all EODs and rock progress",
-                color: "from-orange-400 to-orange-600",
+                color: "from-gray-400 to-gray-600",
               },
             ].map((agent, i) => (
               <motion.div
@@ -235,7 +235,7 @@ export default function LeadershipSolutionPage() {
 
           <div className="text-center mt-12">
             <Link href="/app?page=register">
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-8">
+              <Button className="bg-black hover:bg-gray-900 text-white rounded-full px-8">
                 Explore AI Agents
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -249,7 +249,7 @@ export default function LeadershipSolutionPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-red-50 text-red-600 border-red-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Target className="w-4 h-4 mr-1" />
                 VISION/TRACTION
               </Badge>
@@ -271,7 +271,7 @@ export default function LeadershipSolutionPage() {
                   "Core Values embedded in every process",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -279,23 +279,23 @@ export default function LeadershipSolutionPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-8 border border-red-100">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <div className="text-center pb-4 border-b border-slate-200">
                     <h3 className="text-2xl font-bold text-slate-900">Vision/Traction Organizer</h3>
                     <p className="text-sm text-slate-600 mt-1">Q1 2026</p>
                   </div>
                   <div className="space-y-3">
-                    <div className="p-3 bg-red-50 rounded-lg">
-                      <div className="text-xs font-semibold text-red-600 uppercase mb-1">Core Focus</div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="text-xs font-semibold text-black uppercase mb-1">Core Focus</div>
                       <div className="text-sm font-medium text-slate-900">Help companies run on EOS</div>
                     </div>
-                    <div className="p-3 bg-orange-50 rounded-lg">
-                      <div className="text-xs font-semibold text-orange-600 uppercase mb-1">10-Year Target</div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="text-xs font-semibold text-black uppercase mb-1">10-Year Target</div>
                       <div className="text-sm font-medium text-slate-900">10,000 companies on Taskspace</div>
                     </div>
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <div className="text-xs font-semibold text-blue-600 uppercase mb-1">1-Year Plan</div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="text-xs font-semibold text-black uppercase mb-1">1-Year Plan</div>
                       <div className="text-sm font-medium text-slate-900">1,000 paying customers</div>
                     </div>
                   </div>
@@ -327,7 +327,7 @@ export default function LeadershipSolutionPage() {
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-slate-900">{row.actual}</div>
-                        <TrendingUp className="w-4 h-4 text-emerald-600 inline-block" />
+                        <TrendingUp className="w-4 h-4 text-black inline-block" />
                       </div>
                     </div>
                   ))}
@@ -336,7 +336,7 @@ export default function LeadershipSolutionPage() {
             </div>
 
             <div className="order-1 lg:order-2 space-y-6">
-              <Badge className="bg-blue-50 text-blue-600 border-blue-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <BarChart3 className="w-4 h-4 mr-1" />
                 SCORECARD
               </Badge>
@@ -358,7 +358,7 @@ export default function LeadershipSolutionPage() {
                   "Integration with Level 10 meeting agenda",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -373,7 +373,7 @@ export default function LeadershipSolutionPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-purple-50 text-purple-600 border-purple-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Calendar className="w-4 h-4 mr-1" />
                 LEVEL 10 MEETINGS
               </Badge>
@@ -396,7 +396,7 @@ export default function LeadershipSolutionPage() {
                   "Meeting notes and action items captured",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -404,11 +404,11 @@ export default function LeadershipSolutionPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-100">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-slate-900">Level 10 Agenda</h3>
-                    <Badge className="bg-purple-100 text-purple-700">90 min</Badge>
+                    <Badge className="bg-gray-100 text-gray-700">90 min</Badge>
                   </div>
                   <div className="space-y-3">
                     {[
@@ -424,8 +424,8 @@ export default function LeadershipSolutionPage() {
                         key={i}
                         className={cn(
                           "flex items-center justify-between p-3 rounded-lg",
-                          item.status === "done" && "bg-emerald-50 border border-emerald-200",
-                          item.status === "current" && "bg-purple-50 border border-purple-200",
+                          item.status === "done" && "bg-gray-50 border border-gray-200",
+                          item.status === "current" && "bg-gray-50 border border-gray-200",
                           item.status === "upcoming" && "bg-slate-50 border border-slate-200"
                         )}
                       >
@@ -458,7 +458,7 @@ export default function LeadershipSolutionPage() {
               { value: "100%", label: "Visibility into company health" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold text-black mb-2">
                   {stat.value}
                 </div>
                 <div className="text-slate-600">{stat.label}</div>
@@ -503,7 +503,7 @@ export default function LeadershipSolutionPage() {
                 </div>
                 <p className="text-white/90 mb-6 leading-relaxed">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-600" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
                   <div>
                     <div className="font-semibold text-white">{testimonial.author}</div>
                     <div className="text-sm text-white/60">{testimonial.role}</div>
@@ -516,7 +516,7 @@ export default function LeadershipSolutionPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500">
+      <section className="py-20 lg:py-32 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Award className="w-20 h-20 text-white mx-auto mb-6" />
           <h2 className="text-5xl font-bold text-white mb-6">

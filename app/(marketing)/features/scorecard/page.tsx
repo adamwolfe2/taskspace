@@ -121,7 +121,7 @@ export default function ScorecardPage() {
                           className={cn(
                             "px-3 py-1 text-xs font-medium rounded-lg transition-all",
                             selectedWeek === week
-                              ? "bg-blue-600 text-white"
+                              ? "bg-black text-white"
                               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                           )}
                         >
@@ -162,9 +162,9 @@ export default function ScorecardPage() {
                             <div className="text-right">
                               <div className="text-xl font-bold text-slate-900">{weekValue}</div>
                               {isOnTarget ? (
-                                <TrendingUp className="w-4 h-4 text-emerald-600 inline-block" />
+                                <TrendingUp className="w-4 h-4 text-black inline-block" />
                               ) : (
-                                <TrendingDown className="w-4 h-4 text-orange-600 inline-block" />
+                                <TrendingDown className="w-4 h-4 text-black inline-block" />
                               )}
                             </div>
                           </div>
@@ -176,7 +176,7 @@ export default function ScorecardPage() {
                   <div className="pt-4 border-t border-slate-200">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-600">Overall Health:</span>
-                      <Badge className="bg-emerald-100 text-emerald-700">3/4 On Target</Badge>
+                      <Badge className="bg-gray-100 text-gray-700">3/4 On Target</Badge>
                     </div>
                   </div>
                 </div>
@@ -231,7 +231,7 @@ export default function ScorecardPage() {
                   "Leaders fly blind between quarterly reviews",
                 ].map((problem, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <X className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{problem}</span>
                   </motion.div>
                 ))}
@@ -265,7 +265,7 @@ export default function ScorecardPage() {
                   "Clear owners and targets for every metric",
                 ].map((solution, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-gray-700 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{solution}</span>
                   </motion.div>
                 ))}
@@ -380,16 +380,16 @@ export default function ScorecardPage() {
                   </Badge>
                 </div>
                 <div className="space-y-3">
-                  <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                     <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <AlertCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <p className="font-semibold text-slate-900 text-sm mb-1">Declining Trend Detected</p>
                         <p className="text-xs text-slate-600 mb-2">
                           "Customer Churn" has been above target for 2 consecutive weeks
                         </p>
                         <div className="flex gap-2">
-                          <Button size="sm" className="h-7 text-xs bg-red-600 hover:bg-red-700 text-white">
+                          <Button size="sm" className="h-7 text-xs bg-black hover:bg-gray-900 text-white">
                             Escalate to IDS
                           </Button>
                           <Button size="sm" variant="outline" className="h-7 text-xs">
@@ -400,9 +400,9 @@ export default function ScorecardPage() {
                     </div>
                   </div>
 
-                  <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                     <div className="flex items-start gap-3">
-                      <TrendingDown className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                      <TrendingDown className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <p className="font-semibold text-slate-900 text-sm mb-1">Velocity Slowdown</p>
                         <p className="text-xs text-slate-600">
@@ -412,9 +412,9 @@ export default function ScorecardPage() {
                     </div>
                   </div>
 
-                  <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                     <div className="flex items-start gap-3">
-                      <TrendingUp className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <TrendingUp className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <p className="font-semibold text-slate-900 text-sm mb-1">Positive Momentum</p>
                         <p className="text-xs text-slate-600">
@@ -510,22 +510,22 @@ export default function ScorecardPage() {
                       5 Minutes • Week of Jan 27
                     </div>
 
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-slate-900">Revenue</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-emerald-600">$112k</span>
-                          <TrendingUp className="w-4 h-4 text-emerald-600" />
+                          <span className="text-sm font-bold text-black">$112k</span>
+                          <TrendingUp className="w-4 h-4 text-black" />
                         </div>
                       </div>
                     </div>
 
-                    <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-slate-900">Churn Rate</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-orange-600">2.5%</span>
-                          <AlertCircle className="w-4 h-4 text-orange-600" />
+                          <span className="text-sm font-bold text-black">2.5%</span>
+                          <AlertCircle className="w-4 h-4 text-black" />
                         </div>
                       </div>
                       <Button size="sm" variant="outline" className="w-full mt-2 h-7 text-xs">
@@ -533,12 +533,12 @@ export default function ScorecardPage() {
                       </Button>
                     </div>
 
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-slate-900">NPS Score</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-emerald-600">49</span>
-                          <TrendingUp className="w-4 h-4 text-emerald-600" />
+                          <span className="text-sm font-bold text-black">49</span>
+                          <TrendingUp className="w-4 h-4 text-black" />
                         </div>
                       </div>
                     </div>

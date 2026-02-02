@@ -45,25 +45,25 @@ export default function AccountabilityChartPage() {
       title: "CEO / Visionary",
       responsibilities: ["Vision", "Major Relationships", "Culture", "Strategy"],
       icon: Crown,
-      color: "from-purple-400 to-purple-600"
+      color: "from-gray-400 to-gray-600"
     },
     integrator: {
       title: "Integrator",
       responsibilities: ["Day-to-day Operations", "Leadership Team", "Execute Vision", "P&L Accountability"],
       icon: Shield,
-      color: "from-blue-400 to-blue-600"
+      color: "from-gray-400 to-gray-600"
     },
     sales: {
       title: "Head of Sales",
       responsibilities: ["Revenue", "Customer Acquisition", "Sales Team", "Quota Management"],
       icon: TrendingUp,
-      color: "from-emerald-400 to-emerald-600"
+      color: "from-gray-400 to-gray-600"
     },
     marketing: {
       title: "Head of Marketing",
       responsibilities: ["Brand", "Lead Generation", "Marketing Team", "Content Strategy"],
       icon: Briefcase,
-      color: "from-orange-400 to-orange-600"
+      color: "from-gray-400 to-gray-600"
     },
   }
 
@@ -146,7 +146,7 @@ export default function AccountabilityChartPage() {
                       className={cn(
                         "p-4 rounded-xl border-2 transition-all",
                         selectedRole === 'ceo'
-                          ? "border-purple-300 bg-purple-50 shadow-lg"
+                          ? "border-gray-300 bg-gray-50 shadow-lg"
                           : "border-slate-200 bg-white hover:border-slate-300"
                       )}
                     >
@@ -174,7 +174,7 @@ export default function AccountabilityChartPage() {
                       className={cn(
                         "p-4 rounded-xl border-2 transition-all",
                         selectedRole === 'integrator'
-                          ? "border-blue-300 bg-blue-50 shadow-lg"
+                          ? "border-gray-300 bg-gray-50 shadow-lg"
                           : "border-slate-200 bg-white hover:border-slate-300"
                       )}
                     >
@@ -206,7 +206,7 @@ export default function AccountabilityChartPage() {
                           className={cn(
                             "p-3 rounded-xl border-2 transition-all",
                             selectedRole === key
-                              ? "border-emerald-300 bg-emerald-50 shadow-lg"
+                              ? "border-gray-300 bg-gray-50 shadow-lg"
                               : "border-slate-200 bg-white hover:border-slate-300"
                           )}
                         >
@@ -298,7 +298,7 @@ export default function AccountabilityChartPage() {
                   "Performance reviews lack clear criteria",
                 ].map((problem, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <X className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{problem}</span>
                   </motion.div>
                 ))}
@@ -332,7 +332,7 @@ export default function AccountabilityChartPage() {
                   "Accountability linked to rocks and metrics",
                 ].map((solution, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-gray-700 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{solution}</span>
                   </motion.div>
                 ))}
@@ -384,10 +384,10 @@ export default function AccountabilityChartPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gray-50 rounded-2xl p-8 border border-blue-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
                       <TrendingUp className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -405,8 +405,8 @@ export default function AccountabilityChartPage() {
                       "Pipeline Management",
                       "Quota Attainment"
                     ].map((role, i) => (
-                      <div key={i} className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                        <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">
+                      <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold">
                           {i + 1}
                         </div>
                         <span className="text-sm font-medium text-slate-900">{role}</span>
@@ -417,7 +417,7 @@ export default function AccountabilityChartPage() {
                   <div className="pt-4 border-t border-slate-200">
                     <div className="text-xs text-slate-600 mb-2">Person in Seat:</div>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600" />
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
                       <div>
                         <div className="font-semibold text-slate-900">Michael Rodriguez</div>
                         <div className="text-xs text-slate-500">GWC: ✓✓✓ (Right Person, Right Seat)</div>
@@ -453,7 +453,7 @@ export default function AccountabilityChartPage() {
                         <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                           <span className="text-sm font-medium text-slate-900">{item.value}</span>
                           <Badge className={cn(
-                            item.rating === "+" ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
+                            item.rating === "+" ? "bg-gray-100 text-gray-700" : "bg-gray-100 text-gray-700"
                           )}>
                             {item.rating}
                           </Badge>
@@ -483,7 +483,7 @@ export default function AccountabilityChartPage() {
                   </div>
 
                   <div className="pt-4">
-                    <Badge className="bg-emerald-100 text-emerald-700 w-full justify-center py-2">
+                    <Badge className="bg-gray-100 text-gray-700 w-full justify-center py-2">
                       ✓ Right Person, Right Seat
                     </Badge>
                   </div>
@@ -529,7 +529,7 @@ export default function AccountabilityChartPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-emerald-50 text-black font-bold border-emerald-200">
+              <Badge className="bg-gray-50 text-black font-bold border-gray-200">
                 <Building2 className="w-4 h-4 mr-1" />
                 ORG CLARITY
               </Badge>
@@ -558,7 +558,7 @@ export default function AccountabilityChartPage() {
               </ul>
 
               <Link href="/app?page=register">
-                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6">
+                <Button className="bg-black hover:bg-gray-900 text-white rounded-full px-6">
                   Build your chart
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -566,14 +566,14 @@ export default function AccountabilityChartPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-emerald-50 to-cyan-50 rounded-2xl p-8 border border-emerald-100">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <h3 className="font-bold text-slate-900 mb-4">Company Structure</h3>
                   <div className="space-y-3">
-                    <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Crown className="w-4 h-4 text-purple-600" />
+                          <Crown className="w-4 h-4 text-black" />
                           <span className="text-sm font-semibold text-slate-900">Visionary</span>
                         </div>
                         <span className="text-xs text-slate-600">Emily Watson</span>
@@ -581,10 +581,10 @@ export default function AccountabilityChartPage() {
                     </div>
 
                     <div className="pl-6 space-y-2">
-                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Shield className="w-4 h-4 text-blue-600" />
+                            <Shield className="w-4 h-4 text-black" />
                             <span className="text-sm font-semibold text-slate-900">Integrator</span>
                           </div>
                           <span className="text-xs text-slate-600">Michael R.</span>
@@ -592,19 +592,19 @@ export default function AccountabilityChartPage() {
                       </div>
 
                       <div className="pl-6 space-y-2">
-                        <div className="p-2 bg-emerald-50 rounded border border-emerald-200">
+                        <div className="p-2 bg-gray-50 rounded border border-gray-200">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-slate-900">Sales</span>
                             <span className="text-xs text-slate-500">Sarah C.</span>
                           </div>
                         </div>
-                        <div className="p-2 bg-orange-50 rounded border border-orange-200">
+                        <div className="p-2 bg-gray-50 rounded border border-gray-200">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-slate-900">Marketing</span>
                             <span className="text-xs text-slate-500">David L.</span>
                           </div>
                         </div>
-                        <div className="p-2 bg-blue-50 rounded border border-blue-200">
+                        <div className="p-2 bg-gray-50 rounded border border-gray-200">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-slate-900">Operations</span>
                             <span className="text-xs text-slate-500">Alex M.</span>
@@ -637,7 +637,7 @@ export default function AccountabilityChartPage() {
               { value: "100%", label: "Visibility into who owns what" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold text-black mb-2">
                   {stat.value}
                 </div>
                 <div className="text-slate-600">{stat.label}</div>
@@ -682,7 +682,7 @@ export default function AccountabilityChartPage() {
                 </div>
                 <p className="text-white/90 mb-6 leading-relaxed">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-600" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
                   <div>
                     <div className="font-semibold text-white">{testimonial.author}</div>
                     <div className="text-sm text-white/60">{testimonial.role}</div>
@@ -695,7 +695,7 @@ export default function AccountabilityChartPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-500">
+      <section className="py-20 lg:py-32 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Building2 className="w-20 h-20 text-white mx-auto mb-6" />
           <h2 className="text-5xl font-bold text-white mb-6">

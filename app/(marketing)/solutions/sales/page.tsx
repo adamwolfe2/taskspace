@@ -43,7 +43,7 @@ export default function SalesSolutionPage() {
     <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-b from-emerald-50 to-white">
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -54,7 +54,7 @@ export default function SalesSolutionPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   <DollarSign className="w-4 h-4 mr-1" />
                   FOR SALES TEAMS
                 </Badge>
@@ -118,7 +118,7 @@ export default function SalesSolutionPage() {
               <div className="relative">
                 {/* Back layer */}
                 <div className="absolute top-8 -right-4 w-[85%] bg-white rounded-xl shadow-xl border border-slate-200 p-4 rotate-3 opacity-80">
-                  <div className="h-32 bg-gradient-to-br from-emerald-50 to-cyan-50 rounded-lg" />
+                  <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg" />
                 </div>
 
                 {/* Middle layer */}
@@ -131,16 +131,16 @@ export default function SalesSolutionPage() {
                   <div className="p-6 space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-bold text-slate-900">Sales Dashboard</h3>
-                      <Badge className="bg-emerald-500 text-white border-0">On Track</Badge>
+                      <Badge className="bg-gray-600 text-white border-0">On Track</Badge>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-                        <div className="text-3xl font-bold text-emerald-600">$847k</div>
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="text-3xl font-bold text-black">$847k</div>
                         <div className="text-xs text-slate-600 mt-1">Q1 Revenue</div>
                       </div>
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <div className="text-3xl font-bold text-blue-600">94%</div>
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="text-3xl font-bold text-black">94%</div>
                         <div className="text-xs text-slate-600 mt-1">To Quota</div>
                       </div>
                     </div>
@@ -148,11 +148,11 @@ export default function SalesSolutionPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <span className="text-sm font-medium text-slate-900">Enterprise Deals</span>
-                        <Badge className="bg-emerald-100 text-emerald-700 text-xs">$450k</Badge>
+                        <Badge className="bg-gray-100 text-gray-700 text-xs">$450k</Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <span className="text-sm font-medium text-slate-900">Mid-Market</span>
-                        <Badge className="bg-blue-100 text-blue-700 text-xs">$397k</Badge>
+                        <Badge className="bg-gray-100 text-gray-700 text-xs">$397k</Badge>
                       </div>
                     </div>
                   </div>
@@ -181,7 +181,7 @@ export default function SalesSolutionPage() {
       <section className="py-20 lg:py-32 bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <Badge className="bg-emerald-600 text-white mb-6">
+            <Badge className="bg-black text-white mb-6">
               <Brain className="w-4 h-4 mr-1" />
               AI AGENTS FOR SALES
             </Badge>
@@ -195,22 +195,22 @@ export default function SalesSolutionPage() {
               {
                 name: "Pipeline Agent",
                 description: "Tracks deal velocity, flags stalled opportunities, and predicts close dates based on activity",
-                color: "from-emerald-400 to-emerald-600",
+                color: "from-gray-400 to-gray-600",
               },
               {
                 name: "Activity Agent",
                 description: "Monitors daily activities (calls, emails, meetings) and alerts reps falling behind targets",
-                color: "from-blue-400 to-blue-600",
+                color: "from-gray-400 to-gray-600",
               },
               {
                 name: "Quota Agent",
                 description: "Forecasts quarterly revenue, identifies gaps to quota, and suggests deal prioritization",
-                color: "from-purple-400 to-purple-600",
+                color: "from-gray-400 to-gray-600",
               },
               {
                 name: "Follow-up Agent",
                 description: "Reminds reps of pending follow-ups, unanswered emails, and missed touchpoints",
-                color: "from-orange-400 to-orange-600",
+                color: "from-gray-400 to-gray-600",
               },
             ].map((agent, i) => (
               <motion.div
@@ -234,7 +234,7 @@ export default function SalesSolutionPage() {
 
           <div className="text-center mt-12">
             <Link href="/app?page=register">
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-8">
+              <Button className="bg-black hover:bg-gray-900 text-white rounded-full px-8">
                 Explore AI Agents
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -248,7 +248,7 @@ export default function SalesSolutionPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Target className="w-4 h-4 mr-1" />
                 REVENUE ROCKS
               </Badge>
@@ -270,7 +270,7 @@ export default function SalesSolutionPage() {
                   "Early warning when quota is at risk",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -278,7 +278,7 @@ export default function SalesSolutionPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-emerald-50 to-cyan-50 rounded-2xl p-8 border border-emerald-100">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <h3 className="font-bold text-slate-900 mb-4">Q1 2026 Revenue Rocks</h3>
                   <div className="space-y-4">
@@ -296,7 +296,7 @@ export default function SalesSolutionPage() {
                           <div
                             className={cn(
                               "h-full rounded-full transition-all",
-                              rock.progress >= 80 ? "bg-gradient-to-r from-emerald-500 to-emerald-600" : "bg-gradient-to-r from-orange-500 to-orange-600"
+                              rock.progress >= 80 ? "bg-gray-600" : "bg-gray-600"
                             )}
                             style={{ width: `${rock.progress}%` }}
                           />
@@ -305,7 +305,7 @@ export default function SalesSolutionPage() {
                           <span className="text-slate-500">{rock.progress}% to goal</span>
                           <Badge className={cn(
                             "text-xs",
-                            rock.progress >= 80 ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
+                            rock.progress >= 80 ? "bg-gray-100 text-gray-700" : "bg-gray-100 text-gray-700"
                           )}>
                             {rock.progress >= 80 ? "On Track" : "At Risk"}
                           </Badge>
@@ -342,9 +342,9 @@ export default function SalesSolutionPage() {
                       <div className="text-right">
                         <div className="font-bold text-slate-900">{row.actual}</div>
                         {row.status === "up" ? (
-                          <TrendingUp className="w-4 h-4 text-emerald-600 inline-block" />
+                          <TrendingUp className="w-4 h-4 text-black inline-block" />
                         ) : (
-                          <span className="text-xs text-orange-600">Below target</span>
+                          <span className="text-xs text-black">Below target</span>
                         )}
                       </div>
                     </div>
@@ -354,7 +354,7 @@ export default function SalesSolutionPage() {
             </div>
 
             <div className="order-1 lg:order-2 space-y-6">
-              <Badge className="bg-blue-50 text-blue-600 border-blue-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <BarChart3 className="w-4 h-4 mr-1" />
                 ACTIVITY TRACKING
               </Badge>
@@ -376,7 +376,7 @@ export default function SalesSolutionPage() {
                   "Benchmarking across the sales team",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -391,7 +391,7 @@ export default function SalesSolutionPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-purple-50 text-purple-600 border-purple-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <TrendingUp className="w-4 h-4 mr-1" />
                 PIPELINE INSIGHTS
               </Badge>
@@ -413,14 +413,14 @@ export default function SalesSolutionPage() {
                   "Weekly pipeline health summaries",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
               </ul>
 
               <Link href="/app?page=register">
-                <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6">
+                <Button className="bg-black hover:bg-gray-900 text-white rounded-full px-6">
                   Start tracking pipeline
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -428,42 +428,42 @@ export default function SalesSolutionPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-100">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <h3 className="font-bold text-slate-900 mb-4">Pipeline Forecast</h3>
                   <div className="space-y-3">
-                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-semibold text-slate-900">Acme Corp - Enterprise</span>
-                        <Badge className="bg-emerald-600 text-white text-xs">$150k</Badge>
+                        <Badge className="bg-black text-white text-xs">$150k</Badge>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-slate-600">Predicted close: Feb 15</span>
-                        <span className="text-emerald-600 font-medium">85% confident</span>
+                        <span className="text-black font-medium">85% confident</span>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-orange-50 rounded-xl border border-orange-200">
+                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-semibold text-slate-900">TechStart Inc</span>
-                        <Badge className="bg-blue-600 text-white text-xs">$75k</Badge>
+                        <Badge className="bg-black text-white text-xs">$75k</Badge>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-slate-600">Stalled 14 days</span>
-                        <Button size="sm" className="h-6 text-xs bg-orange-600 hover:bg-orange-700 text-white">
+                        <Button size="sm" className="h-6 text-xs bg-black hover:bg-gray-900 text-white">
                           Follow up
                         </Button>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-semibold text-slate-900">Global Systems</span>
-                        <Badge className="bg-purple-600 text-white text-xs">$200k</Badge>
+                        <Badge className="bg-black text-white text-xs">$200k</Badge>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-slate-600">In negotiation</span>
-                        <span className="text-blue-600 font-medium">Moving fast</span>
+                        <span className="text-black font-medium">Moving fast</span>
                       </div>
                     </div>
                   </div>
@@ -491,7 +491,7 @@ export default function SalesSolutionPage() {
               { value: "100%", label: "Pipeline visibility" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold text-black mb-2">
                   {stat.value}
                 </div>
                 <div className="text-slate-600">{stat.label}</div>
@@ -536,7 +536,7 @@ export default function SalesSolutionPage() {
                 </div>
                 <p className="text-white/90 mb-6 leading-relaxed">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-600" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
                   <div>
                     <div className="font-semibold text-white">{testimonial.author}</div>
                     <div className="text-sm text-white/60">{testimonial.role}</div>
@@ -549,7 +549,7 @@ export default function SalesSolutionPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gradient-to-br from-emerald-600 via-cyan-600 to-teal-500">
+      <section className="py-20 lg:py-32 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Award className="w-20 h-20 text-white mx-auto mb-6" />
           <h2 className="text-5xl font-bold text-white mb-6">

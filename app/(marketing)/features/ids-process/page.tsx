@@ -113,7 +113,7 @@ export default function IDSProcessPage() {
                 <div className="p-6 space-y-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-slate-900">IDS in Action</h3>
-                    <Badge className="bg-orange-100 text-orange-700">Live Example</Badge>
+                    <Badge className="bg-gray-100 text-gray-700">Live Example</Badge>
                   </div>
 
                   {/* Step Selector */}
@@ -131,7 +131,7 @@ export default function IDSProcessPage() {
                           className={cn(
                             "flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all",
                             activeStep === step.key
-                              ? "bg-orange-100 text-orange-900 border-2 border-orange-300"
+                              ? "bg-gray-100 text-orange-900 border-2 border-orange-300"
                               : "bg-slate-50 text-slate-600 border-2 border-slate-200 hover:bg-slate-100"
                           )}
                         >
@@ -145,7 +145,7 @@ export default function IDSProcessPage() {
                   {/* Issue Card */}
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                     <div className="flex items-center gap-2 mb-3">
-                      <AlertCircle className="w-5 h-5 text-orange-600" />
+                      <AlertCircle className="w-5 h-5 text-black" />
                       <span className="font-semibold text-slate-900">Customer churn rate too high</span>
                     </div>
                     <div className="text-xs text-slate-500 mb-3">
@@ -159,11 +159,11 @@ export default function IDSProcessPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="space-y-3"
                       >
-                        <div className="p-3 bg-orange-50 rounded-lg border border-orange-100">
+                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                           <div className="text-xs font-semibold text-orange-900 uppercase mb-1">Root Cause</div>
                           <p className="text-sm text-slate-700">Onboarding process is too complex and confusing</p>
                         </div>
-                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                           <div className="text-xs font-semibold text-blue-900 uppercase mb-1">Impact</div>
                           <p className="text-sm text-slate-700">Lost $120k MRR in Q1, trending worse</p>
                         </div>
@@ -177,21 +177,21 @@ export default function IDSProcessPage() {
                         className="space-y-2"
                       >
                         <div className="flex items-start gap-2 p-2 bg-white rounded">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex-shrink-0" />
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex-shrink-0" />
                           <div className="flex-1">
                             <p className="text-xs font-medium text-slate-900">Michael</p>
                             <p className="text-xs text-slate-600">We need to simplify the first-time setup flow</p>
                           </div>
                         </div>
                         <div className="flex items-start gap-2 p-2 bg-white rounded">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex-shrink-0" />
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex-shrink-0" />
                           <div className="flex-1">
                             <p className="text-xs font-medium text-slate-900">Sarah</p>
                             <p className="text-xs text-slate-600">Agreed. Plus add video tutorials for each step</p>
                           </div>
                         </div>
                         <div className="flex items-start gap-2 p-2 bg-white rounded">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex-shrink-0" />
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex-shrink-0" />
                           <div className="flex-1">
                             <p className="text-xs font-medium text-slate-900">Emily</p>
                             <p className="text-xs text-slate-600">Can we launch the redesign in 2 weeks?</p>
@@ -206,7 +206,7 @@ export default function IDSProcessPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="space-y-3"
                       >
-                        <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                           <div className="flex items-center gap-2 mb-2">
                             <CheckSquare className="w-4 h-4 text-black font-bold" />
                             <div className="text-xs font-semibold text-emerald-900 uppercase">Solution</div>
@@ -235,9 +235,9 @@ export default function IDSProcessPage() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-600">Status:</span>
                       <Badge className={cn(
-                        activeStep === 'identify' && "bg-orange-100 text-orange-700",
-                        activeStep === 'discuss' && "bg-blue-100 text-blue-700",
-                        activeStep === 'solve' && "bg-emerald-100 text-emerald-700"
+                        activeStep === 'identify' && "bg-gray-100 text-gray-700",
+                        activeStep === 'discuss' && "bg-gray-100 text-gray-700",
+                        activeStep === 'solve' && "bg-gray-100 text-gray-700"
                       )}>
                         {activeStep === 'identify' && 'Identifying Root Cause'}
                         {activeStep === 'discuss' && 'Team Discussion'}
@@ -297,7 +297,7 @@ export default function IDSProcessPage() {
                   "Action items forgotten after the meeting",
                 ].map((problem, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <X className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{problem}</span>
                   </motion.div>
                 ))}
@@ -331,7 +331,7 @@ export default function IDSProcessPage() {
                   "Auto-create to-dos from solved issues",
                 ].map((solution, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-gray-700 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{solution}</span>
                   </motion.div>
                 ))}
@@ -383,10 +383,10 @@ export default function IDSProcessPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gray-50 rounded-2xl p-8 border border-orange-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <AlertCircle className="w-5 h-5 text-orange-600" />
+                    <AlertCircle className="w-5 h-5 text-black" />
                     <h3 className="font-bold text-slate-900">Identify Root Cause</h3>
                   </div>
 
@@ -420,7 +420,7 @@ export default function IDSProcessPage() {
                       <label className="text-xs font-semibold text-slate-700 uppercase block mb-2">
                         Impact on rocks/metrics
                       </label>
-                      <div className="p-3 bg-red-50 rounded-lg border border-red-100">
+                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <p className="text-xs text-slate-700">
                           <span className="font-semibold text-black font-bold">Churn Rate:</span> 2.5% (above 2% target)
                         </p>
@@ -441,13 +441,13 @@ export default function IDSProcessPage() {
             <div className="order-2 lg:order-1 relative">
               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <MessageSquare className="w-5 h-5 text-blue-600" />
+                  <MessageSquare className="w-5 h-5 text-black" />
                   <h3 className="font-bold text-slate-900">Team Discussion</h3>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex-shrink-0" />
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex-shrink-0" />
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-semibold text-slate-900">Michael R.</span>
@@ -466,7 +466,7 @@ export default function IDSProcessPage() {
                   </div>
 
                   <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex-shrink-0" />
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex-shrink-0" />
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-semibold text-slate-900">Sarah C.</span>
@@ -483,7 +483,7 @@ export default function IDSProcessPage() {
                     </div>
                   </div>
 
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="text-xs font-semibold text-blue-900 uppercase mb-1">Consensus</div>
                     <p className="text-sm text-slate-700">
                       Simplify onboarding to 3-4 steps with embedded video tutorials
@@ -531,7 +531,7 @@ export default function IDSProcessPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-emerald-50 text-black font-bold border-emerald-200">
+              <Badge className="bg-gray-50 text-black font-bold border-gray-200">
                 <CheckSquare className="w-4 h-4 mr-1" />
                 SOLVE
               </Badge>
@@ -560,7 +560,7 @@ export default function IDSProcessPage() {
               </ul>
 
               <Link href="/app?page=register">
-                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6">
+                <Button className="bg-black hover:bg-gray-900 text-white rounded-full px-6">
                   Start solving with IDS
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -568,14 +568,14 @@ export default function IDSProcessPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-emerald-50 to-cyan-50 rounded-2xl p-8 border border-emerald-100">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <div className="flex items-center gap-2 mb-3">
                     <CheckSquare className="w-5 h-5 text-black font-bold" />
                     <h3 className="font-bold text-slate-900">Solution & Action Items</h3>
                   </div>
 
-                  <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="text-xs font-semibold text-emerald-900 uppercase mb-2">Agreed Solution</div>
                     <p className="text-sm text-slate-700 font-medium mb-4">
                       Redesign onboarding to 3-4 steps with embedded video tutorials
@@ -583,7 +583,7 @@ export default function IDSProcessPage() {
 
                     <div className="space-y-2">
                       <div className="text-xs font-semibold text-slate-700 uppercase mb-2">Action Items:</div>
-                      <div className="p-3 bg-white rounded-lg border border-emerald-200">
+                      <div className="p-3 bg-white rounded-lg border border-gray-200">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium text-slate-900">Design simplified flow</span>
                           <Badge variant="outline" className="text-xs">To Do</Badge>
@@ -594,7 +594,7 @@ export default function IDSProcessPage() {
                         </div>
                       </div>
 
-                      <div className="p-3 bg-white rounded-lg border border-emerald-200">
+                      <div className="p-3 bg-white rounded-lg border border-gray-200">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium text-slate-900">Record tutorial videos</span>
                           <Badge variant="outline" className="text-xs">To Do</Badge>
@@ -605,7 +605,7 @@ export default function IDSProcessPage() {
                         </div>
                       </div>
 
-                      <div className="p-3 bg-white rounded-lg border border-emerald-200">
+                      <div className="p-3 bg-white rounded-lg border border-gray-200">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium text-slate-900">Deploy to production</span>
                           <Badge variant="outline" className="text-xs">To Do</Badge>
@@ -641,7 +641,7 @@ export default function IDSProcessPage() {
               { value: "100%", label: "Action item completion rate" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold text-black mb-2">
                   {stat.value}
                 </div>
                 <div className="text-slate-600">{stat.label}</div>
@@ -686,7 +686,7 @@ export default function IDSProcessPage() {
                 </div>
                 <p className="text-white/90 mb-6 leading-relaxed">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-red-600" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
                   <div>
                     <div className="font-semibold text-white">{testimonial.author}</div>
                     <div className="text-sm text-white/60">{testimonial.role}</div>
@@ -699,7 +699,7 @@ export default function IDSProcessPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gradient-to-br from-orange-600 via-red-600 to-pink-500">
+      <section className="py-20 lg:py-32 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Zap className="w-20 h-20 text-white mx-auto mb-6" />
           <h2 className="text-5xl font-bold text-white mb-6">

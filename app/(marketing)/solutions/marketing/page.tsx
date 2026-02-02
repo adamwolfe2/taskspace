@@ -42,7 +42,7 @@ export default function MarketingSolutionPage() {
     <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-b from-pink-50 to-white">
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -53,7 +53,7 @@ export default function MarketingSolutionPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-pink-50 text-pink-600 border-pink-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   <Megaphone className="w-4 h-4 mr-1" />
                   FOR MARKETING TEAMS
                 </Badge>
@@ -117,12 +117,12 @@ export default function MarketingSolutionPage() {
               <div className="relative">
                 {/* Back layer */}
                 <div className="absolute top-8 -right-4 w-[85%] bg-white rounded-xl shadow-xl border border-slate-200 p-4 rotate-3 opacity-80">
-                  <div className="h-32 bg-gradient-to-br from-pink-50 to-purple-50 rounded-lg" />
+                  <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg" />
                 </div>
 
                 {/* Middle layer */}
                 <div className="absolute top-4 right-0 w-[85%] bg-white rounded-xl shadow-xl border border-slate-200 p-4 -rotate-2 opacity-90">
-                  <div className="h-32 bg-gradient-to-br from-orange-50 to-pink-50 rounded-lg" />
+                  <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg" />
                 </div>
 
                 {/* Front layer */}
@@ -130,16 +130,16 @@ export default function MarketingSolutionPage() {
                   <div className="p-6 space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-bold text-slate-900">Q1 Campaign Rocks</h3>
-                      <Badge className="bg-pink-500 text-white border-0">On Track</Badge>
+                      <Badge className="bg-gray-600 text-white border-0">On Track</Badge>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="bg-pink-50 rounded-lg p-4 border border-pink-200">
-                        <div className="text-3xl font-bold text-pink-600">12k</div>
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="text-3xl font-bold text-black">12k</div>
                         <div className="text-xs text-slate-600 mt-1">New Leads</div>
                       </div>
-                      <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                        <div className="text-3xl font-bold text-purple-600">450k</div>
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="text-3xl font-bold text-black">450k</div>
                         <div className="text-xs text-slate-600 mt-1">Social Reach</div>
                       </div>
                     </div>
@@ -147,11 +147,11 @@ export default function MarketingSolutionPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <span className="text-sm font-medium text-slate-900">Product Launch Campaign</span>
-                        <Badge className="bg-emerald-100 text-emerald-700 text-xs">85%</Badge>
+                        <Badge className="bg-gray-100 text-gray-700 text-xs">85%</Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <span className="text-sm font-medium text-slate-900">Content Marketing</span>
-                        <Badge className="bg-blue-100 text-blue-700 text-xs">72%</Badge>
+                        <Badge className="bg-gray-100 text-gray-700 text-xs">72%</Badge>
                       </div>
                     </div>
                   </div>
@@ -180,7 +180,7 @@ export default function MarketingSolutionPage() {
       <section className="py-20 lg:py-32 bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <Badge className="bg-pink-600 text-white mb-6">
+            <Badge className="bg-black text-white mb-6">
               <Brain className="w-4 h-4 mr-1" />
               AI AGENTS FOR MARKETING
             </Badge>
@@ -194,22 +194,22 @@ export default function MarketingSolutionPage() {
               {
                 name: "Campaign Agent",
                 description: "Auto-tracks campaign milestones, alerts when deliverables are behind schedule, suggests next steps",
-                color: "from-pink-400 to-pink-600",
+                color: "from-gray-400 to-gray-600",
               },
               {
                 name: "Content Agent",
                 description: "Monitors content calendar, flags missing assets, ensures brand consistency across channels",
-                color: "from-purple-400 to-purple-600",
+                color: "from-gray-400 to-gray-600",
               },
               {
                 name: "Brand Agent",
                 description: "Checks all marketing materials for brand guideline compliance and tone consistency",
-                color: "from-orange-400 to-orange-600",
+                color: "from-gray-400 to-gray-600",
               },
               {
                 name: "Performance Agent",
                 description: "Analyzes campaign metrics, identifies underperforming channels, recommends optimizations",
-                color: "from-blue-400 to-blue-600",
+                color: "from-gray-400 to-gray-600",
               },
             ].map((agent, i) => (
               <motion.div
@@ -233,7 +233,7 @@ export default function MarketingSolutionPage() {
 
           <div className="text-center mt-12">
             <Link href="/app?page=register">
-              <Button className="bg-pink-600 hover:bg-pink-700 text-white rounded-full px-8">
+              <Button className="bg-black hover:bg-gray-900 text-white rounded-full px-8">
                 Explore AI Agents
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -247,7 +247,7 @@ export default function MarketingSolutionPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-pink-50 text-pink-600 border-pink-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Target className="w-4 h-4 mr-1" />
                 CAMPAIGN ROCKS
               </Badge>
@@ -269,7 +269,7 @@ export default function MarketingSolutionPage() {
                   "Launch checklists and go-live gates",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-pink-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -277,7 +277,7 @@ export default function MarketingSolutionPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl p-8 border border-pink-100">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <h3 className="font-bold text-slate-900 mb-4">Q1 2026 Marketing Rocks</h3>
                   <div className="space-y-4">
@@ -295,7 +295,7 @@ export default function MarketingSolutionPage() {
                           <div
                             className={cn(
                               "h-full rounded-full transition-all",
-                              rock.status === "on-track" ? "bg-gradient-to-r from-pink-500 to-purple-600" : "bg-gradient-to-r from-orange-500 to-orange-600"
+                              rock.status === "on-track" ? "bg-gray-600" : "bg-gray-600"
                             )}
                             style={{ width: `${rock.progress}%` }}
                           />
@@ -307,7 +307,7 @@ export default function MarketingSolutionPage() {
                           </div>
                           <Badge className={cn(
                             "text-xs",
-                            rock.status === "on-track" ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
+                            rock.status === "on-track" ? "bg-gray-100 text-gray-700" : "bg-gray-100 text-gray-700"
                           )}>
                             {rock.status === "on-track" ? "On Track" : "At Risk"}
                           </Badge>
@@ -341,9 +341,9 @@ export default function MarketingSolutionPage() {
                         <span className="text-sm font-medium text-slate-900">{item.content}</span>
                         <Badge className={cn(
                           "text-xs",
-                          item.status === "published" && "bg-emerald-100 text-emerald-700",
-                          item.status === "scheduled" && "bg-blue-100 text-blue-700",
-                          item.status === "draft" && "bg-orange-100 text-orange-700",
+                          item.status === "published" && "bg-gray-100 text-gray-700",
+                          item.status === "scheduled" && "bg-gray-100 text-gray-700",
+                          item.status === "draft" && "bg-gray-100 text-gray-700",
                           item.status === "planned" && "bg-slate-100 text-slate-700"
                         )}>
                           {item.status}
@@ -360,7 +360,7 @@ export default function MarketingSolutionPage() {
             </div>
 
             <div className="order-1 lg:order-2 space-y-6">
-              <Badge className="bg-purple-50 text-purple-600 border-purple-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Calendar className="w-4 h-4 mr-1" />
                 CONTENT CALENDAR
               </Badge>
@@ -382,7 +382,7 @@ export default function MarketingSolutionPage() {
                   "Integration with campaign rocks and metrics",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -397,7 +397,7 @@ export default function MarketingSolutionPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-blue-50 text-blue-600 border-blue-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <BarChart3 className="w-4 h-4 mr-1" />
                 CAMPAIGN ANALYTICS
               </Badge>
@@ -419,14 +419,14 @@ export default function MarketingSolutionPage() {
                   "Weekly marketing scorecard",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
               </ul>
 
               <Link href="/app?page=register">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6">
+                <Button className="bg-black hover:bg-gray-900 text-white rounded-full px-6">
                   Start tracking campaigns
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -434,25 +434,25 @@ export default function MarketingSolutionPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 border border-blue-100">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <h3 className="font-bold text-slate-900 mb-4">Campaign Performance</h3>
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                        <div className="text-2xl font-bold text-emerald-600">12.5k</div>
+                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-2xl font-bold text-black">12.5k</div>
                         <div className="text-xs text-slate-600 mt-1">Leads Generated</div>
                         <div className="flex items-center gap-1 mt-1">
-                          <TrendingUp className="w-3 h-3 text-emerald-600" />
-                          <span className="text-xs text-emerald-600 font-medium">+23%</span>
+                          <TrendingUp className="w-3 h-3 text-black" />
+                          <span className="text-xs text-black font-medium">+23%</span>
                         </div>
                       </div>
-                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="text-2xl font-bold text-blue-600">3.2%</div>
+                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-2xl font-bold text-black">3.2%</div>
                         <div className="text-xs text-slate-600 mt-1">Conversion Rate</div>
                         <div className="flex items-center gap-1 mt-1">
-                          <TrendingUp className="w-3 h-3 text-blue-600" />
-                          <span className="text-xs text-blue-600 font-medium">+0.8%</span>
+                          <TrendingUp className="w-3 h-3 text-black" />
+                          <span className="text-xs text-black font-medium">+0.8%</span>
                         </div>
                       </div>
                     </div>
@@ -471,7 +471,7 @@ export default function MarketingSolutionPage() {
                           </div>
                           <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+                              className="h-full bg-gray-600 rounded-full"
                               style={{ width: `${ch.performance}%` }}
                             />
                           </div>
@@ -503,7 +503,7 @@ export default function MarketingSolutionPage() {
               { value: "100%", label: "Team alignment on goals" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold text-black mb-2">
                   {stat.value}
                 </div>
                 <div className="text-slate-600">{stat.label}</div>
@@ -548,7 +548,7 @@ export default function MarketingSolutionPage() {
                 </div>
                 <p className="text-white/90 mb-6 leading-relaxed">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-600" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
                   <div>
                     <div className="font-semibold text-white">{testimonial.author}</div>
                     <div className="text-sm text-white/60">{testimonial.role}</div>
@@ -561,7 +561,7 @@ export default function MarketingSolutionPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gradient-to-br from-pink-600 via-purple-600 to-blue-500">
+      <section className="py-20 lg:py-32 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Rocket className="w-20 h-20 text-white mx-auto mb-6" />
           <h2 className="text-5xl font-bold text-white mb-6">

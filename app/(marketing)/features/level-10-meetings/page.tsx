@@ -132,7 +132,7 @@ export default function Level10MeetingsPage() {
                   {/* Progress Bar */}
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-gray-600 to-gray-600 rounded-full transition-all"
+                      className="h-full bg-gray-600 rounded-full transition-all"
                       style={{ width: "35%" }}
                     />
                   </div>
@@ -145,8 +145,8 @@ export default function Level10MeetingsPage() {
                         onClick={() => setCurrentSection(i)}
                         className={cn(
                           "w-full flex items-center justify-between p-3 rounded-lg transition-all text-left",
-                          section.status === "done" && "bg-emerald-50 border border-emerald-200",
-                          section.status === "current" && "bg-purple-50 border border-purple-300 shadow-sm",
+                          section.status === "done" && "bg-gray-50 border border-gray-200",
+                          section.status === "current" && "bg-purple-50 border border-gray-300 shadow-sm",
                           section.status === "upcoming" && "bg-slate-50 border border-slate-200"
                         )}
                       >
@@ -154,7 +154,7 @@ export default function Level10MeetingsPage() {
                           {section.status === "done" ? (
                             <CheckSquare className="w-5 h-5 text-black font-bold" />
                           ) : section.status === "current" ? (
-                            <Clock className="w-5 h-5 text-purple-600 animate-pulse" />
+                            <Clock className="w-5 h-5 text-black animate-pulse" />
                           ) : (
                             <div className="w-5 h-5 rounded border-2 border-slate-300" />
                           )}
@@ -228,7 +228,7 @@ export default function Level10MeetingsPage() {
                   "Meetings run long or skip critical sections",
                 ].map((problem, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <X className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{problem}</span>
                   </motion.div>
                 ))}
@@ -262,7 +262,7 @@ export default function Level10MeetingsPage() {
                   "Automatic notes and action items captured",
                 ].map((solution, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-gray-700 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{solution}</span>
                   </motion.div>
                 ))}
@@ -314,7 +314,7 @@ export default function Level10MeetingsPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gray-50 rounded-2xl p-8 border border-purple-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-bold text-slate-900">Scorecard Review</h3>
@@ -347,11 +347,11 @@ export default function Level10MeetingsPage() {
                   <div className="pt-3 border-t border-slate-200">
                     <h3 className="font-bold text-slate-900 mb-2">Rock Review</h3>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 bg-emerald-50 rounded">
+                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
                         <span className="text-xs text-slate-900">Product Launch</span>
                         <span className="text-xs font-bold text-black font-bold">85%</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 bg-emerald-50 rounded">
+                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
                         <span className="text-xs text-slate-900">Revenue Growth</span>
                         <span className="text-xs font-bold text-black font-bold">72%</span>
                       </div>
@@ -372,14 +372,14 @@ export default function Level10MeetingsPage() {
               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-slate-900">IDS - Identify, Discuss, Solve</h3>
-                  <Badge className="bg-orange-100 text-orange-700">60 min</Badge>
+                  <Badge className="bg-gray-100 text-gray-700">60 min</Badge>
                 </div>
 
                 <div className="space-y-3">
-                  <div className="p-4 bg-orange-50 rounded-xl border border-orange-200">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-semibold text-slate-900">High churn rate (2 weeks)</span>
-                      <Badge className="bg-red-100 text-red-700 text-xs">Priority 1</Badge>
+                      <Badge className="bg-gray-100 text-gray-700 text-xs">Priority 1</Badge>
                     </div>
                     <div className="text-xs text-slate-600 mb-3">
                       Owner: Sarah Chen • Added from Scorecard Review
@@ -498,7 +498,7 @@ export default function Level10MeetingsPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gray-50 rounded-2xl p-8 border border-blue-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <div className="text-center mb-6">
                     <div className="text-5xl font-bold text-slate-900 mb-2">35:42</div>
@@ -507,13 +507,13 @@ export default function Level10MeetingsPage() {
 
                   <div className="h-3 bg-slate-100 rounded-full overflow-hidden mb-6">
                     <div
-                      className="h-full bg-gradient-to-r from-gray-600 to-gray-600 rounded-full"
+                      className="h-full bg-gray-600 rounded-full"
                       style={{ width: "60%" }}
                     />
                   </div>
 
                   <div className="space-y-3">
-                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-slate-900">Current: IDS</span>
                         <span className="text-xs text-slate-600">35 min left</span>
@@ -550,7 +550,7 @@ export default function Level10MeetingsPage() {
               { value: "100%", label: "Attendance rate (same time, same day)" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-gray-600 to-gray-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold text-black mb-2">
                   {stat.value}
                 </div>
                 <div className="text-slate-600">{stat.label}</div>
@@ -595,7 +595,7 @@ export default function Level10MeetingsPage() {
                 </div>
                 <p className="text-white/90 mb-6 leading-relaxed">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-600" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
                   <div>
                     <div className="font-semibold text-white">{testimonial.author}</div>
                     <div className="text-sm text-white/60">{testimonial.role}</div>
@@ -608,7 +608,7 @@ export default function Level10MeetingsPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500">
+      <section className="py-20 lg:py-32 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Calendar className="w-20 h-20 text-white mx-auto mb-6" />
           <h2 className="text-5xl font-bold text-white mb-6">
