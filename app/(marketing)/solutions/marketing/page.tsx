@@ -6,16 +6,12 @@ import {
   ArrowRight,
   CheckCircle,
   Target,
-  Users,
   TrendingUp,
   Megaphone,
   Calendar,
   Brain,
-  Zap,
   Star,
-  X,
   BarChart3,
-  Sparkles,
   Rocket,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"

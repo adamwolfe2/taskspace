@@ -6,7 +6,6 @@ import Link from "next/link"
 import {
   ArrowRight,
   Users,
-  Zap,
   Shield,
   UserPlus,
   Settings,
@@ -250,7 +249,6 @@ function InteractiveTeamDemo() {
 
 import { MegaMenu } from "@/components/marketing/mega-menu"
 import { MarketingFooter } from "@/components/marketing/footer"
-import { PageTransition } from "@/components/marketing/page-transition"
 
 const features = [
   {
@@ -290,7 +288,6 @@ export default function TeamManagementPage() {
   return (
     <>
       <MegaMenu />
-      <PageTransition>
       <div className="pt-20">
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
@@ -551,7 +548,6 @@ export default function TeamManagementPage() {
         </div>
       </section>
     </div>
-      </PageTransition>
     <MarketingFooter />
     </>
   )

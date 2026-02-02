@@ -233,7 +233,6 @@ function InteractiveAnalyticsDemo() {
 
 import { MegaMenu } from "@/components/marketing/mega-menu"
 import { MarketingFooter } from "@/components/marketing/footer"
-import { PageTransition } from "@/components/marketing/page-transition"
 
 const features = [
   {
@@ -284,7 +283,6 @@ export default function AnalyticsPage() {
   return (
     <>
       <MegaMenu />
-      <PageTransition>
       <div className="pt-20">
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
@@ -559,7 +557,6 @@ export default function AnalyticsPage() {
         </div>
       </section>
     </div>
-      </PageTransition>
     <MarketingFooter />
     </>
   )

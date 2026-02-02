@@ -1,5 +1,4 @@
 "use client"
-import { PageTransition } from "@/components/marketing/page-transition"
 
 import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"

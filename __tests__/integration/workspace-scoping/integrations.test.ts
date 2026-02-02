@@ -72,7 +72,7 @@ describe("Integrations - Workspace Scoping", () => {
       it("should require workspaceId parameter", async () => {
         const request = new NextRequest("http://localhost/api/google-calendar")
         const response = await googleCalendarGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -85,7 +85,7 @@ describe("Integrations - Workspace Scoping", () => {
           `http://localhost/api/google-calendar?workspaceId=${WORKSPACE_1}`
         )
         const response = await googleCalendarGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -106,7 +106,7 @@ describe("Integrations - Workspace Scoping", () => {
           `http://localhost/api/google-calendar?workspaceId=${WORKSPACE_1}`
         )
         const response = await googleCalendarGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.connected).toBe(true)
@@ -125,7 +125,7 @@ describe("Integrations - Workspace Scoping", () => {
           `http://localhost/api/google-calendar?workspaceId=${WORKSPACE_1}`
         )
         const response = await googleCalendarGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.authUrl).toBeDefined()
@@ -151,7 +151,7 @@ describe("Integrations - Workspace Scoping", () => {
         })
 
         const response = await googleCalendarPATCH(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -192,7 +192,7 @@ describe("Integrations - Workspace Scoping", () => {
         })
 
         const response = await googleCalendarDELETE(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -224,7 +224,7 @@ describe("Integrations - Workspace Scoping", () => {
       it("should require workspaceId parameter", async () => {
         const request = new NextRequest("http://localhost/api/asana/me/connect")
         const response = await asanaGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -237,7 +237,7 @@ describe("Integrations - Workspace Scoping", () => {
           `http://localhost/api/asana/me/connect?workspaceId=${WORKSPACE_1}`
         )
         const response = await asanaGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -260,7 +260,7 @@ describe("Integrations - Workspace Scoping", () => {
           `http://localhost/api/asana/me/connect?workspaceId=${WORKSPACE_1}`
         )
         const response = await asanaGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.connected).toBe(true)
@@ -301,7 +301,7 @@ describe("Integrations - Workspace Scoping", () => {
         })
 
         const response = await asanaPOST(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -319,7 +319,7 @@ describe("Integrations - Workspace Scoping", () => {
         })
 
         const response = await asanaPOST(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -386,7 +386,7 @@ describe("Integrations - Workspace Scoping", () => {
         })
 
         const response = await asanaDELETE(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")

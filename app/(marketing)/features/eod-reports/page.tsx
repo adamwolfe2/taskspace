@@ -1,7 +1,6 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { useRef } from "react"
 import Link from "next/link"
 import {
   ArrowRight,
@@ -10,13 +9,11 @@ import {
   Brain,
   Zap,
   Target,
-  Clock,
   TrendingUp,
   Star,
   X,
   Sparkles,
   Users,
-  Calendar,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"

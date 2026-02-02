@@ -10,8 +10,6 @@ import {
   TrendingUp,
   TrendingDown,
   Calendar,
-  Users,
-  Zap,
   Star,
   X,
   AlertCircle,

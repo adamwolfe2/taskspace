@@ -8,18 +8,14 @@ import {
   Target,
   TrendingUp,
   Calendar,
-  Users,
-  Zap,
   BarChart3,
   Star,
   X,
   Flag,
-  Award,
   Rocket,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
 import { MegaMenu } from "@/components/marketing/mega-menu"
 import { MarketingFooter } from "@/components/marketing/footer"
 import { PageTransition } from "@/components/marketing/page-transition"

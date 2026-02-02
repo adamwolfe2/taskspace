@@ -8,21 +8,17 @@ import {
   CheckCircle,
   Zap,
   MessageSquare,
-  Lightbulb,
   CheckSquare,
   Star,
   X,
   AlertCircle,
-  Users,
   Target,
-  Brain,
   TrendingUp,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { MegaMenu } from "@/components/marketing/mega-menu"
-import { MarketingFooter } from "@/components/marketing/footer"
 import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {

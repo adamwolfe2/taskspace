@@ -12,19 +12,13 @@ import {
   Calendar,
   Brain,
   Zap,
-  Clock,
-  TrendingUp,
   FileText,
   MessageSquare,
   CheckSquare,
-  Settings,
-  Shield,
   Sparkles,
   Building2,
   LineChart,
   ListTodo,
-  ClipboardCheck,
-  UserCircle,
 } from "lucide-react"
 import { DemoEODForm } from "@/components/marketing/demo-eod-form"
 import { DemoRocks } from "@/components/marketing/demo-rocks"

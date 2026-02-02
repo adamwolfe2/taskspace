@@ -21,8 +21,6 @@ import {
   AlertCircle,
   Star,
   ChevronRight,
-  Wrench,
-  Package,
   Gauge,
   ClipboardCheck,
 } from "lucide-react"
@@ -336,7 +334,7 @@ export default function OperationsPage() {
                 color: "from-gray-400 to-gray-600",
                 stats: "23hrs saved per week"
               }
-            ].map((agent, index) => (
+            ].map((agent, _index) => (
               <motion.div
                 key={agent.name}
                 variants={fadeInUp}

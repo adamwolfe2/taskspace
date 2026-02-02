@@ -11,7 +11,6 @@ import {
   Calendar,
   Brain,
   Shield,
-  Zap,
   MessageSquare,
   Bell,
   FileText,

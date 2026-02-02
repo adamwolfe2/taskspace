@@ -79,7 +79,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
         const request = new NextRequest("http://localhost/api/task-templates")
         const response = await templatesGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data).toHaveLength(3)
@@ -97,7 +97,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
           `http://localhost/api/task-templates?workspaceId=${WORKSPACE_1}`
         )
         const response = await templatesGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data).toHaveLength(2) // Org-wide + WS1
@@ -114,7 +114,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
           `http://localhost/api/task-templates?workspaceId=${WORKSPACE_1}`
         )
         const response = await templatesGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -153,7 +153,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await templatesPOST(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(db.taskTemplates.create).toHaveBeenCalledWith(
@@ -181,7 +181,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await templatesPOST(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -205,7 +205,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await templatesPOST(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(403)
         expect(db.taskTemplates.create).not.toHaveBeenCalled()
@@ -227,7 +227,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await templatesDELETE(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -268,7 +268,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
         const request = new NextRequest("http://localhost/api/webhooks")
         const response = await webhooksGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.webhooks).toHaveLength(3)
@@ -284,7 +284,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
         const request = new NextRequest(`http://localhost/api/webhooks?workspaceId=${WORKSPACE_1}`)
         const response = await webhooksGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.webhooks).toHaveLength(2)
@@ -314,7 +314,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
         const request = new NextRequest("http://localhost/api/webhooks")
         const response = await webhooksGET(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.webhooks[0].secret).not.toBe("whsec_1234567890abcdef1234567890abcdef")
@@ -337,7 +337,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await webhooksPOST(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.webhook.scope).toBe("organization")
@@ -368,7 +368,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await webhooksPOST(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.webhook.scope).toBe("workspace")
@@ -397,7 +397,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await webhooksPOST(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("Maximum webhook limit")
@@ -424,7 +424,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await webhooksPATCH(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(403)
       })
@@ -462,7 +462,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await webhooksDELETE(request)
-        const data = await response.json()
+        const _data = await response.json()
 
         expect(response.status).toBe(403)
       })

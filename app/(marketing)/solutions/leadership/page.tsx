@@ -6,17 +6,12 @@ import {
   ArrowRight,
   CheckCircle,
   Target,
-  Users,
   BarChart3,
   TrendingUp,
   Calendar,
   Brain,
-  Zap,
   Star,
-  X,
   Award,
-  Rocket,
-  Shield,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"

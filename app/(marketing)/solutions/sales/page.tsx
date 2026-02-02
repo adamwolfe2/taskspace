@@ -6,23 +6,16 @@ import {
   ArrowRight,
   CheckCircle,
   Target,
-  Users,
   TrendingUp,
   DollarSign,
-  Phone,
-  Mail,
   Brain,
-  Zap,
   Star,
-  X,
   BarChart3,
-  Calendar,
   Award,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -39,7 +32,6 @@ const staggerContainer = {
 
 export default function SalesSolutionPage() {
   return (
-    <PageTransition>
     <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
@@ -582,7 +574,5 @@ export default function SalesSolutionPage() {
         </div>
       </footer>
     </div>
-  )
-    </PageTransition>
   )
 }
