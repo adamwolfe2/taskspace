@@ -1,103 +1,156 @@
 "use client"
 
 import { useState } from "react"
-import { OnboardingWizard, OnboardingData } from "@/components/onboarding/onboarding-wizard"
+import { OnboardingWizard, type OnboardingData } from "@/components/onboarding/onboarding-wizard"
 import { useApp } from "@/lib/contexts/app-context"
 import { api } from "@/lib/api/client"
 import { useToast } from "@/hooks/use-toast"
 
 interface SetupOrganizationPageProps {
-  mode?: "create" | "setup" // create = new org, setup = configure existing
-  organizationId?: string
-  organizationName?: string
+  mode?: "create" | "setup"
 }
 
-export function SetupOrganizationPage({
-  mode = "create",
-  organizationId,
-  organizationName,
-}: SetupOrganizationPageProps) {
-  const { setCurrentPage, refreshSession } = useApp()
+export function SetupOrganizationPage({ mode = "create" }: SetupOrganizationPageProps) {
+  const { currentUser, setCurrentPage, refreshSession } = useApp()
   const { toast } = useToast()
-  const [isComplete, setIsComplete] = useState(false)
 
   const handleComplete = async (data: OnboardingData) => {
     try {
-      let orgId = organizationId
-
-      // Step 1: Create organization if needed
-      if (mode === "create") {
-        const orgResponse = await api.user.createOrganization(data.organizationName)
-        orgId = orgResponse.id
-      }
-
-      if (!orgId) {
-        throw new Error("Organization ID not available")
-      }
-
-      // Step 2: Upload logo if provided
-      let logoUrl: string | undefined
-      if (data.logoFile) {
-        const formData = new FormData()
-        formData.append("file", data.logoFile)
-        formData.append("type", "logo")
-
-        const uploadResponse = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        })
-
-        if (uploadResponse.ok) {
-          const uploadResult = await uploadResponse.json()
-          logoUrl = uploadResult.data?.url
-        }
-      }
-
-      // Step 3: Update organization settings with branding
-      await api.organizations.updateSettings({
-        logoUrl: logoUrl,
-        primaryColor: data.brandColors.primary,
-        secondaryColor: data.brandColors.secondary,
-        settings: {
-          timezone: data.timezone,
-          customBranding: {
-            logo: logoUrl,
-            primaryColor: data.brandColors.primary,
-            secondaryColor: data.brandColors.secondary,
-            accentColor: data.brandColors.accent,
-          },
-        },
+      // Step 1: Create organization
+      const orgResponse = await fetch("/api/organizations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: data.organization.name,
+          slug: data.organization.slug,
+          description: data.organization.description,
+        }),
       })
 
-      // Step 4: Send invitations if any
-      if (data.inviteEmails.length > 0) {
+      if (!orgResponse.ok) {
+        const error = await orgResponse.json()
+        throw new Error(error.error || "Failed to create organization")
+      }
+
+      const { data: organization } = await orgResponse.json()
+
+      // Step 2: Create default workspace with branding
+      const workspaceResponse = await fetch("/api/workspaces", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          organizationId: organization.id,
+          name: data.workspace.name,
+          slug: data.organization.slug,
+          isDefault: true,
+          primaryColor: data.workspace.primaryColor,
+          secondaryColor: data.workspace.secondaryColor,
+          accentColor: data.workspace.accentColor,
+          logoUrl: data.workspace.logoUrl,
+        }),
+      })
+
+      if (!workspaceResponse.ok) {
+        const error = await workspaceResponse.json()
+        throw new Error(error.error || "Failed to create workspace")
+      }
+
+      const { data: workspace } = await workspaceResponse.json()
+
+      // Step 3: Send team invitations
+      if (data.teamInvites.length > 0) {
         try {
-          await api.invitations.bulkCreate(data.inviteEmails)
+          const invitePromises = data.teamInvites.map((invite) =>
+            fetch("/api/invitations", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({
+                email: invite.email,
+                role: invite.role,
+                organizationId: organization.id,
+                workspaceId: workspace.id,
+              }),
+            })
+          )
+
+          await Promise.all(invitePromises)
+
           toast({
             title: "Invitations sent",
-            description: `${data.inviteEmails.length} team member(s) have been invited`,
+            description: `${data.teamInvites.length} team member${data.teamInvites.length > 1 ? "s" : ""} invited`,
           })
         } catch (error) {
           console.error("Failed to send invitations:", error)
           toast({
             title: "Some invitations failed",
-            description: "You can resend them from the team settings",
+            description: "You can resend them from team settings",
             variant: "destructive",
           })
         }
       }
 
-      // Step 5: Refresh session to get updated organization data
+      // Step 4: Create quarterly rocks
+      if (data.rocks.length > 0) {
+        try {
+          const quarter = `Q${Math.floor(new Date().getMonth() / 3) + 1} ${new Date().getFullYear()}`
+          const dueDate = new Date()
+          dueDate.setMonth(dueDate.getMonth() + 3)
+
+          const rockPromises = data.rocks.map((rock) =>
+            fetch("/api/rocks", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({
+                title: rock.title,
+                description: rock.description,
+                quarter,
+                dueDate: dueDate.toISOString().split("T")[0],
+                status: "on-track",
+                progress: 0,
+                assignedTo: currentUser?.id,
+                workspaceId: workspace.id,
+              }),
+            })
+          )
+
+          await Promise.all(rockPromises)
+
+          toast({
+            title: "Rocks created",
+            description: `${data.rocks.length} quarterly goal${data.rocks.length > 1 ? "s" : ""} added`,
+          })
+        } catch (error) {
+          console.error("Failed to create rocks:", error)
+          toast({
+            title: "Some rocks failed to create",
+            description: "You can add them from the Rocks page",
+            variant: "destructive",
+          })
+        }
+      }
+
+      // Step 5: Refresh session and navigate to dashboard
       await refreshSession()
 
-      setIsComplete(true)
+      toast({
+        title: "Welcome to Align! 🎉",
+        description: "Your workspace is ready. Let's build daily accountability.",
+      })
 
-      // Navigate to dashboard after a brief delay
       setTimeout(() => {
         setCurrentPage("dashboard")
-      }, 2000)
+      }, 1500)
     } catch (error) {
       console.error("Setup failed:", error)
+      toast({
+        title: "Setup failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      })
       throw error
     }
   }
@@ -105,8 +158,9 @@ export function SetupOrganizationPage({
   return (
     <OnboardingWizard
       onComplete={handleComplete}
-      initialData={{
-        organizationName: organizationName || "",
+      currentUser={{
+        email: currentUser?.email || "",
+        name: currentUser?.name || "",
       }}
     />
   )
