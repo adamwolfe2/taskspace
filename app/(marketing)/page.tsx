@@ -1,7 +1,7 @@
 "use client"
 
-import { motion, useScroll, useTransform, useInView } from "framer-motion"
-import { useRef } from "react"
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -46,7 +46,6 @@ import { MegaMenu } from "@/components/marketing/mega-menu"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
 
 // Animation variants
 const fadeInUp = {
@@ -72,9 +71,11 @@ const scaleIn = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
 }
 
-// Interactive Feature Showcase
-function InteractiveFeatureShowcase() {
-  const [selectedFeature, setSelectedFeature] = useState("eod")
+// Hero Section - Narrative-driven with embedded preview
+function HeroSection() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+  const [selectedFeature, setSelectedFeature] = useState("rocks")
 
   const features = [
     { id: "eod", label: "EOD Reports", component: DemoEODForm },
@@ -86,57 +87,7 @@ function InteractiveFeatureShowcase() {
     { id: "vto", label: "Vision/Traction", component: DemoVTO },
   ]
 
-  const SelectedComponent = features.find(f => f.id === selectedFeature)?.component || DemoEODForm
-
-  return (
-    <section className="py-16 bg-white border-y border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-slate-900 mb-2">
-            GET 400% MORE DONE • RUN ON EOS
-          </h2>
-        </div>
-
-        {/* Feature Selection Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
-          {features.map((feature) => (
-            <button
-              key={feature.id}
-              onClick={() => setSelectedFeature(feature.id)}
-              className={cn(
-                "px-6 py-3 rounded-full border-2 text-sm font-medium transition-all",
-                selectedFeature === feature.id
-                  ? "bg-slate-900 border-slate-900 text-white shadow-lg"
-                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:shadow-md"
-              )}
-            >
-              {selectedFeature === feature.id && (
-                <Check className="w-4 h-4 inline-block mr-2" />
-              )}
-              {feature.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Demo Display */}
-        <motion.div
-          key={selectedFeature}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          <SelectedComponent />
-        </motion.div>
-      </div>
-    </section>
-  )
-}
-
-// Hero Section - Narrative-driven with embedded preview
-function HeroSection() {
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: "-100px" })
+  const SelectedComponent = features.find(f => f.id === selectedFeature)?.component || DemoRocks
 
   return (
     <section ref={ref} className="relative pt-32 pb-20 overflow-hidden">
@@ -234,7 +185,33 @@ function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Product Screenshot - Embedded Demo */}
+        {/* GET 400% MORE DONE - Feature Buttons */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">
+            GET 400% MORE DONE • RUN ON EOS
+          </h2>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {features.map((feature) => (
+              <button
+                key={feature.id}
+                onClick={() => setSelectedFeature(feature.id)}
+                className={cn(
+                  "px-5 py-2.5 rounded-full border-2 text-sm font-medium transition-all",
+                  selectedFeature === feature.id
+                    ? "bg-slate-900 border-slate-900 text-white shadow-lg"
+                    : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:shadow-md"
+                )}
+              >
+                {selectedFeature === feature.id && (
+                  <Check className="w-4 h-4 inline-block mr-2" />
+                )}
+                {feature.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Interactive Demo - Browser Frame */}
         <motion.div
           initial={{ opacity: 0, y: 60 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -261,120 +238,19 @@ function HeroSection() {
                 </div>
               </div>
 
-              {/* Actual Product Screenshot */}
-              <div className="bg-gradient-to-br from-slate-50 to-white p-4 sm:p-8">
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-6">
-                  {/* Sidebar */}
-                  <div className="hidden sm:block sm:col-span-2 space-y-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg" />
-                    {[
-                      { active: true, color: "bg-red-50 border-red-200" },
-                      { active: false, color: "bg-slate-50" },
-                      { active: false, color: "bg-slate-50" },
-                      { active: false, color: "bg-slate-50" },
-                      { active: false, color: "bg-slate-50" },
-                    ].map((item, i) => (
-                      <div
-                        key={i}
-                        className={cn(
-                          "h-10 rounded-lg border transition-all",
-                          item.color
-                        )}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Main Content */}
-                  <div className="sm:col-span-10 space-y-6">
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      {[
-                        { icon: Target, value: "94%", label: "On Track", color: "from-red-500 to-red-600" },
-                        { icon: CheckCircle, value: "28", label: "Completed", color: "from-emerald-500 to-emerald-600" },
-                        { icon: TrendingUp, value: "12", label: "In Progress", color: "from-blue-500 to-blue-600" },
-                        { icon: Users, value: "8", label: "Team Size", color: "from-purple-500 to-purple-600" },
-                      ].map((stat, i) => {
-                        const Icon = stat.icon
-                        return (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={isInView ? { opacity: 1, y: 0 } : {}}
-                            transition={{ delay: 0.4 + i * 0.1 }}
-                            className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"
-                          >
-                            <div className={cn("w-10 h-10 rounded-lg bg-gradient-to-br mb-3 flex items-center justify-center", stat.color)}>
-                              <Icon className="w-5 h-5 text-white" />
-                            </div>
-                            <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
-                            <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
-                          </motion.div>
-                        )
-                      })}
-                    </div>
-
-                    {/* Content Grid */}
-                    <div className="grid grid-cols-3 gap-6">
-                      {/* EOD Reports */}
-                      <div className="col-span-2 bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-semibold text-slate-900">Recent EOD Reports</h3>
-                          <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">Live</Badge>
-                        </div>
-                        <div className="space-y-3">
-                          {[1, 2, 3].map((i) => (
-                            <motion.div
-                              key={i}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={isInView ? { opacity: 1, x: 0 } : {}}
-                              transition={{ delay: 0.6 + i * 0.1 }}
-                              className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
-                            >
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300" />
-                              <div className="flex-1 min-w-0">
-                                <div className="h-3 bg-slate-300 rounded w-3/4 mb-2" />
-                                <div className="h-2 bg-slate-200 rounded w-1/2" />
-                              </div>
-                              <Badge className="bg-emerald-100 text-emerald-700 border-0">
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Done
-                              </Badge>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Rock Progress */}
-                      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                        <h3 className="font-semibold text-slate-900 mb-4">Rock Progress</h3>
-                        <div className="space-y-4">
-                          {[85, 62, 45].map((progress, i) => (
-                            <motion.div
-                              key={i}
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                              transition={{ delay: 0.8 + i * 0.1 }}
-                              className="space-y-2"
-                            >
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-slate-600">Q1 Goal {i + 1}</span>
-                                <span className="font-semibold text-slate-900">{progress}%</span>
-                              </div>
-                              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <motion.div
-                                  initial={{ width: 0 }}
-                                  animate={isInView ? { width: `${progress}%` } : {}}
-                                  transition={{ duration: 1, delay: 0.8 + i * 0.1 }}
-                                  className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full"
-                                />
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {/* Interactive Demo Component */}
+              <div className="bg-gradient-to-br from-slate-50 to-white p-4 sm:p-8 min-h-[500px]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={selectedFeature}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <SelectedComponent />
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
           </div>
@@ -1194,7 +1070,6 @@ export default function HomePage() {
     <>
       <MegaMenu />
       <HeroSection />
-      <InteractiveFeatureShowcase />
       <LogoSection />
       <ProblemSolutionSection />
       <StatsSection />
