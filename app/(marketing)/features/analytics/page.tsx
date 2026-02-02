@@ -231,6 +231,9 @@ function InteractiveAnalyticsDemo() {
   )
 }
 
+import { MegaMenu } from "@/components/marketing/mega-menu"
+import { MarketingFooter } from "@/components/marketing/footer"
+
 const features = [
   {
     icon: TrendingUp,
@@ -278,7 +281,9 @@ const insights = [
 
 export default function AnalyticsPage() {
   return (
-    <div className="pt-20">
+    <>
+      <MegaMenu />
+      <div className="pt-20">
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -552,5 +557,7 @@ export default function AnalyticsPage() {
         </div>
       </section>
     </div>
+    <MarketingFooter />
+    </>
   )
 }

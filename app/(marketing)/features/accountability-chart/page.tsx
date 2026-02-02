@@ -20,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { MegaMenu } from "@/components/marketing/mega-menu"
+import { MarketingFooter } from "@/components/marketing/footer"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -65,7 +67,9 @@ export default function AccountabilityChartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <MegaMenu />
+      <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
       <section className="py-20 bg-white">
@@ -79,7 +83,7 @@ export default function AccountabilityChartPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-blue-50 text-blue-600 border-blue-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   <Building2 className="w-4 h-4 mr-1" />
                   ACCOUNTABILITY CHART
                 </Badge>
@@ -233,7 +237,7 @@ export default function AccountabilityChartPage() {
                       <ul className="space-y-2">
                         {roles[selectedRole as keyof typeof roles].responsibilities.map((resp, i) => (
                           <li key={i} className="flex items-center gap-2 text-xs text-slate-700">
-                            <CheckCircle className="w-3 h-3 text-emerald-600 flex-shrink-0" />
+                            <CheckCircle className="w-3 h-3 text-black font-bold flex-shrink-0" />
                             {resp}
                           </li>
                         ))}
@@ -274,13 +278,13 @@ export default function AccountabilityChartPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50 mb-4">
+                <Badge variant="outline" className="border-gray-200 text-gray-600 bg-white mb-4">
                   The Problem
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                Traditional org charts <span className="text-red-600">don't define accountability</span>
+                Traditional org charts <span className="text-black font-bold">don't define accountability</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -308,13 +312,13 @@ export default function AccountabilityChartPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   The Solution
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                Crystal-clear <span className="text-emerald-600">seats and roles</span>
+                Crystal-clear <span className="text-black font-bold">seats and roles</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -341,7 +345,7 @@ export default function AccountabilityChartPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-blue-50 text-blue-600 border-blue-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <UserCircle className="w-4 h-4 mr-1" />
                 SEAT DEFINITION
               </Badge>
@@ -365,8 +369,8 @@ export default function AccountabilityChartPage() {
                   const Icon = item.icon
                   return (
                     <li key={i} className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-5 h-5 text-blue-600" />
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-5 h-5 text-black" />
                       </div>
                       <div className="flex-1 pt-2">
                         <span className="text-slate-700">{item.text}</span>
@@ -378,7 +382,7 @@ export default function AccountabilityChartPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 border border-blue-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-blue-100">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
@@ -467,9 +471,9 @@ export default function AccountabilityChartPage() {
                         <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                           <span className="text-sm font-medium text-slate-900">{item.label}</span>
                           {item.value ? (
-                            <CheckCircle className="w-5 h-5 text-emerald-600" />
+                            <CheckCircle className="w-5 h-5 text-black font-bold" />
                           ) : (
-                            <X className="w-5 h-5 text-red-600" />
+                            <X className="w-5 h-5 text-black font-bold" />
                           )}
                         </div>
                       ))}
@@ -486,7 +490,7 @@ export default function AccountabilityChartPage() {
             </div>
 
             <div className="order-1 lg:order-2 space-y-6">
-              <Badge className="bg-purple-50 text-purple-600 border-purple-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Users className="w-4 h-4 mr-1" />
                 PEOPLE ANALYZER
               </Badge>
@@ -508,7 +512,7 @@ export default function AccountabilityChartPage() {
                   "Make objective hiring and seating decisions",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -523,7 +527,7 @@ export default function AccountabilityChartPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200">
+              <Badge className="bg-emerald-50 text-black font-bold border-emerald-200">
                 <Building2 className="w-4 h-4 mr-1" />
                 ORG CLARITY
               </Badge>
@@ -545,7 +549,7 @@ export default function AccountabilityChartPage() {
                   "Quarterly updates as org evolves",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black font-bold flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}

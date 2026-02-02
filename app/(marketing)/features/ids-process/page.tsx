@@ -21,6 +21,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { MegaMenu } from "@/components/marketing/mega-menu"
+import { MarketingFooter } from "@/components/marketing/footer"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -39,7 +41,9 @@ export default function IDSProcessPage() {
   const [activeStep, setActiveStep] = useState<'identify' | 'discuss' | 'solve'>('identify')
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <MegaMenu />
+      <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
       <section className="py-20 bg-white">
@@ -53,7 +57,7 @@ export default function IDSProcessPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-orange-50 text-orange-600 border-orange-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   <Zap className="w-4 h-4 mr-1" />
                   IDS PROCESS
                 </Badge>
@@ -202,7 +206,7 @@ export default function IDSProcessPage() {
                       >
                         <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
                           <div className="flex items-center gap-2 mb-2">
-                            <CheckSquare className="w-4 h-4 text-emerald-600" />
+                            <CheckSquare className="w-4 h-4 text-black font-bold" />
                             <div className="text-xs font-semibold text-emerald-900 uppercase">Solution</div>
                           </div>
                           <p className="text-sm text-slate-700 mb-3">Redesign onboarding flow with video tutorials</p>
@@ -273,13 +277,13 @@ export default function IDSProcessPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50 mb-4">
+                <Badge variant="outline" className="border-gray-200 text-gray-600 bg-white mb-4">
                   The Problem
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                Most teams <span className="text-red-600">talk in circles</span>
+                Most teams <span className="text-black font-bold">talk in circles</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -307,13 +311,13 @@ export default function IDSProcessPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   The Solution
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                A proven process that <span className="text-emerald-600">actually solves things</span>
+                A proven process that <span className="text-black font-bold">actually solves things</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -340,7 +344,7 @@ export default function IDSProcessPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-orange-50 text-orange-600 border-orange-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <AlertCircle className="w-4 h-4 mr-1" />
                 IDENTIFY
               </Badge>
@@ -364,8 +368,8 @@ export default function IDSProcessPage() {
                   const Icon = item.icon
                   return (
                     <li key={i} className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-5 h-5 text-orange-600" />
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-5 h-5 text-black" />
                       </div>
                       <div className="flex-1 pt-2">
                         <span className="text-slate-700">{item.text}</span>
@@ -377,7 +381,7 @@ export default function IDSProcessPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-8 border border-orange-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-orange-100">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <div className="flex items-center gap-2 mb-3">
                     <AlertCircle className="w-5 h-5 text-orange-600" />
@@ -416,7 +420,7 @@ export default function IDSProcessPage() {
                       </label>
                       <div className="p-3 bg-red-50 rounded-lg border border-red-100">
                         <p className="text-xs text-slate-700">
-                          <span className="font-semibold text-red-600">Churn Rate:</span> 2.5% (above 2% target)
+                          <span className="font-semibold text-black font-bold">Churn Rate:</span> 2.5% (above 2% target)
                         </p>
                       </div>
                     </div>
@@ -488,7 +492,7 @@ export default function IDSProcessPage() {
             </div>
 
             <div className="order-1 lg:order-2 space-y-6">
-              <Badge className="bg-blue-50 text-blue-600 border-blue-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <MessageSquare className="w-4 h-4 mr-1" />
                 DISCUSS
               </Badge>
@@ -510,7 +514,7 @@ export default function IDSProcessPage() {
                   "Timer to keep discussion focused (10 min max)",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -525,7 +529,7 @@ export default function IDSProcessPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200">
+              <Badge className="bg-emerald-50 text-black font-bold border-emerald-200">
                 <CheckSquare className="w-4 h-4 mr-1" />
                 SOLVE
               </Badge>
@@ -547,7 +551,7 @@ export default function IDSProcessPage() {
                   "Link action items to next week's Level 10 agenda",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black font-bold flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -565,7 +569,7 @@ export default function IDSProcessPage() {
               <div className="bg-gradient-to-br from-emerald-50 to-cyan-50 rounded-2xl p-8 border border-emerald-100">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <CheckSquare className="w-5 h-5 text-emerald-600" />
+                    <CheckSquare className="w-5 h-5 text-black font-bold" />
                     <h3 className="font-bold text-slate-900">Solution & Action Items</h3>
                   </div>
 

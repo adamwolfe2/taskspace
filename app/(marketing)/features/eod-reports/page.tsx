@@ -21,6 +21,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { MegaMenu } from "@/components/marketing/mega-menu"
+import { MarketingFooter } from "@/components/marketing/footer"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -37,7 +39,9 @@ const staggerContainer = {
 
 export default function EODReportsPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <MegaMenu />
+      <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
       <section className="py-20 bg-white">
@@ -51,7 +55,7 @@ export default function EODReportsPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-purple-50 text-purple-600 border-purple-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   <Sparkles className="w-4 h-4 mr-1" />
                   AI-POWERED EOD REPORTS
                 </Badge>
@@ -106,7 +110,7 @@ export default function EODReportsPage() {
                 <div className="p-6 space-y-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-slate-900">Submit EOD Report</h3>
-                    <Badge className="bg-purple-50 text-purple-600 border-0">
+                    <Badge className="bg-white text-gray-600 border-gray-200">
                       <Brain className="w-3 h-3 mr-1" />
                       AI Powered
                     </Badge>
@@ -124,7 +128,7 @@ export default function EODReportsPage() {
                   </div>
 
                   <div className="flex items-center justify-center py-2">
-                    <div className="flex items-center gap-2 text-purple-600">
+                    <div className="flex items-center gap-2 text-black">
                       <Sparkles className="w-5 h-5 animate-pulse" />
                       <span className="text-sm font-medium">AI Processing...</span>
                     </div>
@@ -134,7 +138,7 @@ export default function EODReportsPage() {
                   <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <Target className="w-4 h-4 text-emerald-600" />
+                        <Target className="w-4 h-4 text-black" />
                         <span className="text-xs font-semibold text-slate-900 uppercase">Rock: Product Launch</span>
                       </div>
                       <p className="text-sm text-slate-600">✓ Finished product roadmap Q1</p>
@@ -142,20 +146,20 @@ export default function EODReportsPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <Target className="w-4 h-4 text-blue-600" />
+                        <Target className="w-4 h-4 text-black" />
                         <span className="text-xs font-semibold text-slate-900 uppercase">Rock: Platform Stability</span>
                       </div>
                       <p className="text-sm text-slate-600">✓ Fixed bug in dashboard</p>
                     </div>
                     <div className="pt-3 border-t border-slate-200">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-red-600 uppercase">🚧 Blockers</span>
+                        <span className="text-xs font-semibold text-gray-700 uppercase">🚧 Blockers</span>
                       </div>
                       <p className="text-sm text-slate-600">• Blocked on API access from IT</p>
                     </div>
                   </div>
 
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-xl">
+                  <Button className="w-full bg-black hover:bg-gray-900 text-white rounded-xl">
                     Submit Report
                   </Button>
                 </div>
@@ -194,13 +198,13 @@ export default function EODReportsPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50 mb-4">
+                <Badge variant="outline" className="border-gray-200 text-gray-600 bg-white mb-4">
                   You deserve better than this
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                EOD reports shouldn't take <span className="text-red-600">30 minutes</span>
+                EOD reports shouldn't take <span className="text-black font-bold">30 minutes</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -228,13 +232,13 @@ export default function EODReportsPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   You deserve the best
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                Submit EODs in <span className="text-emerald-600">10 seconds</span>
+                Submit EODs in <span className="text-black font-bold">10 seconds</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -261,7 +265,7 @@ export default function EODReportsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-purple-50 text-purple-600 border-purple-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Brain className="w-4 h-4 mr-1" />
                 AI INTELLIGENCE
               </Badge>
@@ -285,8 +289,8 @@ export default function EODReportsPage() {
                   const Icon = item.icon
                   return (
                     <li key={i} className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-5 h-5 text-purple-600" />
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-5 h-5 text-black" />
                       </div>
                       <div className="flex-1 pt-2">
                         <span className="text-slate-700">{item.text}</span>
@@ -298,23 +302,23 @@ export default function EODReportsPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-slate-900">AI Analysis</span>
-                    <Badge className="bg-purple-600 text-white border-0">Processing</Badge>
+                    <Badge className="bg-black text-white border-0">Processing</Badge>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <div className="w-2 h-2 rounded-full bg-gray-600 animate-pulse" />
                       <span className="text-sm text-slate-600">Detecting rock associations...</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" style={{ animationDelay: "0.2s" }} />
+                      <div className="w-2 h-2 rounded-full bg-gray-600 animate-pulse" style={{ animationDelay: "0.2s" }} />
                       <span className="text-sm text-slate-600">Identifying blockers...</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" style={{ animationDelay: "0.4s" }} />
+                      <div className="w-2 h-2 rounded-full bg-gray-600 animate-pulse" style={{ animationDelay: "0.4s" }} />
                       <span className="text-sm text-slate-600">Calculating progress metrics...</span>
                     </div>
                   </div>
@@ -347,7 +351,7 @@ export default function EODReportsPage() {
                         </div>
                         <Badge className={cn(
                           "border-0",
-                          member.color === "emerald" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                          member.color === "emerald" ? "bg-gray-100 text-gray-700" : "bg-gray-100 text-gray-700"
                         )}>
                           {member.status}
                         </Badge>
@@ -359,7 +363,7 @@ export default function EODReportsPage() {
             </div>
 
             <div className="order-1 lg:order-2 space-y-6">
-              <Badge className="bg-blue-50 text-blue-600 border-blue-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <BarChart3 className="w-4 h-4 mr-1" />
                 TEAM VISIBILITY
               </Badge>
@@ -381,7 +385,7 @@ export default function EODReportsPage() {
                   "Spot trends in productivity and morale",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -408,7 +412,7 @@ export default function EODReportsPage() {
               { value: "2.5x", label: "Faster rock completion" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold text-black mb-2">
                   {stat.value}
                 </div>
                 <div className="text-slate-600">{stat.label}</div>
@@ -453,7 +457,7 @@ export default function EODReportsPage() {
                 </div>
                 <p className="text-white/90 mb-6">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-600" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
                   <div>
                     <div className="font-semibold text-white">{testimonial.author}</div>
                     <div className="text-sm text-white/60">{testimonial.role}</div>
@@ -466,7 +470,7 @@ export default function EODReportsPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500">
+      <section className="py-20 lg:py-32 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-5xl font-bold text-white mb-6">
             Start submitting better EODs today
@@ -484,19 +488,8 @@ export default function EODReportsPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
-            <div>© 2026 Align. All rights reserved.</div>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">Security</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
+    <MarketingFooter />
+    </>
   )
 }

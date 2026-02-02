@@ -21,6 +21,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { MegaMenu } from "@/components/marketing/mega-menu"
+import { MarketingFooter } from "@/components/marketing/footer"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -49,7 +51,9 @@ export default function Level10MeetingsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <MegaMenu />
+      <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
       <section className="py-20 bg-white">
@@ -63,7 +67,7 @@ export default function Level10MeetingsPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-purple-50 text-purple-600 border-purple-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   <Calendar className="w-4 h-4 mr-1" />
                   LEVEL 10 MEETINGS
                 </Badge>
@@ -120,13 +124,13 @@ export default function Level10MeetingsPage() {
                       <h3 className="text-lg font-bold text-slate-900">Leadership Team Level 10</h3>
                       <p className="text-xs text-slate-500">Every Monday @ 10:00 AM</p>
                     </div>
-                    <Badge className="bg-purple-100 text-purple-700">90 min</Badge>
+                    <Badge className="bg-white text-gray-600 border-gray-200">90 min</Badge>
                   </div>
 
                   {/* Progress Bar */}
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-purple-600 to-pink-600 rounded-full transition-all"
+                      className="h-full bg-gradient-to-r from-gray-600 to-gray-600 rounded-full transition-all"
                       style={{ width: "35%" }}
                     />
                   </div>
@@ -146,7 +150,7 @@ export default function Level10MeetingsPage() {
                       >
                         <div className="flex items-center gap-3">
                           {section.status === "done" ? (
-                            <CheckSquare className="w-5 h-5 text-emerald-600" />
+                            <CheckSquare className="w-5 h-5 text-black font-bold" />
                           ) : section.status === "current" ? (
                             <Clock className="w-5 h-5 text-purple-600 animate-pulse" />
                           ) : (
@@ -204,13 +208,13 @@ export default function Level10MeetingsPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50 mb-4">
+                <Badge variant="outline" className="border-gray-200 text-gray-600 bg-white mb-4">
                   The Problem
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                Most leadership meetings <span className="text-red-600">waste time</span>
+                Most leadership meetings <span className="text-black font-bold">waste time</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -238,13 +242,13 @@ export default function Level10MeetingsPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   The Solution
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                Structured meetings that <span className="text-emerald-600">solve problems</span>
+                Structured meetings that <span className="text-black font-bold">solve problems</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -271,7 +275,7 @@ export default function Level10MeetingsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-purple-50 text-purple-600 border-purple-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Zap className="w-4 h-4 mr-1" />
                 AUTO-POPULATED
               </Badge>
@@ -295,8 +299,8 @@ export default function Level10MeetingsPage() {
                   const Icon = item.icon
                   return (
                     <li key={i} className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-5 h-5 text-purple-600" />
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-5 h-5 text-black" />
                       </div>
                       <div className="flex-1 pt-2">
                         <span className="text-slate-700">{item.text}</span>
@@ -308,11 +312,11 @@ export default function Level10MeetingsPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-purple-100">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-bold text-slate-900">Scorecard Review</h3>
-                    <Badge className="bg-purple-100 text-purple-700">5 min</Badge>
+                    <Badge className="bg-white text-gray-600 border-gray-200">5 min</Badge>
                   </div>
                   <div className="space-y-2">
                     {[
@@ -330,7 +334,7 @@ export default function Level10MeetingsPage() {
                         <span className="text-sm font-medium text-slate-900">{item.metric}</span>
                         <span className={cn(
                           "text-sm font-bold",
-                          item.status === "up" ? "text-emerald-600" : "text-red-600"
+                          item.status === "up" ? "text-black font-bold" : "text-black font-bold"
                         )}>
                           {item.value}
                         </span>
@@ -343,11 +347,11 @@ export default function Level10MeetingsPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between p-2 bg-emerald-50 rounded">
                         <span className="text-xs text-slate-900">Product Launch</span>
-                        <span className="text-xs font-bold text-emerald-600">85%</span>
+                        <span className="text-xs font-bold text-black font-bold">85%</span>
                       </div>
                       <div className="flex items-center justify-between p-2 bg-emerald-50 rounded">
                         <span className="text-xs text-slate-900">Revenue Growth</span>
-                        <span className="text-xs font-bold text-emerald-600">72%</span>
+                        <span className="text-xs font-bold text-black font-bold">72%</span>
                       </div>
                     </div>
                   </div>
@@ -418,7 +422,7 @@ export default function Level10MeetingsPage() {
             </div>
 
             <div className="order-1 lg:order-2 space-y-6">
-              <Badge className="bg-orange-50 text-orange-600 border-orange-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Zap className="w-4 h-4 mr-1" />
                 IDS PROCESS
               </Badge>
@@ -440,7 +444,7 @@ export default function Level10MeetingsPage() {
                   "Automatic to-dos created from solutions",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -455,7 +459,7 @@ export default function Level10MeetingsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-blue-50 text-blue-600 border-blue-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Clock className="w-4 h-4 mr-1" />
                 MEETING TIMER
               </Badge>
@@ -477,14 +481,14 @@ export default function Level10MeetingsPage() {
                   "Option to extend critical sections",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
               </ul>
 
               <Link href="/app?page=register">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6">
+                <Button className="bg-black hover:bg-gray-900 text-white rounded-full px-6">
                   Start better meetings
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -492,7 +496,7 @@ export default function Level10MeetingsPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 border border-blue-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-blue-100">
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <div className="text-center mb-6">
                     <div className="text-5xl font-bold text-slate-900 mb-2">35:42</div>
@@ -501,7 +505,7 @@ export default function Level10MeetingsPage() {
 
                   <div className="h-3 bg-slate-100 rounded-full overflow-hidden mb-6">
                     <div
-                      className="h-full bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full"
+                      className="h-full bg-gradient-to-r from-gray-600 to-gray-600 rounded-full"
                       style={{ width: "60%" }}
                     />
                   </div>
@@ -544,7 +548,7 @@ export default function Level10MeetingsPage() {
               { value: "100%", label: "Attendance rate (same time, same day)" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold bg-gradient-to-r from-gray-600 to-gray-600 bg-clip-text text-transparent mb-2">
                   {stat.value}
                 </div>
                 <div className="text-slate-600">{stat.label}</div>

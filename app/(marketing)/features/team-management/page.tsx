@@ -248,6 +248,9 @@ function InteractiveTeamDemo() {
   )
 }
 
+import { MegaMenu } from "@/components/marketing/mega-menu"
+import { MarketingFooter } from "@/components/marketing/footer"
+
 const features = [
   {
     icon: Building2,
@@ -284,7 +287,9 @@ const permissions = [
 
 export default function TeamManagementPage() {
   return (
-    <div className="pt-20">
+    <>
+      <MegaMenu />
+      <div className="pt-20">
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -544,5 +549,7 @@ export default function TeamManagementPage() {
         </div>
       </section>
     </div>
+    <MarketingFooter />
+    </>
   )
 }

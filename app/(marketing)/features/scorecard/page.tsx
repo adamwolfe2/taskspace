@@ -21,6 +21,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { MegaMenu } from "@/components/marketing/mega-menu"
+import { MarketingFooter } from "@/components/marketing/footer"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -39,7 +41,9 @@ export default function ScorecardPage() {
   const [selectedWeek, setSelectedWeek] = useState(2)
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <MegaMenu />
+      <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
       <section className="py-20 bg-white">
@@ -53,7 +57,7 @@ export default function ScorecardPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-blue-50 text-blue-600 border-blue-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   <BarChart3 className="w-4 h-4 mr-1" />
                   WEEKLY SCORECARD
                 </Badge>
@@ -207,13 +211,13 @@ export default function ScorecardPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50 mb-4">
+                <Badge variant="outline" className="border-gray-200 text-gray-600 bg-white mb-4">
                   The Problem
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                Spreadsheet scorecards <span className="text-red-600">don't work</span>
+                Spreadsheet scorecards <span className="text-black font-bold">don't work</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -241,13 +245,13 @@ export default function ScorecardPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   The Solution
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                Live scorecards that <span className="text-emerald-600">drive action</span>
+                Live scorecards that <span className="text-black font-bold">drive action</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -274,7 +278,7 @@ export default function ScorecardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-blue-50 text-blue-600 border-blue-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Target className="w-4 h-4 mr-1" />
                 CUSTOM METRICS
               </Badge>
@@ -298,8 +302,8 @@ export default function ScorecardPage() {
                   const Icon = item.icon
                   return (
                     <li key={i} className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-5 h-5 text-blue-600" />
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-5 h-5 text-black" />
                       </div>
                       <div className="flex-1 pt-2">
                         <span className="text-slate-700">{item.text}</span>
@@ -311,7 +315,7 @@ export default function ScorecardPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 border border-blue-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   <h3 className="font-bold text-slate-900 mb-4">Add Custom Metric</h3>
                   <div className="space-y-3">
@@ -350,7 +354,7 @@ export default function ScorecardPage() {
                       </select>
                     </div>
                   </div>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg mt-4">
+                  <Button className="w-full bg-black hover:bg-gray-900 text-white rounded-lg mt-4">
                     Add Metric
                   </Button>
                 </div>
@@ -368,7 +372,7 @@ export default function ScorecardPage() {
               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-slate-900">Trend Alerts</h3>
-                  <Badge className="bg-purple-100 text-purple-700 border-0">
+                  <Badge className="bg-white text-gray-600 border-gray-200">
                     <Brain className="w-3 h-3 mr-1" />
                     AI Powered
                   </Badge>
@@ -422,7 +426,7 @@ export default function ScorecardPage() {
             </div>
 
             <div className="order-1 lg:order-2 space-y-6">
-              <Badge className="bg-purple-50 text-purple-600 border-purple-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Brain className="w-4 h-4 mr-1" />
                 AI INSIGHTS
               </Badge>
@@ -444,7 +448,7 @@ export default function ScorecardPage() {
                   "One-click escalation to IDS issues list",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
@@ -459,7 +463,7 @@ export default function ScorecardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Calendar className="w-4 h-4 mr-1" />
                 LEVEL 10 INTEGRATION
               </Badge>
@@ -481,14 +485,14 @@ export default function ScorecardPage() {
                   "One-click to add scorecard issues to IDS",
                 ].map((benefit, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{benefit}</span>
                   </li>
                 ))}
               </ul>
 
               <Link href="/app?page=register">
-                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6">
+                <Button className="bg-black hover:bg-gray-900 text-white rounded-full px-6">
                   Start tracking metrics
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -496,7 +500,7 @@ export default function ScorecardPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-emerald-50 to-cyan-50 rounded-2xl p-8 border border-emerald-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <h3 className="font-bold text-slate-900 mb-4">Level 10 - Scorecard Review</h3>
                   <div className="space-y-3">
@@ -561,7 +565,7 @@ export default function ScorecardPage() {
               { value: "5 min", label: "Scorecard review in Level 10" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold text-black mb-2">
                   {stat.value}
                 </div>
                 <div className="text-slate-600">{stat.label}</div>
@@ -606,7 +610,7 @@ export default function ScorecardPage() {
                 </div>
                 <p className="text-white/90 mb-6 leading-relaxed">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-600" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
                   <div>
                     <div className="font-semibold text-white">{testimonial.author}</div>
                     <div className="text-sm text-white/60">{testimonial.role}</div>
@@ -619,7 +623,7 @@ export default function ScorecardPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-500">
+      <section className="py-20 lg:py-32 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <BarChart3 className="w-20 h-20 text-white mx-auto mb-6" />
           <h2 className="text-5xl font-bold text-white mb-6">
@@ -638,19 +642,8 @@ export default function ScorecardPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
-            <div>© 2026 Align. All rights reserved.</div>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">Security</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
+    <MarketingFooter />
+    </>
   )
 }

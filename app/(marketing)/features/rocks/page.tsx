@@ -20,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { MegaMenu } from "@/components/marketing/mega-menu"
+import { MarketingFooter } from "@/components/marketing/footer"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -36,7 +38,9 @@ const staggerContainer = {
 
 export default function RocksPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <MegaMenu />
+      <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
       <section className="py-20 bg-white">
@@ -50,7 +54,7 @@ export default function RocksPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-red-50 text-red-600 border-red-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   <Target className="w-4 h-4 mr-1" />
                   QUARTERLY ROCKS
                 </Badge>
@@ -105,15 +109,15 @@ export default function RocksPage() {
                 <div className="p-6 space-y-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-slate-900">Q1 2026 Rocks</h3>
-                    <Badge className="bg-emerald-500 text-white border-0">On Track</Badge>
+                    <Badge className="bg-gray-100 text-gray-700 border-0">On Track</Badge>
                   </div>
 
                   {/* Rock Cards */}
                   <div className="space-y-3">
                     {[
-                      { title: "Launch new product line", progress: 85, status: "on-track", color: "emerald" },
-                      { title: "Grow revenue by 25%", progress: 62, status: "on-track", color: "emerald" },
-                      { title: "Hire 10 new team members", progress: 45, status: "at-risk", color: "orange" },
+                      { title: "Launch new product line", progress: 85, status: "on-track", color: "gray" },
+                      { title: "Grow revenue by 25%", progress: 62, status: "on-track", color: "gray" },
+                      { title: "Hire 10 new team members", progress: 45, status: "at-risk", color: "gray" },
                     ].map((rock, i) => (
                       <div key={i} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                         <div className="flex items-center justify-between mb-3">
@@ -125,19 +129,13 @@ export default function RocksPage() {
                         </div>
                         <div className="h-2 bg-slate-200 rounded-full overflow-hidden mb-2">
                           <div
-                            className={cn(
-                              "h-full rounded-full transition-all",
-                              rock.color === "emerald" ? "bg-emerald-500" : "bg-orange-500"
-                            )}
+                            className="h-full bg-gray-600 rounded-full transition-all"
                             style={{ width: `${rock.progress}%` }}
                           />
                         </div>
                         <div className="flex items-center justify-between text-xs text-slate-500">
                           <span>Due: Mar 31, 2026</span>
-                          <span className={cn(
-                            "font-medium",
-                            rock.color === "emerald" ? "text-emerald-600" : "text-orange-600"
-                          )}>
+                          <span className="font-medium text-gray-700">
                             {rock.status === "on-track" ? "On Track" : "At Risk"}
                           </span>
                         </div>
@@ -178,13 +176,13 @@ export default function RocksPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50 mb-4">
+                <Badge variant="outline" className="border-gray-200 text-gray-600 bg-white mb-4">
                   The Problem
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                Most quarterly goals <span className="text-red-600">never get done</span>
+                Most quarterly goals <span className="text-black font-bold">never get done</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -196,14 +194,14 @@ export default function RocksPage() {
                   "Rock reviews happen too late to course-correct",
                 ].map((problem, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <X className="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{problem}</span>
                   </motion.div>
                 ))}
               </motion.div>
             </motion.div>
 
-            {/* The Align Way */}
+            {/* The Taskspace Way */}
             <motion.div
               initial="hidden"
               whileInView="visible"
@@ -212,13 +210,13 @@ export default function RocksPage() {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 mb-4">
+                <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   The Solution
                 </Badge>
               </motion.div>
 
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
-                Execute with <span className="text-emerald-600">perfect clarity</span>
+                Execute with <span className="text-black font-bold">perfect clarity</span>
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="space-y-4">
@@ -230,7 +228,7 @@ export default function RocksPage() {
                   "Real-time dashboards for leadership visibility",
                 ].map((solution, i) => (
                   <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{solution}</span>
                   </motion.div>
                 ))}
@@ -245,7 +243,7 @@ export default function RocksPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <Badge className="bg-red-50 text-red-600 border-red-200">
+              <Badge className="bg-white text-gray-600 border-gray-200">
                 <Target className="w-4 h-4 mr-1" />
                 VISUAL PROGRESS
               </Badge>
@@ -269,8 +267,8 @@ export default function RocksPage() {
                   const Icon = item.icon
                   return (
                     <li key={i} className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-5 h-5 text-red-600" />
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-5 h-5 text-black" />
                       </div>
                       <div className="flex-1 pt-2">
                         <span className="text-slate-700">{item.text}</span>
@@ -282,7 +280,7 @@ export default function RocksPage() {
             </div>
 
             <div className="relative">
-              <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-8 border border-red-100">
+              <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
                   <div className="space-y-4">
                     {[
@@ -297,7 +295,7 @@ export default function RocksPage() {
                         </div>
                         <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all"
+                            className="h-full bg-gray-600 rounded-full transition-all"
                             style={{ width: `${rock.progress}%` }}
                           />
                         </div>
@@ -312,160 +310,12 @@ export default function RocksPage() {
         </div>
       </section>
 
-      {/* Feature Deep Dive 2 - AI Intelligence */}
-      <section className="py-20 lg:py-32 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="order-2 lg:order-1 relative">
-              <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100">
-                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                      <Zap className="w-5 h-5 text-red-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-slate-900 text-sm">At Risk Alert</p>
-                      <p className="text-xs text-slate-600">"Team Hiring" rock is falling behind schedule</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-xl border border-orange-100">
-                    <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-slate-900 text-sm">Dependency Detected</p>
-                      <p className="text-xs text-slate-600">3 team members blocked on this rock</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-slate-900 text-sm">Accelerating</p>
-                      <p className="text-xs text-slate-600">"Product Launch" gaining momentum this week</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="order-1 lg:order-2 space-y-6">
-              <Badge className="bg-purple-50 text-purple-600 border-purple-200">
-                <Zap className="w-4 h-4 mr-1" />
-                AI INSIGHTS
-              </Badge>
-
-              <h2 className="text-4xl font-bold text-slate-900">
-                AI that predicts risks before they happen
-              </h2>
-
-              <p className="text-xl text-slate-600">
-                Our AI analyzes daily activity patterns to identify rocks at risk, detect blockers,
-                and recommend course corrections—before you fall behind.
-              </p>
-
-              <ul className="space-y-4">
-                {[
-                  "Automatic risk detection based on velocity",
-                  "Blocker identification and escalation",
-                  "Dependency mapping across rocks",
-                  "Predictive completion date forecasting",
-                ].map((benefit, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-slate-600">{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Deep Dive 3 - Team Alignment */}
-      <section className="py-20 lg:py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <Badge className="bg-blue-50 text-blue-600 border-blue-200">
-                <Users className="w-4 h-4 mr-1" />
-                TEAM ALIGNMENT
-              </Badge>
-
-              <h2 className="text-4xl font-bold text-slate-900">
-                Everyone knows what matters most
-              </h2>
-
-              <p className="text-xl text-slate-600">
-                Rocks visible to the entire organization. Every team member sees how their daily work
-                contributes to quarterly priorities.
-              </p>
-
-              <ul className="space-y-4">
-                {[
-                  "Company-wide rock dashboard",
-                  "Department and individual rock tracking",
-                  "Daily EODs automatically linked to rocks",
-                  "Rock reviews integrated into Level 10 meetings",
-                ].map((benefit, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-slate-600">{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link href="/app?page=register">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6">
-                  Start tracking rocks
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-
-            <div className="relative">
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 border border-blue-100">
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h3 className="font-bold text-slate-900 mb-4">Company Rocks</h3>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Target className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm font-semibold text-slate-900">Revenue: $10M ARR</span>
-                      </div>
-                      <div className="text-xs text-slate-600">85% complete • On track</div>
-                    </div>
-                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Target className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm font-semibold text-slate-900">Product: Launch V2</span>
-                      </div>
-                      <div className="text-xs text-slate-600">72% complete • On track</div>
-                    </div>
-                    <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Target className="w-4 h-4 text-orange-600" />
-                        <span className="text-sm font-semibold text-slate-900">Team: Hire 10 people</span>
-                      </div>
-                      <div className="text-xs text-slate-600">45% complete • At risk</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Stats Section */}
       <section className="py-20 lg:py-32 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Teams complete 2.5x more rocks with Align
+              Teams complete 2.5x more rocks with Taskspace
             </h2>
           </div>
 
@@ -477,7 +327,7 @@ export default function RocksPage() {
               { value: "0", label: "Rocks forgotten or abandoned" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-bold text-black mb-2">
                   {stat.value}
                 </div>
                 <div className="text-slate-600">{stat.label}</div>
@@ -522,7 +372,7 @@ export default function RocksPage() {
                 </div>
                 <p className="text-white/90 mb-6">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-orange-600" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
                   <div>
                     <div className="font-semibold text-white">{testimonial.author}</div>
                     <div className="text-sm text-white/60">{testimonial.role}</div>
@@ -535,7 +385,7 @@ export default function RocksPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gradient-to-br from-red-600 via-orange-600 to-yellow-500">
+      <section className="py-20 lg:py-32 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Rocket className="w-20 h-20 text-white mx-auto mb-6" />
           <h2 className="text-5xl font-bold text-white mb-6">
@@ -554,19 +404,8 @@ export default function RocksPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
-            <div>© 2026 Align. All rights reserved.</div>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">Security</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
+    <MarketingFooter />
+    </>
   )
 }
