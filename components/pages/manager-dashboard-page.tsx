@@ -159,19 +159,34 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
     )
   }
 
+  // Show empty state if dashboard loaded successfully but has no direct reports
+  if (dashboard && dashboard.directReports.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Users className="h-12 w-12 text-slate-300 mb-4" />
+        <h2 className="text-xl font-semibold text-slate-900 mb-2">No Direct Reports</h2>
+        <p className="text-slate-500 text-center max-w-md mb-4">
+          You don't have any team members assigned to you as direct reports yet. Contact your
+          administrator to set up your team.
+        </p>
+        <Button onClick={fetchDashboard} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
+    )
+  }
+
+  // Show error state if there was an error or dashboard failed to load
   if (error || !dashboard) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <AlertCircle className="h-12 w-12 text-slate-300 mb-4" />
         <h2 className="text-xl font-semibold text-slate-900 mb-2">
-          {dashboard?.directReports.length === 0
-            ? "No Direct Reports"
-            : error || "Unable to load dashboard"}
+          {error || "Unable to load dashboard"}
         </h2>
         <p className="text-slate-500 text-center max-w-md mb-4">
-          {dashboard?.directReports.length === 0
-            ? "You don't have any team members assigned to you as direct reports yet. Contact your administrator to set up your team."
-            : "There was a problem loading your manager dashboard. Please try again."}
+          There was a problem loading your manager dashboard. Please try again.
         </p>
         <Button onClick={fetchDashboard} variant="outline">
           <RefreshCw className="h-4 w-4 mr-2" />
