@@ -8,7 +8,7 @@ import {
   BarChart3,
   Users,
   AlertCircle,
-  Sitemap,
+  Network,
   Lightbulb,
   KanbanSquare
 } from "lucide-react"
@@ -62,7 +62,7 @@ const features: FeatureTab[] = [
   {
     id: "accountability",
     label: "Accountability Chart",
-    icon: <Sitemap className="w-4 h-4" />,
+    icon: <Network className="w-4 h-4" />,
     component: <DemoAccountabilityChart />
   },
   {
