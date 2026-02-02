@@ -7,7 +7,6 @@ import {
   GlobalDragHandle,
   HighlightExtension,
   HorizontalRule,
-  MarkdownExtension,
   Placeholder,
   StarterKit,
   TaskItem,
@@ -127,17 +126,6 @@ const codeBlockLowlight = CodeBlockLowlight.configure({
 
 const characterCount = CharacterCount.configure()
 
-const markdownExtension = MarkdownExtension.configure({
-  html: true,
-  tightLists: true,
-  tightListClass: "tight",
-  bulletListMarker: "-",
-  linkify: false,
-  breaks: false,
-  transformPastedText: false,
-  transformCopiedText: false,
-})
-
 export const defaultExtensions = [
   starterKit,
   placeholder,
@@ -151,7 +139,6 @@ export const defaultExtensions = [
   codeBlockLowlight,
   characterCount,
   TiptapUnderline,
-  markdownExtension,
   HighlightExtension,
   TextStyle,
   Color,
