@@ -37,6 +37,7 @@ import {
 import { DemoEODForm } from "@/components/marketing/demo-eod-form"
 import { DemoKanban } from "@/components/marketing/demo-kanban"
 import { DemoRocks } from "@/components/marketing/demo-rocks"
+import { MegaMenu } from "@/components/marketing/mega-menu"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -63,55 +64,6 @@ const staggerContainer = {
 const scaleIn = {
   hidden: { opacity: 0, scale: 0.95 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
-}
-
-// Navigation
-function Navigation() {
-  return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200/50"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg" />
-            <span className="text-xl font-bold text-slate-900">Align</span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-              Features
-            </Link>
-            <Link href="#product" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-              Product
-            </Link>
-            <Link href="#pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-              Pricing
-            </Link>
-            <Link href="#customers" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-              Customers
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button size="sm" className="bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700">
-                Start Free Trial
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </motion.nav>
-  )
 }
 
 // Hero Section - Narrative-driven with embedded preview
@@ -1173,7 +1125,7 @@ function Footer() {
 export default function HomePage() {
   return (
     <>
-      <Navigation />
+      <MegaMenu />
       <HeroSection />
       <LogoSection />
       <ProblemSolutionSection />
