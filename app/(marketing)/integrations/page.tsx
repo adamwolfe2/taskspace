@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { MegaMenu } from "@/components/marketing/mega-menu"
 import {
   ArrowRight,
   Search,
@@ -175,28 +176,7 @@ export default function IntegrationsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-8">
-              <div className="text-xl font-bold text-slate-900">Align</div>
-              <div className="hidden md:flex items-center gap-6">
-                <a href="#" className="text-sm text-slate-600 hover:text-slate-900">Product</a>
-                <a href="#" className="text-sm text-slate-600 hover:text-slate-900">Solutions</a>
-                <a href="#" className="text-sm text-slate-600 hover:text-slate-900">Learn</a>
-                <a href="#" className="text-sm text-slate-600 hover:text-slate-900">Pricing</a>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm">Log in</Button>
-              <Button size="sm" className="bg-slate-900 hover:bg-slate-800">
-                Get Started Free
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <MegaMenu />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white py-20 lg:py-32">

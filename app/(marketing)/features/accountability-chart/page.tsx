@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { MegaMenu } from "@/components/marketing/mega-menu"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -66,27 +67,7 @@ export default function AccountabilityChartPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg" />
-              <span className="text-xl font-bold text-slate-900">Align</span>
-            </Link>
-            <div className="flex items-center gap-3">
-              <Link href="/app">
-                <Button variant="ghost" size="sm">Login</Button>
-              </Link>
-              <Link href="/app?page=register">
-                <Button size="sm" className="bg-slate-900 text-white hover:bg-slate-800 rounded-full">
-                  Sign Up Free
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <MegaMenu />
 
       {/* Hero Section */}
       <section className="py-20 bg-white">
