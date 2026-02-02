@@ -23,12 +23,8 @@ import { CSS } from "@dnd-kit/utilities"
 import type { AssignedTask } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import {
-  CheckCircle2,
-  Circle,
-  PlayCircle,
-}
-import { EnhancedKanbanCard } from "./enhanced-kanban-card" from "lucide-react"
+import { CheckCircle2, Circle, PlayCircle } from "lucide-react"
+import { EnhancedKanbanCard } from "./enhanced-kanban-card"
 
 type KanbanColumn = "pending" | "in-progress" | "completed"
 
