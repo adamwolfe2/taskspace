@@ -21,19 +21,14 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import type { AssignedTask } from "@/lib/types"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import {
-  Clock,
-  Target,
-  GripVertical,
-  CalendarDays,
-  AlertCircle,
   CheckCircle2,
   Circle,
   PlayCircle,
-} from "lucide-react"
+}
+import { EnhancedKanbanCard } from "./enhanced-kanban-card" from "lucide-react"
 
 type KanbanColumn = "pending" | "in-progress" | "completed"
 
@@ -75,7 +70,7 @@ const columns: ColumnConfig[] = [
   },
 ]
 
-// Draggable Task Card
+// Draggable Task Card (now using EnhancedKanbanCard)
 function TaskCard({
   task,
   isDragging,
@@ -85,75 +80,8 @@ function TaskCard({
   isDragging?: boolean
   onClick?: () => void
 }) {
-  const priorityVariants = {
-    high: "high" as const,
-    medium: "medium" as const,
-    normal: "low" as const,
-  }
-
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "completed"
-
   return (
-    <Card
-      className={cn(
-        "cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-md",
-        isDragging && "opacity-50 shadow-lg rotate-2",
-        isOverdue && "border-red-300"
-      )}
-      onClick={onClick}
-    >
-      <CardContent className="p-3 space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-start gap-2 flex-1 min-w-0">
-            <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <span className="text-sm font-medium line-clamp-2 whitespace-pre-wrap break-words">
-              {task.title}
-            </span>
-          </div>
-          <Badge
-            variant={priorityVariants[task.priority]}
-            className="text-xs flex-shrink-0"
-          >
-            {task.priority}
-          </Badge>
-        </div>
-
-        {task.rockTitle && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Target className="h-3 w-3" />
-            <span className="truncate">{task.rockTitle}</span>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between">
-          {task.dueDate && (
-            <div
-              className={cn(
-                "flex items-center gap-1 text-xs",
-                isOverdue ? "text-red-600 font-medium" : "text-muted-foreground"
-              )}
-            >
-              {isOverdue ? (
-                <AlertCircle className="h-3 w-3" />
-              ) : (
-                <CalendarDays className="h-3 w-3" />
-              )}
-              <span>
-                {new Date(task.dueDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })}
-              </span>
-            </div>
-          )}
-          {task.assigneeName && task.type === "assigned" && (
-            <span className="text-xs text-muted-foreground truncate">
-              {task.assigneeName}
-            </span>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <EnhancedKanbanCard task={task} isDragging={isDragging} onClick={onClick} />
   )
 }
 
@@ -186,7 +114,7 @@ function SortableTaskItem({
   )
 }
 
-// Droppable Column
+// Droppable Column with enhanced styling
 function Column({
   config,
   tasks,
@@ -199,32 +127,37 @@ function Column({
   const taskIds = tasks.map((t) => t.id)
 
   return (
-    <div className={cn("rounded-xl border p-3", config.bgColor)}>
-      <div className="flex items-center gap-2 mb-3">
-        <config.icon className={cn("h-5 w-5", config.color)} />
-        <h3 className="font-semibold">{config.title}</h3>
-        <Badge variant="secondary" className="ml-auto">
-          {tasks.length}
-        </Badge>
-      </div>
-
-      <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-        <div className="space-y-2 min-h-[200px]">
-          {tasks.length === 0 ? (
-            <div className="flex items-center justify-center h-[200px] text-sm text-muted-foreground border-2 border-dashed rounded-lg">
-              <span>No tasks</span>
-            </div>
-          ) : (
-            tasks.map((task) => (
-              <SortableTaskItem
-                key={task.id}
-                task={task}
-                onClick={() => onTaskClick?.(task)}
-              />
-            ))
-          )}
+    <div className="flex flex-col h-full">
+      <div className={cn("rounded-xl border p-4 bg-muted/30 flex flex-col flex-1", config.bgColor)}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-1.5 rounded-lg bg-background border border-border">
+            <config.icon className={cn("h-4 w-4", config.color)} />
+          </div>
+          <h3 className="font-semibold text-sm">{config.title}</h3>
+          <Badge variant="secondary" className="ml-auto text-xs">
+            {tasks.length}
+          </Badge>
         </div>
-      </SortableContext>
+
+        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+          <div className="space-y-3 flex-1 overflow-y-auto min-h-[300px] max-h-[calc(100vh-300px)]">
+            {tasks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[200px] text-sm text-muted-foreground border-2 border-dashed rounded-xl bg-background/50">
+                <config.icon className={cn("h-8 w-8 mb-2 opacity-30", config.color)} />
+                <span>No tasks</span>
+              </div>
+            ) : (
+              tasks.map((task) => (
+                <SortableTaskItem
+                  key={task.id}
+                  task={task}
+                  onClick={() => onTaskClick?.(task)}
+                />
+              ))
+            )}
+          </div>
+        </SortableContext>
+      </div>
     </div>
   )
 }
