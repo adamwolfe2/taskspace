@@ -37,7 +37,7 @@ self.addEventListener('push', (event) => {
     };
 
     event.waitUntil(
-      self.registration.showNotification(data.title || 'AIMS Dashboard', options)
+      self.registration.showNotification(data.title || 'Taskspace', options)
     );
   } catch (error) {
     console.error('Error handling push event:', error);

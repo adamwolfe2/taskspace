@@ -51,7 +51,7 @@ export function UserSelect({ teamMembers, onSelectUser }: UserSelectProps) {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold text-primary mb-2">AIMS Dashboard</CardTitle>
+          <CardTitle className="text-3xl font-bold text-primary mb-2">Taskspace</CardTitle>
           <CardDescription className="text-base">Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     // Get environment variables
     const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
-    const EMAIL_FROM = process.env.EMAIL_FROM || "AIMS Dashboard <onboarding@resend.dev>"
+    const EMAIL_FROM = process.env.EMAIL_FROM || "Taskspace <onboarding@resend.dev>"
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
     // Debug info
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         from: EMAIL_FROM,
         to: [toEmail],
-        subject: "AIMS Dashboard - Test Email",
+        subject: "Taskspace - Test Email",
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1f2937;">Email Configuration Test</h1>
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
               <p style="margin: 10px 0 0 0;"><strong>To:</strong> ${toEmail}</p>
               <p style="margin: 10px 0 0 0;"><strong>Time:</strong> ${new Date().toISOString()}</p>
             </div>
-            <p style="color: #6b7280; font-size: 14px;">This is a test email from AIMS Dashboard.</p>
+            <p style="color: #6b7280; font-size: 14px;">This is a test email from Taskspace.</p>
           </div>
         `,
       }),
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
     }
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
-    const EMAIL_FROM = process.env.EMAIL_FROM || "AIMS Dashboard <onboarding@resend.dev>"
+    const EMAIL_FROM = process.env.EMAIL_FROM || "Taskspace <onboarding@resend.dev>"
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
     return NextResponse.json({
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
         resendKeyPrefix: RESEND_API_KEY ? RESEND_API_KEY.substring(0, 10) + "..." : "not set",
         resendKeyValid: RESEND_API_KEY.startsWith("re_"),
         emailFrom: EMAIL_FROM,
-        emailFromDefault: EMAIL_FROM === "AIMS Dashboard <onboarding@resend.dev>",
+        emailFromDefault: EMAIL_FROM === "Taskspace <onboarding@resend.dev>",
         appUrl: APP_URL,
         appUrlConfigured: APP_URL !== "http://localhost:3000",
       },
