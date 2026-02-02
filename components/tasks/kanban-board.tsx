@@ -106,7 +106,9 @@ function TaskCard({
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-2 flex-1 min-w-0">
             <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <span className="text-sm font-medium line-clamp-2">{task.title}</span>
+            <span className="text-sm font-medium line-clamp-2 whitespace-pre-wrap break-words">
+              {task.title}
+            </span>
           </div>
           <Badge
             variant={priorityVariants[task.priority]}

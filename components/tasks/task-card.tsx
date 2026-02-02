@@ -103,7 +103,7 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
         <div className="flex-1 space-y-2 min-w-0 overflow-hidden">
           <div className="flex items-start justify-between gap-2">
             <h3 className={cn(
-              "font-medium break-words line-clamp-2",
+              "font-medium break-words line-clamp-2 whitespace-pre-wrap",
               isCompleted && "line-through text-muted-foreground"
             )}>
               {task.title}
@@ -127,7 +127,7 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
           {task.description && (
             <div>
               <p className={cn(
-                "text-sm text-muted-foreground break-words",
+                "text-sm text-muted-foreground break-words whitespace-pre-wrap",
                 isCompleted && "line-through",
                 !showFullDescription && isLongDescription && "line-clamp-2"
               )}>
