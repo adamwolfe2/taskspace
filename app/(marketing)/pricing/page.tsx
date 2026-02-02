@@ -6,11 +6,7 @@ import Link from "next/link"
 import {
   CheckCircle,
   ArrowRight,
-  Users,
-  Zap,
   Shield,
-  Crown,
-  Star,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -47,7 +43,6 @@ export default function PricingPage() {
       ],
       cta: "Get Started",
       popular: false,
-      color: "slate",
     },
     {
       name: "Unlimited",
@@ -67,7 +62,6 @@ export default function PricingPage() {
       ],
       cta: "Get started",
       popular: false,
-      color: "blue",
     },
     {
       name: "Business",
@@ -87,7 +81,6 @@ export default function PricingPage() {
       ],
       cta: "Get started",
       popular: true,
-      color: "purple",
     },
     {
       name: "Enterprise",
@@ -106,7 +99,6 @@ export default function PricingPage() {
       ],
       cta: "Get a Demo",
       popular: false,
-      color: "gradient",
     },
   ]
 
@@ -114,7 +106,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-white">
 
       {/* Hero */}
-      <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
@@ -123,7 +115,7 @@ export default function PricingPage() {
             className="text-center mb-16"
           >
             <motion.div variants={fadeInUp}>
-              <h1 className="text-6xl font-bold text-slate-900 mb-4">
+              <h1 className="text-5xl sm:text-6xl font-bold text-black mb-4">
                 The best work solution,
                 <br />
                 for the best price.
@@ -135,7 +127,7 @@ export default function PricingPage() {
                 onClick={() => setBillingCycle("monthly")}
                 className={cn(
                   "text-lg font-medium transition-colors",
-                  billingCycle === "monthly" ? "text-slate-900" : "text-slate-400"
+                  billingCycle === "monthly" ? "text-black" : "text-gray-400"
                 )}
               >
                 Monthly
@@ -145,7 +137,7 @@ export default function PricingPage() {
                   onClick={() => setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")}
                   className={cn(
                     "w-14 h-8 rounded-full transition-colors",
-                    billingCycle === "yearly" ? "bg-slate-900" : "bg-slate-300"
+                    billingCycle === "yearly" ? "bg-black" : "bg-gray-300"
                   )}
                 >
                   <div
@@ -160,20 +152,20 @@ export default function PricingPage() {
                 onClick={() => setBillingCycle("yearly")}
                 className={cn(
                   "text-lg font-medium transition-colors",
-                  billingCycle === "yearly" ? "text-slate-900" : "text-slate-400"
+                  billingCycle === "yearly" ? "text-black" : "text-gray-400"
                 )}
               >
                 Yearly
               </button>
               {billingCycle === "yearly" && (
-                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                <Badge className="bg-gray-100 text-black border-gray-200">
                   Save up to 30%
                 </Badge>
               )}
             </motion.div>
 
             <motion.div variants={fadeInUp}>
-              <Badge variant="outline" className="border-slate-300">
+              <Badge variant="outline" className="border-gray-300 text-gray-700">
                 <Shield className="w-4 h-4 mr-1" />
                 100% Money-back Guarantee
               </Badge>
@@ -187,42 +179,41 @@ export default function PricingPage() {
             variants={staggerContainer}
             className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto"
           >
-            {plans.map((plan, i) => (
+            {plans.map((plan) => (
               <motion.div
                 key={plan.name}
                 variants={fadeInUp}
                 className={cn(
                   "relative rounded-2xl border p-8 bg-white flex flex-col",
                   plan.popular
-                    ? "border-purple-500 shadow-2xl shadow-purple-500/20 scale-105"
-                    : "border-slate-200"
+                    ? "border-black shadow-2xl scale-105"
+                    : "border-gray-200"
                 )}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-purple-600 text-white border-0 shadow-lg">
-                      <Crown className="w-3 h-3 mr-1" />
+                    <Badge className="bg-black text-white border-0 shadow-lg">
                       Most Popular
                     </Badge>
                   </div>
                 )}
 
                 <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
+                  <h3 className="text-2xl font-bold text-black mb-2">{plan.name}</h3>
                   <div className="mb-2">
-                    <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
+                    <span className="text-4xl font-bold text-black">{plan.price}</span>
                     {plan.priceSubtext && (
-                      <span className="text-slate-600 ml-2">{plan.priceSubtext}</span>
+                      <span className="text-gray-600 ml-2">{plan.priceSubtext}</span>
                     )}
                   </div>
-                  <p className="text-sm text-slate-500">{plan.description}</p>
+                  <p className="text-sm text-gray-500">{plan.description}</p>
                 </div>
 
                 <ul className="space-y-3 mb-8 flex-1">
                   {plan.features.map((feature, j) => (
                     <li key={j} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-slate-600 text-sm">{feature}</span>
+                      <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-600 text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -230,10 +221,10 @@ export default function PricingPage() {
                 <Link href="/app?page=register" className="w-full">
                   <Button
                     className={cn(
-                      "w-full rounded-full",
+                      "w-full",
                       plan.popular
-                        ? "bg-purple-600 hover:bg-purple-700 text-white"
-                        : "border-slate-300 hover:bg-slate-50"
+                        ? "bg-black hover:bg-gray-900 text-white"
+                        : "border-gray-300 hover:bg-gray-50 text-black"
                     )}
                     variant={plan.popular ? "default" : "outline"}
                     size="lg"
@@ -248,29 +239,29 @@ export default function PricingPage() {
       </section>
 
       {/* Feature Comparison */}
-      <section className="py-20 lg:py-32 bg-slate-50">
+      <section className="py-20 lg:py-32 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+            <h2 className="text-4xl font-bold text-black mb-4">
               Compare plans and features
             </h2>
-            <p className="text-xl text-slate-600">
+            <p className="text-xl text-gray-600">
               Everything you need to run on EOS, at every stage
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left py-4 px-6 font-semibold text-slate-900">Features</th>
-                  <th className="py-4 px-6 font-semibold text-slate-900">Free</th>
-                  <th className="py-4 px-6 font-semibold text-slate-900">Unlimited</th>
-                  <th className="py-4 px-6 font-semibold text-purple-600 bg-purple-50">Business</th>
-                  <th className="py-4 px-6 font-semibold text-slate-900">Enterprise</th>
+                  <th className="text-left py-4 px-6 font-semibold text-black">Features</th>
+                  <th className="py-4 px-6 font-semibold text-black">Free</th>
+                  <th className="py-4 px-6 font-semibold text-black">Unlimited</th>
+                  <th className="py-4 px-6 font-semibold text-black bg-gray-100">Business</th>
+                  <th className="py-4 px-6 font-semibold text-black">Enterprise</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-gray-200">
                 {[
                   { feature: "Team members", free: "5", unlimited: "Unlimited", business: "Unlimited", enterprise: "Unlimited" },
                   { feature: "EOD Reports", free: "✓", unlimited: "✓", business: "✓ + AI", enterprise: "✓ + AI" },
@@ -286,11 +277,11 @@ export default function PricingPage() {
                   { feature: "Support", free: "Community", unlimited: "Email", business: "Priority", enterprise: "24/7 Phone" },
                 ].map((row, i) => (
                   <tr key={i}>
-                    <td className="py-4 px-6 font-medium text-slate-900">{row.feature}</td>
-                    <td className="py-4 px-6 text-center text-slate-600">{row.free}</td>
-                    <td className="py-4 px-6 text-center text-slate-600">{row.unlimited}</td>
-                    <td className="py-4 px-6 text-center font-semibold text-purple-600 bg-purple-50">{row.business}</td>
-                    <td className="py-4 px-6 text-center text-slate-600">{row.enterprise}</td>
+                    <td className="py-4 px-6 font-medium text-black">{row.feature}</td>
+                    <td className="py-4 px-6 text-center text-gray-600">{row.free}</td>
+                    <td className="py-4 px-6 text-center text-gray-600">{row.unlimited}</td>
+                    <td className="py-4 px-6 text-center font-semibold text-black bg-gray-50">{row.business}</td>
+                    <td className="py-4 px-6 text-center text-gray-600">{row.enterprise}</td>
                   </tr>
                 ))}
               </tbody>
@@ -303,7 +294,7 @@ export default function PricingPage() {
       <section className="py-20 lg:py-32 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+            <h2 className="text-4xl font-bold text-black mb-4">
               Frequently asked questions
             </h2>
           </div>
@@ -337,10 +328,10 @@ export default function PricingPage() {
             ].map((faq, i) => (
               <div
                 key={i}
-                className="bg-slate-50 rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow"
+                className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow"
               >
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">{faq.question}</h3>
-                <p className="text-slate-600 leading-relaxed">{faq.answer}</p>
+                <h3 className="text-lg font-semibold text-black mb-3">{faq.question}</h3>
+                <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
               </div>
             ))}
           </div>
@@ -348,44 +339,23 @@ export default function PricingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500">
+      <section className="py-20 lg:py-32 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-3xl mx-auto mb-8" />
-          <h2 className="text-5xl font-bold text-white mb-6">
+          <h2 className="text-5xl font-bold text-black mb-6">
             Start running on EOS today
           </h2>
-          <p className="text-xl text-white/90 mb-8">
+          <p className="text-xl text-gray-600 mb-8">
             Join thousands of teams executing flawlessly with Align
           </p>
           <Link href="/app?page=register">
-            <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 rounded-full px-8 h-14 text-base font-semibold">
+            <Button size="lg" className="bg-black text-white hover:bg-gray-900 px-8 h-14 text-base font-semibold">
               Get started FREE
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
-          <p className="text-white/80 mt-4 text-sm">Free forever. No credit card required.</p>
+          <p className="text-gray-600 mt-4 text-sm">Free forever. No credit card required.</p>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
-            <div>© 2026 Align. All rights reserved.</div>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-white transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Terms of Service
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Security
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

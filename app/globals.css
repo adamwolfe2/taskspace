@@ -2,68 +2,68 @@
 @import "tw-animate-css";
 
 /* ============================================
-   PREMIUM SAAS DESIGN SYSTEM
-   Light mode only - Clean, modern, polished
-   Brand: RED/WHITE (Modern Amenities Group)
+   HYPER FX-INSPIRED DESIGN SYSTEM
+   Clean, minimal, professional
+   Monochromatic with sage green accent
    ============================================ */
 
 :root {
-  /* Premium Color Palette */
-  --background: 250 251 252;        /* Off-white for softer feel */
-  --foreground: 15 23 42;           /* Slate-900 for better contrast */
+  /* Monochromatic Color Palette */
+  --background: 255 255 255;        /* Pure white */
+  --foreground: 0 0 0;              /* Pure black for maximum contrast */
   --card: 255 255 255;
-  --card-foreground: 15 23 42;
+  --card-foreground: 0 0 0;
   --popover: 255 255 255;
-  --popover-foreground: 15 23 42;
+  --popover-foreground: 0 0 0;
 
-  /* Primary - Brand Red */
-  --primary: 220 38 38;             /* Red-600 #DC2626 */
+  /* Primary - Black */
+  --primary: 0 0 0;
   --primary-foreground: 255 255 255;
 
-  /* Secondary - Warm gray */
-  --secondary: 248 250 252;
-  --secondary-foreground: 51 65 85;
+  /* Secondary - Light grays */
+  --secondary: 245 245 245;         /* #f5f5f5 */
+  --secondary-foreground: 107 114 128; /* Gray-500 */
 
   /* Muted - Soft backgrounds */
-  --muted: 241 245 249;
-  --muted-foreground: 100 116 139;
+  --muted: 250 250 250;             /* #fafafa */
+  --muted-foreground: 115 115 115;  /* Gray-600 */
 
-  /* Accent - Subtle red highlight */
-  --accent: 254 242 242;            /* Red-50 */
-  --accent-foreground: 153 27 27;   /* Red-800 */
+  /* Accent - Sage green for product UI */
+  --accent: 139 154 127;            /* Sage green #8b9a7f */
+  --accent-foreground: 255 255 255;
 
-  /* Semantic colors - Refined */
-  --destructive: 239 68 68;
+  /* Semantic colors - Minimal */
+  --destructive: 0 0 0;
   --destructive-foreground: 255 255 255;
-  --success: 16 185 129;            /* Emerald-500 */
+  --success: 139 154 127;           /* Sage green */
   --success-foreground: 255 255 255;
-  --warning: 245 158 11;
+  --warning: 0 0 0;
   --warning-foreground: 255 255 255;
 
-  /* Borders and inputs */
-  --border: 226 232 240;
-  --input: 226 232 240;
-  --ring: 220 38 38;                /* Red-600 */
+  /* Borders and inputs - Very light */
+  --border: 229 231 235;            /* Gray-200 */
+  --input: 229 231 235;
+  --ring: 0 0 0;
 
-  /* Charts - Red first for brand consistency */
-  --chart-1: 220 38 38;             /* Red-600 */
-  --chart-2: 16 185 129;
-  --chart-3: 245 158 11;
-  --chart-4: 59 130 246;            /* Blue moved to 4th position */
-  --chart-5: 139 92 246;
+  /* Charts - Monochromatic */
+  --chart-1: 0 0 0;
+  --chart-2: 107 114 128;
+  --chart-3: 156 163 175;
+  --chart-4: 209 213 219;
+  --chart-5: 139 154 127;           /* Sage green */
 
-  /* Premium radius - slightly larger for modern feel */
-  --radius: 0.875rem;
+  /* Clean radius */
+  --radius: 0.75rem;
 
   /* Sidebar */
   --sidebar: 255 255 255;
-  --sidebar-foreground: 71 85 105;
-  --sidebar-primary: 220 38 38;     /* Red-600 */
+  --sidebar-foreground: 107 114 128;
+  --sidebar-primary: 0 0 0;
   --sidebar-primary-foreground: 255 255 255;
-  --sidebar-accent: 254 242 242;    /* Red-50 */
-  --sidebar-accent-foreground: 153 27 27; /* Red-800 */
-  --sidebar-border: 241 245 249;
-  --sidebar-ring: 220 38 38;        /* Red-600 */
+  --sidebar-accent: 245 245 245;
+  --sidebar-accent-foreground: 0 0 0;
+  --sidebar-border: 229 231 235;
+  --sidebar-ring: 0 0 0;
 }
 
 @theme inline {
@@ -129,8 +129,7 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 100%);
-    background-attachment: fixed;
+    background: #ffffff;
     min-height: 100vh;
   }
 
@@ -201,56 +200,44 @@
 }
 
 /* ============================================
-   PREMIUM GRADIENTS
+   CLEAN GRADIENTS - MINIMAL
    ============================================ */
 @layer utilities {
-  /* Primary button gradient - Brand Red */
+  /* Primary button - Solid black */
   .gradient-primary {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+    background: #000000;
   }
 
   .gradient-primary-hover {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+    background: #1a1a1a;
   }
 
-  /* Success gradient */
+  /* Sage green accent */
   .gradient-success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: #8b9a7f;
   }
 
-  /* Subtle card accent gradients */
-  .gradient-accent-red {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  /* Subtle neutral gradients only */
+  .gradient-accent-neutral {
+    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
   }
 
-  .gradient-accent-emerald {
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  .gradient-accent-sage {
+    background: linear-gradient(135deg, #f0f2ee 0%, #e8ebe5 100%);
   }
 
-  .gradient-accent-amber {
-    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  }
-
-  .gradient-accent-rose {
-    background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
-  }
-
-  .gradient-accent-violet {
-    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
-  }
-
-  /* Premium header gradient */
+  /* Clean header */
   .gradient-header {
-    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+    background: #ffffff;
   }
 
   /* Shimmer effect for loading */
   .shimmer {
     background: linear-gradient(
       90deg,
-      rgb(241 245 249) 0%,
-      rgb(248 250 252) 50%,
-      rgb(241 245 249) 100%
+      rgb(250 250 250) 0%,
+      rgb(245 245 245) 50%,
+      rgb(250 250 250) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
@@ -466,25 +453,25 @@
 }
 
 /* ============================================
-   STATUS & TREND BADGES
+   STATUS & TREND BADGES - MINIMAL
    ============================================ */
 @layer utilities {
   .trend-up {
     @apply inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full;
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-    color: #047857;
+    background: #f5f5f5;
+    color: #000000;
   }
 
   .trend-down {
     @apply inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full;
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-    color: #b91c1c;
+    background: #f5f5f5;
+    color: #000000;
   }
 
   .trend-neutral {
     @apply inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    color: #475569;
+    background: #f5f5f5;
+    color: #6b7280;
   }
 
   .status-pill {
@@ -492,57 +479,57 @@
   }
 
   .status-success {
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-    color: #047857;
+    background: #f5f5f5;
+    color: #000000;
   }
 
   .status-warning {
-    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-    color: #b45309;
+    background: #f5f5f5;
+    color: #000000;
   }
 
   .status-error {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-    color: #b91c1c;
+    background: #f5f5f5;
+    color: #000000;
   }
 
   .status-info {
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    color: #1d4ed8;
+    background: #f5f5f5;
+    color: #000000;
   }
 
   .status-neutral {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    color: #475569;
+    background: #f5f5f5;
+    color: #6b7280;
   }
 
-  /* Priority badges for tasks and escalations */
+  /* Priority badges - minimal */
   .badge-critical {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-    color: #dc2626;
-    border: 1px solid rgb(254 202 202 / 0.5);
+    background: #f5f5f5;
+    color: #000000;
+    border: 1px solid #e5e5e5;
   }
 
   .badge-high {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
-    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-    color: #ea580c;
-    border: 1px solid rgb(253 186 116 / 0.5);
+    background: #f5f5f5;
+    color: #000000;
+    border: 1px solid #e5e5e5;
   }
 
   .badge-medium {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
-    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-    color: #d97706;
-    border: 1px solid rgb(252 211 77 / 0.5);
+    background: #f5f5f5;
+    color: #6b7280;
+    border: 1px solid #e5e5e5;
   }
 
   .badge-low {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-    color: #16a34a;
-    border: 1px solid rgb(134 239 172 / 0.5);
+    background: #f5f5f5;
+    color: #6b7280;
+    border: 1px solid #e5e5e5;
   }
 }
 
@@ -594,21 +581,21 @@
   /* Card with colored left border */
   .card-accent-left {
     @apply bg-white rounded-xl overflow-hidden;
-    border: 1px solid rgb(241 245 249);
-    border-left: 4px solid rgb(220 38 38);
+    border: 1px solid rgb(229 231 235);
+    border-left: 4px solid rgb(0 0 0);
     box-shadow: 0 1px 3px rgb(0 0 0 / 0.04);
   }
 
   .card-accent-left-success {
-    border-left-color: rgb(16 185 129);
+    border-left-color: rgb(139 154 127);
   }
 
   .card-accent-left-warning {
-    border-left-color: rgb(245 158 11);
+    border-left-color: rgb(0 0 0);
   }
 
   .card-accent-left-error {
-    border-left-color: rgb(239 68 68);
+    border-left-color: rgb(0 0 0);
   }
 
   /* Toggle group card */
@@ -627,16 +614,16 @@
    ============================================ */
 @layer utilities {
   .nav-item {
-    @apply relative px-3 py-2 rounded-xl text-slate-600 font-medium;
+    @apply relative px-3 py-2 rounded-xl text-gray-600 font-medium;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .nav-item:hover {
-    @apply bg-slate-100 text-slate-900;
+    @apply bg-gray-100 text-gray-900;
   }
 
   .nav-item-active {
-    @apply bg-red-50 text-red-700;
+    @apply bg-gray-50 text-gray-900;
   }
 
   .nav-item-active::before {
@@ -647,7 +634,7 @@
     transform: translateY(-50%);
     width: 3px;
     height: 20px;
-    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+    background: #000000;
     border-radius: 0 2px 2px 0;
   }
 }
@@ -756,7 +743,7 @@
     content: '';
     display: block;
     height: 3px;
-    background: linear-gradient(90deg, #dc2626 0%, #f87171 100%);
+    background: #000000;
   }
 
   /* Glass effect card */
@@ -826,7 +813,7 @@
    ============================================ */
 @layer utilities {
   .text-gradient-primary {
-    background: linear-gradient(135deg, #dc2626 0%, #f87171 100%);
+    background: #000000;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

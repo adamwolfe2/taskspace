@@ -22,6 +22,8 @@ import {
   Globe,
   Smartphone,
 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -48,9 +50,7 @@ const mainFeatures = [
       "Blocker tracking and escalation",
       "Tomorrow's priorities planning",
     ],
-    color: "red",
     href: "/features/eod-reports",
-    image: "/features/eod-preview.png",
   },
   {
     icon: Users,
@@ -63,9 +63,7 @@ const mainFeatures = [
       "Team member profiles",
       "Manager oversight tools",
     ],
-    color: "blue",
     href: "/features/team-management",
-    image: "/features/team-preview.png",
   },
   {
     icon: Target,
@@ -78,9 +76,7 @@ const mainFeatures = [
       "Progress visualization",
       "Goal alignment across teams",
     ],
-    color: "emerald",
     href: "/features/rocks",
-    image: "/features/rocks-preview.png",
   },
   {
     icon: BarChart3,
@@ -93,9 +89,7 @@ const mainFeatures = [
       "Submission rate tracking",
       "Custom report exports",
     ],
-    color: "purple",
     href: "/features/analytics",
-    image: "/features/analytics-preview.png",
   },
 ]
 
@@ -162,18 +156,11 @@ const additionalFeatures = [
   },
 ]
 
-const colorClasses = {
-  red: { bg: "bg-red-50", icon: "text-red-600", border: "border-red-100", gradient: "from-red-500 to-red-600" },
-  blue: { bg: "bg-blue-50", icon: "text-blue-600", border: "border-blue-100", gradient: "from-blue-500 to-blue-600" },
-  emerald: { bg: "bg-emerald-50", icon: "text-emerald-600", border: "border-emerald-100", gradient: "from-emerald-500 to-emerald-600" },
-  purple: { bg: "bg-purple-50", icon: "text-purple-600", border: "border-purple-100", gradient: "from-purple-500 to-purple-600" },
-}
-
 export default function FeaturesPage() {
   return (
     <div className="pt-20">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-slate-50 via-white to-red-50/30">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
@@ -181,23 +168,20 @@ export default function FeaturesPage() {
             variants={staggerContainer}
             className="text-center max-w-3xl mx-auto"
           >
-            <motion.div
-              variants={fadeInUp}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-600 text-sm font-medium mb-6"
-            >
-              <Zap className="w-4 h-4" />
-              Powerful Features
+            <motion.div variants={fadeInUp}>
+              <Badge className="bg-white text-gray-600 border-gray-200 mb-6">
+                Powerful Features
+              </Badge>
             </motion.div>
             <motion.h1
               variants={fadeInUp}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black mb-6"
             >
-              Everything Your Team Needs to{" "}
-              <span className="text-gradient-primary">Succeed</span>
+              Everything Your Team Needs to Succeed
             </motion.h1>
             <motion.p
               variants={fadeInUp}
-              className="text-lg sm:text-xl text-slate-600 leading-relaxed"
+              className="text-lg sm:text-xl text-gray-600 leading-relaxed"
             >
               Align provides a comprehensive suite of tools designed to enhance
               accountability, streamline communication, and drive results across
@@ -208,11 +192,10 @@ export default function FeaturesPage() {
       </section>
 
       {/* Main Features */}
-      <section className="py-20 lg:py-32 bg-white">
+      <section className="py-20 lg:py-32 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="space-y-24">
             {mainFeatures.map((feature, index) => {
-              const colors = colorClasses[feature.color as keyof typeof colorClasses]
               const isReversed = index % 2 === 1
 
               return (
@@ -226,76 +209,66 @@ export default function FeaturesPage() {
                 >
                   {/* Content */}
                   <div className="flex-1">
-                    <motion.div
-                      variants={fadeInUp}
-                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${colors.bg} ${colors.border} border mb-4`}
-                    >
-                      <feature.icon className={`w-4 h-4 ${colors.icon}`} />
-                      <span className={`text-sm font-medium ${colors.icon}`}>
+                    <motion.div variants={fadeInUp}>
+                      <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                         Core Feature
-                      </span>
+                      </Badge>
                     </motion.div>
                     <motion.h2
                       variants={fadeInUp}
-                      className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4"
+                      className="text-3xl sm:text-4xl font-bold text-black mb-4"
                     >
                       {feature.title}
                     </motion.h2>
                     <motion.p
                       variants={fadeInUp}
-                      className="text-lg text-slate-600 mb-6 leading-relaxed"
+                      className="text-lg text-gray-600 mb-6 leading-relaxed"
                     >
                       {feature.description}
                     </motion.p>
                     <motion.ul variants={fadeInUp} className="space-y-3 mb-8">
                       {feature.features.map((item) => (
                         <li key={item} className="flex items-center gap-3">
-                          <div className={`w-5 h-5 rounded-full ${colors.bg} flex items-center justify-center`}>
-                            <CheckCircle className={`w-3 h-3 ${colors.icon}`} />
-                          </div>
-                          <span className="text-slate-700">{item}</span>
+                          <CheckCircle className="w-5 h-5 text-black" />
+                          <span className="text-gray-700">{item}</span>
                         </li>
                       ))}
                     </motion.ul>
                     <motion.div variants={fadeInUp}>
-                      <Link
-                        href={feature.href}
-                        className={`inline-flex items-center gap-2 px-6 py-3 text-white bg-gradient-to-r ${colors.gradient} rounded-xl shadow-lg hover:shadow-xl transition-shadow font-medium`}
-                      >
-                        Explore {feature.title.split(" ")[0]}
-                        <ArrowRight className="w-4 h-4" />
+                      <Link href={feature.href}>
+                        <Button className="bg-black text-white hover:bg-gray-900">
+                          Explore {feature.title.split(" ")[0]}
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
                       </Link>
                     </motion.div>
                   </div>
 
                   {/* Image/Preview */}
                   <motion.div variants={fadeInUp} className="flex-1 w-full">
-                    <div className="relative">
-                      <div className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} rounded-3xl opacity-10 blur-2xl`} />
-                      <div className="relative bg-white rounded-2xl shadow-xl border border-slate-200/50 overflow-hidden">
-                        <div className="aspect-[4/3] bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-                          {/* Placeholder for feature preview */}
-                          <div className="h-full rounded-xl bg-white shadow-sm border border-slate-100 p-4">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colors.gradient} flex items-center justify-center`}>
-                                <feature.icon className="w-5 h-5 text-white" />
-                              </div>
-                              <div>
-                                <div className="h-3 w-24 bg-slate-200 rounded" />
-                                <div className="h-2 w-16 bg-slate-100 rounded mt-1.5" />
-                              </div>
+                    <div className="relative bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                      <div className="aspect-[4/3] bg-gray-50 p-6">
+                        {/* Placeholder for feature preview */}
+                        <div className="h-full rounded-xl bg-white shadow-sm border border-gray-200 p-4">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                              <feature.icon className="w-5 h-5 text-white" />
                             </div>
-                            <div className="space-y-3">
-                              {[1, 2, 3].map((i) => (
-                                <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                                  <div className="w-8 h-8 rounded-full bg-slate-200" />
-                                  <div className="flex-1">
-                                    <div className="h-2.5 w-3/4 bg-slate-200 rounded" />
-                                    <div className="h-2 w-1/2 bg-slate-100 rounded mt-1.5" />
-                                  </div>
+                            <div>
+                              <div className="h-3 w-24 bg-gray-200 rounded" />
+                              <div className="h-2 w-16 bg-gray-100 rounded mt-1.5" />
+                            </div>
+                          </div>
+                          <div className="space-y-3">
+                            {[1, 2, 3].map((i) => (
+                              <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div className="w-8 h-8 rounded-full bg-gray-200" />
+                                <div className="flex-1">
+                                  <div className="h-2.5 w-3/4 bg-gray-200 rounded" />
+                                  <div className="h-2 w-1/2 bg-gray-100 rounded mt-1.5" />
                                 </div>
-                              ))}
-                            </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -309,7 +282,7 @@ export default function FeaturesPage() {
       </section>
 
       {/* Additional Features Grid */}
-      <section className="py-20 lg:py-32 bg-slate-50">
+      <section className="py-20 lg:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
@@ -320,13 +293,13 @@ export default function FeaturesPage() {
           >
             <motion.h2
               variants={fadeInUp}
-              className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4"
+              className="text-3xl sm:text-4xl font-bold text-black mb-4"
             >
               And So Much More
             </motion.h2>
             <motion.p
               variants={fadeInUp}
-              className="text-lg text-slate-600 max-w-2xl mx-auto"
+              className="text-lg text-gray-600 max-w-2xl mx-auto"
             >
               Align is packed with features designed to make your team more
               productive and accountable.
@@ -344,15 +317,15 @@ export default function FeaturesPage() {
               <motion.div
                 key={feature.title}
                 variants={fadeInUp}
-                className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all"
+                className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all"
               >
-                <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center mb-4">
-                  <feature.icon className="w-5 h-5 text-red-600" />
+                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mb-4">
+                  <feature.icon className="w-5 h-5 text-black" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                <h3 className="text-lg font-semibold text-black mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-slate-600 text-sm">{feature.description}</p>
+                <p className="text-gray-600 text-sm">{feature.description}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -360,7 +333,7 @@ export default function FeaturesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 lg:py-32 bg-white">
+      <section className="py-20 lg:py-32 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial="hidden"
@@ -370,13 +343,13 @@ export default function FeaturesPage() {
           >
             <motion.h2
               variants={fadeInUp}
-              className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4"
+              className="text-3xl sm:text-4xl font-bold text-black mb-4"
             >
               Ready to See Align in Action?
             </motion.h2>
             <motion.p
               variants={fadeInUp}
-              className="text-lg text-slate-600 mb-8"
+              className="text-lg text-gray-600 mb-8"
             >
               Start your free trial today and experience the difference Align can
               make for your team.
@@ -385,18 +358,16 @@ export default function FeaturesPage() {
               variants={fadeInUp}
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-shadow"
-              >
-                Start Free Trial
-                <ArrowRight className="w-5 h-5" />
+              <Link href="/app?page=register">
+                <Button size="lg" className="bg-black text-white hover:bg-gray-900">
+                  Start Free Trial
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
               </Link>
-              <Link
-                href="/demo"
-                className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition-colors"
-              >
-                Schedule Demo
+              <Link href="/contact">
+                <Button size="lg" variant="outline" className="border-gray-200 hover:bg-white text-black">
+                  Schedule Demo
+                </Button>
               </Link>
             </motion.div>
           </motion.div>
