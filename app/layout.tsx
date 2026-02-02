@@ -34,20 +34,11 @@ export const metadata: Metadata = {
     siteName: "Taskspace",
     title: "Taskspace - EOS Management Platform",
     description: "The all-in-one platform for implementing the Entrepreneurial Operating System. Run on EOS with confidence.",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Taskspace - EOS Management Platform",
-      },
-    ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Taskspace - EOS Management Platform",
     description: "The all-in-one platform for implementing the Entrepreneurial Operating System.",
-    images: ["/og-image.png"],
     creator: "@taskspace",
   },
   robots: {

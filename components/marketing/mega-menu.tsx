@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown, Menu, X } from "lucide-react"
@@ -12,6 +12,29 @@ type MenuType = "features" | "solutions" | "resources" | null
 export function MegaMenu() {
   const [activeMenu, setActiveMenu] = useState<MenuType>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Handle Escape key to close mobile menu
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileMenuOpen) {
+        setMobileMenuOpen(false)
+      }
+    }
+    document.addEventListener("keydown", handleEscape)
+    return () => document.removeEventListener("keydown", handleEscape)
+  }, [mobileMenuOpen])
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "unset"
+    }
+    return () => {
+      document.body.style.overflow = "unset"
+    }
+  }, [mobileMenuOpen])
 
   return (
     <nav className="relative bg-white border-b border-gray-200 z-50">
