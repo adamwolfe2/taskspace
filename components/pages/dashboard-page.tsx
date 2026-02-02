@@ -10,6 +10,8 @@ import { AIEODSubmission } from "@/components/dashboard/ai-eod-submission"
 import { WeeklyEODCalendar } from "@/components/dashboard/weekly-eod-calendar"
 import { QuickActionsBar } from "@/components/dashboard/quick-actions-bar"
 import { FocusOfTheDay } from "@/components/dashboard/focus-of-the-day"
+import { RocksProgressChart } from "@/components/dashboard/rocks-progress-chart"
+import { TaskCompletionChart } from "@/components/dashboard/task-completion-chart"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -186,6 +188,16 @@ export function DashboardPage({
  <ErrorBoundary title="Stats unavailable">
  <StatsCards stats={stats} />
  </ErrorBoundary>
+
+ {/* Charts Grid - NEW: Visual Analytics */}
+ <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+ <ErrorBoundary title="Chart unavailable">
+ <RocksProgressChart rocks={rocks} />
+ </ErrorBoundary>
+ <ErrorBoundary title="Chart unavailable">
+ <TaskCompletionChart tasks={assignedTasks} />
+ </ErrorBoundary>
+ </div>
 
  {/* Weekly EOD Calendar with Hover Preview */}
  <ErrorBoundary title="Calendar unavailable">
