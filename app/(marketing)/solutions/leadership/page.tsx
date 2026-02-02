@@ -179,7 +179,7 @@ export default function LeadershipSolutionPage() {
       </section>
 
       {/* AI Agents Section */}
-      <section className="py-24 bg-slate-900">
+      <section className="py-20 lg:py-32 bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <Badge className="bg-purple-600 text-white mb-6">
@@ -245,7 +245,7 @@ export default function LeadershipSolutionPage() {
       </section>
 
       {/* Feature: Vision/Traction Alignment */}
-      <section className="py-24 bg-white">
+      <section className="py-20 lg:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -307,7 +307,7 @@ export default function LeadershipSolutionPage() {
       </section>
 
       {/* Feature: Scorecard */}
-      <section className="py-24 bg-slate-50">
+      <section className="py-20 lg:py-32 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1 relative">
@@ -369,7 +369,7 @@ export default function LeadershipSolutionPage() {
       </section>
 
       {/* Feature: Level 10 Meetings */}
-      <section className="py-24 bg-white">
+      <section className="py-20 lg:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -442,7 +442,7 @@ export default function LeadershipSolutionPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-24 bg-slate-50">
+      <section className="py-20 lg:py-32 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">
@@ -469,7 +469,7 @@ export default function LeadershipSolutionPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 bg-slate-900">
+      <section className="py-20 lg:py-32 bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">
@@ -516,7 +516,7 @@ export default function LeadershipSolutionPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500">
+      <section className="py-20 lg:py-32 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Award className="w-20 h-20 text-white mx-auto mb-6" />
           <h2 className="text-5xl font-bold text-white mb-6">

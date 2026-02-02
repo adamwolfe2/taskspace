@@ -250,7 +250,7 @@ export default function PricingPage() {
       </section>
 
       {/* Feature Comparison */}
-      <section className="py-24 bg-slate-50">
+      <section className="py-20 lg:py-32 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">
@@ -302,7 +302,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-24 bg-white">
+      <section className="py-20 lg:py-32 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">
@@ -350,7 +350,7 @@ export default function PricingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500">
+      <section className="py-20 lg:py-32 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-3xl mx-auto mb-8" />
           <h2 className="text-5xl font-bold text-white mb-6">

@@ -401,7 +401,7 @@ function LogoSection() {
 // Problem-Solution Split Section
 function ProblemSolutionSection() {
   return (
-    <section className="py-24 bg-slate-50">
+    <section className="py-20 lg:py-32 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Problem */}
@@ -571,7 +571,7 @@ function FeaturesSection() {
   ]
 
   return (
-    <section id="features" className="py-24 bg-slate-50">
+    <section id="features" className="py-20 lg:py-32 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial="hidden"
@@ -635,7 +635,7 @@ function FeaturesSection() {
 // Interactive Product Demos
 function ProductDemoSection() {
   return (
-    <section id="product" className="py-24 bg-white">
+    <section id="product" className="py-20 lg:py-32 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32">
         {/* EOD Demo */}
         <div>
@@ -773,7 +773,7 @@ function TestimonialsSection() {
   ]
 
   return (
-    <section id="customers" className="py-24 bg-slate-900">
+    <section id="customers" className="py-20 lg:py-32 bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial="hidden"
@@ -879,7 +879,7 @@ function PricingSection() {
   ]
 
   return (
-    <section id="pricing" className="py-24 bg-white">
+    <section id="pricing" className="py-20 lg:py-32 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial="hidden"
@@ -990,7 +990,7 @@ function FAQSection() {
   ]
 
   return (
-    <section className="py-24 bg-slate-50">
+    <section className="py-20 lg:py-32 bg-slate-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial="hidden"
@@ -1035,7 +1035,7 @@ function FAQSection() {
 // Final CTA
 function CTASection() {
   return (
-    <section className="py-24 bg-gradient-to-br from-red-500 via-red-600 to-orange-500 relative overflow-hidden">
+    <section className="py-20 lg:py-32 bg-gradient-to-br from-red-500 via-red-600 to-orange-500 relative overflow-hidden">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]" />
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
