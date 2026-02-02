@@ -4,11 +4,11 @@ import { CONFIG } from "./config"
 
 // Use environment variables for sensitive data
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@example.com"
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@trytaskspace.com"
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-// Default to Resend's testing email - works without domain verification
-// For production, set EMAIL_FROM to your verified domain (e.g., "Align <noreply@yourdomain.com>")
-const EMAIL_FROM = process.env.EMAIL_FROM || "Align <onboarding@resend.dev>"
+// Default to Taskspace domain - make sure this domain is verified in Resend
+// For testing without domain, use "Taskspace <onboarding@resend.dev>"
+const EMAIL_FROM = process.env.EMAIL_FROM || "Taskspace <noreply@trytaskspace.com>"
 
 // Check if email is configured
 function isEmailConfigured(): boolean {
@@ -146,7 +146,7 @@ export async function sendInvitationEmail(
       </div>
 
       <div class="footer">
-        <p>${escapeHtml(organization.name)} - Powered by Align</p>
+        <p>${escapeHtml(organization.name)} - Powered by Taskspace</p>
         <p style="margin-top: 10px;">If the button doesn't work, copy and paste this link:<br/>
         <a href="${inviteLink}" style="color: #2563EB; word-break: break-all;">${inviteLink}</a></p>
       </div>
@@ -350,7 +350,7 @@ export async function sendEODNotification(
     </div>
 
     <div class="footer">
-      ${organization ? escapeHtml(organization.name) : "Align"} • Submitted at ${new Date(eodReport.submittedAt).toLocaleTimeString()}
+      ${organization ? escapeHtml(organization.name) : "Taskspace"} • Submitted at ${new Date(eodReport.submittedAt).toLocaleTimeString()}
     </div>
   </div>
 </body>
@@ -439,7 +439,7 @@ export async function sendPasswordResetEmail(
     <div class="card">
       <div class="header">
         <h1>Password Reset Request</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9;">Align</p>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Taskspace</p>
       </div>
 
       <div class="content">
@@ -460,7 +460,7 @@ export async function sendPasswordResetEmail(
       </div>
 
       <div class="footer">
-        <p>Align - Team Productivity Platform</p>
+        <p>Taskspace - Team Productivity Platform</p>
         <p style="margin-top: 10px;">If the button doesn't work, copy and paste this link:<br/>
         <a href="${resetLink}" style="color: #dc2626; word-break: break-all;">${resetLink}</a></p>
       </div>
@@ -472,7 +472,7 @@ export async function sendPasswordResetEmail(
 
   return sendEmail(
     [resetToken.email],
-    "Reset your Align password",
+    "Reset your Taskspace password",
     html
   )
 }
