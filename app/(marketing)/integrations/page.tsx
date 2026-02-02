@@ -4,6 +4,8 @@ import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, CheckCircle } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
+import { integrations } from "@/lib/integrations-data"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -56,18 +58,41 @@ export default function IntegrationsPage() {
             className="mb-16"
           >
             <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-12 gap-4">
-              {[...Array(60)].map((_, i) => (
+              {integrations.map((integration, i) => (
                 <motion.div
                   key={i}
                   variants={fadeInUp}
-                  className="w-16 h-16 rounded-xl bg-white border border-gray-200 flex items-center justify-center hover:shadow-md transition-shadow"
+                  className="w-16 h-16 rounded-xl bg-white border border-gray-200 flex items-center justify-center hover:shadow-md hover:scale-105 transition-all group relative"
+                  title={integration.name}
                 >
-                  <div className="w-8 h-8 bg-gray-200 rounded" />
+                  <div className="relative w-10 h-10 flex items-center justify-center">
+                    <Image
+                      src={integration.logo}
+                      alt={integration.name}
+                      width={40}
+                      height={40}
+                      className="object-contain"
+                      onError={(e) => {
+                        // Fallback to initials if image fails to load
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        const parent = target.parentElement
+                        if (parent) {
+                          const initials = integration.name.substring(0, 2).toUpperCase()
+                          parent.innerHTML = `<div class="text-xs font-semibold text-gray-600">${initials}</div>`
+                        }
+                      }}
+                    />
+                  </div>
+                  {/* Tooltip */}
+                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10">
+                    {integration.name}
+                  </div>
                 </motion.div>
               ))}
             </div>
-            <div className="text-center mt-8">
-              <Link href="/contact" className="inline-flex items-center gap-2 text-sm text-gray-700 hover:text-black">
+            <div className="text-center mt-12">
+              <Link href="/contact" className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-black transition-colors">
                 Request an integration <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

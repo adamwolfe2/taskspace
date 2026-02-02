@@ -29,6 +29,7 @@ import { DemoLevel10 } from "@/components/marketing/demo-level10"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { integrations, agentUseCases } from "@/lib/integrations-data"
 
 // Animation variants
 const fadeInUp = {
@@ -371,83 +372,8 @@ function FeatureDemoSection() {
   )
 }
 
-// Integrations Section
+// Integrations Section - HyperFX Style
 function IntegrationsSection() {
-  const integrations = [
-    {
-      name: "Slack",
-      description: "Send automated notifications for rocks, tasks, and EOD reports directly to your team channels",
-      logo: "/integrations/slack-svgrepo-com.svg",
-      features: ["Real-time notifications", "Channel integration", "Direct messages"],
-    },
-    {
-      name: "Google Calendar",
-      description: "Sync Level 10 meetings, deadlines, and rocks automatically to your Google Calendar",
-      logo: "/integrations/google-calendar-svgrepo-com.svg",
-      features: ["Two-way sync", "Automatic updates", "Meeting reminders"],
-    },
-    {
-      name: "Asana",
-      description: "Import your existing Asana tasks and projects into Taskspace with one click",
-      logo: "/integrations/asana.svg",
-      features: ["One-click import", "Task sync", "Project migration"],
-    },
-    {
-      name: "Zoom",
-      description: "Launch and record Level 10 meetings directly from Taskspace with automatic calendar sync",
-      logo: "/integrations/icons8-zoom.svg",
-      features: ["One-click meetings", "Auto-recording", "Calendar sync"],
-    },
-    {
-      name: "Notion",
-      description: "Sync your V/TO, rocks, and meeting notes to Notion for centralized documentation",
-      logo: "/integrations/notion.svg",
-      features: ["Two-way sync", "Auto-updates", "Database integration"],
-    },
-    {
-      name: "Gmail",
-      description: "Automated email notifications for escalations, reminders, and team updates",
-      logo: "/integrations/gmail.svg",
-      features: ["Smart notifications", "Daily digests", "Custom alerts"],
-    },
-    {
-      name: "HubSpot",
-      description: "Sync your sales rocks, customer data, and team performance metrics with HubSpot CRM",
-      logo: "/integrations/hubspot-svgrepo-com.svg",
-      features: ["CRM sync", "Deal tracking", "Sales metrics"],
-    },
-    {
-      name: "Google Drive",
-      description: "Attach files and documents from Google Drive directly to your rocks and tasks",
-      logo: "/integrations/icons8-google-drive.svg",
-      features: ["File attachments", "Auto-sync", "Team access"],
-    },
-    {
-      name: "Microsoft",
-      description: "Integrate with Microsoft Teams, Outlook, and Office 365 for enterprise collaboration",
-      logo: "/integrations/microsoft.svg",
-      features: ["Teams integration", "Outlook sync", "Office 365"],
-    },
-    {
-      name: "Google Ads",
-      description: "Track marketing campaign ROI and ad spend as measurables in your weekly scorecard",
-      logo: "/integrations/google-ads-svgrepo-com.svg",
-      features: ["Campaign tracking", "ROI metrics", "Auto-reporting"],
-    },
-    {
-      name: "OpenAI",
-      description: "AI-powered suggestions for EOD reports, rock planning, and issue resolution",
-      logo: "/integrations/openai-svgrepo-com.svg",
-      features: ["AI suggestions", "Smart summaries", "Automated insights"],
-    },
-    {
-      name: "Airtable",
-      description: "Import databases and sync your workflow data between Airtable and Taskspace",
-      logo: "/integrations/airtable-svgrepo-com.svg",
-      features: ["Database import", "Two-way sync", "Custom fields"],
-    },
-  ]
-
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
 
@@ -459,65 +385,158 @@ function IntegrationsSection() {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
           variants={fadeInUp}
-          className="text-center max-w-3xl mx-auto mb-16"
+          className="text-center max-w-3xl mx-auto mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-gray-50 text-gray-700 text-sm mb-4">
-            <Plug className="w-4 h-4" />
-            <span>Integrations</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-gray-700 text-xs font-medium mb-6">
+            <span>80+ Integrations</span>
           </div>
           <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
-            Connect Your Entire Workflow
+            Integrates with your entire stack
           </h2>
-          <p className="text-xl text-gray-600">
-            Seamlessly integrate with the tools your team already uses. Automate workflows and keep everything in sync.
+          <p className="text-lg text-gray-600">
+            From ad platforms to analytics, and the tools that drive your daily operations.
           </p>
         </motion.div>
 
-        {/* Integrations Grid */}
+        {/* Compact Integration Logos Grid */}
         <motion.div
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
           variants={staggerContainer}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="mb-12"
         >
-          {integrations.map((integration, index) => (
-            <motion.div
-              key={integration.name}
-              variants={fadeInUp}
-              className="group relative bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:border-gray-300"
-            >
-              {/* Logo */}
-              <div className="flex items-center justify-center w-16 h-16 bg-gray-50 rounded-lg mb-4 group-hover:bg-gray-100 transition-colors">
-                <Image
-                  src={integration.logo}
-                  alt={`${integration.name} logo`}
-                  width={40}
-                  height={40}
-                  className="object-contain"
-                />
-              </div>
+          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
+            {integrations.slice(0, 48).map((integration, i) => (
+              <motion.div
+                key={i}
+                variants={fadeInUp}
+                className="aspect-square rounded-xl bg-white border border-gray-200 flex items-center justify-center hover:shadow-md hover:scale-105 transition-all group relative"
+                title={integration.name}
+              >
+                <div className="relative w-8 h-8 flex items-center justify-center">
+                  <Image
+                    src={integration.logo}
+                    alt={integration.name}
+                    width={32}
+                    height={32}
+                    className="object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const parent = target.parentElement
+                      if (parent) {
+                        const initials = integration.name.substring(0, 2).toUpperCase()
+                        parent.innerHTML = `<div class="text-xs font-semibold text-gray-600">${initials}</div>`
+                      }
+                    }}
+                  />
+                </div>
+                {/* Tooltip */}
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10">
+                  {integration.name}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
-              {/* Name */}
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {integration.name}
-              </h3>
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ delay: 0.4 }}
+          className="text-center"
+        >
+          <Link href="/integrations" className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-black transition-colors">
+            View all integrations <ArrowRight className="w-4 h-4" />
+          </Link>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
 
-              {/* Description */}
-              <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                {integration.description}
-              </p>
+// Agents for Everything Section - HyperFX Style
+function AgentsSection() {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
 
-              {/* Features */}
-              <ul className="space-y-1.5">
-                {integration.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2 text-xs text-gray-500">
-                    <CheckCircle className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
+  return (
+    <section ref={ref} className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <motion.div
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={fadeInUp}
+          className="text-center max-w-3xl mx-auto mb-16"
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 bg-white text-gray-700 text-xs font-medium mb-6">
+            <Brain className="w-3.5 h-3.5" />
+            <span>AI Agents</span>
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+            Agents for everything
+          </h2>
+          <p className="text-lg text-gray-600">
+            Start with ready-to-use agents for any type of work imaginable.
+          </p>
+        </motion.div>
+
+        {/* Use Cases Grid */}
+        <motion.div
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={staggerContainer}
+          className="grid md:grid-cols-3 gap-8"
+        >
+          {/* Marketing */}
+          <motion.div variants={fadeInUp} className="bg-white rounded-2xl border border-gray-200 p-8">
+            <h3 className="text-2xl font-bold text-black mb-6">Marketing</h3>
+            <div className="space-y-4">
+              {agentUseCases.marketing.map((useCase, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="text-xl flex-shrink-0">{useCase.icon}</span>
+                  <div>
+                    <div className="font-medium text-gray-900 text-sm mb-1">{useCase.title}</div>
+                    <div className="text-xs text-gray-600">{useCase.description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Operations */}
+          <motion.div variants={fadeInUp} className="bg-white rounded-2xl border border-gray-200 p-8">
+            <h3 className="text-2xl font-bold text-black mb-6">Operations</h3>
+            <div className="space-y-4">
+              {agentUseCases.operations.map((useCase, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="text-xl flex-shrink-0">{useCase.icon}</span>
+                  <div>
+                    <div className="font-medium text-gray-900 text-sm mb-1">{useCase.title}</div>
+                    <div className="text-xs text-gray-600">{useCase.description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Sales */}
+          <motion.div variants={fadeInUp} className="bg-white rounded-2xl border border-gray-200 p-8">
+            <h3 className="text-2xl font-bold text-black mb-6">Sales</h3>
+            <div className="space-y-4">
+              {agentUseCases.sales.map((useCase, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="text-xl flex-shrink-0">{useCase.icon}</span>
+                  <div>
+                    <div className="font-medium text-gray-900 text-sm mb-1">{useCase.title}</div>
+                    <div className="text-xs text-gray-600">{useCase.description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </motion.div>
 
         {/* CTA */}
@@ -527,13 +546,9 @@ function IntegrationsSection() {
           transition={{ delay: 0.6 }}
           className="text-center mt-12"
         >
-          <Link href="/integrations">
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-gray-200 hover:bg-gray-50 text-black"
-            >
-              View All Integrations
+          <Link href="/app?page=register">
+            <Button size="lg" className="bg-black text-white hover:bg-gray-900">
+              Start building with AI agents
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
@@ -665,6 +680,7 @@ export default function HomePage() {
       <HeroSection />
       <CoreFeaturesSection />
       <FeatureDemoSection />
+      <AgentsSection />
       <IntegrationsSection />
       <UseCasesSection />
       <StatsSection />
