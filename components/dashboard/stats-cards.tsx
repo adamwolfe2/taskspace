@@ -63,8 +63,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
       iconBg: stats.eodStreak >= 5 ? "bg-orange-100" : "bg-slate-100",
       iconColor: stats.eodStreak >= 5 ? "text-orange-600" : "text-slate-600",
       badge: stats.eodStreak > 0 ? {
-        label: getStreakMilestone(stats.eodStreak).label,
-        color: getStreakMilestone(stats.eodStreak).color + " bg-orange-50",
+        label: getStreakMilestone(stats.eodStreak)?.label || "",
+        color: (getStreakMilestone(stats.eodStreak)?.color || "text-orange-600") + " bg-orange-50",
       } : undefined,
     },
   ]

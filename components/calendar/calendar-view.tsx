@@ -60,6 +60,7 @@ export function CalendarView({ tasks, rocks, eodReports, currentUser, onSelectDa
 
     // Add tasks
     tasks.forEach((task) => {
+      if (!task.dueDate) return
       const dateKey = task.dueDate.split("T")[0]
       const dayData = data.get(dateKey)
       if (dayData) {
@@ -69,6 +70,7 @@ export function CalendarView({ tasks, rocks, eodReports, currentUser, onSelectDa
 
     // Add rocks
     rocks.forEach((rock) => {
+      if (!rock.dueDate) return
       const dateKey = rock.dueDate.split("T")[0]
       const dayData = data.get(dateKey)
       if (dayData) {
@@ -160,7 +162,7 @@ export function CalendarView({ tasks, rocks, eodReports, currentUser, onSelectDa
 
             const pendingTasks = dayData?.tasks.filter((t) => t.status !== "completed") || []
             const overdueTasks = pendingTasks.filter(
-              (t) => new Date(t.dueDate) < new Date() && !isSameDay(new Date(t.dueDate), new Date())
+              (t) => t.dueDate && new Date(t.dueDate) < new Date() && !isSameDay(new Date(t.dueDate), new Date())
             )
 
             return (

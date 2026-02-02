@@ -109,7 +109,6 @@ export function TeamManagementTab() {
         email: inviteEmail.trim().toLowerCase(),
         role: inviteRole,
         department: inviteDepartment,
-        workspaceId: inviteWorkspaceId || undefined,
       })
 
       setPendingInvitations([...pendingInvitations, invitation])

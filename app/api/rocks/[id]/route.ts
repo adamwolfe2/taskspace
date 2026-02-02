@@ -65,11 +65,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       getRockCheckins(id, 13), // Last 13 weeks
     ])
 
-    logger.info("Rock details fetched", {
+    logger.info({
       userId: auth.user.id,
       rockId: id,
       taskCount: tasks.length,
-    })
+    }, "Rock details fetched")
 
     return NextResponse.json({
       success: true,
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     })
   } catch (error) {
-    logger.error("Error fetching rock details", { error })
+    logger.error({ error }, "Error fetching rock details")
     return NextResponse.json(
       {
         success: false,

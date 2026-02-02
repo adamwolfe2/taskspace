@@ -365,6 +365,7 @@ export const updateScorecardEntrySchema = z.object({
   memberId: z.string().min(1, "Member ID is required"),
   weekEnding: dateSchema,
   value: z.coerce.number({ invalid_type_error: "Value must be a number" }),
+  workspaceId: z.string().min(1, "Workspace ID is required"),
 })
 
 // ============================================

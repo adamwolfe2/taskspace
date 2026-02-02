@@ -68,7 +68,7 @@ export function SmartSuggestions({
  })
 
  overdueTasks.forEach((task) => {
- const daysOverdue = differenceInDays(today, parseISO(task.dueDate))
+ const daysOverdue = differenceInDays(today, parseISO(task.dueDate!))
  result.push({
  id: `overdue-${task.id}`,
  type: "task",

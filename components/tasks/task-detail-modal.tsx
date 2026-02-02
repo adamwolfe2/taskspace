@@ -25,8 +25,8 @@ interface TaskDetailModalProps {
   onUpdateTask: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
 }
 
-function getDueDateStatus(dueDate: string, isCompleted: boolean) {
-  if (isCompleted) return null
+function getDueDateStatus(dueDate: string | null, isCompleted: boolean) {
+  if (isCompleted || !dueDate) return null
 
   const today = startOfDay(new Date())
   const due = startOfDay(new Date(dueDate))
@@ -76,6 +76,7 @@ export function TaskDetailModal({
     high: { label: "High", variant: "destructive" as const, color: "text-red-600" },
     medium: { label: "Medium", variant: "default" as const, color: "text-amber-600" },
     normal: { label: "Normal", variant: "secondary" as const, color: "text-slate-600" },
+    low: { label: "Low", variant: "secondary" as const, color: "text-slate-400" },
   }
 
   const priority = priorityConfig[task.priority]
@@ -168,12 +169,12 @@ export function TaskDetailModal({
                     <dueDateStatus.icon className="h-3 w-3" />
                     {dueDateStatus.label}
                   </span>
-                ) : (
+                ) : task.dueDate ? (
                   <span className="flex items-center gap-1 text-xs text-slate-500">
                     <Calendar className="h-3 w-3" />
                     Due: {format(new Date(task.dueDate), "MMM d, yyyy")}
                   </span>
-                )}
+                ) : null}
               </DialogDescription>
             </div>
           </div>

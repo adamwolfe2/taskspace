@@ -81,11 +81,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       updatedRock = await reopenRock(id)
       message = "Rock reopened successfully"
 
-      logger.info("Rock reopened", {
+      logger.info({
         userId: auth.user.id,
         rockId: id,
         rockTitle: rock.title,
-      })
+      }, "Rock reopened")
     } else if (rock.status === "completed") {
       // Already completed
       return NextResponse.json({
@@ -98,11 +98,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       updatedRock = await completeRock(id)
       message = "Rock completed successfully"
 
-      logger.info("Rock completed", {
+      logger.info({
         userId: auth.user.id,
         rockId: id,
         rockTitle: rock.title,
-      })
+      }, "Rock completed")
     }
 
     return NextResponse.json({
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       message,
     })
   } catch (error) {
-    logger.error("Error completing rock", { error })
+    logger.error({ error }, "Error completing rock")
     return NextResponse.json(
       {
         success: false,

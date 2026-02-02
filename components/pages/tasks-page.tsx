@@ -92,7 +92,7 @@ export function TasksPage({
       })
 
       // If this is a recurring task, create the next instance
-      if (completedTask?.recurrence) {
+      if (completedTask?.recurrence && completedTask.dueDate) {
         const nextDueDate = calculateNextDueDate(completedTask.dueDate, completedTask.recurrence)
 
         // Check if we've passed the end date

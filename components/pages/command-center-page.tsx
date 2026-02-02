@@ -125,7 +125,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
       setError(getErrorMessage(err))
       toast({
         title: "Error",
-        description: err.message,
+        description: getErrorMessage(err),
         variant: "destructive",
       })
     } finally {

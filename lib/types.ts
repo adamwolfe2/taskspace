@@ -173,6 +173,8 @@ export interface TeamMember {
   eodReminderTime?: string // User's preferred reminder time (HH:MM format)
   managerId?: string | null // ID of the user who manages this member
   jobTitle?: string // Job title for display
+  lastActive?: string // Last activity timestamp
+  createdAt?: string // Creation timestamp
   notificationPreferences?: NotificationPreferences
 }
 
@@ -191,6 +193,7 @@ export interface Rock {
   organizationId: string
   workspaceId?: string | null // Multi-workspace support (SESSION 5)
   userId: string
+  userName?: string // User name (joined from users table)
   title: string
   description: string
   progress: number
@@ -228,6 +231,7 @@ export interface TaskRecurrence {
 export interface TaskTemplate {
   id: string
   organizationId: string
+  workspaceId?: string | null
   createdBy: string
   name: string
   title: string

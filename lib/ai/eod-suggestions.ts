@@ -154,7 +154,7 @@ export async function generateEODSuggestions(
   if (suggestions.length > 0) {
     try {
       await createSuggestions(suggestions)
-      logger.info("AI suggestions created from EOD report", { count: suggestions.length, reportId: report.id })
+      logger.info({ count: suggestions.length, reportId: report.id }, "AI suggestions created from EOD report")
     } catch (error) {
       logError(logger, "Failed to create AI suggestions", error)
     }
@@ -170,7 +170,7 @@ export async function shouldGenerateSuggestions(
 ): Promise<boolean> {
   // Don't generate suggestions if credits are very low (< 10)
   if (creditsRemaining < 10) {
-    logger.debug("AI suggestions skipped due to low credits", { creditsRemaining })
+    logger.debug({ creditsRemaining }, "AI suggestions skipped due to low credits")
     return false
   }
 

@@ -143,12 +143,12 @@ export async function POST(request: NextRequest) {
 
     const totalMigrated = migrations.reduce((sum, m) => sum + m.count, 0)
 
-    logger.info("Migrated existing data to default workspace", {
+    logger.info({
       organizationId: auth.organization.id,
       workspaceId: defaultWorkspaceId,
       migrations,
       totalRecords: totalMigrated,
-    })
+    }, "Migrated existing data to default workspace")
 
     return NextResponse.json<ApiResponse<{
       workspaceId: string

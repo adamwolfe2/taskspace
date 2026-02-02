@@ -86,7 +86,7 @@ export function ConcludeSection({
           <div className="flex items-center gap-4 text-sm text-slate-600">
             <div className="flex items-center gap-1">
               <Star className="h-4 w-4 text-amber-500" />
-              Rating: {section.data?.rating || "—"}/10
+              <span>{`Rating: ${section.data?.rating || "—"}/10`}</span>
             </div>
           </div>
         </CardContent>

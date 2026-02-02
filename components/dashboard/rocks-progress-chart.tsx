@@ -30,14 +30,14 @@ export function RocksProgressChart({ rocks }: RocksProgressChartProps) {
   const [open, setOpen] = useState(false)
 
   // Aggregate rocks by quarter
-  const chartData = rocks.reduce((acc, rock) => {
+  const chartData = rocks.filter((rock) => rock.quarter).reduce((acc, rock) => {
     const existing = acc.find((item) => item.quarter === rock.quarter)
     if (existing) {
       existing.count += 1
       existing.totalProgress += rock.progress
     } else {
       acc.push({
-        quarter: rock.quarter,
+        quarter: rock.quarter!,
         count: 1,
         totalProgress: rock.progress,
       })

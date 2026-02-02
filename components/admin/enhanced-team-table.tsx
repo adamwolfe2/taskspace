@@ -255,7 +255,7 @@ export function EnhancedTeamTable({
                     </TableCell>
                     <TableCell>
                       <span className="text-sm text-muted-foreground">
-                        {formatDate(member.createdAt)}
+                        {member.createdAt ? formatDate(member.createdAt) : "N/A"}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">

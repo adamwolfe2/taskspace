@@ -50,7 +50,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       data: metric,
     })
   } catch (error) {
-    logger.error("Error fetching scorecard metric", { error })
+    logger.error({ error }, "Error fetching scorecard metric")
     return NextResponse.json(
       {
         success: false,
@@ -122,11 +122,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    logger.info("Scorecard metric updated", {
+    logger.info({
       userId: auth.user.id,
       metricId: id,
       updates: body,
-    })
+    }, "Scorecard metric updated")
 
     return NextResponse.json({
       success: true,
@@ -134,7 +134,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       message: "Metric updated successfully",
     })
   } catch (error) {
-    logger.error("Error updating scorecard metric", { error })
+    logger.error({ error }, "Error updating scorecard metric")
     return NextResponse.json(
       {
         success: false,
@@ -193,18 +193,18 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    logger.info("Scorecard metric deleted", {
+    logger.info({
       userId: auth.user.id,
       metricId: id,
       metricName: metric.name,
-    })
+    }, "Scorecard metric deleted")
 
     return NextResponse.json({
       success: true,
       message: "Metric deleted successfully",
     })
   } catch (error) {
-    logger.error("Error deleting scorecard metric", { error })
+    logger.error({ error }, "Error deleting scorecard metric")
     return NextResponse.json(
       {
         success: false,

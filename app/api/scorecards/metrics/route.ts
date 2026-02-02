@@ -42,18 +42,18 @@ export async function GET(request: NextRequest) {
 
     const metrics = await getMetricsByWorkspace(workspaceId)
 
-    logger.info("Scorecard metrics fetched", {
+    logger.info({
       userId: auth.user.id,
       workspaceId,
       metricCount: metrics.length,
-    })
+    }, "Scorecard metrics fetched")
 
     return NextResponse.json({
       success: true,
       data: metrics,
     })
   } catch (error) {
-    logger.error("Error fetching scorecard metrics", { error })
+    logger.error({ error }, "Error fetching scorecard metrics")
     return NextResponse.json(
       {
         success: false,
@@ -123,12 +123,12 @@ export async function POST(request: NextRequest) {
       createdBy: auth.user.id,
     })
 
-    logger.info("Scorecard metric created", {
+    logger.info({
       userId: auth.user.id,
       workspaceId,
       metricId: metric.id,
       metricName: metric.name,
-    })
+    }, "Scorecard metric created")
 
     return NextResponse.json({
       success: true,
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       message: "Metric created successfully",
     })
   } catch (error) {
-    logger.error("Error creating scorecard metric", { error })
+    logger.error({ error }, "Error creating scorecard metric")
     return NextResponse.json(
       {
         success: false,

@@ -30,8 +30,8 @@ interface FocusItem {
  type: "task" | "rock_deadline"
  title: string
  reason: string
- priority: "high" | "medium" | "normal"
- dueDate?: string
+ priority: "high" | "medium" | "normal" | "low"
+ dueDate?: string | null
  rockTitle?: string
  isOverdue?: boolean
  task?: AssignedTask
@@ -143,7 +143,7 @@ export function FocusOfTheDay({
  if (!pinnedIds.has(a.id) && pinnedIds.has(b.id)) return 1
  if (a.isOverdue && !b.isOverdue) return -1
  if (!a.isOverdue && b.isOverdue) return 1
- const priorityOrder = { high: 0, medium: 1, normal: 2 }
+ const priorityOrder = { high: 0, medium: 1, normal: 2, low: 3 }
  return priorityOrder[a.priority] - priorityOrder[b.priority]
  })
  .slice(0, 3)

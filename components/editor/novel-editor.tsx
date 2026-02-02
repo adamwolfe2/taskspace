@@ -92,7 +92,7 @@ export function NovelEditor() {
               {suggestionItems.map((item) => (
                 <EditorCommandItem
                   value={item.title}
-                  onCommand={(val) => item.command(val)}
+                  onCommand={(val) => item.command?.(val)}
                   className="flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-sm hover:bg-slate-50 aria-selected:bg-slate-50"
                   key={item.title}
                 >

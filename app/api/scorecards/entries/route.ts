@@ -66,13 +66,13 @@ export async function POST(request: NextRequest) {
       enteredBy: auth.user.id,
     })
 
-    logger.info("Scorecard entry submitted", {
+    logger.info({
       userId: auth.user.id,
       metricId,
       weekStart: entryWeekStart,
       value: Number(value),
       status: entry.status,
-    })
+    }, "Scorecard entry submitted")
 
     return NextResponse.json({
       success: true,
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       message: "Entry submitted successfully",
     })
   } catch (error) {
-    logger.error("Error submitting scorecard entry", { error })
+    logger.error({ error }, "Error submitting scorecard entry")
     return NextResponse.json(
       {
         success: false,

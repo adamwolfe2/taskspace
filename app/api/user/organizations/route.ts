@@ -37,6 +37,8 @@ export async function GET(request: NextRequest) {
           logoUrl: org.logoUrl,
           primaryColor: org.primaryColor,
           role: membership.role,
+          memberStatus: membership.status,
+          joinedAt: membership.joinedAt,
           subscriptionTier: org.subscription?.plan || "free",
           isCurrent: org.id === auth.organization.id,
         })
@@ -103,14 +105,14 @@ export async function POST(request: NextRequest) {
       ownerId: auth.user.id,
       settings: {
         timezone: "America/New_York",
-        weekStartDay: 1,
+        weekStartDay: 1 as 0 | 1 | 2 | 3 | 4 | 5 | 6,
         eodReminderTime: "17:00",
         enableEmailNotifications: true,
         enableSlackIntegration: false,
       },
       subscription: {
-        plan: "free",
-        status: "active",
+        plan: "free" as "free" | "starter" | "professional" | "enterprise",
+        status: "active" as "active" | "trialing" | "past_due" | "canceled",
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         maxUsers: 5,
         features: ["basic_rocks", "basic_tasks", "eod_reports"],
@@ -144,10 +146,10 @@ export async function POST(request: NextRequest) {
       userId: auth.user.id,
       email: auth.user.email,
       name: auth.user.name,
-      role: "owner",
+      role: "owner" as "owner" | "admin" | "member",
       department: "Leadership",
       joinedAt: now,
-      status: "active",
+      status: "active" as "active" | "invited" | "inactive",
     }
 
     await db.members.create(member)
@@ -157,7 +159,7 @@ export async function POST(request: NextRequest) {
       id: generateId(),
       workspaceId: defaultWorkspaceId,
       userId: auth.user.id,
-      role: "admin",
+      role: "admin" as "admin" | "member" | "owner",
       joinedAt: now,
     }
 

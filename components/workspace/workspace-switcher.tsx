@@ -89,6 +89,7 @@ interface WorkspaceSwitcherProps {
   showMemberCount?: boolean
   showType?: boolean
   size?: "sm" | "default"
+  compact?: boolean
 }
 
 export function WorkspaceSwitcher({
@@ -171,9 +172,9 @@ export function WorkspaceSwitcher({
                   <span className="text-sm font-medium truncate max-w-full">
                     {currentWorkspace.name}
                   </span>
-                  {currentWorkspace.role && (
+                  {currentWorkspace.memberRole && (
                     <span className="text-xs text-muted-foreground capitalize">
-                      {currentWorkspace.role}
+                      {currentWorkspace.memberRole}
                     </span>
                   )}
                 </div>

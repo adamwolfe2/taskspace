@@ -67,13 +67,13 @@ export async function GET(request: NextRequest) {
       trends = await getScorecardTrends(workspaceId, numWeeks)
     }
 
-    logger.info("Scorecard summary fetched", {
+    logger.info({
       userId: auth.user.id,
       workspaceId,
       weekStart: week,
       metricCount: summary.length,
       stats,
-    })
+    }, "Scorecard summary fetched")
 
     return NextResponse.json({
       success: true,
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    logger.error("Error fetching scorecard summary", { error })
+    logger.error({ error }, "Error fetching scorecard summary")
     return NextResponse.json(
       {
         success: false,

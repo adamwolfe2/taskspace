@@ -26,12 +26,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    logger.info("Auth context obtained", { userId: auth.user.id, orgId: auth.organization.id })
+    logger.info({ userId: auth.user.id, orgId: auth.organization.id }, "Auth context obtained")
 
     // Check if organization already has a default workspace
     logger.info("Checking for existing workspaces")
     const existingWorkspaces = await db.workspaces.findByOrganizationId(auth.organization.id)
-    logger.info("Existing workspaces found", { count: existingWorkspaces.length })
+    logger.info({ count: existingWorkspaces.length }, "Existing workspaces found")
 
     if (existingWorkspaces.length > 0) {
       // Organization already has workspaces
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       settings: {},
     }
 
-    logger.info("About to insert workspace", { workspaceId: defaultWorkspaceId })
+    logger.info({ workspaceId: defaultWorkspaceId }, "About to insert workspace")
     await db.workspaces.create(defaultWorkspace)
     logger.info("Workspace created successfully")
 
@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
     const allMembers = await db.members.findByOrganizationId(auth.organization.id)
 
     for (const member of allMembers) {
-      // Skip if already added (current user)
-      if (member.userId === auth.user.id) continue
+      // Skip if already added (current user) or if userId is null
+      if (!member.userId || member.userId === auth.user.id) continue
 
       const memberRole = member.role === "owner" || member.role === "admin" ? "admin" : "member"
       await db.workspaceMembers.create({
@@ -93,11 +93,11 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    logger.info("Created default workspace for organization", {
+    logger.info({
       organizationId: auth.organization.id,
       workspaceId: defaultWorkspaceId,
       memberCount: allMembers.length,
-    })
+    }, "Created default workspace for organization")
 
     // CRITICAL: Migrate existing data to this workspace
     let migratedRecords = 0
@@ -171,17 +171,17 @@ export async function POST(request: NextRequest) {
       migratedRecords += focusScoreResult.rows.length
 
       if (migratedRecords > 0) {
-        logger.info("Migrated existing data to default workspace", {
+        logger.info({
           organizationId: auth.organization.id,
           workspaceId: defaultWorkspaceId,
           recordCount: migratedRecords,
-        })
+        }, "Migrated existing data to default workspace")
       }
     } catch (migrationError) {
-      logger.error("Data migration failed but workspace created", {
+      logger.error({
         error: migrationError,
         workspaceId: defaultWorkspaceId,
-      })
+      }, "Data migration failed but workspace created")
     }
 
     return NextResponse.json<ApiResponse<{
@@ -204,11 +204,11 @@ export async function POST(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error"
     const errorStack = error instanceof Error ? error.stack : ""
 
-    logger.error("Detailed error info", {
+    logger.error({
       message: errorMessage,
       stack: errorStack,
       error: JSON.stringify(error, null, 2)
-    })
+    }, "Detailed error info")
 
     return NextResponse.json<ApiResponse<null>>(
       {

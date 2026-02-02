@@ -21,8 +21,8 @@ interface TaskCardProps {
   currentUser?: TeamMember
 }
 
-function getDueDateStatus(dueDate: string, isCompleted: boolean) {
-  if (isCompleted) return null
+function getDueDateStatus(dueDate: string | null, isCompleted: boolean) {
+  if (isCompleted || !dueDate) return null
 
   const today = startOfDay(new Date())
   const due = startOfDay(new Date(dueDate))
@@ -78,6 +78,7 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
     high: { emoji: "🔴", label: "High", variant: "high" as const },
     medium: { emoji: "🟡", label: "Medium", variant: "medium" as const },
     normal: { emoji: "🟢", label: "Normal", variant: "low" as const },
+    low: { emoji: "🔵", label: "Low", variant: "low" as const },
   }
 
   const priority = priorityConfig[task.priority]
@@ -161,12 +162,12 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
                 <dueDateStatus.icon className="h-3 w-3" />
                 <span>{dueDateStatus.label}</span>
               </div>
-            ) : (
+            ) : task.dueDate ? (
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Calendar className="h-3 w-3" />
                 <span>Due: {format(new Date(task.dueDate), "MMM d, yyyy")}</span>
               </div>
-            )}
+            ) : null}
             {!isPersonal && task.assignedByName && (
               <div className="flex items-center gap-1 text-muted-foreground">
                 <User className="h-3 w-3" />

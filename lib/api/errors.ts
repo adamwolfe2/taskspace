@@ -336,7 +336,7 @@ export function handleAPIError(
 ): NextResponse<ApiResponse<null>> {
   // Set Sentry context
   if (context) {
-    Sentry.setContext("request", context)
+    Sentry.setContext("request", context as { [key: string]: unknown })
     if (context.userId) {
       Sentry.setUser({ id: context.userId })
     }

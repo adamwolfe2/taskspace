@@ -179,7 +179,7 @@ export function buildTaskAssignmentMessage(
   taskTitle: string,
   taskDescription: string | undefined,
   priority: string,
-  dueDate: string,
+  dueDate: string | null,
   assignedByName: string,
   context?: string
 ): SlackMessage {
@@ -219,7 +219,7 @@ export function buildTaskAssignmentMessage(
         },
         {
           type: "mrkdwn",
-          text: `*Due Date:*\n${dueDate}`,
+          text: `*Due Date:*\n${dueDate || "No due date"}`,
         },
         {
           type: "mrkdwn",
