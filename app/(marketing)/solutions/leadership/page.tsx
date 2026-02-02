@@ -52,7 +52,7 @@ export default function LeadershipSolutionPage() {
               variants={staggerContainer}
               className="space-y-6"
             >
-              <parameter>
+              <motion.div variants={fadeInUp}>
                 <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
                   <Award className="w-4 h-4 mr-1" />
                   FOR LEADERSHIP TEAMS
