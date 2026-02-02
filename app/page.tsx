@@ -15,11 +15,20 @@ import {
   FileText,
   MessageSquare,
   Building2,
-  LineChart,
-  ListTodo,
   Sparkles,
   Shield,
+  ListTodo,
 } from "lucide-react"
+import { MegaMenu } from "@/components/marketing/mega-menu"
+import { MarketingFooter } from "@/components/marketing/footer"
+import { DemoEODForm } from "@/components/marketing/demo-eod-form"
+import { DemoRocks } from "@/components/marketing/demo-rocks"
+import { DemoScorecard } from "@/components/marketing/demo-scorecard"
+import { DemoLevel10 } from "@/components/marketing/demo-level10"
+import { DemoIDS } from "@/components/marketing/demo-ids"
+import { DemoAccountabilityChart } from "@/components/marketing/demo-accountability-chart"
+import { DemoVTO } from "@/components/marketing/demo-vto"
+import { DemoKanban } from "@/components/marketing/demo-kanban"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -36,47 +45,6 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.1, delayChildren: 0.1 },
   },
-}
-
-// Navigation
-function Navigation() {
-  return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-black" />
-            <span className="text-xl font-bold text-black">Taskspace</span>
-          </Link>
-
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="/features" className="text-sm font-medium text-gray-700 hover:text-black transition-colors">
-              Features
-            </Link>
-            <Link href="/pricing" className="text-sm font-medium text-gray-700 hover:text-black transition-colors">
-              Pricing
-            </Link>
-            <Link href="/customers" className="text-sm font-medium text-gray-700 hover:text-black transition-colors">
-              Customers
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link href="/app">
-              <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
-                Log in
-              </Button>
-            </Link>
-            <Link href="/app?page=register">
-              <Button size="sm" className="bg-black text-white hover:bg-gray-900">
-                Start free
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </nav>
-  )
 }
 
 // Hero Section
@@ -179,143 +147,361 @@ function HeroSection() {
   )
 }
 
-// All Features Section
-function AllFeaturesSection() {
-  const features = [
-    {
-      icon: FileText,
-      title: "EOD Reports",
-      description: "AI-powered end-of-day reports that organize task dumps into structured updates.",
-    },
-    {
-      icon: Target,
-      title: "Rocks",
-      description: "Set and track 90-day goals with milestone-based progress tracking.",
-    },
-    {
-      icon: BarChart3,
-      title: "Scorecard",
-      description: "Weekly measurables dashboard with trend analysis and KPI tracking.",
-    },
-    {
-      icon: Zap,
-      title: "IDS Process",
-      description: "Identify, Discuss, and Solve issues systematically with structured problem-solving.",
-    },
-    {
-      icon: Calendar,
-      title: "Level 10",
-      description: "Run productive 90-minute leadership meetings with structured agendas.",
-    },
-    {
-      icon: Users,
-      title: "People",
-      description: "Team member profiles, role assignments, and performance tracking.",
-    },
-    {
-      icon: Building2,
-      title: "VTO",
-      description: "Vision/Traction Organizer for documenting company vision and alignment.",
-    },
-    {
-      icon: LineChart,
-      title: "Analytics",
-      description: "Real-time dashboards showing team performance and progress trends.",
-    },
-    {
-      icon: MessageSquare,
-      title: "Meetings",
-      description: "Structured meeting templates and agendas for all EOS meetings.",
-    },
-    {
-      icon: Building2,
-      title: "Accountability",
-      description: "Accountability Chart for visualizing organization structure and roles.",
-    },
-    {
-      icon: Brain,
-      title: "EOS AI",
-      description: "AI agents that automate routine tasks and provide intelligent insights.",
-    },
-    {
-      icon: ListTodo,
-      title: "Dashboard",
-      description: "Unified dashboard for all your EOS tools and team visibility.",
-    },
-  ]
+// Interactive Demo Section - EOD Reports
+function EODReportDemo() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section ref={ref} className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
+          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
+            <FileText className="w-4 h-4 mr-1" />
+            EOD Reports
+          </Badge>
           <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
-            All apps, AI Agents, and humans in Taskspace.
+            AI-powered end-of-day reports
           </h2>
-          <p className="text-xl text-gray-600">
-            15+ products to replace fragmented software & maximize EOS execution.
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Paste your daily task dump. AI instantly organizes it by your rocks, identifies blockers, and creates a structured report.
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {features.map((feature, i) => (
-            <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all"
-            >
-              <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mb-4">
-                <feature.icon className="w-6 h-6 text-black" />
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="bg-[#8b9a7f] rounded-2xl p-8 sm:p-12"
+        >
+          <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
               </div>
-              <h3 className="text-lg font-bold text-black mb-2">{feature.title}</h3>
-              <p className="text-sm text-gray-600">{feature.description}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="text-center mt-12">
-          <Link href="/features">
-            <Button className="bg-black text-white hover:bg-gray-900">
-              Explore all features
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
-        </div>
+            </div>
+            <div className="bg-white p-8">
+              <DemoEODForm />
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   )
 }
 
-// Stats Section
-function StatsSection() {
-  const stats = [
-    { value: "60%", label: "of work is lost in context" },
-    { value: "96%", label: "of companies fail in AI value & adoption" },
-    { value: "2.5 hrs", label: "daily wasted searching & stitching context" },
-  ]
+// Interactive Demo Section - Rocks
+function RocksDemo() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
 
   return (
-    <section className="py-20 bg-white">
+    <section ref={ref} className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-6">
-            60% of work is lost in context – and AI is lost without it.
+        <div className="text-center mb-12">
+          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
+            <Target className="w-4 h-4 mr-1" />
+            Quarterly Rocks
+          </Badge>
+          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+            90-day goals that actually get done
           </h2>
-          <p className="text-xl text-gray-600">
-            Work Sprawl is killing context and destroying productivity.
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Set 3-7 quarterly goals. Track progress with interactive sliders, manage milestones, and see real-time status.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-12">
-          {stats.map((stat, i) => (
-            <div key={i} className="text-center">
-              <div className="text-5xl font-bold text-black mb-2">{stat.value}</div>
-              <div className="text-gray-600">{stat.label}</div>
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="bg-[#8b9a7f] rounded-2xl p-8 sm:p-12"
+        >
+          <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+              </div>
             </div>
-          ))}
+            <div className="bg-white p-8">
+              <DemoRocks />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// Interactive Demo Section - Scorecard
+function ScorecardDemo() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
+  return (
+    <section ref={ref} className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
+            <BarChart3 className="w-4 h-4 mr-1" />
+            Scorecard
+          </Badge>
+          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+            Track weekly measurables
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Monitor key metrics week-over-week with trend analysis and real-time updates.
+          </p>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="bg-[#8b9a7f] rounded-2xl p-8 sm:p-12"
+        >
+          <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+              </div>
+            </div>
+            <div className="bg-white p-8">
+              <DemoScorecard />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// Interactive Demo Section - Level 10
+function Level10Demo() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
+  return (
+    <section ref={ref} className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
+            <Calendar className="w-4 h-4 mr-1" />
+            Level 10 Meetings
+          </Badge>
+          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+            Run productive leadership meetings
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Structured 90-minute meeting agendas with segues, scorecards, rocks review, and IDS.
+          </p>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="bg-[#8b9a7f] rounded-2xl p-8 sm:p-12"
+        >
+          <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+              </div>
+            </div>
+            <div className="bg-white p-8">
+              <DemoLevel10 />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// Interactive Demo Section - IDS
+function IDSDemo() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
+  return (
+    <section ref={ref} className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
+            <Zap className="w-4 h-4 mr-1" />
+            IDS Process
+          </Badge>
+          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+            Identify, Discuss, Solve issues
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Track problems through resolution with structured problem-solving methodology.
+          </p>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="bg-[#8b9a7f] rounded-2xl p-8 sm:p-12"
+        >
+          <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+              </div>
+            </div>
+            <div className="bg-white p-8">
+              <DemoIDS />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// Interactive Demo Section - Accountability Chart
+function AccountabilityChartDemo() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
+  return (
+    <section ref={ref} className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
+            <Building2 className="w-4 h-4 mr-1" />
+            Accountability Chart
+          </Badge>
+          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+            Visualize your organization
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Build org charts with clear roles and responsibilities. Create a culture of accountability.
+          </p>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="bg-[#8b9a7f] rounded-2xl p-8 sm:p-12"
+        >
+          <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+              </div>
+            </div>
+            <div className="bg-white p-8">
+              <DemoAccountabilityChart />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// Interactive Demo Section - VTO
+function VTODemo() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
+  return (
+    <section ref={ref} className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
+            <Sparkles className="w-4 h-4 mr-1" />
+            Vision/Traction Organizer
+          </Badge>
+          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+            Document your company vision
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Align everyone on core values, focus, and long-term goals with the V/TO framework.
+          </p>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="bg-[#8b9a7f] rounded-2xl p-8 sm:p-12"
+        >
+          <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+              </div>
+            </div>
+            <div className="bg-white p-8">
+              <DemoVTO />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// Interactive Demo Section - Kanban
+function KanbanDemo() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
+  return (
+    <section ref={ref} className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
+            <ListTodo className="w-4 h-4 mr-1" />
+            Task Management
+          </Badge>
+          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+            Kanban boards for your tasks
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Drag-and-drop task management linked to your rocks. Track action items to completion.
+          </p>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="bg-[#8b9a7f] rounded-2xl p-8 sm:p-12"
+        >
+          <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+              </div>
+            </div>
+            <div className="bg-white p-8">
+              <DemoKanban />
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   )
@@ -324,13 +510,13 @@ function StatsSection() {
 // CTA Section
 function CTASection() {
   return (
-    <section className="py-32 bg-gray-50">
+    <section className="py-32 bg-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-5xl sm:text-6xl font-bold text-black mb-6">
-          GET 400% MORE DONE • RUN ON EOS
+          Ready to run your business on EOS?
         </h2>
         <p className="text-xl text-gray-600 mb-10">
-          Join thousands of companies using Taskspace to implement EOS
+          Join thousands of companies using Taskspace to implement the Entrepreneurial Operating System
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -350,11 +536,20 @@ function CTASection() {
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
-      <Navigation />
-      <HeroSection />
-      <AllFeaturesSection />
-      <StatsSection />
-      <CTASection />
+      <MegaMenu />
+      <main>
+        <HeroSection />
+        <EODReportDemo />
+        <RocksDemo />
+        <ScorecardDemo />
+        <Level10Demo />
+        <IDSDemo />
+        <AccountabilityChartDemo />
+        <VTODemo />
+        <KanbanDemo />
+        <CTASection />
+      </main>
+      <MarketingFooter />
     </div>
   )
 }
