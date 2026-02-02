@@ -97,9 +97,9 @@ export function DemoEODForm() {
             exit={{ opacity: 0, y: -20 }}
             className="bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 px-6 py-4 border-b border-slate-200">
+            <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-6 py-4 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-red-600" />
+                <Sparkles className="h-5 w-5 text-gray-900" />
                 <div>
                   <h3 className="font-semibold text-slate-900">AI EOD Report Generator</h3>
                   <p className="text-sm text-slate-600">Paste your daily tasks and let AI organize them by rocks</p>
@@ -123,7 +123,7 @@ export function DemoEODForm() {
                 <Button
                   onClick={handleParse}
                   disabled={!textInput.trim()}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  className="flex-1 bg-gray-900 hover:bg-black text-white"
                 >
                   <Sparkles className="h-4 w-4 mr-2" />
                   Parse & Organize Tasks
@@ -132,7 +132,7 @@ export function DemoEODForm() {
                   <Button
                     onClick={handleLoadDemo}
                     variant="outline"
-                    className="border-red-200 text-red-600 hover:bg-red-50"
+                    className="border-gray-300 text-gray-900 hover:bg-gray-100"
                   >
                     Load Demo
                   </Button>
@@ -150,10 +150,10 @@ export function DemoEODForm() {
             exit={{ opacity: 0, y: -20 }}
             className="bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 px-6 py-4 border-b border-slate-200">
+            <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-6 py-4 border-b border-slate-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-red-600" />
+                  <Sparkles className="h-5 w-5 text-gray-900" />
                   <h3 className="font-semibold text-slate-900">Review Your EOD Report</h3>
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleReset}>
@@ -164,8 +164,8 @@ export function DemoEODForm() {
             </div>
 
             <div className="p-6 space-y-6 max-h-[600px] overflow-y-auto">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm font-medium text-red-800">
+              <div className="bg-gray-100 border border-gray-300 rounded-lg p-3">
+                <p className="text-sm font-medium text-gray-900">
                   AI organized {tasks.length} tasks across {Object.keys(tasksByRock).length} rocks
                 </p>
               </div>
@@ -183,7 +183,7 @@ export function DemoEODForm() {
                     <CardHeader className="py-3 px-4 bg-slate-50">
                       <div className="flex items-center gap-2">
                         {key !== "general" && (
-                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                          <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">
                             Rock
                           </Badge>
                         )}
@@ -194,7 +194,7 @@ export function DemoEODForm() {
                     <CardContent className="p-3 space-y-2">
                       {group.tasks.map((task) => (
                         <div key={task.id} className="flex items-start gap-2 p-2 bg-slate-50 rounded">
-                          <Check className="h-4 w-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                          <Check className="h-4 w-4 text-gray-700 mt-0.5 flex-shrink-0" />
                           <span className="text-sm text-slate-700">{task.text}</span>
                         </div>
                       ))}
@@ -206,7 +206,7 @@ export function DemoEODForm() {
               {/* Challenges */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">Challenges</label>
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-900">
+                <div className="p-3 bg-gray-100 border border-gray-300 rounded text-sm text-gray-900">
                   {challenges}
                 </div>
               </div>
@@ -216,8 +216,8 @@ export function DemoEODForm() {
                 <label className="text-sm font-semibold text-slate-700">Tomorrow's Priorities</label>
                 <div className="space-y-2">
                   {priorities.map((priority, idx) => (
-                    <div key={priority.id} className="flex items-start gap-2 p-2 bg-blue-50 rounded">
-                      <span className="text-sm font-semibold text-blue-600 flex-shrink-0">{idx + 1}.</span>
+                    <div key={priority.id} className="flex items-start gap-2 p-2 bg-gray-100 rounded">
+                      <span className="text-sm font-semibold text-gray-800 flex-shrink-0">{idx + 1}.</span>
                       <div className="flex-1">
                         <p className="text-sm text-slate-700">{priority.text}</p>
                         {priority.rockTitle && (
@@ -249,16 +249,16 @@ export function DemoEODForm() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-white rounded-xl shadow-xl border border-emerald-200 overflow-hidden"
+            className="bg-white rounded-xl shadow-xl border border-gray-300 overflow-hidden"
           >
             <div className="p-12 text-center">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: "spring" }}
-                className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4"
               >
-                <Check className="h-8 w-8 text-emerald-600" />
+                <Check className="h-8 w-8 text-gray-800" />
               </motion.div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">EOD Report Submitted!</h3>
               <p className="text-slate-600">Your progress has been recorded and your team has been notified</p>

@@ -13,17 +13,17 @@ export function DemoVTO() {
 
       <div className="grid gap-4">
         {/* Core Values */}
-        <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+        <div className="p-4 bg-gray-50 border border-gray-300 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center">
               <Users className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-purple-900">Core Values</span>
+            <span className="font-semibold text-gray-900">Core Values</span>
           </div>
           <div className="space-y-1">
             {["Do the right thing", "Embrace change", "Be transparent", "Seek knowledge"].map((value, i) => (
               <div key={i} className="text-sm text-slate-700 flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-purple-600" />
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-800" />
                 {value}
               </div>
             ))}
@@ -31,12 +31,12 @@ export function DemoVTO() {
         </div>
 
         {/* 10-Year Target */}
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="p-4 bg-gray-50 border border-gray-300 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gray-700 flex items-center justify-center">
               <Target className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-blue-900">10-Year Target</span>
+            <span className="font-semibold text-gray-900">10-Year Target</span>
           </div>
           <div className="text-sm text-slate-700">
             $50M revenue, 500 customers, market leader in EOS software
@@ -44,12 +44,12 @@ export function DemoVTO() {
         </div>
 
         {/* 3-Year Picture */}
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+        <div className="p-4 bg-gray-100 border border-gray-400 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gray-600 flex items-center justify-center">
               <TrendingUp className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-emerald-900">3-Year Picture</span>
+            <span className="font-semibold text-gray-900">3-Year Picture</span>
           </div>
           <div className="space-y-1">
             {[
@@ -59,7 +59,7 @@ export function DemoVTO() {
               "Category leader in EOS tools"
             ].map((item, i) => (
               <div key={i} className="text-sm text-slate-700 flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
                 {item}
               </div>
             ))}
@@ -67,12 +67,12 @@ export function DemoVTO() {
         </div>
 
         {/* 1-Year Plan */}
-        <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+        <div className="p-4 bg-gray-100 border border-gray-400 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gray-500 flex items-center justify-center">
               <Calendar className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-orange-900">1-Year Plan</span>
+            <span className="font-semibold text-gray-900">1-Year Plan</span>
           </div>
           <div className="space-y-2">
             <div>
@@ -88,7 +88,7 @@ export function DemoVTO() {
                   "Ship mobile app"
                 ].map((item, i) => (
                   <div key={i} className="text-sm text-slate-700 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-600" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-gray-500" />
                     {item}
                   </div>
                 ))}
@@ -109,13 +109,13 @@ export function DemoVTO() {
               <div key={i} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-700">{item.rock}</span>
-                  <Badge className={item.status === "On Track" ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"}>
+                  <Badge className={item.status === "On Track" ? "bg-gray-100 text-gray-700" : "bg-gray-200 text-gray-800"}>
                     {item.progress}%
                   </Badge>
                 </div>
                 <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all"
+                    className="h-full bg-gradient-to-r from-gray-600 to-gray-800 transition-all"
                     style={{ width: `${item.progress}%` }}
                   />
                 </div>

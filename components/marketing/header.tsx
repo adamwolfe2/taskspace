@@ -19,9 +19,9 @@ export function MarketingHeader() {
               <Image
                 src="/taskspace-logo.png"
                 alt="Taskspace Logo"
-                width={32}
-                height={32}
-                className="w-8 h-8 object-contain"
+                width={48}
+                height={48}
+                className="w-12 h-12 object-contain"
               />
               <span className="text-xl font-bold text-gray-900">Taskspace</span>
             </Link>

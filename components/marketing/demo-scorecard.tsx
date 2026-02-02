@@ -42,7 +42,7 @@ export function DemoScorecard() {
           <h3 className="text-lg font-semibold text-slate-900">Weekly Scorecard</h3>
           <p className="text-sm text-slate-500">Track your key metrics every week</p>
         </div>
-        <Badge className="bg-emerald-100 text-emerald-700">
+        <Badge className="bg-gray-100 text-gray-700">
           <TrendingUp className="w-3 h-3 mr-1" />
           On Target
         </Badge>
@@ -57,7 +57,7 @@ export function DemoScorecard() {
             className={cn(
               "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all",
               selectedWeek === week
-                ? "bg-blue-600 text-white shadow-lg"
+                ? "bg-gray-900 text-white shadow-lg"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             )}
           >
@@ -81,8 +81,8 @@ export function DemoScorecard() {
               className={cn(
                 "p-4 rounded-lg border-2 transition-all",
                 isOnTarget
-                  ? "bg-emerald-50 border-emerald-200"
-                  : "bg-orange-50 border-orange-200"
+                  ? "bg-gray-50 border-gray-300"
+                  : "bg-gray-100 border-gray-400"
               )}
             >
               <div className="flex items-center justify-between">
@@ -95,9 +95,9 @@ export function DemoScorecard() {
                     <div className="text-2xl font-bold text-slate-900">{weekValue}</div>
                   </div>
                   {isOnTarget ? (
-                    <TrendingUp className="w-6 h-6 text-emerald-600" />
+                    <TrendingUp className="w-6 h-6 text-gray-700" />
                   ) : (
-                    <TrendingDown className="w-6 h-6 text-orange-600" />
+                    <TrendingDown className="w-6 h-6 text-gray-600" />
                   )}
                 </div>
               </div>
@@ -107,9 +107,9 @@ export function DemoScorecard() {
       </div>
 
       {selectedWeek === 3 && (
-        <div className="mt-4 flex items-start gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-          <AlertCircle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-orange-900">
+        <div className="mt-4 flex items-start gap-2 p-3 bg-gray-100 border border-gray-300 rounded-lg">
+          <AlertCircle className="w-4 h-4 text-gray-700 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-gray-900">
             <span className="font-medium">Alert:</span> Customer Satisfaction below target this week
           </div>
         </div>

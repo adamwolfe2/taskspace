@@ -75,15 +75,15 @@ const columns = [
     id: "in-progress" as const,
     title: "In Progress",
     icon: PlayCircle,
-    color: "text-blue-500",
-    bgColor: "bg-blue-50 border-blue-200",
+    color: "text-gray-700",
+    bgColor: "bg-gray-100 border-gray-300",
   },
   {
     id: "completed" as const,
     title: "Completed",
     icon: CheckCircle2,
-    color: "text-green-500",
-    bgColor: "bg-green-50 border-green-200",
+    color: "text-gray-900",
+    bgColor: "bg-gray-200 border-gray-400",
   },
 ]
 

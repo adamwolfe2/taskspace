@@ -12,28 +12,28 @@ export function DemoAccountabilityChart() {
     ceo: {
       title: "CEO / Visionary",
       person: "Sarah Johnson",
-      color: "from-purple-400 to-purple-600",
+      color: "from-gray-700 to-gray-900",
       icon: Crown,
       responsibilities: ["Vision", "Major Relationships", "Culture", "Strategy", "Big Decisions"]
     },
     integrator: {
       title: "Integrator",
       person: "Michael Chen",
-      color: "from-blue-400 to-blue-600",
+      color: "from-gray-600 to-gray-800",
       icon: Settings,
       responsibilities: ["P&L", "Leadership Team", "Integration", "Accountability", "Results"]
     },
     sales: {
       title: "Sales",
       person: "Alex Rivera",
-      color: "from-emerald-400 to-emerald-600",
+      color: "from-gray-500 to-gray-700",
       icon: DollarSign,
       responsibilities: ["Revenue", "Pipeline", "Customer Acquisition", "Sales Team", "Targets"]
     },
     marketing: {
       title: "Marketing",
       person: "Jamie Park",
-      color: "from-pink-400 to-pink-600",
+      color: "from-gray-400 to-gray-600",
       icon: Megaphone,
       responsibilities: ["Brand", "Lead Generation", "Content", "Campaigns", "Awareness"]
     }
@@ -55,8 +55,8 @@ export function DemoAccountabilityChart() {
             className={cn(
               "relative p-4 rounded-xl border-2 bg-white transition-all min-w-[200px]",
               selectedRole === "ceo"
-                ? "border-purple-300 shadow-lg ring-4 ring-purple-100"
-                : "border-slate-200 hover:border-purple-200"
+                ? "border-gray-400 shadow-lg ring-4 ring-gray-200"
+                : "border-slate-200 hover:border-gray-300"
             )}
           >
             <div className="flex items-center gap-3">
@@ -78,8 +78,8 @@ export function DemoAccountabilityChart() {
             className={cn(
               "relative p-4 rounded-xl border-2 bg-white transition-all min-w-[200px]",
               selectedRole === "integrator"
-                ? "border-blue-300 shadow-lg ring-4 ring-blue-100"
-                : "border-slate-200 hover:border-blue-200"
+                ? "border-gray-400 shadow-lg ring-4 ring-gray-200"
+                : "border-slate-200 hover:border-gray-300"
             )}
           >
             <div className="flex items-center gap-3">
@@ -106,8 +106,8 @@ export function DemoAccountabilityChart() {
                 className={cn(
                   "p-4 rounded-xl border-2 bg-white transition-all",
                   selectedRole === key
-                    ? "border-emerald-300 shadow-lg ring-4 ring-emerald-100"
-                    : "border-slate-200 hover:border-emerald-200"
+                    ? "border-gray-400 shadow-lg ring-4 ring-gray-200"
+                    : "border-slate-200 hover:border-gray-300"
                 )}
               >
                 <div className="flex items-center gap-3">

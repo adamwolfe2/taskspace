@@ -11,16 +11,16 @@ export function DemoIDS() {
           <h3 className="text-lg font-semibold text-slate-900">IDS Process</h3>
           <p className="text-sm text-slate-500">Identify, Discuss, Solve</p>
         </div>
-        <Badge className="bg-orange-100 text-orange-700">In Progress</Badge>
+        <Badge className="bg-gray-100 text-gray-700">In Progress</Badge>
       </div>
 
       {/* IDS Steps */}
       <div className="space-y-4">
         {/* Identify */}
-        <div className="p-4 bg-orange-50 border-2 border-orange-300 rounded-lg">
+        <div className="p-4 bg-gray-100 border-2 border-gray-400 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
-            <AlertCircle className="w-5 h-5 text-orange-600" />
-            <span className="font-semibold text-orange-900">1. Identify</span>
+            <AlertCircle className="w-5 h-5 text-gray-700" />
+            <span className="font-semibold text-gray-900">1. Identify</span>
           </div>
           <div className="text-sm text-slate-700 font-medium mb-2">
             Issue: Marketing campaign not hitting lead targets
@@ -31,14 +31,14 @@ export function DemoIDS() {
         </div>
 
         {/* Discuss */}
-        <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+        <div className="p-4 bg-gray-50 border-2 border-gray-300 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
-            <MessageSquare className="w-5 h-5 text-blue-600" />
-            <span className="font-semibold text-blue-900">2. Discuss</span>
+            <MessageSquare className="w-5 h-5 text-gray-700" />
+            <span className="font-semibold text-gray-900">2. Discuss</span>
           </div>
           <div className="space-y-2">
             <div className="flex items-start gap-2">
-              <div className="w-6 h-6 rounded-full bg-blue-200 flex items-center justify-center text-xs font-medium text-blue-900 flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs font-medium text-gray-900 flex-shrink-0">
                 SM
               </div>
               <div className="text-sm text-slate-700">
@@ -46,7 +46,7 @@ export function DemoIDS() {
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-6 h-6 rounded-full bg-purple-200 flex items-center justify-center text-xs font-medium text-purple-900 flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center text-xs font-medium text-white flex-shrink-0">
                 JK
               </div>
               <div className="text-sm text-slate-700">
@@ -54,7 +54,7 @@ export function DemoIDS() {
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-6 h-6 rounded-full bg-emerald-200 flex items-center justify-center text-xs font-medium text-emerald-900 flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-gray-500 flex items-center justify-center text-xs font-medium text-white flex-shrink-0">
                 AR
               </div>
               <div className="text-sm text-slate-700">
@@ -65,27 +65,27 @@ export function DemoIDS() {
         </div>
 
         {/* Solve */}
-        <div className="p-4 bg-emerald-50 border-2 border-emerald-200 rounded-lg">
+        <div className="p-4 bg-gray-50 border-2 border-gray-300 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
-            <CheckSquare className="w-5 h-5 text-emerald-600" />
-            <span className="font-semibold text-emerald-900">3. Solve</span>
+            <CheckSquare className="w-5 h-5 text-gray-700" />
+            <span className="font-semibold text-gray-900">3. Solve</span>
           </div>
           <div className="text-sm font-medium text-slate-900 mb-3">
             Solution: Simplify landing page form
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-slate-700">
-              <div className="w-2 h-2 rounded-full bg-emerald-600" />
+              <div className="w-2 h-2 rounded-full bg-gray-700" />
               <span>Remove phone field, make it optional</span>
               <Badge className="ml-auto bg-slate-100 text-slate-700 text-xs">Sarah M.</Badge>
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-700">
-              <div className="w-2 h-2 rounded-full bg-emerald-600" />
+              <div className="w-2 h-2 rounded-full bg-gray-700" />
               <span>A/B test with current version</span>
               <Badge className="ml-auto bg-slate-100 text-slate-700 text-xs">James K.</Badge>
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-700">
-              <div className="w-2 h-2 rounded-full bg-emerald-600" />
+              <div className="w-2 h-2 rounded-full bg-gray-700" />
               <span>Deploy by end of week</span>
               <Badge className="ml-auto bg-slate-100 text-slate-700 text-xs">Alex R.</Badge>
             </div>
