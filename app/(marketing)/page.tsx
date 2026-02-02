@@ -19,7 +19,9 @@ import {
   Building2,
   LineChart,
   ListTodo,
+  Plug,
 } from "lucide-react"
+import Image from "next/image"
 import { DemoEODForm } from "@/components/marketing/demo-eod-form"
 import { DemoRocks } from "@/components/marketing/demo-rocks"
 import { DemoScorecard } from "@/components/marketing/demo-scorecard"
@@ -369,6 +371,154 @@ function FeatureDemoSection() {
   )
 }
 
+// Integrations Section
+function IntegrationsSection() {
+  const integrations = [
+    {
+      name: "Slack",
+      description: "Send automated notifications for rocks, tasks, and EOD reports directly to your team channels",
+      logo: "/integrations/slack.svg",
+      features: ["Real-time notifications", "Channel integration", "Direct messages"],
+    },
+    {
+      name: "Google Calendar",
+      description: "Sync Level 10 meetings, deadlines, and rocks automatically to your Google Calendar",
+      logo: "/integrations/google-calendar.svg",
+      features: ["Two-way sync", "Automatic updates", "Meeting reminders"],
+    },
+    {
+      name: "Asana",
+      description: "Import your existing Asana tasks and projects into Taskspace with one click",
+      logo: "/integrations/asana.svg",
+      features: ["One-click import", "Task sync", "Project migration"],
+    },
+    {
+      name: "Stripe",
+      description: "Secure payment processing for team subscriptions with automatic billing",
+      logo: "/integrations/stripe.svg",
+      features: ["Secure payments", "Auto-billing", "Usage tracking"],
+    },
+    {
+      name: "Zapier",
+      description: "Connect Taskspace with 5,000+ apps to automate your workflows",
+      logo: "/integrations/zapier.svg",
+      features: ["5000+ app connections", "Custom workflows", "No-code automation"],
+    },
+    {
+      name: "Webhooks",
+      description: "Build custom integrations with real-time webhooks for any event",
+      logo: "/integrations/webhooks.svg",
+      features: ["Real-time events", "Custom endpoints", "Flexible payloads"],
+    },
+    {
+      name: "Email",
+      description: "Automated email notifications for escalations, reminders, and team updates",
+      logo: "/integrations/email.svg",
+      features: ["Smart notifications", "Daily digests", "Custom alerts"],
+    },
+    {
+      name: "API Access",
+      description: "Full REST API access to build your own integrations and automations",
+      logo: "/integrations/api.svg",
+      features: ["Complete API", "Documentation", "Rate limiting"],
+    },
+  ]
+
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
+  return (
+    <section ref={ref} className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <motion.div
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={fadeInUp}
+          className="text-center max-w-3xl mx-auto mb-16"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-gray-50 text-gray-700 text-sm mb-4">
+            <Plug className="w-4 h-4" />
+            <span>Integrations</span>
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+            Connect Your Entire Workflow
+          </h2>
+          <p className="text-xl text-gray-600">
+            Seamlessly integrate with the tools your team already uses. Automate workflows and keep everything in sync.
+          </p>
+        </motion.div>
+
+        {/* Integrations Grid */}
+        <motion.div
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={staggerContainer}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
+          {integrations.map((integration, index) => (
+            <motion.div
+              key={integration.name}
+              variants={fadeInUp}
+              className="group relative bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:border-gray-300"
+            >
+              {/* Logo */}
+              <div className="flex items-center justify-center w-16 h-16 bg-gray-50 rounded-lg mb-4 group-hover:bg-gray-100 transition-colors">
+                <Image
+                  src={integration.logo}
+                  alt={`${integration.name} logo`}
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+              </div>
+
+              {/* Name */}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {integration.name}
+              </h3>
+
+              {/* Description */}
+              <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                {integration.description}
+              </p>
+
+              {/* Features */}
+              <ul className="space-y-1.5">
+                {integration.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2 text-xs text-gray-500">
+                    <CheckCircle className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ delay: 0.6 }}
+          className="text-center mt-12"
+        >
+          <Link href="/integrations">
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-gray-200 hover:bg-gray-50 text-black"
+            >
+              View All Integrations
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
 // Use Cases Section
 function UseCasesSection() {
   const useCases = [
@@ -491,6 +641,7 @@ export default function HomePage() {
       <HeroSection />
       <CoreFeaturesSection />
       <FeatureDemoSection />
+      <IntegrationsSection />
       <UseCasesSection />
       <StatsSection />
       <CTASection />
