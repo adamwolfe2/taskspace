@@ -90,21 +90,16 @@ function HeroSection() {
   const SelectedComponent = features.find(f => f.id === selectedFeature)?.component || DemoRocks
 
   return (
-    <section ref={ref} className="relative pt-32 pb-20 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white via-red-50/30 to-white" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
-
+    <section ref={ref} className="relative pt-32 pb-20 overflow-hidden bg-white">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto mb-16">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-600 text-sm font-medium mb-8"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-slate-200 bg-white text-slate-600 text-sm mb-6"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>Trusted by 500+ high-performing teams</span>
+            <span>EOS Management Platform</span>
           </motion.div>
 
           {/* Headline */}
@@ -114,11 +109,7 @@ function HeroSection() {
             transition={{ delay: 0.1 }}
             className="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 leading-[1.1] tracking-tight mb-6"
           >
-            Build a Culture of
-            <br />
-            <span className="bg-gradient-to-r from-red-500 via-red-600 to-orange-500 bg-clip-text text-transparent">
-              Daily Accountability
-            </span>
+            Run your business on EOS with AI
           </motion.h1>
 
           {/* Subheadline */}
@@ -128,9 +119,7 @@ function HeroSection() {
             transition={{ delay: 0.2 }}
             className="text-xl text-slate-600 max-w-3xl mx-auto mb-10 leading-relaxed"
           >
-            Align transforms how teams track progress with AI-powered EOD reports,
-            visual goal tracking, and intelligent insights. No more status meetings.
-            Just results.
+            Align is the all-in-one platform that helps teams run on EOS with AI-powered tools for accountability, goal tracking, and performance insights.
           </motion.p>
 
           {/* CTAs */}
@@ -141,70 +130,32 @@ function HeroSection() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Link href="/register">
-              <Button size="lg" className="bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/25 text-base px-8 h-12">
-                Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5" />
+              <Button size="lg" className="bg-slate-900 text-white hover:bg-slate-800 text-base px-8 h-12 rounded-lg">
+                Start for free
               </Button>
             </Link>
             <Link href="#demo">
-              <Button size="lg" variant="outline" className="border-slate-200 hover:bg-slate-50 text-base px-8 h-12">
-                <Play className="mr-2 h-5 w-5" />
-                See It In Action
+              <Button size="lg" variant="outline" className="border-slate-200 hover:bg-slate-50 text-slate-900 text-base px-8 h-12 rounded-lg">
+                Book a demo
               </Button>
             </Link>
           </motion.div>
-
-          {/* Social Proof */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mt-12 flex items-center justify-center gap-8 text-sm text-slate-600"
-          >
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 border-2 border-white"
-                  />
-                ))}
-              </div>
-              <span className="font-medium">500+ teams</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              ))}
-              <span className="ml-1 font-medium">4.9/5 rating</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-green-600" />
-              <span className="font-medium">SOC 2 Certified</span>
-            </div>
-          </motion.div>
         </div>
 
-        {/* GET 400% MORE DONE - Feature Buttons */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">
-            GET 400% MORE DONE • RUN ON EOS
-          </h2>
-          <div className="flex flex-wrap items-center justify-center gap-3">
+        {/* Feature Tabs */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="inline-flex items-center gap-1 p-1 bg-slate-50 rounded-lg border border-slate-200">
             {features.map((feature) => (
               <button
                 key={feature.id}
                 onClick={() => setSelectedFeature(feature.id)}
                 className={cn(
-                  "px-5 py-2.5 rounded-full border-2 text-sm font-medium transition-all",
+                  "px-4 py-2 rounded-md text-sm font-medium transition-all",
                   selectedFeature === feature.id
-                    ? "bg-slate-900 border-slate-900 text-white shadow-lg"
-                    : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:shadow-md"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
                 )}
               >
-                {selectedFeature === feature.id && (
-                  <Check className="w-4 h-4 inline-block mr-2" />
-                )}
                 {feature.label}
               </button>
             ))}
@@ -219,27 +170,19 @@ function HeroSection() {
           className="relative max-w-6xl mx-auto"
         >
           <div className="relative">
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-t from-red-500/20 to-transparent blur-3xl" />
-
             {/* Browser Frame */}
-            <div className="relative bg-white rounded-2xl shadow-2xl border border-slate-200/50 overflow-hidden">
+            <div className="relative bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
               {/* Browser Header */}
-              <div className="flex items-center gap-2 px-4 py-3 bg-slate-100 border-b border-slate-200">
+              <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
                 <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
-                </div>
-                <div className="flex-1 mx-4">
-                  <div className="bg-white rounded-lg px-4 py-1.5 text-sm text-slate-500 text-center font-medium">
-                    app.getalign.io/dashboard
-                  </div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
                 </div>
               </div>
 
               {/* Interactive Demo Component */}
-              <div className="bg-gradient-to-br from-slate-50 to-white p-4 sm:p-8 min-h-[500px]">
+              <div className="bg-white p-4 sm:p-8 min-h-[500px]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={selectedFeature}
@@ -308,14 +251,14 @@ function ProblemSolutionSection() {
             className="space-y-6"
           >
             <motion.div variants={fadeInUp}>
-              <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50">
+              <Badge variant="outline" className="border-slate-200 text-slate-700 bg-slate-50">
                 The Problem
               </Badge>
             </motion.div>
             <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
               Status meetings waste
               <br />
-              <span className="text-red-600">20+ hours per week</span>
+              20+ hours per week
             </motion.h2>
             <motion.div variants={staggerContainer} className="space-y-4">
               {[
@@ -325,7 +268,7 @@ function ProblemSolutionSection() {
                 "Context switching between Slack, email, and meetings kills productivity",
               ].map((problem, i) => (
                 <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                  <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <X className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" />
                   <span className="text-slate-600">{problem}</span>
                 </motion.div>
               ))}
@@ -341,14 +284,14 @@ function ProblemSolutionSection() {
             className="space-y-6"
           >
             <motion.div variants={fadeInUp}>
-              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+              <Badge className="bg-slate-50 text-slate-700 border-slate-200">
                 The Solution
               </Badge>
             </motion.div>
             <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
               Replace meetings with
               <br />
-              <span className="text-emerald-600">async accountability</span>
+              <span className="text-slate-800">async accountability</span>
             </motion.h2>
             <motion.div variants={staggerContainer} className="space-y-4">
               {[
@@ -358,14 +301,14 @@ function ProblemSolutionSection() {
                 "One platform for EODs, tasks, goals, and team visibility",
               ].map((solution, i) => (
                 <motion.div key={i} variants={fadeInUp} className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-slate-700 flex-shrink-0 mt-0.5" />
                   <span className="text-slate-600">{solution}</span>
                 </motion.div>
               ))}
             </motion.div>
             <motion.div variants={fadeInUp} className="pt-4">
               <Link href="/register">
-                <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700">
+                <Button size="lg" className="bg-slate-900 text-white hover:bg-slate-800 rounded-lg">
                   See How It Works
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -405,10 +348,10 @@ function StatsSection() {
                 variants={scaleIn}
                 className="text-center space-y-3"
               >
-                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mx-auto">
-                  <Icon className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto">
+                  <Icon className="w-6 h-6 text-slate-700" />
                 </div>
-                <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
+                <div className="text-4xl sm:text-5xl font-bold text-slate-900">
                   {stat.value}
                 </div>
                 <div className="text-slate-600 text-sm">{stat.label}</div>
@@ -435,7 +378,7 @@ function FeaturesSection() {
       icon: Target,
       title: "Quarterly Rocks (Goals)",
       description: "Set 3-7 quarterly goals. Track progress with visual indicators, milestones, and automatic status updates based on daily activity.",
-      color: "from-red-500 to-red-600",
+      color: "bg-slate-900",
       badge: "Core Feature",
     },
     {
@@ -476,7 +419,7 @@ function FeaturesSection() {
           className="text-center mb-16"
         >
           <motion.div variants={fadeInUp}>
-            <Badge className="bg-red-50 text-red-600 border-red-200 mb-4">
+            <Badge className="bg-slate-50 text-slate-700 border-slate-200 mb-4">
               Features
             </Badge>
           </motion.div>
@@ -508,7 +451,7 @@ function FeaturesSection() {
               >
                 {feature.badge && (
                   <div className="absolute -top-3 left-8">
-                    <Badge className="bg-red-600 text-white border-0 shadow-lg">
+                    <Badge className="bg-slate-900 text-white border-0 shadow-lg">
                       {feature.badge}
                     </Badge>
                   </div>
@@ -542,7 +485,7 @@ function ProductDemoSection() {
             className="text-center mb-16"
           >
             <motion.div variants={fadeInUp}>
-              <Badge className="bg-purple-50 text-purple-600 border-purple-200 mb-4">
+              <Badge className="bg-slate-50 text-slate-800 border-slate-200 mb-4">
                 <Sparkles className="w-4 h-4 mr-1" />
                 AI-Powered
               </Badge>
@@ -576,7 +519,7 @@ function ProductDemoSection() {
             className="text-center mb-16"
           >
             <motion.div variants={fadeInUp}>
-              <Badge className="bg-blue-50 text-blue-600 border-blue-200 mb-4">
+              <Badge className="bg-slate-50 text-slate-800 border-slate-200 mb-4">
                 <Target className="w-4 h-4 mr-1" />
                 Task Management
               </Badge>
@@ -610,7 +553,7 @@ function ProductDemoSection() {
             className="text-center mb-16"
           >
             <motion.div variants={fadeInUp}>
-              <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200 mb-4">
+              <Badge className="bg-slate-50 text-slate-800 border-slate-200 mb-4">
                 <Target className="w-4 h-4 mr-1" />
                 Goal Tracking
               </Badge>
@@ -784,7 +727,7 @@ function PricingSection() {
           className="text-center mb-16"
         >
           <motion.div variants={fadeInUp}>
-            <Badge className="bg-red-50 text-red-600 border-red-200 mb-4">
+            <Badge className="bg-slate-50 text-slate-700 border-slate-200 mb-4">
               Pricing
             </Badge>
           </motion.div>
@@ -816,7 +759,7 @@ function PricingSection() {
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-red-600 text-white border-0 shadow-lg">
+                  <Badge className="bg-slate-900 text-white border-0 shadow-lg">
                     Most Popular
                   </Badge>
                 </div>
@@ -830,7 +773,7 @@ function PricingSection() {
               <ul className="space-y-3 mb-8">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-slate-700 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600">{feature}</span>
                   </li>
                 ))}
@@ -839,7 +782,7 @@ function PricingSection() {
                 className={cn(
                   "w-full",
                   plan.popular
-                    ? "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700"
+                    ? "bg-gradient-to-r bg-slate-900 text-white hover:from-red-600 hover:to-red-700"
                     : "border-slate-200"
                 )}
                 variant={plan.popular ? "default" : "outline"}
@@ -895,7 +838,7 @@ function FAQSection() {
           className="text-center mb-16"
         >
           <motion.div variants={fadeInUp}>
-            <Badge className="bg-red-50 text-red-600 border-red-200 mb-4">
+            <Badge className="bg-slate-50 text-slate-700 border-slate-200 mb-4">
               FAQ
             </Badge>
           </motion.div>
@@ -930,8 +873,7 @@ function FAQSection() {
 // Final CTA
 function CTASection() {
   return (
-    <section className="py-20 lg:py-32 bg-gradient-to-br from-red-500 via-red-600 to-orange-500 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]" />
+    <section className="py-20 lg:py-32 bg-slate-50 relative overflow-hidden">
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <motion.div
@@ -947,45 +889,27 @@ function CTASection() {
             </Badge>
           </motion.div>
 
-          <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-            Ready to transform your
+          <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6">
+            Everyone's talking about AI.
             <br />
-            team's accountability?
+            Give your team the tool to use it.
           </motion.h2>
 
-          <motion.p variants={fadeInUp} className="text-xl text-white/90 max-w-2xl mx-auto mb-10">
-            Join 500+ teams using Align to replace status meetings with async accountability.
-            Start your free trial today.
+          <motion.p variants={fadeInUp} className="text-xl text-slate-600 max-w-2xl mx-auto mb-10">
+
           </motion.p>
 
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/register">
-              <Button size="lg" className="bg-white text-red-600 hover:bg-slate-50 shadow-xl text-base px-8 h-12">
-                Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5" />
+              <Button size="lg" className="bg-slate-900 text-white hover:bg-slate-800 text-base px-8 h-12 rounded-lg">
+                Start for free
               </Button>
             </Link>
             <Link href="#demo">
-              <Button size="lg" variant="outline" className="border-2 border-white/30 text-white hover:bg-white/10 text-base px-8 h-12">
-                <Play className="mr-2 h-5 w-5" />
-                Watch Demo
+              <Button size="lg" variant="outline" className="border-slate-200 hover:bg-slate-50 text-slate-900 text-base px-8 h-12 rounded-lg">
+                Talk to sales
               </Button>
             </Link>
-          </motion.div>
-
-          <motion.div variants={fadeInUp} className="mt-12 flex items-center justify-center gap-8 text-sm text-white/80">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              <span>Free 14-day trial</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              <span>No credit card</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              <span>Cancel anytime</span>
-            </div>
           </motion.div>
         </motion.div>
       </div>
@@ -1001,7 +925,7 @@ function Footer() {
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg" />
+              <div className="w-8 h-8 bg-slate-100 rounded-lg" />
               <span className="text-xl font-bold">Align</span>
             </div>
             <p className="text-slate-400 text-sm mb-4">

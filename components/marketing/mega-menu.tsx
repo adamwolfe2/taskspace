@@ -40,7 +40,7 @@ export function MegaMenu() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg" />
+            <div className="w-8 h-8 bg-slate-900 rounded-lg" />
             <span className="text-xl font-bold text-slate-900">Align</span>
           </Link>
 
@@ -165,7 +165,7 @@ export function MegaMenu() {
                         className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors group"
                       >
                         <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 group-hover:bg-red-200 transition-colors">
-                          <Target className="w-5 h-5 text-red-600" />
+                          <Target className="w-5 h-5 text-slate-900" />
                         </div>
                         <div>
                           <div className="font-medium text-slate-900 mb-1">Rock Agent</div>
@@ -247,7 +247,7 @@ export function MegaMenu() {
                         href="/features/rocks"
                         className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 transition-colors"
                       >
-                        <Target className="w-4 h-4 text-red-600" />
+                        <Target className="w-4 h-4 text-slate-900" />
                         <span className="text-sm text-slate-700">Quarterly Rocks</span>
                       </Link>
                       <Link
