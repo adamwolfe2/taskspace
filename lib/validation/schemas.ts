@@ -99,6 +99,18 @@ export const updateOrganizationSettingsSchema = z.object({
       workspaceName: z.string(),
       syncTasks: z.boolean().default(true),
       syncRocks: z.boolean().default(true),
+      userMappings: z
+        .array(
+          z.object({
+            aimsUserId: z.string(),
+            asanaUserId: z.string(),
+            asanaUserEmail: z.string().email().optional(),
+            asanaUserName: z.string().optional(),
+          })
+        )
+        .optional()
+        .default([]),
+      lastSyncAt: z.string().nullable().optional(),
     })
     .optional(),
 })
