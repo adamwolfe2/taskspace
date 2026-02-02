@@ -15,7 +15,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { MegaMenu } from "@/components/marketing/mega-menu"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -113,7 +112,6 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <MegaMenu />
 
       {/* Hero */}
       <section className="py-20 bg-gradient-to-b from-slate-50 to-white">

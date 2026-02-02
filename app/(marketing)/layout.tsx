@@ -1,4 +1,4 @@
-import { MarketingHeader } from "@/components/marketing/header"
+import { MegaMenu } from "@/components/marketing/mega-menu"
 import { MarketingFooter } from "@/components/marketing/footer"
 
 export default function MarketingLayout({
@@ -8,7 +8,7 @@ export default function MarketingLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <MarketingHeader />
+      <MegaMenu />
       <main className="flex-1">{children}</main>
       <MarketingFooter />
     </div>

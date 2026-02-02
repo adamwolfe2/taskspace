@@ -20,7 +20,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { MegaMenu } from "@/components/marketing/mega-menu"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -67,7 +66,6 @@ export default function AccountabilityChartPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <MegaMenu />
 
       {/* Hero Section */}
       <section className="py-20 bg-white">

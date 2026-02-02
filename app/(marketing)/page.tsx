@@ -42,7 +42,6 @@ import { DemoLevel10 } from "@/components/marketing/demo-level10"
 import { DemoIDS } from "@/components/marketing/demo-ids"
 import { DemoAccountabilityChart } from "@/components/marketing/demo-accountability-chart"
 import { DemoVTO } from "@/components/marketing/demo-vto"
-import { MegaMenu } from "@/components/marketing/mega-menu"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -1105,7 +1104,6 @@ function Footer() {
 export default function HomePage() {
   return (
     <>
-      <MegaMenu />
       <HeroSection />
       <UseCasesSection />
       <StatsSection />

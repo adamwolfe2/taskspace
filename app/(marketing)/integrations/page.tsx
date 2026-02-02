@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { MegaMenu } from "@/components/marketing/mega-menu"
 import {
   ArrowRight,
   Search,
@@ -176,7 +175,6 @@ export default function IntegrationsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <MegaMenu />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white py-20 lg:py-32">

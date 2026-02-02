@@ -4,7 +4,6 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { MegaMenu } from "@/components/marketing/mega-menu"
 import {
   ArrowRight,
   Star,
@@ -178,7 +177,6 @@ export default function CustomersPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <MegaMenu />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white py-20 lg:py-32">
