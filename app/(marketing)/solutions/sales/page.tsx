@@ -123,7 +123,7 @@ export default function SalesSolutionPage() {
 
                 {/* Middle layer */}
                 <div className="absolute top-4 right-0 w-[85%] bg-white rounded-xl shadow-xl border border-slate-200 p-4 -rotate-2 opacity-90">
-                  <div className="h-32 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg" />
+                  <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg" />
                 </div>
 
                 {/* Front layer */}
