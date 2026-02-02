@@ -20,7 +20,7 @@ async function fixWorkspace() {
       console.log(`\nChecking organization: ${org.name} (${org.id})`)
 
       // Check if org has any workspaces
-      const existingWorkspaces = await db.workspaces.findByOrg(org.id)
+      const existingWorkspaces = await db.workspaces.findByOrganizationId(org.id)
 
       if (existingWorkspaces.length > 0) {
         console.log(`✓ Already has ${existingWorkspaces.length} workspace(s)`)
@@ -53,6 +53,9 @@ async function fixWorkspace() {
       console.log(`Adding ${allMembers.length} members...`)
 
       for (const member of allMembers) {
+        // Skip members without a userId
+        if (!member.userId) continue
+
         const memberRole = member.role === "owner" || member.role === "admin" ? "admin" : "member"
         await db.workspaceMembers.create({
           id: generateId(),

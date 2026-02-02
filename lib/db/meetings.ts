@@ -384,9 +384,9 @@ export async function updateMeeting(
   const { rows } = await sql`
     UPDATE meetings
     SET
-      title = ${updates.title ?? meeting.title},
-      notes = ${updates.notes ?? meeting.notes ?? null},
-      attendees = ${updates.attendees ?? JSON.stringify(meeting.attendees)}::jsonb
+      title = ${(updates.title as string | undefined) ?? meeting.title},
+      notes = ${(updates.notes as string | undefined | null) ?? meeting.notes ?? null},
+      attendees = ${updates.attendees ? JSON.stringify(updates.attendees) : JSON.stringify(meeting.attendees)}::jsonb
     WHERE id = ${meetingId}
     RETURNING *
   `

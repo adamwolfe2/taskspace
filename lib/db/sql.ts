@@ -61,7 +61,7 @@ function createSqlFunction(client?: PoolClient) {
 }
 
 // Local pool client wrapper to match VercelPoolClient interface
-class LocalPoolClient {
+export class LocalPoolClient {
   private client: PoolClient
   sql: ReturnType<typeof createSqlFunction>
 

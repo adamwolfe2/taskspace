@@ -132,7 +132,7 @@ export function withFeatureGate(feature: FeatureKey) {
       const result = await requireFeature(request, feature)
 
       if (!result.authorized) {
-        return result.response
+        return result.response as NextResponse<ApiResponse<null>>
       }
 
       return handler(request, result.auth)

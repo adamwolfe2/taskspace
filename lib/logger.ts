@@ -122,11 +122,12 @@ function createLogger(bindings: Record<string, unknown> = {}): LoggerInterface {
       message = msg || ""
     }
 
+    const redactedData = redactSensitive(data)
     const logEntry = {
       time: timestamp,
       level,
       ...baseContext,
-      ...redactSensitive(data),
+      ...(typeof redactedData === 'object' && redactedData !== null ? redactedData : {}),
       msg: message,
     }
 

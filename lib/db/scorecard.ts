@@ -483,9 +483,11 @@ export async function getScorecardTrends(
     return { weeks, metrics: [] }
   }
 
+  // Use PostgreSQL array literal format for ANY clause
+  const metricIdArray = `{${metricIds.join(',')}}`
   const { rows } = await sql`
     SELECT * FROM scorecard_entries
-    WHERE metric_id = ANY(${metricIds})
+    WHERE metric_id = ANY(${metricIdArray}::text[])
       AND week_start >= ${weeks[weeks.length - 1]}::date
     ORDER BY week_start DESC
   `

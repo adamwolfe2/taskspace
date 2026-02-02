@@ -273,6 +273,9 @@ export async function syncTaskToCalendar(
   const tokenData = await db.googleCalendarTokens.findByUserId(userId, orgId)
   if (!tokenData || !tokenData.syncEnabled) return
 
+  // Only sync tasks with due dates
+  if (!task.dueDate) return
+
   const existingMapping = await db.googleCalendarEvents.findByItem(userId, 'task', task.id)
 
   const eventData = {

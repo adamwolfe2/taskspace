@@ -117,11 +117,11 @@ export async function sendEscalationNotification(
     })
 
     if (result.error) {
-      logger.error("Escalation notification failed", { error: result.error.message })
+      logger.error({ error: result.error.message }, "Escalation notification failed")
       return { success: false, error: result.error.message }
     }
 
-    logger.info("Escalation notification sent", { emailId: result.data?.id })
+    logger.info({ emailId: result.data?.id }, "Escalation notification sent")
     return { success: true, id: result.data?.id }
   } catch (error) {
     logError(logger, "Escalation notification error", error)
@@ -270,11 +270,11 @@ export async function sendDailySummaryEmail(
     })
 
     if (result.error) {
-      logger.error("Daily summary email failed", { error: result.error.message })
+      logger.error({ error: result.error.message }, "Daily summary email failed")
       return { success: false, error: result.error.message }
     }
 
-    logger.info("Daily summary email sent", { emailId: result.data?.id })
+    logger.info({ emailId: result.data?.id }, "Daily summary email sent")
     return { success: true, id: result.data?.id }
   } catch (error) {
     logError(logger, "Daily summary email error", error)
@@ -358,11 +358,11 @@ export async function sendAIAlertEmail(
     })
 
     if (result.error) {
-      logger.error("AI alert email failed", { error: result.error.message })
+      logger.error({ error: result.error.message }, "AI alert email failed")
       return { success: false, error: result.error.message }
     }
 
-    logger.info("AI alert email sent", { emailId: result.data?.id })
+    logger.info({ emailId: result.data?.id }, "AI alert email sent")
     return { success: true, id: result.data?.id }
   } catch (error) {
     logError(logger, "AI alert email error", error)
@@ -446,11 +446,11 @@ export async function sendTaskAssignmentEmail(
     })
 
     if (result.error) {
-      logger.error("Task notification email failed", { error: result.error.message })
+      logger.error({ error: result.error.message }, "Task notification email failed")
       return { success: false, error: result.error.message }
     }
 
-    logger.info("Task notification email sent", { emailId: result.data?.id })
+    logger.info({ emailId: result.data?.id }, "Task notification email sent")
     return { success: true, id: result.data?.id }
   } catch (error) {
     logError(logger, "Task notification email error", error)
@@ -547,11 +547,11 @@ export async function sendDailyEODLinkEmail(
     })
 
     if (result.error) {
-      logger.error("Daily EOD link email failed", { error: result.error.message })
+      logger.error({ error: result.error.message }, "Daily EOD link email failed")
       return { success: false, error: result.error.message }
     }
 
-    logger.info("Daily EOD link email sent", { memberName: member.name, emailId: result.data?.id })
+    logger.info({ memberName: member.name, emailId: result.data?.id }, "Daily EOD link email sent")
     return { success: true, id: result.data?.id }
   } catch (error) {
     logError(logger, "Daily EOD link email error", error)
@@ -631,11 +631,11 @@ export async function sendMissingEODReminder(
     })
 
     if (result.error) {
-      logger.error("EOD reminder email failed", { error: result.error.message })
+      logger.error({ error: result.error.message }, "EOD reminder email failed")
       return { success: false, error: result.error.message }
     }
 
-    logger.info("EOD reminder email sent", { memberName: member.name, emailId: result.data?.id })
+    logger.info({ memberName: member.name, emailId: result.data?.id }, "EOD reminder email sent")
     return { success: true, id: result.data?.id }
   } catch (error) {
     logError(logger, "EOD reminder email error", error)

@@ -55,9 +55,9 @@ export async function checkMigrationStatus(): Promise<MigrationStatus> {
       ORDER BY run_on DESC
     `
 
-    const applied = rows.map((r: MigrationInfo) => r.name)
-    const lastApplied = rows.length > 0 ? rows[0].name : null
-    const lastAppliedAt = rows.length > 0 ? rows[0].run_on : null
+    const applied = rows.map((r) => r.name as string)
+    const lastApplied = rows.length > 0 ? (rows[0].name as string) : null
+    const lastAppliedAt = rows.length > 0 ? new Date(rows[0].run_on as string) : null
 
     return {
       applied,
@@ -198,9 +198,10 @@ export async function createOptimizationIndexes(): Promise<{
       if (rows.length > 0) {
         existing.push(index.name)
       } else {
-        // Create the index using raw SQL (tagged template handles escaping)
-        await sql.unsafe(index.sql)
-        created.push(index.name)
+        // TODO: postgres.js doesn't support .unsafe() method
+        // Index creation needs to be done via migrations instead
+        // For now, skip dynamic index creation
+        errors.push(`${index.name}: Dynamic index creation not supported with postgres.js - use migrations`)
       }
     } catch (error) {
       errors.push(`${index.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)

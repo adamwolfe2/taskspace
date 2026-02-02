@@ -1194,11 +1194,11 @@ export interface FocusBlock {
   startTime: string
   endTime: string
   category: FocusBlockCategory
-  quality: 1 | 2 | 3 | 4 | 5 // Self-rated quality
+  quality: 1 | 2 | 3 | 4 | 5 | null // Self-rated quality (nullable)
   interruptions: number
-  notes?: string
-  taskId?: string // Optional link to task
-  rockId?: string // Optional link to rock
+  notes?: string | null
+  taskId?: string | null // Optional link to task
+  rockId?: string | null // Optional link to rock
   createdAt: string
 }
 
@@ -1227,7 +1227,7 @@ export interface DailyEnergy {
   energyLevel: EnergyLevel
   mood: MoodEmoji
   factors: EnergyFactor[]
-  notes?: string
+  notes?: string | null
   createdAt: string
 }
 

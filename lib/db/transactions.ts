@@ -5,19 +5,21 @@
  * atomicity. Uses Vercel Postgres's transaction support.
  */
 
-import { sql, VercelPoolClient } from "./sql"
+import { sql, VercelPoolClient, LocalPoolClient, QueryResult, QueryResultRow } from "./sql"
 
 // ============================================
 // TRANSACTION TYPES
 // ============================================
 
+export type PoolClient = VercelPoolClient | LocalPoolClient
+
 export interface TransactionContext {
-  client: VercelPoolClient
+  client: PoolClient
   committed: boolean
   rolledBack: boolean
 }
 
-export type TransactionCallback<T> = (client: VercelPoolClient) => Promise<T>
+export type TransactionCallback<T> = (client: PoolClient) => Promise<T>
 
 // ============================================
 // TRANSACTION UTILITIES
@@ -180,7 +182,7 @@ export async function batchInsert<T extends Record<string, unknown>>(
     `
 
     try {
-      const result = await sql.query(query, flatValues)
+      const result = await (sql.query as (query: string, values: unknown[]) => Promise<QueryResult<QueryResultRow>>)(query, flatValues)
       inserted += result.rowCount || 0
       if (options.onConflict === "ignore") {
         skipped += batch.length - (result.rowCount || 0)
@@ -226,7 +228,7 @@ export async function batchUpdate<T extends Record<string, unknown>>(
           WHERE id = $1
         `
 
-        const result = await client.query(query, [id, ...values])
+        const result = await (client.query as (query: string, values: unknown[]) => Promise<QueryResult<QueryResultRow>>)(query, [id, ...values])
         updated += result.rowCount || 0
       }
     })
@@ -254,7 +256,7 @@ export async function batchDelete(
     const placeholders = batch.map((_, idx) => `$${idx + 1}`)
     const query = `DELETE FROM ${tableName} WHERE id IN (${placeholders.join(", ")})`
 
-    const result = await sql.query(query, batch)
+    const result = await (sql.query as (query: string, values: unknown[]) => Promise<QueryResult<QueryResultRow>>)(query, batch)
     deleted += result.rowCount || 0
   }
 

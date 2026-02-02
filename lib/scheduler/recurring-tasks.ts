@@ -239,7 +239,7 @@ class RecurringTaskProcessor {
     }
 
     if (processed > 0) {
-      logger.info("Processed recurring tasks", { count: processed })
+      logger.info({ count: processed }, "Processed recurring tasks")
     }
 
     return processed

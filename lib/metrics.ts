@@ -266,13 +266,15 @@ export async function getScorecardData(
   const memberIds = metricsResult.rows.map(r => r.member_id)
 
   // Use native PostgreSQL array for efficient querying
+  // Use PostgreSQL array literal format for ANY clause
+  const memberIdArray = `{${memberIds.join(',')}}`
   const entriesResult = await sql`
     SELECT
       team_member_id,
       week_ending,
       actual_value
     FROM weekly_metric_entries
-    WHERE team_member_id = ANY(${memberIds}::text[])
+    WHERE team_member_id = ANY(${memberIdArray}::text[])
     AND week_ending >= ${oldestWeek}::date
     ORDER BY week_ending DESC
   `
@@ -323,7 +325,7 @@ export async function setTeamMemberMetric(
   metricName: string,
   weeklyGoal: number
 ): Promise<TeamMemberMetric> {
-logger.debug("setTeamMemberMetric: Deactivating existing metrics", { memberId })
+logger.debug({ memberId }, "setTeamMemberMetric: Deactivating existing metrics")
 
   // Deactivate existing active metric
   const deactivateResult = await sql`
@@ -332,10 +334,10 @@ logger.debug("setTeamMemberMetric: Deactivating existing metrics", { memberId })
     WHERE team_member_id = ${memberId}
     AND is_active = true
   `
-  logger.debug("setTeamMemberMetric: Deactivated existing metrics", { memberId, count: deactivateResult.rowCount })
+  logger.debug({ memberId, count: deactivateResult.rowCount }, "setTeamMemberMetric: Deactivated existing metrics")
 
   // Insert new metric
-  logger.debug("setTeamMemberMetric: Inserting new metric", { memberId, metricName, weeklyGoal })
+  logger.debug({ memberId, metricName, weeklyGoal }, "setTeamMemberMetric: Inserting new metric")
   const result = await sql`
     INSERT INTO team_member_metrics (id, team_member_id, metric_name, weekly_goal, is_active, created_at, updated_at)
     VALUES (
@@ -356,7 +358,7 @@ logger.debug("setTeamMemberMetric: Deactivating existing metrics", { memberId })
   }
 
   const row = result.rows[0]
-  logger.debug("setTeamMemberMetric: Successfully inserted metric", { metricId: row.id })
+  logger.debug({ metricId: row.id }, "setTeamMemberMetric: Successfully inserted metric")
 
   return {
     id: row.id,

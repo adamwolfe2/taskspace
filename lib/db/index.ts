@@ -802,9 +802,11 @@ export const db = {
     // Optimized: fetch rocks for multiple users at once (reduces data transfer)
     async findByUserIds(userIds: string[], orgId: string): Promise<Rock[]> {
       if (userIds.length === 0) return []
+      // Use PostgreSQL array literal format for ANY clause
+      const userIdArray = `{${userIds.join(',')}}`
       const { rows } = await sql`
         SELECT * FROM rocks
-        WHERE organization_id = ${orgId} AND user_id = ANY(${userIds})
+        WHERE organization_id = ${orgId} AND user_id = ANY(${userIdArray}::text[])
       `
       return rows.map(parseRock)
     },
@@ -989,9 +991,11 @@ export const db = {
     // Optimized: fetch tasks for multiple users at once (reduces data transfer)
     async findByUserIds(userIds: string[], orgId: string): Promise<AssignedTask[]> {
       if (userIds.length === 0) return []
+      // Use PostgreSQL array literal format for ANY clause
+      const userIdArray = `{${userIds.join(',')}}`
       const { rows } = await sql`
         SELECT * FROM assigned_tasks
-        WHERE organization_id = ${orgId} AND assignee_id = ANY(${userIds})
+        WHERE organization_id = ${orgId} AND assignee_id = ANY(${userIdArray}::text[])
       `
       return rows.map(parseAssignedTask)
     },
@@ -1119,10 +1123,12 @@ export const db = {
       endDate: string
     ): Promise<EODReport[]> {
       if (userIds.length === 0) return []
+      // Use PostgreSQL array literal format for ANY clause
+      const userIdArray = `{${userIds.join(',')}}`
       const { rows } = await sql`
         SELECT * FROM eod_reports
         WHERE organization_id = ${orgId}
-          AND user_id = ANY(${userIds})
+          AND user_id = ANY(${userIdArray}::text[])
           AND date >= ${startDate}
           AND date <= ${endDate}
         ORDER BY date DESC
@@ -1390,9 +1396,11 @@ export const db = {
     // OPTIMIZED: Batch fetch insights for multiple reports (fixes N+1 query problem)
     async findByReportIds(reportIds: string[]): Promise<EODInsight[]> {
       if (reportIds.length === 0) return []
+      // Use PostgreSQL array literal format for ANY clause
+      const reportIdArray = `{${reportIds.join(',')}}`
       const { rows } = await sql`
         SELECT * FROM eod_insights
-        WHERE eod_report_id = ANY(${reportIds})
+        WHERE eod_report_id = ANY(${reportIdArray}::text[])
       `
       return rows.map(row => ({
         id: row.id as string,
@@ -2396,7 +2404,7 @@ export const db = {
         startTime: (row.start_time as Date)?.toISOString() || "",
         endTime: (row.end_time as Date)?.toISOString() || "",
         category: row.category as FocusBlockCategory,
-        quality: row.quality as number | null,
+        quality: row.quality as 1 | 2 | 3 | 4 | 5 | null,
         interruptions: (row.interruptions as number) || 0,
         notes: row.notes as string | null,
         taskId: row.task_id as string | null,
@@ -2415,7 +2423,7 @@ export const db = {
         startTime: (row.start_time as Date)?.toISOString() || "",
         endTime: (row.end_time as Date)?.toISOString() || "",
         category: row.category as FocusBlockCategory,
-        quality: row.quality as number | null,
+        quality: row.quality as 1 | 2 | 3 | 4 | 5 | null,
         interruptions: (row.interruptions as number) || 0,
         notes: row.notes as string | null,
         taskId: row.task_id as string | null,
@@ -2429,11 +2437,11 @@ export const db = {
       startTime: string
       endTime: string
       category: string
-      quality?: number
+      quality?: number | null
       interruptions?: number
-      notes?: string
-      taskId?: string
-      rockId?: string
+      notes?: string | null
+      taskId?: string | null
+      rockId?: string | null
     }): Promise<{ id: string }> {
       const { rows } = await sql`
         INSERT INTO focus_blocks (organization_id, user_id, start_time, end_time, category, quality, interruptions, notes, task_id, rock_id)
@@ -2448,9 +2456,11 @@ export const db = {
       startTime?: string
       endTime?: string
       category?: string
-      quality?: number
+      quality?: number | null
       interruptions?: number
-      notes?: string
+      notes?: string | null
+      taskId?: string | null
+      rockId?: string | null
     }): Promise<boolean> {
       const { rowCount } = await sql`
         UPDATE focus_blocks SET
@@ -2460,6 +2470,8 @@ export const db = {
           quality = COALESCE(${updates.quality ?? null}, quality),
           interruptions = COALESCE(${updates.interruptions ?? null}, interruptions),
           notes = COALESCE(${updates.notes}, notes),
+          task_id = COALESCE(${updates.taskId}, task_id),
+          rock_id = COALESCE(${updates.rockId}, rock_id),
           updated_at = NOW()
         WHERE id = ${id}
       `
@@ -2527,7 +2539,7 @@ export const db = {
       energyLevel: string
       mood: string
       factors?: string[]
-      notes?: string
+      notes?: string | null
     }): Promise<{ id: string }> {
       const factorsJson = JSON.stringify(energy.factors || [])
       const { rows } = await sql`
