@@ -195,10 +195,10 @@ function HeroSection() {
               </div>
 
               {/* Actual Product Screenshot */}
-              <div className="bg-gradient-to-br from-slate-50 to-white p-8">
-                <div className="grid grid-cols-12 gap-6">
+              <div className="bg-gradient-to-br from-slate-50 to-white p-4 sm:p-8">
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-6">
                   {/* Sidebar */}
-                  <div className="col-span-2 space-y-3">
+                  <div className="hidden sm:block sm:col-span-2 space-y-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg" />
                     {[
                       { active: true, color: "bg-red-50 border-red-200" },
@@ -218,9 +218,9 @@ function HeroSection() {
                   </div>
 
                   {/* Main Content */}
-                  <div className="col-span-10 space-y-6">
+                  <div className="sm:col-span-10 space-y-6">
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       {[
                         { icon: Target, value: "94%", label: "On Track", color: "from-red-500 to-red-600" },
                         { icon: CheckCircle, value: "28", label: "Completed", color: "from-emerald-500 to-emerald-600" },

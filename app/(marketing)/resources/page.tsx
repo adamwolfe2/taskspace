@@ -452,7 +452,7 @@ export default function ResourcesPage() {
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="grid grid-cols-2 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-6"
             >
               {[
                 { icon: Video, label: "50+ Courses", color: "from-blue-400 to-blue-600" },

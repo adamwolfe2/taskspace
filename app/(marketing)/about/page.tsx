@@ -192,7 +192,7 @@ export default function AboutPage() {
             <motion.div variants={fadeInUp} className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-red-600 rounded-3xl opacity-10 blur-2xl" />
               <div className="relative bg-white rounded-2xl shadow-xl border border-slate-200/50 p-8">
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {stats.map((stat) => (
                     <div key={stat.label} className="text-center p-4">
                       <div className="text-3xl sm:text-4xl font-bold text-red-600 mb-2">

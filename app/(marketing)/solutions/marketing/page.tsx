@@ -133,7 +133,7 @@ export default function MarketingSolutionPage() {
                       <Badge className="bg-pink-500 text-white border-0">On Track</Badge>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="bg-pink-50 rounded-lg p-4 border border-pink-200">
                         <div className="text-3xl font-bold text-pink-600">12k</div>
                         <div className="text-xs text-slate-600 mt-1">New Leads</div>
@@ -438,7 +438,7 @@ export default function MarketingSolutionPage() {
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <h3 className="font-bold text-slate-900 mb-4">Campaign Performance</h3>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
                         <div className="text-2xl font-bold text-emerald-600">12.5k</div>
                         <div className="text-xs text-slate-600 mt-1">Leads Generated</div>

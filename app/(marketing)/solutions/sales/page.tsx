@@ -134,7 +134,7 @@ export default function SalesSolutionPage() {
                       <Badge className="bg-emerald-500 text-white border-0">On Track</Badge>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
                         <div className="text-3xl font-bold text-emerald-600">$847k</div>
                         <div className="text-xs text-slate-600 mt-1">Q1 Revenue</div>

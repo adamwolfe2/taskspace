@@ -192,7 +192,7 @@ export default function AccountabilityChartPage() {
                   </div>
 
                   {/* Department Heads */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {Object.entries(roles).slice(2).map(([key, role]) => {
                       const Icon = role.icon
                       return (

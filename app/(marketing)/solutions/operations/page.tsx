@@ -628,7 +628,7 @@ export default function OperationsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-slate-900">32</div>
                     <div className="text-xs text-slate-500">Team Members</div>
