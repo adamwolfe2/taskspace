@@ -120,10 +120,22 @@ export async function POST(request: NextRequest) {
       createdAt: now,
       invitedBy: auth.user.id,
       status: "pending",
-      workspaceId: workspaceId || null,
+      // Don't include workspaceId until migrations are run
+      // workspaceId: workspaceId || null,
     }
 
-    await db.invitations.create(invitation)
+    try {
+      await db.invitations.create(invitation)
+    } catch (dbError: any) {
+      logError(logger, "Database error creating invitation", dbError)
+      return NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: `Database error: ${dbError.message || "Failed to create invitation"}`
+        },
+        { status: 500 }
+      )
+    }
 
     // Update draft member status to "invited" if exists
     if (draftMember) {
@@ -150,10 +162,13 @@ export async function POST(request: NextRequest) {
           ? "Invitation sent successfully"
           : `Invitation created but email failed: ${emailResult.error}. You can copy the invite link manually.`,
     })
-  } catch (error) {
+  } catch (error: any) {
     logError(logger, "Create invitation error", error)
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Failed to send invitation" },
+      {
+        success: false,
+        error: error.message || "Failed to send invitation"
+      },
       { status: 500 }
     )
   }

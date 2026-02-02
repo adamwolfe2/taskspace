@@ -109,6 +109,8 @@ export function TeamManagementTab() {
         email: inviteEmail.trim().toLowerCase(),
         role: inviteRole,
         department: inviteDepartment,
+        // Temporarily don't send workspaceId until migrations are run
+        // workspaceId: inviteWorkspaceId || undefined,
       })
 
       setPendingInvitations([...pendingInvitations, invitation])

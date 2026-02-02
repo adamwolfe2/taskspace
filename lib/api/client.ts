@@ -172,7 +172,7 @@ export const api = {
       return handleResponse<any[]>(response)
     },
 
-    async create(data: { email: string; role: string; department: string }) {
+    async create(data: { email: string; role: string; department: string; workspaceId?: string }) {
       const response = await fetch(`${API_BASE}/invitations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
