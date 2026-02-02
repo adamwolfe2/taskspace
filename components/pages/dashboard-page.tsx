@@ -248,8 +248,7 @@ export function DashboardPage({
  {/* EOD Submission Card */}
  <div ref={eodCardRef}>
  <ErrorBoundary title="EOD submission unavailable">
- {(currentUser.role === "admin" || currentUser.role === "owner") ? (
- /* Admins get tabs to switch between AI and Manual EOD submission */
+ {/* All team members get tabs to switch between AI and Manual EOD submission */}
  <Tabs defaultValue="ai" className="w-full">
  <TabsList className="grid w-full grid-cols-2 mb-4">
  <TabsTrigger value="ai" className="data-[state=active]:bg-purple-100">
@@ -281,19 +280,6 @@ export function DashboardPage({
  />
  </TabsContent>
  </Tabs>
- ) : (
- /* Regular members get the standard EOD card */
- <EODSubmissionCard
- rocks={currentQuarterRocks}
- allRocks={rocks}
- onSubmitEOD={handleSubmitEOD}
- userId={currentUser.id}
- currentUser={currentUser}
- assignedTasks={assignedTasks}
- selectedDate={selectedEodDate}
- onDateReset={() => setSelectedEodDate(null)}
- />
- )}
  </ErrorBoundary>
  </div>
  </div>
