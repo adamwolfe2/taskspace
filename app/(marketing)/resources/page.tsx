@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { BookOpen, FileText, Video } from "lucide-react"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -19,6 +20,7 @@ const staggerContainer = {
 
 export default function ResourcesPage() {
   return (
+    <PageTransition>
     <div className="min-h-screen bg-white pt-20">
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -95,5 +97,6 @@ export default function ResourcesPage() {
         </div>
       </section>
     </div>
+    </PageTransition>
   )
 }

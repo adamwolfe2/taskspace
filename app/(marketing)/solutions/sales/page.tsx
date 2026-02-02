@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -32,6 +33,7 @@ const staggerContainer = {
 
 export default function SalesSolutionPage() {
   return (
+    <PageTransition>
     <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
@@ -559,20 +561,7 @@ export default function SalesSolutionPage() {
           <p className="text-white/80 mt-4 text-sm">Free forever. No credit card required.</p>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
-            <div>© 2026 Taskspace. All rights reserved.</div>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">Security</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
+    </PageTransition>
   )
 }

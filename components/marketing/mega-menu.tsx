@@ -4,7 +4,21 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown, Menu, X } from "lucide-react"
+import {
+  ChevronDown,
+  Menu,
+  X,
+  FileText,
+  Target,
+  BarChart2,
+  Calendar,
+  AlertCircle,
+  Network,
+  Users,
+  TrendingUp,
+  Grid,
+  Plug
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -184,65 +198,74 @@ export function MegaMenu() {
                     <div className="space-y-1">
                       <Link
                         href="/features/eod-reports"
-                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
+                        <FileText className="w-4 h-4" />
                         EOD Reports
                       </Link>
                       <Link
                         href="/features/rocks"
-                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
+                        <Target className="w-4 h-4" />
                         Quarterly Rocks
                       </Link>
                       <Link
                         href="/features/scorecard"
-                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
+                        <BarChart2 className="w-4 h-4" />
                         Scorecard
                       </Link>
                       <Link
                         href="/features/level-10-meetings"
-                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
+                        <Calendar className="w-4 h-4" />
                         Level 10 Meetings
                       </Link>
                       <Link
                         href="/features/ids-process"
-                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
+                        <AlertCircle className="w-4 h-4" />
                         IDS Process
                       </Link>
                       <Link
                         href="/features/accountability-chart"
-                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
+                        <Network className="w-4 h-4" />
                         Accountability Chart
                       </Link>
                       <Link
                         href="/features/team-management"
-                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
+                        <Users className="w-4 h-4" />
                         Team Management
                       </Link>
                       <Link
                         href="/features/analytics"
-                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
+                        <TrendingUp className="w-4 h-4" />
                         Analytics
                       </Link>
                       <Link
                         href="/features"
-                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
+                        <Grid className="w-4 h-4" />
                         All Features
                       </Link>
                     </div>
@@ -381,28 +404,40 @@ export function MegaMenu() {
                         href="/features/eod-reports"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">EOD Reports</div>
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <FileText className="w-4 h-4" />
+                          EOD Reports
+                        </div>
                         <div className="text-sm text-gray-600">AI-powered daily updates</div>
                       </Link>
                       <Link
                         href="/features/rocks"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Quarterly Rocks</div>
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <Target className="w-4 h-4" />
+                          Quarterly Rocks
+                        </div>
                         <div className="text-sm text-gray-600">90-day goal tracking</div>
                       </Link>
                       <Link
                         href="/features/scorecard"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Scorecard</div>
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <BarChart2 className="w-4 h-4" />
+                          Scorecard
+                        </div>
                         <div className="text-sm text-gray-600">Weekly measurables</div>
                       </Link>
                       <Link
                         href="/features/level-10-meetings"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Level 10 Meetings</div>
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <Calendar className="w-4 h-4" />
+                          Level 10 Meetings
+                        </div>
                         <div className="text-sm text-gray-600">Structured meeting agendas</div>
                       </Link>
                     </div>
@@ -417,28 +452,40 @@ export function MegaMenu() {
                         href="/features/ids-process"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">IDS Process</div>
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <AlertCircle className="w-4 h-4" />
+                          IDS Process
+                        </div>
                         <div className="text-sm text-gray-600">Issue resolution tracking</div>
                       </Link>
                       <Link
                         href="/features/accountability-chart"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Accountability Chart</div>
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <Network className="w-4 h-4" />
+                          Accountability Chart
+                        </div>
                         <div className="text-sm text-gray-600">Organization structure</div>
                       </Link>
                       <Link
                         href="/features/team-management"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Team Management</div>
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <Users className="w-4 h-4" />
+                          Team Management
+                        </div>
                         <div className="text-sm text-gray-600">Manage your teams</div>
                       </Link>
                       <Link
                         href="/features/analytics"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Analytics & Insights</div>
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <TrendingUp className="w-4 h-4" />
+                          Analytics & Insights
+                        </div>
                         <div className="text-sm text-gray-600">Performance dashboards</div>
                       </Link>
                     </div>
@@ -453,14 +500,20 @@ export function MegaMenu() {
                         href="/features"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">All Features</div>
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <Grid className="w-4 h-4" />
+                          All Features
+                        </div>
                         <div className="text-sm text-gray-600">See everything Taskspace offers</div>
                       </Link>
                       <Link
                         href="/integrations"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Integrations</div>
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <Plug className="w-4 h-4" />
+                          Integrations
+                        </div>
                         <div className="text-sm text-gray-600">Connect your tools</div>
                       </Link>
                     </div>

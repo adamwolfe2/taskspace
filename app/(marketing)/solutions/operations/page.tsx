@@ -949,66 +949,7 @@ export default function OperationsPage() {
           </motion.div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-slate-900 border-t border-slate-800 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-5 gap-8 mb-12">
-            <div className="md:col-span-2">
-              <div className="text-xl font-bold text-white mb-4">Taskspace</div>
-              <p className="text-slate-400 text-sm mb-4">
-                The all-in-one EOS platform for scaling companies.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold text-white mb-4">Product</h3>
-              <ul className="space-y-3">
-                {["Features", "Pricing", "Security", "Roadmap"].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-sm text-slate-400 hover:text-white">{item}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold text-white mb-4">Company</h3>
-              <ul className="space-y-3">
-                {["About", "Blog", "Careers", "Contact"].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-sm text-slate-400 hover:text-white">{item}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold text-white mb-4">Resources</h3>
-              <ul className="space-y-3">
-                {["Docs", "API", "Support", "Status"].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-sm text-slate-400 hover:text-white">{item}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-slate-400 text-sm">
-              © 2024 Taskspace. All rights reserved.
-            </p>
-            <div className="flex items-center gap-6">
-              <a href="#" className="text-slate-400 hover:text-white text-sm">Privacy</a>
-              <a href="#" className="text-slate-400 hover:text-white text-sm">Terms</a>
-              <a href="#" className="text-slate-400 hover:text-white text-sm">Cookies</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
-  )
     </PageTransition>
   )
 }

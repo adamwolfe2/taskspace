@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { Mail, MessageSquare, Phone } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -20,6 +21,7 @@ const staggerContainer = {
 
 export default function ContactPage() {
   return (
+    <PageTransition>
     <div className="min-h-screen bg-white pt-20">
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -99,5 +101,6 @@ export default function ContactPage() {
         </div>
       </section>
     </div>
+    </PageTransition>
   )
 }
