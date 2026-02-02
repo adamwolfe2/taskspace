@@ -248,12 +248,13 @@ export function TasksPage({
             value={viewMode}
             onValueChange={(value) => value && setViewMode(value as "list" | "kanban")}
             className="flex-shrink-0"
+            variant="outline"
           >
-            <ToggleGroupItem value="list" aria-label="List view" className="gap-1.5">
+            <ToggleGroupItem value="list" aria-label="List view" className="gap-1.5 bg-white">
               <LayoutList className="h-4 w-4" />
               <span className="hidden sm:inline text-sm">List</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="kanban" aria-label="Kanban view" className="gap-1.5">
+            <ToggleGroupItem value="kanban" aria-label="Kanban view" className="gap-1.5 bg-white">
               <LayoutGrid className="h-4 w-4" />
               <span className="hidden sm:inline text-sm">Kanban</span>
             </ToggleGroupItem>

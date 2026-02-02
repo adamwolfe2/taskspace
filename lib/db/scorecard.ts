@@ -392,10 +392,35 @@ export async function getScorecardSummary(
 ): Promise<ScorecardSummary[]> {
   const week = weekStart || getWeekStart()
 
-  const { rows } = await sql`
-    SELECT * FROM get_scorecard_summary(${workspaceId}, ${week}::date)
-  `
-  return rows.map(parseSummary)
+  try {
+    // Direct query instead of SQL function (SQL function may not exist)
+    const { rows } = await sql`
+      SELECT
+        m.id as metric_id,
+        m.name as metric_name,
+        m.description as metric_description,
+        m.owner_id,
+        om.name as owner_name,
+        m.target_value,
+        m.target_direction,
+        m.unit,
+        m.display_order,
+        e.value as current_value,
+        COALESCE(e.status, 'gray'::text) as current_status,
+        e.notes as current_notes,
+        ${week} as week_start
+      FROM scorecard_metrics m
+      LEFT JOIN organization_members om ON m.owner_id = om.id
+      LEFT JOIN scorecard_entries e ON m.id = e.metric_id AND e.week_start = ${week}::date
+      WHERE m.workspace_id = ${workspaceId} AND m.is_active = true
+      ORDER BY m.display_order ASC, m.name ASC
+    `
+    return rows.map(parseSummary)
+  } catch (error) {
+    console.error("Error in getScorecardSummary:", error)
+    // Return empty array if tables don't exist yet
+    return []
+  }
 }
 
 /**
@@ -405,24 +430,8 @@ export async function getRedMetrics(
   workspaceId: string,
   weekStart?: string
 ): Promise<ScorecardSummary[]> {
-  const week = weekStart || getWeekStart()
-
-  const { rows } = await sql`
-    SELECT * FROM get_red_metrics(${workspaceId}, ${week}::date)
-  `
-  return rows.map((row) => ({
-    metricId: row.metric_id as string,
-    metricName: row.metric_name as string,
-    ownerId: row.owner_id as string | undefined,
-    ownerName: row.owner_name as string | undefined,
-    targetValue: row.target_value !== null ? Number(row.target_value) : undefined,
-    targetDirection: "above",
-    unit: "",
-    displayOrder: 0,
-    currentValue: row.actual_value !== null ? Number(row.actual_value) : undefined,
-    currentStatus: "red" as const,
-    weekStart: formatDate(row.week_start as Date),
-  }))
+  const summary = await getScorecardSummary(workspaceId, weekStart)
+  return summary.filter(item => item.currentStatus === 'red')
 }
 
 /**
