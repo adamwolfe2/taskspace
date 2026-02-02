@@ -36,7 +36,7 @@ export default function AboutPage() {
               variants={fadeInUp}
               className="text-5xl font-bold text-black mb-6"
             >
-              About Align
+              About Taskspace
             </motion.h1>
             <motion.p
               variants={fadeInUp}
@@ -55,7 +55,7 @@ export default function AboutPage() {
           >
             <motion.div variants={fadeInUp} className="space-y-6 text-gray-600">
               <p>
-                Align is the all-in-one AI platform with agents that connect to your
+                Taskspace is the all-in-one AI platform with agents that connect to your
                 tools and partner with humans to drive smarter, faster outcomes.
               </p>
               <p>

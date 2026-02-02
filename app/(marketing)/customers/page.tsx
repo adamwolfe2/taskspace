@@ -61,7 +61,7 @@ export default function CustomersPage() {
               variants={fadeInUp}
               className="text-xl text-gray-600 max-w-3xl mx-auto"
             >
-              Businesses of all sizes are using Align to automate workflows across marketing,
+              Businesses of all sizes are using Taskspace to automate workflows across marketing,
               sales, and operations—saving thousands of hours and driving measurable growth.
             </motion.p>
           </motion.div>

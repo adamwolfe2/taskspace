@@ -3,7 +3,6 @@
 import { motion, useInView, AnimatePresence } from "framer-motion"
 import { useRef, useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import {
   ArrowRight,
   CheckCircle,
@@ -15,6 +14,17 @@ import {
   Zap,
   Clock,
   TrendingUp,
+  FileText,
+  MessageSquare,
+  CheckSquare,
+  Settings,
+  Shield,
+  Sparkles,
+  Building2,
+  LineChart,
+  ListTodo,
+  ClipboardCheck,
+  UserCircle,
 } from "lucide-react"
 import { DemoEODForm } from "@/components/marketing/demo-eod-form"
 import { DemoRocks } from "@/components/marketing/demo-rocks"
@@ -40,19 +50,8 @@ const staggerContainer = {
 
 // Hero Section
 function HeroSection() {
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: "-100px" })
-  const [selectedFeature, setSelectedFeature] = useState("automate")
-
-  const features = [
-    { id: "automate", label: "Automate" },
-    { id: "create", label: "Create" },
-    { id: "agents", label: "Agents" },
-    { id: "workflows", label: "Workflows" },
-  ]
-
   return (
-    <section ref={ref} className="relative pt-24 pb-12 overflow-hidden bg-white">
+    <section className="relative pt-24 pb-12 overflow-hidden bg-white">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto mb-12">
           {/* Badge */}
@@ -61,7 +60,8 @@ function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-700 text-sm mb-6"
           >
-            <span>Platform</span>
+            <Sparkles className="w-4 h-4" />
+            <span>EOS Management Platform</span>
           </motion.div>
 
           {/* Headline */}
@@ -71,7 +71,7 @@ function HeroSection() {
             transition={{ delay: 0.1 }}
             className="text-5xl sm:text-6xl lg:text-7xl font-bold text-black leading-[1.1] mb-6"
           >
-            Everything you need to build your AI workforce — from integrations to enterprise-grade security.
+            Run your business on EOS with Taskspace
           </motion.h1>
 
           {/* Subheadline */}
@@ -81,8 +81,8 @@ function HeroSection() {
             transition={{ delay: 0.2 }}
             className="text-xl text-gray-600 max-w-3xl mx-auto mb-10"
           >
-            Align is the all-in-one AI platform with agents that connect to your
-            tools and partner with humans to drive smarter, faster outcomes.
+            The all-in-one platform for implementing the Entrepreneurial Operating System.
+            Manage teams, track rocks, run Level 10 meetings, and drive accountability.
           </motion.p>
 
           {/* CTAs */}
@@ -108,37 +108,210 @@ function HeroSection() {
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-700">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
-              <span>All AI models</span>
+              <span>Free forever plan</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
-              <span>Image and video generation</span>
+              <span>AI-powered tools</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
-              <span>Data privacy</span>
+              <span>Full EOS toolkit</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
-              <span>Built-in tools</span>
+              <span>Team collaboration</span>
             </div>
           </div>
         </div>
+      </div>
+    </section>
+  )
+}
 
-        {/* Integration Icons Grid */}
-        <div className="max-w-6xl mx-auto mb-12">
-          <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-15 gap-4">
-            {[...Array(45)].map((_, i) => (
-              <div key={i} className="w-16 h-16 rounded-xl bg-white border border-gray-200 flex items-center justify-center hover:shadow-md transition-shadow">
-                <div className="w-8 h-8 bg-gray-200 rounded" />
+// Core Features Section - Showcase ALL Features
+function CoreFeaturesSection() {
+  const coreFeatures = [
+    {
+      icon: FileText,
+      title: "EOD Reports",
+      description: "AI-powered end-of-day reports that organize task dumps into structured updates. Track progress, identify blockers, and plan tomorrow's priorities.",
+      features: ["AI task organization", "Blocker tracking", "Daily summaries", "Team visibility"],
+      href: "/features/eod-reports"
+    },
+    {
+      icon: Target,
+      title: "Quarterly Rocks",
+      description: "Set and track 90-day goals with milestone-based progress tracking. Keep your team aligned on what matters most each quarter.",
+      features: ["90-day goal tracking", "Milestone management", "Progress visualization", "Team alignment"],
+      href: "/features/rocks"
+    },
+    {
+      icon: BarChart3,
+      title: "Scorecard",
+      description: "Weekly measurables dashboard with trend analysis. Track the key metrics that drive your business forward.",
+      features: ["Weekly metrics", "Trend analysis", "Custom KPIs", "Automated reporting"],
+      href: "/features/scorecard"
+    },
+    {
+      icon: Calendar,
+      title: "Level 10 Meetings",
+      description: "Run productive 90-minute leadership meetings with structured agendas. Follow the proven EOS meeting format.",
+      features: ["Meeting templates", "Agenda management", "Action item tracking", "Meeting history"],
+      href: "/features/level-10-meetings"
+    },
+    {
+      icon: Zap,
+      title: "IDS Process",
+      description: "Identify, Discuss, and Solve issues systematically. Track problems through resolution with structured problem-solving.",
+      features: ["Issue identification", "Discussion tracking", "Solution management", "Resolution history"],
+      href: "/features/ids-process"
+    },
+    {
+      icon: Building2,
+      title: "Accountability Chart",
+      description: "Visualize your organization structure with clear roles and responsibilities. Build a culture of accountability.",
+      features: ["Org chart builder", "Role definitions", "Responsibility tracking", "Team hierarchy"],
+      href: "/features/accountability-chart"
+    },
+    {
+      icon: Users,
+      title: "Team Management",
+      description: "Manage team members, assign roles, and track individual contributions. Build high-performing teams.",
+      features: ["Team member profiles", "Role assignments", "Performance tracking", "Manager oversight"],
+      href: "/features/team-management"
+    },
+    {
+      icon: Brain,
+      title: "AI Agents",
+      description: "Intelligent AI assistants that automate routine tasks, analyze data, and provide insights to save time.",
+      features: ["Task automation", "Data analysis", "Smart suggestions", "24/7 assistance"],
+      href: "/features/analytics"
+    },
+    {
+      icon: LineChart,
+      title: "Analytics & Insights",
+      description: "Real-time dashboards showing team performance, submission rates, and progress trends. Make data-driven decisions.",
+      features: ["Real-time dashboards", "Performance metrics", "Custom reports", "Trend analysis"],
+      href: "/features/analytics"
+    },
+    {
+      icon: CheckSquare,
+      title: "Vision/Traction Organizer",
+      description: "Document your company vision and ensure everyone is aligned on core values, focus, and goals.",
+      features: ["Vision documentation", "Core values", "10-year target", "3-year picture"],
+      href: "/features"
+    },
+    {
+      icon: ListTodo,
+      title: "To-Do List & Tasks",
+      description: "Kanban-style task management integrated with your rocks and meetings. Track action items to completion.",
+      features: ["Kanban boards", "Task assignments", "Due dates", "Priority management"],
+      href: "/features"
+    },
+    {
+      icon: MessageSquare,
+      title: "Team Communication",
+      description: "Built-in commenting and feedback on reports. Keep all team communication in context.",
+      features: ["Inline comments", "@mentions", "Notifications", "Discussion threads"],
+      href: "/features"
+    },
+  ]
+
+  return (
+    <section className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="text-center mb-16"
+        >
+          <motion.div variants={fadeInUp}>
+            <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
+              Complete EOS Platform
+            </Badge>
+          </motion.div>
+          <motion.h2
+            variants={fadeInUp}
+            className="text-4xl sm:text-5xl font-bold text-black mb-4"
+          >
+            Everything you need to run on EOS
+          </motion.h2>
+          <motion.p
+            variants={fadeInUp}
+            className="text-xl text-gray-600 max-w-3xl mx-auto"
+          >
+            All the tools from the Entrepreneurial Operating System in one integrated platform
+          </motion.p>
+        </motion.div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
+          {coreFeatures.map((feature) => (
+            <motion.div
+              key={feature.title}
+              variants={fadeInUp}
+              className="bg-white rounded-2xl border border-gray-200 p-8 hover:shadow-lg transition-all"
+            >
+              <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mb-4">
+                <feature.icon className="w-6 h-6 text-black" />
               </div>
-            ))}
-          </div>
-          <div className="text-center mt-6">
-            <Link href="/integrations" className="inline-flex items-center gap-2 text-sm text-gray-700 hover:text-black">
-              View all integrations <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+              <h3 className="text-xl font-bold text-black mb-3">{feature.title}</h3>
+              <p className="text-gray-600 mb-4 leading-relaxed">{feature.description}</p>
+              <ul className="space-y-2 mb-6">
+                {feature.features.map((item, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-gray-700">
+                    <CheckCircle className="w-4 h-4 text-black flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href={feature.href} className="text-sm font-medium text-black hover:text-gray-700 flex items-center gap-1">
+                Learn more <ArrowRight className="w-4 h-4" />
+              </Link>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// Feature Demo Section
+function FeatureDemoSection() {
+  const [selectedFeature, setSelectedFeature] = useState("rocks")
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
+  const features = [
+    { id: "rocks", label: "Rocks", component: DemoRocks },
+    { id: "eod", label: "EOD Reports", component: DemoEODForm },
+    { id: "scorecard", label: "Scorecard", component: DemoScorecard },
+    { id: "level10", label: "Level 10", component: DemoLevel10 },
+  ]
+
+  const SelectedComponent = features.find(f => f.id === selectedFeature)?.component || DemoRocks
+
+  return (
+    <section ref={ref} className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
+            Interactive Demo
+          </Badge>
+          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+            See Taskspace in action
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Try our core features with interactive demos
+          </p>
         </div>
 
         {/* Feature Tabs */}
@@ -171,25 +344,16 @@ function HeroSection() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="relative"
         >
-          {/* Sage green container */}
           <div className="bg-[#8b9a7f] rounded-2xl p-8 sm:p-12">
-            {/* Browser Frame */}
             <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
-              {/* Browser Header */}
               <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
                 <div className="flex gap-1.5">
                   <div className="w-3 h-3 rounded-full bg-gray-300" />
                   <div className="w-3 h-3 rounded-full bg-gray-300" />
                   <div className="w-3 h-3 rounded-full bg-gray-300" />
                 </div>
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="flex items-center gap-2 px-4 py-1 rounded-md bg-white border border-gray-200">
-                    <span className="text-xs text-gray-500">Chat</span>
-                  </div>
-                </div>
               </div>
 
-              {/* Demo Content */}
               <div className="bg-white p-8 min-h-[500px]">
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -198,26 +362,8 @@ function HeroSection() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3 }}
-                    className="max-w-2xl mx-auto"
                   >
-                    <div className="text-center mb-8">
-                      <h3 className="text-2xl font-bold text-black mb-2">
-                        {selectedFeature === "automate" && "Automate anything with AI"}
-                        {selectedFeature === "create" && "Create workflows that work"}
-                        {selectedFeature === "agents" && "AI agents that never sleep"}
-                        {selectedFeature === "workflows" && "Build complex automations"}
-                      </h3>
-                      <p className="text-gray-600">
-                        {selectedFeature === "automate" && "Analyze performance month-over-month across all channels. Surface the key numbers, insights, and recommended actions. Email the report to my team."}
-                        {selectedFeature === "create" && "Speak workflows into existence with a prompt."}
-                        {selectedFeature === "agents" && "Give them instructions, knowledge bases, and assign them tasks."}
-                        {selectedFeature === "workflows" && "Connect multiple steps, add conditional logic, and orchestrate your automations."}
-                      </p>
-                    </div>
-                    {selectedFeature === "automate" && <DemoRocks />}
-                    {selectedFeature === "create" && <DemoEODForm />}
-                    {selectedFeature === "agents" && <DemoScorecard />}
-                    {selectedFeature === "workflows" && <DemoLevel10 />}
+                    <SelectedComponent />
                   </motion.div>
                 </AnimatePresence>
               </div>
@@ -233,53 +379,32 @@ function HeroSection() {
 function UseCasesSection() {
   const useCases = [
     {
-      title: "Sales",
-      description: "Find prospects and automate personalized outreach. Enrich contacts, manage pipelines, and close deals.",
-      tasks: [
-        "Define ICP and find prospects",
-        "Create personalized email sequences",
-        "Enrich CRM with latest data",
-        "Prepare for sales calls",
-        "Track outreach performance"
-      ]
+      title: "Leadership Teams",
+      description: "Run effective L10 meetings, track leadership scorecard, and align on vision.",
+      features: ["Level 10 meetings", "Leadership scorecard", "VTO alignment", "Quarterly rock reviews"]
     },
     {
-      title: "Content Pipelines",
-      description: "Create content at scale for any channel. Automate production, distribution, and performance optimization.",
-      tasks: [
-        "Track content performance",
-        "Draft email responses",
-        "Build website and find leads",
-        "Research and build outreach plan",
-        "Generate marketing reports"
-      ]
+      title: "Department Heads",
+      description: "Manage team rocks, track departmental metrics, and solve issues with IDS.",
+      features: ["Department rocks", "Team scorecards", "IDS process", "Accountability tracking"]
     },
     {
-      title: "Analytics",
-      description: "Transform data into actionable dashboards with reporting.",
-      tasks: [
-        "Review traffic and conversions",
-        "Generate revenue forecasts",
-        "Generate marketing analytics",
-        "Analyze Meta, Google Ads data",
-        "Track campaign metrics"
-      ]
+      title: "Entire Organization",
+      description: "Cascade goals, maintain accountability, and drive execution company-wide.",
+      features: ["Company-wide rocks", "Org-wide metrics", "Team collaboration", "Full visibility"]
     }
   ]
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-12">
+        <div className="text-center mb-12">
           <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
-            Use Cases
+            Built for Teams
           </Badge>
           <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
-            Agents for everything
+            EOS for every level of your organization
           </h2>
-          <p className="text-lg text-gray-600 max-w-3xl mb-8">
-            Start with ready-to-use templates or create custom agents for any type of work imaginable.
-          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -294,21 +419,14 @@ function UseCasesSection() {
               <p className="text-sm text-gray-600 mb-6">
                 {useCase.description}
               </p>
-              <div className="space-y-3 mb-6">
-                {useCase.tasks.map((task, j) => (
-                  <div key={j} className="flex items-start gap-3 text-sm text-gray-700">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full" />
-                      </div>
-                      <span>{task}</span>
-                    </div>
+              <div className="space-y-3">
+                {useCase.features.map((feature, j) => (
+                  <div key={j} className="flex items-center gap-3 text-sm text-gray-700">
+                    <CheckCircle className="w-4 h-4 text-black flex-shrink-0" />
+                    <span>{feature}</span>
                   </div>
                 ))}
               </div>
-              <Link href="/templates" className="text-sm font-medium text-black hover:text-gray-700 flex items-center gap-1">
-                View {useCase.title} Templates <ArrowRight className="w-4 h-4" />
-              </Link>
             </div>
           ))}
         </div>
@@ -317,153 +435,25 @@ function UseCasesSection() {
   )
 }
 
-// Stats Section
+// Stats/Social Proof
 function StatsSection() {
-  const caseStudies = [
-    {
-      value: "97%",
-      label: "Time savings on reporting",
-      description: "Marketing team automated cross-platform reporting from GA4, Meta, Google Ads, and TikTok—and accelerated time to create, setup, and launch campaigns by 30x."
-    },
-    {
-      value: "10 hrs",
-      label: "Saved per employee weekly",
-      description: "Enterprise sales team automated follow-up emails, calendar syncing to Salesforce, and meeting briefs. Saved 10 hours per employee weekly."
-    },
-    {
-      value: "45%",
-      label: "Revenue growth",
-      description: "Local business with no prior ad experience automated Meta and Google ad campaigns. Attributed 45% revenue increase in 3 months."
-    }
+  const stats = [
+    { value: "5,000+", label: "Teams running on EOS" },
+    { value: "50,000+", label: "Rocks tracked quarterly" },
+    { value: "20+", label: "Hours saved per week" },
+    { value: "98%", label: "Team satisfaction" },
   ]
 
   return (
-    <section className="py-20 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-12">
-          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
-            Case Studies
-          </Badge>
-          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
-            The results speak for themselves
-          </h2>
-          <p className="text-lg text-gray-600 max-w-3xl mb-6">
-            Businesses of all sizes are using Align to automate workflows across marketing,
-            sales, and operations—saving thousands of hours and driving measurable growth.
-          </p>
-          <button className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-900 text-sm font-medium">
-            All Customer Stories
-          </button>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {caseStudies.map((study, i) => (
-            <div key={i} className="bg-white rounded-xl p-8 border border-gray-200">
-              <div className="text-5xl font-bold text-black mb-2">
-                {study.value}
-              </div>
-              <div className="text-sm font-medium text-black mb-4">
-                {study.label}
-              </div>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                {study.description}
-              </p>
-              <button className="mt-6 text-sm font-medium text-black hover:text-gray-700 flex items-center gap-1">
-                Read the Full Story <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// Integrations Section
-function IntegrationsSection() {
-  return (
     <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
-            80+ Integrations
-          </Badge>
-          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-6 max-w-5xl mx-auto">
-            Integrates with your entire marketing stack,{" "}
-            <span className="text-gray-500">from ad platforms to analytics, and the tools that drive your daily operations.</span>
-          </h2>
-        </div>
-
-        {/* Integration Icons */}
-        <div className="mb-12">
-          <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-14 gap-4 mb-4">
-            {[...Array(28)].map((_, i) => (
-              <div key={i} className="w-16 h-16 rounded-xl bg-white border border-gray-200 flex items-center justify-center hover:shadow-md transition-shadow">
-                <div className="w-8 h-8 bg-gray-200 rounded" />
-              </div>
-            ))}
-          </div>
-          <div className="text-center">
-            <Link href="/integrations" className="inline-flex items-center gap-2 text-sm text-gray-700 hover:text-black">
-              View all integrations <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Feature Grid */}
-        <div className="grid md:grid-cols-4 gap-6">
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="w-12 h-12 rounded-lg bg-white border border-gray-200 flex items-center justify-center mb-4">
-              <CheckCircle className="w-6 h-6 text-black" />
+        <div className="grid md:grid-cols-4 gap-8 text-center">
+          {stats.map((stat, i) => (
+            <div key={i}>
+              <div className="text-5xl font-bold text-black mb-2">{stat.value}</div>
+              <div className="text-gray-600">{stat.label}</div>
             </div>
-            <h3 className="font-semibold text-black mb-2">AI agents</h3>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="w-12 h-12 rounded-lg bg-white border border-gray-200 flex items-center justify-center mb-4">
-              <CheckCircle className="w-6 h-6 text-black" />
-            </div>
-            <h3 className="font-semibold text-black mb-2">Workflow automations</h3>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="w-12 h-12 rounded-lg bg-white border border-gray-200 flex items-center justify-center mb-4">
-              <CheckCircle className="w-6 h-6 text-black" />
-            </div>
-            <h3 className="font-semibold text-black mb-2">Connects to your data</h3>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="w-12 h-12 rounded-lg bg-white border border-gray-200 flex items-center justify-center mb-4">
-              <CheckCircle className="w-6 h-6 text-black" />
-            </div>
-            <h3 className="font-semibold text-black mb-2">80+ integrations</h3>
-          </div>
-        </div>
-
-        {/* Second Row */}
-        <div className="grid md:grid-cols-4 gap-6 mt-6">
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="w-12 h-12 rounded-lg bg-white border border-gray-200 flex items-center justify-center mb-4">
-              <CheckCircle className="w-6 h-6 text-black" />
-            </div>
-            <h3 className="font-semibold text-black mb-2">Built-in SEO & SERP data</h3>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="w-12 h-12 rounded-lg bg-white border border-gray-200 flex items-center justify-center mb-4">
-              <CheckCircle className="w-6 h-6 text-black" />
-            </div>
-            <h3 className="font-semibold text-black mb-2">Image & video generation</h3>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="w-12 h-12 rounded-lg bg-white border border-gray-200 flex items-center justify-center mb-4">
-              <CheckCircle className="w-6 h-6 text-black" />
-            </div>
-            <h3 className="font-semibold text-black mb-2">Enterprise-grade security</h3>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="w-12 h-12 rounded-lg bg-white border border-gray-200 flex items-center justify-center mb-4">
-              <CheckCircle className="w-6 h-6 text-black" />
-            </div>
-            <h3 className="font-semibold text-black mb-2">Human-in-the-loop</h3>
-          </div>
+          ))}
         </div>
       </div>
     </section>
@@ -475,31 +465,26 @@ function CTASection() {
   return (
     <section className="py-32 bg-gray-50">
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={staggerContainer}
-        >
-          <motion.h2 variants={fadeInUp} className="text-5xl sm:text-6xl font-bold text-black mb-6">
-            Everyone's talking about AI.
-            <br />
-            Give your team the tool to use it.
-          </motion.h2>
+        <h2 className="text-5xl sm:text-6xl font-bold text-black mb-6">
+          Ready to run your business on EOS?
+        </h2>
+        <p className="text-xl text-gray-600 mb-10">
+          Join thousands of companies using Taskspace to implement the Entrepreneurial Operating System
+        </p>
 
-          <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
-            <Link href="/app?page=register">
-              <Button size="lg" className="bg-black text-white hover:bg-gray-900 text-base px-8 h-12">
-                Start for free
-              </Button>
-            </Link>
-            <Link href="/contact">
-              <Button size="lg" variant="outline" className="border-gray-200 hover:bg-white text-black text-base px-8 h-12">
-                Talk to sales
-              </Button>
-            </Link>
-          </motion.div>
-        </motion.div>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link href="/app?page=register">
+            <Button size="lg" className="bg-black text-white hover:bg-gray-900 text-base px-8 h-12">
+              Start for free
+            </Button>
+          </Link>
+          <Link href="/pricing">
+            <Button size="lg" variant="outline" className="border-gray-200 hover:bg-white text-black text-base px-8 h-12">
+              View pricing
+            </Button>
+          </Link>
+        </div>
+        <p className="text-gray-600 mt-6 text-sm">Free forever plan • No credit card required</p>
       </div>
     </section>
   )
@@ -510,9 +495,10 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
+      <CoreFeaturesSection />
+      <FeatureDemoSection />
       <UseCasesSection />
       <StatsSection />
-      <IntegrationsSection />
       <CTASection />
     </>
   )

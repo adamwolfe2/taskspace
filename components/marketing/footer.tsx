@@ -14,10 +14,10 @@ export function MarketingFooter() {
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 bg-black" />
-              <span className="text-lg font-bold text-black">hyper</span>
+              <span className="text-lg font-bold text-black">Taskspace</span>
             </Link>
             <p className="text-sm text-gray-600 mb-4">
-              Intelligent AI agents for Enterprise and Entrepreneurs.
+              The all-in-one EOS platform for teams running on the Entrepreneurial Operating System.
             </p>
             <div className="flex items-center gap-4">
               <a href="#" className="text-gray-600 hover:text-black transition-colors">
@@ -153,7 +153,7 @@ export function MarketingFooter() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-gray-200">
           <p className="text-sm text-gray-500">
-            © {currentYear} Align. All rights reserved.
+            © {currentYear} Taskspace. All rights reserved.
           </p>
         </div>
       </div>

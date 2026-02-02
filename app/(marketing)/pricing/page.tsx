@@ -345,7 +345,7 @@ export default function PricingPage() {
             Start running on EOS today
           </h2>
           <p className="text-xl text-gray-600 mb-8">
-            Join thousands of teams executing flawlessly with Align
+            Join thousands of teams executing flawlessly with Taskspace
           </p>
           <Link href="/app?page=register">
             <Button size="lg" className="bg-black text-white hover:bg-gray-900 px-8 h-14 text-base font-semibold">

@@ -7,7 +7,7 @@ import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-type MenuType = "platform" | "integrations" | "templates" | "resources" | null
+type MenuType = "features" | "solutions" | "resources" | null
 
 export function MegaMenu() {
   const [activeMenu, setActiveMenu] = useState<MenuType>(null)
@@ -19,35 +19,45 @@ export function MegaMenu() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <div className="w-6 h-6 bg-black" />
-            <span className="text-xl font-bold text-black">hyper</span>
+            <span className="text-xl font-bold text-black">Taskspace</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <div
               className="relative"
-              onMouseEnter={() => setActiveMenu("platform")}
+              onMouseEnter={() => setActiveMenu("features")}
               onMouseLeave={() => setActiveMenu(null)}
             >
               <button className="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-black transition-colors py-2">
-                Platform
+                Features
                 <ChevronDown className={cn(
                   "w-4 h-4 transition-transform",
-                  activeMenu === "platform" && "rotate-180"
+                  activeMenu === "features" && "rotate-180"
                 )} />
               </button>
             </div>
 
-            <Link href="/integrations" className="text-sm font-medium text-gray-700 hover:text-black transition-colors">
-              Integrations
-            </Link>
-
-            <Link href="/templates" className="text-sm font-medium text-gray-700 hover:text-black transition-colors">
-              Templates
-            </Link>
+            <div
+              className="relative"
+              onMouseEnter={() => setActiveMenu("solutions")}
+              onMouseLeave={() => setActiveMenu(null)}
+            >
+              <button className="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-black transition-colors py-2">
+                Solutions
+                <ChevronDown className={cn(
+                  "w-4 h-4 transition-transform",
+                  activeMenu === "solutions" && "rotate-180"
+                )} />
+              </button>
+            </div>
 
             <Link href="/pricing" className="text-sm font-medium text-gray-700 hover:text-black transition-colors">
               Pricing
+            </Link>
+
+            <Link href="/customers" className="text-sm font-medium text-gray-700 hover:text-black transition-colors">
+              Customers
             </Link>
 
             <div
@@ -74,7 +84,7 @@ export function MegaMenu() {
             </Link>
             <Link href="/app?page=register">
               <Button size="sm" className="bg-black text-white hover:bg-gray-900">
-                Try for free
+                Start free
               </Button>
             </Link>
           </div>
@@ -94,117 +104,189 @@ export function MegaMenu() {
             onMouseLeave={() => setActiveMenu(null)}
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              {/* Platform Menu */}
-              {activeMenu === "platform" && (
-                <div className="grid grid-cols-2 gap-8">
+              {/* Features Menu */}
+              {activeMenu === "features" && (
+                <div className="grid grid-cols-3 gap-8">
                   <div>
                     <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
-                      FEATURES
+                      CORE EOS TOOLS
                     </h3>
                     <div className="space-y-2">
                       <Link
-                        href="/features"
+                        href="/features/eod-reports"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Chat</div>
-                        <div className="text-sm text-gray-600">Instant actions on demand</div>
+                        <div className="font-medium text-black mb-1">EOD Reports</div>
+                        <div className="text-sm text-gray-600">AI-powered daily updates</div>
                       </Link>
                       <Link
-                        href="/features"
+                        href="/features/rocks"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Agents</div>
-                        <div className="text-sm text-gray-600">Autonomous AI that works 24/7</div>
+                        <div className="font-medium text-black mb-1">Quarterly Rocks</div>
+                        <div className="text-sm text-gray-600">90-day goal tracking</div>
                       </Link>
                       <Link
-                        href="/features"
+                        href="/features/scorecard"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Workflows</div>
-                        <div className="text-sm text-gray-600">Build automations with logic</div>
+                        <div className="font-medium text-black mb-1">Scorecard</div>
+                        <div className="text-sm text-gray-600">Weekly measurables</div>
+                      </Link>
+                      <Link
+                        href="/features/level-10-meetings"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="font-medium text-black mb-1">Level 10 Meetings</div>
+                        <div className="text-sm text-gray-600">Structured meeting agendas</div>
                       </Link>
                     </div>
                   </div>
 
                   <div>
                     <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
-                      USE CASES
+                      MORE TOOLS
                     </h3>
                     <div className="space-y-2">
                       <Link
-                        href="/solutions"
+                        href="/features/ids-process"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Marketing</div>
-                        <div className="text-sm text-gray-600">AI-powered marketing automation and insights</div>
+                        <div className="font-medium text-black mb-1">IDS Process</div>
+                        <div className="text-sm text-gray-600">Issue resolution tracking</div>
                       </Link>
                       <Link
-                        href="/solutions"
+                        href="/features/accountability-chart"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Enterprise</div>
-                        <div className="text-sm text-gray-600">Enterprise-grade AI solutions for your business</div>
+                        <div className="font-medium text-black mb-1">Accountability Chart</div>
+                        <div className="text-sm text-gray-600">Organization structure</div>
                       </Link>
                       <Link
-                        href="/customers"
+                        href="/features/team-management"
                         className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <div className="font-medium text-black mb-1">Case Studies</div>
-                        <div className="text-sm text-gray-600">Real results from businesses using Hyper AI</div>
+                        <div className="font-medium text-black mb-1">Team Management</div>
+                        <div className="text-sm text-gray-600">Manage your teams</div>
+                      </Link>
+                      <Link
+                        href="/features/analytics"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="font-medium text-black mb-1">Analytics & Insights</div>
+                        <div className="text-sm text-gray-600">Performance dashboards</div>
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
+                      OVERVIEW
+                    </h3>
+                    <div className="space-y-2">
+                      <Link
+                        href="/features"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="font-medium text-black mb-1">All Features</div>
+                        <div className="text-sm text-gray-600">See everything Taskspace offers</div>
+                      </Link>
+                      <Link
+                        href="/integrations"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="font-medium text-black mb-1">Integrations</div>
+                        <div className="text-sm text-gray-600">Connect your tools</div>
                       </Link>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Resources Menu */}
-              {activeMenu === "resources" && (
-                <div className="grid grid-cols-4 gap-8">
+              {/* Solutions Menu */}
+              {activeMenu === "solutions" && (
+                <div className="grid grid-cols-2 gap-8">
                   <div>
                     <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
-                      Quick Links
+                      BY TEAM
                     </h3>
                     <div className="space-y-2">
-                      <Link href="/" className="block text-sm text-gray-700 hover:text-black py-1">Home</Link>
-                      <Link href="/app" className="block text-sm text-gray-700 hover:text-black py-1">Log in</Link>
-                      <Link href="/app?page=register" className="block text-sm text-gray-700 hover:text-black py-1">Sign up</Link>
+                      <Link
+                        href="/solutions/leadership"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="font-medium text-black mb-1">Leadership Teams</div>
+                        <div className="text-sm text-gray-600">Run effective L10 meetings</div>
+                      </Link>
+                      <Link
+                        href="/solutions/sales"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="font-medium text-black mb-1">Sales Teams</div>
+                        <div className="text-sm text-gray-600">Track sales rocks and metrics</div>
+                      </Link>
+                      <Link
+                        href="/solutions/marketing"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="font-medium text-black mb-1">Marketing Teams</div>
+                        <div className="text-sm text-gray-600">Campaign tracking and analytics</div>
+                      </Link>
+                      <Link
+                        href="/solutions/operations"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="font-medium text-black mb-1">Operations Teams</div>
+                        <div className="text-sm text-gray-600">Process management and KPIs</div>
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
+                      SUCCESS STORIES
+                    </h3>
+                    <Link
+                      href="/customers"
+                      className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="font-medium text-black mb-1">Customer Stories</div>
+                      <div className="text-sm text-gray-600">See how teams succeed with Taskspace</div>
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {/* Resources Menu */}
+              {activeMenu === "resources" && (
+                <div className="grid grid-cols-3 gap-8">
+                  <div>
+                    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
+                      LEARN
+                    </h3>
+                    <div className="space-y-2">
+                      <Link href="/help" className="block text-sm text-gray-700 hover:text-black py-1">Help Center</Link>
+                      <Link href="/resources" className="block text-sm text-gray-700 hover:text-black py-1">Blog & Resources</Link>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
+                      COMPANY
+                    </h3>
+                    <div className="space-y-2">
+                      <Link href="/about" className="block text-sm text-gray-700 hover:text-black py-1">About</Link>
                       <Link href="/contact" className="block text-sm text-gray-700 hover:text-black py-1">Contact</Link>
                     </div>
                   </div>
 
                   <div>
                     <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
-                      Product
+                      CONNECT
                     </h3>
                     <div className="space-y-2">
-                      <Link href="/features" className="block text-sm text-gray-700 hover:text-black py-1">Features</Link>
-                      <Link href="/integrations" className="block text-sm text-gray-700 hover:text-black py-1">Integrations</Link>
-                      <Link href="/pricing" className="block text-sm text-gray-700 hover:text-black py-1">Pricing</Link>
-                      <Link href="/templates" className="block text-sm text-gray-700 hover:text-black py-1">Templates</Link>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
-                      Resources
-                    </h3>
-                    <div className="space-y-2">
-                      <Link href="/resources" className="block text-sm text-gray-700 hover:text-black py-1">Blog</Link>
-                      <Link href="/help" className="block text-sm text-gray-700 hover:text-black py-1">Documentation</Link>
-                      <Link href="/help" className="block text-sm text-gray-700 hover:text-black py-1">FAQ</Link>
-                      <Link href="/about" className="block text-sm text-gray-700 hover:text-black py-1">Company</Link>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
-                      Contact
-                    </h3>
-                    <div className="space-y-2">
-                      <Link href="/contact" className="block text-sm text-gray-700 hover:text-black py-1">Sales</Link>
-                      <Link href="/contact" className="block text-sm text-gray-700 hover:text-black py-1">Support</Link>
-                      <Link href="#" className="block text-sm text-gray-700 hover:text-black py-1">X (Twitter)</Link>
-                      <Link href="#" className="block text-sm text-gray-700 hover:text-black py-1">LinkedIn</Link>
+                      <a href="#" className="block text-sm text-gray-700 hover:text-black py-1">Twitter</a>
+                      <a href="#" className="block text-sm text-gray-700 hover:text-black py-1">LinkedIn</a>
                     </div>
                   </div>
                 </div>

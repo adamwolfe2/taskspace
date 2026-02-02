@@ -132,7 +132,7 @@ const additionalFeatures = [
   {
     icon: Settings,
     title: "Customization",
-    description: "Tailor Align to your workflow with extensive customization options.",
+    description: "Tailor Taskspace to your workflow with extensive customization options.",
   },
   {
     icon: Lock,
@@ -183,7 +183,7 @@ export default function FeaturesPage() {
               variants={fadeInUp}
               className="text-lg sm:text-xl text-gray-600 leading-relaxed"
             >
-              Align provides a comprehensive suite of tools designed to enhance
+              Taskspace provides a comprehensive suite of tools designed to enhance
               accountability, streamline communication, and drive results across
               your organization.
             </motion.p>
@@ -301,7 +301,7 @@ export default function FeaturesPage() {
               variants={fadeInUp}
               className="text-lg text-gray-600 max-w-2xl mx-auto"
             >
-              Align is packed with features designed to make your team more
+              Taskspace is packed with features designed to make your team more
               productive and accountable.
             </motion.p>
           </motion.div>
@@ -345,13 +345,13 @@ export default function FeaturesPage() {
               variants={fadeInUp}
               className="text-3xl sm:text-4xl font-bold text-black mb-4"
             >
-              Ready to See Align in Action?
+              Ready to See Taskspace in Action?
             </motion.h2>
             <motion.p
               variants={fadeInUp}
               className="text-lg text-gray-600 mb-8"
             >
-              Start your free trial today and experience the difference Align can
+              Start your free trial today and experience the difference Taskspace can
               make for your team.
             </motion.p>
             <motion.div
