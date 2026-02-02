@@ -250,6 +250,7 @@ function InteractiveTeamDemo() {
 
 import { MegaMenu } from "@/components/marketing/mega-menu"
 import { MarketingFooter } from "@/components/marketing/footer"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 const features = [
   {
@@ -289,6 +290,7 @@ export default function TeamManagementPage() {
   return (
     <>
       <MegaMenu />
+      <PageTransition>
       <div className="pt-20">
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -549,6 +551,7 @@ export default function TeamManagementPage() {
         </div>
       </section>
     </div>
+      </PageTransition>
     <MarketingFooter />
     </>
   )

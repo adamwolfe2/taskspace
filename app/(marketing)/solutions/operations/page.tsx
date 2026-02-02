@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { PageTransition } from "@/components/marketing/page-transition"
 import {
   ArrowRight,
   CheckCircle,
@@ -69,6 +70,7 @@ export default function OperationsPage() {
   }
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
@@ -1008,5 +1010,7 @@ export default function OperationsPage() {
         </div>
       </footer>
     </div>
+  )
+    </PageTransition>
   )
 }

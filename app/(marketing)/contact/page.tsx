@@ -1,4 +1,5 @@
 "use client"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 import { motion } from "framer-motion"
 import { Mail, MessageSquare, Phone } from "lucide-react"

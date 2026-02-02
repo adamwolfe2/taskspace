@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -158,6 +159,7 @@ const additionalFeatures = [
 
 export default function FeaturesPage() {
   return (
+    <PageTransition>
     <div className="pt-20">
       {/* Hero Section */}
       <section className="py-20 bg-white">
@@ -374,5 +376,6 @@ export default function FeaturesPage() {
         </div>
       </section>
     </div>
+    </PageTransition>
   )
 }

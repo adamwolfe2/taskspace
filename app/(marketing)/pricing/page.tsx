@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -103,6 +104,7 @@ export default function PricingPage() {
   ]
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-white">
 
       {/* Hero */}
@@ -357,5 +359,6 @@ export default function PricingPage() {
         </div>
       </section>
     </div>
+    </PageTransition>
   )
 }

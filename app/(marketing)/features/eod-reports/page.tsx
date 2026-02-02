@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { MegaMenu } from "@/components/marketing/mega-menu"
 import { MarketingFooter } from "@/components/marketing/footer"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -41,6 +42,7 @@ export default function EODReportsPage() {
   return (
     <>
       <MegaMenu />
+      <PageTransition>
       <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
@@ -61,12 +63,12 @@ export default function EODReportsPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h1 variants={fadeInUp} className="text-6xl font-bold text-slate-900 leading-[1.1]">
+              <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                 An EOD reporting system that{" "}
                 <span className="text-slate-400">saves time</span>
               </motion.h1>
 
-              <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed">
+              <motion.p variants={fadeInUp} className="text-base sm:text-lg lg:text-xl text-slate-600 leading-relaxed">
                 Just paste your daily task dump. Our AI instantly organizes it by your quarterly rocks,
                 identifies blockers, and creates a professional End-of-Day report in seconds.
               </motion.p>
@@ -489,6 +491,7 @@ export default function EODReportsPage() {
       </section>
 
     </div>
+    </PageTransition>
     <MarketingFooter />
     </>
   )

@@ -95,15 +95,15 @@ export function InteractiveFeaturesShowcase() {
               key={feature.id}
               onClick={() => setActiveTab(feature.id)}
               className={`
-                flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all
+                flex items-center gap-1.5 sm:gap-2 px-2 py-2 sm:px-4 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all
                 ${activeTab === feature.id
                   ? 'bg-black text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                 }
               `}
             >
-              {feature.icon}
-              {feature.label}
+              <span className="flex-shrink-0">{feature.icon}</span>
+              <span className="hidden xs:inline sm:inline">{feature.label}</span>
             </button>
           ))}
         </div>
@@ -114,22 +114,22 @@ export function InteractiveFeaturesShowcase() {
               key={feature.id}
               onClick={() => setActiveTab(feature.id)}
               className={`
-                flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all
+                flex items-center gap-1.5 sm:gap-2 px-2 py-2 sm:px-4 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all
                 ${activeTab === feature.id
                   ? 'bg-black text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                 }
               `}
             >
-              {feature.icon}
-              {feature.label}
+              <span className="flex-shrink-0">{feature.icon}</span>
+              <span className="hidden xs:inline sm:inline">{feature.label}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Demo Container with Sage Green Background */}
-      <div className="bg-[#8b9a7f] rounded-2xl p-8 sm:p-12">
+      <div className="bg-[#8b9a7f] rounded-2xl p-4 sm:p-8 lg:p-12">
         <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
           {/* Browser Chrome */}
           <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
@@ -146,7 +146,7 @@ export function InteractiveFeaturesShowcase() {
           </div>
 
           {/* Interactive Demo Content */}
-          <div className="bg-white p-8">
+          <div className="bg-white p-4 sm:p-8">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}

@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -37,6 +38,7 @@ const staggerContainer = {
 
 export default function MarketingSolutionPage() {
   return (
+    <PageTransition>
     <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
@@ -592,5 +594,7 @@ export default function MarketingSolutionPage() {
         </div>
       </footer>
     </div>
+  )
+    </PageTransition>
   )
 }

@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { MegaMenu } from "@/components/marketing/mega-menu"
 import { MarketingFooter } from "@/components/marketing/footer"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -40,6 +41,7 @@ export default function RocksPage() {
   return (
     <>
       <MegaMenu />
+      <PageTransition>
       <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
@@ -405,6 +407,7 @@ export default function RocksPage() {
       </section>
 
     </div>
+      </PageTransition>
     <MarketingFooter />
     </>
   )

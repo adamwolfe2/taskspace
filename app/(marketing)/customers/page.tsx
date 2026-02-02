@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight } from "lucide-react"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -37,6 +38,7 @@ export default function CustomersPage() {
   ]
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-white pt-20">
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -96,5 +98,6 @@ export default function CustomersPage() {
         </div>
       </section>
     </div>
+    </PageTransition>
   )
 }
