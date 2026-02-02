@@ -15,13 +15,13 @@ export function MarketingHeader() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-4">
               <Image
                 src="/taskspace-logo.png"
                 alt="Taskspace Logo"
-                width={80}
-                height={80}
-                className="w-20 h-20 object-contain"
+                width={160}
+                height={160}
+                className="w-32 h-32 object-contain"
               />
               <span className="text-xl font-bold text-gray-900">Taskspace</span>
             </Link>
