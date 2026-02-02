@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Target, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { useState } from "react"
 
 export function MarketingHeader() {
@@ -15,9 +16,13 @@ export function MarketingHeader() {
           {/* Logo */}
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-2">
-              <div className="bg-red-600 rounded-xl p-2">
-                <Target className="h-6 w-6 text-white" />
-              </div>
+              <Image
+                src="/taskspace-logo.png"
+                alt="Taskspace Logo"
+                width={32}
+                height={32}
+                className="w-8 h-8 object-contain"
+              />
               <span className="text-xl font-bold text-gray-900">Taskspace</span>
             </Link>
           </div>

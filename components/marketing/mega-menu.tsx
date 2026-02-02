@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -42,7 +43,13 @@ export function MegaMenu() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-black" />
+            <Image
+              src="/taskspace-logo.png"
+              alt="Taskspace Logo"
+              width={32}
+              height={32}
+              className="w-8 h-8 object-contain"
+            />
             <span className="text-xl font-bold text-black">Taskspace</span>
           </Link>
 
@@ -149,7 +156,13 @@ export function MegaMenu() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                   <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
-                    <div className="w-6 h-6 bg-black" />
+                    <Image
+                      src="/taskspace-logo.png"
+                      alt="Taskspace Logo"
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 object-contain"
+                    />
                     <span className="text-xl font-bold text-black">Taskspace</span>
                   </Link>
                   <button

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Twitter, Linkedin, Instagram, Youtube } from "lucide-react"
 
 export function MarketingFooter() {
@@ -13,7 +14,13 @@ export function MarketingFooter() {
           {/* Brand */}
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-6 h-6 bg-black" />
+              <Image
+                src="/taskspace-logo.png"
+                alt="Taskspace Logo"
+                width={28}
+                height={28}
+                className="w-7 h-7 object-contain"
+              />
               <span className="text-lg font-bold text-black">Taskspace</span>
             </Link>
             <p className="text-sm text-gray-600 mb-4">
