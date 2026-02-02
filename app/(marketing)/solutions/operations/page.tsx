@@ -934,7 +934,7 @@ export default function OperationsPage() {
               Ready for flawless operations?
             </h2>
             <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              Join 10,000+ operations teams running more efficiently with Align. Free forever for up to 10 users.
+              Join 10,000+ operations teams running more efficiently with Taskspace. Free forever for up to 10 users.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 h-14 px-8 text-lg">
@@ -957,7 +957,7 @@ export default function OperationsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-5 gap-8 mb-12">
             <div className="md:col-span-2">
-              <div className="text-xl font-bold text-white mb-4">Align</div>
+              <div className="text-xl font-bold text-white mb-4">Taskspace</div>
               <p className="text-slate-400 text-sm mb-4">
                 The all-in-one EOS platform for scaling companies.
               </p>
@@ -999,7 +999,7 @@ export default function OperationsPage() {
 
           <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-slate-400 text-sm">
-              © 2024 Align. All rights reserved.
+              © 2024 Taskspace. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
               <a href="#" className="text-slate-400 hover:text-white text-sm">Privacy</a>

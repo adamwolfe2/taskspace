@@ -282,7 +282,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                 >
                   <div>
                     <h2 className="text-3xl font-bold text-slate-900 mb-2">
-                      Welcome to Align! 👋
+                      Welcome to Taskspace! 👋
                     </h2>
                     <p className="text-slate-600">
                       Let's start by setting up your organization. This is the top-level entity

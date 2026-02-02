@@ -491,7 +491,7 @@ export default function MarketingSolutionPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Marketing teams execute 2.8x faster with Align
+              Marketing teams execute 2.8x faster with Taskspace
             </h2>
           </div>
 
@@ -518,7 +518,7 @@ export default function MarketingSolutionPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">
-              Marketing leaders love Align
+              Marketing leaders love Taskspace
             </h2>
           </div>
 
@@ -584,7 +584,7 @@ export default function MarketingSolutionPage() {
       <footer className="bg-slate-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
-            <div>© 2026 Align. All rights reserved.</div>
+            <div>© 2026 Taskspace. All rights reserved.</div>
             <div className="flex gap-6">
               <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-white transition-colors">Terms of Service</a>

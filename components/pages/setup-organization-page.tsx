@@ -137,7 +137,7 @@ export function SetupOrganizationPage({ mode = "create" }: SetupOrganizationPage
       await refreshSession()
 
       toast({
-        title: "Welcome to Align! 🎉",
+        title: "Welcome to Taskspace! 🎉",
         description: "Your workspace is ready. Let's build daily accountability.",
       })
 

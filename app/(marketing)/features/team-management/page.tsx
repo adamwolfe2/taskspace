@@ -526,7 +526,7 @@ export default function TeamManagementPage() {
               variants={fadeInUp}
               className="text-lg text-slate-600 mb-8"
             >
-              Start organizing your team today with Align.
+              Start organizing your team today with Taskspace.
             </motion.p>
             <motion.div
               variants={fadeInUp}

@@ -225,7 +225,7 @@ export default function EODReportsPage() {
               </motion.div>
             </motion.div>
 
-            {/* The Align Way */}
+            {/* The Taskspace Way */}
             <motion.div
               initial="hidden"
               whileInView="visible"

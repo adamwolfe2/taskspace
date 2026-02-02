@@ -44,7 +44,7 @@ export default function ResourcesPage() {
               variants={fadeInUp}
               className="text-xl text-gray-600"
             >
-              Resources to help you get the most out of Align.
+              Resources to help you get the most out of Taskspace.
             </motion.p>
           </motion.div>
 

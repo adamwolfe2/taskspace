@@ -432,7 +432,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
                   <div className="relative">
                     <pre className="p-4 bg-muted rounded-lg overflow-x-auto text-xs font-mono">
                       {`RESEND_API_KEY=re_your_api_key_here
-EMAIL_FROM=Align <noreply@yourdomain.com>`}
+EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
                     </pre>
                     <Button
                       size="sm"
@@ -440,7 +440,7 @@ EMAIL_FROM=Align <noreply@yourdomain.com>`}
                       className="absolute top-2 right-2"
                       onClick={() =>
                         copyToClipboard(
-                          `RESEND_API_KEY=re_your_api_key_here\nEMAIL_FROM=Align <noreply@yourdomain.com>`,
+                          `RESEND_API_KEY=re_your_api_key_here\nEMAIL_FROM=Taskspace <noreply@yourdomain.com>`,
                           "Environment variables"
                         )
                       }

@@ -18,7 +18,7 @@ export function MarketingHeader() {
               <div className="bg-red-600 rounded-xl p-2">
                 <Target className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">Align</span>
+              <span className="text-xl font-bold text-gray-900">Taskspace</span>
             </Link>
           </div>
 

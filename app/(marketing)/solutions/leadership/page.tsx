@@ -292,7 +292,7 @@ export default function LeadershipSolutionPage() {
                     </div>
                     <div className="p-3 bg-orange-50 rounded-lg">
                       <div className="text-xs font-semibold text-orange-600 uppercase mb-1">10-Year Target</div>
-                      <div className="text-sm font-medium text-slate-900">10,000 companies on Align</div>
+                      <div className="text-sm font-medium text-slate-900">10,000 companies on Taskspace</div>
                     </div>
                     <div className="p-3 bg-blue-50 rounded-lg">
                       <div className="text-xs font-semibold text-blue-600 uppercase mb-1">1-Year Plan</div>
@@ -446,7 +446,7 @@ export default function LeadershipSolutionPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Leadership teams execute 3x faster with Align
+              Leadership teams execute 3x faster with Taskspace
             </h2>
           </div>
 
@@ -523,7 +523,7 @@ export default function LeadershipSolutionPage() {
             Transform your leadership team today
           </h2>
           <p className="text-xl text-white/90 mb-8">
-            Join thousands of companies running on EOS with Align
+            Join thousands of companies running on EOS with Taskspace
           </p>
           <Link href="/app?page=register">
             <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 rounded-full px-8 h-14 text-base font-semibold">
@@ -539,7 +539,7 @@ export default function LeadershipSolutionPage() {
       <footer className="bg-slate-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
-            <div>© 2026 Align. All rights reserved.</div>
+            <div>© 2026 Taskspace. All rights reserved.</div>
             <div className="flex gap-6">
               <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
