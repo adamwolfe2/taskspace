@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Loader2, Send, Bot, User, Sparkles, HelpCircle } from "lucide-react"
+import { Loader2, Send, User, Sparkles, HelpCircle } from "lucide-react"
 import type { AIConversation, AIQueryResponse } from "@/lib/types"
 
 interface AICopilotChatProps {
@@ -120,10 +120,10 @@ export function AICopilotChat({
   }
 
   return (
-    <Card className="flex flex-col h-[500px]">
+    <Card className="flex flex-col min-h-[500px] max-h-[calc(100vh-200px)]">
       <CardHeader className="flex-shrink-0 pb-2">
         <CardTitle className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-primary" />
+          <Sparkles className="h-5 w-5 text-primary" />
           AI Copilot
         </CardTitle>
       </CardHeader>
@@ -163,7 +163,7 @@ export function AICopilotChat({
                 >
                   {message.role === "assistant" && (
                     <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Bot className="h-4 w-4 text-primary" />
+                      <Sparkles className="h-4 w-4 text-primary" />
                     </div>
                   )}
                   <div
@@ -202,7 +202,7 @@ export function AICopilotChat({
               {isLoading && (
                 <div className="flex gap-3" role="status" aria-label="AI is thinking">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-primary" aria-hidden="true" />
+                    <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
                   </div>
                   <div className="bg-muted rounded-lg p-3">
                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
