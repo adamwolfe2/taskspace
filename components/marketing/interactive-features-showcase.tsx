@@ -86,24 +86,46 @@ export function InteractiveFeaturesShowcase() {
 
   return (
     <div className="w-full">
-      {/* Tab Navigation */}
-      <div className="flex items-center justify-center gap-2 mb-8 overflow-x-auto pb-2">
-        {features.map((feature) => (
-          <button
-            key={feature.id}
-            onClick={() => setActiveTab(feature.id)}
-            className={`
-              flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all whitespace-nowrap
-              ${activeTab === feature.id
-                ? 'bg-black text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-              }
-            `}
-          >
-            {feature.icon}
-            {feature.label}
-          </button>
-        ))}
+      {/* Tab Navigation - 2 Rows */}
+      <div className="flex flex-col items-center gap-2 mb-8">
+        {/* First Row - 4 tabs */}
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          {features.slice(0, 4).map((feature) => (
+            <button
+              key={feature.id}
+              onClick={() => setActiveTab(feature.id)}
+              className={`
+                flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all
+                ${activeTab === feature.id
+                  ? 'bg-black text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                }
+              `}
+            >
+              {feature.icon}
+              {feature.label}
+            </button>
+          ))}
+        </div>
+        {/* Second Row - 4 tabs */}
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          {features.slice(4, 8).map((feature) => (
+            <button
+              key={feature.id}
+              onClick={() => setActiveTab(feature.id)}
+              className={`
+                flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all
+                ${activeTab === feature.id
+                  ? 'bg-black text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                }
+              `}
+            >
+              {feature.icon}
+              {feature.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Demo Container with Sage Green Background */}
