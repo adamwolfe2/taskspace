@@ -37,10 +37,16 @@ import {
 import { DemoEODForm } from "@/components/marketing/demo-eod-form"
 import { DemoKanban } from "@/components/marketing/demo-kanban"
 import { DemoRocks } from "@/components/marketing/demo-rocks"
+import { DemoScorecard } from "@/components/marketing/demo-scorecard"
+import { DemoLevel10 } from "@/components/marketing/demo-level10"
+import { DemoIDS } from "@/components/marketing/demo-ids"
+import { DemoAccountabilityChart } from "@/components/marketing/demo-accountability-chart"
+import { DemoVTO } from "@/components/marketing/demo-vto"
 import { MegaMenu } from "@/components/marketing/mega-menu"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { useState } from "react"
 
 // Animation variants
 const fadeInUp = {
@@ -64,6 +70,67 @@ const staggerContainer = {
 const scaleIn = {
   hidden: { opacity: 0, scale: 0.95 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
+}
+
+// Interactive Feature Showcase
+function InteractiveFeatureShowcase() {
+  const [selectedFeature, setSelectedFeature] = useState("eod")
+
+  const features = [
+    { id: "eod", label: "EOD Reports", component: DemoEODForm },
+    { id: "rocks", label: "Rocks", component: DemoRocks },
+    { id: "accountability", label: "Accountability Chart", component: DemoAccountabilityChart },
+    { id: "level10", label: "Level 10 Meetings", component: DemoLevel10 },
+    { id: "scorecard", label: "Scorecard", component: DemoScorecard },
+    { id: "ids", label: "IDS Process", component: DemoIDS },
+    { id: "vto", label: "Vision/Traction", component: DemoVTO },
+  ]
+
+  const SelectedComponent = features.find(f => f.id === selectedFeature)?.component || DemoEODForm
+
+  return (
+    <section className="py-16 bg-white border-y border-slate-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-slate-900 mb-2">
+            GET 400% MORE DONE • RUN ON EOS
+          </h2>
+        </div>
+
+        {/* Feature Selection Buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
+          {features.map((feature) => (
+            <button
+              key={feature.id}
+              onClick={() => setSelectedFeature(feature.id)}
+              className={cn(
+                "px-6 py-3 rounded-full border-2 text-sm font-medium transition-all",
+                selectedFeature === feature.id
+                  ? "bg-slate-900 border-slate-900 text-white shadow-lg"
+                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:shadow-md"
+              )}
+            >
+              {selectedFeature === feature.id && (
+                <Check className="w-4 h-4 inline-block mr-2" />
+              )}
+              {feature.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Demo Display */}
+        <motion.div
+          key={selectedFeature}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          <SelectedComponent />
+        </motion.div>
+      </div>
+    </section>
+  )
 }
 
 // Hero Section - Narrative-driven with embedded preview
@@ -1127,6 +1194,7 @@ export default function HomePage() {
     <>
       <MegaMenu />
       <HeroSection />
+      <InteractiveFeatureShowcase />
       <LogoSection />
       <ProblemSolutionSection />
       <StatsSection />

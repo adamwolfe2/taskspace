@@ -55,7 +55,7 @@ export function MegaMenu() {
               <button className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors py-2">
                 EOS AI
                 <ChevronDown className={cn(
-                  "w-4 h-4 transition-transform",
+                  "w-4 h-4 transition-transform stroke-[1.5]",
                   activeMenu === "eos-ai" && "rotate-180"
                 )} />
               </button>
@@ -70,7 +70,7 @@ export function MegaMenu() {
               <button className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors py-2">
                 Product
                 <ChevronDown className={cn(
-                  "w-4 h-4 transition-transform",
+                  "w-4 h-4 transition-transform stroke-[1.5]",
                   activeMenu === "product" && "rotate-180"
                 )} />
               </button>
@@ -85,7 +85,7 @@ export function MegaMenu() {
               <button className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors py-2">
                 Solutions
                 <ChevronDown className={cn(
-                  "w-4 h-4 transition-transform",
+                  "w-4 h-4 transition-transform stroke-[1.5]",
                   activeMenu === "solutions" && "rotate-180"
                 )} />
               </button>
@@ -100,7 +100,7 @@ export function MegaMenu() {
               <button className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors py-2">
                 Learn
                 <ChevronDown className={cn(
-                  "w-4 h-4 transition-transform",
+                  "w-4 h-4 transition-transform stroke-[1.5]",
                   activeMenu === "learn" && "rotate-180"
                 )} />
               </button>
