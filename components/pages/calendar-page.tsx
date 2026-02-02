@@ -1,9 +1,7 @@
 "use client"
 
 import type { TeamMember, AssignedTask, Rock, EODReport } from "@/lib/types"
-import { CalendarView } from "@/components/calendar/calendar-view"
-import { useState } from "react"
-import { format } from "date-fns"
+import { EnhancedCalendarView } from "@/components/calendar/enhanced-calendar-view"
 
 interface CalendarPageProps {
   currentUser: TeamMember
@@ -20,11 +18,11 @@ export function CalendarPage({ currentUser, assignedTasks, rocks, eodReports }: 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Calendar</h1>
-        <p className="text-slate-500 mt-1">View your tasks, rocks, and EOD submissions</p>
+        <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
+        <p className="text-muted-foreground mt-1">View your tasks, rocks, and EOD submissions</p>
       </div>
 
-      <CalendarView
+      <EnhancedCalendarView
         tasks={userTasks}
         rocks={userRocks}
         eodReports={userEODReports}
