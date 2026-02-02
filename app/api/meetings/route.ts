@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       data: meetingsList,
     })
   } catch (error) {
-    logger.error("Get meetings error:", error)
+    logger.error({ error }, "Get meetings error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get meetings" },
       { status: 500 }
@@ -91,11 +91,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user has admin/manager role
+    // Check if user has admin/owner role
     const role = await getUserWorkspaceRole(auth.user.id, workspaceId)
-    if (!isAdmin(auth) && role !== "admin" && role !== "manager") {
+    if (!isAdmin(auth) && role !== "owner") {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins and managers can create meetings" },
+        { success: false, error: "Only workspace owners can create meetings" },
         { status: 403 }
       )
     }
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       message: "Meeting created successfully",
     })
   } catch (error) {
-    logger.error("Create meeting error:", error)
+    logger.error({ error }, "Create meeting error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create meeting" },
       { status: 500 }

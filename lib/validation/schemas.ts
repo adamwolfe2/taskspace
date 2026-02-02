@@ -420,6 +420,7 @@ export const focusCategorySchema = z.enum(["deep_work", "meetings", "admin", "co
 export const focusQualitySchema = z.number().int().min(1).max(5).optional()
 
 export const createFocusBlockSchema = z.object({
+  workspaceId: z.string().optional().nullable(), // Multi-workspace support
   startTime: isoDateSchema,
   endTime: isoDateSchema,
   category: focusCategorySchema,

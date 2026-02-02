@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       startTime: body.startTime,
       endTime: body.endTime,
       category: body.category,
-      quality: body.quality,
+      quality: (body.quality as 1 | 2 | 3 | 4 | 5) || 3, // Default to 3 if not provided
       interruptions: body.interruptions,
       notes: body.notes,
       taskId: body.taskId,

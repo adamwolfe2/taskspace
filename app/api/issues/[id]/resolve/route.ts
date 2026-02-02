@@ -65,7 +65,7 @@ export async function POST(
       message: "Issue resolved successfully",
     })
   } catch (error) {
-    logger.error("Resolve issue error:", error)
+    logger.error({ error }, "Resolve issue error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to resolve issue" },
       { status: 500 }

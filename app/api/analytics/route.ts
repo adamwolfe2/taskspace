@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     const workspaceMemberUserIds = new Set(workspaceMembers.map((wm) => wm.userId))
 
     // Get full member details for workspace members only
-    const members = orgMembers.filter((m) => workspaceMemberUserIds.has(m.userId))
+    const members = orgMembers.filter((m) => m.userId && workspaceMemberUserIds.has(m.userId))
 
     // Filter by date range
     const rocksInRange = filteredRocks.filter(
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
     const topPerformers = activeMembers
       .map((member) => {
         const memberTasks = tasksInRange.filter(
-          (t) => t.userId === member.userId && t.status === "completed"
+          (t) => t.assigneeId === member.userId && t.status === "completed"
         )
         const memberRocks = rocksInRange.filter(
           (r) => r.userId === member.userId && r.status === "completed"

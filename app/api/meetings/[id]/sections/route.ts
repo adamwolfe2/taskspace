@@ -75,7 +75,8 @@ export async function PATCH(
         updatedSection = await meetings.startSection(id, sectionType)
         break
       case "complete":
-        updatedSection = await meetings.completeSection(id, sectionType, data)
+        const result = await meetings.completeSection(id, sectionType, data)
+        updatedSection = result.completedSection
         break
       case "update":
         updatedSection = await meetings.updateSectionData(id, sectionType, data || {})
@@ -102,7 +103,7 @@ export async function PATCH(
       message: `Section ${action}ed successfully`,
     })
   } catch (error) {
-    logger.error("Update section error:", error)
+    logger.error({ error }, "Update section error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update section" },
       { status: 500 }

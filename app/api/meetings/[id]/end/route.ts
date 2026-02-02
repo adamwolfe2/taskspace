@@ -86,7 +86,7 @@ export async function POST(
       message: "Meeting ended successfully",
     })
   } catch (error) {
-    logger.error("End meeting error:", error)
+    logger.error({ error }, "End meeting error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to end meeting" },
       { status: 500 }

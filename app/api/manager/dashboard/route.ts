@@ -497,8 +497,8 @@ function calculateRecentActivity(
         id: t.id,
         title: t.title,
         type: "task",
-        dueDate: t.dueDate,
-        priority: t.priority,
+        dueDate: t.dueDate || "",
+        priority: t.priority === "low" ? "normal" : t.priority,
       })
     })
 

@@ -42,15 +42,16 @@ export async function POST(request: NextRequest) {
         const filePath = join(migrationsDir, file)
         const sqlContent = readFileSync(filePath, "utf-8")
 
-        // Execute the SQL using sql.query() method
-        await sql.query(sqlContent)
+        // Execute the SQL (raw query for migration)
+        // @ts-expect-error - Dynamic SQL from migration file (admin only)
+        await sql([sqlContent])
 
         logger.info(`✓ Completed: ${file}`)
         results.push({ file, status: "success" })
 
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : "Unknown error"
-        logger.error(`✗ Failed: ${file}`, { error: errorMsg })
+        logger.error({ error: errorMsg }, `✗ Failed: ${file}`)
         results.push({ file, status: "failed", error: errorMsg })
       }
     }
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error"
-    logger.error("Migration execution failed", { error: errorMessage })
+    logger.error({ error: errorMessage }, "Migration execution failed")
 
     return NextResponse.json<ApiResponse<null>>(
       {

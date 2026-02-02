@@ -241,11 +241,11 @@ export async function POST(request: NextRequest) {
       `
     }
 
-    logger.info(`Org chart uploaded: ${memberRecords.length} employees created`, {
+    logger.info({
       organizationId: auth.organization.id,
       workspaceId,
       employeeCount: memberRecords.length,
-    })
+    }, `Org chart uploaded: ${memberRecords.length} employees created`)
 
     return NextResponse.json<UploadResult>({
       success: true,

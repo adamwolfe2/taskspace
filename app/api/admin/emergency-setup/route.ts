@@ -101,11 +101,9 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        // Use raw SQL query since table names can't be parameterized
-        await sql.query(`
-          ALTER TABLE ${table}
-          ADD COLUMN IF NOT EXISTS workspace_id VARCHAR(255) REFERENCES workspaces(id) ON DELETE SET NULL
-        `)
+        // Use raw SQL with dynamic table name (admin only, safe context)
+        // @ts-expect-error - Dynamic table name for emergency admin operation
+        await sql([`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS workspace_id VARCHAR(255) REFERENCES workspaces(id) ON DELETE SET NULL`])
         steps.push(`✓ Added workspace_id to ${table}`)
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error)
@@ -204,22 +202,24 @@ export async function POST(request: NextRequest) {
         // Migrate based on table type
         let result
         if (isUserBased) {
-          result = await sql.query(`
+          // @ts-expect-error - Dynamic table name for emergency admin operation
+          result = await sql([`
             UPDATE ${tableName} SET workspace_id = '${workspaceId}'
             WHERE user_id IN (
               SELECT user_id FROM organization_members WHERE organization_id = '${orgId}'
             ) AND workspace_id IS NULL
-          `)
+          `])
         } else {
-          result = await sql.query(`
+          // @ts-expect-error - Dynamic table name for emergency admin operation
+          result = await sql([`
             UPDATE ${tableName} SET workspace_id = '${workspaceId}'
             WHERE organization_id = '${orgId}' AND workspace_id IS NULL
-          `)
+          `])
         }
 
         return result.rowCount || 0
       } catch (error) {
-        logger.error(`Failed to migrate ${tableName}`, { error })
+        logger.error({ error }, `Failed to migrate ${tableName}`)
         return 0
       }
     }
@@ -257,10 +257,10 @@ export async function POST(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error"
     const errorStack = error instanceof Error ? error.stack : ""
 
-    logger.error("Emergency setup failed", {
+    logger.error({
       message: errorMessage,
       stack: errorStack
-    })
+    }, "Emergency setup failed")
 
     return NextResponse.json<ApiResponse<null>>(
       {

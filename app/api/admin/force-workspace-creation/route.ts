@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const orgId = auth.organization.id
     const userId = auth.user.id
 
-    logger.info("Auth obtained", { orgId, userId })
+    logger.info({ orgId, userId }, "Auth obtained")
 
     // Step 1: Check for existing workspaces
     const { rows: existingWorkspaces } = await sql`
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     `
 
     if (existingWorkspaces.length > 0) {
-      logger.info("Workspace already exists", { count: existingWorkspaces.length })
+      logger.info({ count: existingWorkspaces.length }, "Workspace already exists")
       return NextResponse.json<ApiResponse<any>>({
         success: true,
         data: { workspace: existingWorkspaces[0], alreadyExisted: true },
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     logger.info("Creating workspace with direct SQL")
 
     const workspaceId = crypto.randomUUID()
-    const now = new Date()
+    const now = new Date().toISOString()
 
     await sql`
       INSERT INTO workspaces (
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       )
     `
 
-    logger.info("✓ Workspace created", { workspaceId })
+    logger.info({ workspaceId }, "✓ Workspace created")
 
     // Step 3: Add all org members to workspace
     logger.info("Adding members to workspace")
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       SELECT user_id, role FROM organization_members WHERE organization_id = ${orgId}
     `
 
-    logger.info("Found org members", { count: orgMembers.length })
+    logger.info({ count: orgMembers.length }, "Found org members")
 
     for (const member of orgMembers) {
       const memberRole = (member.role === 'owner' || member.role === 'admin') ? 'admin' : 'member'
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
     `
     migratedRecords += focusScoreResult.rowCount || 0
 
-    logger.info("✓ Migration complete", { totalRecords: migratedRecords })
+    logger.info({ totalRecords: migratedRecords }, "✓ Migration complete")
 
     return NextResponse.json<ApiResponse<{
       workspaceId: string
@@ -192,10 +192,10 @@ export async function POST(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error"
     const errorStack = error instanceof Error ? error.stack : ""
 
-    logger.error("Full error details", {
+    logger.error({
       message: errorMessage,
       stack: errorStack
-    })
+    }, "Full error details")
 
     return NextResponse.json<ApiResponse<null>>(
       {

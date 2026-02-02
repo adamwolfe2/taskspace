@@ -95,33 +95,61 @@ async function queryRocks(orgId: string, userId?: string) {
 }
 
 async function queryTasks(orgId: string, userId?: string, status?: string) {
-  let baseQuery = `
-    SELECT t.*,
-           assignee.name as assignee_name,
-           assigner.name as assigned_by_name
-    FROM tasks t
-    JOIN organization_members om ON t.assignee_id = om.user_id
-    JOIN users assignee ON t.assignee_id = assignee.id
-    LEFT JOIN users assigner ON t.assigned_by = assigner.id
-    WHERE om.organization_id = $1
-  `
-  const params: (string | undefined)[] = [orgId]
-  let paramIndex = 2
-
-  if (userId) {
-    baseQuery += ` AND t.assignee_id = $${paramIndex}`
-    params.push(userId)
-    paramIndex++
+  // Build query with Vercel postgres template literals
+  let result
+  if (userId && status) {
+    result = await sql`
+      SELECT t.*,
+             assignee.name as assignee_name,
+             assigner.name as assigned_by_name
+      FROM tasks t
+      JOIN organization_members om ON t.assignee_id = om.user_id
+      JOIN users assignee ON t.assignee_id = assignee.id
+      LEFT JOIN users assigner ON t.assigned_by = assigner.id
+      WHERE om.organization_id = ${orgId}
+        AND t.assignee_id = ${userId}
+        AND t.status = ${status}
+      ORDER BY t.due_date ASC
+    `
+  } else if (userId) {
+    result = await sql`
+      SELECT t.*,
+             assignee.name as assignee_name,
+             assigner.name as assigned_by_name
+      FROM tasks t
+      JOIN organization_members om ON t.assignee_id = om.user_id
+      JOIN users assignee ON t.assignee_id = assignee.id
+      LEFT JOIN users assigner ON t.assigned_by = assigner.id
+      WHERE om.organization_id = ${orgId}
+        AND t.assignee_id = ${userId}
+      ORDER BY t.due_date ASC
+    `
+  } else if (status) {
+    result = await sql`
+      SELECT t.*,
+             assignee.name as assignee_name,
+             assigner.name as assigned_by_name
+      FROM tasks t
+      JOIN organization_members om ON t.assignee_id = om.user_id
+      JOIN users assignee ON t.assignee_id = assignee.id
+      LEFT JOIN users assigner ON t.assigned_by = assigner.id
+      WHERE om.organization_id = ${orgId}
+        AND t.status = ${status}
+      ORDER BY t.due_date ASC
+    `
+  } else {
+    result = await sql`
+      SELECT t.*,
+             assignee.name as assignee_name,
+             assigner.name as assigned_by_name
+      FROM tasks t
+      JOIN organization_members om ON t.assignee_id = om.user_id
+      JOIN users assignee ON t.assignee_id = assignee.id
+      LEFT JOIN users assigner ON t.assigned_by = assigner.id
+      WHERE om.organization_id = ${orgId}
+      ORDER BY t.due_date ASC
+    `
   }
-
-  if (status) {
-    baseQuery += ` AND t.status = $${paramIndex}`
-    params.push(status)
-  }
-
-  baseQuery += ` ORDER BY t.due_date ASC`
-
-  const result = await sql.query(baseQuery, params)
   return result.rows
 }
 

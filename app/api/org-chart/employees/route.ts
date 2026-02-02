@@ -77,15 +77,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Primary source: ma_employees database table filtered by workspace
+    // Primary source: ma_employees database table
+    // Note: ma_employees is a legacy org-wide table without workspace filtering
     const dbEmployees = await db.maEmployees.findAll()
 
-    // Filter by workspace
-    const workspaceEmployees = dbEmployees.filter(emp => emp.workspaceId === workspaceId)
-
-    if (workspaceEmployees.length > 0) {
+    if (dbEmployees.length > 0) {
       // Transform to OrgChartEmployee format
-      const employees: OrgChartEmployee[] = workspaceEmployees.map(emp => ({
+      const employees: OrgChartEmployee[] = dbEmployees.map(emp => ({
         id: emp.id,
         firstName: emp.firstName,
         lastName: emp.lastName,

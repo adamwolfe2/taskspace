@@ -31,6 +31,8 @@ export interface OrganizationSettings {
   customBranding?: {
     logo?: string
     primaryColor?: string
+    secondaryColor?: string
+    accentColor?: string
   }
   asanaIntegration?: AsanaIntegrationSettings
 }
@@ -241,6 +243,7 @@ export interface TaskTemplate {
 export interface Task {
   id: string
   organizationId: string
+  workspaceId?: string | null // Multi-workspace support
   userId: string
   title: string
   category: "urgent" | "today" | "upcoming"
@@ -687,6 +690,7 @@ export interface GoogleCalendarToken {
   id: string
   userId: string
   organizationId: string
+  workspaceId?: string | null // Multi-workspace support
   accessToken: string
   refreshToken: string
   tokenType: string
@@ -1151,6 +1155,7 @@ export interface FocusScoreInput {
 export interface UserStreak {
   id: string
   organizationId: string
+  workspaceId?: string | null // Multi-workspace support
   userId: string
   currentStreak: number
   longestStreak: number
@@ -1180,6 +1185,7 @@ export interface StreakMilestoneInfo {
 export interface FocusBlock {
   id: string
   organizationId: string
+  workspaceId?: string | null // Multi-workspace support
   userId: string
   startTime: string
   endTime: string
@@ -1196,6 +1202,7 @@ export type FocusBlockCategory = "deep_work" | "meetings" | "admin" | "collabora
 
 // Focus block creation input
 export interface FocusBlockInput {
+  workspaceId?: string | null // Multi-workspace support
   startTime: string
   endTime: string
   category: FocusBlockCategory
@@ -1210,6 +1217,7 @@ export interface FocusBlockInput {
 export interface DailyEnergy {
   id: string
   organizationId: string
+  workspaceId?: string | null // Multi-workspace support
   userId: string
   date: string
   energyLevel: EnergyLevel

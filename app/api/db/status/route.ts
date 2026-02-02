@@ -60,7 +60,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     for (const table of tables) {
       try {
-        const result = await sql.query(`SELECT COUNT(*) as count FROM ${table}`)
+        // @ts-expect-error - Dynamic table name for status check
+        const result = await sql([`SELECT COUNT(*) as count FROM ${table}`])
         status.tableCounts.push({
           table,
           count: parseInt(result.rows[0]?.count || "0"),

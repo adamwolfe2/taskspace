@@ -44,7 +44,7 @@ export async function GET(
       data: issue,
     })
   } catch (error) {
-    logger.error("Get issue error:", error)
+    logger.error({ error }, "Get issue error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get issue" },
       { status: 500 }
@@ -102,7 +102,7 @@ export async function PATCH(
       message: "Issue updated successfully",
     })
   } catch (error) {
-    logger.error("Update issue error:", error)
+    logger.error({ error }, "Update issue error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update issue" },
       { status: 500 }
@@ -150,7 +150,7 @@ export async function DELETE(
       message: "Issue dropped successfully",
     })
   } catch (error) {
-    logger.error("Delete issue error:", error)
+    logger.error({ error }, "Delete issue error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to delete issue" },
       { status: 500 }

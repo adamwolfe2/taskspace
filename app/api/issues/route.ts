@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       data: issues,
     })
   } catch (error) {
-    logger.error("Get issues error:", error)
+    logger.error({ error }, "Get issues error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get issues" },
       { status: 500 }
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       message: "Issue created successfully",
     })
   } catch (error) {
-    logger.error("Create issue error:", error)
+    logger.error({ error }, "Create issue error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create issue" },
       { status: 500 }

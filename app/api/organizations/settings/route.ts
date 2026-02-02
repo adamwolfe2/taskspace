@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { logger, logError } from "@/lib/logger"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateOrganizationSettingsSchema } from "@/lib/validation/schemas"
+import type { OrganizationSettings } from "@/lib/types"
 
 /**
  * PUT /api/organizations/settings
@@ -46,9 +47,17 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Validate weekStartDay if provided
+    if (body.weekStartDay !== undefined) {
+      const validDays = [0, 1, 2, 3, 4, 5, 6] as const
+      if (!validDays.includes(body.weekStartDay as typeof validDays[number])) {
+        return NextResponse.json({ error: "Invalid weekStartDay value" }, { status: 400 })
+      }
+    }
+
     // Update organization settings
     const updatedOrg = await db.organizations.update(auth.organization.id, {
-      settings: updatedSettings,
+      settings: updatedSettings as OrganizationSettings,
     })
 
     return NextResponse.json({

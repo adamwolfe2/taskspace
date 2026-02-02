@@ -44,7 +44,7 @@ export async function GET(
       data: meeting,
     })
   } catch (error) {
-    logger.error("Get meeting error:", error)
+    logger.error({ error }, "Get meeting error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get meeting" },
       { status: 500 }
@@ -100,7 +100,7 @@ export async function PATCH(
       message: "Meeting updated successfully",
     })
   } catch (error) {
-    logger.error("Update meeting error:", error)
+    logger.error({ error }, "Update meeting error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update meeting" },
       { status: 500 }
@@ -156,7 +156,7 @@ export async function DELETE(
       message: "Meeting cancelled successfully",
     })
   } catch (error) {
-    logger.error("Delete meeting error:", error)
+    logger.error({ error }, "Delete meeting error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to delete meeting" },
       { status: 500 }

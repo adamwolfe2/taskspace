@@ -72,12 +72,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       weekStart: weekStart || getWeekStart(),
     })
 
-    logger.info("Rock check-in created", {
+    logger.info({
       userId: auth.user.id,
       rockId: id,
       confidence,
       weekStart: checkin.weekStart,
-    })
+    }, "Rock check-in created")
 
     return NextResponse.json({
       success: true,
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       message: "Check-in recorded successfully",
     })
   } catch (error) {
-    logger.error("Error creating rock check-in", { error })
+    logger.error({ error }, "Error creating rock check-in")
     return NextResponse.json(
       {
         success: false,
