@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { fetchEmployeesFromAirtable } from "@/lib/org-chart/airtable"
@@ -104,6 +105,61 @@ export async function GET(request: NextRequest) {
         source: "database",
         count: employees.length,
       })
+    }
+
+    // Secondary source: organization_members table with workspace filter
+    try {
+      const { rows } = await sql`
+        SELECT
+          om.id,
+          om.name,
+          om.email,
+          om.job_title,
+          om.department,
+          om.manager_id,
+          om.notes,
+          manager.name as manager_name
+        FROM organization_members om
+        INNER JOIN workspace_members wm ON wm.member_id = om.id
+        LEFT JOIN organization_members manager ON manager.id = om.manager_id
+        WHERE wm.workspace_id = ${workspaceId}
+          AND om.organization_id = ${auth.organization.id}
+          AND om.status = 'active'
+        ORDER BY om.name ASC
+      `
+
+      if (rows.length > 0) {
+        // Transform to OrgChartEmployee format
+        const employees: OrgChartEmployee[] = rows.map(row => {
+          // Split name into first and last
+          const nameParts = (row.name as string).split(" ")
+          const firstName = nameParts[0] || ""
+          const lastName = nameParts.slice(1).join(" ") || ""
+
+          return {
+            id: row.id as string,
+            firstName,
+            lastName,
+            fullName: row.name as string,
+            supervisor: row.manager_name as string | null,
+            department: (row.department as string) || "",
+            jobTitle: (row.job_title as string) || "",
+            notes: (row.notes as string) || "",
+            email: row.email as string | undefined,
+            rocks: "", // Rocks will be synced separately
+          }
+        })
+
+        return NextResponse.json({
+          success: true,
+          employees,
+          source: "organization_members",
+          count: employees.length,
+        })
+      }
+    } catch (error) {
+      logError(logger, "Error fetching organization members", error)
+      // Continue to fallbacks if this fails
     }
 
     // Fallback #1: Try Airtable if database is empty

@@ -4,13 +4,14 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import useSWR from "swr"
 import { OrgChart } from "@/components/org-chart/org-chart"
+import { OrgChartUploadWizard } from "@/components/org-chart/org-chart-upload-wizard"
 import { EmployeeModal } from "@/components/org-chart/employee-modal"
 import { ChatInterface } from "@/components/org-chart/chat-interface"
 import { ZoomControls } from "@/components/org-chart/zoom-controls"
 import { StatusIndicator } from "@/components/org-chart/status-indicator"
 import { buildOrgTree } from "@/lib/org-chart/utils"
 import type { OrgChartEmployee, OrgChartEmployeeNode } from "@/lib/org-chart/types"
-import { Loader2, RefreshCw, Users, ArrowRightLeft } from "lucide-react"
+import { Loader2, RefreshCw, Users, ArrowRightLeft, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/lib/contexts/app-context"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
@@ -28,6 +29,7 @@ export function OrgChartPage() {
   const [highlightedEmployee, setHighlightedEmployee] = useState<string | null>(null)
   const [progressData, setProgressData] = useState<Map<string, boolean>>(new Map())
   const [isSyncing, setIsSyncing] = useState(false)
+  const [showUploadWizard, setShowUploadWizard] = useState(false)
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const transformRef = useRef<any>(null)
 
@@ -64,6 +66,39 @@ export function OrgChartPage() {
 
   const employees = employeeData?.employees || []
   const orgTree = buildOrgTree(employees)
+
+  // Show upload wizard if no employees and user is admin
+  if (isAdmin && employees.length === 0 && !employeesLoading && !showUploadWizard) {
+    return (
+      <div className="p-4 md:p-6">
+        <OrgChartUploadWizard
+          onUploadComplete={() => {
+            setShowUploadWizard(false)
+            refreshEmployees()
+          }}
+        />
+      </div>
+    )
+  }
+
+  // Show upload wizard modal if triggered
+  if (showUploadWizard) {
+    return (
+      <div className="p-4 md:p-6">
+        <div className="mb-4">
+          <Button variant="outline" onClick={() => setShowUploadWizard(false)}>
+            ← Back to Org Chart
+          </Button>
+        </div>
+        <OrgChartUploadWizard
+          onUploadComplete={() => {
+            setShowUploadWizard(false)
+            refreshEmployees()
+          }}
+        />
+      </div>
+    )
+  }
 
   // Handle zoom to employee
   const handleZoomToEmployee = useCallback(
@@ -226,21 +261,33 @@ export function OrgChartPage() {
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSyncRocks}
-              disabled={isSyncing}
-              className="bg-white/80 backdrop-blur"
-              title="Sync rocks from workspace members to org chart"
-            >
-              {isSyncing ? (
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              ) : (
-                <ArrowRightLeft className="h-4 w-4 mr-1" />
-              )}
-              Sync Rocks
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowUploadWizard(true)}
+                className="bg-white/80 backdrop-blur"
+                title="Upload or update org chart"
+              >
+                <Upload className="h-4 w-4 mr-1" />
+                Upload Org Chart
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSyncRocks}
+                disabled={isSyncing}
+                className="bg-white/80 backdrop-blur"
+                title="Sync rocks from workspace members to org chart"
+              >
+                {isSyncing ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <ArrowRightLeft className="h-4 w-4 mr-1" />
+                )}
+                Sync Rocks
+              </Button>
+            </>
           )}
           <Button
             variant="outline"
