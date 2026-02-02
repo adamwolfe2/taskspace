@@ -100,6 +100,9 @@ function HeroSection() {
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-slate-200 bg-white text-slate-600 text-sm mb-6"
           >
             <span>EOS Management Platform</span>
+            <Link href="/platform" className="text-blue-600 hover:text-blue-700 flex items-center gap-1">
+              Explore <ArrowRight className="w-3 h-3" />
+            </Link>
           </motion.div>
 
           {/* Headline */}
@@ -107,9 +110,9 @@ function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 leading-[1.1] tracking-tight mb-6"
+            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 leading-[1.1] mb-6"
           >
-            Run your business on EOS with AI
+            Run your business on EOS
           </motion.h1>
 
           {/* Subheadline */}
@@ -117,9 +120,9 @@ function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-slate-600 max-w-3xl mx-auto mb-10 leading-relaxed"
+            className="text-xl text-slate-600 max-w-3xl mx-auto mb-10"
           >
-            Align is the all-in-one platform that helps teams run on EOS with AI-powered tools for accountability, goal tracking, and performance insights.
+            Align is the all-in-one EOS platform with tools that connect to your stack and partner with your team to drive traction and accountability.
           </motion.p>
 
           {/* CTAs */}
@@ -142,36 +145,40 @@ function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Feature Tabs */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="inline-flex items-center gap-1 p-1 bg-slate-50 rounded-lg border border-slate-200">
-            {features.map((feature) => (
+        {/* Feature Tabs - Hyper Style */}
+        <div className="flex items-center justify-center border-b border-slate-200 mb-0">
+          <div className="inline-flex items-center gap-8">
+            {features.slice(0, 4).map((feature) => (
               <button
                 key={feature.id}
                 onClick={() => setSelectedFeature(feature.id)}
                 className={cn(
-                  "px-4 py-2 rounded-md text-sm font-medium transition-all",
+                  "px-1 py-4 text-sm font-medium transition-colors relative",
                   selectedFeature === feature.id
-                    ? "bg-white text-slate-900 shadow-sm"
+                    ? "text-slate-900"
                     : "text-slate-600 hover:text-slate-900"
                 )}
               >
                 {feature.label}
+                {selectedFeature === feature.id && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900" />
+                )}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Interactive Demo - Browser Frame */}
+        {/* Interactive Demo - Browser Frame with Colored Background */}
         <motion.div
           initial={{ opacity: 0, y: 60 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative max-w-6xl mx-auto"
+          className="relative"
         >
-          <div className="relative">
+          {/* Colored container like Hyper */}
+          <div className="bg-gradient-to-br from-green-100 to-emerald-50 rounded-2xl p-8 sm:p-12">
             {/* Browser Frame */}
-            <div className="relative bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+            <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
               {/* Browser Header */}
               <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
                 <div className="flex gap-1.5">
@@ -182,7 +189,7 @@ function HeroSection() {
               </div>
 
               {/* Interactive Demo Component */}
-              <div className="bg-white p-4 sm:p-8 min-h-[500px]">
+              <div className="bg-white p-4 sm:p-8 min-h-[600px]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={selectedFeature}
@@ -198,6 +205,97 @@ function HeroSection() {
             </div>
           </div>
         </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// Use Cases Section - Hyper Style
+function UseCasesSection() {
+  const useCases = [
+    {
+      title: "Leadership",
+      description: "Run effective L10 meetings and track leadership team accountability.",
+      color: "border-blue-200 bg-blue-50/30",
+      tasks: [
+        "Weekly L10 meeting agendas",
+        "Leadership scorecard tracking",
+        "VTO alignment and updates",
+        "Company-wide rock reviews"
+      ]
+    },
+    {
+      title: "Sales & Marketing",
+      description: "Track leads, manage pipelines, and measure marketing performance.",
+      color: "border-purple-200 bg-purple-50/30",
+      tasks: [
+        "Lead tracking and follow-up",
+        "Sales pipeline management",
+        "Marketing campaign metrics",
+        "Customer acquisition tracking"
+      ]
+    },
+    {
+      title: "Operations",
+      description: "Streamline processes, track KPIs, and manage operational rocks.",
+      color: "border-emerald-200 bg-emerald-50/30",
+      tasks: [
+        "Process documentation",
+        "Operational scorecard metrics",
+        "Team capacity planning",
+        "Issue tracking and resolution"
+      ]
+    }
+  ]
+
+  return (
+    <section className="py-20 bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <Badge className="bg-white text-slate-600 border-slate-200 mb-4">
+            Use Cases
+          </Badge>
+        </div>
+        <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+          EOS tools for everything
+        </h2>
+        <p className="text-lg text-slate-600 max-w-3xl mb-12">
+          Start with ready-to-use templates or create custom workflows for any type of work imaginable.
+        </p>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {useCases.map((useCase) => (
+            <div
+              key={useCase.title}
+              className={cn(
+                "relative bg-white rounded-2xl border-2 p-8 hover:shadow-lg transition-shadow",
+                useCase.color
+              )}
+            >
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                {useCase.title}
+              </h3>
+              <p className="text-sm text-slate-600 mb-6">
+                {useCase.description}
+              </p>
+              <div className="space-y-3">
+                {useCase.tasks.map((task, i) => (
+                  <div key={i} className="flex items-start gap-3 text-sm text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center flex-shrink-0">
+                        <div className="w-2 h-2 bg-slate-400 rounded-full" />
+                      </div>
+                      <span>{task}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button className="mt-6 text-sm font-medium text-slate-900 hover:text-slate-700 flex items-center gap-1">
+                View Templates <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -321,44 +419,62 @@ function ProblemSolutionSection() {
   )
 }
 
-// Stats Section
+// Stats Section - Hyper Style
 function StatsSection() {
-  const stats = [
-    { value: "94%", label: "Increase in team accountability", icon: TrendingUp },
-    { value: "20hrs", label: "Saved per week on status meetings", icon: Clock },
-    { value: "2.5x", label: "Faster quarterly goal completion", icon: Rocket },
-    { value: "500+", label: "High-performing teams using Align", icon: Users },
+  const caseStudies = [
+    {
+      value: "97%",
+      label: "Time savings on reporting",
+      description: "Leadership team automated weekly reporting and accelerated decision-making by 5x."
+    },
+    {
+      value: "10 hrs",
+      label: "Saved per person weekly",
+      description: "Operations team automated rock tracking, scorecard updates, and L10 prep. Saved 10 hours per week."
+    },
+    {
+      value: "45%",
+      label: "Faster goal completion",
+      description: "Sales team with no prior EOS experience automated their process and completed rocks 45% faster."
+    }
   ]
 
   return (
     <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={staggerContainer}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-8"
-        >
-          {stats.map((stat) => {
-            const Icon = stat.icon
-            return (
-              <motion.div
-                key={stat.label}
-                variants={scaleIn}
-                className="text-center space-y-3"
-              >
-                <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto">
-                  <Icon className="w-6 h-6 text-slate-700" />
-                </div>
-                <div className="text-4xl sm:text-5xl font-bold text-slate-900">
-                  {stat.value}
-                </div>
-                <div className="text-slate-600 text-sm">{stat.label}</div>
-              </motion.div>
-            )
-          })}
-        </motion.div>
+        <div className="mb-12">
+          <Badge className="bg-white text-slate-600 border-slate-200 mb-4">
+            Case Studies
+          </Badge>
+          <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+            The results speak for themselves
+          </h2>
+          <p className="text-lg text-slate-600 max-w-3xl">
+            Businesses of all sizes are using Align to run on EOS across leadership, sales, and operations—saving time and driving measurable growth.
+          </p>
+          <button className="mt-6 px-6 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 text-sm font-medium">
+            All Customer Stories
+          </button>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {caseStudies.map((study, i) => (
+            <div key={i} className="bg-slate-50 rounded-xl p-8 border border-slate-200">
+              <div className="text-5xl font-bold text-slate-900 mb-2">
+                {study.value}
+              </div>
+              <div className="text-sm font-medium text-slate-900 mb-4">
+                {study.label}
+              </div>
+              <p className="text-sm text-slate-600">
+                {study.description}
+              </p>
+              <button className="mt-6 text-sm font-medium text-slate-900 hover:text-slate-700 flex items-center gap-1">
+                Read the Full Story <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -371,40 +487,37 @@ function FeaturesSection() {
       icon: Brain,
       title: "AI-Powered EOD Reports",
       description: "Paste your daily task dump. AI instantly organizes it by your quarterly rocks, identifies blockers, and creates a structured report.",
-      color: "from-purple-500 to-purple-600",
-      badge: "Most Popular",
+      color: "bg-slate-100",
     },
     {
       icon: Target,
       title: "Quarterly Rocks (Goals)",
       description: "Set 3-7 quarterly goals. Track progress with visual indicators, milestones, and automatic status updates based on daily activity.",
       color: "bg-slate-900",
-      badge: "Core Feature",
     },
     {
       icon: BarChart3,
       title: "Real-Time Team Dashboard",
       description: "See exactly what your team is working on, who's blocked, and progress toward goals - all in one unified dashboard.",
-      color: "from-blue-500 to-blue-600",
-      badge: "Managers Love This",
+      color: "bg-slate-100",
     },
     {
       icon: CheckCircle,
       title: "Kanban Task Management",
       description: "Drag-and-drop tasks across columns. Link tasks to rocks. Set priorities. See dependencies. All synced in real-time.",
-      color: "from-emerald-500 to-emerald-600",
+      color: "bg-slate-100",
     },
     {
       icon: Users,
       title: "Manager Insights",
       description: "Get AI-generated insights on team velocity, at-risk goals, and who needs support - delivered weekly to your inbox.",
-      color: "from-orange-500 to-orange-600",
+      color: "bg-slate-100",
     },
     {
       icon: Zap,
       title: "Integrations That Matter",
       description: "Sync with Slack for notifications, Google Calendar for deadlines, Asana for tasks. No manual data entry required.",
-      color: "from-cyan-500 to-cyan-600",
+      color: "bg-slate-100",
     },
   ]
 
@@ -457,7 +570,7 @@ function FeaturesSection() {
                   </div>
                 )}
                 <div className={cn("w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center mb-5 group-hover:scale-110 transition-transform", feature.color)}>
-                  <Icon className="w-6 h-6 text-white" />
+                  <Icon className="w-6 h-6 text-slate-700" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-900 mb-3">{feature.title}</h3>
                 <p className="text-slate-600 leading-relaxed">{feature.description}</p>
@@ -994,8 +1107,7 @@ export default function HomePage() {
     <>
       <MegaMenu />
       <HeroSection />
-      <LogoSection />
-      <ProblemSolutionSection />
+      <UseCasesSection />
       <StatsSection />
       <FeaturesSection />
       <ProductDemoSection />
