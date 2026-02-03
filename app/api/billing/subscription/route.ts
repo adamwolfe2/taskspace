@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import {
   getSubscription,
@@ -9,6 +9,8 @@ import {
   createCustomerPortalSession,
 } from "@/lib/integrations/stripe"
 import { getStripeConfig, PLAN_FEATURES } from "@/lib/integrations/stripe-config"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateSubscriptionSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -16,16 +18,8 @@ import { logger, logError } from "@/lib/logger"
  * GET /api/billing/subscription
  * Get current subscription details
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const org = auth.organization
     const subscription = org.subscription
 
@@ -64,30 +58,14 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * PATCH /api/billing/subscription
  * Update subscription (change plan, cancel, resume)
  */
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can manage billing
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can manage billing" },
-        { status: 403 }
-      )
-    }
-
     const stripeConfig = getStripeConfig()
     if (!stripeConfig.isConfigured) {
       return NextResponse.json<ApiResponse<null>>(
@@ -96,8 +74,8 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { action, plan, billingCycle } = body
+    // Validate request body
+    const { action, plan, billingCycle } = await validateBody(request, updateSubscriptionSchema)
 
     const org = auth.organization
     const subscriptionId = org.stripeSubscriptionId
@@ -111,6 +89,7 @@ export async function PATCH(request: NextRequest) {
 
     switch (action) {
       case "change_plan": {
+        // Type guard: validation ensures these exist for change_plan action
         if (!plan || !billingCycle) {
           return NextResponse.json<ApiResponse<null>>(
             { success: false, error: "Plan and billing cycle required" },
@@ -187,6 +166,14 @@ export async function PATCH(request: NextRequest) {
         )
     }
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Update subscription error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
@@ -196,4 +183,4 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

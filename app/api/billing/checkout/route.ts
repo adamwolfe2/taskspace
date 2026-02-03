@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { createCheckoutSession, getOrCreateCustomer } from "@/lib/integrations/stripe"
 import { getStripeConfig } from "@/lib/integrations/stripe-config"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { checkoutSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -10,24 +12,8 @@ import { logger, logError } from "@/lib/logger"
  * POST /api/billing/checkout
  * Create a Stripe Checkout Session for subscription
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can manage billing
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can manage billing" },
-        { status: 403 }
-      )
-    }
-
     // Check if Stripe is configured
     const stripeConfig = getStripeConfig()
     if (!stripeConfig.isConfigured) {
@@ -37,24 +23,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { plan, billingCycle } = body
-
-    // Validate plan
-    if (!["starter", "professional", "enterprise"].includes(plan)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid plan" },
-        { status: 400 }
-      )
-    }
-
-    // Validate billing cycle
-    if (!["monthly", "yearly"].includes(billingCycle)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid billing cycle" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { plan, billingCycle } = await validateBody(request, checkoutSchema)
 
     const org = auth.organization
     const billingEmail = org.billingEmail || auth.user.email
@@ -96,6 +66,14 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Checkout error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
@@ -105,4 +83,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

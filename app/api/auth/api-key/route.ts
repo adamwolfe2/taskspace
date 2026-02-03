@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAdmin } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { apiKeyCreateSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -32,15 +34,8 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
 // POST /api/auth/api-key - Create a new API key
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { name, scopes } = body
-
-    if (!name) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Name is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { name, scopes } = await validateBody(request, apiKeyCreateSchema)
 
     // Generate a secure API key
     const keyValue = `aims_${generateId()}_${generateId()}`
@@ -66,6 +61,14 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       message: "API key created. Save this key - it won't be shown again.",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Create API key error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create API key" },

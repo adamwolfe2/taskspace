@@ -446,6 +446,31 @@ export const createFocusBlockSchema = z.object({
 })
 
 // ============================================
+// BILLING SCHEMAS
+// ============================================
+
+export const checkoutSchema = z.object({
+  plan: z.enum(["starter", "professional", "enterprise"]),
+  billingCycle: z.enum(["monthly", "yearly"]),
+})
+
+export const updateSubscriptionSchema = z.object({
+  action: z.enum(["change_plan", "cancel", "resume", "portal"]),
+  plan: z.enum(["starter", "professional", "enterprise"]).optional(),
+  billingCycle: z.enum(["monthly", "yearly"]).optional(),
+}).refine(
+  (data) => {
+    if (data.action === "change_plan") {
+      return data.plan !== undefined && data.billingCycle !== undefined
+    }
+    return true
+  },
+  {
+    message: "Plan and billing cycle are required when changing plan",
+  }
+)
+
+// ============================================
 // TEST EMAIL SCHEMA
 // ============================================
 
