@@ -17,30 +17,12 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
+    // workspaceId is optional - workspace feature temporarily disabled
     const workspaceId = searchParams.get("workspaceId")
     const requestedUserId = searchParams.get("userId")
     const date = searchParams.get("date")
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
-
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate workspace access (unless org admin)
-    if (!isAdmin(auth)) {
-      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
-      if (!hasAccess) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "You don't have access to this workspace" },
-          { status: 403 }
-        )
-      }
-    }
 
     // Users can only view their own data unless they're admin/owner
     const userIsAdmin = isAdmin(auth)
@@ -54,8 +36,8 @@ export async function GET(request: NextRequest) {
         date
       )
 
-      // Filter by workspace
-      if (energy && energy.workspaceId !== workspaceId) {
+      // Filter by workspace if provided (workspace feature temporarily disabled)
+      if (workspaceId && energy && energy.workspaceId !== workspaceId) {
         return NextResponse.json<ApiResponse<DailyEnergy | null>>({
           success: true,
           data: null,
@@ -77,8 +59,10 @@ export async function GET(request: NextRequest) {
         endDate
       )
 
-      // Filter by workspace
-      const workspaceEnergyData = energyData.filter(e => e.workspaceId === workspaceId)
+      // Filter by workspace if provided (workspace feature temporarily disabled)
+      const workspaceEnergyData = workspaceId
+        ? energyData.filter(e => e.workspaceId === workspaceId)
+        : energyData
 
       return NextResponse.json<ApiResponse<DailyEnergy[]>>({
         success: true,
@@ -98,8 +82,10 @@ export async function GET(request: NextRequest) {
       defaultEndDate
     )
 
-    // Filter by workspace
-    const workspaceEnergyData = energyData.filter(e => e.workspaceId === workspaceId)
+    // Filter by workspace if provided (workspace feature temporarily disabled)
+    const workspaceEnergyData = workspaceId
+      ? energyData.filter(e => e.workspaceId === workspaceId)
+      : energyData
 
     return NextResponse.json<ApiResponse<DailyEnergy[]>>({
       success: true,
