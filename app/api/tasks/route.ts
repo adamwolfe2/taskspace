@@ -22,26 +22,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
     const status = searchParams.get("status")
+    // workspaceId is optional - workspace feature temporarily disabled
     const workspaceId = searchParams.get("workspaceId")
-
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate workspace access (unless org admin)
-    if (!isAdmin(auth)) {
-      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
-      if (!hasAccess) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "You don't have access to this workspace" },
-          { status: 403 }
-        )
-      }
-    }
 
     let tasks: AssignedTask[]
 
@@ -56,8 +38,10 @@ export async function GET(request: NextRequest) {
       tasks = await db.assignedTasks.findByAssigneeId(auth.user.id, auth.organization.id)
     }
 
-    // ALWAYS filter by workspace - enforce workspace isolation
-    tasks = tasks.filter(t => t.workspaceId === workspaceId)
+    // Filter by workspace if provided (workspace feature temporarily disabled)
+    if (workspaceId) {
+      tasks = tasks.filter(t => t.workspaceId === workspaceId)
+    }
 
     // Filter by status if specified
     if (status) {
