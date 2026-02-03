@@ -48,7 +48,7 @@ function HeroSection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" })
 
   return (
-    <section ref={ref} className="pt-24 pb-20 bg-white">
+    <section ref={ref} className="pt-12 pb-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <motion.div
@@ -78,7 +78,7 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto mb-10"
           >
-            Explore every tool Taskspace offers with interactive demos. Click through all features.
+            AI operational infrastructure for multi-company founders & builders. TaskspaceAI automates EOD reports, cadence metrics, and keeps every entity accountable through unified dashboards across all your teams running on EOS.
           </motion.p>
 
           <motion.div
