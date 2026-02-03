@@ -1,7 +1,7 @@
 // List of Taskspace integrations - ONLY showing uploaded logos
 export const integrations = [
   // Communication & Collaboration
-  { name: "Slack", logo: "/integrations/slack.svg", category: "communication" },
+  { name: "Slack", logo: "/integrations/slack-svgrepo-com.svg", category: "communication" },
   { name: "Microsoft Teams", logo: "/integrations/icons8-microsoft-teams.svg", category: "communication" },
   { name: "Zoom", logo: "/integrations/icons8-zoom.svg", category: "communication" },
   { name: "Gmail", logo: "/integrations/gmail.svg", category: "communication" },
@@ -20,7 +20,7 @@ export const integrations = [
   { name: "Apollo", logo: "/integrations/apollo.svg", category: "crm" },
 
   // Google Workspace
-  { name: "Google Calendar", logo: "/integrations/google-calendar.svg", category: "productivity" },
+  { name: "Google Calendar", logo: "/integrations/google-calendar-svgrepo-com.svg", category: "productivity" },
   { name: "Google Drive", logo: "/integrations/google-drive-svgrepo-com.svg", category: "productivity" },
   { name: "Google Sheets", logo: "/integrations/gsheet-document-svgrepo-com.svg", category: "productivity" },
   { name: "Google Docs", logo: "/integrations/google-docs-svgrepo-com.svg", category: "productivity" },
@@ -34,7 +34,6 @@ export const integrations = [
   // Social Media
   { name: "Meta", logo: "/integrations/meta-color.svg", category: "social" },
   { name: "X (Twitter)", logo: "/integrations/X_idJxGuURW1_0.svg", category: "social" },
-  { name: "TikTok", logo: "/integrations/tiktok.svg", category: "social" },
   { name: "LinkedIn", logo: "/integrations/linkedin.svg", category: "social" },
   { name: "Instagram", logo: "/integrations/icons8-instagram.svg", category: "social" },
   { name: "Pinterest", logo: "/integrations/icons8-pinterest.svg", category: "social" },
@@ -55,7 +54,6 @@ export const integrations = [
 
   // Design & Content
   { name: "Webflow", logo: "/integrations/Webflow_id2IyfqSKv_0.svg", category: "design" },
-  { name: "WordPress", logo: "/integrations/icons8-wordpress.svg", category: "design" },
 
   // Scheduling
   { name: "Calendly", logo: "/integrations/calendly.svg", category: "scheduling" },
@@ -78,7 +76,7 @@ export const agentUseCases = {
   ],
   sales: [
     { logo: "/integrations/salesforce.svg", title: "Review demo and draft proposals", description: "AI-generated proposals based on discovery calls" },
-    { logo: "/integrations/slack.svg", title: "Assess deal from chat logs", description: "Deal intelligence from conversation analysis" },
+    { logo: "/integrations/slack-svgrepo-com.svg", title: "Assess deal from chat logs", description: "Deal intelligence from conversation analysis" },
     { logo: "/integrations/hubspot-svgrepo-com.svg", title: "Send personalized outreach emails", description: "Hyper-personalized outbound at scale" },
     { logo: "/integrations/calendly.svg", title: "Track actions and perform calls", description: "Automated follow-ups and call scheduling" },
     { logo: "/logos/integrations/stripe.png", title: "Close deals and process payments", description: "Automated payment processing and invoice generation" },
