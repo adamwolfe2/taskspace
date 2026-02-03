@@ -2,29 +2,17 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
-import { generateId, validateEmail } from "@/lib/auth/password"
+import { generateId } from "@/lib/auth/password"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createMemberSchema, updateMemberSchema } from "@/lib/validation/schemas"
 import type { TeamMember, OrganizationMember, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // POST /api/members - Create a draft team member (before invitation)
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { name, email, role = "member", department = "General" } = body
-
-    if (!name || name.trim().length < 2) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Name must be at least 2 characters" },
-        { status: 400 }
-      )
-    }
-
-    if (!email || !validateEmail(email)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Valid email is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { name, email, role, department } = await validateBody(request, createMemberSchema)
 
     // Check if user already exists in org
     const existingUser = await db.users.findByEmail(email)
@@ -90,6 +78,14 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       message: "Team member created. You can now assign rocks and tasks, then send an invitation when ready.",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Create draft member error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create team member" },
@@ -121,15 +117,9 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // PATCH /api/members - Update a team member
 export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { memberId, department, weeklyMeasurable, role, timezone, eodReminderTime, notificationPreferences } = body
-
-    if (!memberId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Member ID is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { memberId, department, weeklyMeasurable, role, timezone, eodReminderTime, notificationPreferences } =
+      await validateBody(request, updateMemberSchema)
 
     // Get the member record - try organization_members.id first, then user_id
     let member = await db.members.findByOrgAndId(auth.organization.id, memberId)
@@ -219,6 +209,14 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       message: "Member updated successfully",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Update member error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update member" },

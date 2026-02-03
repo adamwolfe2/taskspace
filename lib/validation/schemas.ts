@@ -120,20 +120,39 @@ export const updateOrganizationSettingsSchema = z.object({
 // MEMBER SCHEMAS
 // ============================================
 
+const notificationChannelsSchema = z.object({
+  email: z.boolean(),
+  inApp: z.boolean(),
+  slack: z.boolean(),
+})
+
+const notificationPreferencesSchema = z.object({
+  task_assigned: notificationChannelsSchema,
+  eod_reminder: notificationChannelsSchema,
+  escalation: notificationChannelsSchema,
+  rock_updated: notificationChannelsSchema,
+  digest: z.object({
+    email: z.boolean(),
+    slack: z.boolean(),
+  }),
+})
+
 export const createMemberSchema = z.object({
   email: emailSchema,
   name: z.string().min(2).max(100),
   role: z.enum(["admin", "member"]).default("member"),
-  department: z.string().min(1).max(100),
+  department: z.string().min(1).max(100).default("General"),
   weeklyMeasurable: z.string().max(500).optional(),
 })
 
 export const updateMemberSchema = z.object({
-  name: z.string().min(2).max(100).optional(),
-  role: z.enum(["admin", "member"]).optional(),
+  memberId: uuidSchema, // Organization member ID to update
+  role: z.enum(["admin", "member", "owner"]).optional(),
   department: z.string().min(1).max(100).optional(),
   weeklyMeasurable: z.string().max(500).optional(),
-  status: z.enum(["active", "inactive"]).optional(),
+  timezone: z.string().optional(),
+  eodReminderTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  notificationPreferences: notificationPreferencesSchema.optional(),
 })
 
 export const inviteMemberSchema = z.object({
