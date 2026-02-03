@@ -7,7 +7,7 @@
 
 import { sql } from "@/lib/db/sql"
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withOptionalAuth } from "@/lib/api/middleware"
 
 interface TableCount {
   table: string
@@ -33,7 +33,7 @@ interface DbStatus {
   }[]
 }
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export const GET = withOptionalAuth(async (request: NextRequest, auth): Promise<NextResponse> => {
   const status: DbStatus = {
     connected: false,
     tableCounts: [],
@@ -87,7 +87,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }))
 
     // Try to get current user's org data
-    const auth = await getAuthContext(request)
     if (auth) {
       const orgId = auth.organization.id
 
@@ -113,4 +112,4 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     status.error = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json({ success: false, data: status }, { status: 500 })
   }
-}
+})

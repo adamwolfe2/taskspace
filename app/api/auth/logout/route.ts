@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
+import { withOptionalAuth } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
-export async function POST(request: NextRequest) {
+export const POST = withOptionalAuth(async (request: NextRequest, auth) => {
   try {
     const sessionToken = request.cookies.get("session_token")?.value
 
@@ -33,4 +34,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

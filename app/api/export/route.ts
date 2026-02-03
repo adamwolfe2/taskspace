@@ -270,86 +270,91 @@ async function fetchTeamSummary(
   organizationId: string,
   dateRange?: { start: string; end: string }
 ): Promise<Record<string, unknown>[]> {
-  // Use separate queries to avoid SQL injection from dynamic date conditions
-  // First get members
-  const { rows: members } = await sql`
-    SELECT
-      om.id,
-      om.name,
-      om.email,
-      om.department,
-      om.role
-    FROM organization_members om
-    WHERE om.organization_id = ${organizationId}
-    AND om.status = 'active'
-    ORDER BY om.name
-  `
-
+  // OPTIMIZED: Use a single query with CTEs instead of N+1 queries
+  // This reduces queries from 4*N to 1 (where N = number of members)
   const startDate = dateRange?.start ?? null
   const endDate = dateRange?.end ?? null
 
-  // Then calculate stats for each member with parameterized queries
-  const memberStats = await Promise.all(
-    members.map(async (m: Record<string, unknown>) => {
-      const { rows: taskStats } = await sql`
-        SELECT
-          COUNT(*) as total,
-          COUNT(*) FILTER (WHERE status = 'completed') as completed
-        FROM assigned_tasks
-        WHERE assignee_id = ${m.id as string}
-        AND organization_id = ${organizationId}
-        AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
-        AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
-      `
-      const totalTasks = parseInt(String(taskStats[0]?.total || 0), 10)
-      const completedTasks = parseInt(String(taskStats[0]?.completed || 0), 10)
+  const { rows: memberStats } = await sql`
+    WITH active_members AS (
+      SELECT
+        om.id,
+        om.name,
+        om.email,
+        om.department,
+        om.role
+      FROM organization_members om
+      WHERE om.organization_id = ${organizationId}
+      AND om.status = 'active'
+    ),
+    task_stats AS (
+      SELECT
+        assignee_id,
+        COUNT(*) as total_tasks,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed_tasks
+      FROM assigned_tasks
+      WHERE organization_id = ${organizationId}
+      AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
+      AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
+      GROUP BY assignee_id
+    ),
+    rock_stats AS (
+      SELECT
+        user_id,
+        COUNT(*) as total_rocks,
+        AVG(progress) as avg_progress
+      FROM rocks
+      WHERE organization_id = ${organizationId}
+      AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
+      AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
+      GROUP BY user_id
+    ),
+    eod_stats AS (
+      SELECT
+        user_id,
+        COUNT(*) as eod_submissions
+      FROM eod_reports
+      WHERE organization_id = ${organizationId}
+      AND (${startDate}::date IS NULL OR date >= ${startDate})
+      AND (${endDate}::date IS NULL OR date <= ${endDate})
+      GROUP BY user_id
+    )
+    SELECT
+      am.id as member_id,
+      am.name,
+      am.email,
+      am.department,
+      am.role,
+      COALESCE(ts.total_tasks, 0)::int as total_tasks,
+      COALESCE(ts.completed_tasks, 0)::int as completed_tasks,
+      CASE
+        WHEN COALESCE(ts.total_tasks, 0) > 0
+        THEN ROUND((COALESCE(ts.completed_tasks, 0)::numeric / ts.total_tasks::numeric) * 100)::int
+        ELSE 0
+      END as completion_rate,
+      COALESCE(rs.total_rocks, 0)::int as total_rocks,
+      COALESCE(es.eod_submissions, 0)::int as eod_submissions,
+      COALESCE(ROUND(rs.avg_progress), 0)::int as avg_rock_progress
+    FROM active_members am
+    LEFT JOIN task_stats ts ON ts.assignee_id = am.id
+    LEFT JOIN rock_stats rs ON rs.user_id = am.id
+    LEFT JOIN eod_stats es ON es.user_id = am.id
+    ORDER BY am.name
+  `
 
-      const { rows: rockStats } = await sql`
-        SELECT COUNT(*) as total
-        FROM rocks
-        WHERE user_id = ${m.id as string}
-        AND organization_id = ${organizationId}
-        AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
-        AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
-      `
-      const totalRocks = parseInt(String(rockStats[0]?.total || 0), 10)
-
-      const { rows: eodStats } = await sql`
-        SELECT COUNT(*) as total
-        FROM eod_reports
-        WHERE user_id = ${m.id as string}
-        AND organization_id = ${organizationId}
-        AND (${startDate}::date IS NULL OR date >= ${startDate})
-        AND (${endDate}::date IS NULL OR date <= ${endDate})
-      `
-      const eodSubmissions = parseInt(String(eodStats[0]?.total || 0), 10)
-
-      const { rows: avgProgress } = await sql`
-        SELECT AVG(progress) as avg
-        FROM rocks
-        WHERE user_id = ${m.id as string}
-        AND organization_id = ${organizationId}
-      `
-
-      return {
-        memberId: m.id,
-        name: m.name,
-        email: m.email,
-        department: m.department,
-        role: m.role,
-        totalTasks,
-        completedTasks,
-        completionRate: totalTasks
-          ? Math.round((completedTasks / totalTasks) * 100)
-          : 0,
-        totalRocks,
-        eodSubmissions,
-        avgRockProgress: Math.round(parseFloat(String(avgProgress[0]?.avg || 0))),
-      }
-    })
-  )
-
-  return memberStats
+  return memberStats.map((row: Record<string, unknown>) => ({
+    memberId: row.member_id,
+    name: row.name,
+    email: row.email,
+    department: row.department,
+    role: row.role,
+    totalTasks: row.total_tasks,
+    completedTasks: row.completed_tasks,
+    completionRate: row.completion_rate,
+    totalRocks: row.total_rocks,
+    eodSubmissions: row.eod_submissions,
+    avgRockProgress: row.avg_rock_progress,
+  }))
 }
 
 // ============================================

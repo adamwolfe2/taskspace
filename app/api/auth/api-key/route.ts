@@ -1,28 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/auth/api-key - List API keys for the organization
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can manage API keys" },
-        { status: 403 }
-      )
-    }
-
     const keys = await db.apiKeys.findByOrganizationId(auth.organization.id)
 
     // Mask the actual key values
@@ -42,26 +27,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/auth/api-key - Create a new API key
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can create API keys" },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
     const { name, scopes } = body
 
@@ -102,26 +72,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/auth/api-key - Delete an API key
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can delete API keys" },
-        { status: 403 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const keyId = searchParams.get("id")
 
@@ -155,4 +110,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

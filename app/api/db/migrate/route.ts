@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { getDatabaseHealth, checkMigrationStatus } from "@/lib/db/migrate"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -28,25 +28,8 @@ interface MigrationStatusResponse {
  * Returns database migration status (admin only).
  * Does NOT run migrations - use CLI instead.
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
-    // Require authentication
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
-    // Require admin or owner role
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
-      )
-    }
-
     // Get database health and migration status
     const health = await getDatabaseHealth()
     const status = await checkMigrationStatus()
@@ -77,7 +60,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * POST /api/db/migrate

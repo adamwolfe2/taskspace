@@ -6,23 +6,15 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse } from "@/lib/types"
 import { logger } from "@/lib/logger"
 import { readFileSync, readdirSync } from "fs"
 import { join } from "path"
 
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth || !isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized - Admin only" },
-        { status: 403 }
-      )
-    }
-
     logger.info("🚨 RUNNING DATABASE MIGRATIONS")
 
     // Get all migration files
@@ -87,4 +79,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

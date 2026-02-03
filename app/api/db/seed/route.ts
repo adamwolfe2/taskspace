@@ -7,28 +7,13 @@
 
 import { sql } from "@/lib/db/sql"
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import { initialTeamMembers, initialRocks } from "@/lib/initial-data"
 import { logger, logError } from "@/lib/logger"
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const POST = withAdmin(async (request: NextRequest, auth): Promise<NextResponse> => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json(
-        { success: false, error: "Only admins can seed data" },
-        { status: 403 }
-      )
-    }
-
     const orgId = auth.organization.id
 
     // Check if there's already data
@@ -149,4 +134,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       { status: 500 }
     )
   }
-}
+})
