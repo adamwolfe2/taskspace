@@ -49,7 +49,7 @@ const features: FeatureTab[] = [
   },
   {
     id: "level10",
-    label: "Level 10 Meetings",
+    label: "L10 Meetings",
     icon: <Users className="w-4 h-4" />,
     component: <DemoLevel10 />
   },
