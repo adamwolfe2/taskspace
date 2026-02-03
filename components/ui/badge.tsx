@@ -9,13 +9,13 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        // Primary brand variant (red)
+        // Primary brand variant - uses workspace theme
         default:
-          'border-transparent bg-red-600 text-white shadow-sm',
+          'border-transparent bg-primary text-primary-foreground shadow-sm',
         primary:
-          'border-transparent bg-red-600 text-white shadow-sm',
+          'border-transparent bg-primary text-primary-foreground shadow-sm',
         secondary:
-          'border-transparent bg-gray-100 text-gray-700',
+          'border-transparent bg-secondary text-secondary-foreground shadow-sm',
         destructive:
           'border-transparent bg-red-600 text-white shadow-sm',
         warning:
@@ -25,7 +25,7 @@ const badgeVariants = cva(
         info:
           'border-transparent bg-blue-500 text-white shadow-sm',
         outline:
-          'border-gray-200 bg-white text-gray-700 shadow-sm',
+          'border-2 border-primary/20 bg-white text-foreground shadow-sm',
         // Soft variants for subtle badges (consistent styling)
         'soft-red':
           'border-transparent bg-red-50 text-red-700',
@@ -56,26 +56,26 @@ const badgeVariants = cva(
           'border-amber-200 bg-amber-50 text-amber-700 font-semibold',
         low:
           'border-green-200 bg-green-50 text-green-700 font-semibold',
-        // Status variants for rocks/tasks
+        // Status variants for rocks/tasks - use workspace theme for positive statuses
         'on-track':
-          'border-green-200 bg-green-50 text-green-700',
+          'border-primary/20 bg-primary/10 text-primary',
         'at-risk':
           'border-amber-200 bg-amber-50 text-amber-700',
         blocked:
           'border-red-200 bg-red-50 text-red-700',
         completed:
-          'border-blue-200 bg-blue-50 text-blue-700',
+          'border-primary/20 bg-primary/10 text-primary',
         pending:
           'border-gray-200 bg-gray-50 text-gray-600',
         active:
-          'border-green-200 bg-green-50 text-green-700',
+          'border-primary/20 bg-primary/10 text-primary',
         inactive:
           'border-gray-200 bg-gray-100 text-gray-500',
-        // Role badges
+        // Role badges - professional workspace-aware colors
         owner:
-          'border-amber-200 bg-amber-50 text-amber-700 font-semibold',
+          'border-primary/30 bg-primary/10 text-primary font-semibold',
         admin:
-          'border-blue-200 bg-blue-50 text-blue-700 font-semibold',
+          'border-primary/20 bg-primary/5 text-primary/80 font-semibold',
         member:
           'border-gray-200 bg-gray-50 text-gray-600',
       },

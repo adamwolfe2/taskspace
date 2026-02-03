@@ -2,15 +2,19 @@
 
 import { cn } from '@/lib/utils'
 import { useBrandTheme } from '@/lib/contexts/brand-theme-context'
+import { adjustOpacity } from '@/lib/utils/color-helpers'
 
 function Skeleton({ className, ...props }: React.ComponentProps<'div'>) {
   const { colors } = useBrandTheme()
 
-  // Create gradient from brand colors
+  // Create subtle shimmer effect with workspace brand colors
+  const baseColor = adjustOpacity(colors.primary, 0.1)
+  const shimmerColor = adjustOpacity(colors.primary, 0.15)
+
   const gradientStyle = {
-    background: `linear-gradient(90deg, ${colors.primary} 0%, ${colors.accent} 50%, ${colors.primary} 100%)`,
+    background: `linear-gradient(90deg, ${baseColor} 0%, ${shimmerColor} 50%, ${baseColor} 100%)`,
     backgroundSize: '200% 100%',
-    animation: 'shimmer 2s infinite',
+    animation: 'shimmer 2s ease-in-out infinite',
   }
 
   return (
@@ -27,7 +31,7 @@ function Skeleton({ className, ...props }: React.ComponentProps<'div'>) {
       `}</style>
       <div
         data-slot="skeleton"
-        className={cn('rounded-md opacity-20', className)}
+        className={cn('rounded-lg', className)}
         style={gradientStyle}
         {...props}
       />
