@@ -30,26 +30,8 @@ export async function GET(request: NextRequest) {
     const date = searchParams.get("date")
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
+    // workspaceId is optional - workspace feature temporarily disabled
     const workspaceId = searchParams.get("workspaceId")
-
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate workspace access (unless org admin)
-    if (!isAdmin(auth)) {
-      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
-      if (!hasAccess) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "You don't have access to this workspace" },
-          { status: 403 }
-        )
-      }
-    }
 
     let reports: EODReport[]
 
@@ -155,24 +137,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate workspace access (unless org admin)
-    if (!isAdmin(auth)) {
-      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
-      if (!hasAccess) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "You don't have access to this workspace" },
-          { status: 403 }
-        )
-      }
-    }
+    // workspaceId is optional - workspace feature temporarily disabled
 
     // Get the organization's timezone (default to PST)
     const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"
