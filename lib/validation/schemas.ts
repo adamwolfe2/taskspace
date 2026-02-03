@@ -72,16 +72,13 @@ export const apiKeyCreateSchema = z.object({
 
 export const createOrganizationSchema = z.object({
   name: z.string().min(2).max(100),
-  settings: z
-    .object({
-      timezone: z.string().default("America/New_York"),
-      weekStartDay: z.number().int().min(0).max(6).default(0),
-      eodReminderTime: z.string().regex(/^\d{2}:\d{2}$/).default("17:00"),
-      enableEmailNotifications: z.boolean().default(true),
-      enableSlackIntegration: z.boolean().default(false),
-      slackWebhookUrl: z.string().url().optional(),
-    })
-    .optional(),
+  timezone: z.string().default("America/New_York"),
+})
+
+export const updateOrganizationSchema = z.object({
+  name: z.string().min(2).max(100).optional(),
+  settings: z.record(z.unknown()).optional(),
+  subscription: z.record(z.unknown()).optional(),
 })
 
 export const updateOrganizationSettingsSchema = z.object({

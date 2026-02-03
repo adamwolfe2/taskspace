@@ -3,6 +3,8 @@ import { db } from "@/lib/db"
 import { withAuth } from "@/lib/api/middleware"
 import { isOwner } from "@/lib/auth/middleware"
 import { generateId, slugify } from "@/lib/auth/password"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createOrganizationSchema, updateOrganizationSchema } from "@/lib/validation/schemas"
 import type { Organization, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -36,15 +38,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // POST /api/organizations - Create a new organization
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { name, timezone = "America/New_York" } = body
-
-    if (!name || name.trim().length < 2) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Organization name must be at least 2 characters" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { name, timezone } = await validateBody(request, createOrganizationSchema)
 
     const now = new Date().toISOString()
     const orgId = generateId()
@@ -103,6 +98,14 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       message: "Organization created successfully",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Create organization error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create organization" },
@@ -121,8 +124,8 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    const body = await request.json()
-    const { name, settings, subscription } = body
+    // Validate request body
+    const { name, settings, subscription } = await validateBody(request, updateOrganizationSchema)
 
     const updates: Partial<Organization> = {}
 
@@ -153,6 +156,14 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       message: "Organization updated successfully",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Update organization error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update organization" },
