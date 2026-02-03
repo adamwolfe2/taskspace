@@ -311,7 +311,7 @@ function FeatureDemoSection() {
           </p>
         </div>
 
-        {/* Feature Tabs - Scrollable on mobile, centered on desktop */}
+        {/* Feature Tabs - Full text on all devices */}
         <div className="border-b border-gray-200 mb-0 overflow-x-auto">
           <div className="flex items-center justify-start sm:justify-center gap-6 sm:gap-8 min-w-max sm:min-w-0 px-4 sm:px-0">
             {features.map((feature) => (
@@ -319,13 +319,13 @@ function FeatureDemoSection() {
                 key={feature.id}
                 onClick={() => setSelectedFeature(feature.id)}
                 className={cn(
-                  "px-2 py-4 text-sm sm:text-base font-medium transition-colors relative whitespace-nowrap",
+                  "px-3 py-4 text-base font-medium transition-colors relative whitespace-nowrap",
                   selectedFeature === feature.id
                     ? "text-black"
                     : "text-gray-600 hover:text-black"
                 )}
               >
-                {feature.label}
+                <span className="block">{feature.label}</span>
                 {selectedFeature === feature.id && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />
                 )}
