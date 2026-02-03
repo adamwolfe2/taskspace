@@ -10,19 +10,19 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:-translate-y-0.5 shadow-blue-500/25',
+          'bg-primary text-primary-foreground shadow-md hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5',
         destructive:
           'bg-gradient-to-b from-red-500 to-red-600 text-white shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg hover:-translate-y-0.5 shadow-red-500/25',
         success:
           'bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-md hover:from-emerald-600 hover:to-emerald-700 hover:shadow-lg hover:-translate-y-0.5 shadow-emerald-500/25',
         outline:
-          'border border-slate-200 bg-white shadow-sm hover:bg-slate-50 hover:border-slate-300 text-slate-700 hover:text-slate-900',
+          'border-2 border-primary/20 bg-white shadow-sm hover:bg-primary/5 hover:border-primary/40 text-foreground',
         secondary:
-          'bg-slate-100 text-slate-700 shadow-sm hover:bg-slate-200 hover:shadow',
+          'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 hover:shadow',
         ghost:
-          'hover:bg-slate-100 text-slate-600 hover:text-slate-900',
+          'hover:bg-accent hover:text-accent-foreground',
         link:
-          'text-blue-600 underline-offset-4 hover:underline hover:text-blue-700',
+          'text-primary underline-offset-4 hover:underline hover:opacity-80',
       },
       size: {
         default: 'h-10 px-5 py-2.5 has-[>svg]:px-4',
