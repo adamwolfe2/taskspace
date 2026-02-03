@@ -720,8 +720,8 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <CoreFeaturesSection />
       <FeatureDemoSection />
+      <CoreFeaturesSection />
       <AgentsSection />
       <IntegrationsSection />
       <UseCasesSection />
