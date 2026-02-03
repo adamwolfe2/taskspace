@@ -6,6 +6,8 @@ import { generateId } from "@/lib/auth/password"
 import { sendSlackMessage, buildTaskAssignmentMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import { asanaClient } from "@/lib/integrations/asana"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createTaskSchema, updateTaskSchema } from "@/lib/validation/schemas"
 import type { AssignedTask, ApiResponse, Notification } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -57,32 +59,11 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // POST /api/tasks - Create a new task
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const {
-      title,
-      description,
-      assigneeId,
-      rockId,
-      priority = "normal",
-      dueDate,
-      type: _type = "personal",
-      workspaceId,
-    } = body
-
-    if (!title) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Task title is required" },
-        { status: 400 }
-      )
-    }
-
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { title, description, assigneeId, rockId, priority, dueDate, workspaceId } = await validateBody(
+      request,
+      createTaskSchema
+    )
 
     // Validate workspace access (unless org admin)
     if (!isAdmin(auth)) {
@@ -245,6 +226,14 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       message: taskType === "assigned" ? "Task assigned successfully" : "Task created successfully",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Create task error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create task" },
@@ -256,15 +245,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 // PATCH /api/tasks - Update a task
 export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { id, ...updates } = body
-
-    if (!id) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Task ID is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { id, ...updates } = await validateBody(request, updateTaskSchema)
 
     const task = await db.assignedTasks.findById(id)
     if (!task) {
@@ -300,7 +282,21 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       updates.completedAt = null
     }
 
-    const updatedTask = await db.assignedTasks.update(id, updates)
+    // Type-safe update object (filter out undefined values, convert null recurrence)
+    const updateData: Partial<AssignedTask> = {}
+    if (updates.title !== undefined) updateData.title = updates.title
+    if (updates.description !== undefined) updateData.description = updates.description
+    if (updates.priority !== undefined) updateData.priority = updates.priority
+    if (updates.dueDate !== undefined) updateData.dueDate = updates.dueDate
+    if (updates.status !== undefined) updateData.status = updates.status
+    if (updates.completedAt !== undefined) updateData.completedAt = updates.completedAt
+    if (updates.rockId !== undefined) updateData.rockId = updates.rockId
+    if (updates.recurrence !== undefined) {
+      updateData.recurrence = updates.recurrence === null ? undefined : updates.recurrence
+    }
+    updateData.updatedAt = new Date().toISOString()
+
+    const updatedTask = await db.assignedTasks.update(id, updateData)
 
     // Sync to Asana if task has an asanaGid
     if (task.asanaGid && asanaClient.isConfigured()) {
@@ -342,6 +338,14 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       message: "Task updated successfully",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Update task error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update task" },

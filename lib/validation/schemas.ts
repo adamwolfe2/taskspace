@@ -165,14 +165,16 @@ export const recurrenceSchema = z.object({
 export const createTaskSchema = z.object({
   title: z.string().min(1).max(500),
   description: z.string().max(5000).optional(),
-  assigneeId: uuidSchema,
+  assigneeId: uuidSchema.optional(), // Optional - defaults to current user
+  workspaceId: uuidSchema, // Required for data isolation
   priority: prioritySchema.default("normal"),
-  dueDate: dateSchema,
+  dueDate: dateSchema.optional(), // Optional - defaults to today
   rockId: uuidSchema.nullable().optional(),
   recurrence: recurrenceSchema.optional(),
 })
 
 export const updateTaskSchema = z.object({
+  id: uuidSchema, // Task ID to update
   title: z.string().min(1).max(500).optional(),
   description: z.string().max(5000).optional(),
   priority: prioritySchema.optional(),
