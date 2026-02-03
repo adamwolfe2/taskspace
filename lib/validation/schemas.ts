@@ -158,11 +158,15 @@ export const updateMemberSchema = z.object({
 export const inviteMemberSchema = z.object({
   email: emailSchema,
   role: z.enum(["admin", "member"]).default("member"),
-  department: z.string().min(1).max(100),
+  department: z.string().min(1).max(100).default("General"),
+  workspaceId: uuidSchema.optional(),
+  name: z.string().min(2).max(100).optional(), // Optional pre-filled name
 })
 
 export const bulkInviteSchema = z.object({
-  invitations: z.array(inviteMemberSchema).min(1).max(50),
+  emails: z.array(emailSchema).min(1).max(50),
+  role: z.enum(["admin", "member"]).default("member"),
+  department: z.string().min(1).max(100).default("General"),
 })
 
 // ============================================
@@ -370,8 +374,8 @@ export const calendarExportSchema = z.object({
 
 export const acceptInvitationSchema = z.object({
   token: z.string().min(1, "Invitation token is required"),
-  name: z.string().min(2, "Name must be at least 2 characters").max(100),
-  password: passwordSchema,
+  name: z.string().min(2, "Name must be at least 2 characters").max(100).optional(),
+  password: passwordSchema.optional(),
 })
 
 export const switchOrganizationSchema = z.object({

@@ -6,8 +6,9 @@ import {
   generateToken,
   getExpirationDate,
   isTokenExpired,
-  validatePasswordStrength,
 } from "@/lib/auth/password"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { acceptInvitationSchema } from "@/lib/validation/schemas"
 import { addWorkspaceMember, getDefaultWorkspace } from "@/lib/db/workspaces"
 import type { OrganizationMember, Session, ApiResponse, AuthResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -15,15 +16,8 @@ import { logger, logError } from "@/lib/logger"
 // POST /api/invitations/accept - Accept an invitation
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { token, name, password } = body
-
-    if (!token) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invitation token is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { token, name, password } = await validateBody(request, acceptInvitationSchema)
 
     // Find invitation
     const invitation = await db.invitations.findByToken(token)
@@ -79,15 +73,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Validate password
-      const passwordValidation = validatePasswordStrength(password)
-      if (!passwordValidation.valid) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: passwordValidation.errors.join(". ") },
-          { status: 400 }
-        )
-      }
-
+      // Password already validated by schema
       user = {
         id: generateId(),
         email: invitation.email.toLowerCase(),
@@ -213,6 +199,14 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Accept invitation error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to accept invitation" },

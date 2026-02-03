@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
-import { generateId, generateInviteToken, getExpirationDate, validateEmail } from "@/lib/auth/password"
+import { withAdmin } from "@/lib/api/middleware"
+import { generateId, generateInviteToken, getExpirationDate } from "@/lib/auth/password"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { bulkInviteSchema } from "@/lib/validation/schemas"
 import { sendInvitationEmail } from "@/lib/email"
 import type { Invitation, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -12,39 +14,10 @@ interface BulkInviteResult {
 }
 
 // POST /api/invitations/bulk - Send multiple invitations at once
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can invite members" },
-        { status: 403 }
-      )
-    }
-
-    const body = await request.json()
-    const { emails, role = "member", department = "General" } = body
-
-    if (!emails || !Array.isArray(emails) || emails.length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "At least one email address is required" },
-        { status: 400 }
-      )
-    }
-
-    if (emails.length > 50) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Maximum 50 invitations at once" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { emails, role, department } = await validateBody(request, bulkInviteSchema)
 
     // Get current counts for subscription limit check
     const members = await db.members.findByOrganizationId(auth.organization.id)
@@ -73,13 +46,7 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString()
 
     for (const email of emails) {
-      const trimmedEmail = email.trim().toLowerCase()
-
-      // Validate email
-      if (!validateEmail(trimmedEmail)) {
-        result.failed.push({ email: trimmedEmail, error: "Invalid email format" })
-        continue
-      }
+      const trimmedEmail = email.toLowerCase() // Already validated by schema
 
       // Check if user is already a member
       const existingUser = await db.users.findByEmail(trimmedEmail)
@@ -137,10 +104,18 @@ export async function POST(request: NextRequest) {
       message: `Successfully sent ${result.successful.length} invitation(s)${result.failed.length > 0 ? `, ${result.failed.length} failed` : ""}`,
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Bulk invite error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to send invitations" },
       { status: 500 }
     )
   }
-}
+})

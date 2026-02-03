@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAdmin } from "@/lib/api/middleware"
-import { generateId, generateInviteToken, getExpirationDate, validateEmail } from "@/lib/auth/password"
+import { generateId, generateInviteToken, getExpirationDate } from "@/lib/auth/password"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { inviteMemberSchema } from "@/lib/validation/schemas"
 import { sendInvitationEmail } from "@/lib/email"
 import type { Invitation, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -28,15 +30,8 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
 // POST /api/invitations - Create a new invitation
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { email, role = "member", department = "General", workspaceId, name: _name } = body
-
-    if (!email || !validateEmail(email)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Valid email is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { email, role, department, workspaceId, name: _name } = await validateBody(request, inviteMemberSchema)
 
     // Check if user is already an active member
     const existingUser = await db.users.findByEmail(email)
@@ -133,6 +128,14 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           : `Invitation created but email failed: ${emailResult.error}. You can copy the invite link manually.`,
     })
   } catch (error: any) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Create invitation error", error)
     return NextResponse.json<ApiResponse<null>>(
       {
