@@ -593,8 +593,8 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <CoreFeaturesSection />
       <AgentsSection />
+      <CoreFeaturesSection />
       <IntegrationsSection />
       <UseCasesSection />
       <StatsSection />
