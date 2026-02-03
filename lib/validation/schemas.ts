@@ -42,6 +42,7 @@ export const paginationSchema = z.object({
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "Password is required"),
+  organizationId: z.string().uuid().optional(),
 })
 
 export const registerSchema = z.object({

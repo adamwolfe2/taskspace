@@ -5,14 +5,14 @@ import {
   generateId,
   generateToken,
   getExpirationDate,
-  validateEmail,
-  validatePasswordStrength,
   slugify,
 } from "@/lib/auth/password"
 import {
   checkRegisterRateLimit,
   getRateLimitHeaders,
 } from "@/lib/auth/rate-limit"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { registerSchema } from "@/lib/validation/schemas"
 import { logger, logAuthEvent, formatError } from "@/lib/logger"
 import type { User, Organization, OrganizationMember, Session, ApiResponse, AuthResponse } from "@/lib/types"
 
@@ -35,33 +35,8 @@ export async function POST(request: NextRequest) {
       return response
     }
 
-    const body = await request.json()
-    const { email, password, name, organizationName } = body
-
-    // Validate required fields
-    if (!email || !password || !name) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Email, password, and name are required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate email format
-    if (!validateEmail(email)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid email format" },
-        { status: 400 }
-      )
-    }
-
-    // Validate password strength
-    const passwordValidation = validatePasswordStrength(password)
-    if (!passwordValidation.valid) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: passwordValidation.errors.join(". ") },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { email, password, name, organizationName } = await validateBody(request, registerSchema)
 
     // Check if user already exists
     const existingUser = await db.users.findByEmail(email)
@@ -224,6 +199,14 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logger.error({ error: formatError(error) }, "Registration error")
     logAuthEvent("register", undefined, false, { error: formatError(error) })
 

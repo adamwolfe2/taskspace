@@ -5,13 +5,14 @@ import {
   generateId,
   generateToken,
   getExpirationDate,
-  validateEmail,
 } from "@/lib/auth/password"
 import {
   checkLoginRateLimit,
   resetLoginRateLimit,
   getRateLimitHeaders,
 } from "@/lib/auth/rate-limit"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { loginSchema } from "@/lib/validation/schemas"
 import { logger, logAuthEvent, formatError } from "@/lib/logger"
 import type { Session, ApiResponse, AuthResponse } from "@/lib/types"
 
@@ -35,24 +36,8 @@ export async function POST(request: NextRequest) {
       return response
     }
 
-    const body = await request.json()
-    const { email, password, organizationId } = body
-
-    // Validate required fields
-    if (!email || !password) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Email and password are required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate email format
-    if (!validateEmail(email)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid email format" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { email, password, organizationId } = await validateBody(request, loginSchema)
 
     // Find user
     const user = await db.users.findByEmail(email)
@@ -168,6 +153,14 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logger.error({ error: formatError(error) }, "Login error")
     logAuthEvent("login", undefined, false, { error: formatError(error) })
 

@@ -4,13 +4,14 @@ import {
   generateId,
   generateToken,
   getExpirationDate,
-  validateEmail,
 } from "@/lib/auth/password"
 import {
   checkPasswordResetRateLimit,
   checkPasswordResetEmailRateLimit,
   getRateLimitHeaders,
 } from "@/lib/auth/rate-limit"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { forgotPasswordSchema } from "@/lib/validation/schemas"
 import { sendPasswordResetEmail } from "@/lib/email"
 import type { PasswordResetToken, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -34,16 +35,8 @@ export async function POST(request: NextRequest) {
       return response
     }
 
-    const body = await request.json()
-    const { email } = body
-
-    // Validate email format
-    if (!email || !validateEmail(email)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Valid email is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { email } = await validateBody(request, forgotPasswordSchema)
 
     // Check rate limit by email (to prevent email enumeration via timing attacks)
     const emailRateLimitResult = checkPasswordResetEmailRateLimit(email)
@@ -91,6 +84,14 @@ export async function POST(request: NextRequest) {
       message: "If an account with that email exists, we've sent a password reset link.",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Forgot password error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "An error occurred. Please try again later." },

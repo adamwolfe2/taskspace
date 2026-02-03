@@ -2,33 +2,17 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import {
   hashPassword,
-  validatePasswordStrength,
   isTokenExpired,
 } from "@/lib/auth/password"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { resetPasswordSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { token, password } = body
-
-    // Validate required fields
-    if (!token || !password) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Token and password are required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate password strength
-    const passwordValidation = validatePasswordStrength(password)
-    if (!passwordValidation.valid) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: passwordValidation.errors.join(". ") },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { token, password } = await validateBody(request, resetPasswordSchema)
 
     // Find reset token
     const resetToken = await db.passwordResetTokens.findByToken(token)
@@ -86,6 +70,14 @@ export async function POST(request: NextRequest) {
       message: "Password reset successfully. Please log in with your new password.",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Reset password error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "An error occurred. Please try again later." },
