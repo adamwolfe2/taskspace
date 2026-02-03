@@ -4,6 +4,8 @@ import { withAuth } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createRockSchema, updateRockSchema } from "@/lib/validation/schemas"
 import type { Rock, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -59,33 +61,9 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // POST /api/rocks - Create a new rock
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const {
-      title,
-      description,
-      dueDate,
-      bucket,
-      outcome,
-      doneWhen,
-      userId,
-      quarter,
-      workspaceId,
-    } = body
-
-    if (!title || !description || !dueDate) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Title, description, and due date are required" },
-        { status: 400 }
-      )
-    }
-
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { title, description, dueDate, bucket, outcome, doneWhen, userId, quarter, workspaceId } =
+      await validateBody(request, createRockSchema)
 
     // Validate workspace access (unless org admin)
     if (!isAdmin(auth)) {
@@ -145,6 +123,14 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       message: "Rock created successfully",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Create rock error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create rock" },
@@ -156,15 +142,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 // PATCH /api/rocks - Update a rock
 export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { id, ...updates } = body
-
-    if (!id) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Rock ID is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { id, ...updates } = await validateBody(request, updateRockSchema)
 
     const rock = await db.rocks.findById(id)
     if (!rock) {
@@ -207,6 +186,14 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       message: "Rock updated successfully",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Update rock error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update rock" },

@@ -211,16 +211,18 @@ export const milestoneSchema = z.object({
 
 export const createRockSchema = z.object({
   title: z.string().min(1).max(500),
-  description: z.string().max(5000).optional(),
-  userId: uuidSchema,
+  description: z.string().min(1).max(5000), // Required per route validation
+  userId: uuidSchema.optional(), // Optional - defaults to current user
+  workspaceId: uuidSchema, // Required for data isolation
   dueDate: dateSchema,
   quarter: z.string().regex(/^Q[1-4] \d{4}$/).optional(),
   bucket: z.string().max(100).optional(),
   outcome: z.string().max(1000).optional(),
-  milestones: z.array(milestoneSchema).optional(),
+  doneWhen: z.array(z.string()).optional(), // Array of completion criteria
 })
 
 export const updateRockSchema = z.object({
+  id: uuidSchema, // Rock ID to update
   title: z.string().min(1).max(500).optional(),
   description: z.string().max(5000).optional(),
   progress: z.number().int().min(0).max(100).optional(),
@@ -229,7 +231,7 @@ export const updateRockSchema = z.object({
   quarter: z.string().regex(/^Q[1-4] \d{4}$/).optional(),
   bucket: z.string().max(100).optional(),
   outcome: z.string().max(1000).optional(),
-  milestones: z.array(milestoneSchema).optional(),
+  doneWhen: z.array(z.string()).optional(),
 })
 
 export const bulkRockSchema = z.object({
