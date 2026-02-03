@@ -16,8 +16,6 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MegaMenu } from "@/components/marketing/mega-menu"
-import { MarketingFooter } from "@/components/marketing/footer"
 import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
@@ -35,8 +33,7 @@ const staggerContainer = {
 
 export default function RocksPage() {
   return (
-    <>
-      <MegaMenu />
+    
       <PageTransition>
       <div className="min-h-screen bg-white">
 
@@ -404,7 +401,6 @@ export default function RocksPage() {
 
     </div>
       </PageTransition>
-    <MarketingFooter />
-    </>
+    
   )
 }

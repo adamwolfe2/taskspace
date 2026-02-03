@@ -175,7 +175,7 @@ function InteractiveTeamDemo() {
         {/* Team Details */}
         <div className="md:col-span-3 p-6">
           {selectedTeam && teams[selectedTeam as keyof typeof teams] && (
-            <>
+            
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h4 className="text-xl font-semibold text-slate-900">
@@ -240,7 +240,7 @@ function InteractiveTeamDemo() {
                 <UserPlus className="w-5 h-5" />
                 Add Team Member
               </button>
-            </>
+            
           )}
         </div>
       </div>
@@ -248,8 +248,6 @@ function InteractiveTeamDemo() {
   )
 }
 
-import { MegaMenu } from "@/components/marketing/mega-menu"
-import { MarketingFooter } from "@/components/marketing/footer"
 
 const features = [
   {
@@ -287,8 +285,7 @@ const permissions = [
 
 export default function TeamManagementPage() {
   return (
-    <>
-      <MegaMenu />
+    
       <div className="pt-20">
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
@@ -549,7 +546,6 @@ export default function TeamManagementPage() {
         </div>
       </section>
     </div>
-    <MarketingFooter />
-    </>
+    
   )
 }

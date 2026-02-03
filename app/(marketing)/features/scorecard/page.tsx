@@ -20,8 +20,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { MegaMenu } from "@/components/marketing/mega-menu"
-import { MarketingFooter } from "@/components/marketing/footer"
 import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
@@ -41,8 +39,7 @@ export default function ScorecardPage() {
   const [selectedWeek, setSelectedWeek] = useState(2)
 
   return (
-    <>
-      <MegaMenu />
+    
       <PageTransition>
       <div className="min-h-screen bg-white">
 
@@ -645,7 +642,6 @@ export default function ScorecardPage() {
 
     </div>
       </PageTransition>
-    <MarketingFooter />
-    </>
+    
   )
 }

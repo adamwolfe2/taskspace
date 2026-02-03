@@ -18,8 +18,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { MegaMenu } from "@/components/marketing/mega-menu"
-import { MarketingFooter } from "@/components/marketing/footer"
 import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
@@ -37,9 +35,7 @@ const staggerContainer = {
 
 export default function EODReportsPage() {
   return (
-    <>
-      <MegaMenu />
-      <PageTransition>
+    <PageTransition>
       <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
@@ -469,27 +465,42 @@ export default function EODReportsPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-black">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-5xl font-bold text-white mb-6">
-            Start submitting better EODs today
-          </h2>
-          <p className="text-xl text-white/90 mb-8">
-            Join thousands of teams saving hours every week
-          </p>
-          <Link href="/app?page=register">
-            <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 rounded-full px-8 h-14 text-base font-semibold">
-              Get started FREE
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-          <p className="text-white/80 mt-4 text-sm">Free forever. No credit card required.</p>
+      <section className="py-20 lg:py-32 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative bg-black rounded-3xl overflow-hidden px-8 py-16 sm:px-16 sm:py-20 text-center">
+            {/* Dotted pattern overlay */}
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
+              backgroundSize: '24px 24px'
+            }}></div>
+
+            <div className="relative z-10">
+              <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
+                Start submitting better EODs today
+              </h2>
+              <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+                Join thousands of teams saving hours every week
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/app?page=register">
+                  <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 rounded-full px-8 h-14 text-base font-semibold">
+                    Get started FREE
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-full px-8 h-14 text-base font-semibold">
+                    Request a demo
+                  </Button>
+                </Link>
+              </div>
+              <p className="text-white/80 mt-6 text-sm">Free forever. No credit card required.</p>
+            </div>
+          </div>
         </div>
       </section>
 
     </div>
     </PageTransition>
-    <MarketingFooter />
-    </>
   )
 }
