@@ -66,9 +66,11 @@ function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-black leading-[1.1] mb-6"
+            className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-black leading-[1.1] mb-6"
           >
-            Run your business on EOS with Taskspace
+            Run All Your Teams
+            <br />
+            <span className="text-gray-400">In True Parallel</span>
           </motion.h1>
 
           {/* Subheadline */}
@@ -78,8 +80,7 @@ function HeroSection() {
             transition={{ delay: 0.2 }}
             className="text-xl text-gray-600 max-w-3xl mx-auto mb-10"
           >
-            The all-in-one platform for implementing the Entrepreneurial Operating System.
-            Manage teams, track rocks, run Level 10 meetings, and drive accountability.
+            AI operational infrastructure for multi-company founders & builders. Set it & forget it with EOD reports, custom workspaces, and unified dashboard across all your teams running on EOS.
           </motion.p>
 
           {/* CTAs */}
