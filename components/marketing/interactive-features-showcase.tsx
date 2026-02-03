@@ -67,7 +67,7 @@ const features: FeatureTab[] = [
   },
   {
     id: "vto",
-    label: "Vision/Traction Organizer",
+    label: "Team Vision",
     icon: <Lightbulb className="w-4 h-4" />,
     component: <DemoVTO />
   },
