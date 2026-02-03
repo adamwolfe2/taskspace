@@ -19,6 +19,7 @@ import {
   Zap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -285,7 +286,7 @@ const permissions = [
 
 export default function TeamManagementPage() {
   return (
-    
+    <PageTransition>
       <div className="pt-20">
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
@@ -546,6 +547,6 @@ export default function TeamManagementPage() {
         </div>
       </section>
     </div>
-    
+    </PageTransition>
   )
 }
