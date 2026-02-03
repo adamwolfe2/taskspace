@@ -9,6 +9,8 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createWorkspaceSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import {
   getUserWorkspaces,
@@ -51,32 +53,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
  */
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { name, type, description, settings, isDefault } = body
-
-    // Validation
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Workspace name is required" },
-        { status: 400 }
-      )
-    }
-
-    if (name.length > 100) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Workspace name must be 100 characters or less" },
-        { status: 400 }
-      )
-    }
-
-    // Validate type
-    const validTypes = ["leadership", "department", "team", "project"]
-    if (type && !validTypes.includes(type)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `Invalid workspace type. Must be one of: ${validTypes.join(", ")}` },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { name, type, description, settings, isDefault } = await validateBody(request, createWorkspaceSchema)
 
     // Generate unique slug
     const baseSlug = generateSlug(name.trim())
@@ -105,6 +83,14 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       message: "Workspace created successfully",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Create workspace error", error)
 
     // Handle unique constraint violation

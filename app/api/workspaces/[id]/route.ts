@@ -11,6 +11,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateWorkspaceSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import {
   getWorkspaceById,
@@ -125,7 +127,7 @@ export const PATCH = withAdmin(async (
       )
     }
 
-    const body = await request.json()
+    // Validate request body
     const {
       name,
       type,
@@ -137,53 +139,7 @@ export const PATCH = withAdmin(async (
       secondaryColor,
       accentColor,
       faviconUrl
-    } = body
-
-    // Validation
-    if (name !== undefined) {
-      if (typeof name !== "string" || name.trim().length === 0) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "Workspace name cannot be empty" },
-          { status: 400 }
-        )
-      }
-      if (name.length > 100) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "Workspace name must be 100 characters or less" },
-          { status: 400 }
-        )
-      }
-    }
-
-    // Validate type
-    const validTypes = ["leadership", "department", "team", "project"]
-    if (type !== undefined && !validTypes.includes(type)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `Invalid workspace type. Must be one of: ${validTypes.join(", ")}` },
-        { status: 400 }
-      )
-    }
-
-    // Validate color format (if provided)
-    const colorRegex = /^#[0-9A-Fa-f]{6}$/
-    if (primaryColor !== undefined && primaryColor !== null && !colorRegex.test(primaryColor)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Primary color must be in hex format (#RRGGBB)" },
-        { status: 400 }
-      )
-    }
-    if (secondaryColor !== undefined && secondaryColor !== null && !colorRegex.test(secondaryColor)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Secondary color must be in hex format (#RRGGBB)" },
-        { status: 400 }
-      )
-    }
-    if (accentColor !== undefined && accentColor !== null && !colorRegex.test(accentColor)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Accent color must be in hex format (#RRGGBB)" },
-        { status: 400 }
-      )
-    }
+    } = await validateBody(request, updateWorkspaceSchema)
 
     // Prevent un-defaulting the default workspace without setting another as default
     if (isDefault === false && workspace.isDefault) {
@@ -221,6 +177,14 @@ export const PATCH = withAdmin(async (
       message: "Workspace updated successfully",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Update workspace error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update workspace" },

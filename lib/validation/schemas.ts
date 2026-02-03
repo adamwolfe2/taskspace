@@ -412,11 +412,11 @@ export const updateScorecardEntrySchema = z.object({
 // WORKSPACE SCHEMAS
 // ============================================
 
-export const workspaceTypeSchema = z.enum(["personal", "team", "project"])
+export const workspaceTypeSchema = z.enum(["leadership", "department", "team", "project"])
 
 export const createWorkspaceSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  type: workspaceTypeSchema.default("personal"),
+  type: workspaceTypeSchema.default("team"),
   description: z.string().max(500).optional(),
   isDefault: z.boolean().default(false),
   settings: z.record(z.unknown()).optional(),
@@ -428,6 +428,11 @@ export const updateWorkspaceSchema = z.object({
   description: z.string().max(500).optional(),
   isDefault: z.boolean().optional(),
   settings: z.record(z.unknown()).optional(),
+  logoUrl: z.string().url().nullable().optional(),
+  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color format").nullable().optional(),
+  secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color format").nullable().optional(),
+  accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color format").nullable().optional(),
+  faviconUrl: z.string().url().nullable().optional(),
 })
 
 // ============================================
