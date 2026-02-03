@@ -84,7 +84,7 @@ export async function sendInvitationEmail(
   organization: Organization,
   inviterName: string
 ) {
-  const inviteLink = `${APP_URL}?invite=${invitation.token}`
+  const inviteLink = `${APP_URL}/app?invite=${invitation.token}`
 
   const html = `
 <!DOCTYPE html>
