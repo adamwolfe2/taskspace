@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
 import { useApp } from "./app-context"
-import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import {
   ExtractedColors,
   defaultBrandColors,
@@ -26,22 +25,12 @@ interface BrandThemeProviderProps {
 
 export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
   const { currentOrganization } = useApp()
-  const { currentWorkspace } = useWorkspaces()
   const [colors, setColors] = useState<ExtractedColors>(defaultBrandColors)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load brand colors from workspace settings (workspace-level branding)
+  // Load brand colors from organization settings
   useEffect(() => {
-    // Priority: Workspace branding > Organization branding > Default
-    let primaryColor: string | null = null
-
-    if (currentWorkspace) {
-      // Use workspace-specific branding (highest priority)
-      primaryColor = currentWorkspace.primaryColor || null
-    } else if (currentOrganization) {
-      // Fallback to organization branding if no workspace selected
-      primaryColor = currentOrganization.primaryColor || null
-    }
+    const primaryColor = currentOrganization?.primaryColor || null
 
     if (primaryColor) {
       // Generate palette from primary color
@@ -58,7 +47,7 @@ export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
     }
 
     setIsLoading(false)
-  }, [currentOrganization, currentWorkspace])
+  }, [currentOrganization])
 
   // Apply CSS variables to document
   useEffect(() => {
