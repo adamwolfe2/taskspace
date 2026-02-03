@@ -12,8 +12,14 @@ import { getErrorMessage } from "../utils"
 function getLocalDateString(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
-const today = getLocalDateString(new Date())
-const yesterday = getLocalDateString(new Date(Date.now() - 86400000))
+
+// Compute dates dynamically to avoid hydration mismatch
+function getDemoDates() {
+  return {
+    today: getLocalDateString(new Date()),
+    yesterday: getLocalDateString(new Date(Date.now() - 86400000))
+  }
+}
 
 // LocalStorage keys for demo mode data persistence
 const DEMO_STORAGE_KEYS = {
@@ -49,27 +55,38 @@ function saveToStorage<T>(key: string, data: T): void {
   }
 }
 
-const DEMO_TEAM_MEMBERS: TeamMember[] = [
-  { id: "demo-user-1", name: "Adam Wolfe", email: "adam@demo.com", role: "admin", department: "Operations", joinDate: "2024-01-15", status: "active" },
-  { id: "demo-user-2", name: "Sarah Chen", email: "sarah@demo.com", role: "member", department: "Property Management", joinDate: "2024-02-01", status: "active" },
-  { id: "demo-user-3", name: "Mike Johnson", email: "mike@demo.com", role: "member", department: "Maintenance", joinDate: "2024-02-15", status: "active" },
-  { id: "demo-user-4", name: "Lisa Park", email: "lisa@demo.com", role: "member", department: "Leasing", joinDate: "2024-03-01", status: "active" },
-]
+// Generate demo data with current dates (called at runtime, not module load)
+function getDemoTeamMembers(): TeamMember[] {
+  return [
+    { id: "demo-user-1", name: "Adam Wolfe", email: "adam@demo.com", role: "admin", department: "Operations", joinDate: "2024-01-15", status: "active" },
+    { id: "demo-user-2", name: "Sarah Chen", email: "sarah@demo.com", role: "member", department: "Property Management", joinDate: "2024-02-01", status: "active" },
+    { id: "demo-user-3", name: "Mike Johnson", email: "mike@demo.com", role: "member", department: "Maintenance", joinDate: "2024-02-15", status: "active" },
+    { id: "demo-user-4", name: "Lisa Park", email: "lisa@demo.com", role: "member", department: "Leasing", joinDate: "2024-03-01", status: "active" },
+  ]
+}
 
-const DEMO_ROCKS: Rock[] = [
-  { id: "rock-1", userId: "demo-user-2", organizationId: "demo-org-1", title: "Complete Q1 property inspections", description: "Inspect all 50 properties by end of quarter", progress: 72, status: "on-track", dueDate: "2025-03-31", quarter: "Q1 2025", createdAt: "2024-12-01", updatedAt: today },
-  { id: "rock-2", userId: "demo-user-3", organizationId: "demo-org-1", title: "Reduce maintenance backlog by 40%", description: "Clear outstanding maintenance tickets", progress: 45, status: "at-risk", dueDate: "2025-03-31", quarter: "Q1 2025", createdAt: "2024-12-01", updatedAt: today },
-  { id: "rock-3", userId: "demo-user-4", organizationId: "demo-org-1", title: "Achieve 95% occupancy rate", description: "Fill vacant units across portfolio", progress: 88, status: "on-track", dueDate: "2025-03-31", quarter: "Q1 2025", createdAt: "2024-12-01", updatedAt: today },
-  { id: "rock-4", userId: "demo-user-1", organizationId: "demo-org-1", title: "Implement new property management software", description: "Roll out and train team on new system", progress: 60, status: "on-track", dueDate: "2025-03-31", quarter: "Q1 2025", createdAt: "2024-12-01", updatedAt: today },
-]
+function getDemoRocks(): Rock[] {
+  const { today } = getDemoDates()
+  return [
+    { id: "rock-1", userId: "demo-user-2", organizationId: "demo-org-1", title: "Complete Q1 property inspections", description: "Inspect all 50 properties by end of quarter", progress: 72, status: "on-track", dueDate: "2025-03-31", quarter: "Q1 2025", createdAt: "2024-12-01", updatedAt: today },
+    { id: "rock-2", userId: "demo-user-3", organizationId: "demo-org-1", title: "Reduce maintenance backlog by 40%", description: "Clear outstanding maintenance tickets", progress: 45, status: "at-risk", dueDate: "2025-03-31", quarter: "Q1 2025", createdAt: "2024-12-01", updatedAt: today },
+    { id: "rock-3", userId: "demo-user-4", organizationId: "demo-org-1", title: "Achieve 95% occupancy rate", description: "Fill vacant units across portfolio", progress: 88, status: "on-track", dueDate: "2025-03-31", quarter: "Q1 2025", createdAt: "2024-12-01", updatedAt: today },
+    { id: "rock-4", userId: "demo-user-1", organizationId: "demo-org-1", title: "Implement new property management software", description: "Roll out and train team on new system", progress: 60, status: "on-track", dueDate: "2025-03-31", quarter: "Q1 2025", createdAt: "2024-12-01", updatedAt: today },
+  ]
+}
 
-const DEMO_TASKS: AssignedTask[] = [
-  { id: "task-1", organizationId: "demo-org-1", title: "Review vendor contracts", description: "Annual review of all vendor agreements", assigneeId: "demo-user-2", assigneeName: "Sarah Chen", assignedById: "demo-user-1", assignedByName: "Adam Wolfe", type: "assigned", rockId: null, rockTitle: null, priority: "high", dueDate: today, status: "pending", completedAt: null, addedToEOD: false, eodReportId: null, createdAt: yesterday, updatedAt: yesterday },
-  { id: "task-2", organizationId: "demo-org-1", title: "Fix HVAC unit at 123 Main St", description: "Unit 4B reported heating issues", assigneeId: "demo-user-3", assigneeName: "Mike Johnson", assignedById: "demo-user-1", assignedByName: "Adam Wolfe", type: "assigned", rockId: "rock-2", rockTitle: "Reduce maintenance backlog by 40%", priority: "high", dueDate: today, status: "in-progress", completedAt: null, addedToEOD: false, eodReportId: null, createdAt: yesterday, updatedAt: today },
-  { id: "task-3", organizationId: "demo-org-1", title: "Schedule property tours for prospects", description: "3 prospects interested in 2BR units", assigneeId: "demo-user-4", assigneeName: "Lisa Park", assignedById: "demo-user-1", assignedByName: "Adam Wolfe", type: "assigned", rockId: "rock-3", rockTitle: "Achieve 95% occupancy rate", priority: "medium", dueDate: today, status: "pending", completedAt: null, addedToEOD: false, eodReportId: null, createdAt: yesterday, updatedAt: yesterday },
-]
+function getDemoTasks(): AssignedTask[] {
+  const { today, yesterday } = getDemoDates()
+  return [
+    { id: "task-1", organizationId: "demo-org-1", title: "Review vendor contracts", description: "Annual review of all vendor agreements", assigneeId: "demo-user-2", assigneeName: "Sarah Chen", assignedById: "demo-user-1", assignedByName: "Adam Wolfe", type: "assigned", rockId: null, rockTitle: null, priority: "high", dueDate: today, status: "pending", completedAt: null, addedToEOD: false, eodReportId: null, createdAt: yesterday, updatedAt: yesterday },
+    { id: "task-2", organizationId: "demo-org-1", title: "Fix HVAC unit at 123 Main St", description: "Unit 4B reported heating issues", assigneeId: "demo-user-3", assigneeName: "Mike Johnson", assignedById: "demo-user-1", assignedByName: "Adam Wolfe", type: "assigned", rockId: "rock-2", rockTitle: "Reduce maintenance backlog by 40%", priority: "high", dueDate: today, status: "in-progress", completedAt: null, addedToEOD: false, eodReportId: null, createdAt: yesterday, updatedAt: today },
+    { id: "task-3", organizationId: "demo-org-1", title: "Schedule property tours for prospects", description: "3 prospects interested in 2BR units", assigneeId: "demo-user-4", assigneeName: "Lisa Park", assignedById: "demo-user-1", assignedByName: "Adam Wolfe", type: "assigned", rockId: "rock-3", rockTitle: "Achieve 95% occupancy rate", priority: "medium", dueDate: today, status: "pending", completedAt: null, addedToEOD: false, eodReportId: null, createdAt: yesterday, updatedAt: yesterday },
+  ]
+}
 
-const DEMO_EOD_REPORTS: EODReport[] = [
+function getDemoEODReports(): EODReport[] {
+  const { yesterday } = getDemoDates()
+  return [
   {
     id: "eod-1",
     organizationId: "demo-org-1",
@@ -132,7 +149,8 @@ const DEMO_EOD_REPORTS: EODReport[] = [
     submittedAt: yesterday,
     createdAt: yesterday,
   },
-]
+  ]
+}
 
 export function useTeamData() {
   const { isAuthenticated, currentOrganization, isDemoMode } = useApp()
@@ -156,10 +174,10 @@ export function useTeamData() {
 
     // Use demo data in demo mode - load from localStorage if available, fallback to defaults
     if (isDemoMode) {
-      const savedMembers = loadFromStorage<TeamMember[]>(DEMO_STORAGE_KEYS.teamMembers, DEMO_TEAM_MEMBERS)
-      const savedRocks = loadFromStorage<Rock[]>(DEMO_STORAGE_KEYS.rocks, DEMO_ROCKS)
-      const savedTasks = loadFromStorage<AssignedTask[]>(DEMO_STORAGE_KEYS.tasks, DEMO_TASKS)
-      const savedReports = loadFromStorage<EODReport[]>(DEMO_STORAGE_KEYS.eodReports, DEMO_EOD_REPORTS)
+      const savedMembers = loadFromStorage<TeamMember[]>(DEMO_STORAGE_KEYS.teamMembers, getDemoTeamMembers())
+      const savedRocks = loadFromStorage<Rock[]>(DEMO_STORAGE_KEYS.rocks, getDemoRocks())
+      const savedTasks = loadFromStorage<AssignedTask[]>(DEMO_STORAGE_KEYS.tasks, getDemoTasks())
+      const savedReports = loadFromStorage<EODReport[]>(DEMO_STORAGE_KEYS.eodReports, getDemoEODReports())
 
       setTeamMembers(savedMembers)
       setRocks(savedRocks)
@@ -459,10 +477,10 @@ export function useTeamData() {
     })
 
     // Reset to default demo data
-    setTeamMembers(DEMO_TEAM_MEMBERS)
-    setRocks(DEMO_ROCKS)
-    setAssignedTasks(DEMO_TASKS)
-    setEODReports(DEMO_EOD_REPORTS)
+    setTeamMembers(getDemoTeamMembers())
+    setRocks(getDemoRocks())
+    setAssignedTasks(getDemoTasks())
+    setEODReports(getDemoEODReports())
 
     // Reset the initialLoadComplete flag to prevent immediate re-saving
     initialLoadComplete.current = false
