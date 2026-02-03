@@ -14,16 +14,16 @@ export function MarketingHeader() {
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-4">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/taskspace-logo.png"
                 alt="Taskspace Logo"
-                width={160}
-                height={160}
-                className="w-32 h-32 object-contain"
+                width={40}
+                height={40}
+                className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
               />
-              <span className="text-xl font-bold text-gray-900">Taskspace</span>
+              <span className="text-base sm:text-xl font-bold text-gray-900">Taskspace</span>
             </Link>
           </div>
 
