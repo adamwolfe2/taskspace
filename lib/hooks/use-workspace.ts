@@ -278,6 +278,10 @@ interface UpdateWorkspaceParams {
   description?: string
   settings?: Record<string, unknown>
   isDefault?: boolean
+  primaryColor?: string
+  secondaryColor?: string
+  accentColor?: string
+  logoUrl?: string
 }
 
 export function useUpdateWorkspace() {

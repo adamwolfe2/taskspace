@@ -101,7 +101,9 @@ export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
       // Limit cache size to prevent memory leaks
       if (colorCalculationCache.size > 50) {
         const firstKey = colorCalculationCache.keys().next().value
-        colorCalculationCache.delete(firstKey)
+        if (firstKey) {
+          colorCalculationCache.delete(firstKey)
+        }
       }
 
       return calculatedColors
