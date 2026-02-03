@@ -29,26 +29,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
+    // workspaceId is optional - workspace feature temporarily disabled
     const workspaceId = searchParams.get("workspaceId")
-
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate workspace access
-    if (!isAdmin(auth)) {
-      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
-      if (!hasAccess) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "You don't have access to this workspace" },
-          { status: 403 }
-        )
-      }
-    }
 
     // Check for workspace-specific Asana connection
     const { rows } = await sql`
@@ -107,22 +89,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!aimsWorkspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate workspace access
-    const hasAccess = await userHasWorkspaceAccess(auth.user.id, aimsWorkspaceId)
-    if (!hasAccess) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "You don't have access to this workspace" },
-        { status: 403 }
-      )
-    }
+    // workspaceId is optional - workspace feature temporarily disabled
 
     // Validate the PAT by fetching user info
     const meResponse = await fetch(`${ASANA_API_BASE}/users/me`, {
