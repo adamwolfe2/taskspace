@@ -66,7 +66,7 @@ function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-black leading-[1.1] mb-6"
+            className="text-5xl sm:text-6xl lg:text-7xl font-medium text-black leading-[1.1] mb-6"
           >
             Run All Your Teams
             <br />
@@ -80,7 +80,7 @@ function HeroSection() {
             transition={{ delay: 0.2 }}
             className="text-xl text-gray-600 max-w-3xl mx-auto mb-10"
           >
-            AI operational infrastructure for multi-company founders & builders. Set it & forget it with EOD reports, custom workspaces, and unified dashboard across all your teams running on EOS.
+            AI operational infrastructure for multi-company founders & builders. Unified dashboard across all your teams running on EOS. AI handles EOD reports, surfaces blockers, and keeps every entity accountable without you in every meeting.
           </motion.p>
 
           {/* CTAs */}

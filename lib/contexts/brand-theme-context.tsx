@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef, useMemo } from "react"
 import { useApp } from "./app-context"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import {
@@ -9,7 +9,23 @@ import {
   generateCSSVariables,
   hexToHsl,
   generateColorPalette,
+  refineExtractedColors,
 } from "@/lib/utils/color-extractor"
+
+// Color calculation cache
+const colorCalculationCache = new Map<string, ExtractedColors>()
+
+// Debounce helper
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null
+  return function (...args: Parameters<T>) {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
+}
 
 interface BrandThemeContextValue {
   colors: ExtractedColors
@@ -29,6 +45,68 @@ export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
   const { currentWorkspace } = useWorkspaces()
   const [colors, setColors] = useState<ExtractedColors>(defaultBrandColors)
   const [isLoading, setIsLoading] = useState(true)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  // Track previous workspace ID to detect changes
+  const prevWorkspaceId = useRef<string | null>(null)
+
+  // Memoized color calculation with caching
+  const calculateColors = useMemo(() => {
+    return (
+      primaryColor: string | null,
+      secondaryColor: string | null,
+      accentColor: string | null
+    ): ExtractedColors => {
+      // Create cache key
+      const cacheKey = `${primaryColor}-${secondaryColor}-${accentColor}`
+
+      // Check cache first
+      if (colorCalculationCache.has(cacheKey)) {
+        return colorCalculationCache.get(cacheKey)!
+      }
+
+      let calculatedColors: ExtractedColors
+
+      if (primaryColor) {
+        // If we have all three colors from workspace, use them directly
+        if (secondaryColor && accentColor) {
+          calculatedColors = {
+            primary: primaryColor,
+            secondary: secondaryColor,
+            accent: accentColor,
+            text: "#ffffff",
+            background: `${primaryColor}0D`,
+          }
+        } else {
+          // Generate palette from primary color only
+          try {
+            const hsl = hexToHsl(primaryColor)
+            calculatedColors = generateColorPalette(hsl)
+          } catch (error) {
+            console.error("Failed to parse brand color:", error)
+            calculatedColors = defaultBrandColors
+          }
+        }
+
+        // Refine colors to ensure quality
+        calculatedColors = refineExtractedColors(calculatedColors)
+      } else {
+        // No workspace or organization colors - use monochrome default
+        calculatedColors = defaultBrandColors
+      }
+
+      // Cache the result
+      colorCalculationCache.set(cacheKey, calculatedColors)
+
+      // Limit cache size to prevent memory leaks
+      if (colorCalculationCache.size > 50) {
+        const firstKey = colorCalculationCache.keys().next().value
+        colorCalculationCache.delete(firstKey)
+      }
+
+      return calculatedColors
+    }
+  }, [])
 
   // Load brand colors from workspace (with fallback to organization)
   useEffect(() => {
@@ -41,44 +119,54 @@ export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
     const secondaryColor = currentWorkspace?.secondaryColor || null
     const accentColor = currentWorkspace?.accentColor || null
 
-    if (primaryColor) {
-      // If we have all three colors from workspace, use them directly
-      if (secondaryColor && accentColor) {
-        setColors({
-          primary: primaryColor,
-          secondary: secondaryColor,
-          accent: accentColor,
-          text: "#ffffff", // Will be recalculated based on brightness
-          background: `${primaryColor}0D`, // Primary with 5% opacity
-        })
-      } else {
-        // Generate palette from primary color only
-        try {
-          const hsl = hexToHsl(primaryColor)
-          const palette = generateColorPalette(hsl)
-          setColors(palette)
-        } catch (error) {
-          console.error("Failed to parse brand color:", error)
-          setColors(defaultBrandColors)
-        }
-      }
-    } else {
-      // No workspace or organization colors - use monochrome default
-      setColors(defaultBrandColors)
+    // Detect workspace change for transition animation
+    const workspaceChanged =
+      prevWorkspaceId.current !== null &&
+      prevWorkspaceId.current !== currentWorkspace?.id
+
+    if (workspaceChanged) {
+      setIsTransitioning(true)
+      setTimeout(() => setIsTransitioning(false), 300) // Match CSS transition duration
     }
 
+    prevWorkspaceId.current = currentWorkspace?.id || null
+
+    const newColors = calculateColors(primaryColor, secondaryColor, accentColor)
+    setColors(newColors)
     setIsLoading(false)
-  }, [currentWorkspace, currentOrganization])
+  }, [currentWorkspace, currentOrganization, calculateColors])
+
+  // Debounced CSS variable application for performance
+  const applyCSSVariables = useCallback(
+    debounce((colorsToApply: ExtractedColors) => {
+      const cssVars = generateCSSVariables(colorsToApply)
+      const root = document.documentElement
+
+      // Add transition class for smooth color changes
+      if (isTransitioning) {
+        root.classList.add('theme-transitioning')
+      }
+
+      // Set brand-specific CSS variables
+      Object.entries(cssVars).forEach(([property, value]) => {
+        root.style.setProperty(property, value)
+      })
+
+      // Remove transition class after animation completes
+      if (isTransitioning) {
+        setTimeout(() => {
+          root.classList.remove('theme-transitioning')
+        }, 300)
+      }
+    }, 50), // 50ms debounce
+    [isTransitioning]
+  )
 
   // Apply CSS variables to document
   useEffect(() => {
-    const cssVars = generateCSSVariables(colors)
-    const root = document.documentElement
+    applyCSSVariables(colors)
 
-    // Set brand-specific CSS variables
-    Object.entries(cssVars).forEach(([property, value]) => {
-      root.style.setProperty(property, value)
-    })
+    const root = document.documentElement
 
     // Helper functions for color manipulation
     const hexToRgb = (hex: string): string => {

@@ -3,6 +3,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Smooth theme transitions when workspace changes */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: background-color 300ms ease-out,
+              border-color 300ms ease-out,
+              color 300ms ease-out,
+              fill 300ms ease-out,
+              stroke 300ms ease-out !important;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

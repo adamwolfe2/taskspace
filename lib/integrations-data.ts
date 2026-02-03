@@ -1,88 +1,90 @@
 // Comprehensive list of all Taskspace integrations
+// Using Clearbit Logo API for actual colored brand logos: https://logo.clearbit.com/[domain]
 export const integrations = [
   // Communication & Collaboration
-  { name: "Slack", logo: "/integrations/slack-svgrepo-com.svg", category: "communication" },
-  { name: "Microsoft Teams", logo: "/integrations/microsoft.svg", category: "communication" },
-  { name: "Zoom", logo: "/integrations/icons8-zoom.svg", category: "communication" },
-  { name: "Gmail", logo: "/integrations/gmail.svg", category: "communication" },
-  { name: "Outlook", logo: "/integrations/icons8-microsoft-outlook-2019.svg", category: "communication" },
+  { name: "Slack", logo: "https://logo.clearbit.com/slack.com", category: "communication" },
+  { name: "Microsoft Teams", logo: "https://logo.clearbit.com/microsoft.com", category: "communication" },
+  { name: "Zoom", logo: "https://logo.clearbit.com/zoom.us", category: "communication" },
+  { name: "Gmail", logo: "https://logo.clearbit.com/google.com", category: "communication" },
+  { name: "Discord", logo: "https://logo.clearbit.com/discord.com", category: "communication" },
+  { name: "Twilio", logo: "https://logo.clearbit.com/twilio.com", category: "communication" },
 
   // Project Management
-  { name: "Asana", logo: "/integrations/asana.svg", category: "project-management" },
-  { name: "Notion", logo: "/integrations/notion.svg", category: "project-management" },
-  { name: "Airtable", logo: "/integrations/airtable-svgrepo-com.svg", category: "project-management" },
-  { name: "TikTok", logo: "/integrations/tiktok.svg", category: "social" },
+  { name: "Asana", logo: "https://logo.clearbit.com/asana.com", category: "project-management" },
+  { name: "Notion", logo: "https://logo.clearbit.com/notion.so", category: "project-management" },
+  { name: "Airtable", logo: "https://logo.clearbit.com/airtable.com", category: "project-management" },
+  { name: "Monday.com", logo: "https://logo.clearbit.com/monday.com", category: "project-management" },
+  { name: "Jira", logo: "https://logo.clearbit.com/atlassian.com", category: "project-management" },
+  { name: "Trello", logo: "https://logo.clearbit.com/trello.com", category: "project-management" },
+  { name: "ClickUp", logo: "https://logo.clearbit.com/clickup.com", category: "project-management" },
+  { name: "Linear", logo: "https://logo.clearbit.com/linear.app", category: "project-management" },
+  { name: "Basecamp", logo: "https://logo.clearbit.com/basecamp.com", category: "project-management" },
 
   // CRM & Sales
-  { name: "HubSpot", logo: "/integrations/hubspot-svgrepo-com.svg", category: "crm" },
-  { name: "Instantly", logo: "/integrations/instantly.webp", category: "sales" },
+  { name: "HubSpot", logo: "https://logo.clearbit.com/hubspot.com", category: "crm" },
+  { name: "Salesforce", logo: "https://logo.clearbit.com/salesforce.com", category: "crm" },
 
   // Google Workspace
-  { name: "Google Calendar", logo: "/integrations/google-calendar-svgrepo-com.svg", category: "productivity" },
-  { name: "Google Drive", logo: "/integrations/icons8-google-drive.svg", category: "productivity" },
-  { name: "Google Sheets", logo: "/integrations/gsheet-document-svgrepo-com.svg", category: "productivity" },
-  { name: "Google Ads", logo: "/integrations/google-ads-svgrepo-com.svg", category: "marketing" },
-  { name: "Google Search Console", logo: "/integrations/search-console-icon-2025-1.svg", category: "analytics" },
+  { name: "Google Calendar", logo: "https://logo.clearbit.com/google.com", category: "productivity" },
+  { name: "Google Drive", logo: "https://logo.clearbit.com/google.com", category: "productivity" },
+  { name: "Google Sheets", logo: "https://logo.clearbit.com/google.com", category: "productivity" },
+  { name: "Google Ads", logo: "https://logo.clearbit.com/google.com", category: "marketing" },
 
   // AI & Automation
-  { name: "OpenAI", logo: "/integrations/openai-svgrepo-com.svg", category: "ai" },
-  { name: "Meta", logo: "/integrations/meta.svg", category: "marketing" },
-  { name: "X (Twitter)", logo: "/integrations/X_id.IxGuIRW1_0.svg", category: "social" },
+  { name: "OpenAI", logo: "https://logo.clearbit.com/openai.com", category: "ai" },
+  { name: "Zapier", logo: "https://logo.clearbit.com/zapier.com", category: "automation" },
+  { name: "Make", logo: "https://logo.clearbit.com/make.com", category: "automation" },
 
-  // Additional common integrations (using placeholder paths for now)
-  { name: "Salesforce", logo: "/integrations/salesforce.svg", category: "crm" },
-  { name: "Monday.com", logo: "/integrations/monday.svg", category: "project-management" },
-  { name: "Jira", logo: "/integrations/jira.svg", category: "project-management" },
-  { name: "Trello", logo: "/integrations/trello.svg", category: "project-management" },
-  { name: "ClickUp", logo: "/integrations/clickup.svg", category: "project-management" },
-  { name: "Linear", logo: "/integrations/linear.svg", category: "project-management" },
-  { name: "Basecamp", logo: "/integrations/basecamp.svg", category: "project-management" },
+  // Social Media
+  { name: "Meta", logo: "https://logo.clearbit.com/meta.com", category: "social" },
+  { name: "X (Twitter)", logo: "https://logo.clearbit.com/x.com", category: "social" },
+  { name: "TikTok", logo: "https://logo.clearbit.com/tiktok.com", category: "social" },
+  { name: "LinkedIn", logo: "https://logo.clearbit.com/linkedin.com", category: "social" },
+  { name: "Facebook", logo: "https://logo.clearbit.com/facebook.com", category: "social" },
+  { name: "Instagram", logo: "https://logo.clearbit.com/instagram.com", category: "social" },
+  { name: "YouTube", logo: "https://logo.clearbit.com/youtube.com", category: "social" },
 
-  { name: "Stripe", logo: "/integrations/stripe.svg", category: "payments" },
-  { name: "PayPal", logo: "/integrations/paypal.svg", category: "payments" },
+  // Payments
+  { name: "Stripe", logo: "https://logo.clearbit.com/stripe.com", category: "payments" },
+  { name: "PayPal", logo: "https://logo.clearbit.com/paypal.com", category: "payments" },
 
-  { name: "Dropbox", logo: "/integrations/dropbox.svg", category: "storage" },
-  { name: "Box", logo: "/integrations/box.svg", category: "storage" },
-  { name: "OneDrive", logo: "/integrations/onedrive.svg", category: "storage" },
+  // Storage
+  { name: "Dropbox", logo: "https://logo.clearbit.com/dropbox.com", category: "storage" },
+  { name: "OneDrive", logo: "https://logo.clearbit.com/microsoft.com", category: "storage" },
+  { name: "Box", logo: "https://logo.clearbit.com/box.com", category: "storage" },
 
-  { name: "Zapier", logo: "/integrations/zapier.svg", category: "automation" },
-  { name: "Make", logo: "/integrations/make.svg", category: "automation" },
-  { name: "IFTTT", logo: "/integrations/ifttt.svg", category: "automation" },
+  // E-commerce
+  { name: "Shopify", logo: "https://logo.clearbit.com/shopify.com", category: "ecommerce" },
+  { name: "WooCommerce", logo: "https://logo.clearbit.com/woocommerce.com", category: "ecommerce" },
 
-  { name: "Shopify", logo: "/integrations/shopify.svg", category: "ecommerce" },
-  { name: "WooCommerce", logo: "/integrations/woocommerce.svg", category: "ecommerce" },
-  { name: "BigCommerce", logo: "/integrations/bigcommerce.svg", category: "ecommerce" },
+  // Marketing & Email
+  { name: "Mailchimp", logo: "https://logo.clearbit.com/mailchimp.com", category: "marketing" },
+  { name: "SendGrid", logo: "https://logo.clearbit.com/sendgrid.com", category: "marketing" },
 
-  { name: "Mailchimp", logo: "/integrations/mailchimp.svg", category: "marketing" },
-  { name: "SendGrid", logo: "/integrations/sendgrid.svg", category: "marketing" },
-  { name: "Intercom", logo: "/integrations/intercom.svg", category: "support" },
-  { name: "Zendesk", logo: "/integrations/zendesk.svg", category: "support" },
-  { name: "Freshdesk", logo: "/integrations/freshdesk.svg", category: "support" },
+  // Support
+  { name: "Intercom", logo: "https://logo.clearbit.com/intercom.com", category: "support" },
+  { name: "Zendesk", logo: "https://logo.clearbit.com/zendesk.com", category: "support" },
 
-  { name: "QuickBooks", logo: "/integrations/quickbooks.svg", category: "accounting" },
-  { name: "Xero", logo: "/integrations/xero.svg", category: "accounting" },
+  // Accounting
+  { name: "QuickBooks", logo: "https://logo.clearbit.com/quickbooks.intuit.com", category: "accounting" },
+  { name: "Xero", logo: "https://logo.clearbit.com/xero.com", category: "accounting" },
 
-  { name: "LinkedIn", logo: "/integrations/linkedin.svg", category: "social" },
-  { name: "Facebook", logo: "/integrations/facebook.svg", category: "social" },
-  { name: "Instagram", logo: "/integrations/instagram.svg", category: "social" },
-  { name: "YouTube", logo: "/integrations/youtube.svg", category: "social" },
+  // Developer Tools
+  { name: "GitHub", logo: "https://logo.clearbit.com/github.com", category: "developer" },
+  { name: "GitLab", logo: "https://logo.clearbit.com/gitlab.com", category: "developer" },
+  { name: "Bitbucket", logo: "https://logo.clearbit.com/bitbucket.org", category: "developer" },
 
-  { name: "GitHub", logo: "/integrations/github.svg", category: "developer" },
-  { name: "GitLab", logo: "/integrations/gitlab.svg", category: "developer" },
-  { name: "Bitbucket", logo: "/integrations/bitbucket.svg", category: "developer" },
+  // Design
+  { name: "Figma", logo: "https://logo.clearbit.com/figma.com", category: "design" },
+  { name: "Adobe", logo: "https://logo.clearbit.com/adobe.com", category: "design" },
+  { name: "Canva", logo: "https://logo.clearbit.com/canva.com", category: "design" },
 
-  { name: "Figma", logo: "/integrations/figma.svg", category: "design" },
-  { name: "Adobe", logo: "/integrations/adobe.svg", category: "design" },
-  { name: "Canva", logo: "/integrations/canva.svg", category: "design" },
+  // Scheduling
+  { name: "Calendly", logo: "https://logo.clearbit.com/calendly.com", category: "scheduling" },
 
-  { name: "Calendly", logo: "/integrations/calendly.svg", category: "scheduling" },
-  { name: "Cal.com", logo: "/integrations/cal.svg", category: "scheduling" },
-
-  { name: "Datadog", logo: "/integrations/datadog.svg", category: "monitoring" },
-  { name: "Sentry", logo: "/integrations/sentry.svg", category: "monitoring" },
-
-  { name: "Twilio", logo: "/integrations/twilio.svg", category: "communication" },
-  { name: "Discord", logo: "/integrations/discord.svg", category: "communication" },
+  // Monitoring
+  { name: "Datadog", logo: "https://logo.clearbit.com/datadoghq.com", category: "monitoring" },
+  { name: "Sentry", logo: "https://logo.clearbit.com/sentry.io", category: "monitoring" },
 ]
 
 export const agentUseCases = {

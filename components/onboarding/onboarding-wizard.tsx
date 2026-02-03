@@ -23,6 +23,14 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Organization } from "@/lib/types"
+import {
+  extractColorsFromImage,
+  generateColorPresets,
+  analyzeColorQuality,
+  hexToHsl,
+  type ExtractedColors,
+  type BrandPersonality,
+} from "@/lib/utils/color-extractor"
 
 interface OnboardingWizardProps {
   onComplete: (data: OnboardingData) => Promise<void>
@@ -53,42 +61,84 @@ export interface OnboardingData {
   }>
 }
 
-const PRESET_THEMES = [
+interface PresetTheme {
+  name: string
+  description: string
+  colors: ExtractedColors
+}
+
+const PRESET_THEMES: PresetTheme[] = [
+  {
+    name: "Tech Blue",
+    description: "Professional & innovative",
+    colors: {
+      primary: "#3b82f6",
+      secondary: "#60a5fa",
+      accent: "#8b5cf6",
+      text: "#1e293b",
+      background: "#f8fafc",
+      personality: { vibrancy: "vibrant", temperature: "cool", formality: "professional" },
+    },
+  },
+  {
+    name: "Startup Orange",
+    description: "Bold & energetic",
+    colors: {
+      primary: "#f97316",
+      secondary: "#fb923c",
+      accent: "#fbbf24",
+      text: "#1e293b",
+      background: "#fffbeb",
+      personality: { vibrancy: "vibrant", temperature: "warm", formality: "creative" },
+    },
+  },
+  {
+    name: "Finance Green",
+    description: "Trustworthy & stable",
+    colors: {
+      primary: "#059669",
+      secondary: "#34d399",
+      accent: "#10b981",
+      text: "#1e293b",
+      background: "#f0fdf4",
+      personality: { vibrancy: "balanced", temperature: "cool", formality: "professional" },
+    },
+  },
+  {
+    name: "Creative Purple",
+    description: "Innovative & unique",
+    colors: {
+      primary: "#7c3aed",
+      secondary: "#a78bfa",
+      accent: "#c084fc",
+      text: "#1e293b",
+      background: "#faf5ff",
+      personality: { vibrancy: "vibrant", temperature: "cool", formality: "creative" },
+    },
+  },
   {
     name: "Ruby Red",
-    primary: "#dc2626",
-    secondary: "#991b1b",
-    accent: "#f87171",
+    description: "Powerful & confident",
+    colors: {
+      primary: "#dc2626",
+      secondary: "#ef4444",
+      accent: "#f87171",
+      text: "#1e293b",
+      background: "#fef2f2",
+      personality: { vibrancy: "vibrant", temperature: "warm", formality: "professional" },
+    },
   },
   {
-    name: "Ocean Blue",
-    primary: "#2563eb",
-    secondary: "#1e40af",
-    accent: "#60a5fa",
-  },
-  {
-    name: "Forest Green",
-    primary: "#059669",
-    secondary: "#047857",
-    accent: "#34d399",
-  },
-  {
-    name: "Royal Purple",
-    primary: "#7c3aed",
-    secondary: "#6d28d9",
-    accent: "#a78bfa",
-  },
-  {
-    name: "Sunset Orange",
-    primary: "#ea580c",
-    secondary: "#c2410c",
-    accent: "#fb923c",
-  },
-  {
-    name: "Midnight",
-    primary: "#0f172a",
-    secondary: "#1e293b",
-    accent: "#475569",
+    name: "Midnight Navy",
+    description: "Sophisticated & timeless",
+    colors: {
+      primary: "#1e40af",
+      secondary: "#3b82f6",
+      accent: "#60a5fa",
+      text: "#1e293b",
+      background: "#eff6ff",
+      personality: { vibrancy: "muted", temperature: "cool", formality: "professional" },
+    },
   },
 ]
 
@@ -110,10 +160,14 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
   const [orgDescription, setOrgDescription] = useState("")
 
   const [workspaceName, setWorkspaceName] = useState("")
-  const [primaryColor, setPrimaryColor] = useState(PRESET_THEMES[0].primary)
-  const [secondaryColor, setSecondaryColor] = useState(PRESET_THEMES[0].secondary)
-  const [accentColor, setAccentColor] = useState(PRESET_THEMES[0].accent)
+  const [primaryColor, setPrimaryColor] = useState(PRESET_THEMES[0].colors.primary)
+  const [secondaryColor, setSecondaryColor] = useState(PRESET_THEMES[0].colors.secondary)
+  const [accentColor, setAccentColor] = useState(PRESET_THEMES[0].colors.accent)
   const [logoUrl, setLogoUrl] = useState("")
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [isExtractingColors, setIsExtractingColors] = useState(false)
+  const [personality, setPersonality] = useState<BrandPersonality | null>(null)
+  const [selectedPreset, setSelectedPreset] = useState<PresetTheme | null>(PRESET_THEMES[0])
 
   const [teamInvites, setTeamInvites] = useState<Array<{ email: string; role: "admin" | "manager" | "member"; name?: string }>>([])
   const [newInviteEmail, setNewInviteEmail] = useState("")
@@ -132,10 +186,32 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
     }
   }
 
-  const applyTheme = (theme: typeof PRESET_THEMES[0]) => {
-    setPrimaryColor(theme.primary)
-    setSecondaryColor(theme.secondary)
-    setAccentColor(theme.accent)
+  const applyTheme = (theme: PresetTheme) => {
+    setPrimaryColor(theme.colors.primary)
+    setSecondaryColor(theme.colors.secondary)
+    setAccentColor(theme.colors.accent)
+    setPersonality(theme.colors.personality || null)
+    setSelectedPreset(theme)
+  }
+
+  const handleExtractColorsFromLogo = async () => {
+    if (!logoFile && !logoUrl) return
+
+    setIsExtractingColors(true)
+    try {
+      const imageUrl = logoFile ? URL.createObjectURL(logoFile) : logoUrl
+      const extracted = await extractColorsFromImage(imageUrl)
+
+      setPrimaryColor(extracted.primary)
+      setSecondaryColor(extracted.secondary)
+      setAccentColor(extracted.accent)
+      setPersonality(extracted.personality || null)
+      setSelectedPreset(null) // Clear preset selection when extracting
+    } catch (error) {
+      console.error("Failed to extract colors:", error)
+    } finally {
+      setIsExtractingColors(false)
+    }
   }
 
   const addTeamInvite = () => {
@@ -367,25 +443,33 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                     {/* Theme Presets */}
                     <div>
                       <Label>Quick Themes</Label>
-                      <div className="mt-3 grid grid-cols-3 gap-3">
+                      <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
                         {PRESET_THEMES.map((theme) => (
                           <button
                             key={theme.name}
                             onClick={() => applyTheme(theme)}
-                            className="p-4 border-2 border-slate-200 rounded-lg hover:border-slate-300 transition-all text-left group"
+                            className={cn(
+                              "p-4 border-2 rounded-lg hover:border-primary transition-all text-left group",
+                              selectedPreset?.name === theme.name
+                                ? "border-primary bg-primary/5"
+                                : "border-slate-200"
+                            )}
                           >
                             <div className="flex items-center gap-2 mb-2">
                               <div
-                                className="w-6 h-6 rounded-full"
-                                style={{ backgroundColor: theme.primary }}
+                                className="w-6 h-6 rounded-full shadow-sm"
+                                style={{ backgroundColor: theme.colors.primary }}
                               />
                               <div
-                                className="w-6 h-6 rounded-full"
-                                style={{ backgroundColor: theme.accent }}
+                                className="w-6 h-6 rounded-full shadow-sm"
+                                style={{ backgroundColor: theme.colors.accent }}
                               />
                             </div>
-                            <div className="text-sm font-medium text-slate-900 group-hover:text-red-600 transition-colors">
+                            <div className="text-sm font-medium text-slate-900 group-hover:text-primary transition-colors">
                               {theme.name}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {theme.description}
                             </div>
                           </button>
                         ))}
@@ -452,15 +536,58 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                     {/* Logo Upload */}
                     <div>
                       <Label>Logo (Optional)</Label>
-                      <div className="mt-2 border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-slate-300 transition-all cursor-pointer">
-                        <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                      <div className="mt-2 border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-primary/30 transition-all cursor-pointer">
+                        <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                         <p className="text-sm text-slate-600">
                           Click to upload or drag and drop
                         </p>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           PNG, JPG or SVG (max 2MB)
                         </p>
                       </div>
+
+                      {(logoFile || logoUrl) && (
+                        <Button
+                          onClick={handleExtractColorsFromLogo}
+                          disabled={isExtractingColors}
+                          variant="outline"
+                          className="w-full mt-3"
+                        >
+                          {isExtractingColors ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Extracting colors...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Extract Colors from Logo
+                            </>
+                          )}
+                        </Button>
+                      )}
+
+                      {/* Show personality if extracted */}
+                      {personality && (
+                        <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                          <div className="text-xs text-muted-foreground mb-2">
+                            Brand Personality Detected:
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              <Sparkles className="w-3 h-3 mr-1" />
+                              {personality.vibrancy}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {personality.temperature === "warm" ? "🔥" : personality.temperature === "cool" ? "❄️" : "⚖️"}
+                              {" "}{personality.temperature}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {personality.formality}
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Preview */}
