@@ -104,19 +104,7 @@ export function WorkspaceSwitcher({
   const [createModalOpen, setCreateModalOpen] = React.useState(false)
   const router = useRouter()
 
-  if (isLoading) {
-    return (
-      <div className={cn("flex items-center gap-2", className)}>
-        <Skeleton className="h-10 w-[220px]" />
-      </div>
-    )
-  }
-
-  // If no workspaces, don't render
-  if (workspaces.length === 0) {
-    return null
-  }
-
+  // CRITICAL: All hooks must be called before any early returns
   // Group workspaces by type
   const groupedWorkspaces = React.useMemo(() => {
     const groups: Record<string, WorkspaceWithMemberInfo[]> = {
@@ -132,6 +120,20 @@ export function WorkspaceSwitcher({
     })
     return groups
   }, [workspaces])
+
+  // Early returns AFTER all hooks
+  if (isLoading) {
+    return (
+      <div className={cn("flex items-center gap-2", className)}>
+        <Skeleton className="h-10 w-[220px]" />
+      </div>
+    )
+  }
+
+  // If no workspaces, don't render
+  if (workspaces.length === 0) {
+    return null
+  }
 
   const typeLabels = {
     leadership: "Leadership",
