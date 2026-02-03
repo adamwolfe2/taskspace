@@ -80,6 +80,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
     }),
     {
       name: "workspace-storage",
+      skipHydration: true,
       partialize: (state) => ({
         currentWorkspaceId: state.currentWorkspaceId,
       }),
@@ -108,6 +109,11 @@ export function useWorkspaces() {
     useWorkspaceStore()
 
   const hasInitialized = useRef(false)
+
+  // Rehydrate store from localStorage after initial render (fixes hydration mismatch)
+  useEffect(() => {
+    useWorkspaceStore.persist.rehydrate()
+  }, [])
 
   // Fetch user's workspaces
   const {
