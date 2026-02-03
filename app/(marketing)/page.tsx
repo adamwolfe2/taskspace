@@ -22,10 +22,7 @@ import {
   Plug,
 } from "lucide-react"
 import Image from "next/image"
-import { DemoEODForm } from "@/components/marketing/demo-eod-form"
-import { DemoRocks } from "@/components/marketing/demo-rocks"
-import { DemoScorecard } from "@/components/marketing/demo-scorecard"
-import { DemoLevel10 } from "@/components/marketing/demo-level10"
+import { InteractiveFeaturesShowcase } from "@/components/marketing/interactive-features-showcase"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -45,124 +42,66 @@ const staggerContainer = {
   },
 }
 
-// Hero Section
+// Hero Section with Interactive Demo
 function HeroSection() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
   return (
-    <section className="relative pt-24 pb-12 overflow-hidden bg-white">
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-4xl mx-auto mb-12">
-          {/* Badge */}
+    <section ref={ref} className="pt-24 pb-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-700 text-sm mb-6"
           >
             <Sparkles className="w-4 h-4" />
             <span>EOS Management Platform</span>
           </motion.div>
 
-          {/* Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-medium text-black leading-[1.1] mb-6"
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl sm:text-5xl lg:text-7xl font-medium text-black leading-[1.1] mb-6"
           >
             Run All Your Teams
             <br />
             <span className="text-gray-400">In True Parallel</span>
           </motion.h1>
 
-          {/* Subheadline */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl text-gray-600 max-w-3xl mx-auto mb-10"
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto mb-10"
           >
-            AI operational infrastructure for multi-company founders & builders. Unified dashboard across all your teams running on EOS. AI handles EOD reports, surfaces blockers, and keeps every entity accountable without you in every meeting.
+            Explore every tool Taskspace offers with interactive demos. Click through all features.
           </motion.p>
 
-          {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
           >
             <Link href="/app?page=register">
-              <Button size="lg" className="bg-black text-white hover:bg-gray-900 text-base px-8 h-12">
-                Start for free
+              <Button size="lg" className="bg-black text-white hover:bg-gray-900 px-8 h-12">
+                Get started. It's FREE!
               </Button>
-            </Link>
-            <Link href="/contact">
-              <Button size="lg" variant="outline" className="border-gray-200 hover:bg-gray-50 text-black text-base px-8 h-12">
-                Book a demo
-              </Button>
-            </Link>
-          </motion.div>
-
-          {/* Feature Checkmarks */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-700 mb-12">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              <span>Free forever plan</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              <span>AI-powered tools</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              <span>Full EOS toolkit</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              <span>Team collaboration</span>
-            </div>
-          </div>
-
-          {/* Feature Shortcuts - Responsive grid: 2 cols on small, flex on larger */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-3 px-2 sm:px-4 max-w-4xl mx-auto"
-          >
-            <Link href="/features/eod-reports" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-black text-white hover:bg-gray-900 transition-colors text-[10px] sm:text-sm font-medium">
-              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">EOD Reports</span>
-            </Link>
-            <Link href="/features/rocks" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
-              <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">Quarterly Rocks</span>
-            </Link>
-            <Link href="/features/scorecard" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
-              <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">Scorecard</span>
-            </Link>
-            <Link href="/features/level-10-meetings" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
-              <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">Level 10</span>
-            </Link>
-            <Link href="/features/ids-process" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
-              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">IDS Process</span>
-            </Link>
-            <Link href="/features/accountability-chart" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
-              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">Accountability</span>
-            </Link>
-            <Link href="/features" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
-              <CheckSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">VTO</span>
-            </Link>
-            <Link href="/features" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
-              <ListTodo className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">Kanban</span>
             </Link>
           </motion.div>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+        >
+          <InteractiveFeaturesShowcase />
+        </motion.div>
       </div>
     </section>
   )
@@ -323,96 +262,6 @@ function CoreFeaturesSection() {
   )
 }
 
-// Feature Demo Section
-function FeatureDemoSection() {
-  const [selectedFeature, setSelectedFeature] = useState("rocks")
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: "-100px" })
-
-  const features = [
-    { id: "rocks", label: "Rocks", component: DemoRocks },
-    { id: "eod", label: "EOD Reports", component: DemoEODForm },
-    { id: "scorecard", label: "Scorecard", component: DemoScorecard },
-    { id: "level10", label: "Level 10", component: DemoLevel10 },
-  ]
-
-  const SelectedComponent = features.find(f => f.id === selectedFeature)?.component || DemoRocks
-
-  return (
-    <section ref={ref} className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
-            Interactive Demo
-          </Badge>
-          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
-            See Taskspace in action
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Try our core features with interactive demos
-          </p>
-        </div>
-
-        {/* Feature Tabs - Full text on all devices */}
-        <div className="border-b border-gray-200 mb-0 overflow-x-auto">
-          <div className="flex items-center justify-start sm:justify-center gap-6 sm:gap-8 min-w-max sm:min-w-0 px-4 sm:px-0">
-            {features.map((feature) => (
-              <button
-                key={feature.id}
-                onClick={() => setSelectedFeature(feature.id)}
-                className={cn(
-                  "px-3 py-4 text-base font-medium transition-colors relative whitespace-nowrap",
-                  selectedFeature === feature.id
-                    ? "text-black"
-                    : "text-gray-600 hover:text-black"
-                )}
-              >
-                <span className="block">{feature.label}</span>
-                {selectedFeature === feature.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Interactive Demo - Sage Green Background */}
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative"
-        >
-          <div className="bg-[#8b9a7f] rounded-2xl p-4 sm:p-8 lg:p-12">
-            <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-gray-300" />
-                  <div className="w-3 h-3 rounded-full bg-gray-300" />
-                  <div className="w-3 h-3 rounded-full bg-gray-300" />
-                </div>
-              </div>
-
-              <div className="bg-white p-4 sm:p-6 lg:p-8 min-h-[400px] sm:min-h-[500px] overflow-x-auto">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={selectedFeature}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <SelectedComponent />
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  )
-}
 
 // Integrations Section - HyperFX Style
 function IntegrationsSection() {
@@ -538,7 +387,15 @@ function AgentsSection() {
             <div className="space-y-4">
               {agentUseCases.marketing.map((useCase, i) => (
                 <div key={i} className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">{useCase.icon}</span>
+                  <div className="w-6 h-6 flex-shrink-0 relative">
+                    <Image
+                      src={useCase.logo}
+                      alt={useCase.title}
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                    />
+                  </div>
                   <div>
                     <div className="font-medium text-gray-900 text-sm mb-1">{useCase.title}</div>
                     <div className="text-xs text-gray-600">{useCase.description}</div>
@@ -554,7 +411,15 @@ function AgentsSection() {
             <div className="space-y-4">
               {agentUseCases.operations.map((useCase, i) => (
                 <div key={i} className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">{useCase.icon}</span>
+                  <div className="w-6 h-6 flex-shrink-0 relative">
+                    <Image
+                      src={useCase.logo}
+                      alt={useCase.title}
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                    />
+                  </div>
                   <div>
                     <div className="font-medium text-gray-900 text-sm mb-1">{useCase.title}</div>
                     <div className="text-xs text-gray-600">{useCase.description}</div>
@@ -570,7 +435,15 @@ function AgentsSection() {
             <div className="space-y-4">
               {agentUseCases.sales.map((useCase, i) => (
                 <div key={i} className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">{useCase.icon}</span>
+                  <div className="w-6 h-6 flex-shrink-0 relative">
+                    <Image
+                      src={useCase.logo}
+                      alt={useCase.title}
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                    />
+                  </div>
                   <div>
                     <div className="font-medium text-gray-900 text-sm mb-1">{useCase.title}</div>
                     <div className="text-xs text-gray-600">{useCase.description}</div>
@@ -720,7 +593,6 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <FeatureDemoSection />
       <CoreFeaturesSection />
       <AgentsSection />
       <IntegrationsSection />
