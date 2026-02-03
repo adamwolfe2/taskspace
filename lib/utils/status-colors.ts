@@ -3,7 +3,17 @@
  *
  * Use this for consistent status colors across the application.
  * All status colors should be defined here to ensure consistency.
+ *
+ * NOTE: Workspace-aware versions are available that use brand colors.
+ * Import from '@/lib/utils/dynamic-status-colors' for brand-themed colors.
  */
+
+import {
+  getDynamicStatusColors,
+  getDynamicPriorityColors,
+  getEnergyLevelColors as getDynamicEnergyColors,
+  getFocusScoreColors as getDynamicFocusColors,
+} from "./dynamic-status-colors"
 
 export type RockStatus = "on-track" | "at-risk" | "blocked" | "completed"
 export type TaskStatus = "pending" | "in-progress" | "completed" | "blocked"
@@ -231,4 +241,70 @@ export function getStatusLabel(status: string): string {
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ")
+}
+
+// ============================================================================
+// WORKSPACE-AWARE COLOR FUNCTIONS (USE THESE FOR BRAND THEMING)
+// ============================================================================
+
+/**
+ * Get rock status colors with workspace branding
+ * @param status - Rock status
+ * @param brandColor - Workspace primary color (optional, uses default if not provided)
+ */
+export function getRockStatusColorsThemed(
+  status: RockStatus,
+  brandColor?: string | null
+): StatusColors {
+  if (!brandColor) {
+    return rockStatusColors[status] || rockStatusColors["on-track"]
+  }
+  return getDynamicStatusColors(brandColor, status)
+}
+
+/**
+ * Get task status colors with workspace branding
+ * @param status - Task status
+ * @param brandColor - Workspace primary color (optional, uses default if not provided)
+ */
+export function getTaskStatusColorsThemed(
+  status: TaskStatus,
+  brandColor?: string | null
+): StatusColors {
+  if (!brandColor) {
+    return taskStatusColors[status] || taskStatusColors.pending
+  }
+  return getDynamicStatusColors(brandColor, status)
+}
+
+/**
+ * Get priority colors with workspace branding
+ * @param priority - Priority level
+ * @param brandColor - Workspace primary color (optional, uses default if not provided)
+ */
+export function getPriorityColorsThemed(
+  priority: PriorityLevel,
+  brandColor?: string | null
+): StatusColors {
+  if (!brandColor) {
+    return priorityColors[priority] || priorityColors.normal
+  }
+  return getDynamicPriorityColors(brandColor, priority)
+}
+
+/**
+ * Get progress bar color based on percentage (themed)
+ * @param progress - Progress percentage (0-100)
+ * @param brandColor - Workspace primary color
+ */
+export function getProgressColorThemed(progress: number, brandColor?: string | null): string {
+  if (!brandColor) {
+    return getProgressColor(progress)
+  }
+
+  // Use brand color for all progress levels when workspace theme is active
+  if (progress >= 80) return `bg-[${brandColor}]`
+  if (progress >= 60) return `bg-[${brandColor}]`
+  if (progress >= 40) return "bg-amber-500" // Warning
+  return "bg-red-500" // Danger
 }
