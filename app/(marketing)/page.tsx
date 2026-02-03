@@ -121,44 +121,44 @@ function HeroSection() {
             </div>
           </div>
 
-          {/* Feature Shortcuts - Pills with Icons and Text */}
+          {/* Feature Shortcuts - 2 rows on mobile, wrapping on desktop */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="flex flex-wrap items-center justify-center gap-3"
+            className="grid grid-cols-4 sm:flex sm:flex-wrap items-center justify-center gap-2 sm:gap-3 px-2 sm:px-4 max-w-4xl mx-auto"
           >
-            <Link href="/features/eod-reports" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-black text-white hover:bg-gray-900 transition-colors text-sm font-medium whitespace-nowrap">
+            <Link href="/features/eod-reports" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-black text-white hover:bg-gray-900 transition-colors text-xs sm:text-sm font-medium">
               <FileText className="w-4 h-4 flex-shrink-0" />
-              <span className="inline">EOD Reports</span>
+              <span>EOD Reports</span>
             </Link>
-            <Link href="/features/rocks" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium whitespace-nowrap">
+            <Link href="/features/rocks" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
               <Target className="w-4 h-4 flex-shrink-0" />
-              <span className="inline">Quarterly Rocks</span>
+              <span>Quarterly Rocks</span>
             </Link>
-            <Link href="/features/scorecard" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium whitespace-nowrap">
+            <Link href="/features/scorecard" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
               <BarChart3 className="w-4 h-4 flex-shrink-0" />
-              <span className="inline">Scorecard</span>
+              <span>Scorecard</span>
             </Link>
-            <Link href="/features/level-10-meetings" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium whitespace-nowrap">
+            <Link href="/features/level-10-meetings" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
               <Calendar className="w-4 h-4 flex-shrink-0" />
-              <span className="inline">Level 10 Meetings</span>
+              <span>Level 10</span>
             </Link>
-            <Link href="/features/ids-process" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium whitespace-nowrap">
+            <Link href="/features/ids-process" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
               <Zap className="w-4 h-4 flex-shrink-0" />
-              <span className="inline">IDS Process</span>
+              <span>IDS Process</span>
             </Link>
-            <Link href="/features/accountability-chart" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium whitespace-nowrap">
+            <Link href="/features/accountability-chart" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
               <Building2 className="w-4 h-4 flex-shrink-0" />
-              <span className="inline">Accountability Chart</span>
+              <span>Accountability</span>
             </Link>
-            <Link href="/features" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium whitespace-nowrap">
+            <Link href="/features" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
               <CheckSquare className="w-4 h-4 flex-shrink-0" />
-              <span className="inline">Vision/Traction Organizer</span>
+              <span>VTO</span>
             </Link>
-            <Link href="/features" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium whitespace-nowrap">
+            <Link href="/features" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
               <ListTodo className="w-4 h-4 flex-shrink-0" />
-              <span className="inline">Kanban Board</span>
+              <span>Kanban</span>
             </Link>
           </motion.div>
         </div>
@@ -382,7 +382,7 @@ function FeatureDemoSection() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="relative"
         >
-          <div className="bg-[#8b9a7f] rounded-2xl p-8 sm:p-12">
+          <div className="bg-[#8b9a7f] rounded-2xl p-4 sm:p-8 lg:p-12">
             <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
                 <div className="flex gap-1.5">
@@ -392,7 +392,7 @@ function FeatureDemoSection() {
                 </div>
               </div>
 
-              <div className="bg-white p-8 min-h-[500px]">
+              <div className="bg-white p-4 sm:p-6 lg:p-8 min-h-[400px] sm:min-h-[500px] overflow-x-auto">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={selectedFeature}
