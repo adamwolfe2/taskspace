@@ -311,21 +311,21 @@ function FeatureDemoSection() {
           </p>
         </div>
 
-        {/* Feature Tabs */}
+        {/* Feature Tabs - 2 rows on mobile, single row on desktop */}
         <div className="flex items-center justify-center border-b border-gray-200 mb-0">
-          <div className="inline-flex items-center gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-8 w-full max-w-3xl sm:flex sm:flex-row sm:w-auto">
             {features.map((feature) => (
               <button
                 key={feature.id}
                 onClick={() => setSelectedFeature(feature.id)}
                 className={cn(
-                  "px-1 py-4 text-sm font-medium transition-colors relative",
+                  "px-3 py-4 text-sm font-medium transition-colors relative whitespace-nowrap text-center",
                   selectedFeature === feature.id
                     ? "text-black"
                     : "text-gray-600 hover:text-black"
                 )}
               >
-                {feature.label}
+                <span className="block">{feature.label}</span>
                 {selectedFeature === feature.id && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />
                 )}
