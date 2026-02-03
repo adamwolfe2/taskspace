@@ -94,12 +94,12 @@ export async function sendInvitationEmail(
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
     .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: linear-gradient(135deg, #2563EB, #1d4ed8); color: white; padding: 30px; text-align: center; }
+    .header { background: linear-gradient(135deg, #000000, #1f2937); color: white; padding: 30px; text-align: center; }
     .header h1 { margin: 0; font-size: 24px; }
     .content { padding: 30px; }
-    .invite-box { background: #f0f9ff; border: 2px dashed #3b82f6; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
-    .button { display: inline-block; background: #2563EB; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 10px 0; }
-    .button:hover { background: #1d4ed8; }
+    .invite-box { background: #f9fafb; border: 2px dashed #000000; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+    .button { display: inline-block; background: #000000; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 10px 0; }
+    .button:hover { background: #1f2937; }
     .details { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; }
     .details-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
     .details-row:last-child { border-bottom: none; }
@@ -119,7 +119,7 @@ export async function sendInvitationEmail(
 
       <div class="content">
         <p>Hi there,</p>
-        <p><strong>${escapeHtml(inviterName)}</strong> has invited you to join <strong>${escapeHtml(organization.name)}</strong> - a team productivity and accountability platform.</p>
+        <p><strong>${escapeHtml(inviterName)}</strong> has invited you to join <strong>${escapeHtml(organization.name)}</strong> on Taskspace - the AI operational infrastructure for multi-company founders & builders.</p>
 
         <div class="invite-box">
           <p style="margin: 0 0 15px 0;">Click the button below to accept your invitation:</p>
@@ -148,7 +148,7 @@ export async function sendInvitationEmail(
       <div class="footer">
         <p>${escapeHtml(organization.name)} - Powered by Taskspace</p>
         <p style="margin-top: 10px;">If the button doesn't work, copy and paste this link:<br/>
-        <a href="${inviteLink}" style="color: #2563EB; word-break: break-all;">${inviteLink}</a></p>
+        <a href="${inviteLink}" style="color: #000000; word-break: break-all;">${inviteLink}</a></p>
       </div>
     </div>
   </div>
