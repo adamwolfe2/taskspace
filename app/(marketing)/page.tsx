@@ -121,44 +121,44 @@ function HeroSection() {
             </div>
           </div>
 
-          {/* Feature Shortcuts - 2 rows on mobile, wrapping on desktop */}
+          {/* Feature Shortcuts - Responsive grid: 2 cols on small, flex on larger */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="grid grid-cols-4 sm:flex sm:flex-wrap items-center justify-center gap-2 sm:gap-3 px-2 sm:px-4 max-w-4xl mx-auto"
+            className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-3 px-2 sm:px-4 max-w-4xl mx-auto"
           >
-            <Link href="/features/eod-reports" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-black text-white hover:bg-gray-900 transition-colors text-xs sm:text-sm font-medium">
-              <FileText className="w-4 h-4 flex-shrink-0" />
-              <span>EOD Reports</span>
+            <Link href="/features/eod-reports" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-black text-white hover:bg-gray-900 transition-colors text-[10px] sm:text-sm font-medium">
+              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">EOD Reports</span>
             </Link>
-            <Link href="/features/rocks" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
-              <Target className="w-4 h-4 flex-shrink-0" />
-              <span>Quarterly Rocks</span>
+            <Link href="/features/rocks" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
+              <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Quarterly Rocks</span>
             </Link>
-            <Link href="/features/scorecard" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
-              <BarChart3 className="w-4 h-4 flex-shrink-0" />
-              <span>Scorecard</span>
+            <Link href="/features/scorecard" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
+              <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Scorecard</span>
             </Link>
-            <Link href="/features/level-10-meetings" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
-              <Calendar className="w-4 h-4 flex-shrink-0" />
-              <span>Level 10</span>
+            <Link href="/features/level-10-meetings" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
+              <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Level 10</span>
             </Link>
-            <Link href="/features/ids-process" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
-              <Zap className="w-4 h-4 flex-shrink-0" />
-              <span>IDS Process</span>
+            <Link href="/features/ids-process" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
+              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">IDS Process</span>
             </Link>
-            <Link href="/features/accountability-chart" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
-              <Building2 className="w-4 h-4 flex-shrink-0" />
-              <span>Accountability</span>
+            <Link href="/features/accountability-chart" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
+              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Accountability</span>
             </Link>
-            <Link href="/features" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
-              <CheckSquare className="w-4 h-4 flex-shrink-0" />
-              <span>VTO</span>
+            <Link href="/features" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
+              <CheckSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">VTO</span>
             </Link>
-            <Link href="/features" className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium">
-              <ListTodo className="w-4 h-4 flex-shrink-0" />
-              <span>Kanban</span>
+            <Link href="/features" className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-[10px] sm:text-sm font-medium">
+              <ListTodo className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Kanban</span>
             </Link>
           </motion.div>
         </div>
