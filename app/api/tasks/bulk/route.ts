@@ -10,7 +10,7 @@
  */
 
 import { NextRequest } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { withTransaction } from "@/lib/db/transactions"
 import { logTaskEvent } from "@/lib/audit/logger"
@@ -65,18 +65,8 @@ const bulkOperationSchema = z.discriminatedUnion("operation", [
 // BULK OPERATIONS HANDLER
 // ============================================
 
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    // Only admins can perform bulk operations
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return Errors.insufficientPermissions("perform bulk task operations").toResponse()
-    }
-
     const body = await validateBody(request, bulkOperationSchema)
 
     // Verify all tasks belong to the organization
@@ -183,7 +173,7 @@ export async function POST(request: NextRequest) {
     logError(logger, "Bulk operation error", error)
     return Errors.internal().toResponse()
   }
-}
+})
 
 // ============================================
 // OPERATION IMPLEMENTATIONS

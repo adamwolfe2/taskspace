@@ -1,28 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { generateId, validateEmail } from "@/lib/auth/password"
 import type { TeamMember, OrganizationMember, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // POST /api/members - Create a draft team member (before invitation)
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can create team members" },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
     const { name, email, role = "member", department = "General" } = body
 
@@ -110,19 +96,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // GET /api/members - Get all team members in the organization
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // Use optimized JOIN query to get members with user data in a single call
     // This fixes the N+1 query problem (was: 1 query + N queries for each user)
     const teamMembers = await db.members.findWithUsersByOrganizationId(auth.organization.id)
@@ -138,19 +116,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // PATCH /api/members - Update a team member
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { memberId, department, weeklyMeasurable, role, timezone, eodReminderTime, notificationPreferences } = body
 
@@ -255,26 +225,11 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/members - Remove a member from the organization
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can remove members" },
-        { status: 403 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const memberId = searchParams.get("memberId")
 
@@ -327,4 +282,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

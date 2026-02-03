@@ -1,20 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import type { Notification, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/notifications - Get user's notifications
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const unreadOnly = searchParams.get("unread") === "true"
     const countOnly = searchParams.get("count") === "true"
@@ -42,19 +34,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // PATCH /api/notifications - Mark notification(s) as read
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { id, markAllRead } = body
 
@@ -93,19 +77,11 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/notifications - Delete a notification
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 
@@ -135,4 +111,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

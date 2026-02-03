@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
 import type { ApiResponse } from "@/lib/types"
 import {
   getUserWorkspaces,
@@ -27,16 +27,8 @@ import { logger, logError } from "@/lib/logger"
  *
  * Returns all workspaces the current user has access to
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const workspaces = await getUserWorkspaces(auth.user.id)
 
     return NextResponse.json<ApiResponse<WorkspaceWithMemberInfo[]>>({
@@ -50,31 +42,15 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * POST /api/workspaces
  *
  * Creates a new workspace (admin only)
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can create workspaces
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required to create workspaces" },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
     const { name, type, description, settings, isDefault } = body
 
@@ -144,4 +120,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

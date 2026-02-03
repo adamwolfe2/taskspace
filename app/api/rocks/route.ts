@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import type { Rock, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/rocks - Get rocks
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
     const quarter = searchParams.get("quarter")
@@ -61,19 +54,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/rocks - Create a new rock
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const {
       title,
@@ -166,19 +151,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // PATCH /api/rocks - Update a rock
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { id, ...updates } = body
 
@@ -236,19 +213,11 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/rocks - Delete a rock
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 
@@ -296,4 +265,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

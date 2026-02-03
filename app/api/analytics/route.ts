@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces"
 import type { ApiResponse } from "@/lib/types"
@@ -10,16 +11,8 @@ import { subDays, subMonths, startOfDay, endOfDay, eachDayOfInterval, format } f
  * GET /api/analytics
  * Get analytics data for charts and metrics
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
     const dateRange = searchParams.get("dateRange") || "30d" // 7d, 30d, 90d, 1y
@@ -252,4 +245,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

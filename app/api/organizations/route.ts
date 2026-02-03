@@ -1,21 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isOwner } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
+import { isOwner } from "@/lib/auth/middleware"
 import { generateId, slugify } from "@/lib/auth/password"
 import type { Organization, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/organizations - Get current user's organizations
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // Get all organizations the user is a member of
     const memberships = await db.members.findByUserId(auth.user.id)
     const organizations: Organization[] = []
@@ -38,19 +31,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/organizations - Create a new organization
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { name, timezone = "America/New_York" } = body
 
@@ -124,19 +109,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // PATCH /api/organizations - Update current organization
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     if (!isOwner(auth)) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Only organization owners can update settings" },
@@ -182,4 +159,4 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

@@ -9,7 +9,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import type { ApiResponse } from "@/lib/types"
 import {
   getWorkspaceById,
@@ -34,20 +35,13 @@ interface WorkspaceDetailResponse {
  *
  * Returns workspace details and members
  */
-export async function GET(
+export const GET = withAuth(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  auth,
+  context?: { params: Promise<{ id: string }> }
+) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
 
     // Get workspace
     const workspace = await getWorkspaceById(id)
@@ -99,35 +93,20 @@ export async function GET(
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * PATCH /api/workspaces/[id]
  *
  * Updates a workspace (admin only)
  */
-export async function PATCH(
+export const PATCH = withAdmin(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  auth,
+  context?: { params: Promise<{ id: string }> }
+) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can update workspaces
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required to update workspaces" },
-        { status: 403 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
 
     // Get existing workspace
     const workspace = await getWorkspaceById(id)
@@ -248,35 +227,20 @@ export async function PATCH(
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * DELETE /api/workspaces/[id]
  *
  * Deletes a workspace (admin only, cannot delete default)
  */
-export async function DELETE(
+export const DELETE = withAdmin(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  auth,
+  context?: { params: Promise<{ id: string }> }
+) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can delete workspaces
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required to delete workspaces" },
-        { status: 403 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
 
     // Get existing workspace
     const workspace = await getWorkspaceById(id)
@@ -332,4 +296,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-}
+})

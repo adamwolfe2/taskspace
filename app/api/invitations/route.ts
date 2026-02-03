@@ -1,29 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { generateId, generateInviteToken, getExpirationDate, validateEmail } from "@/lib/auth/password"
 import { sendInvitationEmail } from "@/lib/email"
 import type { Invitation, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/invitations - Get all pending invitations
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can view invitations" },
-        { status: 403 }
-      )
-    }
-
     const invitations = await db.invitations.findByOrganizationId(auth.organization.id)
     const pendingInvitations = invitations.filter(i => i.status === "pending")
 
@@ -38,26 +23,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/invitations - Create a new invitation
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can invite members" },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
     const { email, role = "member", department = "General", workspaceId, name: _name } = body
 
@@ -172,26 +142,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/invitations - Cancel an invitation
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can cancel invitations" },
-        { status: 403 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const invitationId = searchParams.get("id")
 
@@ -225,4 +180,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

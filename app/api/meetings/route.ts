@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { logger } from "@/lib/logger"
@@ -7,16 +8,8 @@ import type { ApiResponse } from "@/lib/types"
 import type { Meeting } from "@/lib/db/meetings"
 
 // GET /api/meetings - List meetings for a workspace
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
     const status = searchParams.get("status") as Meeting["status"] | null
@@ -52,19 +45,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/meetings - Create a new meeting (admin/manager only)
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { workspaceId, title, scheduledAt, attendees } = body
 
@@ -122,4 +107,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
