@@ -176,7 +176,7 @@ function InteractiveTeamDemo() {
         {/* Team Details */}
         <div className="md:col-span-3 p-6">
           {selectedTeam && teams[selectedTeam as keyof typeof teams] && (
-            
+            <>
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h4 className="text-xl font-semibold text-slate-900">
@@ -241,7 +241,7 @@ function InteractiveTeamDemo() {
                 <UserPlus className="w-5 h-5" />
                 Add Team Member
               </button>
-            
+            </>
           )}
         </div>
       </div>
