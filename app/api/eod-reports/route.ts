@@ -3,6 +3,8 @@ import { db } from "@/lib/db"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createEODReportSchema, updateEODReportSchema } from "@/lib/validation/schemas"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateEODSuggestions } from "@/lib/ai/eod-suggestions"
 import { sendEscalationNotification, sendAIAlertEmail, isEmailConfigured } from "@/lib/integrations/email"
@@ -95,7 +97,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // POST /api/eod-reports - Submit an EOD report
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
+    // Validate request body
     const {
       tasks,
       challenges,
@@ -106,21 +108,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       date,
       attachments,
       workspaceId,
-    } = body
-
-    if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "At least one completed task is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!tomorrowPriorities || !Array.isArray(tomorrowPriorities) || tomorrowPriorities.length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "At least one priority for tomorrow is required" },
-        { status: 400 }
-      )
-    }
+    } = await validateBody(request, createEODReportSchema)
 
     // workspaceId is optional - workspace feature temporarily disabled
 
@@ -174,7 +162,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       challenges: challenges || "",
       tomorrowPriorities,
       needsEscalation: needsEscalation || false,
-      escalationNote: needsEscalation ? escalationNote : null,
+      escalationNote: needsEscalation ? (escalationNote || null) : null,
       metricValueToday: validMetricValue,
       attachments: attachments && Array.isArray(attachments) && attachments.length > 0 ? attachments : undefined,
       submittedAt: now,
@@ -373,6 +361,14 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       message: "EOD report submitted successfully",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Submit EOD report error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to submit EOD report" },
@@ -384,15 +380,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 // PATCH /api/eod-reports - Update an EOD report (supports date changes to move reports between days)
 export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { id, date: newDate, ...updates } = body
-
-    if (!id) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Report ID is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { id, date: newDate, ...updates } = await validateBody(request, updateEODReportSchema)
 
     const report = await db.eodReports.findById(id)
     if (!report) {
@@ -460,6 +449,14 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       message,
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Update EOD report error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update EOD report" },

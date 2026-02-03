@@ -265,6 +265,7 @@ export const bulkRockSchema = z.object({
 export const eodTaskSchema = z.object({
   id: z.string(),
   text: z.string().min(1).max(1000),
+  taskId: uuidSchema.optional(), // Optional reference to AssignedTask
   rockId: uuidSchema.nullable(),
   rockTitle: z.string().nullable(),
 })
@@ -276,16 +277,30 @@ export const eodPrioritySchema = z.object({
   rockTitle: z.string().nullable(),
 })
 
+const fileAttachmentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  url: z.string().url(),
+  type: z.string(),
+  size: z.number(),
+  uploadedAt: z.string(),
+})
+
 export const createEODReportSchema = z.object({
-  date: dateSchema,
+  date: dateSchema.optional(), // Optional - defaults to today in org timezone
   tasks: z.array(eodTaskSchema).min(1),
   challenges: z.string().max(5000).default(""),
-  tomorrowPriorities: z.array(eodPrioritySchema),
+  tomorrowPriorities: z.array(eodPrioritySchema).min(1),
   needsEscalation: z.boolean().default(false),
   escalationNote: z.string().max(2000).nullable().optional(),
+  metricValueToday: z.union([z.number(), z.string(), z.null()]).optional(),
+  attachments: z.array(fileAttachmentSchema).optional(),
+  workspaceId: uuidSchema.optional(),
 })
 
 export const updateEODReportSchema = z.object({
+  id: uuidSchema, // Report ID to update
+  date: dateSchema.optional(), // Optional new date
   tasks: z.array(eodTaskSchema).optional(),
   challenges: z.string().max(5000).optional(),
   tomorrowPriorities: z.array(eodPrioritySchema).optional(),
