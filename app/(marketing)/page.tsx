@@ -102,7 +102,7 @@ function HeroSection() {
           </motion.div>
 
           {/* Feature Checkmarks */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-700">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-700 mb-12">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
               <span>Free forever plan</span>
@@ -120,6 +120,47 @@ function HeroSection() {
               <span>Team collaboration</span>
             </div>
           </div>
+
+          {/* Feature Shortcuts - Pills with Icons and Text */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="flex flex-wrap items-center justify-center gap-3"
+          >
+            <Link href="/features/eod-reports" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-black text-white hover:bg-gray-900 transition-colors text-sm font-medium">
+              <FileText className="w-4 h-4" />
+              <span>EOD Reports</span>
+            </Link>
+            <Link href="/features/rocks" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium">
+              <Target className="w-4 h-4" />
+              <span>Quarterly Rocks</span>
+            </Link>
+            <Link href="/features/scorecard" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium">
+              <BarChart3 className="w-4 h-4" />
+              <span>Scorecard</span>
+            </Link>
+            <Link href="/features/level-10-meetings" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium">
+              <Calendar className="w-4 h-4" />
+              <span>Level 10 Meetings</span>
+            </Link>
+            <Link href="/features/ids-process" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium">
+              <Zap className="w-4 h-4" />
+              <span>IDS Process</span>
+            </Link>
+            <Link href="/features/accountability-chart" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium">
+              <Building2 className="w-4 h-4" />
+              <span>Accountability Chart</span>
+            </Link>
+            <Link href="/features" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium">
+              <CheckSquare className="w-4 h-4" />
+              <span>Vision/Traction Organizer</span>
+            </Link>
+            <Link href="/features" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-black hover:bg-gray-50 transition-colors text-sm font-medium">
+              <ListTodo className="w-4 h-4" />
+              <span>Kanban Board</span>
+            </Link>
+          </motion.div>
         </div>
       </div>
     </section>
