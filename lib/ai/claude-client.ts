@@ -275,8 +275,8 @@ Summary: ${i.aiSummary}
 
 TEAM ROCKS (Goals):
 ${rocks.map(r => {
-  const member = memberMap.get(r.userId)
-  return `- ${member?.name || "Unknown"}: ${r.title} (${r.progress}%)`
+  const member = r.userId ? memberMap.get(r.userId) : null
+  return `- ${member?.name || r.ownerEmail || "Unknown"}: ${r.title} (${r.progress}%)`
 }).join("\n")}
 
 ${previousDigest ? `

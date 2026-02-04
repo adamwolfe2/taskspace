@@ -19,7 +19,8 @@ export interface Rock {
   id: string
   organizationId: string
   workspaceId?: string
-  userId: string
+  userId?: string // Optional for draft members
+  ownerEmail?: string // For draft members who haven't accepted invitation
   userName?: string
   title: string
   description?: string

@@ -73,12 +73,13 @@ export async function POST(request: NextRequest) {
     // 1. A user.id (for active members who have registered)
     // 2. An organization_member.id (for draft members who haven't registered yet)
     //
-    // IMPORTANT: rocks.user_id has a foreign key constraint to users.id,
-    // so we can only create rocks for active members with valid user accounts.
+    // For draft members (no userId yet), we store their email in owner_email field.
+    // When they accept the invitation, pending rocks are transferred to their userId.
 
     // First, try to find by user_id (active members)
     let targetMember = await db.members.findByOrgAndUser(auth.organization.id, userId)
-    let rockUserId: string
+    let rockUserId: string | undefined
+    let rockOwnerEmail: string | undefined
 
     if (targetMember) {
       // Found an active member - use their user.id
@@ -94,20 +95,9 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Check if this member has a linked user account
-      if (!targetMember.userId) {
-        // Draft member without a user account - cannot create rocks due to FK constraint
-        return NextResponse.json<ApiResponse<null>>(
-          {
-            success: false,
-            error: `Cannot create rocks for ${targetMember.name || targetMember.email} - they need to accept their invitation and create an account first.`
-          },
-          { status: 400 }
-        )
-      }
-
-      // Member found by organization_member.id but has a user account
-      rockUserId = targetMember.userId
+      // Member can be either accepted (has userId) or draft (has email only)
+      rockUserId = targetMember.userId || undefined
+      rockOwnerEmail = targetMember.email || undefined
     }
 
     // Calculate default due date (end of current quarter)
@@ -137,6 +127,7 @@ export async function POST(request: NextRequest) {
           id: rockId,
           organizationId: auth.organization.id,
           userId: rockUserId,
+          ownerEmail: rockOwnerEmail,
           title: rockInput.title.trim(),
           description: rockInput.description?.trim() || "",
           progress: 0,

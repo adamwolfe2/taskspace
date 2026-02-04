@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
         data = rocks.map((rock) => ({
           Title: rock.title,
           Description: rock.description || "",
-          Owner: memberMap.get(rock.userId)?.name || "Unknown",
+          Owner: rock.userId ? (memberMap.get(rock.userId)?.name || "Unknown") : (rock.ownerEmail || "Pending"),
           Status: rock.status,
           Progress: `${rock.progress}%`,
           Quarter: rock.quarter || "",

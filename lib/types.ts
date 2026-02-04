@@ -192,7 +192,8 @@ export interface Rock {
   id: string
   organizationId: string
   workspaceId?: string | null // Multi-workspace support (SESSION 5)
-  userId: string
+  userId?: string // Optional for draft members who haven't accepted invitation
+  ownerEmail?: string // For draft members who haven't accepted invitation
   userName?: string // User name (joined from users table)
   title: string
   description: string

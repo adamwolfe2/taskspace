@@ -94,6 +94,10 @@ export const POST = withAdmin(async (request: NextRequest, auth): Promise<NextRe
     const now = new Date().toISOString()
 
     for (const rock of initialRocks) {
+      if (!rock.userId) {
+        results.errors.push(`Rock has no userId: ${rock.title}`)
+        continue
+      }
       const userId = userIdMapping[rock.userId]
       if (!userId) {
         results.errors.push(`No user mapping for rock: ${rock.title}`)

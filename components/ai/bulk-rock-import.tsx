@@ -137,7 +137,7 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
 
       const data = await response.json()
 
-      if (!data.success && data.data?.created?.length === 0) {
+      if (!data.success || !data.data) {
         // Build a detailed error message from failed rocks
         let errorMsg = data.error || "Failed to create rocks"
         if (data.data?.failed?.length > 0) {

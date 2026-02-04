@@ -146,7 +146,8 @@ function parseRock(row: Record<string, unknown>): Rock {
     id: row.id as string,
     organizationId: row.organization_id as string,
     workspaceId: row.workspace_id as string | null | undefined,
-    userId: row.user_id as string,
+    userId: row.user_id as string | undefined,
+    ownerEmail: row.owner_email as string | undefined,
     title: row.title as string,
     description: row.description as string,
     progress: row.progress as number,
@@ -768,8 +769,8 @@ export const db = {
     },
     async create(rock: Rock): Promise<Rock> {
       await sql`
-        INSERT INTO rocks (id, organization_id, user_id, title, description, progress, due_date, status, bucket, outcome, done_when, quarter, created_at, updated_at)
-        VALUES (${rock.id}, ${rock.organizationId}, ${rock.userId}, ${rock.title}, ${rock.description},
+        INSERT INTO rocks (id, organization_id, user_id, owner_email, title, description, progress, due_date, status, bucket, outcome, done_when, quarter, created_at, updated_at)
+        VALUES (${rock.id}, ${rock.organizationId}, ${rock.userId || null}, ${rock.ownerEmail || null}, ${rock.title}, ${rock.description},
                 ${rock.progress}, ${rock.dueDate}, ${rock.status}, ${rock.bucket || null},
                 ${rock.outcome || null}, ${JSON.stringify(rock.doneWhen || [])},
                 ${rock.quarter || null}, ${rock.createdAt}, ${rock.updatedAt})
@@ -3149,6 +3150,11 @@ export const db = {
       `
       return rows
     },
+  },
+
+  // Transfer pending rocks/tasks from email to userId when user accepts invitation
+  async transferPendingItems(email: string, userId: string): Promise<void> {
+    await sql`SELECT transfer_pending_items_to_user(${email}, ${userId})`
   },
 }
 

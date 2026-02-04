@@ -120,6 +120,7 @@ export function TeamAnalyticsCharts({
     const memberProgress: Record<string, { name: string; avgProgress: number; count: number }> = {}
 
     rocks.forEach(rock => {
+      if (!rock.userId) return // Skip rocks for draft members
       const member = memberMap.get(rock.userId)
       if (!member) return
 
@@ -263,7 +264,7 @@ export function TeamAnalyticsCharts({
 
     // Calculate rock progress
     rocks.forEach(rock => {
-      if (performance[rock.userId]) {
+      if (rock.userId && performance[rock.userId]) {
         performance[rock.userId].rockProgress += rock.progress
         performance[rock.userId].rockCount++
       }

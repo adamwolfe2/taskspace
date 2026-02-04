@@ -185,6 +185,7 @@ export function RockRoadmap({
 
  const grouped: Record<string, Rock[]> = {}
  visibleRocks.forEach((rock) => {
+ if (!rock.userId) return // Skip rocks for draft members
  if (!grouped[rock.userId]) {
  grouped[rock.userId] = []
  }

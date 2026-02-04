@@ -134,6 +134,15 @@ export async function POST(request: NextRequest) {
       await db.members.create(member)
     }
 
+    // Transfer any pending rocks/tasks from email to userId
+    try {
+      await db.transferPendingItems(invitation.email, user.id)
+      logger.info(`Transferred pending items for ${invitation.email} to user ${user.id}`)
+    } catch (error) {
+      // Log error but don't fail the invitation acceptance
+      logError(logger, "Failed to transfer pending items", error)
+    }
+
     // Mark invitation as accepted
     await db.invitations.update(invitation.id, { status: "accepted" })
 

@@ -92,9 +92,10 @@ export async function POST(request: NextRequest) {
       rock.quarter === currentQuarter || !rock.quarter
     )
 
-    // Group rocks by userId
+    // Group rocks by userId (skip draft member rocks without userId)
     const rocksByUserId = new Map<string, Rock[]>()
     for (const rock of quarterRocks) {
+      if (!rock.userId) continue // Skip rocks for draft members who haven't accepted invitation
       const existing = rocksByUserId.get(rock.userId) || []
       existing.push(rock)
       rocksByUserId.set(rock.userId, existing)
@@ -259,6 +260,7 @@ export async function GET(request: NextRequest) {
     const allRocks = await db.rocks.findByOrganizationId(orgId)
     const rocksByUserId = new Map<string, typeof allRocks>()
     for (const rock of allRocks) {
+      if (!rock.userId) continue // Skip rocks for draft members who haven't accepted invitation
       const existing = rocksByUserId.get(rock.userId) || []
       existing.push(rock)
       rocksByUserId.set(rock.userId, existing)
