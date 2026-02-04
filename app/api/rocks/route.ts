@@ -89,8 +89,16 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
           { status: 403 }
         )
       }
-      // Verify target user is in the organization
-      const targetMember = await db.members.findByOrgAndUser(auth.organization.id, userId)
+
+      // First check if this is a user ID or might be a member email
+      let targetMember = await db.members.findByOrgAndUser(auth.organization.id, userId)
+
+      // If not found by userId, try finding by email (in case frontend passed email)
+      if (!targetMember) {
+        const members = await db.members.findByOrganizationId(auth.organization.id)
+        targetMember = members.find(m => m.email.toLowerCase() === userId.toLowerCase()) || null
+      }
+
       if (!targetMember) {
         return NextResponse.json<ApiResponse<null>>(
           { success: false, error: "User is not a member of this organization" },
@@ -98,14 +106,15 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
         )
       }
 
-      // Check if this is a draft member (invited but not yet accepted)
-      const targetUser = await db.users.findById(userId)
-      if (!targetUser && targetMember.status === "invited") {
-        // This is a draft member - use their email instead of userId
+      // Check if member has a user account
+      if (targetMember.userId) {
+        // Member has accepted invitation - use their userId
+        targetUserId = targetMember.userId
+        ownerEmail = undefined
+      } else {
+        // Draft member (invited but not accepted) - use their email
         ownerEmail = targetMember.email
         targetUserId = undefined
-      } else {
-        targetUserId = userId
       }
     }
 
