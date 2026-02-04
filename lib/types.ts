@@ -67,6 +67,7 @@ export interface SubscriptionInfo {
   // Additional billing fields
   billingCycle?: "monthly" | "yearly" | null
   cancelAtPeriodEnd?: boolean
+  aiCreditsUsed?: number
 }
 
 // User Types

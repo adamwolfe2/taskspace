@@ -12,7 +12,7 @@ export interface FeatureGateContext {
   subscription?: {
     plan: PlanTier
     status: string
-    currentPeriodEnd?: string
+    currentPeriodEnd?: string | null
   } | null
   usage: {
     activeUsers: number
@@ -313,7 +313,7 @@ export function getTrialDaysRemaining(subscription?: { plan: PlanTier; currentPe
  */
 export async function buildFeatureGateContext(
   organizationId: string,
-  subscription?: { plan: PlanTier; status: string; currentPeriodEnd?: string } | null,
+  subscription?: { plan: PlanTier; status: string; currentPeriodEnd?: string | null } | null,
   stats?: {
     activeUsers?: number
     workspaces?: number

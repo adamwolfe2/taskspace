@@ -76,7 +76,9 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         {
           success: false,
           error: workspaceCheck.reason || "Cannot create workspace",
-          upgradeRequired: workspaceCheck.upgradeRequired,
+          meta: {
+            upgradeRequired: workspaceCheck.upgradeRequired,
+          },
         },
         { status: 403 }
       )

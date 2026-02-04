@@ -76,11 +76,11 @@ export async function PATCH(request: NextRequest) {
     // Build updates object
     const updates: Partial<Organization> = {}
 
-    if (logoUrl !== undefined) updates.logoUrl = logoUrl
-    if (primaryColor !== undefined) updates.primaryColor = primaryColor
-    if (secondaryColor !== undefined) updates.secondaryColor = secondaryColor
-    if (faviconUrl !== undefined) updates.faviconUrl = faviconUrl
-    if (customDomain !== undefined) updates.customDomain = customDomain
+    if (logoUrl !== undefined) updates.logoUrl = logoUrl || undefined
+    if (primaryColor !== undefined) updates.primaryColor = primaryColor || undefined
+    if (secondaryColor !== undefined) updates.secondaryColor = secondaryColor || undefined
+    if (faviconUrl !== undefined) updates.faviconUrl = faviconUrl || undefined
+    if (customDomain !== undefined) updates.customDomain = customDomain || undefined
 
     // Also update the settings.customBranding object
     const currentSettings = auth.organization.settings || {}

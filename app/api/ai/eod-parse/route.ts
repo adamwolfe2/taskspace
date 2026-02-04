@@ -57,9 +57,11 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: aiCheck.reason || "AI credits depleted",
-          creditsNeeded: aiCheck.creditsNeeded,
-          creditsAvailable: aiCheck.creditsAvailable,
-          upgradeRequired: aiCheck.upgradeRequired,
+          meta: {
+            creditsNeeded: aiCheck.creditsNeeded,
+            creditsAvailable: aiCheck.creditsAvailable,
+            upgradeRequired: aiCheck.upgradeRequired,
+          },
         },
         { status: 403 }
       )

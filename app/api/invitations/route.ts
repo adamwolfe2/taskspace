@@ -85,7 +85,9 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           {
             success: false,
             error: userCheck.reason || "Cannot add user",
-            upgradeRequired: userCheck.upgradeRequired,
+            meta: {
+              upgradeRequired: userCheck.upgradeRequired,
+            },
           },
           { status: 403 }
         )
