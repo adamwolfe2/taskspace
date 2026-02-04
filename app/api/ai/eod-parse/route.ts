@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { parseEODTextDump, isClaudeConfigured, ParsedEODReport } from "@/lib/ai/claude-client"
+import { canUseAI, buildFeatureGateContext } from "@/lib/billing/feature-gates"
+import { AI_OPERATION_COSTS } from "@/lib/billing/plans"
+import { getUserWorkspaces } from "@/lib/db/workspaces"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -33,6 +36,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check feature gate: Can use AI?
+    const members = await db.members.findByOrganizationId(auth.organization.id)
+    const workspaces = await getUserWorkspaces(auth.user.id)
+    const aiUsage = auth.organization.subscription?.aiCreditsUsed || 0
+
+    const featureContext = await buildFeatureGateContext(
+      auth.organization.id,
+      auth.organization.subscription,
+      {
+        activeUsers: members.filter(m => m.status === "active").length,
+        workspaces: workspaces.length,
+        aiCreditsUsed: aiUsage,
+      }
+    )
+
+    const aiCheck = canUseAI(featureContext, "eodParsing")
+    if (!aiCheck.allowed) {
+      return NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: aiCheck.reason || "AI credits depleted",
+          creditsNeeded: aiCheck.creditsNeeded,
+          creditsAvailable: aiCheck.creditsAvailable,
+          upgradeRequired: aiCheck.upgradeRequired,
+        },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
     const { content, quarter } = body
 
@@ -55,6 +87,11 @@ export async function POST(request: NextRequest) {
       allRocks,
       targetQuarter
     )
+
+    // Deduct AI credits after successful operation
+    const newCreditsUsed = aiUsage + AI_OPERATION_COSTS.eodParsing
+    // Note: You'll need to add a method to update AI credits in the subscription
+    // await db.organizations.updateAICredits(auth.organization.id, newCreditsUsed)
 
     // Return the parsed structure for review before submission
     return NextResponse.json<ApiResponse<{

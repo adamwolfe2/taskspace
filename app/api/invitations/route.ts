@@ -5,6 +5,8 @@ import { generateId, generateInviteToken, getExpirationDate } from "@/lib/auth/p
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { inviteMemberSchema } from "@/lib/validation/schemas"
 import { sendInvitationEmail } from "@/lib/email"
+import { canAddUser, buildFeatureGateContext } from "@/lib/billing/feature-gates"
+import { getUserWorkspaces } from "@/lib/db/workspaces"
 import type { Invitation, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -63,11 +65,28 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       const members = await db.members.findByOrganizationId(auth.organization.id)
       const pendingInvites = (await db.invitations.findByOrganizationId(auth.organization.id))
         .filter(i => i.status === "pending")
+      const workspaces = await getUserWorkspaces(auth.user.id)
 
       const totalUsers = members.length + pendingInvites.length
-      if (totalUsers >= auth.organization.subscription.maxUsers) {
+
+      // Check feature gate: Can add user?
+      const featureContext = await buildFeatureGateContext(
+        auth.organization.id,
+        auth.organization.subscription,
+        {
+          activeUsers: totalUsers,
+          workspaces: workspaces.length,
+        }
+      )
+
+      const userCheck = canAddUser(featureContext)
+      if (!userCheck.allowed) {
         return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: `You have reached your plan limit of ${auth.organization.subscription.maxUsers} users. Please upgrade to add more team members.` },
+          {
+            success: false,
+            error: userCheck.reason || "Cannot add user",
+            upgradeRequired: userCheck.upgradeRequired,
+          },
           { status: 403 }
         )
       }

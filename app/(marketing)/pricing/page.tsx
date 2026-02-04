@@ -1,364 +1,367 @@
-"use client"
-
-import { motion } from "framer-motion"
-import { useState } from "react"
+import type { Metadata } from "next"
 import Link from "next/link"
-import {
-  CheckCircle,
-  ArrowRight,
-  Shield,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import { PageTransition } from "@/components/marketing/page-transition"
+import { CheckIcon, XMarkIcon, SparklesIcon, RocketLaunchIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline"
+import { PLANS, FEATURE_CATEGORIES, formatPrice, calculateYearlySavings } from "@/lib/billing/plans"
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0,  },
-}
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
+export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
+  title: "Pricing | Taskspace - Simple, Transparent Pricing for EOS Teams",
+  description: "Choose the perfect plan for your team. From startups to enterprise, Taskspace scales with you. 14-day free trial, no credit card required.",
+  openGraph: {
+    title: "Pricing | Taskspace",
+    description: "Simple, transparent pricing for EOS teams. Start free, scale as you grow.",
+    type: "website",
+    url: `${APP_URL}/pricing`,
+    siteName: "Taskspace",
+    images: [
+      {
+        url: `${APP_URL}/2026-02-03_17.24.49.png`,
+        width: 1200,
+        height: 630,
+        alt: "Taskspace Pricing",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pricing | Taskspace",
+    description: "Simple, transparent pricing for EOS teams.",
+    images: [`${APP_URL}/2026-02-03_17.24.49.png`],
   },
 }
 
-export default function PricingPage() {
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
+const faqs = [
+  {
+    question: "Can I try Taskspace before paying?",
+    answer: "Yes! All plans include a 14-day free trial with no credit card required. You'll have full access to test all features and see if Taskspace is right for your team.",
+  },
+  {
+    question: "What happens when I hit my AI credit limit?",
+    answer: "You'll receive a notification when you're approaching your limit. You can either upgrade to a higher plan for more credits, purchase add-on credit packs, or wait until your credits reset at the start of your next billing cycle.",
+  },
+  {
+    question: "Can I change plans later?",
+    answer: "Absolutely! You can upgrade or downgrade your plan at any time. Upgrades take effect immediately, and downgrades take effect at the end of your current billing period. We'll prorate any differences.",
+  },
+  {
+    question: "Do you offer discounts for annual billing?",
+    answer: "Yes! Annual billing saves you 17-20% compared to monthly billing. For example, Professional is $16/user/month when billed annually vs $20/user/month when billed monthly.",
+  },
+  {
+    question: "What counts as a user?",
+    answer: "A user is anyone with an active account in your organization. This includes managers, team members, and admin. Deactivated users don't count toward your limit.",
+  },
+  {
+    question: "Can I use Taskspace for multiple companies?",
+    answer: "Yes! The Professional and Enterprise plans include unlimited workspaces, perfect for multi-company founders. Each workspace can represent a different company, department, or team.",
+  },
+  {
+    question: "Is my data secure?",
+    answer: "Absolutely. We use bank-level encryption (AES-256), secure database access, and regular backups. Enterprise plans include SSO, custom security policies, and dedicated support.",
+  },
+  {
+    question: "What integrations are included?",
+    answer: "All plans include Slack notifications. Professional+ includes Asana sync and Google Calendar integration. Enterprise includes everything plus SSO/SAML and custom integrations.",
+  },
+]
 
-  const plans = [
-    {
-      name: "Free Forever",
-      price: "$0",
-      description: "Perfect for trying EOS methodology",
-      features: [
-        "Up to 5 team members",
-        "Unlimited EOD reports",
-        "3 Rocks per quarter",
-        "Basic scorecard",
-        "Level 10 meeting template",
-        "Community support",
-      ],
-      cta: "Get Started",
-      popular: false,
-    },
-    {
-      name: "Unlimited",
-      price: billingCycle === "monthly" ? "$7" : "$5",
-      priceSubtext: "per user/month",
-      description: "For teams committed to EOS",
-      features: [
-        "Everything in Free +",
-        "Unlimited team members",
-        "Unlimited Rocks",
-        "Advanced scorecard with custom metrics",
-        "IDS process tracking",
-        "V/TO (Vision/Traction Organizer)",
-        "Accountability Chart",
-        "Email support",
-        "Data export",
-      ],
-      cta: "Get started",
-      popular: false,
-    },
-    {
-      name: "Business",
-      price: billingCycle === "monthly" ? "$12" : "$9",
-      priceSubtext: "per user/month",
-      description: "For scaling EOS organizations",
-      features: [
-        "Everything in Unlimited +",
-        "EOS AI Agents (EOD, Rock, Scorecard)",
-        "Advanced analytics & insights",
-        "Custom integrations (Slack, Calendar)",
-        "Google SSO",
-        "Unlimited dashboards",
-        "API access",
-        "Priority support",
-        "Quarterly business reviews",
-      ],
-      cta: "Get started",
-      popular: true,
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      description: "For large organizations",
-      features: [
-        "Everything in Business +",
-        "White label branding",
-        "Dedicated account manager",
-        "Custom onboarding & training",
-        "Advanced security (SAML SSO)",
-        "SLA guarantee",
-        "Custom integrations",
-        "Dedicated infrastructure",
-        "24/7 phone support",
-      ],
-      cta: "Get a Demo",
-      popular: false,
-    },
-  ]
+const trustLogos = [
+  { name: "Asana", icon: "🎯" },
+  { name: "Slack", icon: "💬" },
+  { name: "Google", icon: "📅" },
+  { name: "Stripe", icon: "💳" },
+]
+
+export default function PricingPage() {
+  const plans = [PLANS.starter, PLANS.professional, PLANS.enterprise]
 
   return (
-    <PageTransition>
-    <div className="min-h-screen bg-white">
-
-      {/* Hero */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="text-center mb-16"
-          >
-            <motion.div variants={fadeInUp}>
-              <h1 className="text-5xl sm:text-6xl font-bold text-black mb-4">
-                The best work solution,
-                <br />
-                for the best price.
-              </h1>
-            </motion.div>
-
-            <motion.div variants={fadeInUp} className="flex items-center justify-center gap-4 mb-6">
-              <button
-                onClick={() => setBillingCycle("monthly")}
-                className={cn(
-                  "text-lg font-medium transition-colors",
-                  billingCycle === "monthly" ? "text-black" : "text-gray-400"
-                )}
-              >
-                Monthly
-              </button>
-              <div className="relative">
-                <button
-                  onClick={() => setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")}
-                  className={cn(
-                    "w-14 h-8 rounded-full transition-colors",
-                    billingCycle === "yearly" ? "bg-black" : "bg-gray-300"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "absolute top-1 w-6 h-6 bg-white rounded-full transition-transform",
-                      billingCycle === "yearly" ? "translate-x-7" : "translate-x-1"
-                    )}
-                  />
-                </button>
-              </div>
-              <button
-                onClick={() => setBillingCycle("yearly")}
-                className={cn(
-                  "text-lg font-medium transition-colors",
-                  billingCycle === "yearly" ? "text-black" : "text-gray-400"
-                )}
-              >
-                Yearly
-              </button>
-              {billingCycle === "yearly" && (
-                <Badge className="bg-gray-100 text-black border-gray-200">
-                  Save up to 30%
-                </Badge>
-              )}
-            </motion.div>
-
-            <motion.div variants={fadeInUp}>
-              <Badge variant="outline" className="border-gray-300 text-gray-700">
-                <Shield className="w-4 h-4 mr-1" />
-                100% Money-back Guarantee
-              </Badge>
-            </motion.div>
-          </motion.div>
-
-          {/* Pricing Cards */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto"
-          >
-            {plans.map((plan) => (
-              <motion.div
-                key={plan.name}
-                variants={fadeInUp}
-                className={cn(
-                  "relative rounded-2xl border p-8 bg-white flex flex-col",
-                  plan.popular
-                    ? "border-black shadow-2xl scale-105"
-                    : "border-gray-200"
-                )}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-black text-white border-0 shadow-lg">
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
-
-                <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-black mb-2">{plan.name}</h3>
-                  <div className="mb-2">
-                    <span className="text-4xl font-bold text-black">{plan.price}</span>
-                    {plan.priceSubtext && (
-                      <span className="text-gray-600 ml-2">{plan.priceSubtext}</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-500">{plan.description}</p>
-                </div>
-
-                <ul className="space-y-3 mb-8 flex-1">
-                  {plan.features.map((feature, j) => (
-                    <li key={j} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-600 text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link href="/app?page=register" className="w-full">
-                  <Button
-                    className={cn(
-                      "w-full",
-                      plan.popular
-                        ? "bg-black hover:bg-gray-900 text-white"
-                        : "border-gray-300 hover:bg-gray-50 text-black"
-                    )}
-                    variant={plan.popular ? "default" : "outline"}
-                    size="lg"
-                  >
-                    {plan.cta}
-                  </Button>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Feature Comparison */}
-      <section className="py-20 lg:py-32 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-black mb-4">
-              Compare plans and features
-            </h2>
-            <p className="text-xl text-gray-600">
-              Everything you need to run on EOS, at every stage
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left py-4 px-6 font-semibold text-black">Features</th>
-                  <th className="py-4 px-6 font-semibold text-black">Free</th>
-                  <th className="py-4 px-6 font-semibold text-black">Unlimited</th>
-                  <th className="py-4 px-6 font-semibold text-black bg-gray-100">Business</th>
-                  <th className="py-4 px-6 font-semibold text-black">Enterprise</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {[
-                  { feature: "Team members", free: "5", unlimited: "Unlimited", business: "Unlimited", enterprise: "Unlimited" },
-                  { feature: "EOD Reports", free: "✓", unlimited: "✓", business: "✓ + AI", enterprise: "✓ + AI" },
-                  { feature: "Quarterly Rocks", free: "3", unlimited: "Unlimited", business: "Unlimited", enterprise: "Unlimited" },
-                  { feature: "Scorecard", free: "Basic", unlimited: "Advanced", business: "Advanced + AI", enterprise: "Custom" },
-                  { feature: "Level 10 Meetings", free: "✓", unlimited: "✓", business: "✓", enterprise: "✓" },
-                  { feature: "IDS Process", free: "—", unlimited: "✓", business: "✓", enterprise: "✓" },
-                  { feature: "Accountability Chart", free: "—", unlimited: "✓", business: "✓", enterprise: "✓" },
-                  { feature: "Vision/Traction Organizer", free: "—", unlimited: "✓", business: "✓", enterprise: "✓" },
-                  { feature: "AI Agents", free: "—", unlimited: "—", business: "✓", enterprise: "✓" },
-                  { feature: "API Access", free: "—", unlimited: "—", business: "✓", enterprise: "✓" },
-                  { feature: "SSO", free: "—", unlimited: "—", business: "Google", enterprise: "SAML" },
-                  { feature: "Support", free: "Community", unlimited: "Email", business: "Priority", enterprise: "24/7 Phone" },
-                ].map((row, i) => (
-                  <tr key={i}>
-                    <td className="py-4 px-6 font-medium text-black">{row.feature}</td>
-                    <td className="py-4 px-6 text-center text-gray-600">{row.free}</td>
-                    <td className="py-4 px-6 text-center text-gray-600">{row.unlimited}</td>
-                    <td className="py-4 px-6 text-center font-semibold text-black bg-gray-50">{row.business}</td>
-                    <td className="py-4 px-6 text-center text-gray-600">{row.enterprise}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-20 lg:py-32 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-black mb-4">
-              Frequently asked questions
-            </h2>
-          </div>
-
-          <div className="space-y-6">
-            {[
-              {
-                question: "What happens after my free trial?",
-                answer: "The Free Forever plan never expires. You can use it indefinitely with up to 5 team members. Upgrade anytime to unlock unlimited users and advanced features.",
-              },
-              {
-                question: "Can I change plans later?",
-                answer: "Absolutely. You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any charges.",
-              },
-              {
-                question: "What's included in EOS AI Agents?",
-                answer: "AI Agents automatically organize your EOD reports, track Rock progress, update your scorecard, and prepare Level 10 meetings. They learn your team's patterns and save hours of manual work every week.",
-              },
-              {
-                question: "Do you offer discounts for annual billing?",
-                answer: "Yes! Annual billing saves you up to 30% compared to monthly pricing. Plus you lock in your rate for the year.",
-              },
-              {
-                question: "Is my data secure?",
-                answer: "Yes. We're SOC 2 Type II certified with enterprise-grade encryption. Your data is backed up daily and never used to train AI models.",
-              },
-              {
-                question: "Can I get a custom plan?",
-                answer: "Enterprise customers can work with our team to create a custom plan with dedicated infrastructure, advanced security, and tailored features. Contact sales to discuss your needs.",
-              },
-            ].map((faq, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow"
-              >
-                <h3 className="text-lg font-semibold text-black mb-3">{faq.question}</h3>
-                <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-5xl font-bold text-black mb-6">
-            Start running on EOS today
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Join thousands of teams executing flawlessly with Taskspace
+    <div className="bg-gradient-to-b from-white to-gray-50">
+      {/* Hero Section */}
+      <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="text-base font-semibold leading-7 text-blue-600">Pricing</p>
+          <h1 className="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            Simple, transparent pricing
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-gray-600">
+            Choose the perfect plan for your team. Start with a 14-day free trial, then scale as you grow.
+            No surprises, no hidden fees.
           </p>
-          <Link href="/app?page=register">
-            <Button size="lg" className="bg-black text-white hover:bg-gray-900 px-8 h-14 text-base font-semibold">
-              Get started FREE
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-          <p className="text-gray-600 mt-4 text-sm">Free forever. No credit card required.</p>
         </div>
-      </section>
+
+        {/* Trust Indicators */}
+        <div className="mt-16 flex justify-center">
+          <div className="flex flex-wrap justify-center gap-8 text-gray-400">
+            <div className="flex items-center gap-2">
+              <CheckIcon className="h-5 w-5 text-green-500" />
+              <span className="text-sm font-medium">14-day free trial</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckIcon className="h-5 w-5 text-green-500" />
+              <span className="text-sm font-medium">No credit card required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckIcon className="h-5 w-5 text-green-500" />
+              <span className="text-sm font-medium">Cancel anytime</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Billing Toggle */}
+        <div className="mt-12 flex justify-center">
+          <div className="inline-flex rounded-lg bg-gray-100 p-1">
+            <button className="rounded-md bg-white px-6 py-2 text-sm font-semibold text-gray-900 shadow-sm">
+              Annual <span className="ml-1 text-green-600">(Save 20%)</span>
+            </button>
+            <button className="rounded-md px-6 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">
+              Monthly
+            </button>
+          </div>
+        </div>
+
+        {/* Pricing Cards */}
+        <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+          {plans.map((plan) => (
+            <div
+              key={plan.id}
+              className={`rounded-3xl p-8 ring-1 ${
+                plan.popular
+                  ? "bg-white ring-2 ring-blue-600 shadow-2xl"
+                  : "bg-white ring-gray-200"
+              }`}
+            >
+              {plan.badge && (
+                <div className="mb-4 inline-block rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
+                  {plan.badge}
+                </div>
+              )}
+
+              <div className="flex items-center gap-x-4">
+                <h3 className="text-2xl font-bold text-gray-900">{plan.name}</h3>
+                {plan.id === "starter" && <SparklesIcon className="h-6 w-6 text-blue-600" />}
+                {plan.id === "professional" && <RocketLaunchIcon className="h-6 w-6 text-blue-600" />}
+                {plan.id === "enterprise" && <BuildingOffice2Icon className="h-6 w-6 text-blue-600" />}
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-gray-600">{plan.description}</p>
+
+              <p className="mt-6 flex items-baseline gap-x-1">
+                <span className="text-5xl font-bold tracking-tight text-gray-900">
+                  {formatPrice(plan.priceYearly / 12)}
+                </span>
+                <span className="text-sm font-semibold leading-6 text-gray-600">/user/month</span>
+              </p>
+
+              <p className="mt-2 text-xs text-gray-500">
+                {plan.id !== "enterprise" ? "Billed annually" : "Minimum 20 seats, annual only"}
+              </p>
+
+              {calculateYearlySavings(plan) > 0 && (
+                <p className="mt-1 text-xs font-medium text-green-600">
+                  Save {formatPrice(calculateYearlySavings(plan))}/year
+                </p>
+              )}
+
+              <Link
+                href={plan.id === "enterprise" ? "/contact" : "/auth/register"}
+                className={`mt-6 block w-full rounded-lg px-4 py-3 text-center text-sm font-semibold shadow-sm transition-colors ${
+                  plan.popular
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-gray-900 text-white hover:bg-gray-800"
+                }`}
+              >
+                {plan.cta}
+              </Link>
+
+              <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-gray-600">
+                <li className="flex gap-x-3">
+                  <CheckIcon className="h-6 w-5 flex-none text-blue-600" />
+                  <span>
+                    <strong className="font-semibold text-gray-900">
+                      {plan.limits.maxUsers === null ? "Unlimited" : plan.limits.maxUsers}
+                    </strong>{" "}
+                    users
+                  </span>
+                </li>
+                <li className="flex gap-x-3">
+                  <CheckIcon className="h-6 w-5 flex-none text-blue-600" />
+                  <span>
+                    <strong className="font-semibold text-gray-900">
+                      {plan.limits.maxWorkspaces === null ? "Unlimited" : plan.limits.maxWorkspaces}
+                    </strong>{" "}
+                    workspace{plan.limits.maxWorkspaces !== 1 ? "s" : ""}
+                  </span>
+                </li>
+                <li className="flex gap-x-3">
+                  <CheckIcon className="h-6 w-5 flex-none text-blue-600" />
+                  <span>
+                    <strong className="font-semibold text-gray-900">
+                      {plan.features.unlimitedAI ? "Unlimited" : plan.limits.aiCreditsPerUser}
+                    </strong>{" "}
+                    AI credits/user
+                  </span>
+                </li>
+                <li className="flex gap-x-3">
+                  <CheckIcon className="h-6 w-5 flex-none text-blue-600" />
+                  <span>{plan.features.responseTime} support</span>
+                </li>
+                {plan.features.asanaSync && (
+                  <li className="flex gap-x-3">
+                    <CheckIcon className="h-6 w-5 flex-none text-blue-600" />
+                    <span>Asana & Google Calendar sync</span>
+                  </li>
+                )}
+                {plan.features.customBranding && (
+                  <li className="flex gap-x-3">
+                    <CheckIcon className="h-6 w-5 flex-none text-blue-600" />
+                    <span>Custom branding & API access</span>
+                  </li>
+                )}
+                {plan.features.ssoAuth && (
+                  <li className="flex gap-x-3">
+                    <CheckIcon className="h-6 w-5 flex-none text-blue-600" />
+                    <span>SSO/SAML & dedicated support</span>
+                  </li>
+                )}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* Feature Comparison Table */}
+        <div className="mt-24">
+          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            Compare all features
+          </h2>
+          <p className="mt-4 text-center text-lg text-gray-600">
+            Everything you need to run EOS like a pro
+          </p>
+
+          <div className="mt-12 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-gray-200">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Feature</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Starter</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Professional</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Enterprise</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {FEATURE_CATEGORIES.map((category) => (
+                    <>
+                      <tr key={category.name} className="bg-gray-50">
+                        <td colSpan={4} className="px-6 py-3 text-sm font-semibold text-gray-900">
+                          {category.name}
+                        </td>
+                      </tr>
+                      {category.features.map((feature) => (
+                        <tr key={feature.key}>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            {feature.label}
+                            <span className="ml-2 text-xs text-gray-500">{feature.tooltip}</span>
+                          </td>
+                          {plans.map((plan) => (
+                            <td key={plan.id} className="px-6 py-4 text-center">
+                              {renderFeatureValue(plan, feature.key)}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Integration Logos (like agents page) */}
+        <div className="mt-24">
+          <h3 className="text-center text-lg font-semibold text-gray-900">Integrates with your favorite tools</h3>
+          <div className="mt-8 flex flex-wrap justify-center gap-8 grayscale hover:grayscale-0 transition-all">
+            {trustLogos.map((logo) => (
+              <div key={logo.name} className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-6 py-4 shadow-sm">
+                <span className="text-3xl">{logo.icon}</span>
+                <span className="text-sm font-medium text-gray-700">{logo.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="mt-32">
+          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            Frequently asked questions
+          </h2>
+          <dl className="mx-auto mt-12 max-w-4xl space-y-8">
+            {faqs.map((faq) => (
+              <div key={faq.question} className="rounded-2xl border border-gray-200 bg-white p-8">
+                <dt className="text-lg font-semibold leading-7 text-gray-900">{faq.question}</dt>
+                <dd className="mt-3 text-base leading-7 text-gray-600">{faq.answer}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        {/* CTA Section */}
+        <div className="mt-32 text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            Ready to run your teams in true parallel?
+          </h2>
+          <p className="mt-4 text-lg text-gray-600">
+            Start your 14-day free trial today. No credit card required.
+          </p>
+          <div className="mt-8 flex justify-center gap-4">
+            <Link
+              href="/auth/register"
+              className="rounded-lg bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+            >
+              Start Free Trial
+            </Link>
+            <Link
+              href="/contact"
+              className="rounded-lg border border-gray-300 bg-white px-8 py-3 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50"
+            >
+              Contact Sales
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
-    </PageTransition>
   )
+}
+
+function renderFeatureValue(plan: any, featureKey: string): React.ReactNode {
+  const value = plan.features[featureKey] || plan.limits[featureKey]
+
+  if (typeof value === "boolean") {
+    return value ? (
+      <CheckIcon className="mx-auto h-5 w-5 text-green-600" />
+    ) : (
+      <XMarkIcon className="mx-auto h-5 w-5 text-gray-300" />
+    )
+  }
+
+  if (featureKey === "maxUsers" || featureKey === "maxWorkspaces" || featureKey === "maxManagers") {
+    return (
+      <span className="text-sm font-medium text-gray-900">
+        {value === null ? "Unlimited" : value}
+      </span>
+    )
+  }
+
+  if (featureKey === "aiCreditsPerUser") {
+    return (
+      <span className="text-sm font-medium text-gray-900">
+        {plan.features.unlimitedAI ? "Unlimited" : value}
+      </span>
+    )
+  }
+
+  return <span className="text-sm text-gray-600">{value}</span>
 }

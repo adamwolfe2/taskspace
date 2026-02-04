@@ -22,6 +22,8 @@ import {
   type WorkspaceWithMemberInfo,
   type CreateWorkspaceParams,
 } from "@/lib/db/workspaces"
+import { canCreateWorkspace, buildFeatureGateContext } from "@/lib/billing/feature-gates"
+import { db } from "@/lib/db"
 import { logger, logError } from "@/lib/logger"
 
 /**
@@ -55,6 +57,30 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
     // Validate request body
     const { name, type, description, settings, isDefault } = await validateBody(request, createWorkspaceSchema)
+
+    // Check feature gate: Can create workspace?
+    const allWorkspaces = await getUserWorkspaces(auth.user.id)
+    const activeMembers = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+    const featureContext = await buildFeatureGateContext(
+      auth.organization.id,
+      auth.organization.subscription,
+      {
+        activeUsers: activeMembers.filter(m => m.status === "active").length,
+        workspaces: allWorkspaces.length,
+      }
+    )
+
+    const workspaceCheck = canCreateWorkspace(featureContext)
+    if (!workspaceCheck.allowed) {
+      return NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: workspaceCheck.reason || "Cannot create workspace",
+          upgradeRequired: workspaceCheck.upgradeRequired,
+        },
+        { status: 403 }
+      )
+    }
 
     // Generate unique slug
     const baseSlug = generateSlug(name.trim())
