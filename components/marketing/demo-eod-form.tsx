@@ -87,7 +87,7 @@ export function DemoEODForm() {
   }, {} as Record<string, { rockTitle: string; tasks: ParsedTask[] }>)
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto min-w-0">
       <AnimatePresence mode="wait">
         {step === "input" && (
           <motion.div
@@ -97,17 +97,17 @@ export function DemoEODForm() {
             exit={{ opacity: 0, y: -20 }}
             className="bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-6 py-4 border-b border-slate-200">
+            <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-gray-900" />
-                <div>
-                  <h3 className="font-semibold text-slate-900">AI EOD Report Generator</h3>
-                  <p className="text-sm text-slate-600">Paste your daily tasks and let AI organize them by rocks</p>
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-gray-900 flex-shrink-0" />
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-slate-900 text-sm sm:text-base">AI EOD Report Generator</h3>
+                  <p className="text-xs sm:text-sm text-slate-600 truncate">Paste your daily tasks and let AI organize them by rocks</p>
                 </div>
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">Paste Your Daily Tasks</label>
                 <Textarea
@@ -119,20 +119,20 @@ export function DemoEODForm() {
                 />
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <Button
                   onClick={handleParse}
                   disabled={!textInput.trim()}
-                  className="flex-1 bg-gray-900 hover:bg-black text-white"
+                  className="flex-1 bg-gray-900 hover:bg-black text-white text-sm sm:text-base"
                 >
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Parse & Organize Tasks
+                  <span className="truncate">Parse & Organize Tasks</span>
                 </Button>
                 {!textInput && (
                   <Button
                     onClick={handleLoadDemo}
                     variant="outline"
-                    className="border-gray-300 text-gray-900 hover:bg-gray-100"
+                    className="border-gray-300 text-gray-900 hover:bg-gray-100 text-sm sm:text-base whitespace-nowrap"
                   >
                     Load Demo
                   </Button>
@@ -150,22 +150,22 @@ export function DemoEODForm() {
             exit={{ opacity: 0, y: -20 }}
             className="bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-6 py-4 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-gray-900" />
-                  <h3 className="font-semibold text-slate-900">Review Your EOD Report</h3>
+            <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-gray-900 flex-shrink-0" />
+                  <h3 className="font-semibold text-slate-900 text-sm sm:text-base truncate">Review Your EOD Report</h3>
                 </div>
-                <Button variant="ghost" size="sm" onClick={handleReset}>
-                  <X className="h-4 w-4 mr-1" />
-                  Start Over
+                <Button variant="ghost" size="sm" onClick={handleReset} className="flex-shrink-0">
+                  <X className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Start Over</span>
                 </Button>
               </div>
             </div>
 
-            <div className="p-6 space-y-6 max-h-[600px] overflow-y-auto">
-              <div className="bg-gray-100 border border-gray-300 rounded-lg p-3">
-                <p className="text-sm font-medium text-gray-900">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-h-[600px] overflow-y-auto">
+              <div className="bg-gray-100 border border-gray-300 rounded-lg p-2 sm:p-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-900">
                   AI organized {tasks.length} tasks across {Object.keys(tasksByRock).length} rocks
                 </p>
               </div>
