@@ -200,13 +200,13 @@ export function AssignedTasksSection({
   return (
     <div className="section-card">
       <div className="section-header">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
             <CheckSquare className="h-5 w-5 text-slate-500" />
             <h3 className="font-semibold text-slate-900">My Tasks</h3>
             <span className="text-sm text-slate-500">({tasks.length})</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {!isCheckingConnection && asanaConnected && (
               <Button
                 variant="outline"
