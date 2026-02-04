@@ -3,14 +3,17 @@
 import { useState, useMemo } from "react"
 import type { Rock } from "@/lib/types"
 import { formatDate } from "@/lib/utils/date-utils"
-import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight } from "lucide-react"
+import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight, RefreshCw } from "lucide-react"
 import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
 
 interface MyRocksSectionProps {
   rocks: Rock[]
   onUpdateProgress: (rockId: string, progress: number) => void
   onUpdateRock?: (id: string, updates: Partial<Rock>) => Promise<Rock>
+  onRefresh?: () => Promise<void>
 }
 
 // Calculate quarter from a date string (YYYY-MM-DD or ISO format)
@@ -72,10 +75,12 @@ function getAvailableQuarters(rocks: Rock[]): string[] {
   })
 }
 
-export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock }: MyRocksSectionProps) {
+export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefresh }: MyRocksSectionProps) {
   const [draggedRock, setDraggedRock] = useState<string | null>(null)
   const [selectedRock, setSelectedRock] = useState<Rock | null>(null)
   const [selectedQuarter, setSelectedQuarter] = useState<string>("all")
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const { toast } = useToast()
 
   // Get available quarters for filter
   const availableQuarters = useMemo(() => getAvailableQuarters(rocks), [rocks])
@@ -140,6 +145,26 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock }: MyRock
     setDraggedRock(null)
   }
 
+  const handleRefresh = async () => {
+    if (!onRefresh) return
+    setIsRefreshing(true)
+    try {
+      await onRefresh()
+      toast({
+        title: "Rocks refreshed",
+        description: "Your rocks have been synchronized",
+      })
+    } catch (err) {
+      toast({
+        title: "Refresh failed",
+        description: "Failed to sync rocks",
+        variant: "destructive",
+      })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
   return (
     <div className="section-card">
       <div className="section-header flex-col items-start gap-3">
@@ -149,11 +174,25 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock }: MyRock
             <h3 className="font-semibold text-slate-900">My Rocks</h3>
             <span className="text-sm text-slate-500">({filteredRocks.length})</span>
           </div>
-          {rocks.length > 0 && (
-            <button className="text-sm text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1">
-              View all <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {onRefresh && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="gap-1.5 text-xs"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+                {isRefreshing ? "Syncing..." : "Refresh"}
+              </Button>
+            )}
+            {rocks.length > 0 && (
+              <button className="text-sm text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1">
+                View all <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
         {/* Quarter Filter Tabs */}
         {availableQuarters.length > 0 && (

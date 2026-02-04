@@ -227,6 +227,7 @@ export function DashboardPage({
  rocks={userRocks}
  onUpdateProgress={handleUpdateProgress}
  onUpdateRock={updateRock}
+ onRefresh={onRefresh}
  />
  </ErrorBoundary>
  <div ref={tasksRef}>
