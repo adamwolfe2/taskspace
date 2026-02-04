@@ -3156,6 +3156,115 @@ export const db = {
   async transferPendingItems(email: string, userId: string): Promise<void> {
     await sql`SELECT transfer_pending_items_to_user(${email}, ${userId})`
   },
+
+  // AI Usage Tracking
+  aiUsage: {
+    async track(params: {
+      organizationId: string
+      userId: string
+      action: string
+      model: string
+      inputTokens: number
+      outputTokens: number
+      creditsUsed: number
+      metadata?: Record<string, unknown>
+    }): Promise<void> {
+      const { organizationId, userId, action, model, inputTokens, outputTokens, creditsUsed, metadata } = params
+
+      await sql`
+        INSERT INTO ai_usage (id, organization_id, user_id, action, model, input_tokens, output_tokens, credits_used, metadata, created_at)
+        VALUES (
+          gen_random_uuid()::text,
+          ${organizationId},
+          ${userId},
+          ${action},
+          ${model},
+          ${inputTokens},
+          ${outputTokens},
+          ${creditsUsed},
+          ${JSON.stringify(metadata || {})}::jsonb,
+          NOW()
+        )
+      `
+
+      // Update subscription credits used
+      await sql`
+        UPDATE subscriptions
+        SET ai_credits_used = ai_credits_used + ${creditsUsed},
+            updated_at = NOW()
+        WHERE organization_id = ${organizationId}
+      `
+    },
+
+    async getMonthlyUsage(organizationId: string): Promise<number> {
+      const { rows } = await sql`
+        SELECT COALESCE(SUM(credits_used), 0)::int as total_credits
+        FROM ai_usage
+        WHERE organization_id = ${organizationId}
+          AND created_at >= date_trunc('month', CURRENT_DATE)
+          AND created_at < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
+      `
+      return rows[0]?.total_credits || 0
+    },
+
+    async getUsageByAction(organizationId: string, startDate: string, endDate: string): Promise<Array<{
+      action: string
+      count: number
+      totalCredits: number
+    }>> {
+      const { rows } = await sql`
+        SELECT
+          action,
+          COUNT(*)::int as count,
+          SUM(credits_used)::int as total_credits
+        FROM ai_usage
+        WHERE organization_id = ${organizationId}
+          AND created_at >= ${startDate}::timestamptz
+          AND created_at < ${endDate}::timestamptz
+        GROUP BY action
+        ORDER BY total_credits DESC
+      `
+      return rows.map(row => ({
+        action: row.action,
+        count: row.count,
+        totalCredits: row.total_credits,
+      }))
+    },
+  },
+
+  // Subscriptions
+  subscriptions: {
+    async findByOrganizationId(organizationId: string): Promise<{
+      id: string
+      organizationId: string
+      plan: string
+      aiCreditsUsed: number
+      aiCreditsLimit: number
+      status: string
+    } | null> {
+      const { rows } = await sql`
+        SELECT * FROM subscriptions WHERE organization_id = ${organizationId}
+      `
+      if (!rows[0]) return null
+      return {
+        id: rows[0].id,
+        organizationId: rows[0].organization_id,
+        plan: rows[0].plan,
+        aiCreditsUsed: rows[0].ai_credits_used || 0,
+        aiCreditsLimit: rows[0].ai_credits_limit || 0,
+        status: rows[0].status,
+      }
+    },
+
+    async updateCredits(organizationId: string, creditsUsed: number): Promise<void> {
+      await sql`
+        UPDATE subscriptions
+        SET ai_credits_used = ${creditsUsed},
+            updated_at = NOW()
+        WHERE organization_id = ${organizationId}
+      `
+    },
+  },
 }
 
 export default db

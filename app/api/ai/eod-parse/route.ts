@@ -90,10 +90,20 @@ export async function POST(request: NextRequest) {
       targetQuarter
     )
 
-    // Deduct AI credits after successful operation
-    const newCreditsUsed = aiUsage + AI_OPERATION_COSTS.eodParsing
-    // Note: You'll need to add a method to update AI credits in the subscription
-    // await db.organizations.updateAICredits(auth.organization.id, newCreditsUsed)
+    // Track AI usage and deduct credits
+    await db.aiUsage.track({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+      action: "eod_parsing",
+      model: "claude-3-5-sonnet",
+      inputTokens: Math.ceil(content.length / 4), // rough estimate
+      outputTokens: Math.ceil(JSON.stringify(parsedReport).length / 4),
+      creditsUsed: AI_OPERATION_COSTS.eodParsing,
+      metadata: {
+        taskCount: parsedReport.tasks.length,
+        quarter: targetQuarter,
+      },
+    })
 
     // Return the parsed structure for review before submission
     return NextResponse.json<ApiResponse<{

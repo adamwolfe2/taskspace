@@ -20,18 +20,25 @@ export interface PriceConfig {
 
 // Price IDs for each plan (configure in Stripe Dashboard)
 export const STRIPE_PRICE_IDS: Record<string, PriceConfig> = {
-  pro: {
-    monthly: process.env.STRIPE_PRICE_PRO_MONTHLY || "",
-    yearly: process.env.STRIPE_PRICE_PRO_YEARLY || "",
+  starter: {
+    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY || "",
+    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_YEARLY || "",
   },
-  team: {
-    monthly: process.env.STRIPE_PRICE_TEAM_MONTHLY || "",
-    yearly: process.env.STRIPE_PRICE_TEAM_YEARLY || "",
+  professional: {
+    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || "",
+    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || "",
   },
   enterprise: {
-    monthly: process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY || "",
-    yearly: process.env.STRIPE_PRICE_ENTERPRISE_YEARLY || "",
+    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY || "",
+    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_YEARLY || "",
   },
+}
+
+// AI Credit Pack Price IDs
+export const AI_CREDIT_PRICE_IDS = {
+  credits_500: process.env.NEXT_PUBLIC_STRIPE_PRICE_AI_500 || "",
+  credits_2000: process.env.NEXT_PUBLIC_STRIPE_PRICE_AI_2000 || "",
+  credits_5000: process.env.NEXT_PUBLIC_STRIPE_PRICE_AI_5000 || "",
 }
 
 // Get Stripe configuration
@@ -48,7 +55,7 @@ export function getStripeConfig(): StripeConfig {
   }
 }
 
-// Plan feature definitions (matches database plan_configs table)
+// Plan feature definitions (matches new pricing strategy)
 export const PLAN_FEATURES: Record<string, {
   name: string
   maxSeats: number | null
@@ -59,31 +66,30 @@ export const PLAN_FEATURES: Record<string, {
 }> = {
   free: {
     name: "Free",
-    maxSeats: 5,
-    aiCreditsMonthly: 100,
+    maxSeats: 3,
+    aiCreditsMonthly: 50,
     features: ["basic_rocks", "basic_tasks", "eod_reports"],
     monthlyPrice: 0,
     yearlyPrice: 0,
   },
-  pro: {
-    name: "Pro",
-    maxSeats: 20,
-    aiCreditsMonthly: 1000,
+  starter: {
+    name: "Starter",
+    maxSeats: 10,
+    aiCreditsMonthly: 100,
     features: [
       "basic_rocks",
       "basic_tasks",
       "eod_reports",
       "ai_insights",
-      "team_analytics",
-      "asana_integration",
+      "slack_integration",
     ],
-    monthlyPrice: 1500, // $15/month
-    yearlyPrice: 14400, // $144/year (save 20%)
+    monthlyPrice: 1200, // $12/month per user
+    yearlyPrice: 12000, // $120/year per user (saves $24/year)
   },
-  team: {
-    name: "Team",
-    maxSeats: 100,
-    aiCreditsMonthly: 5000,
+  professional: {
+    name: "Professional",
+    maxSeats: 50,
+    aiCreditsMonthly: 500,
     features: [
       "basic_rocks",
       "basic_tasks",
@@ -91,12 +97,14 @@ export const PLAN_FEATURES: Record<string, {
       "ai_insights",
       "team_analytics",
       "asana_integration",
+      "google_calendar",
+      "slack_integration",
       "custom_branding",
-      "api_access",
       "priority_support",
+      "unlimited_workspaces",
     ],
-    monthlyPrice: 2500, // $25/month
-    yearlyPrice: 24000, // $240/year (save 20%)
+    monthlyPrice: 2000, // $20/month per user
+    yearlyPrice: 19200, // $192/year per user (saves $48/year, 20% off)
   },
   enterprise: {
     name: "Enterprise",
@@ -109,16 +117,20 @@ export const PLAN_FEATURES: Record<string, {
       "ai_insights",
       "team_analytics",
       "asana_integration",
+      "google_calendar",
+      "slack_integration",
       "custom_branding",
       "api_access",
       "priority_support",
       "sso_saml",
       "dedicated_support",
+      "success_manager",
       "sla_guarantee",
       "unlimited_ai",
+      "unlimited_workspaces",
     ],
-    monthlyPrice: 7500, // $75/month
-    yearlyPrice: 72000, // $720/year (save 20%)
+    monthlyPrice: 3500, // $35/month per user
+    yearlyPrice: 42000, // $420/year per user
   },
 }
 

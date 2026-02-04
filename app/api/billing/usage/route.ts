@@ -1,32 +1,29 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
-import { checkAICredits, getAIUsageStats } from "@/lib/billing/stripe"
+import { db } from "@/lib/db"
+import { getUserWorkspaces } from "@/lib/db/workspaces"
+import { PLANS, type PlanTier } from "@/lib/billing/plans"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
-interface AIUsageResponse {
-  credits: {
-    used: number
-    limit: number
-    remaining: number
-    hasCredits: boolean
-  }
-  stats: {
-    totalCredits: number
-    totalTokens: number
-    queryCount: number
-    byAction: Record<string, number>
-    byModel: Record<string, number>
-  }
-  period: {
-    start: string
-    end: string
-  }
+interface BillingUsageResponse {
+  currentPlan: PlanTier
+  activeUsers: number
+  workspaces: number
+  managers: number
+  aiCreditsUsed: number
+  aiCreditsTotal: number
+  subscription: {
+    status: string
+    billingCycle?: string
+    currentPeriodEnd?: string
+  } | null
+  stripeCustomerId?: string
 }
 
 /**
  * GET /api/billing/usage
- * Get AI usage statistics for the organization
+ * Get billing and usage statistics for the organization
  */
 export async function GET(request: NextRequest) {
   try {
@@ -38,33 +35,37 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const orgId = auth.organization.id
+    const org = auth.organization
+    const currentPlan = (org.subscription?.plan || "free") as PlanTier
+    const plan = PLANS[currentPlan]
 
-    // Get current period (start of month to now)
-    const now = new Date()
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+    // Get usage data
+    const members = await db.members.findByOrganizationId(org.id)
+    const workspaces = await getUserWorkspaces(auth.user.id)
+    const activeUsers = members.filter(m => m.status === "active").length
 
-    // Get credits info
-    const creditsInfo = await checkAICredits(orgId)
+    // Get AI usage from subscription or database
+    const subscription = await db.subscriptions.findByOrganizationId(org.id)
+    const aiCreditsUsed = subscription?.aiCreditsUsed || org.subscription?.aiCreditsUsed || 0
+    const aiCreditsTotal = plan.limits.aiCreditsPerUser === null
+      ? -1
+      : plan.limits.aiCreditsPerUser * activeUsers
 
-    // Get usage stats for current month
-    const stats = await getAIUsageStats(orgId, startOfMonth, now)
-
-    return NextResponse.json<ApiResponse<AIUsageResponse>>({
+    return NextResponse.json<ApiResponse<BillingUsageResponse>>({
       success: true,
       data: {
-        credits: {
-          used: creditsInfo.creditsUsed,
-          limit: creditsInfo.creditsLimit,
-          remaining: creditsInfo.remainingCredits,
-          hasCredits: creditsInfo.hasCredits,
-        },
-        stats,
-        period: {
-          start: startOfMonth.toISOString(),
-          end: endOfMonth.toISOString(),
-        },
+        currentPlan,
+        activeUsers,
+        workspaces: workspaces.length,
+        managers: members.filter(m => m.role === "admin").length,
+        aiCreditsUsed,
+        aiCreditsTotal,
+        subscription: org.subscription ? {
+          status: org.subscription.status,
+          billingCycle: org.subscription.billingCycle || undefined,
+          currentPeriodEnd: org.subscription.currentPeriodEnd || undefined,
+        } : null,
+        stripeCustomerId: org.stripeCustomerId,
       },
     })
   } catch (error) {
