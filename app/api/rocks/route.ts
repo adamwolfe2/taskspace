@@ -37,8 +37,10 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
     }
 
-    // ALWAYS filter by workspace - enforce workspace isolation
-    rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
+    // Filter by workspace if specified (workspace feature temporarily optional)
+    if (workspaceId) {
+      rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
+    }
 
     // Filter by quarter if specified
     if (quarter) {

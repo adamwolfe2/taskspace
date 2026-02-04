@@ -75,8 +75,10 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    // ALWAYS filter by workspace - enforce workspace isolation
-    reports = reports.filter((report) => report.workspaceId === workspaceId)
+    // Filter by workspace if specified (workspace feature temporarily optional)
+    if (workspaceId) {
+      reports = reports.filter((report) => report.workspaceId === workspaceId)
+    }
 
     // Sort by date descending (already done in DB, but ensure consistency)
     reports.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
