@@ -131,12 +131,12 @@ export function isValidEODDate(dateString: string, timezone: string = "America/L
     }
   }
 
-  // Extended grace period: allow up to 2 days back for international timezone support
-  // This handles cases like IST employees submitting after midnight PST
-  if (diffDays < -2) {
+  // Allow submissions for the past 7 days (1 week) to support backfilling missed reports
+  // This gives users flexibility while preventing very old or erroneous submissions
+  if (diffDays < -7) {
     return {
       valid: false,
-      reason: `EOD reports can only be submitted for the past 2 days. Please contact an admin if you need to submit for ${dateString}.`,
+      reason: `EOD reports can only be submitted for the past 7 days. Please contact an admin if you need to submit for ${dateString}.`,
       suggestedDate: todayInTz,
     }
   }
