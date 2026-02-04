@@ -74,82 +74,108 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       `)
       logger.info("✓ Created index on rocks.owner_email")
 
-      // Step 5: Make tasks.user_id nullable
-      await client.query(`
-        ALTER TABLE tasks
-        ALTER COLUMN user_id DROP NOT NULL
+      // Step 5: Handle tasks table (only if it exists - might be called assigned_tasks)
+      const { rows: tasksTableCheck } = await client.query(`
+        SELECT EXISTS (
+          SELECT 1 FROM information_schema.tables
+          WHERE table_name = 'tasks'
+        ) as exists
       `)
-      logger.info("✓ Made tasks.user_id nullable")
 
-      // Step 6: Add tasks.owner_email field
-      await client.query(`
-        DO $$
-        BEGIN
-          IF NOT EXISTS (
-            SELECT 1 FROM information_schema.columns
-            WHERE table_name = 'tasks' AND column_name = 'owner_email'
-          ) THEN
-            ALTER TABLE tasks ADD COLUMN owner_email VARCHAR(255);
-          END IF;
-        END $$;
-      `)
-      logger.info("✓ Added tasks.owner_email column")
+      if (tasksTableCheck[0].exists) {
+        await client.query(`
+          ALTER TABLE tasks
+          ALTER COLUMN user_id DROP NOT NULL
+        `)
+        logger.info("✓ Made tasks.user_id nullable")
 
-      // Step 7: Add tasks check constraint
-      await client.query(`
-        DO $$
-        BEGIN
-          IF EXISTS (
-            SELECT 1 FROM information_schema.table_constraints
-            WHERE constraint_name = 'tasks_owner_check'
-          ) THEN
-            ALTER TABLE tasks DROP CONSTRAINT tasks_owner_check;
-          END IF;
-        END $$;
-      `)
-      await client.query(`
-        ALTER TABLE tasks
-        ADD CONSTRAINT tasks_owner_check
-        CHECK (
-          (user_id IS NOT NULL AND owner_email IS NULL) OR
-          (user_id IS NULL AND owner_email IS NOT NULL)
-        )
-      `)
-      logger.info("✓ Added tasks ownership check constraint")
+        await client.query(`
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_name = 'tasks' AND column_name = 'owner_email'
+            ) THEN
+              ALTER TABLE tasks ADD COLUMN owner_email VARCHAR(255);
+            END IF;
+          END $$;
+        `)
+        logger.info("✓ Added tasks.owner_email column")
 
-      // Step 8: Create index on tasks.owner_email
-      await client.query(`
-        DROP INDEX IF EXISTS idx_tasks_owner_email
-      `)
-      await client.query(`
-        CREATE INDEX idx_tasks_owner_email ON tasks(owner_email)
-        WHERE owner_email IS NOT NULL
-      `)
-      logger.info("✓ Created index on tasks.owner_email")
+        await client.query(`
+          DO $$
+          BEGIN
+            IF EXISTS (
+              SELECT 1 FROM information_schema.table_constraints
+              WHERE constraint_name = 'tasks_owner_check'
+            ) THEN
+              ALTER TABLE tasks DROP CONSTRAINT tasks_owner_check;
+            END IF;
+          END $$;
+        `)
+        await client.query(`
+          ALTER TABLE tasks
+          ADD CONSTRAINT tasks_owner_check
+          CHECK (
+            (user_id IS NOT NULL AND owner_email IS NULL) OR
+            (user_id IS NULL AND owner_email IS NOT NULL)
+          )
+        `)
+        logger.info("✓ Added tasks ownership check constraint")
 
-      // Step 9: Create transfer function
-      await client.query(`
-        CREATE OR REPLACE FUNCTION transfer_pending_items_to_user(
-          p_email VARCHAR(255),
-          p_user_id VARCHAR(255)
-        ) RETURNS void AS $$
-        BEGIN
-          -- Transfer rocks from email to user_id
-          UPDATE rocks
-          SET user_id = p_user_id,
-              owner_email = NULL,
-              updated_at = NOW()
-          WHERE owner_email = p_email;
+        await client.query(`
+          DROP INDEX IF EXISTS idx_tasks_owner_email
+        `)
+        await client.query(`
+          CREATE INDEX idx_tasks_owner_email ON tasks(owner_email)
+          WHERE owner_email IS NOT NULL
+        `)
+        logger.info("✓ Created index on tasks.owner_email")
+      } else {
+        logger.info("⚠ Tasks table not found, skipping tasks migration (this is okay)")
+      }
 
-          -- Transfer tasks from email to user_id
-          UPDATE tasks
-          SET user_id = p_user_id,
-              owner_email = NULL,
-              updated_at = NOW()
-          WHERE owner_email = p_email;
-        END;
-        $$ LANGUAGE plpgsql;
-      `)
+      // Step 6: Create transfer function (handles only rocks if tasks table doesn't exist)
+      const transferFunctionSql = tasksTableCheck[0].exists
+        ? `
+          CREATE OR REPLACE FUNCTION transfer_pending_items_to_user(
+            p_email VARCHAR(255),
+            p_user_id VARCHAR(255)
+          ) RETURNS void AS $$
+          BEGIN
+            -- Transfer rocks from email to user_id
+            UPDATE rocks
+            SET user_id = p_user_id,
+                owner_email = NULL,
+                updated_at = NOW()
+            WHERE owner_email = p_email;
+
+            -- Transfer tasks from email to user_id
+            UPDATE tasks
+            SET user_id = p_user_id,
+                owner_email = NULL,
+                updated_at = NOW()
+            WHERE owner_email = p_email;
+          END;
+          $$ LANGUAGE plpgsql;
+        `
+        : `
+          CREATE OR REPLACE FUNCTION transfer_pending_items_to_user(
+            p_email VARCHAR(255),
+            p_user_id VARCHAR(255)
+          ) RETURNS void AS $$
+          BEGIN
+            -- Transfer rocks from email to user_id
+            UPDATE rocks
+            SET user_id = p_user_id,
+                owner_email = NULL,
+                updated_at = NOW()
+            WHERE owner_email = p_email;
+          END;
+          $$ LANGUAGE plpgsql;
+        `
+
+      await client.query(transferFunctionSql)
       logger.info("✓ Created transfer_pending_items_to_user function")
 
       await client.query("COMMIT")
