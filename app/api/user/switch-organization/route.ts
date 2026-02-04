@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { switchOrganizationSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -18,15 +20,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { organizationId } = body
-
-    if (!organizationId || typeof organizationId !== "string") {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Organization ID is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body using Zod schema
+    const { organizationId } = await validateBody(request, switchOrganizationSchema)
 
     // Verify user is a member of the target organization
     const membership = await db.members.findByOrgAndUser(
@@ -67,6 +62,14 @@ export async function POST(request: NextRequest) {
       data: { message: "Organization switched successfully" },
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Switch organization error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to switch organization" },

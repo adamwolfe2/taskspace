@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateBrandingSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, Organization } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -61,7 +63,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
+    // Validate request body using Zod schema
     const {
       logoUrl,
       primaryColor,
@@ -69,22 +71,7 @@ export async function PATCH(request: NextRequest) {
       accentColor,
       faviconUrl,
       customDomain,
-    } = body
-
-    // Validate color format if provided
-    const colorRegex = /^#[0-9A-Fa-f]{6}$/
-    if (primaryColor && !colorRegex.test(primaryColor)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid primary color format. Use hex format (e.g., #3b82f6)" },
-        { status: 400 }
-      )
-    }
-    if (secondaryColor && !colorRegex.test(secondaryColor)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid secondary color format. Use hex format (e.g., #60a5fa)" },
-        { status: 400 }
-      )
-    }
+    } = await validateBody(request, updateBrandingSchema)
 
     // Build updates object
     const updates: Partial<Organization> = {}
@@ -132,6 +119,14 @@ export async function PATCH(request: NextRequest) {
       message: "Branding settings updated successfully",
     })
   } catch (error) {
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+
     logError(logger, "Update branding error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update branding settings" },
