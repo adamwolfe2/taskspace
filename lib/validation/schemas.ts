@@ -143,7 +143,7 @@ export const createMemberSchema = z.object({
 })
 
 export const updateMemberSchema = z.object({
-  memberId: uuidSchema, // Organization member ID to update
+  memberId: z.string().min(1, "Member ID is required"), // Organization member ID (hex string, not UUID)
   role: z.enum(["admin", "member", "owner"]).optional(),
   department: z.string().min(1).max(100).optional(),
   weeklyMeasurable: z.string().max(500).optional(),
