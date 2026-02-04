@@ -79,7 +79,9 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     }
 
     // Determine which user the rock belongs to
-    let targetUserId = auth.user.id
+    let targetUserId: string | undefined = auth.user.id
+    let ownerEmail: string | undefined = undefined
+
     if (userId && userId !== auth.user.id) {
       if (!isAdmin(auth)) {
         return NextResponse.json<ApiResponse<null>>(
@@ -95,7 +97,16 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
           { status: 404 }
         )
       }
-      targetUserId = userId
+
+      // Check if this is a draft member (invited but not yet accepted)
+      const targetUser = await db.users.findById(userId)
+      if (!targetUser && targetMember.status === "invited") {
+        // This is a draft member - use their email instead of userId
+        ownerEmail = targetMember.email
+        targetUserId = undefined
+      } else {
+        targetUserId = userId
+      }
     }
 
     const now = new Date().toISOString()
@@ -104,6 +115,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       organizationId: auth.organization.id,
       workspaceId: workspaceId, // Required - validated above
       userId: targetUserId,
+      ownerEmail: ownerEmail,
       title: title.trim(),
       description: description.trim(),
       progress: 0,
