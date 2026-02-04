@@ -68,44 +68,44 @@ function getDayOfWeekInTimezone(date: Date, timezone: string): number {
 }
 
 function getWeekDays(reports: EODReport[], userId: string, todayString: string): WeekDay[] {
- const today = new Date()
-
- // Parse today's date string to create the week
+ // Parse today's date string (already in org timezone from getTodayInTimezone)
  const [year, month, day] = todayString.split('-').map(Number)
- const todayDate = new Date(year, month - 1, day)
- const dayOfWeek = todayDate.getDay() // 0 = Sunday, 1 = Monday, etc.
+
+ // Calculate day of week (0-6) by creating date at noon UTC to avoid timezone issues
+ const todayDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
+ const dayOfWeek = todayDate.getUTCDay() // 0 = Sunday, 1 = Monday, etc.
 
  // Calculate Monday of current week
- const monday = new Date(todayDate)
+ const mondayDate = new Date(todayDate)
  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek // Adjust for Sunday
- monday.setDate(todayDate.getDate() + diff)
+ mondayDate.setUTCDate(todayDate.getUTCDate() + diff)
 
  // Get user's report dates as a Set for quick lookup
  const userReportDates = new Set(
- reports
- .filter(r => r.userId === userId)
- .map(r => r.date)
+   reports
+     .filter(r => r.userId === userId)
+     .map(r => r.date)
  )
 
  const weekDays: WeekDay[] = []
  const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri"]
 
  for (let i = 0; i < 5; i++) {
- const date = new Date(monday)
- date.setDate(monday.getDate() + i)
- const dateYear = date.getFullYear()
- const dateMonth = String(date.getMonth() + 1).padStart(2, '0')
- const dateDay = String(date.getDate()).padStart(2, '0')
- const dateString = `${dateYear}-${dateMonth}-${dateDay}`
+   const date = new Date(mondayDate)
+   date.setUTCDate(mondayDate.getUTCDate() + i)
+   const dateYear = date.getUTCFullYear()
+   const dateMonth = String(date.getUTCMonth() + 1).padStart(2, '0')
+   const dateDay = String(date.getUTCDate()).padStart(2, '0')
+   const dateString = `${dateYear}-${dateMonth}-${dateDay}`
 
- weekDays.push({
- date: dateString,
- dayName: dayNames[i],
- dayNumber: date.getDate(),
- isToday: dateString === todayString,
- isFuture: dateString > todayString,
- hasSubmission: userReportDates.has(dateString),
- })
+   weekDays.push({
+     date: dateString,
+     dayName: dayNames[i],
+     dayNumber: date.getUTCDate(),
+     isToday: dateString === todayString,
+     isFuture: dateString > todayString,
+     hasSubmission: userReportDates.has(dateString),
+   })
  }
 
  return weekDays
