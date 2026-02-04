@@ -76,9 +76,18 @@ function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto mb-10"
+            className="text-xl sm:text-2xl text-gray-700 font-medium max-w-4xl mx-auto mb-4 text-center"
           >
-            AI operational infrastructure for multi-company founders & builders. TaskspaceAI automates EOD reports, cadence metrics, and keeps every entity accountable through unified dashboards across all your teams running on EOS.
+            AI operational infrastructure for multi-company founders & builders.
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto mb-10 text-center"
+          >
+            TaskspaceAI automates EOD reports, cadence metrics, and keeps every entity accountable through unified dashboards across all your teams running on EOS.
           </motion.p>
 
           <motion.div
