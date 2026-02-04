@@ -1,30 +1,35 @@
 import type { Metadata } from "next"
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
+
 export const metadata: Metadata = {
-  title: "Team EOD Report | AIMS",
+  metadataBase: new URL(APP_URL),
+  title: "Team EOD Report | Taskspace",
   description: "Live end-of-day team reporting dashboard. Track progress, view completed tasks, and stay aligned with your team's daily activities.",
   icons: {
     icon: "/icon-light-32x32.png",
     apple: "/apple-icon.png",
   },
   openGraph: {
-    title: "Team EOD Report | AIMS",
+    title: "Team EOD Report | Taskspace",
     description: "Live end-of-day team reporting dashboard. Track progress, view completed tasks, and stay aligned with your team's daily activities.",
     type: "website",
+    url: APP_URL,
+    siteName: "Taskspace",
     images: [
       {
-        url: "/2026-02-03_17.24.49.png", // Marketing site image
+        url: `${APP_URL}/2026-02-03_17.24.49.png`,
         width: 1200,
         height: 630,
-        alt: "AIMS EOD Dashboard",
+        alt: "Taskspace - Team EOD Dashboard",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Team EOD Report | AIMS",
+    title: "Team EOD Report | Taskspace",
     description: "Live end-of-day team reporting dashboard. Track progress, view completed tasks, and stay aligned with your team's daily activities.",
-    images: ["/2026-02-03_17.24.49.png"],
+    images: [`${APP_URL}/2026-02-03_17.24.49.png`],
   },
 }
 
