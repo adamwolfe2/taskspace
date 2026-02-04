@@ -81,23 +81,27 @@ export async function POST(request: NextRequest) {
     let rockUserId: string | undefined
     let rockOwnerEmail: string | undefined
 
-    if (targetMember) {
-      // Found an active member - use their user.id
-      rockUserId = targetMember.userId!
-    } else {
+    if (!targetMember) {
       // Not found by user_id, try to find by organization_member.id (draft members)
       targetMember = await db.members.findByOrgAndId(auth.organization.id, userId)
+    }
 
-      if (!targetMember) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "User is not a member of this organization" },
-          { status: 404 }
-        )
-      }
+    if (!targetMember) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "User is not a member of this organization" },
+        { status: 404 }
+      )
+    }
 
-      // Member can be either accepted (has userId) or draft (has email only)
-      rockUserId = targetMember.userId || undefined
-      rockOwnerEmail = targetMember.email || undefined
+    // Check if member has accepted invitation (has userId) or is draft (email only)
+    if (targetMember.userId) {
+      // Member has accepted - use their user ID
+      rockUserId = targetMember.userId
+      rockOwnerEmail = undefined
+    } else {
+      // Draft member - use their email
+      rockUserId = undefined
+      rockOwnerEmail = targetMember.email
     }
 
     // Calculate default due date (end of current quarter)
