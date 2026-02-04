@@ -195,12 +195,13 @@ function parseAssignedTask(row: Record<string, unknown>): AssignedTask {
 
 function parseEODReport(row: Record<string, unknown>): EODReport {
   // PostgreSQL DATE type returns a JavaScript Date object
-  // We need to format it as YYYY-MM-DD string using local timezone
+  // We need to format it as YYYY-MM-DD string using UTC methods to avoid timezone shifting
   const dateValue = row.date
   let dateString: string
   if (dateValue instanceof Date) {
-    // Format as YYYY-MM-DD using local timezone (not UTC to avoid date shifting)
-    dateString = `${dateValue.getFullYear()}-${String(dateValue.getMonth() + 1).padStart(2, '0')}-${String(dateValue.getDate()).padStart(2, '0')}`
+    // Use UTC methods to avoid server timezone affecting date parsing
+    // DATE type is timezone-agnostic, so UTC interpretation is correct
+    dateString = `${dateValue.getUTCFullYear()}-${String(dateValue.getUTCMonth() + 1).padStart(2, '0')}-${String(dateValue.getUTCDate()).padStart(2, '0')}`
   } else if (typeof dateValue === 'string') {
     // Already a string, extract just the date part if it has time component
     dateString = dateValue.split('T')[0]

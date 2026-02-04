@@ -84,15 +84,6 @@ function getWeekDays(reports: EODReport[], userId: string, todayString: string):
  const userReports = reports.filter(r => r.userId === userId)
  const userReportDates = new Set(userReports.map(r => r.date))
 
- // Debug logging (remove after fixing)
- if (typeof window !== 'undefined' && userReports.length > 0) {
-   console.log('[EOD Calendar Debug]', {
-     todayString,
-     userReportDates: Array.from(userReportDates),
-     reportCount: userReports.length,
-   })
- }
-
  const weekDays: WeekDay[] = []
  const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri"]
 
@@ -103,15 +94,6 @@ function getWeekDays(reports: EODReport[], userId: string, todayString: string):
    const dateMonth = String(date.getUTCMonth() + 1).padStart(2, '0')
    const dateDay = String(date.getUTCDate()).padStart(2, '0')
    const dateString = `${dateYear}-${dateMonth}-${dateDay}`
-
-   // Debug logging (remove after fixing)
-   if (typeof window !== 'undefined' && i < 3) {
-     console.log(`[EOD Calendar] ${dayNames[i]}:`, {
-       dateString,
-       hasSubmission: userReportDates.has(dateString),
-       matchingReports: userReports.filter(r => r.date === dateString).length,
-     })
-   }
 
    weekDays.push({
      date: dateString,
