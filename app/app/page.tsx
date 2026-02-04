@@ -77,8 +77,8 @@ function AppContent() {
     )
   }
 
-  // Handle invitation acceptance
-  if (inviteToken && !isAuthenticated) {
+  // Handle invitation acceptance (works for both new and existing users)
+  if (inviteToken) {
     return <AcceptInvitationPage token={inviteToken} />
   }
 
