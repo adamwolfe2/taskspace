@@ -51,20 +51,12 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get workspaceId from query params
+    // Get workspaceId from query params (optional - if not provided, show all direct reports)
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
 
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate workspace access (unless org admin)
-    if (!isAdmin(auth)) {
+    // Validate workspace access if workspaceId is provided
+    if (workspaceId && !isAdmin(auth)) {
       const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
       if (!hasAccess) {
         return NextResponse.json<ApiResponse<null>>(
@@ -82,12 +74,15 @@ export async function GET(request: NextRequest) {
     // Get all direct reports
     const allDirectReportMembers = await db.members.findDirectReports(orgId, managerId)
 
-    // Filter direct reports to only those in the current workspace
-    const workspaceMembers = await getWorkspaceMembers(workspaceId)
-    const workspaceMemberUserIds = new Set(workspaceMembers.map((wm) => wm.userId))
-    const directReportMembers = allDirectReportMembers.filter((member) =>
-      workspaceMemberUserIds.has(member.userId || member.id)
-    )
+    // Filter direct reports to only those in the current workspace (if workspaceId provided)
+    let directReportMembers = allDirectReportMembers
+    if (workspaceId) {
+      const workspaceMembers = await getWorkspaceMembers(workspaceId)
+      const workspaceMemberUserIds = new Set(workspaceMembers.map((wm) => wm.userId))
+      directReportMembers = allDirectReportMembers.filter((member) =>
+        workspaceMemberUserIds.has(member.userId || member.id)
+      )
+    }
 
     if (directReportMembers.length === 0) {
       // Return empty dashboard if no direct reports

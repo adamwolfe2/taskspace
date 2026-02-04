@@ -56,19 +56,13 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
 
   // Fetch dashboard data
   const fetchDashboard = async () => {
-    // CRITICAL: Workspace is required for data isolation
-    if (!currentWorkspace) {
-      setError("No workspace selected")
-      setIsLoading(false)
-      return
-    }
-
     try {
       setIsRefreshing(true)
-      // ALWAYS include workspaceId - required for workspace isolation
-      const params = new URLSearchParams({
-        workspaceId: currentWorkspace.id,
-      })
+      // Include workspaceId if available (optional for backward compatibility)
+      const params = new URLSearchParams()
+      if (currentWorkspace) {
+        params.set("workspaceId", currentWorkspace.id)
+      }
       const response = await fetch(`/api/manager/dashboard?${params.toString()}`)
       const data = await response.json()
 
