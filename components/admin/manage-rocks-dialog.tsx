@@ -235,7 +235,15 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
   }
 
   const selectedUser = teamMembers.find((m) => m.id === selectedUserId)
-  const allUserRocks = rocks.filter((r) => r.userId === selectedUserId)
+  // Filter rocks for this user - match by userId OR ownerEmail (for draft members)
+  const allUserRocks = rocks.filter((r) => {
+    if (!selectedUser) return false
+    // Match by user.id (for accepted members)
+    if (selectedUser.userId && r.userId === selectedUser.userId) return true
+    // Match by email (for draft members who haven't accepted yet)
+    if (!r.userId && r.ownerEmail && r.ownerEmail.toLowerCase() === selectedUser.email.toLowerCase()) return true
+    return false
+  })
 
   // Extract unique quarters from user's rocks for the filter dropdown
   const availableQuarters = [...new Set(allUserRocks.map((r) => r.quarter).filter(Boolean))]
