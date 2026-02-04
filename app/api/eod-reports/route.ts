@@ -155,7 +155,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     const report: EODReport = {
       id: generateId(),
       organizationId: auth.organization.id,
-      workspaceId: workspaceId, // Required - validated above
+      workspaceId: workspaceId || null, // Optional - workspace feature temporarily disabled
       userId: auth.user.id,
       date: reportDate,
       tasks,

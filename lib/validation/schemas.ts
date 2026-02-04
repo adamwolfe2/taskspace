@@ -266,14 +266,26 @@ export const eodTaskSchema = z.object({
   id: z.string(),
   text: z.string().min(1).max(1000),
   taskId: uuidSchema.optional(), // Optional reference to AssignedTask
-  rockId: uuidSchema.nullable(),
+  rockId: z.string().nullable().optional().transform(val => {
+    // Convert empty strings, "undefined", "null" to null
+    if (!val || val === "" || val === "undefined" || val === "null") return null
+    // Validate UUID format if present
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    return uuidRegex.test(val) ? val : null
+  }),
   rockTitle: z.string().nullable(),
 })
 
 export const eodPrioritySchema = z.object({
   id: z.string(),
   text: z.string().min(1).max(1000),
-  rockId: uuidSchema.nullable(),
+  rockId: z.string().nullable().optional().transform(val => {
+    // Convert empty strings, "undefined", "null" to null
+    if (!val || val === "" || val === "undefined" || val === "null") return null
+    // Validate UUID format if present
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    return uuidRegex.test(val) ? val : null
+  }),
   rockTitle: z.string().nullable(),
 })
 
