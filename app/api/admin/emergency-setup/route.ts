@@ -75,10 +75,17 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     }
 
     // Step 3: Add workspace_id columns to existing tables (only if tables exist)
+    // SECURITY: Whitelist of allowed table names to prevent SQL injection
+    const ALLOWED_TABLES = ["rocks", "assigned_tasks", "eod_reports", "meetings", "focus_blocks", "daily_energy", "user_streaks", "focus_score_history"] as const
     const tables = ["rocks", "assigned_tasks", "eod_reports", "meetings", "focus_blocks", "daily_energy", "user_streaks", "focus_score_history"]
 
     for (const table of tables) {
       try {
+        // Validate table name against whitelist
+        if (!ALLOWED_TABLES.includes(table as typeof ALLOWED_TABLES[number])) {
+          throw new Error(`Invalid table name: ${table}`)
+        }
+
         // First check if table exists
         const { rows: tableCheck } = await sql`
           SELECT EXISTS (
@@ -93,9 +100,8 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           continue
         }
 
-        // Use raw SQL with dynamic table name (admin only, safe context)
-        // @ts-expect-error - Dynamic table name for emergency admin operation
-        await sql([`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS workspace_id VARCHAR(255) REFERENCES workspaces(id) ON DELETE SET NULL`])
+        // Use parameterized identifier for table name
+        await sql`ALTER TABLE ${sql(table)} ADD COLUMN IF NOT EXISTS workspace_id VARCHAR(255) REFERENCES workspaces(id) ON DELETE SET NULL`
         steps.push(`✓ Added workspace_id to ${table}`)
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error)
@@ -162,8 +168,16 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     let migratedRecords = 0
 
     // Helper function to safely migrate a table
+    // SECURITY: Whitelist of allowed table names for migration
+    const MIGRATION_ALLOWED_TABLES = ["rocks", "assigned_tasks", "eod_reports", "meetings", "focus_blocks", "daily_energy", "user_streaks", "focus_score_history"] as const
+
     const migrateTable = async (tableName: string, isUserBased: boolean) => {
       try {
+        // Validate table name against whitelist
+        if (!MIGRATION_ALLOWED_TABLES.includes(tableName as typeof MIGRATION_ALLOWED_TABLES[number])) {
+          throw new Error(`Invalid table name for migration: ${tableName}`)
+        }
+
         // Check if table exists
         const { rows: tableCheck } = await sql`
           SELECT EXISTS (
@@ -191,22 +205,20 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           return 0
         }
 
-        // Migrate based on table type
+        // Migrate based on table type using parameterized queries
         let result
         if (isUserBased) {
-          // @ts-expect-error - Dynamic table name for emergency admin operation
-          result = await sql([`
-            UPDATE ${tableName} SET workspace_id = '${workspaceId}'
+          result = await sql`
+            UPDATE ${sql(tableName)} SET workspace_id = ${workspaceId}
             WHERE user_id IN (
-              SELECT user_id FROM organization_members WHERE organization_id = '${orgId}'
+              SELECT user_id FROM organization_members WHERE organization_id = ${orgId}
             ) AND workspace_id IS NULL
-          `])
+          `
         } else {
-          // @ts-expect-error - Dynamic table name for emergency admin operation
-          result = await sql([`
-            UPDATE ${tableName} SET workspace_id = '${workspaceId}'
-            WHERE organization_id = '${orgId}' AND workspace_id IS NULL
-          `])
+          result = await sql`
+            UPDATE ${sql(tableName)} SET workspace_id = ${workspaceId}
+            WHERE organization_id = ${orgId} AND workspace_id IS NULL
+          `
         }
 
         return result.rowCount || 0
