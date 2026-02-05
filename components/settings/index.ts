@@ -1,6 +1,7 @@
 // Existing component exports
 export { BillingSettings } from "./billing-settings"
 export { BrandingSettings } from "./branding-settings"
+export { WorkspaceBrandingSettings } from "./workspace-branding-settings"
 export { WorkspaceDashboard } from "./workspace-dashboard"
 export { AsanaIntegration } from "./asana-integration"
 export { AsanaMemberConnection } from "./asana-member-connection"

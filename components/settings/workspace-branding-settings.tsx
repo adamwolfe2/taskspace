@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -114,6 +114,10 @@ export function WorkspaceBrandingSettings() {
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isExtracting, setIsExtracting] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+
+  // File input ref
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Color state
   const [primaryColor, setPrimaryColor] = useState(currentWorkspace?.primaryColor || "#3b82f6")
@@ -156,6 +160,71 @@ export function WorkspaceBrandingSettings() {
     const analysis = analyzeColorQuality(colors)
     setQuality(analysis)
   }, [primaryColor, secondaryColor, accentColor])
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file (PNG, JPG, SVG)",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      // Upload file
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("type", "logo")
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Upload failed")
+      }
+
+      const data = await response.json()
+      if (!data.success || !data.data?.url) {
+        throw new Error(data.error || "Upload failed")
+      }
+
+      const uploadedLogoUrl = data.data.url
+      setLogoUrl(uploadedLogoUrl)
+      setLogoFile(file)
+
+      toast({
+        title: "Logo uploaded",
+        description: "Your logo has been uploaded successfully",
+      })
+    } catch (error) {
+      console.error("Logo upload failed:", error)
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload logo. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   const handleExtractFromLogo = async () => {
     if (!logoFile && !logoUrl) {
@@ -338,14 +407,47 @@ export function WorkspaceBrandingSettings() {
               {/* Logo Upload */}
               <div>
                 <Label>Logo</Label>
-                <div className="mt-2 border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-primary/50 transition-all cursor-pointer">
-                  <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    Click to upload or drag and drop
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    PNG, JPG or SVG (max 2MB)
-                  </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                  disabled={isUploading}
+                />
+                <div
+                  className="mt-2 border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-primary/50 transition-all cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-8 h-8 text-muted-foreground mx-auto mb-2 animate-spin" />
+                      <p className="text-sm text-muted-foreground">
+                        Uploading...
+                      </p>
+                    </>
+                  ) : logoUrl ? (
+                    <>
+                      <img
+                        src={logoUrl}
+                        alt="Logo preview"
+                        className="w-16 h-16 mx-auto mb-2 object-contain"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Click to change logo
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        Click to upload or drag and drop
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        PNG, JPG or SVG (max 5MB)
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {(logoFile || logoUrl) && (

@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import type { TeamMember } from "@/lib/types"
 import type { Workspace } from "@/lib/hooks/use-workspace"
+import { WorkspaceBrandingSettings } from "./workspace-branding-settings"
 
 interface WorkspaceSettingsTabProps {
   teamMembers: TeamMember[]
@@ -323,6 +324,9 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
 
   return (
     <div className="space-y-6">
+      {/* Workspace Branding - Admin only */}
+      {isAdmin && <WorkspaceBrandingSettings />}
+
       {/* Workspace Members */}
       <Card>
         <CardHeader>
