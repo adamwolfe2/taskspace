@@ -7,11 +7,22 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  DropResult,
-} from "@hello-pangea/dnd"
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import {
   ClipboardList,
   GripVertical,
@@ -64,6 +75,90 @@ const DEFAULT_DURATIONS: Record<SectionType, number> = {
   conclude: 5,
 }
 
+// Sortable item component
+function SortableSection({
+  section,
+  index,
+  disabled,
+  onUpdateDuration,
+}: {
+  section: AgendaSection
+  index: number
+  disabled: boolean
+  onUpdateDuration: (sectionType: SectionType, duration: number) => void
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: section.sectionType })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`p-4 border rounded-lg ${
+        isDragging ? "shadow-lg bg-white z-50" : "bg-slate-50"
+      } ${disabled ? "opacity-60" : ""}`}
+    >
+      <div className="flex items-center gap-3">
+        <div {...attributes} {...listeners}>
+          <GripVertical
+            className={`h-5 w-5 ${
+              disabled ? "text-slate-300" : "text-slate-400 cursor-grab active:cursor-grabbing"
+            }`}
+          />
+        </div>
+        <Badge variant="outline" className="font-mono text-xs">
+          #{index + 1}
+        </Badge>
+        <div className="flex-1">
+          <h4 className="font-semibold text-sm">
+            {SECTION_NAMES[section.sectionType]}
+          </h4>
+          <p className="text-xs text-slate-500">
+            {SECTION_DESCRIPTIONS[section.sectionType]}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label htmlFor={`duration-${section.sectionType}`} className="text-xs text-slate-600 whitespace-nowrap">
+            Duration:
+          </Label>
+          <div className="relative">
+            <Input
+              id={`duration-${section.sectionType}`}
+              type="number"
+              min="1"
+              max="120"
+              value={section.durationTarget}
+              onChange={(e) =>
+                onUpdateDuration(
+                  section.sectionType,
+                  parseInt(e.target.value) || 1
+                )
+              }
+              disabled={disabled}
+              className="w-16 text-right pr-8"
+            />
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+              min
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function AgendaBuilder({ meetingId, disabled = false }: AgendaBuilderProps) {
   const { toast } = useToast()
   const [sections, setSections] = useState<AgendaSection[]>([])
@@ -71,6 +166,13 @@ export function AgendaBuilder({ meetingId, disabled = false }: AgendaBuilderProp
   const [saving, setSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const [originalSections, setOriginalSections] = useState<AgendaSection[]>([])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   // Load agenda
   const loadAgenda = async () => {
@@ -102,21 +204,26 @@ export function AgendaBuilder({ meetingId, disabled = false }: AgendaBuilderProp
   }, [meetingId])
 
   // Handle drag end
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination || disabled) return
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
 
-    const items = Array.from(sections)
-    const [reorderedItem] = items.splice(result.source.index, 1)
-    items.splice(result.destination.index, 0, reorderedItem)
+    if (!over || active.id === over.id || disabled) return
 
-    // Update order indices
-    const updated = items.map((item, index) => ({
-      ...item,
-      orderIndex: index,
-    }))
+    setSections((items) => {
+      const oldIndex = items.findIndex((item) => item.sectionType === active.id)
+      const newIndex = items.findIndex((item) => item.sectionType === over.id)
 
-    setSections(updated)
-    setHasChanges(true)
+      const reordered = arrayMove(items, oldIndex, newIndex)
+
+      // Update order indices
+      const updated = reordered.map((item, index) => ({
+        ...item,
+        orderIndex: index,
+      }))
+
+      setHasChanges(true)
+      return updated
+    })
   }
 
   // Update duration
@@ -231,85 +338,29 @@ export function AgendaBuilder({ meetingId, disabled = false }: AgendaBuilderProp
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="agenda-sections" isDropDisabled={disabled}>
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="space-y-2"
-              >
-                {sections.map((section, index) => (
-                  <Draggable
-                    key={section.sectionType}
-                    draggableId={section.sectionType}
-                    index={index}
-                    isDragDisabled={disabled}
-                  >
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className={`p-4 border rounded-lg ${
-                          snapshot.isDragging
-                            ? "shadow-lg bg-white"
-                            : "bg-slate-50"
-                        } ${disabled ? "opacity-60" : ""}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div {...provided.dragHandleProps}>
-                            <GripVertical
-                              className={`h-5 w-5 ${
-                                disabled ? "text-slate-300" : "text-slate-400 cursor-grab"
-                              }`}
-                            />
-                          </div>
-                          <Badge variant="outline" className="font-mono text-xs">
-                            #{index + 1}
-                          </Badge>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-sm">
-                              {SECTION_NAMES[section.sectionType]}
-                            </h4>
-                            <p className="text-xs text-slate-500">
-                              {SECTION_DESCRIPTIONS[section.sectionType]}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Label htmlFor={`duration-${section.sectionType}`} className="text-xs text-slate-600 whitespace-nowrap">
-                              Duration:
-                            </Label>
-                            <div className="relative">
-                              <Input
-                                id={`duration-${section.sectionType}`}
-                                type="number"
-                                min="1"
-                                max="120"
-                                value={section.durationTarget}
-                                onChange={(e) =>
-                                  updateDuration(
-                                    section.sectionType,
-                                    parseInt(e.target.value) || 1
-                                  )
-                                }
-                                disabled={disabled}
-                                className="w-16 text-right pr-8"
-                              />
-                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-500">
-                                min
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sections.map((s) => s.sectionType)}
+            strategy={verticalListSortingStrategy}
+            disabled={disabled}
+          >
+            <div className="space-y-2">
+              {sections.map((section, index) => (
+                <SortableSection
+                  key={section.sectionType}
+                  section={section}
+                  index={index}
+                  disabled={disabled}
+                  onUpdateDuration={updateDuration}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-4 border-t">
