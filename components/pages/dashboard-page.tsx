@@ -16,11 +16,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { calculateUserStats } from "@/lib/utils/stats-calculator"
 import { triggerConfetti } from "@/lib/utils/confetti"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
-import { ProductivityWidget } from "@/components/productivity/productivity-dashboard"
-import {
-  useProductivityDashboard,
-  useTodayEnergy,
-} from "@/lib/hooks/use-productivity"
 import { useApp } from "@/lib/contexts/app-context"
 
 // Get current quarter string (e.g., "Q1 2026")
@@ -62,16 +57,6 @@ export function DashboardPage({
  const eodCardRef = useRef<HTMLDivElement>(null)
  const tasksRef = useRef<HTMLDivElement>(null)
  const { currentOrganization } = useApp()
-
- // Productivity data
- const { data: productivityData, isLoading: productivityLoading } = useProductivityDashboard(currentUser.id)
- const { energy: todayEnergy } = useTodayEnergy(currentUser.id)
-
- // Calculate total focus minutes from weekly hours data
- const totalFocusMinutes = productivityData?.weeklyHours?.reduce(
-   (sum, day) => sum + day.totalMinutes,
-   0
- ) || 0
 
  const currentQuarter = getCurrentQuarter()
  const userRocks = rocks.filter((r) => r.userId === currentUser.id)
@@ -197,18 +182,6 @@ export function DashboardPage({
  showMoodTrend
  />
  </ErrorBoundary>
-
- {/* Productivity Widget */}
- {!productivityLoading && productivityData && (
-   <ErrorBoundary title="Productivity metrics unavailable">
-     <ProductivityWidget
-       focusScore={productivityData.focusScore}
-       streak={productivityData.streak}
-       todayEnergy={todayEnergy || null}
-       totalFocusMinutes={totalFocusMinutes}
-     />
-   </ErrorBoundary>
- )}
 
  {/* Focus of the Day - AI Suggested Priorities */}
  <ErrorBoundary title="Suggestions unavailable">
