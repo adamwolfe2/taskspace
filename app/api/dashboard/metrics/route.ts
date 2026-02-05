@@ -89,25 +89,13 @@ export async function GET(request: NextRequest) {
     const year = today.getFullYear()
     const currentQuarter = `Q${quarter} ${year}`
 
-    // Fetch all needed data in parallel
-    const [allTasks, allRocks, allEodReports, members] = await Promise.all([
-      db.assignedTasks.findByOrganizationId(orgId),
-      db.rocks.findByOrganizationId(orgId),
-      db.eodReports.findByOrganizationId(orgId),
+    // Fetch all needed data in parallel - pass workspaceId to filter at database layer
+    const [tasks, rocks, eodReports, members] = await Promise.all([
+      db.assignedTasks.findByOrganizationId(orgId, workspaceId || undefined),
+      db.rocks.findByOrganizationId(orgId, workspaceId || undefined),
+      db.eodReports.findByOrganizationId(orgId, workspaceId || undefined),
       db.members.findWithUsersByOrganizationId(orgId),
     ])
-
-    // Apply workspace filter if provided
-    // Note: workspace_id column is added via migration 1736779200003_multi_workspace.sql
-    type WithWorkspaceId = { workspaceId?: string | null }
-    const filterByWorkspace = <T extends WithWorkspaceId>(items: T[]): T[] => {
-      if (!workspaceId) return items
-      return items.filter(item => item.workspaceId === workspaceId)
-    }
-
-    const tasks = filterByWorkspace(allTasks)
-    const rocks = filterByWorkspace(allRocks)
-    const eodReports = filterByWorkspace(allEodReports as Array<typeof allEodReports[0] & WithWorkspaceId>)
 
     // Calculate metrics
     const pendingTasks = tasks.filter(t => t.status !== "completed")

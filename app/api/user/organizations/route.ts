@@ -22,15 +22,23 @@ export async function GET(request: NextRequest) {
     // Get all organization memberships for this user
     const memberships = await db.members.findByUserId(auth.user.id)
 
-    // Fetch full organization details for each membership
-    const organizations: UserOrganizationItem[] = []
+    // Filter active memberships
+    const activeMemberships = memberships.filter(m => m.status === "active")
 
-    for (const membership of memberships) {
-      if (membership.status !== "active") continue
+    // Batch fetch all organizations at once (reduces N+1 queries)
+    const organizationIds = activeMemberships.map(m => m.organizationId)
+    const orgs = await db.organizations.findByIds(organizationIds)
 
-      const org = await db.organizations.findById(membership.organizationId)
-      if (org) {
-        organizations.push({
+    // Create a map for quick lookup
+    const orgMap = new Map(orgs.map(o => [o.id, o]))
+
+    // Build the organization list
+    const organizations: UserOrganizationItem[] = activeMemberships
+      .map(membership => {
+        const org = orgMap.get(membership.organizationId)
+        if (!org) return null
+
+        return {
           id: org.id,
           name: org.name,
           slug: org.slug,
@@ -41,9 +49,9 @@ export async function GET(request: NextRequest) {
           joinedAt: membership.joinedAt,
           subscriptionTier: org.subscription?.plan || "free",
           isCurrent: org.id === auth.organization.id,
-        })
-      }
-    }
+        }
+      })
+      .filter((org): org is UserOrganizationItem => org !== null)
 
     return NextResponse.json<ApiResponse<{ organizations: UserOrganizationItem[] }>>({
       success: true,

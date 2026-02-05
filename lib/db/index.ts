@@ -301,6 +301,16 @@ export const db = {
       const { rows } = await sql`SELECT * FROM organizations WHERE owner_id = ${ownerId}`
       return rows.map(parseOrganization)
     },
+    async findByIds(ids: string[]): Promise<Organization[]> {
+      if (ids.length === 0) return []
+      // Use PostgreSQL array literal format for ANY clause
+      const idArray = `{${ids.join(',')}}`
+      const { rows } = await sql`
+        SELECT * FROM organizations
+        WHERE id = ANY(${idArray}::text[])
+      `
+      return rows.map(parseOrganization)
+    },
     async create(org: Organization): Promise<Organization> {
       await sql`
         INSERT INTO organizations (id, name, slug, owner_id, settings, subscription, created_at, updated_at)
@@ -757,8 +767,17 @@ export const db = {
       const { rows } = await sql`SELECT * FROM rocks WHERE id = ${id} LIMIT 1`
       return rows[0] ? parseRock(rows[0]) : null
     },
-    async findByOrganizationId(orgId: string): Promise<Rock[]> {
+    async findByOrganizationId(orgId: string, workspaceId?: string): Promise<Rock[]> {
       // OPTIMIZED: Added LIMIT to prevent unbounded queries
+      // Added optional workspace filter to move filtering to SQL layer
+      if (workspaceId) {
+        const { rows } = await sql`
+          SELECT * FROM rocks
+          WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId}
+          ORDER BY created_at DESC LIMIT 500
+        `
+        return rows.map(parseRock)
+      }
       const { rows } = await sql`SELECT * FROM rocks WHERE organization_id = ${orgId} ORDER BY created_at DESC LIMIT 500`
       return rows.map(parseRock)
     },
@@ -928,8 +947,17 @@ export const db = {
 
   // Assigned Tasks
   assignedTasks: {
-    async findByOrganizationId(orgId: string): Promise<AssignedTask[]> {
+    async findByOrganizationId(orgId: string, workspaceId?: string): Promise<AssignedTask[]> {
       // OPTIMIZED: Added LIMIT and ORDER BY to prevent unbounded queries
+      // Added optional workspace filter to move filtering to SQL layer
+      if (workspaceId) {
+        const { rows } = await sql`
+          SELECT * FROM assigned_tasks
+          WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId}
+          ORDER BY created_at DESC LIMIT 1000
+        `
+        return rows.map(parseAssignedTask)
+      }
       const { rows } = await sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId} ORDER BY created_at DESC LIMIT 1000`
       return rows.map(parseAssignedTask)
     },
@@ -952,6 +980,16 @@ export const db = {
         WHERE asana_gid = ${asanaGid} AND organization_id = ${orgId}
       `
       return rows[0] ? parseAssignedTask(rows[0]) : null
+    },
+    async findByIds(ids: string[]): Promise<AssignedTask[]> {
+      if (ids.length === 0) return []
+      // Use PostgreSQL array literal format for ANY clause
+      const idArray = `{${ids.join(',')}}`
+      const { rows } = await sql`
+        SELECT * FROM assigned_tasks
+        WHERE id = ANY(${idArray}::text[])
+      `
+      return rows.map(parseAssignedTask)
     },
     async create(task: AssignedTask): Promise<AssignedTask> {
       await sql`
@@ -986,6 +1024,31 @@ export const db = {
       `
       return rows[0] ? parseAssignedTask(rows[0]) : null
     },
+    async batchUpdate(updates: Array<{ id: string; updates: Partial<AssignedTask> }>): Promise<void> {
+      if (updates.length === 0) return
+      const now = new Date().toISOString()
+
+      // Execute all updates in parallel
+      await Promise.all(
+        updates.map(({ id, updates: taskUpdates }) =>
+          sql`
+            UPDATE assigned_tasks SET
+              title = COALESCE(${taskUpdates.title || null}, title),
+              description = COALESCE(${taskUpdates.description || null}, description),
+              priority = COALESCE(${taskUpdates.priority || null}, priority),
+              due_date = COALESCE(${taskUpdates.dueDate || null}, due_date),
+              status = COALESCE(${taskUpdates.status || null}, status),
+              completed_at = COALESCE(${taskUpdates.completedAt || null}, completed_at),
+              added_to_eod = COALESCE(${taskUpdates.addedToEOD ?? null}, added_to_eod),
+              eod_report_id = COALESCE(${taskUpdates.eodReportId || null}, eod_report_id),
+              comments = COALESCE(${taskUpdates.comments ? JSON.stringify(taskUpdates.comments) : null}::jsonb, comments),
+              recurrence = COALESCE(${taskUpdates.recurrence ? JSON.stringify(taskUpdates.recurrence) : null}::jsonb, recurrence),
+              updated_at = ${now}
+            WHERE id = ${id}
+          `
+        )
+      )
+    },
     async delete(id: string): Promise<boolean> {
       const { rowCount } = await sql`DELETE FROM assigned_tasks WHERE id = ${id}`
       return (rowCount ?? 0) > 0
@@ -1005,8 +1068,18 @@ export const db = {
 
   // EOD Reports
   eodReports: {
-    async findByOrganizationId(orgId: string): Promise<EODReport[]> {
+    async findByOrganizationId(orgId: string, workspaceId?: string): Promise<EODReport[]> {
       // OPTIMIZED: Added LIMIT and ORDER BY - fetches last 90 days max
+      // Added optional workspace filter to move filtering to SQL layer
+      if (workspaceId) {
+        const { rows } = await sql`
+          SELECT * FROM eod_reports
+          WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId}
+          ORDER BY date DESC
+          LIMIT 500
+        `
+        return rows.map(parseEODReport)
+      }
       const { rows } = await sql`
         SELECT * FROM eod_reports
         WHERE organization_id = ${orgId}

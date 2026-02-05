@@ -184,28 +184,43 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     }
 
     // Mark any completed tasks as added to EOD and sync to Asana
-    for (const task of tasks) {
-      if (task.taskId) {
-        const assignedTask = await db.assignedTasks.findById(task.taskId)
-        if (assignedTask && assignedTask.assigneeId === auth.user.id) {
-          await db.assignedTasks.update(task.taskId, {
-            addedToEOD: true,
-            eodReportId: report.id,
-            status: "completed",
-            completedAt: now,
-          })
+    const taskIds = tasks.filter(t => t.taskId).map(t => t.taskId!)
 
-          // Sync completion to Asana if task has an asanaGid
-          if (assignedTask.asanaGid && asanaClient.isConfigured()) {
+    if (taskIds.length > 0) {
+      // Batch fetch all tasks at once
+      const assignedTasks = await db.assignedTasks.findByIds(taskIds)
+
+      // Filter tasks that belong to the current user (security check)
+      const userTasks = assignedTasks.filter(t => t.assigneeId === auth.user.id)
+
+      // Batch update all tasks
+      const taskUpdates = userTasks.map(t => ({
+        id: t.id,
+        updates: {
+          addedToEOD: true,
+          eodReportId: report.id,
+          status: "completed" as const,
+          completedAt: now,
+        }
+      }))
+
+      await db.assignedTasks.batchUpdate(taskUpdates)
+
+      // Parallelize Asana API calls
+      if (asanaClient.isConfigured()) {
+        const asanaTasks = userTasks.filter(t => t.asanaGid)
+
+        await Promise.all(
+          asanaTasks.map(async (task) => {
             try {
-              await asanaClient.completeTask(assignedTask.asanaGid)
-              logger.info({ taskId: task.taskId, asanaGid: assignedTask.asanaGid }, "Synced task completion to Asana")
+              await asanaClient.completeTask(task.asanaGid!)
+              logger.info({ taskId: task.id, asanaGid: task.asanaGid }, "Synced task completion to Asana")
             } catch (asanaErr) {
               // Log but don't fail - Asana sync is best-effort
-              logError(logger, "Failed to sync task completion to Asana", asanaErr, { taskId: task.taskId, asanaGid: assignedTask.asanaGid })
+              logError(logger, "Failed to sync task completion to Asana", asanaErr, { taskId: task.id, asanaGid: task.asanaGid })
             }
-          }
-        }
+          })
+        )
       }
     }
 

@@ -13,14 +13,10 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
     // Get all organizations the user is a member of
     const memberships = await db.members.findByUserId(auth.user.id)
-    const organizations: Organization[] = []
 
-    for (const membership of memberships) {
-      const org = await db.organizations.findById(membership.organizationId)
-      if (org) {
-        organizations.push(org)
-      }
-    }
+    // Batch fetch all organizations at once (reduces N+1 queries)
+    const organizationIds = memberships.map(m => m.organizationId)
+    const organizations = await db.organizations.findByIds(organizationIds)
 
     return NextResponse.json<ApiResponse<Organization[]>>({
       success: true,
