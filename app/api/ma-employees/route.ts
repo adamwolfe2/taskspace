@@ -1,11 +1,32 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { getAuthContext } from "@/lib/auth/middleware"
 import { logger, logError } from "@/lib/logger"
 
-// GET - Fetch all MA employees
-export async function GET() {
+// GET - Fetch all MA employees for a workspace
+export async function GET(request: NextRequest) {
   try {
-    const employees = await db.maEmployees.findAll()
+    // Auth check
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
+    // Get workspaceId from query params
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
+
+    if (!workspaceId) {
+      return NextResponse.json(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    const employees = await db.maEmployees.findByWorkspace(workspaceId)
 
     return NextResponse.json({
       success: true,
@@ -22,14 +43,30 @@ export async function GET() {
 }
 
 // POST - Create a new MA employee
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Auth check
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
-    const { firstName, lastName, supervisor, department, jobTitle, responsibilities, notes, email } = body
+    const { firstName, lastName, supervisor, department, jobTitle, responsibilities, notes, email, workspaceId } = body
 
     if (!firstName || !lastName) {
       return NextResponse.json(
         { success: false, error: "First name and last name are required" },
+        { status: 400 }
+      )
+    }
+
+    if (!workspaceId) {
+      return NextResponse.json(
+        { success: false, error: "workspaceId is required" },
         { status: 400 }
       )
     }
@@ -43,6 +80,7 @@ export async function POST(request: Request) {
       responsibilities: responsibilities || null,
       notes: notes || null,
       email: email || null,
+      workspaceId,
     })
 
     return NextResponse.json({

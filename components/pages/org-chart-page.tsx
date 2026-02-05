@@ -186,10 +186,17 @@ export function OrgChartPage() {
 
   // Sync rocks from workspace to org chart
   const handleSyncRocks = async () => {
+    if (!currentWorkspace) return
     setIsSyncing(true)
     try {
       const response = await fetch("/api/org-chart/sync-rocks", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          workspaceId: currentWorkspace.id,
+        }),
       })
       const data = await response.json()
 

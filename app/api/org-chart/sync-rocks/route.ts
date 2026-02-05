@@ -55,6 +55,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get workspaceId from request body
+    const body = await request.json()
+    const workspaceId = body.workspaceId
+
+    if (!workspaceId) {
+      return NextResponse.json(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
     const orgId = auth.organization.id
     const currentQuarter = getCurrentQuarter()
 
@@ -75,8 +86,8 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Pre-fetch all org chart employees (single query instead of per-member)
-    const allOrgChartEmployees = await db.maEmployees.findAll()
+    // Pre-fetch all org chart employees for this workspace (single query instead of per-member)
+    const allOrgChartEmployees = await db.maEmployees.findByWorkspace(workspaceId)
     const employeesByEmail = new Map(
       allOrgChartEmployees
         .filter(e => e.email)
@@ -226,6 +237,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get workspaceId from query params
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
+
+    if (!workspaceId) {
+      return NextResponse.json(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
     const orgId = auth.organization.id
     const currentQuarter = getCurrentQuarter()
 
@@ -247,8 +269,8 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Get org chart employees (single query)
-    const allOrgChartEmployees = await db.maEmployees.findAll()
+    // Get org chart employees for this workspace (single query)
+    const allOrgChartEmployees = await db.maEmployees.findByWorkspace(workspaceId)
     const employeesByEmail = new Map(
       allOrgChartEmployees.filter(e => e.email).map(e => [e.email!.toLowerCase(), e])
     )

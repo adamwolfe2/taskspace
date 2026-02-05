@@ -77,9 +77,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Primary source: ma_employees database table
-    // Note: ma_employees is a legacy org-wide table without workspace filtering
-    const dbEmployees = await db.maEmployees.findAll()
+    // Primary source: ma_employees database table with workspace filtering
+    const dbEmployees = await db.maEmployees.findByWorkspace(workspaceId)
 
     if (dbEmployees.length > 0) {
       // Transform to OrgChartEmployee format

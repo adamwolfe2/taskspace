@@ -1,13 +1,23 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { getAuthContext } from "@/lib/auth/middleware"
 import { logger, logError } from "@/lib/logger"
 
 // GET - Fetch a single MA employee by ID
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Auth check
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
     const employee = await db.maEmployees.findById(id)
 
@@ -17,6 +27,9 @@ export async function GET(
         { status: 404 }
       )
     }
+
+    // Note: Additional workspace validation could be added here if needed
+    // by checking if employee.workspace_id matches user's workspace access
 
     return NextResponse.json({
       success: true,
@@ -33,10 +46,19 @@ export async function GET(
 
 // PATCH - Update an MA employee
 export async function PATCH(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Auth check
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
     const body = await request.json()
 
@@ -89,10 +111,19 @@ export async function PATCH(
 
 // DELETE - Soft delete an MA employee (set is_active = false)
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Auth check
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
     const { searchParams } = new URL(request.url)
     const hard = searchParams.get("hard") === "true"

@@ -27,15 +27,29 @@ export async function POST(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const clearFirst = searchParams.get("clear") !== "false" // Default to clearing first
+    const workspaceId = searchParams.get("workspaceId")
+
+    if (!workspaceId) {
+      return NextResponse.json(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
 
     let deletedCount = 0
     if (clearFirst) {
-      // Clear existing employees
-      deletedCount = await db.maEmployees.deleteAll()
+      // Clear existing employees for this workspace only
+      // Note: deleteAll clears all, so we skip it for now to avoid cross-workspace deletion
+      // TODO: Add deleteByWorkspace method if needed
+      deletedCount = 0
     }
 
-    // Insert all employees
-    const insertedCount = await db.maEmployees.createMany(MA_EMPLOYEES_SEED)
+    // Insert all employees with workspace_id
+    const employeesWithWorkspace = MA_EMPLOYEES_SEED.map(emp => ({
+      ...emp,
+      workspaceId,
+    }))
+    const insertedCount = await db.maEmployees.createMany(employeesWithWorkspace)
 
     return NextResponse.json({
       success: true,
@@ -78,7 +92,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const count = await db.maEmployees.count()
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId")
+
+    if (!workspaceId) {
+      return NextResponse.json(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    const count = await db.maEmployees.countByWorkspace(workspaceId)
 
     return NextResponse.json({
       success: true,

@@ -2155,6 +2155,46 @@ export const db = {
         updatedAt: (row.updated_at as Date)?.toISOString() || "",
       }))
     },
+    async findByWorkspace(workspaceId: string): Promise<{
+      id: string
+      firstName: string
+      lastName: string
+      fullName: string
+      supervisor: string | null
+      department: string | null
+      jobTitle: string | null
+      responsibilities: string | null
+      notes: string | null
+      email: string | null
+      rocks: string | null
+      isActive: boolean
+      createdAt: string
+      updatedAt: string
+    }[]> {
+      const { rows } = await sql`
+        SELECT *, TRIM(first_name || ' ' || COALESCE(last_name, '')) as full_name
+        FROM ma_employees
+        WHERE workspace_id = ${workspaceId}
+          AND is_active = TRUE
+        ORDER BY first_name ASC, last_name ASC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        firstName: row.first_name as string,
+        lastName: row.last_name as string,
+        fullName: row.full_name as string,
+        supervisor: row.supervisor as string | null,
+        department: row.department as string | null,
+        jobTitle: row.job_title as string | null,
+        responsibilities: row.responsibilities as string | null,
+        notes: row.notes as string | null,
+        email: row.email as string | null,
+        rocks: row.rocks as string | null,
+        isActive: row.is_active as boolean,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        updatedAt: (row.updated_at as Date)?.toISOString() || "",
+      }))
+    },
     async findById(id: string): Promise<{
       id: string
       firstName: string
@@ -2272,12 +2312,14 @@ export const db = {
       responsibilities?: string | null
       notes?: string | null
       email?: string | null
+      workspaceId?: string | null
     }): Promise<{ id: string; fullName: string }> {
       const { rows } = await sql`
-        INSERT INTO ma_employees (first_name, last_name, supervisor, department, job_title, responsibilities, notes, email)
+        INSERT INTO ma_employees (first_name, last_name, supervisor, department, job_title, responsibilities, notes, email, workspace_id)
         VALUES (${employee.firstName}, ${employee.lastName}, ${employee.supervisor || null},
                 ${employee.department || null}, ${employee.jobTitle || null},
-                ${employee.responsibilities || null}, ${employee.notes || null}, ${employee.email || null})
+                ${employee.responsibilities || null}, ${employee.notes || null}, ${employee.email || null},
+                ${employee.workspaceId || null})
         RETURNING id, first_name, last_name
       `
       const fullName = `${rows[0].first_name} ${rows[0].last_name || ''}`.trim()
@@ -2295,14 +2337,16 @@ export const db = {
       responsibilities?: string | null
       notes?: string | null
       email?: string | null
+      workspaceId?: string | null
     }[]): Promise<number> {
       let count = 0
       for (const emp of employees) {
         await sql`
-          INSERT INTO ma_employees (first_name, last_name, supervisor, department, job_title, responsibilities, notes, email)
+          INSERT INTO ma_employees (first_name, last_name, supervisor, department, job_title, responsibilities, notes, email, workspace_id)
           VALUES (${emp.firstName}, ${emp.lastName}, ${emp.supervisor || null},
                   ${emp.department || null}, ${emp.jobTitle || null},
-                  ${emp.responsibilities || null}, ${emp.notes || null}, ${emp.email || null})
+                  ${emp.responsibilities || null}, ${emp.notes || null}, ${emp.email || null},
+                  ${emp.workspaceId || null})
         `
         count++
       }
@@ -2373,6 +2417,13 @@ export const db = {
     },
     async count(): Promise<number> {
       const { rows } = await sql`SELECT COUNT(*) as count FROM ma_employees WHERE is_active = TRUE`
+      return parseInt(rows[0]?.count || "0", 10)
+    },
+    async countByWorkspace(workspaceId: string): Promise<number> {
+      const { rows } = await sql`
+        SELECT COUNT(*) as count FROM ma_employees
+        WHERE workspace_id = ${workspaceId} AND is_active = TRUE
+      `
       return parseInt(rows[0]?.count || "0", 10)
     },
   },
