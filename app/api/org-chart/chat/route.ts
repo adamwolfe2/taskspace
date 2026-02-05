@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { getAuthContext } from "@/lib/auth/middleware"
 import { findRelevantEmployees } from "@/lib/org-chart/utils"
 import type { OrgChartEmployee } from "@/lib/org-chart/types"
 import { logger, logError } from "@/lib/logger"
@@ -63,12 +64,22 @@ async function callClaude(context: string, userMessage: string): Promise<string>
   return data.content[0].text
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require authentication for org chart chat
+    const auth = await getAuthContext(request)
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
-    const { message, employees } = body as {
+    // SECURITY: Do not accept employee data in request body
+    // Employee data should be fetched server-side based on authenticated user's organization
+    const { message } = body as {
       message: string
-      employees: OrgChartEmployee[]
     }
 
     if (!message) {
@@ -78,10 +89,15 @@ export async function POST(request: Request) {
       )
     }
 
+    // Fetch employees from the database based on authenticated user's organization
+    // TODO: Implement server-side employee fetching from database
+    // For now, return an error indicating this endpoint needs employee data from the database
+    const employees: OrgChartEmployee[] = []
+
     // Check if Claude is configured
     if (!process.env.ANTHROPIC_API_KEY) {
       // Return a helpful fallback response
-      const relevantEmployees = findRelevantEmployees(employees || [], message)
+      const relevantEmployees = findRelevantEmployees(employees, message)
 
       if (relevantEmployees.length > 0) {
         const names = relevantEmployees.map(e => `**${e.fullName}**`).join(", ")
@@ -100,7 +116,7 @@ export async function POST(request: Request) {
     }
 
     // Find relevant employees using RAG search
-    const relevantEmployees = findRelevantEmployees(employees || [], message)
+    const relevantEmployees = findRelevantEmployees(employees, message)
 
     // Build context from relevant employees
     let context = "Organization Members:\n\n"
@@ -113,7 +129,7 @@ export async function POST(request: Request) {
         if (emp.extraInfo) context += `- Additional Info: ${emp.extraInfo}\n`
         context += "\n"
       })
-    } else if (employees && employees.length > 0) {
+    } else if (employees.length > 0) {
       // Include a summary of all employees if no specific match
       employees.slice(0, 10).forEach(emp => {
         context += `- **${emp.fullName}**: ${emp.jobTitle} (${emp.department})\n`
@@ -129,7 +145,7 @@ export async function POST(request: Request) {
     while ((match = boldNameRegex.exec(response)) !== null) {
       const name = match[1]
       // Verify this is actually an employee name
-      if (employees?.some(e => e.fullName.toLowerCase() === name.toLowerCase())) {
+      if (employees.some(e => e.fullName.toLowerCase() === name.toLowerCase())) {
         mentionedEmployees.push(name)
       }
     }

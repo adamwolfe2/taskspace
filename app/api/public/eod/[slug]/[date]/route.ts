@@ -1,8 +1,20 @@
 /**
  * Public EOD Daily Report API
  *
- * This endpoint provides public access to aggregated EOD reports for a specific date.
- * No authentication required - designed for sharing with stakeholders/board members.
+ * ⚠️ WARNING: INTENTIONALLY PUBLIC ENDPOINT ⚠️
+ *
+ * This endpoint provides UNAUTHENTICATED access to ALL EOD reports for a specific date.
+ * Anyone who knows the organization slug can access all EOD data including:
+ * - Employee names, roles, and departments
+ * - Daily tasks and challenges
+ * - Rock progress and priorities
+ * - Escalation notes
+ *
+ * SECURITY CONSIDERATIONS:
+ * - Organization slug is effectively the only "authentication" mechanism
+ * - No per-user access controls or permission checks
+ * - Designed for sharing with external stakeholders/board members via URL
+ * - Consider implementing optional access tokens for sensitive organizations
  *
  * URL format: /api/public/eod/[org-slug]/[date]
  * Example: /api/public/eod/aims/2026-01-05

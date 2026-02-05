@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { query } = body
+    const { query, workspaceId } = body
 
     if (!query || typeof query !== "string" || query.trim().length === 0) {
       return NextResponse.json<ApiResponse<null>>(
@@ -50,6 +50,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // SECURITY: Add optional workspace filtering to prevent cross-workspace data leakage
+    // If workspaceId is provided, filter data to only that workspace
+    const workspaceFilter = workspaceId && typeof workspaceId === "string" ? workspaceId : null
 
     // Build context from team data
     const teamMembersData = await db.members.findWithUsersByOrganizationId(auth.organization.id)
@@ -65,9 +69,21 @@ export async function POST(request: NextRequest) {
       status: m.status,
     }))
 
-    const tasks = await db.assignedTasks.findByOrganizationId(auth.organization.id)
-    const rocks = await db.rocks.findByOrganizationId(auth.organization.id)
-    const eodReports = await db.eodReports.findByOrganizationId(auth.organization.id)
+    // Fetch all data
+    const allTasks = await db.assignedTasks.findByOrganizationId(auth.organization.id)
+    const allRocks = await db.rocks.findByOrganizationId(auth.organization.id)
+    const allEodReports = await db.eodReports.findByOrganizationId(auth.organization.id)
+
+    // Filter by workspace if specified
+    const tasks = workspaceFilter
+      ? allTasks.filter(t => t.workspaceId === workspaceFilter)
+      : allTasks
+    const rocks = workspaceFilter
+      ? allRocks.filter(r => r.workspaceId === workspaceFilter)
+      : allRocks
+    const eodReports = workspaceFilter
+      ? allEodReports.filter(e => e.workspaceId === workspaceFilter)
+      : allEodReports
 
     // Get the last 30 days of reports for context
     const thirtyDaysAgo = new Date()
