@@ -20,6 +20,7 @@ import { DemoIDS } from "./demo-ids"
 import { DemoAccountabilityChart } from "./demo-accountability-chart"
 import { DemoVTO } from "./demo-vto"
 import { DemoKanban } from "./demo-kanban"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 type FeatureTab = {
   id: string
@@ -80,6 +81,7 @@ const features: FeatureTab[] = [
 ]
 
 export function InteractiveFeaturesShowcase() {
+  const themedColors = useThemedIconColors()
   const [activeTab, setActiveTab] = useState(features[0].id)
 
   const activeFeature = features.find(f => f.id === activeTab)
@@ -95,10 +97,11 @@ export function InteractiveFeaturesShowcase() {
             className={`
               flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all whitespace-nowrap
               ${activeTab === feature.id
-                ? 'bg-black text-white'
+                ? 'text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
               }
             `}
+            style={activeTab === feature.id ? { backgroundColor: themedColors.primary } : {}}
           >
             <span className="flex-shrink-0">{feature.icon}</span>
             <span className="truncate">{feature.label}</span>

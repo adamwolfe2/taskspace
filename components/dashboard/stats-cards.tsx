@@ -1,6 +1,9 @@
+"use client"
+
 import { CheckCircle2, Target, TrendingUp, Calendar, Flame } from "lucide-react"
 import { getStreakMilestone } from "@/lib/utils/stats-calculator"
 import { EnhancedStatCard } from "./enhanced-stat-card"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface StatsCardsProps {
   stats: {
@@ -14,6 +17,8 @@ interface StatsCardsProps {
 }
 
 export function StatsCards({ stats }: StatsCardsProps) {
+  const themedColors = useThemedIconColors()
+
   // Calculate safe values
   const safeCompletionRate = isFinite(stats.taskCompletionRate) ? stats.taskCompletionRate : 0
   const safeAverageProgress = isFinite(stats.averageRockProgress) ? stats.averageRockProgress : 0
@@ -40,8 +45,10 @@ export function StatsCards({ stats }: StatsCardsProps) {
       } : undefined,
       subtitle: "quarterly goals",
       icon: Target,
-      iconBg: "bg-blue-50",
-      iconColor: "text-blue-600",
+      iconBg: "",
+      iconBgStyle: { backgroundColor: themedColors.primaryAlpha10 },
+      iconColor: "",
+      iconColorStyle: { color: themedColors.primary },
     },
     {
       title: "Rock Progress",
@@ -52,8 +59,10 @@ export function StatsCards({ stats }: StatsCardsProps) {
       } : undefined,
       subtitle: "average completion",
       icon: TrendingUp,
-      iconBg: "bg-purple-50",
-      iconColor: "text-purple-600",
+      iconBg: "",
+      iconBgStyle: { backgroundColor: themedColors.secondaryAlpha10 },
+      iconColor: "",
+      iconColorStyle: { color: themedColors.secondary },
     },
     {
       title: "EOD Streak",

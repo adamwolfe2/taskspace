@@ -16,6 +16,19 @@ const badgeVariants = cva(
           'border-transparent bg-primary text-primary-foreground shadow-sm',
         secondary:
           'border-transparent bg-secondary text-secondary-foreground shadow-sm',
+        // New brand-themed variants using CSS variables
+        'brand-primary':
+          'border-transparent text-white shadow-sm',
+        'brand-secondary':
+          'border-transparent text-white shadow-sm',
+        'brand-accent':
+          'border-transparent text-white shadow-sm',
+        'brand-primary-soft':
+          'border-transparent text-[var(--brand-primary)]',
+        'brand-secondary-soft':
+          'border-transparent text-[var(--brand-secondary)]',
+        'brand-accent-soft':
+          'border-transparent text-[var(--brand-accent)]',
         destructive:
           'border-transparent bg-red-600 text-white shadow-sm',
         warning:
@@ -95,10 +108,28 @@ function Badge({
   VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : 'span'
 
+  // Apply dynamic brand color styles for brand variants
+  const brandStyle: React.CSSProperties = {}
+  if (variant === 'brand-primary') {
+    brandStyle.backgroundColor = 'var(--brand-primary)'
+  } else if (variant === 'brand-secondary') {
+    brandStyle.backgroundColor = 'var(--brand-secondary)'
+  } else if (variant === 'brand-accent') {
+    brandStyle.backgroundColor = 'var(--brand-accent)'
+  } else if (variant === 'brand-primary-soft') {
+    brandStyle.backgroundColor = 'var(--brand-primary-rgb)'
+    brandStyle.backgroundColor = `rgba(var(--brand-primary-rgb), 0.1)`
+  } else if (variant === 'brand-secondary-soft') {
+    brandStyle.backgroundColor = `rgba(var(--brand-secondary-rgb), 0.1)`
+  } else if (variant === 'brand-accent-soft') {
+    brandStyle.backgroundColor = `rgba(var(--brand-accent-rgb), 0.1)`
+  }
+
   return (
     <Comp
       data-slot="badge"
       className={cn(badgeVariants({ variant }), className)}
+      style={{ ...brandStyle, ...(props.style || {}) }}
       {...props}
     />
   )

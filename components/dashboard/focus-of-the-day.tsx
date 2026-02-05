@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils"
 import type { AssignedTask, Rock } from "@/lib/types"
 import { parseISO, isToday, isBefore, startOfDay } from "date-fns"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface FocusOfTheDayProps {
  tasks: AssignedTask[]
@@ -44,6 +45,7 @@ export function FocusOfTheDay({
  onViewTask,
  className,
 }: FocusOfTheDayProps) {
+ const themedColors = useThemedIconColors()
  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
 
@@ -174,8 +176,11 @@ export function FocusOfTheDay({
  return (
  <Card className={cn("border-dashed", className)}>
  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
- <div className="h-12 w-12 rounded-full bg-green-100  flex items-center justify-center mb-3">
- <Sparkles className="h-6 w-6 text-green-600" />
+ <div
+  className="h-12 w-12 rounded-full flex items-center justify-center mb-3"
+  style={{ backgroundColor: themedColors.primaryAlpha10 }}
+ >
+ <Sparkles className="h-6 w-6" style={{ color: themedColors.primary }} />
  </div>
  <p className="font-medium text-slate-900 ">All caught up!</p>
  <p className="text-sm text-slate-500  mt-1">
@@ -190,9 +195,9 @@ export function FocusOfTheDay({
  <Card className={className}>
  <CardHeader className="pb-3">
  <CardTitle className="flex items-center gap-2 text-base">
- <Sparkles className="h-5 w-5 text-amber-500" />
+ <Sparkles className="h-5 w-5" style={{ color: themedColors.accent }} />
  Focus of the Day
- <Badge variant="secondary" className="ml-auto text-xs">
+ <Badge variant="brand-secondary-soft" className="ml-auto text-xs">
  AI Suggested
  </Badge>
  </CardTitle>
@@ -220,7 +225,7 @@ export function FocusOfTheDay({
  )}
  {item.type === "rock_deadline" && (
  <div className="mt-0.5">
- <Target className="h-4 w-4 text-purple-500" />
+ <Target className="h-4 w-4" style={{ color: themedColors.secondary }} />
  </div>
  )}
  <div className="flex-1 min-w-0">

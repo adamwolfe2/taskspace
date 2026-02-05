@@ -10,6 +10,8 @@ interface EnhancedStatCardProps {
   icon: LucideIcon
   iconBg?: string
   iconColor?: string
+  iconBgStyle?: React.CSSProperties
+  iconColorStyle?: React.CSSProperties
   trend?: {
     value: number
     isPositive: boolean
@@ -27,14 +29,16 @@ export function EnhancedStatCard({
   icon: Icon,
   iconBg = "bg-slate-100",
   iconColor = "text-slate-600",
+  iconBgStyle,
+  iconColorStyle,
   trend,
   badge,
 }: EnhancedStatCardProps) {
   return (
     <div className="relative overflow-hidden rounded-xl border border-border bg-card p-6 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-4">
-        <div className={cn("p-3 rounded-lg", iconBg)}>
-          <Icon className={cn("h-6 w-6", iconColor)} />
+        <div className={cn("p-3 rounded-lg", iconBg)} style={iconBgStyle}>
+          <Icon className={cn("h-6 w-6", iconColor)} style={iconColorStyle} />
         </div>
         {badge && (
           <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full", badge.color)}>

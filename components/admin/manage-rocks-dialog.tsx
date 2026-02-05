@@ -12,6 +12,7 @@ import { Pencil, Trash2, Plus, X, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 interface ManageRocksDialogProps {
   open: boolean
@@ -334,9 +335,9 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
                             <CardTitle className="text-base">{rock.title}</CardTitle>
                             <div className="flex items-center gap-3 mt-1">
                               {rock.quarter && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
+                                <Badge variant="brand-primary-soft">
                                   {rock.quarter}
-                                </span>
+                                </Badge>
                               )}
                               {rock.bucket && <p className="text-sm text-muted-foreground">Bucket: {rock.bucket}</p>}
                             </div>

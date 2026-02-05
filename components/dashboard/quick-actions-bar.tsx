@@ -10,6 +10,7 @@ import {
  Clock,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface QuickAction {
  id: string
@@ -42,15 +43,17 @@ export function QuickActionsBar({
  activeFocusSession,
  className,
 }: QuickActionsBarProps) {
+ const themedColors = useThemedIconColors()
+
  const actions: QuickAction[] = [
  {
  id: "eod",
  label: hasSubmittedEOD ? "EOD Submitted" : "Submit EOD",
  shortLabel: "EOD",
  icon: ClipboardEdit,
- color: hasSubmittedEOD ? "text-green-600" : "text-blue-600",
- bgColor: hasSubmittedEOD ? "bg-green-50 " : "bg-blue-50 ",
- hoverColor: hasSubmittedEOD ? "hover:bg-green-100 " : "hover:bg-blue-100 ",
+ color: hasSubmittedEOD ? "text-green-600" : "",
+ bgColor: hasSubmittedEOD ? "bg-green-50 " : "",
+ hoverColor: hasSubmittedEOD ? "hover:bg-green-100 " : "",
  onClick: onSubmitEOD,
  badge: hasSubmittedEOD ? "✓" : undefined,
  },
@@ -71,9 +74,9 @@ export function QuickActionsBar({
  label: "Update Rock",
  shortLabel: "Rock",
  icon: Target,
- color: "text-purple-600",
- bgColor: "bg-purple-50 ",
- hoverColor: "hover:bg-purple-100 ",
+ color: "",
+ bgColor: "",
+ hoverColor: "",
  onClick: onUpdateRock,
  },
  ]
@@ -85,9 +88,9 @@ export function QuickActionsBar({
  label: activeFocusSession ? "Focus Active" : "Start Focus",
  shortLabel: "Focus",
  icon: activeFocusSession ? Zap : Clock,
- color: activeFocusSession ? "text-orange-600" : "text-amber-600",
- bgColor: activeFocusSession ? "bg-orange-50 " : "bg-amber-50 ",
- hoverColor: activeFocusSession ? "hover:bg-orange-100 " : "hover:bg-amber-100 ",
+ color: "",
+ bgColor: "",
+ hoverColor: "",
  onClick: onStartFocus,
  badge: activeFocusSession ? "●" : undefined,
  },
@@ -97,26 +100,48 @@ export function QuickActionsBar({
 
  return (
  <div className={cn("flex flex-wrap gap-2", className)}>
- {actions.map((action) => (
- <Button
- key={action.id}
- variant="ghost"
- onClick={action.onClick}
- className={cn(
- "gap-2 transition-all",
- action.bgColor,
- action.hoverColor,
- action.color
- )}
- >
- <action.icon className="h-4 w-4" />
- <span className="hidden sm:inline">{action.label}</span>
- <span className="sm:hidden">{action.shortLabel}</span>
- {action.badge && (
- <span className="text-xs font-bold">{action.badge}</span>
- )}
- </Button>
- ))}
+ {actions.map((action) => {
+  // Apply themed colors for specific actions
+  let buttonStyle: React.CSSProperties = {}
+  if (action.id === "eod" && !hasSubmittedEOD) {
+   buttonStyle = {
+    backgroundColor: themedColors.primaryAlpha10,
+    color: themedColors.primary,
+   }
+  } else if (action.id === "rock") {
+   buttonStyle = {
+    backgroundColor: themedColors.secondaryAlpha10,
+    color: themedColors.secondary,
+   }
+  } else if (action.id === "focus") {
+   buttonStyle = {
+    backgroundColor: themedColors.accentAlpha10,
+    color: themedColors.accent,
+   }
+  }
+
+  return (
+   <Button
+    key={action.id}
+    variant="ghost"
+    onClick={action.onClick}
+    className={cn(
+     "gap-2 transition-all",
+     action.bgColor,
+     action.hoverColor,
+     action.color
+    )}
+    style={buttonStyle}
+   >
+    <action.icon className="h-4 w-4" />
+    <span className="hidden sm:inline">{action.label}</span>
+    <span className="sm:hidden">{action.shortLabel}</span>
+    {action.badge && (
+     <span className="text-xs font-bold">{action.badge}</span>
+    )}
+   </Button>
+  )
+ })}
  </div>
  )
 }
