@@ -121,7 +121,7 @@ export async function createSubtask(
   const nextOrder = input.orderIndex ?? (maxRows[0]?.max_order + 1 || 0)
 
   const subtaskId = "sub_" + generateId()
-  const now = new Date()
+  const now = new Date().toISOString()
 
   const { rows } = await sql`
     INSERT INTO task_subtasks (
@@ -182,7 +182,7 @@ export async function updateSubtask(
     // Set or clear completed_at timestamp
     if (updates.completed) {
       setParts.push(`completed_at = $${paramIndex++}`)
-      values.push(new Date())
+      values.push(new Date().toISOString())
     } else {
       setParts.push(`completed_at = NULL`)
     }
@@ -200,7 +200,7 @@ export async function updateSubtask(
 
   // Always update updated_at
   setParts.push(`updated_at = $${paramIndex++}`)
-  values.push(new Date())
+  values.push(new Date().toISOString())
 
   // Add subtaskId as final parameter
   values.push(subtaskId)
@@ -212,6 +212,7 @@ export async function updateSubtask(
     RETURNING *
   `
 
+  // @ts-expect-error - sql.query has union type with incompatible signatures
   const { rows } = await sql.query(query, values)
   if (rows.length === 0) return null
 

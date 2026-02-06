@@ -152,7 +152,7 @@ export function MeetingTodoList({ meetingId, workspaceId }: MeetingTodoListProps
 
   const incompleteTodos = todos.filter((t) => !t.completed)
   const completedTodos = todos.filter((t) => t.completed)
-  const availableTasks = tasks.filter((t) => !t.completed && t.status !== "completed")
+  const availableTasks = tasks.filter((t) => !t.completedAt && t.status !== "completed")
 
   if (loading) {
     return (

@@ -100,8 +100,9 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           continue
         }
 
-        // Use parameterized identifier for table name
-        await sql`ALTER TABLE ${sql(table)} ADD COLUMN IF NOT EXISTS workspace_id VARCHAR(255) REFERENCES workspaces(id) ON DELETE SET NULL`
+        // SECURITY: Table name validated against whitelist, safe to use in dynamic SQL
+        // @ts-expect-error - Dynamic table name after whitelist validation
+        await sql([`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS workspace_id VARCHAR(255) REFERENCES workspaces(id) ON DELETE SET NULL`])
         steps.push(`✓ Added workspace_id to ${table}`)
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error)
@@ -205,20 +206,23 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           return 0
         }
 
-        // Migrate based on table type using parameterized queries
+        // SECURITY: Table name validated against whitelist, safe to use in dynamic SQL
+        // Values (workspaceId, orgId) are still parameterized for security
         let result
         if (isUserBased) {
-          result = await sql`
-            UPDATE ${sql(tableName)} SET workspace_id = ${workspaceId}
-            WHERE user_id IN (
-              SELECT user_id FROM organization_members WHERE organization_id = ${orgId}
-            ) AND workspace_id IS NULL
-          `
+          // @ts-expect-error - Dynamic table name after whitelist validation
+          result = await sql([
+            `UPDATE ${tableName} SET workspace_id = `,
+            ` WHERE user_id IN (SELECT user_id FROM organization_members WHERE organization_id = `,
+            `) AND workspace_id IS NULL`,
+          ], workspaceId, orgId)
         } else {
-          result = await sql`
-            UPDATE ${sql(tableName)} SET workspace_id = ${workspaceId}
-            WHERE organization_id = ${orgId} AND workspace_id IS NULL
-          `
+          // @ts-expect-error - Dynamic table name after whitelist validation
+          result = await sql([
+            `UPDATE ${tableName} SET workspace_id = `,
+            ` WHERE organization_id = `,
+            ` AND workspace_id IS NULL`,
+          ], workspaceId, orgId)
         }
 
         return result.rowCount || 0

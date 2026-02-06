@@ -76,7 +76,15 @@ export function adjustAlpha(hex: string, alpha: number): string {
  * Provides consistent brand colors across the application
  */
 export function useThemedIconColors() {
-  const { colors } = useBrandTheme()
+  // Try to get brand theme, fallback to default colors if provider not available
+  let colors = { primary: "#6366f1", secondary: "#64748b", accent: "#8b5cf6" }
+
+  try {
+    const theme = useBrandTheme()
+    colors = theme.colors
+  } catch {
+    // Use default colors when BrandThemeProvider is not available (e.g., marketing pages)
+  }
 
   return {
     // Base brand colors

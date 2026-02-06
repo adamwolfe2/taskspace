@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const orgMap = new Map(orgs.map(o => [o.id, o]))
 
     // Build the organization list
-    const organizations: UserOrganizationItem[] = activeMemberships
+    const organizations = activeMemberships
       .map(membership => {
         const org = orgMap.get(membership.organizationId)
         if (!org) return null
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
           joinedAt: membership.joinedAt,
           subscriptionTier: org.subscription?.plan || "free",
           isCurrent: org.id === auth.organization.id,
-        }
+        } as UserOrganizationItem
       })
       .filter((org): org is UserOrganizationItem => org !== null)
 
