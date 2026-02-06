@@ -10,8 +10,8 @@
 import { useEffect, useMemo } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useWorkspaces } from "./use-workspace"
-import type { WorkspaceFeatureKey } from "@/lib/types/workspace-features"
-import { getWorkspaceFeatures } from "@/lib/auth/workspace-features"
+import type { WorkspaceFeatureKey, WorkspaceFeatureToggles } from "@/lib/types/workspace-features"
+import { DEFAULT_WORKSPACE_FEATURES } from "@/lib/types/workspace-features"
 
 /**
  * Hook to check workspace features in client components
@@ -21,10 +21,25 @@ export function useWorkspaceFeatures() {
   const router = useRouter()
   const pathname = usePathname()
 
-  // Get features for current workspace
+  // Get features for current workspace (client-side safe)
   const features = useMemo(() => {
     if (!currentWorkspace) return null
-    return getWorkspaceFeatures(currentWorkspace)
+
+    // Extract features from workspace settings
+    const settings = currentWorkspace.settings || {}
+    const featuresFromSettings = (settings as Record<string, unknown>).features as WorkspaceFeatureToggles | undefined
+
+    // If no features set, use defaults (all enabled)
+    const workspaceFeatures = featuresFromSettings || DEFAULT_WORKSPACE_FEATURES
+
+    // Ensure all feature keys exist (for backward compatibility)
+    return {
+      core: { ...DEFAULT_WORKSPACE_FEATURES.core, ...workspaceFeatures.core },
+      productivity: { ...DEFAULT_WORKSPACE_FEATURES.productivity, ...workspaceFeatures.productivity },
+      integrations: { ...DEFAULT_WORKSPACE_FEATURES.integrations, ...workspaceFeatures.integrations },
+      advanced: { ...DEFAULT_WORKSPACE_FEATURES.advanced, ...workspaceFeatures.advanced },
+      admin: { ...DEFAULT_WORKSPACE_FEATURES.admin, ...workspaceFeatures.admin },
+    }
   }, [currentWorkspace])
 
   // Check if a specific feature is enabled

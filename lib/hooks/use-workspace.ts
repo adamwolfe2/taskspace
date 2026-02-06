@@ -12,7 +12,7 @@ import { persist } from "zustand/middleware"
 import { useCallback, useEffect, useRef } from "react"
 import useSWR from "swr"
 import type { WorkspaceFeatureToggles, WorkspaceFeatureKey } from "@/lib/types/workspace-features"
-import { getWorkspaceFeatures, isWorkspaceFeatureEnabled } from "@/lib/auth/workspace-features"
+import { DEFAULT_WORKSPACE_FEATURES } from "@/lib/types/workspace-features"
 
 // ============================================
 // TYPES
@@ -206,24 +206,40 @@ export function useWorkspaces() {
     return mutate()
   }, [mutate])
 
-  // Get workspace features
+  // Get workspace features (client-side safe version)
   const getFeatures = useCallback((): WorkspaceFeatureToggles | null => {
     if (!currentWorkspace) return null
-    return getWorkspaceFeatures(currentWorkspace)
+
+    // Extract features from workspace settings
+    const settings = currentWorkspace.settings || {}
+    const featuresFromSettings = (settings as Record<string, unknown>).features as WorkspaceFeatureToggles | undefined
+
+    // If no features set, use defaults (all enabled)
+    const features = featuresFromSettings || DEFAULT_WORKSPACE_FEATURES
+
+    // Ensure all feature keys exist (for backward compatibility)
+    return {
+      core: { ...DEFAULT_WORKSPACE_FEATURES.core, ...features.core },
+      productivity: { ...DEFAULT_WORKSPACE_FEATURES.productivity, ...features.productivity },
+      integrations: { ...DEFAULT_WORKSPACE_FEATURES.integrations, ...features.integrations },
+      advanced: { ...DEFAULT_WORKSPACE_FEATURES.advanced, ...features.advanced },
+      admin: { ...DEFAULT_WORKSPACE_FEATURES.admin, ...features.admin },
+    }
   }, [currentWorkspace])
 
-  // Check if a specific feature is enabled
+  // Check if a specific feature is enabled (client-side safe version)
   const isFeatureEnabled = useCallback(
     (feature: WorkspaceFeatureKey): boolean => {
       if (!currentWorkspace) return false
-      // Note: This is a simplified check without org context
-      // For full validation including org-level features, use the API
-      const features = getWorkspaceFeatures(currentWorkspace)
+
+      const features = getFeatures()
+      if (!features) return false
+
       const [category, name] = feature.split(".") as [keyof WorkspaceFeatureToggles, string]
       const categoryFeatures = features[category] as Record<string, boolean>
       return categoryFeatures?.[name] ?? true
     },
-    [currentWorkspace]
+    [currentWorkspace, getFeatures]
   )
 
   return {
