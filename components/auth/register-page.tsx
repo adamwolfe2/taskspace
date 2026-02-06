@@ -15,7 +15,6 @@ export function RegisterPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [organizationName, setOrganizationName] = useState("")
   const [localError, setLocalError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,7 +38,7 @@ export function RegisterPage() {
     }
 
     try {
-      await register(email, password, name, organizationName || undefined)
+      await register(email, password, name)
     } catch (err: unknown) {
       setLocalError(getErrorMessage(err, "Registration failed"))
     }
@@ -120,24 +119,6 @@ export function RegisterPage() {
                   autoComplete="email"
                   className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400"
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="organizationName" className="text-sm font-medium text-black">
-                  Organization name <span className="text-gray-400">(optional)</span>
-                </Label>
-                <Input
-                  id="organizationName"
-                  type="text"
-                  placeholder="Your company name"
-                  value={organizationName}
-                  onChange={(e) => setOrganizationName(e.target.value)}
-                  disabled={isLoading}
-                  className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400"
-                />
-                <p className="text-xs text-gray-500">
-                  Leave blank if joining via invitation
-                </p>
               </div>
 
               <div className="space-y-2">

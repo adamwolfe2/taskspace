@@ -328,11 +328,11 @@ export const api = {
       return handleResponse<AuthResponse>(response)
     },
 
-    async register(email: string, password: string, name: string, organizationName?: string) {
+    async register(email: string, password: string, name: string) {
       const response = await fetchWithRetry(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name, organizationName }),
+        body: JSON.stringify({ email, password, name }),
       })
       return handleResponse<AuthResponse>(response)
     },

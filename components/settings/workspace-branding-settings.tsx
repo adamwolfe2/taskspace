@@ -24,6 +24,7 @@ import {
   Eye,
   Zap,
   RefreshCw,
+  Globe,
 } from "lucide-react"
 import { useWorkspaces, useUpdateWorkspace } from "@/lib/hooks/use-workspace"
 import { useToast } from "@/hooks/use-toast"
@@ -131,6 +132,10 @@ export function WorkspaceBrandingSettings() {
   // Color analysis
   const [personality, setPersonality] = useState<BrandPersonality | null>(null)
   const [quality, setQuality] = useState<ReturnType<typeof analyzeColorQuality> | null>(null)
+
+  // Website scrape (Firecrawl)
+  const [websiteUrl, setWebsiteUrl] = useState("")
+  const [isScraping, setIsScraping] = useState(false)
 
   // Preview mode
   const [showBeforeAfter, setShowBeforeAfter] = useState(false)
@@ -265,6 +270,68 @@ export function WorkspaceBrandingSettings() {
       })
     } finally {
       setIsExtracting(false)
+    }
+  }
+
+  const handleScrapeWebsite = async () => {
+    if (!websiteUrl.trim()) {
+      toast({
+        title: "URL required",
+        description: "Please enter your company website URL",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Normalize URL
+    let url = websiteUrl.trim()
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url
+    }
+
+    setIsScraping(true)
+    try {
+      const response = await fetch("/api/firecrawl/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || "Failed to scrape website")
+      }
+
+      const data = await response.json()
+      const brand = data.data?.brand
+
+      if (!brand) {
+        throw new Error("No brand data could be extracted from this website")
+      }
+
+      // Apply extracted colors
+      if (brand.colors?.primary) setPrimaryColor(brand.colors.primary)
+      if (brand.colors?.secondary) setSecondaryColor(brand.colors.secondary)
+      if (brand.colors?.accent) setAccentColor(brand.colors.accent)
+
+      // Apply logo if found
+      if (brand.logo) setLogoUrl(brand.logo)
+
+      toast({
+        title: "Brand data extracted!",
+        description: "Colors and logo have been populated from your website",
+      })
+
+      setShowBeforeAfter(true)
+      setTimeout(() => setShowBeforeAfter(false), 5000)
+    } catch (error) {
+      toast({
+        title: "Scrape failed",
+        description: error instanceof Error ? error.message : "Could not analyze website",
+        variant: "destructive",
+      })
+    } finally {
+      setIsScraping(false)
     }
   }
 
@@ -404,6 +471,49 @@ export function WorkspaceBrandingSettings() {
         <CardContent>
           {isEditing ? (
             <div className="space-y-6">
+              {/* Website Scrape (Firecrawl) */}
+              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <Label className="text-sm font-medium">Auto-detect from Website</Label>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Enter your company website to automatically extract brand colors, logo, and favicon
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="yourcompany.com"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    disabled={isScraping}
+                    className="flex-1"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        handleScrapeWebsite()
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={handleScrapeWebsite}
+                    disabled={isScraping || !websiteUrl.trim()}
+                    variant="outline"
+                  >
+                    {isScraping ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Analyze
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
               {/* Logo Upload */}
               <div>
                 <Label>Logo</Label>

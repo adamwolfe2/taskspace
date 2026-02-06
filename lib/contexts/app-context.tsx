@@ -36,7 +36,7 @@ interface AppContextType {
 
   // Auth actions
   login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, name: string, organizationName?: string) => Promise<void>
+  register: (email: string, password: string, name: string) => Promise<void>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
   enterDemoMode: () => void
@@ -178,33 +178,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const register = useCallback(async (email: string, password: string, name: string, organizationName?: string) => {
+  const register = useCallback(async (email: string, password: string, name: string) => {
     try {
       setIsLoading(true)
       setError(null)
 
-      const data = await api.auth.register(email, password, name, organizationName)
+      await api.auth.register(email, password, name)
 
-      if (data.organization && data.member) {
-        const teamMember: TeamMember = {
-          id: data.member.id, // organization_members.id - use for metrics, manager assignments
-          userId: data.user.id, // users.id - use for rocks, tasks, EOD reports
-          name: data.user.name,
-          email: data.user.email,
-          role: data.member.role,
-          department: data.member.department,
-          avatar: data.user.avatar,
-          joinDate: data.member.joinedAt,
-          status: data.member.status,
-        }
-
-        setCurrentUser(teamMember)
-        setCurrentOrganization(data.organization)
-        setCurrentPage("dashboard")
-      } else {
-        // User created but no organization - go to setup
-        setCurrentPage("setup-organization")
-      }
+      // Always go to onboarding wizard to set up organization with branding
+      setCurrentPage("setup-organization")
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Registration failed"))
       throw err
