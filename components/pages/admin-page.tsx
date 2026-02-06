@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import type { TeamMember, EODReport, Rock, AssignedTask, EODInsight, Organization } from "@/lib/types"
 import { api } from "@/lib/api/client"
+import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -40,6 +41,7 @@ export function AdminPage({
   const [showPendingTasks, setShowPendingTasks] = useState(false)
   const [insights, setInsights] = useState<EODInsight[]>([])
   const { toast } = useToast()
+  const { currentWorkspaceId } = useWorkspaceStore()
 
   // Fetch AI insights
   useEffect(() => {
@@ -105,6 +107,7 @@ export function AdminPage({
         rockId: taskData.rockId,
         priority: taskData.priority,
         dueDate: taskData.dueDate,
+        workspaceId: currentWorkspaceId || undefined,
       })
       setAssignedTasks([...assignedTasks, newTask])
 

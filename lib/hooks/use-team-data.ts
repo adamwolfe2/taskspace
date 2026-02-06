@@ -196,12 +196,21 @@ export function useTeamData() {
       setIsLoading(true)
       setError(null)
 
-      const [membersData, rocksData, tasksData, reportsData] = await Promise.all([
-        api.members.list(),
-        api.rocks.list(undefined, currentWorkspaceId || undefined),
-        api.tasks.list(undefined, undefined, currentWorkspaceId || undefined),
-        api.eodReports.list(currentWorkspaceId ? { workspaceId: currentWorkspaceId } : undefined),
-      ])
+      // Workspace-scoped APIs require workspaceId - fetch members always, but only
+      // fetch workspace-scoped data when a workspace is selected
+      const membersData = await api.members.list()
+
+      let rocksData: Rock[] = []
+      let tasksData: AssignedTask[] = []
+      let reportsData: EODReport[] = []
+
+      if (currentWorkspaceId) {
+        ;[rocksData, tasksData, reportsData] = await Promise.all([
+          api.rocks.list(undefined, currentWorkspaceId),
+          api.tasks.list(undefined, undefined, currentWorkspaceId),
+          api.eodReports.list({ workspaceId: currentWorkspaceId }),
+        ])
+      }
 
       setTeamMembers(membersData.map(m => ({
         ...m,

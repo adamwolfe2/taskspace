@@ -418,8 +418,9 @@ async function handleInvoicePaymentFailed(invoice: StripeWebhookObject) {
       const { rows: adminUsers } = await sql`
         SELECT u.email, u.name
         FROM users u
-        WHERE u.organization_id = ${orgId}
-          AND (u.role = 'admin' OR u.role = 'owner')
+        JOIN organization_members om ON om.user_id = u.id
+        WHERE om.organization_id = ${orgId}
+          AND (om.role = 'admin' OR om.role = 'owner')
           AND u.email IS NOT NULL
       `
 

@@ -98,6 +98,15 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
+    // Prevent excessively large inputs from exhausting AI credits
+    const MAX_CONTENT_LENGTH = 50000 // ~50KB, roughly 12,500 tokens
+    if (content.length > MAX_CONTENT_LENGTH) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: `Content too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.` },
+        { status: 400 }
+      )
+    }
+
     // Use provided quarter or default to current
     const targetQuarter = quarter || getCurrentQuarter()
 

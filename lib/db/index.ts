@@ -1343,7 +1343,7 @@ export const db = {
     async deleteOld(days: number = 30): Promise<number> {
       const { rowCount } = await sql`
         DELETE FROM notifications
-        WHERE created_at < NOW() - INTERVAL '${days} days' AND read = TRUE
+        WHERE created_at < NOW() - INTERVAL '1 day' * ${days} AND read = TRUE
       `
       return rowCount ?? 0
     },

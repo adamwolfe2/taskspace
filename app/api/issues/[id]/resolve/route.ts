@@ -24,6 +24,16 @@ export const POST = withAuth(async (request, auth, context?) => {
       )
     }
 
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(issue.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Issue not found" },
+        { status: 404 }
+      )
+    }
+
     // Check workspace access
     const hasAccess = await userHasWorkspaceAccess(auth.user.id, issue.workspaceId)
     if (!hasAccess) {

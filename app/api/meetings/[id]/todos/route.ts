@@ -168,23 +168,46 @@ export const PATCH = withAuth(async (request, auth, context?) => {
       )
     }
 
-    // For now, only support completing todos
-    if (body.completed !== undefined && body.completed) {
-      const updatedTodo = await meetings.completeTodo(todoId)
-      if (!updatedTodo) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "Todo not found" },
-          { status: 404 }
-        )
+    if (body.completed !== undefined) {
+      if (body.completed) {
+        const updatedTodo = await meetings.completeTodo(todoId)
+        if (!updatedTodo) {
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, error: "Todo not found" },
+            { status: 404 }
+          )
+        }
+
+        logger.info(`Todo ${todoId} completed`)
+
+        return NextResponse.json<ApiResponse<typeof updatedTodo>>({
+          success: true,
+          data: updatedTodo,
+          message: "Todo completed successfully",
+        })
+      } else {
+        // Un-complete a todo
+        const { rows } = await (await import("@/lib/db/sql")).sql`
+          UPDATE meeting_todos
+          SET completed = FALSE, completed_at = NULL
+          WHERE id = ${todoId}
+          RETURNING *
+        `
+        if (rows.length === 0) {
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, error: "Todo not found" },
+            { status: 404 }
+          )
+        }
+
+        logger.info(`Todo ${todoId} uncompleted`)
+
+        return NextResponse.json<ApiResponse<Record<string, unknown>>>({
+          success: true,
+          data: rows[0],
+          message: "Todo uncompleted successfully",
+        })
       }
-
-      logger.info(`Todo ${todoId} completed`)
-
-      return NextResponse.json<ApiResponse<typeof updatedTodo>>({
-        success: true,
-        data: updatedTodo,
-        message: "Todo updated successfully",
-      })
     }
 
     return NextResponse.json<ApiResponse<null>>(
