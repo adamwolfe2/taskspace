@@ -339,7 +339,7 @@ export async function GET(request: NextRequest) {
       type: "module",
       main: "index.js",
       dependencies: {
-        "@modelcontextprotocol/sdk": "^1.0.0",
+        "@modelcontextprotocol/sdk": "^1.26.0",
       },
     }, null, 2))
 
