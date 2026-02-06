@@ -1,5 +1,6 @@
 "use client"
 
+import { FeatureGate } from "@/components/shared/feature-gate"
 import { useState, useMemo } from "react"
 import type { AssignedTask, Rock, TeamMember } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -208,7 +209,8 @@ export function TasksPage({
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
+    <FeatureGate feature="core.tasks">
+      <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-2xl sm:text-3xl font-bold truncate">Tasks</h1>
@@ -374,5 +376,6 @@ export function TasksPage({
         userRocks={userRocks}
       />
     </div>
+    </FeatureGate>
   )
 }

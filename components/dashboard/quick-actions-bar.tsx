@@ -25,8 +25,8 @@ interface QuickAction {
 }
 
 interface QuickActionsBarProps {
- onSubmitEOD: () => void
- onAddTask: () => void
+ onSubmitEOD?: () => void
+ onAddTask?: () => void
  onUpdateRock?: () => void
  onStartFocus?: () => void
  hasSubmittedEOD?: boolean
@@ -46,7 +46,7 @@ export function QuickActionsBar({
  const themedColors = useThemedIconColors()
 
  const actions: QuickAction[] = [
- {
+ ...(onSubmitEOD ? [{
  id: "eod",
  label: hasSubmittedEOD ? "EOD Submitted" : "Submit EOD",
  shortLabel: "EOD",
@@ -56,8 +56,8 @@ export function QuickActionsBar({
  hoverColor: hasSubmittedEOD ? "hover:bg-green-100 " : "",
  onClick: onSubmitEOD,
  badge: hasSubmittedEOD ? "✓" : undefined,
- },
- {
+ }] : []),
+ ...(onAddTask ? [{
  id: "task",
  label: "Add Task",
  shortLabel: "Task",
@@ -66,7 +66,7 @@ export function QuickActionsBar({
  bgColor: "bg-emerald-50 ",
  hoverColor: "hover:bg-emerald-100 ",
  onClick: onAddTask,
- },
+ }] : []),
  ...(onUpdateRock
  ? [
  {
@@ -96,7 +96,7 @@ export function QuickActionsBar({
  },
  ]
  : []),
- ]
+ ].filter(Boolean) as QuickAction[]
 
  return (
  <div className={cn("flex flex-wrap gap-2", className)}>

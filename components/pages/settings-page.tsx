@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Toaster } from "@/components/ui/toaster"
-import { Building, Bell, Users, CreditCard, Key, Download, Sparkles, Briefcase } from "lucide-react"
+import { Building, Bell, Users, CreditCard, Key, Download, Sparkles, Briefcase, Sliders } from "lucide-react"
 import { api } from "@/lib/api/client"
 import type { TeamMember } from "@/lib/types"
 import { WorkspaceSwitcher } from "@/components/workspace"
@@ -17,6 +17,7 @@ import {
   DataExportTab,
   BillingSettings,
 } from "@/components/settings"
+import { WorkspaceFeaturesTab } from "@/components/settings/workspace-features-tab"
 import { AIInbox } from "@/components/ai/ai-inbox"
 import { AIBudgetControls } from "@/components/ai/ai-budget-controls"
 
@@ -63,6 +64,13 @@ export function SettingsPage() {
               <TabsTrigger value="workspace" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
                 <Briefcase className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Workspace
+              </TabsTrigger>
+            )}
+
+            {isAdmin && (
+              <TabsTrigger value="features" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+                <Sliders className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Features
               </TabsTrigger>
             )}
 
@@ -121,6 +129,13 @@ export function SettingsPage() {
         {isAdmin && (
           <TabsContent value="workspace" className="space-y-6">
             <WorkspaceSettingsTab teamMembers={teamMembers} />
+          </TabsContent>
+        )}
+
+        {/* Features Tab - Workspace feature toggles */}
+        {isAdmin && (
+          <TabsContent value="features" className="space-y-6">
+            <WorkspaceFeaturesTab />
           </TabsContent>
         )}
 

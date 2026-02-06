@@ -17,6 +17,9 @@ import { calculateUserStats } from "@/lib/utils/stats-calculator"
 import { triggerConfetti } from "@/lib/utils/confetti"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
+import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
+import { Card, CardContent } from "@/components/ui/card"
+import { AlertCircle } from "lucide-react"
 
 // Get current quarter string (e.g., "Q1 2026")
 function getCurrentQuarter(): string {
@@ -57,6 +60,13 @@ export function DashboardPage({
  const eodCardRef = useRef<HTMLDivElement>(null)
  const tasksRef = useRef<HTMLDivElement>(null)
  const { currentOrganization } = useApp()
+ const { isFeatureEnabled } = useWorkspaceFeatures()
+
+ // Check which features are enabled
+ const hasTasksFeature = isFeatureEnabled("core.tasks")
+ const hasRocksFeature = isFeatureEnabled("core.rocks")
+ const hasEodFeature = isFeatureEnabled("core.eodReports")
+ const hasFocusBlocksFeature = isFeatureEnabled("productivity.focusBlocks")
 
  const currentQuarter = getCurrentQuarter()
  const userRocks = rocks.filter((r) => r.userId === currentUser.id)
@@ -160,19 +170,24 @@ export function DashboardPage({
  </h1>
  <p className="text-slate-500  mt-1">Here's your overview for today</p>
  </div>
+ {(hasEodFeature || hasTasksFeature) && (
  <QuickActionsBar
- onSubmitEOD={handleScrollToEOD}
- onAddTask={() => setShowAddTaskDialog(true)}
+ onSubmitEOD={hasEodFeature ? handleScrollToEOD : undefined}
+ onAddTask={hasTasksFeature ? () => setShowAddTaskDialog(true) : undefined}
  hasSubmittedEOD={hasSubmittedEODToday}
  />
+ )}
  </div>
 
- {/* Stats Cards */}
+ {/* Stats Cards - Only show if tasks or rocks enabled */}
+ {(hasTasksFeature || hasRocksFeature) && (
  <ErrorBoundary title="Stats unavailable">
  <StatsCards stats={stats} />
  </ErrorBoundary>
+ )}
 
  {/* Weekly EOD Calendar with Hover Preview */}
+ {hasEodFeature && (
  <ErrorBoundary title="Calendar unavailable">
  <WeeklyEODCalendar
  eodReports={eodReports}
@@ -182,8 +197,10 @@ export function DashboardPage({
  showMoodTrend
  />
  </ErrorBoundary>
+ )}
 
  {/* Focus of the Day - AI Suggested Priorities */}
+ {hasFocusBlocksFeature && (hasTasksFeature || hasRocksFeature) && (
  <ErrorBoundary title="Suggestions unavailable">
  <FocusOfTheDay
  tasks={userTasks}
@@ -192,9 +209,12 @@ export function DashboardPage({
  onViewTask={handleViewTask}
  />
  </ErrorBoundary>
+ )}
 
- {/* Rocks and Tasks Grid */}
- <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+ {/* Rocks and Tasks Grid - Only show if at least one is enabled */}
+ {(hasRocksFeature || hasTasksFeature) && (
+ <div className={`grid grid-cols-1 ${hasRocksFeature && hasTasksFeature ? 'lg:grid-cols-2' : ''} gap-6`}>
+ {hasRocksFeature && (
  <ErrorBoundary title="Rocks section unavailable">
  <MyRocksSection
  rocks={userRocks}
@@ -203,6 +223,8 @@ export function DashboardPage({
  onRefresh={onRefresh}
  />
  </ErrorBoundary>
+ )}
+ {hasTasksFeature && (
  <div ref={tasksRef}>
  <ErrorBoundary title="Tasks section unavailable">
  <AssignedTasksSection
@@ -217,9 +239,12 @@ export function DashboardPage({
  />
  </ErrorBoundary>
  </div>
+ )}
  </div>
+ )}
 
  {/* EOD Submission Card */}
+ {hasEodFeature && (
  <div ref={eodCardRef}>
  <ErrorBoundary title="EOD submission unavailable">
  {/* All team members get tabs to switch between AI and Manual EOD submission */}
@@ -256,6 +281,20 @@ export function DashboardPage({
  </Tabs>
  </ErrorBoundary>
  </div>
+ )}
+
+ {/* Empty Dashboard State */}
+ {!hasTasksFeature && !hasRocksFeature && !hasEodFeature && !hasFocusBlocksFeature && (
+ <Card>
+ <CardContent className="flex flex-col items-center justify-center py-16">
+ <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+ <h3 className="text-lg font-semibold mb-2">Dashboard Empty</h3>
+ <p className="text-sm text-muted-foreground text-center max-w-md">
+ No dashboard widgets are available. Contact your workspace admin to enable features.
+ </p>
+ </CardContent>
+ </Card>
+ )}
  </div>
  )
 }

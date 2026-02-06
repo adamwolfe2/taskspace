@@ -1,5 +1,6 @@
 "use client"
 
+import { FeatureGate } from "@/components/shared/feature-gate"
 import { useState, useMemo } from "react"
 import type { TeamMember, Rock } from "@/lib/types"
 import { ProgressBar } from "@/components/shared/progress-bar"
@@ -79,7 +80,8 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <FeatureGate feature="core.rocks">
+      <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Rock Progress</h1>
         <p className="text-slate-500 mt-1">
@@ -242,5 +244,6 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
         </div>
       </div>
     </div>
+    </FeatureGate>
   )
 }

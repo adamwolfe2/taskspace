@@ -11,6 +11,8 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { useCallback, useEffect, useRef } from "react"
 import useSWR from "swr"
+import type { WorkspaceFeatureToggles, WorkspaceFeatureKey } from "@/lib/types/workspace-features"
+import { getWorkspaceFeatures, isWorkspaceFeatureEnabled } from "@/lib/auth/workspace-features"
 
 // ============================================
 // TYPES
@@ -204,6 +206,26 @@ export function useWorkspaces() {
     return mutate()
   }, [mutate])
 
+  // Get workspace features
+  const getFeatures = useCallback((): WorkspaceFeatureToggles | null => {
+    if (!currentWorkspace) return null
+    return getWorkspaceFeatures(currentWorkspace)
+  }, [currentWorkspace])
+
+  // Check if a specific feature is enabled
+  const isFeatureEnabled = useCallback(
+    (feature: WorkspaceFeatureKey): boolean => {
+      if (!currentWorkspace) return false
+      // Note: This is a simplified check without org context
+      // For full validation including org-level features, use the API
+      const features = getWorkspaceFeatures(currentWorkspace)
+      const [category, name] = feature.split(".") as [keyof WorkspaceFeatureToggles, string]
+      const categoryFeatures = features[category] as Record<string, boolean>
+      return categoryFeatures?.[name] ?? true
+    },
+    [currentWorkspace]
+  )
+
   return {
     // Data
     workspaces: workspaces || [],
@@ -223,6 +245,10 @@ export function useWorkspaces() {
     // Helpers
     isAdmin: currentWorkspace?.memberRole === "admin" || currentWorkspace?.memberRole === "owner",
     isOwner: currentWorkspace?.memberRole === "owner",
+
+    // Feature helpers
+    getFeatures,
+    isFeatureEnabled,
   }
 }
 
