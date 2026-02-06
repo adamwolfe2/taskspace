@@ -17,8 +17,36 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
     const status = searchParams.get("status")
-    // workspaceId is optional - workspace feature temporarily disabled
     const workspaceId = searchParams.get("workspaceId")
+
+    // SECURITY: workspaceId is required to prevent data leakage across workspaces
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
 
     let tasks: AssignedTask[]
 
@@ -33,10 +61,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       tasks = await db.assignedTasks.findByAssigneeId(auth.user.id, auth.organization.id)
     }
 
-    // Filter by workspace if provided (workspace feature temporarily disabled)
-    if (workspaceId) {
-      tasks = tasks.filter(t => t.workspaceId === workspaceId)
-    }
+    // Filter by workspace - strict filtering to prevent cross-workspace data leakage
+    tasks = tasks.filter(t => t.workspaceId === workspaceId)
 
     // Filter by status if specified
     if (status) {

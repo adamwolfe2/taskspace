@@ -15,8 +15,36 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
     const quarter = searchParams.get("quarter")
-    // workspaceId is optional - workspace feature temporarily disabled
     const workspaceId = searchParams.get("workspaceId")
+
+    // SECURITY: workspaceId is required to prevent data leakage across workspaces
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
+    // Validate workspace access (unless org admin)
+    if (!isAdmin(auth)) {
+      const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+      if (!hasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You don't have access to this workspace" },
+          { status: 403 }
+        )
+      }
+    }
 
     let rocks: Rock[]
 
@@ -37,10 +65,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
     }
 
-    // Filter by workspace if specified (workspace feature temporarily optional)
-    if (workspaceId) {
-      rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
-    }
+    // Filter by workspace - strict filtering to prevent cross-workspace data leakage
+    rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
 
     // Filter by quarter if specified
     if (quarter) {
