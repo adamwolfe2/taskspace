@@ -10,7 +10,13 @@ import { logger, logError } from "@/lib/logger"
 // GET /api/productivity/focus-blocks/[id] - Get single focus block
 export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
 
     const focusBlock = await db.focusBlocks.findById(id)
 
@@ -45,7 +51,13 @@ export const GET = withAuth(async (request, auth, context?) => {
 // PUT /api/productivity/focus-blocks/[id] - Update focus block
 export const PUT = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const body = await validateBody(request, updateFocusBlockSchema)
 
     // Get existing block to verify ownership
@@ -105,7 +117,13 @@ export const PUT = withAuth(async (request, auth, context?) => {
 // DELETE /api/productivity/focus-blocks/[id] - Delete focus block
 export const DELETE = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
 
     // Get existing block to verify ownership
     const existingBlock = await db.focusBlocks.findById(id)

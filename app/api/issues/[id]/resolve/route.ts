@@ -12,7 +12,13 @@ import type { Issue } from "@/lib/db/meetings"
 // POST /api/issues/[id]/resolve - Mark an issue as resolved
 export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const { resolution, meetingId } = await validateBody(request, resolveIssueSchema)
 
     const issue = await meetings.getIssue(id)

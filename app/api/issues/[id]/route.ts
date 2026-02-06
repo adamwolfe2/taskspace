@@ -12,7 +12,13 @@ import type { Issue } from "@/lib/db/meetings"
 // GET /api/issues/[id] - Get a single issue
 export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const issue = await meetings.getIssue(id)
 
     if (!issue) {
@@ -57,7 +63,13 @@ export const GET = withAuth(async (request, auth, context?) => {
 // PATCH /api/issues/[id] - Update an issue
 export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
 
     const issue = await meetings.getIssue(id)
     if (!issue) {
@@ -119,7 +131,13 @@ export const PATCH = withAuth(async (request, auth, context?) => {
 // DELETE /api/issues/[id] - Delete (drop) an issue
 export const DELETE = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const issue = await meetings.getIssue(id)
 
     if (!issue) {

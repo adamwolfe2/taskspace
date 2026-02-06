@@ -20,6 +20,7 @@ import { useApp } from "@/lib/contexts/app-context"
 import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle } from "lucide-react"
+import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 
 // Get current quarter string (e.g., "Q1 2026")
 function getCurrentQuarter(): string {
@@ -159,6 +160,9 @@ export function DashboardPage({
 
  return (
  <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
+ {/* No workspace selected alert */}
+ <NoWorkspaceAlert />
+
  {/* Keyboard Shortcuts Dialog */}
  <KeyboardShortcutsDialog />
 

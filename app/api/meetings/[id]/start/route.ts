@@ -17,7 +17,13 @@ interface StartMeetingResponse {
 // POST /api/meetings/[id]/start - Start a meeting and get prep data
 export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const meetingData = await meetings.getById(id)
 
     if (!meetingData) {

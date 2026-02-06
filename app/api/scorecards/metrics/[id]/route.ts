@@ -15,10 +15,17 @@ import { getMetricById, updateMetric, deleteMetric } from "@/lib/db/scorecard"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateScorecardMetricSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
+import type { ApiResponse } from "@/lib/types"
 
 export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const metric = await getMetricById(id)
 
     if (!metric) {
@@ -55,7 +62,13 @@ export const GET = withAuth(async (request, auth, context?) => {
 
 export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const metric = await getMetricById(id)
 
     if (!metric) {
@@ -137,7 +150,13 @@ export const PATCH = withAuth(async (request, auth, context?) => {
 
 export const DELETE = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const metric = await getMetricById(id)
 
     if (!metric) {

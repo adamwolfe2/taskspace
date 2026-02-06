@@ -78,9 +78,8 @@ export function getTodayInTimezone(timezone: string = "America/Los_Angeles"): st
     })
     // en-CA locale gives us YYYY-MM-DD format
     return formatter.format(now)
-  } catch (error) {
-    // Fallback to UTC if timezone is invalid
-    console.error(`Invalid timezone "${timezone}", falling back to UTC:`, error)
+  } catch {
+    // Silently fallback to UTC if timezone is invalid
     return new Date().toISOString().split("T")[0]
   }
 }

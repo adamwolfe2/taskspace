@@ -1,6 +1,7 @@
 import type { EODReport, TeamMember, Rock, Invitation, Organization, PasswordResetToken } from "./types"
 import { withRetry, isTransientError } from "./utils"
 import { CONFIG } from "./config"
+import { logger, logError } from "@/lib/logger"
 
 // Use environment variables for sensitive data
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
@@ -18,7 +19,7 @@ function isEmailConfigured(): boolean {
 // Generic email sending function with automatic retry
 async function sendEmail(to: string[], subject: string, html: string) {
   if (!isEmailConfigured()) {
-    console.warn("Email not configured - RESEND_API_KEY not set")
+    logger.warn("Email not configured - RESEND_API_KEY not set")
     return { success: false, error: "Email not configured" }
   }
 
@@ -59,7 +60,7 @@ async function sendEmail(to: string[], subject: string, html: string) {
         initialDelayMs: CONFIG.api.retryDelayMs,
         isRetryable: isTransientError,
         onRetry: (error, attempt) => {
-          console.warn(`Email send retry attempt ${attempt}:`, error)
+          logger.warn({ attempt, error: error instanceof Error ? error.message : String(error) }, "Email send retry attempt")
         },
       }
     )
@@ -359,7 +360,7 @@ export async function sendEODNotification(
 
     return sendEmail([ADMIN_EMAIL], `EOD Report: ${submittedBy.name} - ${new Date(eodReport.date).toLocaleDateString()}`, html)
   } catch (error) {
-    console.error("Failed to send EOD notification:", error)
+    logError(logger, "Failed to send EOD notification", error)
     return { success: false, error }
   }
 }

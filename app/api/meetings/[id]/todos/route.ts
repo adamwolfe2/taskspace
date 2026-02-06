@@ -12,7 +12,13 @@ import type { ApiResponse } from "@/lib/types"
 // GET /api/meetings/[id]/todos - Get todos for a meeting
 export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
@@ -59,7 +65,13 @@ export const GET = withAuth(async (request, auth, context?) => {
 // POST /api/meetings/[id]/todos - Create a new todo
 export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const { title, assigneeId, dueDate, issueId } = await validateBody(request, createMeetingTodoSchema)
 
     const meeting = await meetings.getById(id)
@@ -128,7 +140,13 @@ export const POST = withAuth(async (request, auth, context?) => {
 // PATCH /api/meetings/[id]/todos - Update todo completion status
 export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const { searchParams } = new URL(request.url)
     const todoId = searchParams.get("todoId")
 

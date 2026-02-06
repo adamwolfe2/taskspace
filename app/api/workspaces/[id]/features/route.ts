@@ -43,7 +43,13 @@ export const GET = withAuth(async (
   context?: RouteContext
 ) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
 
     // Get workspace
     const workspace = await getWorkspaceById(id)
@@ -121,7 +127,13 @@ export const PATCH = withAuth(async (
   context?: RouteContext
 ) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
 
     // Get workspace
     const workspace = await getWorkspaceById(id)

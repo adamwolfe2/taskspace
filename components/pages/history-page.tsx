@@ -10,6 +10,7 @@ import { Search, AlertCircle, ChevronDown, ChevronUp, Pencil, Trash2, Loader2, F
 import { EmptyState } from "@/components/shared/empty-state"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { EditEODModal } from "@/components/dashboard/edit-eod-modal"
+import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 
 // Grace period for editing reports (24 hours in milliseconds)
 const EDIT_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000
@@ -104,6 +105,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
 
   return (
     <div className="space-y-6">
+      <NoWorkspaceAlert />
       <div>
         <h1 className="text-2xl font-bold text-slate-900">EOD History</h1>
         <p className="text-slate-500 mt-1">View past end-of-day reports</p>

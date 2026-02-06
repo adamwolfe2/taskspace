@@ -12,7 +12,13 @@ import type { ApiResponse } from "@/lib/types"
 // POST /api/meetings/[id]/todos/[todoId] - Convert todo to task
 export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const { id: meetingId, todoId } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id: meetingId, todoId } = await context.params
     const { taskId } = await validateBody(request, convertTodoToTaskSchema)
 
     // Get meeting to validate workspace access

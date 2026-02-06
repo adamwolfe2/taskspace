@@ -107,7 +107,7 @@ async function checkRateLimitDb(
     }
   } catch (error) {
     // Database error - fall back to in-memory
-    console.warn("Rate limit DB error, using fallback:", error)
+    logger.warn({ error: error instanceof Error ? error.message : String(error) }, "Rate limit DB error, using fallback")
     return checkRateLimitMemory(identifier, maxAttempts)
   }
 }

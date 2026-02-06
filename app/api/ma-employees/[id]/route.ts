@@ -3,11 +3,18 @@ import { db } from "@/lib/db"
 import { withAuth } from "@/lib/api/middleware"
 import type { RouteContext } from "@/lib/api/middleware"
 import { logger, logError } from "@/lib/logger"
+import type { ApiResponse } from "@/lib/types"
 
 // GET - Fetch a single MA employee by ID
 export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const employee = await db.maEmployees.findById(id)
 
     if (!employee) {
@@ -36,7 +43,13 @@ export const GET = withAuth(async (request, auth, context?) => {
 // PATCH - Update an MA employee
 export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const body = await request.json()
 
     // Check if employee exists first
@@ -89,7 +102,13 @@ export const PATCH = withAuth(async (request, auth, context?) => {
 // DELETE - Soft delete an MA employee (set is_active = false)
 export const DELETE = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const { searchParams } = new URL(request.url)
     const hard = searchParams.get("hard") === "true"
 

@@ -82,8 +82,8 @@ export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
           try {
             const hsl = hexToHsl(primaryColor)
             calculatedColors = generateColorPalette(hsl)
-          } catch (error) {
-            console.error("Failed to parse brand color:", error)
+          } catch {
+            // Silently ignore invalid brand color
             calculatedColors = defaultBrandColors
           }
         }

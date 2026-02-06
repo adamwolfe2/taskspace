@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { db } from "@/lib/db"
 import { isTokenExpired } from "@/lib/auth/password"
+import { logger, logError } from "@/lib/logger"
 import type { User, Organization, OrganizationMember } from "@/lib/types"
 
 export interface AuthContext {
@@ -58,7 +59,7 @@ async function getApiKeyAuthContext(request: NextRequest): Promise<AuthContext |
       isApiKey: true,
     }
   } catch (error) {
-    console.error("API key auth error:", error)
+    logError(logger, "API key auth error", error)
     return null
   }
 }
@@ -104,7 +105,7 @@ async function getSessionAuthContext(request: NextRequest): Promise<AuthContext 
       sessionId: session.id,
     }
   } catch (error) {
-    console.error("Session auth error:", error)
+    logError(logger, "Session auth error", error)
     return null
   }
 }

@@ -17,6 +17,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useToast } from "@/hooks/use-toast"
 import { addDays, addWeeks, addMonths } from "date-fns"
 import { getErrorMessage } from "@/lib/utils"
+import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 
 interface TasksPageProps {
   currentUser: TeamMember
@@ -237,6 +238,7 @@ export function TasksPage({
   return (
     <FeatureGate feature="core.tasks">
       <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
+      <NoWorkspaceAlert />
       {/* Viewing other user's tasks banner */}
       {isViewingOtherUser && (
         <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">

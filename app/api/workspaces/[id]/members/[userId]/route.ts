@@ -28,7 +28,13 @@ import { logger, logError } from "@/lib/logger"
  */
 export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    const { id, userId } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id, userId } = await context.params
 
     // Get workspace
     const workspace = await getWorkspaceById(id)
@@ -94,7 +100,13 @@ export const PATCH = withAuth(async (request, auth, context?) => {
  */
 export const DELETE = withAuth(async (request, auth, context?) => {
   try {
-    const { id, userId } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id, userId } = await context.params
 
     // Get workspace
     const workspace = await getWorkspaceById(id)

@@ -13,7 +13,13 @@ import type { SectionType } from "@/lib/db/meetings"
 // GET /api/meetings/[id]/notes - Get all notes for a meeting
 export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
@@ -55,7 +61,13 @@ export const GET = withAuth(async (request, auth, context?) => {
 // POST /api/meetings/[id]/notes - Create/update notes for a section
 export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const { section, content } = await validateBody(request, updateMeetingNotesSchema)
 
     const meeting = await meetings.getById(id)

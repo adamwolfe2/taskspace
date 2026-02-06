@@ -12,10 +12,17 @@ import { getRockById, createRockCheckin, getWeekStart } from "@/lib/db/rocks"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createRockCheckinSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
+import type { ApiResponse } from "@/lib/types"
 
 export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const rock = await getRockById(id)
 
     if (!rock) {

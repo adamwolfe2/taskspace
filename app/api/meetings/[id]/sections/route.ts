@@ -12,7 +12,13 @@ import type { MeetingSection, SectionType } from "@/lib/db/meetings"
 // PATCH /api/meetings/[id]/sections - Update a section (start, complete, update data)
 export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const { sectionType, action, data } = await validateBody(request, updateMeetingSectionSchema)
 
     const meeting = await meetings.getById(id)

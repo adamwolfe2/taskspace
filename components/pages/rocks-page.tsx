@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Target, Search, Calendar } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
+import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 
 interface RocksPageProps {
   currentUser: TeamMember
@@ -95,6 +96,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
   return (
     <FeatureGate feature="core.rocks">
       <div className="space-y-6">
+      <NoWorkspaceAlert />
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Rock Progress</h1>
         <p className="text-sm sm:text-base text-slate-500 mt-1">

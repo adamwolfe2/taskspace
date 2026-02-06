@@ -13,7 +13,13 @@ import type { SectionType } from "@/lib/db/meetings"
 // GET /api/meetings/[id]/agenda - Get meeting agenda
 export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
@@ -58,7 +64,13 @@ export const GET = withAuth(async (request, auth, context?) => {
 // POST /api/meetings/[id]/agenda - Update meeting agenda
 export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const { sections } = await validateBody(request, updateAgendaSchema)
 
     const meeting = await meetings.getById(id)

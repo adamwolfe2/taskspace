@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
+import { logger, logError } from "@/lib/logger"
 import type { GoogleCalendarToken, GoogleCalendarEventMapping, AssignedTask, Rock } from "@/lib/types"
 import { encryptToken, decryptToken } from "@/lib/crypto/token-encryption"
 
@@ -63,7 +64,7 @@ export async function exchangeCodeForTokens(code: string): Promise<{
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('Token exchange error:', error)
+    logger.error({ responseBody: error }, "Token exchange error")
     throw new Error('Failed to exchange code for tokens')
   }
 
@@ -119,7 +120,7 @@ export async function getValidAccessToken(userId: string, orgId: string, workspa
     const decryptedRefreshToken = decryptToken(token.refreshToken)
 
     if (!decryptedAccessToken || !decryptedRefreshToken) {
-      console.error('Failed to decrypt Google Calendar tokens')
+      logger.error("Failed to decrypt Google Calendar tokens")
       return null
     }
 
@@ -135,7 +136,7 @@ export async function getValidAccessToken(userId: string, orgId: string, workspa
         })
         return refreshed.access_token
       } catch (error) {
-        console.error('Failed to refresh token:', error)
+        logError(logger, "Failed to refresh token", error)
         return null
       }
     }
@@ -152,7 +153,7 @@ export async function getValidAccessToken(userId: string, orgId: string, workspa
   const decryptedRefreshToken = decryptToken(token.refreshToken)
 
   if (!decryptedAccessToken || !decryptedRefreshToken) {
-    console.error('Failed to decrypt Google Calendar tokens')
+    logger.error("Failed to decrypt Google Calendar tokens")
     return null
   }
 
@@ -168,7 +169,7 @@ export async function getValidAccessToken(userId: string, orgId: string, workspa
       })
       return refreshed.access_token
     } catch (error) {
-      console.error('Failed to refresh token:', error)
+      logError(logger, "Failed to refresh token", error)
       return null
     }
   }
@@ -202,7 +203,7 @@ export async function createCalendarEvent(
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('Create event error:', error)
+    logger.error({ responseBody: error }, "Create event error")
     throw new Error('Failed to create calendar event')
   }
 
@@ -235,7 +236,7 @@ export async function updateCalendarEvent(
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('Update event error:', error)
+    logger.error({ responseBody: error }, "Update event error")
     throw new Error('Failed to update calendar event')
   }
 
@@ -335,7 +336,7 @@ export async function syncTaskToCalendar(
       })
     }
   } catch (error) {
-    console.error('Failed to sync task to calendar:', error)
+    logError(logger, "Failed to sync task to calendar", error)
   }
 }
 
@@ -391,7 +392,7 @@ export async function syncRockToCalendar(
       })
     }
   } catch (error) {
-    console.error('Failed to sync rock to calendar:', error)
+    logError(logger, "Failed to sync rock to calendar", error)
   }
 }
 
@@ -414,6 +415,6 @@ export async function removeFromCalendar(
     await deleteCalendarEvent(accessToken, tokenData.calendarId, mapping.googleEventId)
     await db.googleCalendarEvents.deleteByItem(userId, itemType, itemId)
   } catch (error) {
-    console.error('Failed to remove from calendar:', error)
+    logError(logger, "Failed to remove from calendar", error)
   }
 }

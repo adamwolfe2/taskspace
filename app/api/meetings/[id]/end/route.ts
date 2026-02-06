@@ -18,7 +18,13 @@ interface EndMeetingResponse {
 // POST /api/meetings/[id]/end - End a meeting with rating
 export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const { rating, notes } = await validateBody(request, endMeetingSchema)
 
     const meeting = await meetings.getById(id)

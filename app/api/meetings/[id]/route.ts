@@ -13,7 +13,13 @@ import type { MeetingWithDetails, MeetingSection } from "@/lib/db/meetings"
 // GET /api/meetings/[id] - Get meeting with full details
 export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
@@ -58,7 +64,13 @@ export const GET = withAuth(async (request, auth, context?) => {
 // PATCH /api/meetings/[id] - Update meeting details
 export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
 
     const meeting = await meetings.getById(id)
     if (!meeting) {
@@ -132,7 +144,13 @@ export const PATCH = withAuth(async (request, auth, context?) => {
 // DELETE /api/meetings/[id] - Cancel/delete a meeting
 export const DELETE = withAuth(async (request, auth, context?) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const meeting = await meetings.getById(id)
 
     if (!meeting) {

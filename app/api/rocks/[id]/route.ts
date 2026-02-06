@@ -15,10 +15,17 @@ import {
   getRockCheckins,
 } from "@/lib/db/rocks"
 import { logger } from "@/lib/logger"
+import type { ApiResponse } from "@/lib/types"
 
 export const GET = withAuth(async (request: NextRequest, auth, context?: RouteContext) => {
   try {
-    const { id } = await context!.params
+    if (!context?.params) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Missing route parameters" },
+        { status: 400 }
+      )
+    }
+    const { id } = await context.params
     const rock = await getRockById(id)
 
     if (!rock) {
