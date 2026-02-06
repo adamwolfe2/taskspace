@@ -7,8 +7,13 @@ import {
   type ApprovalResult,
 } from "@/lib/ai/suggestions"
 import { generateId } from "@/lib/auth/password"
+import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AISuggestion, AssignedTask } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+
+// Rate limit: 30 suggestion approvals per user per hour
+const MAX_APPROVALS_PER_HOUR = 30
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
 /**
  * POST /api/ai/suggestions/[id]/approve
@@ -16,6 +21,30 @@ import { logger, logError } from "@/lib/logger"
  */
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
+    // Rate limit: 30 suggestion approvals per user per hour
+    const rateLimitKey = `ai-suggestion-approve:${auth.user.id}`
+    const rateLimitResult = await checkApiRateLimit(
+      request,
+      rateLimitKey,
+      MAX_APPROVALS_PER_HOUR,
+      RATE_LIMIT_WINDOW_MS
+    )
+
+    if (!rateLimitResult.success) {
+      const response = NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: "You have reached the maximum number of suggestion approvals. Please try again later.",
+        },
+        { status: 429 }
+      )
+      const headers = getRateLimitHeaders(rateLimitResult, MAX_APPROVALS_PER_HOUR)
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value)
+      }
+      return response
+    }
+
     // Extract id from URL path since middleware wrapper doesn't pass params directly
     const url = new URL(request.url)
     const pathParts = url.pathname.split("/")

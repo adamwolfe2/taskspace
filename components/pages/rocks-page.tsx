@@ -1,7 +1,7 @@
 "use client"
 
 import { FeatureGate } from "@/components/shared/feature-gate"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import type { TeamMember, Rock } from "@/lib/types"
 import { ProgressBar } from "@/components/shared/progress-bar"
 import { UserInitials } from "@/components/shared/user-initials"
@@ -16,16 +16,28 @@ interface RocksPageProps {
   currentUser: TeamMember
   teamMembers: TeamMember[]
   rocks: Rock[]
+  initialOwnerFilter?: string // Pre-set owner filter (e.g., from manager drill-down)
+  onFilterConsumed?: () => void  // Callback to clear the filter after consuming it
 }
 
-export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
+export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter, onFilterConsumed }: RocksPageProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [ownerFilter, setOwnerFilter] = useState<string>("all")
+  const [ownerFilter, setOwnerFilter] = useState<string>(initialOwnerFilter || "all")
+
+  // Apply initial filter from navigation (e.g., manager dashboard drill-down)
+  useEffect(() => {
+    if (initialOwnerFilter) {
+      setOwnerFilter(initialOwnerFilter)
+      onFilterConsumed?.()
+    }
+  }, [initialOwnerFilter, onFilterConsumed])
   const [quarterFilter, setQuarterFilter] = useState<string>("Q1 2025") // Default to current quarter
 
   const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
-  const baseRocks = isAdmin ? rocks : rocks.filter((r) => r.userId === currentUser.id)
+  // When navigating from manager drill-down with an owner filter, show all rocks so the filter works
+  const hasManagerFilter = !!initialOwnerFilter
+  const baseRocks = (isAdmin || hasManagerFilter) ? rocks : rocks.filter((r) => r.userId === currentUser.id)
 
   // Get unique quarters from rocks for filter options
   const availableQuarters = useMemo(() => {
@@ -63,12 +75,12 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
       // Status filter
       if (statusFilter !== "all" && rock.status !== statusFilter) return false
 
-      // Owner filter (admin only)
-      if (isAdmin && ownerFilter !== "all" && rock.userId !== ownerFilter) return false
+      // Owner filter (admin or manager drill-down)
+      if ((isAdmin || hasManagerFilter) && ownerFilter !== "all" && rock.userId !== ownerFilter) return false
 
       return true
     })
-  }, [baseRocks, searchQuery, statusFilter, ownerFilter, quarterFilter, isAdmin])
+  }, [baseRocks, searchQuery, statusFilter, ownerFilter, quarterFilter, isAdmin, hasManagerFilter])
 
   const getStatusConfig = (status: Rock["status"]) => {
     const configs = {
@@ -128,7 +140,7 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
               <SelectItem value="completed">Completed</SelectItem>
             </SelectContent>
           </Select>
-          {isAdmin && (
+          {(isAdmin || hasManagerFilter) && (
             <Select value={ownerFilter} onValueChange={setOwnerFilter}>
               <SelectTrigger className="w-full sm:w-48 bg-slate-50 border-slate-200">
                 <SelectValue placeholder="Owner" />
@@ -136,7 +148,7 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
               <SelectContent>
                 <SelectItem value="all">All Owners</SelectItem>
                 {teamMembers.map((member) => (
-                  <SelectItem key={member.id} value={member.id}>
+                  <SelectItem key={member.userId || member.id} value={member.userId || member.id}>
                     {member.name}
                   </SelectItem>
                 ))}

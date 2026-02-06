@@ -4,12 +4,41 @@ import { withAdmin } from "@/lib/api/middleware"
 import { parseBrainDump, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
+import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AdminBrainDump, AIGeneratedTask, TeamMember, ParsedScorecardMetric } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+
+// Rate limit: 10 brain dumps per user per hour (expensive operation)
+const MAX_BRAIN_DUMPS_PER_HOUR = 10
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
 // POST /api/ai/brain-dump - Process a brain dump and generate task suggestions
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
+    // Rate limit: 10 brain dumps per user per hour
+    const rateLimitKey = `ai-brain-dump:${auth.user.id}`
+    const rateLimitResult = await checkApiRateLimit(
+      request,
+      rateLimitKey,
+      MAX_BRAIN_DUMPS_PER_HOUR,
+      RATE_LIMIT_WINDOW_MS
+    )
+
+    if (!rateLimitResult.success) {
+      const response = NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: "You have reached the maximum number of brain dumps. Please try again later.",
+        },
+        { status: 429 }
+      )
+      const headers = getRateLimitHeaders(rateLimitResult, MAX_BRAIN_DUMPS_PER_HOUR)
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value)
+      }
+      return response
+    }
+
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },

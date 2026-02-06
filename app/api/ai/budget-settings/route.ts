@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
 import { getBudgetSettings, updateBudgetSettings } from "@/lib/ai/suggestions"
+import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AIBudgetSettings } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+
+// Rate limit: 10 budget settings requests per user per hour
+const MAX_BUDGET_SETTINGS_PER_HOUR = 10
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
 /**
  * GET /api/ai/budget-settings
@@ -34,6 +39,30 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
  */
 export const PUT = withAdmin(async (request: NextRequest, auth) => {
   try {
+    // Rate limit: 10 budget settings updates per user per hour
+    const rateLimitKey = `ai-budget-settings:${auth.user.id}`
+    const rateLimitResult = await checkApiRateLimit(
+      request,
+      rateLimitKey,
+      MAX_BUDGET_SETTINGS_PER_HOUR,
+      RATE_LIMIT_WINDOW_MS
+    )
+
+    if (!rateLimitResult.success) {
+      const response = NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: "You have reached the maximum number of budget settings updates. Please try again later.",
+        },
+        { status: 429 }
+      )
+      const headers = getRateLimitHeaders(rateLimitResult, MAX_BUDGET_SETTINGS_PER_HOUR)
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value)
+      }
+      return response
+    }
+
     const body = await request.json()
 
     // Validate settings

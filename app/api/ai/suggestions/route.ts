@@ -5,9 +5,14 @@ import {
   getSuggestionStats,
   type SuggestionFilters,
 } from "@/lib/ai/suggestions"
+import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AISuggestion, SuggestionStats } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { safeParseFloat, safeParseInt, clamp } from "@/lib/utils"
+
+// Rate limit: 30 suggestion list requests per user per hour
+const MAX_SUGGESTIONS_PER_HOUR = 30
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
 interface SuggestionsResponse {
   suggestions: AISuggestion[]
@@ -25,6 +30,30 @@ interface SuggestionsResponse {
  */
 export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
+    // Rate limit: 30 suggestion list requests per user per hour
+    const rateLimitKey = `ai-suggestions:${auth.user.id}`
+    const rateLimitResult = await checkApiRateLimit(
+      request,
+      rateLimitKey,
+      MAX_SUGGESTIONS_PER_HOUR,
+      RATE_LIMIT_WINDOW_MS
+    )
+
+    if (!rateLimitResult.success) {
+      const response = NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: "You have reached the maximum number of suggestion requests. Please try again later.",
+        },
+        { status: 429 }
+      )
+      const headers = getRateLimitHeaders(rateLimitResult, MAX_SUGGESTIONS_PER_HOUR)
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value)
+      }
+      return response
+    }
+
     const { searchParams } = new URL(request.url)
 
     // Parse filters from query params

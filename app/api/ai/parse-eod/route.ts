@@ -3,12 +3,41 @@ import { db } from "@/lib/db"
 import { withAuth } from "@/lib/api/middleware"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
+import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, EODInsight } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+
+// Rate limit: 20 EOD report parses per user per hour
+const MAX_PARSE_EOD_PER_HOUR = 20
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
 // POST /api/ai/parse-eod - Parse an EOD report and extract insights
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
+    // Rate limit: 20 parses per user per hour
+    const rateLimitKey = `ai-parse-eod:${auth.user.id}`
+    const rateLimitResult = await checkApiRateLimit(
+      request,
+      rateLimitKey,
+      MAX_PARSE_EOD_PER_HOUR,
+      RATE_LIMIT_WINDOW_MS
+    )
+
+    if (!rateLimitResult.success) {
+      const response = NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: "You have reached the maximum number of EOD report parses. Please try again later.",
+        },
+        { status: 429 }
+      )
+      const headers = getRateLimitHeaders(rateLimitResult, MAX_PARSE_EOD_PER_HOUR)
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value)
+      }
+      return response
+    }
+
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },
@@ -135,6 +164,30 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // POST /api/ai/parse-eod/batch - Parse multiple EOD reports
 export const PUT = withAuth(async (request: NextRequest, auth) => {
   try {
+    // Rate limit: batch parsing shares the same limit as single parse
+    const rateLimitKey = `ai-parse-eod-batch:${auth.user.id}`
+    const rateLimitResult = await checkApiRateLimit(
+      request,
+      rateLimitKey,
+      MAX_PARSE_EOD_PER_HOUR,
+      RATE_LIMIT_WINDOW_MS
+    )
+
+    if (!rateLimitResult.success) {
+      const response = NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: "You have reached the maximum number of batch EOD parses. Please try again later.",
+        },
+        { status: 429 }
+      )
+      const headers = getRateLimitHeaders(rateLimitResult, MAX_PARSE_EOD_PER_HOUR)
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value)
+      }
+      return response
+    }
+
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "AI features are not configured" },

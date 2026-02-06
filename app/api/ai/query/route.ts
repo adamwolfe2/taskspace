@@ -4,12 +4,41 @@ import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { answerQuery, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
+import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AIQueryResponse, AIConversation, TeamMember } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+
+// Rate limit: 30 AI queries per user per hour
+const MAX_QUERIES_PER_HOUR = 30
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
 // POST /api/ai/query - Ask a natural language question about team data
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
+    // Rate limit: 30 AI queries per user per hour
+    const rateLimitKey = `ai-query:${auth.user.id}`
+    const rateLimitResult = await checkApiRateLimit(
+      request,
+      rateLimitKey,
+      MAX_QUERIES_PER_HOUR,
+      RATE_LIMIT_WINDOW_MS
+    )
+
+    if (!rateLimitResult.success) {
+      const response = NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: "You have reached the maximum number of AI queries. Please try again later.",
+        },
+        { status: 429 }
+      )
+      const headers = getRateLimitHeaders(rateLimitResult, MAX_QUERIES_PER_HOUR)
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value)
+      }
+      return response
+    }
+
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },

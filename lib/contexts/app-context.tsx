@@ -5,6 +5,12 @@ import type { TeamMember, Organization, PageType } from "../types"
 import { api } from "../api/client"
 import { getErrorMessage } from "../utils"
 
+// Filter state passed between pages during navigation (e.g., manager drill-down)
+export interface PageFilter {
+  userId?: string   // Filter target pages by this user ID
+  userName?: string // Display name for the filtered user
+}
+
 interface AppContextType {
   // Auth state
   currentUser: TeamMember | null
@@ -18,6 +24,11 @@ interface AppContextType {
   // Page navigation
   currentPage: PageType
   setCurrentPage: (page: PageType) => void
+
+  // Cross-page filter state (consumed once by target page, then cleared)
+  pageFilter: PageFilter | null
+  navigateWithFilter: (page: PageType, filter: PageFilter) => void
+  clearPageFilter: () => void
 
   // Theme
   darkMode: boolean
@@ -78,12 +89,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [currentPage, setCurrentPage] = useState<PageType>("login")
+  const [pageFilter, setPageFilter] = useState<PageFilter | null>(null)
   const [darkMode, setDarkMode] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const isAuthenticated = !!currentUser && !!currentOrganization
 
   const clearError = useCallback(() => setError(null), [])
+
+  const navigateWithFilter = useCallback((page: PageType, filter: PageFilter) => {
+    setPageFilter(filter)
+    setCurrentPage(page)
+  }, [])
+
+  const clearPageFilter = useCallback(() => setPageFilter(null), [])
 
   const refreshSession = useCallback(async () => {
     try {
@@ -251,6 +270,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isDemoMode,
         currentPage,
         setCurrentPage,
+        pageFilter,
+        navigateWithFilter,
+        clearPageFilter,
         darkMode,
         setDarkMode,
         login,

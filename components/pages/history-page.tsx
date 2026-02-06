@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { TeamMember, EODReport, Rock } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,11 +21,21 @@ interface HistoryPageProps {
   rocks: Rock[]
   updateEODReport?: (id: string, updates: Partial<EODReport>) => Promise<EODReport>
   deleteEODReport?: (id: string) => Promise<void>
+  initialUserFilter?: string // Pre-set user filter (e.g., from manager drill-down)
+  onFilterConsumed?: () => void  // Callback to clear the filter after consuming it
 }
 
-export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updateEODReport, deleteEODReport }: HistoryPageProps) {
+export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updateEODReport, deleteEODReport, initialUserFilter, onFilterConsumed }: HistoryPageProps) {
   const [searchQuery, setSearchQuery] = useState("")
-  const [userFilter, setUserFilter] = useState<string>("all")
+  const [userFilter, setUserFilter] = useState<string>(initialUserFilter || "all")
+
+  // Apply initial filter from navigation (e.g., manager dashboard drill-down)
+  useEffect(() => {
+    if (initialUserFilter) {
+      setUserFilter(initialUserFilter)
+      onFilterConsumed?.()
+    }
+  }, [initialUserFilter, onFilterConsumed])
   const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set())
   const [editingReport, setEditingReport] = useState<EODReport | null>(null)
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
@@ -62,10 +72,11 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   }
 
   const isAdminOrOwner = currentUser.role === "admin" || currentUser.role === "owner"
+  const hasManagerFilter = !!initialUserFilter
 
   const filteredReports = eodReports
     .filter((report) => {
-      if (!isAdminOrOwner && userFilter === "all") {
+      if (!isAdminOrOwner && !hasManagerFilter && userFilter === "all") {
         return report.userId === currentUser.userId
       }
       if (userFilter !== "all") {
@@ -109,7 +120,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
               className="pl-9 bg-slate-50 border-slate-200"
             />
           </div>
-          {isAdminOrOwner && (
+          {(isAdminOrOwner || hasManagerFilter) && (
             <Select value={userFilter} onValueChange={setUserFilter}>
               <SelectTrigger className="w-full sm:w-48 bg-slate-50 border-slate-200">
                 <SelectValue placeholder="Filter by user" />

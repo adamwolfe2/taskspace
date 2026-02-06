@@ -5,8 +5,13 @@ import { parseEODTextDump, isClaudeConfigured, ParsedEODReport } from "@/lib/ai/
 import { canUseAI, buildFeatureGateContext } from "@/lib/billing/feature-gates"
 import { AI_OPERATION_COSTS } from "@/lib/billing/plans"
 import { getUserWorkspaces } from "@/lib/db/workspaces"
+import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+
+// Rate limit: 20 EOD parses per user per hour
+const MAX_EOD_PARSES_PER_HOUR = 20
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
 // Get current quarter string
 function getCurrentQuarter(): string {
@@ -20,6 +25,30 @@ function getCurrentQuarter(): string {
 // POST /api/ai/eod-parse - Parse text dump into EOD report structure
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
+    // Rate limit: 20 EOD parses per user per hour
+    const rateLimitKey = `ai-eod-parse:${auth.user.id}`
+    const rateLimitResult = await checkApiRateLimit(
+      request,
+      rateLimitKey,
+      MAX_EOD_PARSES_PER_HOUR,
+      RATE_LIMIT_WINDOW_MS
+    )
+
+    if (!rateLimitResult.success) {
+      const response = NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: "You have reached the maximum number of EOD parses. Please try again later.",
+        },
+        { status: 429 }
+      )
+      const headers = getRateLimitHeaders(rateLimitResult, MAX_EOD_PARSES_PER_HOUR)
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value)
+      }
+      return response
+    }
+
     // AI EOD parsing is available to all members
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(

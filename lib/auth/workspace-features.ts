@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "./middleware"
 import { isFeatureEnabled as isOrgFeatureEnabled, type FeatureKey } from "./feature-gate"
 import type { Organization, ApiResponse } from "@/lib/types"
-import type { Workspace } from "@/lib/db/workspaces"
+import { getWorkspaceById, type Workspace } from "@/lib/db/workspaces"
 import type {
   WorkspaceFeatureToggles,
   WorkspaceFeatureKey,
@@ -357,13 +357,30 @@ export function withWorkspaceFeature(feature: WorkspaceFeatureKey) {
         )
       }
 
-      // Fetch workspace (you'll need to import this)
-      // For now, we'll assume the workspace is passed in or fetched
-      // TODO: Import and use getWorkspaceById from @/lib/db/workspaces
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Not implemented yet" },
-        { status: 501 }
-      )
+      // Fetch workspace from database
+      const workspace = await getWorkspaceById(workspaceId)
+      if (!workspace) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Workspace not found" },
+          { status: 404 }
+        )
+      }
+
+      // Verify workspace belongs to the authenticated user's organization
+      if (workspace.organizationId !== auth.organization.id) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Workspace not found" },
+          { status: 404 }
+        )
+      }
+
+      // Check if the requested feature is enabled for this workspace + org plan
+      if (!isWorkspaceFeatureEnabled(auth.organization, workspace, feature)) {
+        return getWorkspaceFeatureGateError(feature) as NextResponse<ApiResponse<null>>
+      }
+
+      // Feature is enabled - call the actual handler
+      return handler(request, auth, workspace)
     }
   }
 }

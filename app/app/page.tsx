@@ -44,7 +44,7 @@ import {
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 
 function AppContent() {
-  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization } = useApp()
+  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization, pageFilter, clearPageFilter } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [resetToken, setResetToken] = useState<string | null>(null)
@@ -154,9 +154,23 @@ function AppContent() {
       case "dashboard":
         return <DashboardPage {...dashboardProps} />
       case "history":
-        return <HistoryPage {...teamData} currentUser={currentUser!} />
+        return (
+          <HistoryPage
+            {...teamData}
+            currentUser={currentUser!}
+            initialUserFilter={pageFilter?.userId}
+            onFilterConsumed={clearPageFilter}
+          />
+        )
       case "rocks":
-        return <RocksPage {...teamData} currentUser={currentUser!} />
+        return (
+          <RocksPage
+            {...teamData}
+            currentUser={currentUser!}
+            initialOwnerFilter={pageFilter?.userId}
+            onFilterConsumed={clearPageFilter}
+          />
+        )
       case "tasks":
         return (
           <TasksPage
@@ -167,6 +181,9 @@ function AppContent() {
             createTask={teamData.createTask}
             updateTask={teamData.updateTask}
             deleteTask={teamData.deleteTask}
+            initialAssigneeFilter={pageFilter?.userId}
+            filterUserName={pageFilter?.userName}
+            onFilterConsumed={clearPageFilter}
           />
         )
       case "admin":

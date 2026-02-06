@@ -1,7 +1,7 @@
 "use client"
 
 import { FeatureGate } from "@/components/shared/feature-gate"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import type { AssignedTask, Rock, TeamMember } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { KanbanBoard } from "@/components/tasks/kanban-board"
-import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid } from "lucide-react"
+import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useToast } from "@/hooks/use-toast"
@@ -26,6 +26,10 @@ interface TasksPageProps {
   createTask: (task: Partial<AssignedTask>) => Promise<AssignedTask>
   updateTask: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
   deleteTask: (id: string) => Promise<void>
+  initialAssigneeFilter?: string // Pre-set assignee filter (e.g., from manager drill-down, uses org member id)
+  filterUserName?: string        // Display name for the filtered user
+  onFilterConsumed?: () => void  // Callback to clear the filter after consuming it
+  onClearFilter?: () => void     // Callback to navigate back (clear the filter view)
 }
 
 export function TasksPage({
@@ -36,15 +40,36 @@ export function TasksPage({
   createTask,
   updateTask,
   deleteTask,
+  initialAssigneeFilter,
+  filterUserName,
+  onFilterConsumed,
+  onClearFilter,
 }: TasksPageProps) {
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
   const [editingTask, setEditingTask] = useState<AssignedTask | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list")
+  const [viewingUserId, setViewingUserId] = useState<string | null>(initialAssigneeFilter || null)
+  const [viewingUserName, setViewingUserName] = useState<string | null>(filterUserName || null)
   const { toast } = useToast()
 
-  const userTasks = assignedTasks.filter((t) => t.assigneeId === currentUser.id)
+  // Apply initial filter from navigation (e.g., manager dashboard drill-down)
+  useEffect(() => {
+    if (initialAssigneeFilter) {
+      setViewingUserId(initialAssigneeFilter)
+      setViewingUserName(filterUserName || null)
+      onFilterConsumed?.()
+    }
+  }, [initialAssigneeFilter, filterUserName, onFilterConsumed])
+
+  // viewingUserId is users.id; compare against both currentUser.id (org_members.id)
+  // and currentUser.userId (users.id) to handle the self-view case
+  const isViewingOtherUser = viewingUserId !== null
+    && viewingUserId !== currentUser.id
+    && viewingUserId !== currentUser.userId
+  const targetUserId = viewingUserId || currentUser.id
+  const userTasks = assignedTasks.filter((t) => t.assigneeId === targetUserId)
 
   const filteredTasks = useMemo(() => {
     return userTasks.filter((task) => {
@@ -212,15 +237,47 @@ export function TasksPage({
   return (
     <FeatureGate feature="core.tasks">
       <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
+      {/* Viewing other user's tasks banner */}
+      {isViewingOtherUser && (
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+          <Eye className="h-5 w-5 text-blue-600 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-blue-900">
+              Viewing {viewingUserName ? `${viewingUserName}'s` : "team member's"} tasks
+            </p>
+            <p className="text-xs text-blue-600">Read-only view from manager dashboard</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setViewingUserId(null)
+              setViewingUserName(null)
+              onClearFilter?.()
+            }}
+            className="shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to My Tasks
+          </Button>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold truncate">Tasks</h1>
-          <p className="text-muted-foreground text-sm sm:text-base mt-1">Manage your daily tasks and to-dos</p>
+          <h1 className="text-2xl sm:text-3xl font-bold truncate">
+            {isViewingOtherUser && viewingUserName ? `${viewingUserName}'s Tasks` : "Tasks"}
+          </h1>
+          <p className="text-muted-foreground text-sm sm:text-base mt-1">
+            {isViewingOtherUser ? "Viewing assigned tasks and progress" : "Manage your daily tasks and to-dos"}
+          </p>
         </div>
-        <Button onClick={() => setShowAddTaskModal(true)} className="w-full sm:w-auto flex-shrink-0 min-h-[44px]">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Task
-        </Button>
+        {!isViewingOtherUser && (
+          <Button onClick={() => setShowAddTaskModal(true)} className="w-full sm:w-auto flex-shrink-0 min-h-[44px]">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Task
+          </Button>
+        )}
       </div>
 
       {/* Search, Filters, and View Toggle */}

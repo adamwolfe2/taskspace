@@ -17,6 +17,7 @@ import {
 import { DirectReportCard, DirectReportCardCompact } from "@/components/manager/direct-report-card"
 import { DirectReportDetailSheet } from "@/components/manager/direct-report-detail-sheet"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
+import { useApp } from "@/lib/contexts/app-context"
 import { cn } from "@/lib/utils"
 import type { TeamMember, ManagerDashboard, DirectReport, ManagerAlert } from "@/lib/types"
 import {
@@ -45,6 +46,7 @@ interface ManagerDashboardPageProps {
 
 export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps) {
   const { currentWorkspace } = useWorkspaces()
+  const { navigateWithFilter } = useApp()
   const [dashboard, setDashboard] = useState<ManagerDashboard | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -514,13 +516,31 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
         open={!!selectedReport}
         onOpenChange={(open) => !open && setSelectedReport(null)}
         onViewTasks={() => {
-          // TODO: Navigate to tasks filtered by user
+          if (selectedReport) {
+            setSelectedReport(null)
+            navigateWithFilter("tasks", {
+              userId: selectedReport.userId,
+              userName: selectedReport.name,
+            })
+          }
         }}
         onViewRocks={() => {
-          // TODO: Navigate to rocks filtered by user
+          if (selectedReport) {
+            setSelectedReport(null)
+            navigateWithFilter("rocks", {
+              userId: selectedReport.userId,
+              userName: selectedReport.name,
+            })
+          }
         }}
         onViewEOD={() => {
-          // TODO: Navigate to EOD history filtered by user
+          if (selectedReport) {
+            setSelectedReport(null)
+            navigateWithFilter("history", {
+              userId: selectedReport.userId,
+              userName: selectedReport.name,
+            })
+          }
         }}
         onSendMessage={(userId) => {
           // Open message/email

@@ -25,7 +25,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Users, UserPlus, Loader2, Trash2, Shield, Eye, Crown, Settings2, BarChart3, AlertTriangle, Briefcase, Building2, Folder, Save } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Users, UserPlus, Loader2, Trash2, Shield, Eye, Crown, Settings2, BarChart3, AlertTriangle, Briefcase, Building2, Folder, Save, CheckCircle2, Target, FileText } from "lucide-react"
 import { useWorkspaces, useWorkspaceDetails, useUpdateWorkspace, useDeleteWorkspace } from "@/lib/hooks/use-workspace"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
@@ -60,6 +61,10 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState("")
 
+  // Workspace statistics
+  const [stats, setStats] = useState<{ activeTasks: number; rocks: number; eodReports: number } | null>(null)
+  const [statsLoading, setStatsLoading] = useState(false)
+
   // Update local state when workspace changes
   useEffect(() => {
     if (currentWorkspace) {
@@ -68,6 +73,35 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
       setWorkspaceDescription(currentWorkspace.description || "")
     }
   }, [currentWorkspace])
+
+  // Fetch workspace statistics
+  useEffect(() => {
+    if (!currentWorkspace?.id) {
+      setStats(null)
+      return
+    }
+
+    let cancelled = false
+    setStatsLoading(true)
+
+    fetch(`/api/workspaces/${currentWorkspace.id}/stats`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && data.success) {
+          setStats(data.data)
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch workspace stats:", err)
+      })
+      .finally(() => {
+        if (!cancelled) setStatsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [currentWorkspace?.id])
 
   if (!currentWorkspace) {
     return (
@@ -642,27 +676,45 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
             </div>
             <div className="p-4 border rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <Settings2 className="h-4 w-4 text-muted-foreground" />
+                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
                 <p className="text-sm font-medium text-muted-foreground">Active Tasks</p>
               </div>
-              <p className="text-2xl font-bold">-</p>
-              <p className="text-xs text-muted-foreground">Coming soon</p>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-12 mt-1" />
+              ) : (
+                <>
+                  <p className="text-2xl font-bold">{stats?.activeTasks ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">Not completed</p>
+                </>
+              )}
             </div>
             <div className="p-4 border rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <Folder className="h-4 w-4 text-muted-foreground" />
+                <Target className="h-4 w-4 text-muted-foreground" />
                 <p className="text-sm font-medium text-muted-foreground">Rocks</p>
               </div>
-              <p className="text-2xl font-bold">-</p>
-              <p className="text-xs text-muted-foreground">Coming soon</p>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-12 mt-1" />
+              ) : (
+                <>
+                  <p className="text-2xl font-bold">{stats?.rocks ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">Quarterly goals</p>
+                </>
+              )}
             </div>
             <div className="p-4 border rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                <FileText className="h-4 w-4 text-muted-foreground" />
                 <p className="text-sm font-medium text-muted-foreground">EOD Reports</p>
               </div>
-              <p className="text-2xl font-bold">-</p>
-              <p className="text-xs text-muted-foreground">Coming soon</p>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-12 mt-1" />
+              ) : (
+                <>
+                  <p className="text-2xl font-bold">{stats?.eodReports ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">Total submitted</p>
+                </>
+              )}
             </div>
           </div>
         </CardContent>
