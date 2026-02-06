@@ -1,5 +1,6 @@
 "use client"
 
+import type { PageType } from "@/lib/types"
 import { AppProvider, useApp } from "@/lib/contexts/app-context"
 import { useTeamData } from "@/lib/hooks/use-team-data"
 import { Header } from "@/components/layout/header"
@@ -25,11 +26,13 @@ import { ManagerDashboardPage } from "@/components/pages/manager-dashboard-page"
 import { ScorecardPage } from "@/components/pages/scorecard-page"
 import { OrgChartPage } from "@/components/pages/org-chart-page"
 import { SetupOrganizationPage } from "@/components/pages/setup-organization-page"
+import { InvitedUserWelcome } from "@/components/onboarding/invited-user-welcome"
 import { BrandThemeProvider } from "@/lib/contexts/brand-theme-context"
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
 import { CommandPalette } from "@/components/shared/command-palette"
+import { initGlobalErrorHandler } from "@/lib/api/client"
 import { DemoModeBanner } from "@/components/shared/demo-mode-banner"
 import { Loader2 } from "lucide-react"
 import {
@@ -47,6 +50,12 @@ function AppContent() {
   const [resetToken, setResetToken] = useState<string | null>(null)
   const teamData = useTeamData()
 
+  // Initialize global error handler for unhandled promise rejections
+  useEffect(() => {
+    const cleanup = initGlobalErrorHandler()
+    return cleanup
+  }, [])
+
   // Check for invitation token, reset token, or page parameter in URL
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -63,7 +72,7 @@ function AppContent() {
         setCurrentPage("reset-password")
       }
       if (page && !isAuthenticated) {
-        setCurrentPage(page as any)
+        setCurrentPage(page as PageType)
       }
     }
   }, [setCurrentPage, isAuthenticated])
@@ -102,6 +111,11 @@ function AppContent() {
       default:
         return <LoginPage />
     }
+  }
+
+  // Welcome page for invited users (full-screen, no sidebar/header)
+  if (currentPage === "welcome") {
+    return <InvitedUserWelcome />
   }
 
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"

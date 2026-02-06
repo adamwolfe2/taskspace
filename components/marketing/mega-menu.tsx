@@ -128,8 +128,8 @@ export function MegaMenu() {
               </Button>
             </Link>
             <Link href="/app?page=register" className="hidden sm:block">
-              <Button size="sm" className="bg-black text-white hover:bg-gray-900">
-                Start free
+              <Button size="sm" className="bg-black text-white hover:bg-gray-900 px-5 font-semibold shadow-sm">
+                Get started free
               </Button>
             </Link>
 
@@ -367,8 +367,8 @@ export function MegaMenu() {
                       </Button>
                     </Link>
                     <Link href="/app?page=register" onClick={() => setMobileMenuOpen(false)} className="block">
-                      <Button className="w-full bg-black text-white hover:bg-gray-900">
-                        Start free
+                      <Button className="w-full bg-black text-white hover:bg-gray-900 font-semibold">
+                        Get started free
                       </Button>
                     </Link>
                   </div>

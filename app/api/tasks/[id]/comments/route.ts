@@ -21,6 +21,8 @@ import { db } from "@/lib/db"
 import { taskComments } from "@/lib/db/task-comments"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { isAdmin } from "@/lib/auth/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createTaskCommentSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, TaskComment } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -100,16 +102,8 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
       )
     }
 
-    // Parse request body
-    const body = await request.json()
-    const { text } = body
-
-    if (!text || typeof text !== "string" || text.trim().length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Comment text is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { text } = await validateBody(request, createTaskCommentSchema)
 
     // Fetch task
     const task = await db.assignedTasks.findById(taskId)
@@ -143,7 +137,7 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
     const newComment = await taskComments.add(taskId, {
       userId: auth.user.id,
       userName: auth.user.name,
-      text: text.trim(),
+      text,
     })
 
     logger.info({ taskId, commentId: newComment.id, userId: auth.user.id }, "Comment added to task")
@@ -155,10 +149,10 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
     })
   } catch (error) {
     // Handle validation errors
-    if (error instanceof Error && error.message.includes("Comment")) {
+    if (error instanceof ValidationError) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: error.message },
-        { status: 400 }
+        { status: error.statusCode }
       )
     }
 

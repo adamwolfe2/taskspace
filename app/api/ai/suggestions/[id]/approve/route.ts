@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin, type RouteContext } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import {
   getSuggestionById,
@@ -14,27 +14,22 @@ import { logger, logError } from "@/lib/logger"
  * POST /api/ai/suggestions/[id]/approve
  * Approve a suggestion and create the corresponding entity
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
+    // Extract id from URL path since middleware wrapper doesn't pass params directly
+    const url = new URL(request.url)
+    const pathParts = url.pathname.split("/")
+    // Path: /api/ai/suggestions/[id]/approve
+    const idIndex = pathParts.indexOf("suggestions") + 1
+    const id = pathParts[idIndex]
+
+    if (!id) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { success: false, error: "Suggestion ID is required" },
+        { status: 400 }
       )
     }
 
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
-      )
-    }
-
-    const { id } = await params
     const body = await request.json().catch(() => ({}))
     const { modifiedData, reviewerNotes } = body as {
       modifiedData?: Record<string, unknown>
@@ -91,7 +86,7 @@ export async function POST(
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * Create the appropriate entity based on suggestion type

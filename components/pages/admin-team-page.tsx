@@ -182,13 +182,14 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         }
       }
 
-      // Update local state with manager info
+      // Update local state with manager info, preserving existing TeamMember fields
       const updatedWithManager = {
+        ...editingMember,
         ...updated,
         managerId: formData.managerId,
       }
 
-      setTeamMembers(teamMembers.map((m) => (m.id === editingMember.id ? updatedWithManager : m)))
+      setTeamMembers(teamMembers.map((m) => (m.id === editingMember.id ? updatedWithManager as TeamMember : m)))
       toast({
         title: "Member Updated",
         description: `${formData.name} has been updated successfully`,

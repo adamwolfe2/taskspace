@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * AIMS EOD Tracker MCP Server
+ * Taskspace MCP Server
  *
- * This MCP server enables Claude to interact with the AIMS platform:
+ * This MCP server enables Claude to interact with the Taskspace platform:
  * - Query team members and their status
  * - Check who has/hasn't submitted EOD reports
  * - Assign tasks to team members
@@ -20,8 +20,8 @@ import {
 } from "@modelcontextprotocol/sdk/types.js"
 
 // Configuration
-const AIMS_API_URL = process.env.AIMS_API_URL || "http://localhost:3000"
-const AIMS_API_KEY = process.env.AIMS_API_KEY || ""
+const ALIGN_API_URL = process.env.ALIGN_API_URL || process.env.AIMS_API_URL || "http://localhost:3000"
+const ALIGN_API_KEY = process.env.ALIGN_API_KEY || process.env.AIMS_API_KEY || ""
 
 interface ApiResponse<T> {
   success: boolean
@@ -30,19 +30,74 @@ interface ApiResponse<T> {
   message?: string
 }
 
-async function callAimsApi<T>(
+interface McpMember {
+  id: string
+  name: string
+  email: string
+  department: string
+  role: string
+  status: string
+}
+
+interface McpEodReport {
+  id: string
+  userId: string
+  date: string
+  tasks?: { text: string; taskId?: string }[]
+  needsEscalation: boolean
+  escalationNote?: string
+}
+
+interface McpRock {
+  id: string
+  title: string
+  status: string
+  progress: number
+  quarter: string
+}
+
+interface McpTask {
+  id: string
+  title: string
+  assigneeName: string
+  priority: string
+  dueDate: string
+  status: string
+}
+
+interface McpDigest {
+  digestDate: string
+  reportsAnalyzed: number
+  teamSentiment: string
+  summary: string
+  wins?: { memberName: string; text: string }[]
+  blockers?: { memberName: string; text: string; severity: string }[]
+}
+
+interface McpInsight {
+  id: string
+  blockers?: { text: string; severity: string }[]
+}
+
+interface McpBlocker {
+  text: string
+  severity: string
+  insightId?: string
+}
+
+async function callTaskspaceApi<T>(
   endpoint: string,
   method: string = "GET",
   body?: object
 ): Promise<ApiResponse<T>> {
-  const url = `${AIMS_API_URL}${endpoint}`
+  const url = `${ALIGN_API_URL}${endpoint}`
 
   try {
     const response = await fetch(url, {
       method,
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${AIMS_API_KEY}`,
+        "Authorization": `Bearer ${ALIGN_API_KEY}`,
       },
       body: body ? JSON.stringify(body) : undefined,
     })
@@ -59,7 +114,7 @@ async function callAimsApi<T>(
 // Create MCP server
 const server = new Server(
   {
-    name: "aims-eod-tracker",
+    name: "align-tracker",
     version: "1.0.0",
   },
   {
@@ -233,19 +288,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     switch (name) {
       case "get_team_members": {
-        const result = await callAimsApi<any[]>("/api/members")
+        const result = await callTaskspaceApi<McpMember[]>("/api/members")
         if (!result.success) {
           return { content: [{ type: "text", text: `Error: ${result.error}` }] }
         }
 
         let members = result.data || []
         if (args?.department) {
-          members = members.filter((m: any) =>
+          members = members.filter((m) =>
             m.department?.toLowerCase() === (args.department as string).toLowerCase()
           )
         }
 
-        const summary = members.map((m: any) =>
+        const summary = members.map((m) =>
           `- ${m.name} (${m.department}) - ${m.role}`
         ).join("\n")
 
@@ -261,8 +316,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const date = (args?.date as string) || new Date().toISOString().split("T")[0]
 
         const [membersResult, reportsResult] = await Promise.all([
-          callAimsApi<any[]>("/api/members"),
-          callAimsApi<any[]>(`/api/eod-reports?date=${date}`),
+          callTaskspaceApi<McpMember[]>("/api/members"),
+          callTaskspaceApi<McpEodReport[]>(`/api/eod-reports?date=${date}`),
         ])
 
         if (!membersResult.success || !reportsResult.success) {
@@ -271,26 +326,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         const members = membersResult.data || []
         const reports = reportsResult.data || []
-        const submittedIds = new Set(reports.map((r: any) => r.userId))
+        const submittedIds = new Set(reports.map((r) => r.userId))
 
-        const activeMembers = members.filter((m: any) =>
+        const activeMembers = members.filter((m) =>
           m.status === "active" && m.role === "member"
         )
 
-        const submitted = activeMembers.filter((m: any) => submittedIds.has(m.id))
-        const missing = activeMembers.filter((m: any) => !submittedIds.has(m.id))
+        const submitted = activeMembers.filter((m) => submittedIds.has(m.id))
+        const missing = activeMembers.filter((m) => !submittedIds.has(m.id))
 
         let response = `EOD Status for ${date}:\n\n`
         response += `✅ Submitted (${submitted.length}):\n`
-        response += submitted.map((m: any) => `  - ${m.name}`).join("\n") || "  None"
+        response += submitted.map((m) => `  - ${m.name}`).join("\n") || "  None"
         response += `\n\n❌ Missing (${missing.length}):\n`
-        response += missing.map((m: any) => `  - ${m.name} (${m.email})`).join("\n") || "  None - everyone submitted!"
+        response += missing.map((m) => `  - ${m.name} (${m.email})`).join("\n") || "  None - everyone submitted!"
 
         return { content: [{ type: "text", text: response }] }
       }
 
       case "assign_task": {
-        const result = await callAimsApi<any>("/api/tasks", "POST", {
+        const result = await callTaskspaceApi<McpTask>("/api/tasks", "POST", {
           title: args?.title,
           description: args?.description || "",
           assigneeId: args?.assigneeId,
@@ -315,17 +370,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const params = new URLSearchParams()
         if (args?.userId) params.set("userId", args.userId as string)
 
-        const result = await callAimsApi<any[]>(`/api/rocks?${params}`)
+        const result = await callTaskspaceApi<McpRock[]>(`/api/rocks?${params}`)
         if (!result.success) {
           return { content: [{ type: "text", text: `Error: ${result.error}` }] }
         }
 
         let rocks = result.data || []
         if (args?.status) {
-          rocks = rocks.filter((r: any) => r.status === args.status)
+          rocks = rocks.filter((r) => r.status === args.status)
         }
 
-        const summary = rocks.map((r: any) => {
+        const summary = rocks.map((r) => {
           const statusEmojiMap: Record<string, string> = {
             "on-track": "🟢",
             "at-risk": "🟡",
@@ -349,13 +404,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (args?.userId) params.set("userId", args.userId as string)
         params.set("status", "pending")
 
-        const result = await callAimsApi<any[]>(`/api/tasks?${params}`)
+        const result = await callTaskspaceApi<McpTask[]>(`/api/tasks?${params}`)
         if (!result.success) {
           return { content: [{ type: "text", text: `Error: ${result.error}` }] }
         }
 
         const tasks = result.data || []
-        const summary = tasks.map((t: any) => {
+        const summary = tasks.map((t) => {
           const priorityEmojiMap: Record<string, string> = { high: "🔴", medium: "🟡", normal: "🟢" }
           const priorityEmoji = priorityEmojiMap[t.priority] || "⚪"
           return `${priorityEmoji} ${t.title} → ${t.assigneeName} (due: ${t.dueDate})`
@@ -375,13 +430,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (args?.endDate) params.set("endDate", args.endDate as string)
         if (args?.userId) params.set("userId", args.userId as string)
 
-        const result = await callAimsApi<any[]>(`/api/eod-reports?${params}`)
+        const result = await callTaskspaceApi<McpEodReport[]>(`/api/eod-reports?${params}`)
         if (!result.success) {
           return { content: [{ type: "text", text: `Error: ${result.error}` }] }
         }
 
         const reports = result.data || []
-        const summary = reports.slice(0, 10).map((r: any) => {
+        const summary = reports.slice(0, 10).map((r) => {
           const escalation = r.needsEscalation ? "⚠️ ESCALATION" : ""
           return `📋 ${r.date} - Tasks: ${r.tasks?.length || 0} ${escalation}`
         }).join("\n")
@@ -396,7 +451,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "get_daily_digest": {
         const date = (args?.date as string) || new Date().toISOString().split("T")[0]
-        const result = await callAimsApi<any>(`/api/ai/digest?date=${date}`)
+        const result = await callTaskspaceApi<McpDigest>(`/api/ai/digest?date=${date}`)
 
         if (!result.success) {
           return { content: [{ type: "text", text: `Error: ${result.error}` }] }
@@ -413,32 +468,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         response += `Summary: ${digest.summary}\n\n`
 
         if (digest.wins?.length) {
-          response += `✅ Wins:\n${digest.wins.map((w: any) => `  - ${w.memberName}: ${w.text}`).join("\n")}\n\n`
+          response += `✅ Wins:\n${digest.wins.map((w) => `  - ${w.memberName}: ${w.text}`).join("\n")}\n\n`
         }
 
         if (digest.blockers?.length) {
-          response += `🚧 Blockers:\n${digest.blockers.map((b: any) => `  - ${b.memberName}: ${b.text} [${b.severity}]`).join("\n")}\n\n`
+          response += `🚧 Blockers:\n${digest.blockers.map((b) => `  - ${b.memberName}: ${b.text} [${b.severity}]`).join("\n")}\n\n`
         }
 
         return { content: [{ type: "text", text: response }] }
       }
 
       case "get_blockers": {
-        const result = await callAimsApi<any[]>("/api/ai/parse-eod?days=7")
+        const result = await callTaskspaceApi<McpInsight[]>("/api/ai/parse-eod?days=7")
         if (!result.success) {
           return { content: [{ type: "text", text: `Error: ${result.error}` }] }
         }
 
         const insights = result.data || []
-        const blockers = insights
-          .filter((i: any) => i.blockers?.length > 0)
-          .flatMap((i: any) => i.blockers.map((b: any) => ({ ...b, insightId: i.id })))
+        const blockers: McpBlocker[] = insights
+          .filter((i) => i.blockers && i.blockers.length > 0)
+          .flatMap((i) => (i.blockers || []).map((b) => ({ ...b, insightId: i.id })))
 
         if (blockers.length === 0) {
           return { content: [{ type: "text", text: "No blockers reported in the last 7 days" }] }
         }
 
-        const summary = blockers.map((b: any) => {
+        const summary = blockers.map((b) => {
           const severityEmojiMap: Record<string, string> = { high: "🔴", medium: "🟡", low: "🟢" }
           const severityEmoji = severityEmojiMap[b.severity] || "⚪"
           return `${severityEmoji} ${b.text}`
@@ -453,19 +508,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "get_escalations": {
-        const result = await callAimsApi<any[]>("/api/eod-reports")
+        const result = await callTaskspaceApi<McpEodReport[]>("/api/eod-reports")
         if (!result.success) {
           return { content: [{ type: "text", text: `Error: ${result.error}` }] }
         }
 
         const reports = result.data || []
-        const escalations = reports.filter((r: any) => r.needsEscalation)
+        const escalations = reports.filter((r) => r.needsEscalation)
 
         if (escalations.length === 0) {
           return { content: [{ type: "text", text: "No active escalations" }] }
         }
 
-        const summary = escalations.slice(0, 10).map((r: any) =>
+        const summary = escalations.slice(0, 10).map((r) =>
           `⚠️ ${r.date}: ${r.escalationNote || "No details provided"}`
         ).join("\n\n")
 
@@ -478,7 +533,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "send_eod_reminder": {
-        const result = await callAimsApi<any>("/api/cron/eod-reminder")
+        const result = await callTaskspaceApi<Record<string, unknown>>("/api/cron/eod-reminder")
         if (!result.success) {
           return { content: [{ type: "text", text: `Error: ${result.error}` }] }
         }
@@ -512,7 +567,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 server.setRequestHandler(ListResourcesRequestSchema, async () => ({
   resources: [
     {
-      uri: "aims://team/overview",
+      uri: "align://team/overview",
       name: "Team Overview",
       description: "Current team status, EOD submissions, and key metrics",
       mimeType: "text/plain",
@@ -524,32 +579,32 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => ({
 server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   const { uri } = request.params
 
-  if (uri === "aims://team/overview") {
+  if (uri === "align://team/overview") {
     const today = new Date().toISOString().split("T")[0]
 
     const [membersResult, reportsResult, rocksResult] = await Promise.all([
-      callAimsApi<any[]>("/api/members"),
-      callAimsApi<any[]>(`/api/eod-reports?date=${today}`),
-      callAimsApi<any[]>("/api/rocks"),
+      callTaskspaceApi<McpMember[]>("/api/members"),
+      callTaskspaceApi<McpEodReport[]>(`/api/eod-reports?date=${today}`),
+      callTaskspaceApi<McpRock[]>("/api/rocks"),
     ])
 
     const members = membersResult.data || []
     const reports = reportsResult.data || []
     const rocks = rocksResult.data || []
 
-    const activeMembers = members.filter((m: any) => m.status === "active" && m.role === "member")
-    const submittedIds = new Set(reports.map((r: any) => r.userId))
+    const activeMembers = members.filter((m) => m.status === "active" && m.role === "member")
+    const submittedIds = new Set(reports.map((r) => r.userId))
     const submissionRate = activeMembers.length > 0
       ? Math.round((submittedIds.size / activeMembers.length) * 100)
       : 0
 
-    const atRiskRocks = rocks.filter((r: any) => r.status === "at-risk" || r.status === "blocked")
+    const atRiskRocks = rocks.filter((r) => r.status === "at-risk" || r.status === "blocked")
     const avgProgress = rocks.length > 0
-      ? Math.round(rocks.reduce((sum: number, r: any) => sum + r.progress, 0) / rocks.length)
+      ? Math.round(rocks.reduce((sum: number, r) => sum + r.progress, 0) / rocks.length)
       : 0
 
     const overview = `
-AIMS Team Overview - ${today}
+Taskspace Team Overview - ${today}
 ==============================
 
 📊 EOD Submissions: ${submissionRate}% (${submittedIds.size}/${activeMembers.length})
@@ -557,7 +612,7 @@ AIMS Team Overview - ${today}
 📈 Average Rock Progress: ${avgProgress}%
 
 Team Members (${members.length}):
-${members.map((m: any) => `  - ${m.name} (${m.department})`).join("\n")}
+${members.map((m) => `  - ${m.name} (${m.department})`).join("\n")}
     `.trim()
 
     return {
@@ -576,7 +631,7 @@ ${members.map((m: any) => `  - ${m.name} (${m.department})`).join("\n")}
 async function main() {
   const transport = new StdioServerTransport()
   await server.connect(transport)
-  console.error("AIMS MCP Server running on stdio")
+  console.error("Taskspace MCP Server running on stdio")
 }
 
 main().catch(console.error)

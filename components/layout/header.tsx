@@ -43,15 +43,15 @@ export function Header({ onMenuClick }: HeaderProps) {
   }
 
   return (
-    <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
-      <div className="flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6">
+    <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40 w-full overflow-hidden">
+      <div className="flex items-center justify-between h-14 sm:h-16 px-2 sm:px-4 md:px-6">
         {/* Left side - Organization & Workspace switchers */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-shrink overflow-hidden">
           {onMenuClick && (
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-gray-600 h-9 w-9 flex-shrink-0"
+              className="md:hidden text-gray-600 h-10 w-10 min-h-[44px] min-w-[44px] flex-shrink-0"
               onClick={onMenuClick}
               aria-label="Open menu"
             >
@@ -59,7 +59,7 @@ export function Header({ onMenuClick }: HeaderProps) {
             </Button>
           )}
           {/* Mobile organization switcher */}
-          <div className="md:hidden">
+          <div className="md:hidden min-w-0 flex-shrink overflow-hidden">
             <OrganizationSwitcher compact />
           </div>
           {/* Desktop organization switcher */}
@@ -68,13 +68,13 @@ export function Header({ onMenuClick }: HeaderProps) {
           </div>
 
           {/* Workspace switcher - visible on both mobile and desktop */}
-          <div className="border-l border-gray-200 pl-2 sm:pl-3">
+          <div className="border-l border-gray-200 pl-1.5 sm:pl-2 md:pl-3 min-w-0 flex-shrink overflow-hidden">
             <WorkspaceSwitcher compact />
           </div>
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-shrink-0">
           {/* Demo mode indicator */}
           <DemoModeIndicator />
 
@@ -103,7 +103,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden h-9 w-9 text-gray-600"
+            className="md:hidden h-10 w-10 min-h-[44px] min-w-[44px] text-gray-600"
             onClick={() => {
               const event = new KeyboardEvent("keydown", {
                 key: "k",
@@ -125,7 +125,7 @@ export function Header({ onMenuClick }: HeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex items-center gap-1 sm:gap-2 hover:bg-gray-100 px-1.5 sm:px-2 h-9"
+                className="flex items-center gap-1 sm:gap-2 hover:bg-gray-100 px-1.5 sm:px-2 h-10 min-h-[44px]"
               >
                 <UserInitials name={currentUser.name} size="sm" />
                 <span className="hidden md:inline text-sm font-medium text-gray-700 max-w-[100px] truncate">

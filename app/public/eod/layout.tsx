@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

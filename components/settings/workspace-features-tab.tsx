@@ -46,7 +46,7 @@ import {
   type WorkspaceFeatureConfig,
 } from "@/lib/types/workspace-features"
 
-const CATEGORY_ICONS: Record<string, any> = {
+const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   core: Layers,
   productivity: Zap,
   integrations: Link,
@@ -247,11 +247,11 @@ export function WorkspaceFeaturesTab() {
     if (!currentFeatures) return
 
     const allEnabled: WorkspaceFeatureToggles = {
-      core: Object.fromEntries(Object.keys(currentFeatures.core).map((k) => [k, true])) as any,
-      productivity: Object.fromEntries(Object.keys(currentFeatures.productivity).map((k) => [k, true])) as any,
-      integrations: Object.fromEntries(Object.keys(currentFeatures.integrations).map((k) => [k, true])) as any,
-      advanced: Object.fromEntries(Object.keys(currentFeatures.advanced).map((k) => [k, true])) as any,
-      admin: Object.fromEntries(Object.keys(currentFeatures.admin).map((k) => [k, true])) as any,
+      core: Object.fromEntries(Object.keys(currentFeatures.core).map((k) => [k, true])) as WorkspaceFeatureToggles["core"],
+      productivity: Object.fromEntries(Object.keys(currentFeatures.productivity).map((k) => [k, true])) as WorkspaceFeatureToggles["productivity"],
+      integrations: Object.fromEntries(Object.keys(currentFeatures.integrations).map((k) => [k, true])) as WorkspaceFeatureToggles["integrations"],
+      advanced: Object.fromEntries(Object.keys(currentFeatures.advanced).map((k) => [k, true])) as WorkspaceFeatureToggles["advanced"],
+      admin: Object.fromEntries(Object.keys(currentFeatures.admin).map((k) => [k, true])) as WorkspaceFeatureToggles["admin"],
     }
 
     setCurrentFeatures(allEnabled)
@@ -273,16 +273,29 @@ export function WorkspaceFeaturesTab() {
       {/* Header */}
       <Card>
         <CardHeader>
-          <CardTitle>Workspace Features</CardTitle>
+          <div className="flex items-center gap-2">
+            <Layers className="h-5 w-5 text-primary" />
+            <CardTitle>Workspace Features</CardTitle>
+          </div>
           <CardDescription>
-            Enable or disable features for this workspace. Disabled features will be hidden from navigation and unavailable to members.
+            Control which features are available in this workspace. Disabled features will be hidden from navigation, the dashboard, and the API. Changes take effect immediately after saving.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Unsaved changes banner */}
+          {hasChanges && (
+            <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+              <p className="text-sm text-amber-800 flex-1">
+                You have unsaved changes. Save to apply your feature configuration.
+              </p>
+            </div>
+          )}
+
           {/* Warnings */}
           {warnings.length > 0 && (
             <Alert>
-              <AlertTriangle className="h-4 w-4" />
+              <CheckCircle2 className="h-4 w-4" />
               <AlertDescription>
                 <ul className="list-disc list-inside space-y-1">
                   {warnings.map((warning, i) => (

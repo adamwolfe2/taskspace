@@ -149,7 +149,7 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
             </Label>
             <Input
               id="name"
-              placeholder="e.g., AIMS, Marketing Team, Project Alpha"
+              placeholder="e.g., Marketing Team, Project Alpha, Engineering"
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={100}

@@ -1,16 +1,16 @@
 /**
- * Centralized configuration for Align
+ * Centralized configuration for Taskspace
  * All magic numbers and hardcoded values should be defined here
  */
 
 // Product branding (easy to update when rebranding)
 export const PRODUCT_CONFIG = {
-  name: "Align",
+  name: "Taskspace",
   tagline: "Team Productivity Platform",
   description: "Transform how your team tracks progress and achieves goals with AI-powered accountability tools",
   domain: "align.app", // TODO: Update when domain is purchased
   supportEmail: "support@align.app", // TODO: Update when email is set up
-  company: "Align", // TODO: Update with LLC name when registered
+  company: "Taskspace", // TODO: Update with LLC name when registered
 } as const
 
 export const CONFIG = {

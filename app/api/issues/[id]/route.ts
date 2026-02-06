@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateIssueSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 import type { Issue } from "@/lib/db/meetings"
@@ -67,7 +69,6 @@ export async function PATCH(
     }
 
     const { id } = await params
-    const body = await request.json()
 
     const issue = await meetings.getIssue(id)
     if (!issue) {
@@ -86,9 +87,9 @@ export async function PATCH(
       )
     }
 
-    const { title, description, priority, status, ownerId } = body
+    const { title, description, priority, status, ownerId } = await validateBody(request, updateIssueSchema)
     const updates: Record<string, unknown> = {}
-    if (title !== undefined) updates.title = title.trim()
+    if (title !== undefined) updates.title = title
     if (description !== undefined) updates.description = description?.trim()
     if (priority !== undefined) updates.priority = priority
     if (status !== undefined) updates.status = status
@@ -102,6 +103,12 @@ export async function PATCH(
       message: "Issue updated successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Update issue error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update issue" },

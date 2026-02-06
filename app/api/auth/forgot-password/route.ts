@@ -24,11 +24,11 @@ export async function POST(request: NextRequest) {
       const response = NextResponse.json<ApiResponse<null>>(
         {
           success: false,
-          error: `Too many password reset attempts. Please try again in ${ipRateLimitResult.retryAfter} seconds.`,
+          error: "Too many password reset attempts. Please wait a few minutes and try again.",
         },
         { status: 429 }
       )
-      const headers = getRateLimitHeaders(ipRateLimitResult)
+      const headers = getRateLimitHeaders(ipRateLimitResult, 3)
       for (const [key, value] of Object.entries(headers)) {
         response.headers.set(key, value)
       }

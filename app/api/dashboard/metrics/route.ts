@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { userHasWorkspaceAccess, getWorkspaceById } from "@/lib/db/workspaces"
 import type { ApiResponse } from "@/lib/types"
@@ -30,24 +30,8 @@ interface DashboardMetrics {
  * Query params:
  * - workspaceId: Optional workspace ID to filter metrics
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can view full dashboard metrics
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
-      )
-    }
-
     const orgId = auth.organization.id
 
     // Get optional workspace filter
@@ -160,4 +144,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

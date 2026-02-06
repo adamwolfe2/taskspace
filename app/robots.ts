@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next"
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = "https://aims.io"
+  const baseUrl = "https://align.app"
 
   return {
     rules: [

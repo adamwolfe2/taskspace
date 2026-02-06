@@ -3,6 +3,8 @@ import { getAuthContext } from "@/lib/auth/middleware"
 import { findRelevantEmployees } from "@/lib/org-chart/utils"
 import type { OrgChartEmployee } from "@/lib/org-chart/types"
 import { logger, logError } from "@/lib/logger"
+import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 const MODEL = "claude-sonnet-4-20250514"
@@ -78,8 +80,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     // SECURITY: Do not accept employee data in request body
     // Employee data should be fetched server-side based on authenticated user's organization
-    const { message } = body as {
+    const { message, workspaceId } = body as {
       message: string
+      workspaceId?: string
     }
 
     if (!message) {
@@ -89,10 +92,83 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (!workspaceId) {
+      return NextResponse.json(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
+    }
+
     // Fetch employees from the database based on authenticated user's organization
-    // TODO: Implement server-side employee fetching from database
-    // For now, return an error indicating this endpoint needs employee data from the database
-    const employees: OrgChartEmployee[] = []
+    // Primary source: ma_employees database table with workspace filtering
+    const dbEmployees = await db.maEmployees.findByWorkspace(workspaceId)
+
+    let employees: OrgChartEmployee[] = []
+
+    if (dbEmployees.length > 0) {
+      // Transform to OrgChartEmployee format
+      employees = dbEmployees.map(emp => ({
+        id: emp.id,
+        firstName: emp.firstName,
+        lastName: emp.lastName,
+        fullName: emp.fullName,
+        supervisor: emp.supervisor,
+        department: emp.department || "",
+        jobTitle: emp.jobTitle || "",
+        notes: emp.notes || "",
+        extraInfo: emp.responsibilities || "",
+        email: emp.email || undefined,
+        rocks: emp.rocks || "",
+      }))
+    } else {
+      // Fallback: Try organization_members table with workspace filter
+      try {
+        const { rows } = await sql`
+          SELECT
+            om.id,
+            om.name,
+            om.email,
+            om.job_title,
+            om.department,
+            om.manager_id,
+            om.notes,
+            manager.name as manager_name
+          FROM organization_members om
+          INNER JOIN workspace_members wm ON wm.member_id = om.id
+          LEFT JOIN organization_members manager ON manager.id = om.manager_id
+          WHERE wm.workspace_id = ${workspaceId}
+            AND om.organization_id = ${auth.organization.id}
+            AND om.status = 'active'
+          ORDER BY om.name ASC
+        `
+
+        if (rows.length > 0) {
+          // Transform to OrgChartEmployee format
+          employees = rows.map(row => {
+            // Split name into first and last
+            const nameParts = (row.name as string).split(" ")
+            const firstName = nameParts[0] || ""
+            const lastName = nameParts.slice(1).join(" ") || ""
+
+            return {
+              id: row.id as string,
+              firstName,
+              lastName,
+              fullName: row.name as string,
+              supervisor: row.manager_name as string | null,
+              department: (row.department as string) || "",
+              jobTitle: (row.job_title as string) || "",
+              notes: (row.notes as string) || "",
+              email: row.email as string | undefined,
+              rocks: "",
+            }
+          })
+        }
+      } catch (error) {
+        logError(logger, "Error fetching organization members", error)
+        // Continue with empty array if fallback fails
+      }
+    }
 
     // Check if Claude is configured
     if (!process.env.ANTHROPIC_API_KEY) {

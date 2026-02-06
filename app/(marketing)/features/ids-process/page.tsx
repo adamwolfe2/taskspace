@@ -124,7 +124,7 @@ export default function IDSProcessPage() {
                       return (
                         <button
                           key={step.key}
-                          onClick={() => setActiveStep(step.key as any)}
+                          onClick={() => setActiveStep(step.key as 'identify' | 'discuss' | 'solve')}
                           className={cn(
                             "flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all",
                             activeStep === step.key

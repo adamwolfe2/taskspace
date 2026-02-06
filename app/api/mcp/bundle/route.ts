@@ -1,5 +1,5 @@
 /**
- * AIMS EOD Tracker - MCPB Bundle Generator
+ * Taskspace - MCPB Bundle Generator
  *
  * Generates a downloadable .mcpb file for drag-and-drop installation
  * in Claude Desktop. The bundle contains a pre-configured MCP server
@@ -20,10 +20,10 @@ import { logger, logError } from "@/lib/logger"
 // MCP Server code template - this runs locally but connects to our remote API
 const getMcpServerCode = (apiUrl: string, apiKey: string) => `#!/usr/bin/env node
 /**
- * AIMS EOD Tracker - MCP Server for Claude Desktop
+ * Taskspace - MCP Server for Claude Desktop
  * Auto-generated with pre-configured API key
  *
- * This server connects to your AIMS organization and provides
+ * This server connects to your Taskspace organization and provides
  * Claude with tools to manage your team's EOD reports, tasks, and rocks.
  */
 
@@ -55,7 +55,7 @@ async function apiCall(endpoint, options = {}) {
 
 // MCP Server setup
 const server = new Server(
-  { name: "aims-eod-tracker", version: "2.0.0" },
+  { name: "align-tracker", version: "2.0.0" },
   { capabilities: { tools: {} } }
 );
 
@@ -63,7 +63,7 @@ const server = new Server(
 const tools = [
   {
     name: "get_team_members",
-    description: "Get all team members in your AIMS organization",
+    description: "Get all team members in your Taskspace organization",
     inputSchema: {
       type: "object",
       properties: {
@@ -230,7 +230,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("AIMS EOD Tracker MCP Server running");
+  console.error("Taskspace MCP Server running");
 }
 
 main().catch(console.error);
@@ -239,13 +239,13 @@ main().catch(console.error);
 // Manifest template for the MCPB bundle
 const getManifest = (orgName: string) => ({
   schema_version: "1.0",
-  name: "aims-eod-tracker",
-  display_name: `AIMS EOD Tracker${orgName ? ` - ${orgName}` : ""}`,
+  name: "align-tracker",
+  display_name: `Taskspace${orgName ? ` - ${orgName}` : ""}`,
   description: "Track your team's EOD reports, manage tasks, and view quarterly rocks directly from Claude Desktop.",
   version: "2.0.0",
   author: {
-    name: "AI Managing Services",
-    url: "https://eod.aimanagingservices.com",
+    name: "Taskspace",
+    url: "https://align.app",
   },
   server: {
     type: "node",
@@ -266,7 +266,7 @@ const getManifest = (orgName: string) => ({
     { name: "generate_daily_digest", description: "Generate daily summary" },
   ],
   permissions: {
-    network: ["https://eod.aimanagingservices.com"],
+    network: ["https://align.app"],
   },
 })
 
@@ -318,7 +318,7 @@ export async function GET(request: NextRequest) {
     const orgName = org?.name || ""
 
     // Build the API URL
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://eod.aimanagingservices.com"
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://align.app"
 
     // Create the ZIP bundle
     const zip = new JSZip()
@@ -334,7 +334,7 @@ export async function GET(request: NextRequest) {
 
     // Add package.json for the server
     zip.file("server/package.json", JSON.stringify({
-      name: "aims-eod-tracker-mcp",
+      name: "align-tracker-mcp",
       version: "2.0.0",
       type: "module",
       main: "index.js",
@@ -354,14 +354,14 @@ export async function GET(request: NextRequest) {
     return new NextResponse(new Uint8Array(content), {
       headers: {
         "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="aims-eod-tracker.mcpb"`,
+        "Content-Disposition": `attachment; filename="align-tracker.mcpb"`,
         "Content-Length": content.length.toString(),
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     logError(logger, "Error generating MCPB bundle", error)
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to generate bundle" },
+      { success: false, error: error instanceof Error ? error.message : "Failed to generate bundle" },
       { status: 500 }
     )
   }

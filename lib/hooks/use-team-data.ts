@@ -203,7 +203,11 @@ export function useTeamData() {
         api.eodReports.list(currentWorkspaceId ? { workspaceId: currentWorkspaceId } : undefined),
       ])
 
-      setTeamMembers(membersData)
+      setTeamMembers(membersData.map(m => ({
+        ...m,
+        joinDate: m.joinedAt,
+        userId: m.userId ?? undefined,
+      })))
       setRocks(rocksData)
       setAssignedTasks(tasksData)
       setEODReports(reportsData)
@@ -262,7 +266,7 @@ export function useTeamData() {
         ...rock,
         workspaceId: currentWorkspaceId,
       }
-      const newRock = await api.rocks.create(rockWithWorkspace)
+      const newRock = await api.rocks.create(rockWithWorkspace as Parameters<typeof api.rocks.create>[0])
       setRocks((prev) => [...prev, newRock])
       return newRock
     } catch (err: unknown) {
@@ -323,7 +327,7 @@ export function useTeamData() {
         ...task,
         workspaceId: currentWorkspaceId,
       }
-      const newTask = await api.tasks.create(taskWithWorkspace)
+      const newTask = await api.tasks.create(taskWithWorkspace as Parameters<typeof api.tasks.create>[0])
       setAssignedTasks((prev) => [...prev, newTask])
       return newTask
     } catch (err: unknown) {
@@ -384,7 +388,7 @@ export function useTeamData() {
         ...report,
         workspaceId: currentWorkspaceId,
       }
-      const newReport = await api.eodReports.create(reportWithWorkspace)
+      const newReport = await api.eodReports.create(reportWithWorkspace as Parameters<typeof api.eodReports.create>[0])
       setEODReports((prev) => [newReport, ...prev])
       return newReport
     } catch (err: unknown) {
@@ -440,8 +444,9 @@ export function useTeamData() {
     }
     try {
       const updatedMember = await api.members.update(memberId, updates)
-      setTeamMembers((prev) => prev.map((m) => (m.id === memberId ? updatedMember : m)))
-      return updatedMember
+      const mapped = { ...updatedMember, joinDate: updatedMember.joinedAt, userId: updatedMember.userId ?? undefined } as TeamMember
+      setTeamMembers((prev) => prev.map((m) => (m.id === memberId ? mapped : m)))
+      return mapped
     } catch (err: unknown) {
       setError(getErrorMessage(err))
       throw err

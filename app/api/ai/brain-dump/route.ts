@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { parseBrainDump, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
@@ -8,23 +8,8 @@ import type { ApiResponse, AdminBrainDump, AIGeneratedTask, TeamMember, ParsedSc
 import { logger, logError } from "@/lib/logger"
 
 // POST /api/ai/brain-dump - Process a brain dump and generate task suggestions
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can use the brain dump feature" },
-        { status: 403 }
-      )
-    }
-
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },
@@ -167,26 +152,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // GET /api/ai/brain-dump - Get brain dump history
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can view brain dump history" },
-        { status: 403 }
-      )
-    }
-
     const brainDumps = await db.brainDumps.findByOrganizationId(auth.organization.id)
 
     return NextResponse.json<ApiResponse<AdminBrainDump[]>>({
@@ -200,4 +170,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

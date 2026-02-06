@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { resolveIssueSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 import type { Issue } from "@/lib/db/meetings"
@@ -21,8 +23,7 @@ export async function POST(
     }
 
     const { id } = await params
-    const body = await request.json().catch(() => ({}))
-    const { resolution, meetingId } = body
+    const { resolution, meetingId } = await validateBody(request, resolveIssueSchema)
 
     const issue = await meetings.getIssue(id)
 
@@ -65,6 +66,12 @@ export async function POST(
       message: "Issue resolved successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Resolve issue error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to resolve issue" },

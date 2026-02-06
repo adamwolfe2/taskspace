@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import { parseEODTextDump, isClaudeConfigured, ParsedEODReport } from "@/lib/ai/claude-client"
 import { canUseAI, buildFeatureGateContext } from "@/lib/billing/feature-gates"
 import { AI_OPERATION_COSTS } from "@/lib/billing/plans"
@@ -18,16 +18,8 @@ function getCurrentQuarter(): string {
 }
 
 // POST /api/ai/eod-parse - Parse text dump into EOD report structure
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // AI EOD parsing is available to all members
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
@@ -126,4 +118,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

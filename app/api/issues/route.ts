@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createIssueSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 import type { Issue, IssueStatus } from "@/lib/db/meetings"
@@ -26,6 +28,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Workspace ID is required" },
         { status: 400 }
+      )
+    }
+
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
       )
     }
 
@@ -69,20 +81,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { workspaceId, title, description, priority, ownerId, sourceType, sourceId } = body
+    const { workspaceId, title, description, priority, ownerId, sourceType, sourceId } =
+      await validateBody(request, createIssueSchema)
 
-    if (!workspaceId) {
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Workspace ID is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!title?.trim()) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Title is required" },
-        { status: 400 }
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
       )
     }
 
@@ -97,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     const issue = await meetings.createIssue({
       workspaceId,
-      title: title.trim(),
+      title,
       description: description?.trim(),
       priority: priority || 0,
       ownerId,
@@ -114,6 +122,12 @@ export async function POST(request: NextRequest) {
       message: "Issue created successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Create issue error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create issue" },

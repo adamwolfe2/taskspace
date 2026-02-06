@@ -49,6 +49,7 @@ export function SetupOrganizationPage({ mode = "create" }: SetupOrganizationPage
           secondaryColor: data.workspace.secondaryColor,
           accentColor: data.workspace.accentColor,
           logoUrl: data.workspace.logoUrl,
+          faviconUrl: data.workspace.faviconUrl,
         }),
       })
 

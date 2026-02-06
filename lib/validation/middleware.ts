@@ -156,11 +156,11 @@ export class ValidationError extends Error {
  * Wraps an API handler with validation error handling
  */
 export function withValidation<T>(
-  handler: (request: NextRequest, context?: any) => Promise<NextResponse<ApiResponse<T>>>
+  handler: (request: NextRequest, context?: Record<string, unknown>) => Promise<NextResponse<ApiResponse<T>>>
 ) {
   return async (
     request: NextRequest,
-    context?: any
+    context?: Record<string, unknown>
   ): Promise<NextResponse<ApiResponse<T> | ApiResponse<null>>> => {
     try {
       return await handler(request, context)

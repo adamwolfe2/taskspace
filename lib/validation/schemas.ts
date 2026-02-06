@@ -535,6 +535,259 @@ export const testEmailSchema = z.object({
 })
 
 // ============================================
+// MEETING SCHEMAS
+// ============================================
+
+export const sectionTypeSchema = z.enum(["segue", "scorecard", "rocks", "headlines", "ids", "conclude"])
+
+export const createMeetingSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  title: z.string().max(200).optional(),
+  scheduledAt: z.string().min(1, "Scheduled date/time is required"),
+  attendees: z.array(z.string()).optional().default([]),
+})
+
+export const updateMeetingSchema = z.object({
+  notes: z.string().max(10000).optional(),
+  attendees: z.array(z.string()).optional(),
+  title: z.string().max(200).optional(),
+})
+
+export const endMeetingSchema = z.object({
+  rating: z.number().int().min(1).max(10).optional(),
+  notes: z.string().max(5000).optional(),
+})
+
+export const updateMeetingSectionSchema = z.object({
+  sectionType: sectionTypeSchema,
+  action: z.enum(["start", "complete", "update"]),
+  data: z.record(z.unknown()).optional(),
+})
+
+export const createMeetingTodoSchema = z.object({
+  title: z.string().min(1, "Title is required").max(500).trim(),
+  assigneeId: z.string().optional(),
+  dueDate: dateSchema.optional(),
+  issueId: z.string().optional(),
+})
+
+export const updateMeetingTodoSchema = z.object({
+  completed: z.boolean().optional(),
+})
+
+export const convertTodoToTaskSchema = z.object({
+  taskId: z.string().min(1, "Task ID is required"),
+})
+
+export const updateMeetingNotesSchema = z.object({
+  section: sectionTypeSchema,
+  content: z.string().max(10000).default(""),
+})
+
+export const agendaSectionSchema = z.object({
+  sectionType: sectionTypeSchema,
+  orderIndex: z.number().int().min(0),
+  durationTarget: z.number().int().min(1).max(120),
+})
+
+export const updateAgendaSchema = z.object({
+  sections: z.array(agendaSectionSchema).min(1),
+})
+
+// ============================================
+// ISSUE SCHEMAS
+// ============================================
+
+export const issueStatusSchema = z.enum(["open", "active", "resolved", "dropped"])
+export const issuePrioritySchema = z.number().int().min(0).max(10).default(0)
+
+export const createIssueSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  title: z.string().min(1, "Title is required").max(500).trim(),
+  description: z.string().max(5000).optional(),
+  priority: issuePrioritySchema,
+  ownerId: z.string().optional(),
+  sourceType: z.string().optional(),
+  sourceId: z.string().optional(),
+})
+
+export const updateIssueSchema = z.object({
+  title: z.string().min(1).max(500).trim().optional(),
+  description: z.string().max(5000).optional(),
+  priority: z.number().int().min(0).max(10).optional(),
+  status: issueStatusSchema.optional(),
+  ownerId: z.string().nullable().optional(),
+})
+
+export const resolveIssueSchema = z.object({
+  resolution: z.string().max(2000).optional(),
+  meetingId: z.string().optional(),
+})
+
+// ============================================
+// DAILY ENERGY SCHEMAS
+// ============================================
+
+export const energyLevelSchema = z.enum(["low", "medium", "high", "peak"])
+
+export const moodEmojiSchema = z.enum(["😫", "😐", "🙂", "😄", "🔥"])
+
+export const energyFactorSchema = z.enum([
+  "good_sleep",
+  "exercise",
+  "caffeine",
+  "stress",
+  "meetings",
+  "deadline_pressure",
+  "great_progress",
+  "team_support",
+])
+
+export const createDailyEnergySchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  date: dateSchema,
+  energyLevel: energyLevelSchema,
+  mood: moodEmojiSchema,
+  factors: z.array(energyFactorSchema).optional().default([]),
+  notes: z.string().max(2000).optional(),
+})
+
+// ============================================
+// FOCUS BLOCK UPDATE SCHEMA
+// ============================================
+
+export const updateFocusBlockSchema = z.object({
+  startTime: isoDateSchema.optional(),
+  endTime: isoDateSchema.optional(),
+  category: focusCategorySchema.optional(),
+  quality: z.number().int().min(1).max(5).optional(),
+  interruptions: z.number().int().min(0).optional(),
+  notes: z.string().max(1000).optional(),
+  taskId: z.string().optional(),
+  rockId: z.string().optional(),
+})
+
+// ============================================
+// SCORECARD METRIC SCHEMAS
+// ============================================
+
+export const targetDirectionSchema = z.enum(["above", "below", "exact"])
+export const metricFrequencySchema = z.enum(["weekly", "monthly"])
+
+export const createScorecardMetricSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  name: z.string().min(1, "Metric name is required").max(200).trim(),
+  description: z.string().max(1000).optional(),
+  ownerId: z.string().optional(),
+  targetValue: z.number().optional(),
+  targetDirection: targetDirectionSchema.default("above"),
+  unit: z.string().max(50).default(""),
+  frequency: metricFrequencySchema.default("weekly"),
+  displayOrder: z.number().int().min(0).default(0),
+})
+
+export const updateScorecardMetricSchema = z.object({
+  name: z.string().min(1).max(200).trim().optional(),
+  description: z.string().max(1000).nullable().optional(),
+  ownerId: z.string().nullable().optional(),
+  targetValue: z.number().nullable().optional(),
+  targetDirection: targetDirectionSchema.optional(),
+  unit: z.string().max(50).optional(),
+  frequency: metricFrequencySchema.optional(),
+  displayOrder: z.number().int().min(0).optional(),
+  isActive: z.boolean().optional(),
+})
+
+export const createScorecardEntrySchema = z.object({
+  metricId: z.string().min(1, "Metric ID is required"),
+  value: z.coerce.number({ invalid_type_error: "Value must be a number" }),
+  weekStart: dateSchema.optional(),
+  notes: z.string().max(1000).optional(),
+})
+
+// ============================================
+// ROCK CHECK-IN SCHEMA
+// ============================================
+
+export const rockConfidenceSchema = z.enum(["on_track", "at_risk", "off_track"])
+
+export const createRockCheckinSchema = z.object({
+  confidence: rockConfidenceSchema,
+  notes: z.string().max(2000).optional(),
+  weekStart: dateSchema.optional(),
+})
+
+// ============================================
+// ROCK COMPLETE SCHEMA
+// ============================================
+
+export const completeRockSchema = z.object({
+  reopen: z.boolean().optional(),
+})
+
+// ============================================
+// TASK COMMENT SCHEMA
+// ============================================
+
+export const createTaskCommentSchema = z.object({
+  text: z.string().min(1, "Comment text is required").max(2000).trim(),
+})
+
+// ============================================
+// TASK SUBTASK SCHEMAS
+// ============================================
+
+export const createSubtaskSchema = z.object({
+  title: z.string().min(1, "Subtask title is required").max(500).trim(),
+  completed: z.boolean().default(false),
+  orderIndex: z.number().int().min(0).optional(),
+})
+
+export const updateSubtaskSchema = z.object({
+  title: z.string().min(1).max(500).trim().optional(),
+  completed: z.boolean().optional(),
+  orderIndex: z.number().int().min(0).optional(),
+})
+
+export const reorderSubtasksSchema = z.object({
+  subtaskIds: z.array(z.string().min(1)).min(1, "subtaskIds array cannot be empty"),
+})
+
+// ============================================
+// GOOGLE CALENDAR SCHEMA
+// ============================================
+
+export const updateGoogleCalendarSettingsSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  syncEnabled: z.boolean().optional(),
+  calendarId: z.string().optional(),
+})
+
+// ============================================
+// WORKSPACE MEMBER SCHEMAS
+// ============================================
+
+export const workspaceMemberRoleSchema = z.enum(["owner", "admin", "member", "viewer"])
+
+export const addWorkspaceMemberSchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+  role: workspaceMemberRoleSchema.default("member"),
+})
+
+export const updateWorkspaceMemberRoleSchema = z.object({
+  role: workspaceMemberRoleSchema,
+})
+
+// ============================================
+// MANAGER DIRECT REPORTS SCHEMA
+// ============================================
+
+export const assignManagerSchema = z.object({
+  memberId: z.string().min(1, "Member ID is required"),
+  managerId: z.string().nullable().optional(),
+})
+
+// ============================================
 // TYPE EXPORTS
 // ============================================
 
@@ -558,4 +811,31 @@ export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>
 export type UpdateNotificationInput = z.infer<typeof updateNotificationSchema>
 export type CreatePushSubscriptionInput = z.infer<typeof createPushSubscriptionSchema>
 export type CreateFocusBlockInput = z.infer<typeof createFocusBlockSchema>
+export type UpdateFocusBlockInput = z.infer<typeof updateFocusBlockSchema>
 export type TestEmailInput = z.infer<typeof testEmailSchema>
+export type CreateMeetingInput = z.infer<typeof createMeetingSchema>
+export type UpdateMeetingInput = z.infer<typeof updateMeetingSchema>
+export type EndMeetingInput = z.infer<typeof endMeetingSchema>
+export type UpdateMeetingSectionInput = z.infer<typeof updateMeetingSectionSchema>
+export type CreateMeetingTodoInput = z.infer<typeof createMeetingTodoSchema>
+export type UpdateMeetingTodoInput = z.infer<typeof updateMeetingTodoSchema>
+export type ConvertTodoToTaskInput = z.infer<typeof convertTodoToTaskSchema>
+export type UpdateMeetingNotesInput = z.infer<typeof updateMeetingNotesSchema>
+export type UpdateAgendaInput = z.infer<typeof updateAgendaSchema>
+export type CreateIssueInput = z.infer<typeof createIssueSchema>
+export type UpdateIssueInput = z.infer<typeof updateIssueSchema>
+export type ResolveIssueInput = z.infer<typeof resolveIssueSchema>
+export type CreateDailyEnergyInput = z.infer<typeof createDailyEnergySchema>
+export type CreateScorecardMetricInput = z.infer<typeof createScorecardMetricSchema>
+export type UpdateScorecardMetricInput = z.infer<typeof updateScorecardMetricSchema>
+export type CreateScorecardEntryInput = z.infer<typeof createScorecardEntrySchema>
+export type CreateRockCheckinInput = z.infer<typeof createRockCheckinSchema>
+export type CompleteRockInput = z.infer<typeof completeRockSchema>
+export type CreateTaskCommentInput = z.infer<typeof createTaskCommentSchema>
+export type CreateSubtaskInput = z.infer<typeof createSubtaskSchema>
+export type UpdateSubtaskInput = z.infer<typeof updateSubtaskSchema>
+export type ReorderSubtasksInput = z.infer<typeof reorderSubtasksSchema>
+export type UpdateGoogleCalendarSettingsInput = z.infer<typeof updateGoogleCalendarSettingsSchema>
+export type AddWorkspaceMemberInput = z.infer<typeof addWorkspaceMemberSchema>
+export type UpdateWorkspaceMemberRoleInput = z.infer<typeof updateWorkspaceMemberRoleSchema>
+export type AssignManagerInput = z.infer<typeof assignManagerSchema>

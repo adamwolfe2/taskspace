@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { logIntegrationEvent } from "@/lib/audit/logger"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { Errors } from "@/lib/api/errors"
@@ -54,16 +55,8 @@ function arrayToCSV(data: Record<string, unknown>[], headers?: string[]): string
 }
 
 // GET /api/export - Export data as CSV
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const type = searchParams.get("type") || "rocks"
     const format = searchParams.get("format") || "csv"
@@ -221,7 +214,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // ============================================
 // ADVANCED EXPORT FUNCTIONS
@@ -361,18 +354,8 @@ async function fetchTeamSummary(
 // POST - Advanced Export with More Options
 // ============================================
 
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    // Only admins can use advanced export
-    if (!isAdmin(auth)) {
-      return Errors.insufficientPermissions("use advanced export").toResponse()
-    }
-
     const body = await validateBody(request, advancedExportSchema)
     let data: Record<string, unknown>[]
     let filename: string
@@ -550,4 +533,4 @@ export async function POST(request: NextRequest) {
     logError(logger, "Advanced export error", error)
     return Errors.internal().toResponse()
   }
-}
+})

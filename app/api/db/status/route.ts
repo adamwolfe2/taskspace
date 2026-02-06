@@ -33,7 +33,7 @@ interface DbStatus {
   }[]
 }
 
-export const GET = withOptionalAuth(async (request: NextRequest, auth): Promise<NextResponse> => {
+export const GET = withOptionalAuth(async (request: NextRequest, auth) => {
   const status: DbStatus = {
     connected: false,
     tableCounts: [],

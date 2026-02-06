@@ -6,6 +6,8 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { addWorkspaceMemberSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import {
   getWorkspaceById,
@@ -60,24 +62,7 @@ export async function POST(
       )
     }
 
-    const body = await request.json()
-    const { userId, role = "member" } = body
-
-    // Validation
-    if (!userId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "User ID is required" },
-        { status: 400 }
-      )
-    }
-
-    const validRoles = ["owner", "admin", "member", "viewer"]
-    if (!validRoles.includes(role)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `Invalid role. Must be one of: ${validRoles.join(", ")}` },
-        { status: 400 }
-      )
-    }
+    const { userId, role } = await validateBody(request, addWorkspaceMemberSchema)
 
     // Add member to workspace
     const member = await addWorkspaceMember(id, userId, role as WorkspaceMember["role"])
@@ -88,6 +73,12 @@ export async function POST(
       message: "Member added to workspace successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Add workspace member error", error)
 
     // Handle duplicate member

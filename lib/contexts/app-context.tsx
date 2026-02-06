@@ -90,8 +90,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
       const data = await api.auth.getSession()
 
-      if (data.teamMember && data.organization) {
-        setCurrentUser(data.teamMember)
+      if (data.member && data.organization) {
+        const teamMember: TeamMember = {
+          id: data.member.id,
+          userId: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.member.role,
+          department: data.member.department,
+          avatar: data.user.avatar,
+          joinDate: data.member.joinedAt,
+          weeklyMeasurable: data.member.weeklyMeasurable,
+          status: data.member.status,
+        }
+        setCurrentUser(teamMember)
         setCurrentOrganization(data.organization)
         setCurrentPage("dashboard")
       } else {
@@ -116,7 +128,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const data = await api.auth.login(email, password)
 
-      if (data.needsOrganization) {
+      if (!data.organization || !data.member) {
         // User needs to create an organization or accept an invitation
         setCurrentPage("setup-organization")
         return

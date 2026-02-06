@@ -19,6 +19,7 @@ import { ActivityHeatmap } from "@/components/analytics/activity-heatmap"
 import { Skeleton } from "@/components/ui/skeleton"
 import { BarChart3, Calendar } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { EmptyState } from "@/components/shared/empty-state"
 
 interface AnalyticsData {
   rockCompletionData: Array<{ date: string; completed: number }>
@@ -151,8 +152,22 @@ export function AnalyticsPage() {
   }
 
   if (!data) {
-    return null
+    return (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <EmptyState
+          icon={BarChart3}
+          title="No analytics data available"
+          description="Analytics will appear here once your team starts creating tasks, setting rocks, and submitting EOD reports. Get started to see your performance insights!"
+          size="lg"
+        />
+      </div>
+    )
   }
+
+  const hasNoActivity =
+    data.metrics.totalRocks === 0 &&
+    data.metrics.totalTasks === 0 &&
+    data.metrics.totalReports === 0
 
   return (
     <div className="flex-1 space-y-6 p-8">
@@ -208,23 +223,36 @@ export function AnalyticsPage() {
         )}
       </div>
 
-      {/* Metrics Overview */}
-      <MetricsOverview metrics={data.metrics} />
+      {hasNoActivity ? (
+        <div className="bg-white rounded-xl shadow-card border border-dashed border-slate-200">
+          <EmptyState
+            icon={BarChart3}
+            title="No activity data yet"
+            description="Your analytics dashboard will come to life once your team starts working. Create tasks, set quarterly rocks, and submit EOD reports to see performance charts and insights here."
+            size="lg"
+          />
+        </div>
+      ) : (
+        <>
+          {/* Metrics Overview */}
+          <MetricsOverview metrics={data.metrics} />
 
-      {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RockCompletionChart data={data.rockCompletionData} />
-        <TaskCompletionChart data={data.taskCompletionData} />
-      </div>
+          {/* Charts Row 1 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RockCompletionChart data={data.rockCompletionData} />
+            <TaskCompletionChart data={data.taskCompletionData} />
+          </div>
 
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <EODSubmissionChart data={data.eodSubmissionData} />
-        <ActivityHeatmap data={data.activityByDayOfWeek} />
-      </div>
+          {/* Charts Row 2 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <EODSubmissionChart data={data.eodSubmissionData} />
+            <ActivityHeatmap data={data.activityByDayOfWeek} />
+          </div>
 
-      {/* Top Performers */}
-      <TopPerformersCard performers={data.topPerformers} />
+          {/* Top Performers */}
+          <TopPerformersCard performers={data.topPerformers} />
+        </>
+      )}
     </div>
   )
 }

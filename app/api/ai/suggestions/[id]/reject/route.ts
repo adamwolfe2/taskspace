@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { getSuggestionById, rejectSuggestion } from "@/lib/ai/suggestions"
 import type { ApiResponse, AISuggestion } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -8,27 +8,22 @@ import { logger, logError } from "@/lib/logger"
  * POST /api/ai/suggestions/[id]/reject
  * Reject a suggestion
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
+    // Extract id from URL path since middleware wrapper doesn't pass params directly
+    const url = new URL(request.url)
+    const pathParts = url.pathname.split("/")
+    // Path: /api/ai/suggestions/[id]/reject
+    const idIndex = pathParts.indexOf("suggestions") + 1
+    const id = pathParts[idIndex]
+
+    if (!id) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { success: false, error: "Suggestion ID is required" },
+        { status: 400 }
       )
     }
 
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
-      )
-    }
-
-    const { id } = await params
     const body = await request.json().catch(() => ({}))
     const { reviewerNotes } = body as { reviewerNotes?: string }
 
@@ -71,4 +66,4 @@ export async function POST(
       { status: 500 }
     )
   }
-}
+})

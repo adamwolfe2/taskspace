@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2, Paperclip, ChevronDown } from "lucide-react"
+import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2, Paperclip, ChevronDown, Loader2 } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask, FileAttachment } from "@/lib/types"
 import { FileTray } from "@/components/ui/file-tray"
 import type { TeamMemberMetric } from "@/lib/metrics"
@@ -128,6 +128,7 @@ export function EODSubmissionCard({
   const [weeklyMetricTotal, setWeeklyMetricTotal] = useState<number | null>(null)
   const [weeklyMetricConfirmed, setWeeklyMetricConfirmed] = useState<string>("")
   const [attachments, setAttachments] = useState<FileAttachment[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
   // Check if this is a Thursday submission (weekly deliverable due)
@@ -254,6 +255,8 @@ export function EODSubmissionCard({
       return
     }
 
+    setIsSubmitting(true)
+
     const filteredPriorities = tomorrowPriorities.filter((p) => p.text.trim() !== "")
 
     // Note: organizationId is added by the API from the session
@@ -318,10 +321,11 @@ export function EODSubmissionCard({
         title: "EOD Report Submitted",
         description: `Your EOD report for ${formatDisplayDate(reportDate)} has been recorded. You can submit another report for the same day if needed.`,
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Check if this is a duplicate submission (409 conflict)
-      if (err.status === 409 && err.data) {
-        const existingReport = err.data
+      const apiErr = err as { status?: number; data?: { id: string }; message?: string }
+      if (apiErr.status === 409 && apiErr.data) {
+        const existingReport = apiErr.data
 
         // Automatically update the existing report instead of showing an error
         try {
@@ -364,20 +368,22 @@ export function EODSubmissionCard({
             title: "EOD Report Updated",
             description: `Your EOD report for ${formatDisplayDate(reportDate)} has been updated`,
           })
-        } catch (updateErr: any) {
+        } catch (updateErr: unknown) {
           toast({
             title: "Update Failed",
-            description: updateErr.message || "Failed to update existing EOD report. You may need to contact an admin.",
+            description: updateErr instanceof Error ? updateErr.message : "Failed to update existing EOD report. You may need to contact an admin.",
             variant: "destructive",
           })
         }
       } else {
         toast({
           title: "Submission Failed",
-          description: err.message || "Failed to submit EOD report",
+          description: err instanceof Error ? err.message : "Failed to submit EOD report",
           variant: "destructive",
         })
       }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -719,9 +725,18 @@ export function EODSubmissionCard({
           )}
         </div>
 
-        <Button onClick={handleSubmit} className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-sm">
-          <Send className="h-4 w-4 mr-2" />
-          {isBackdatedReport ? `Submit EOD for ${formatDisplayDate(reportDate)}` : "Submit EOD Report"}
+        <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-sm">
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Submitting...
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4 mr-2" />
+              {isBackdatedReport ? `Submit EOD for ${formatDisplayDate(reportDate)}` : "Submit EOD Report"}
+            </>
+          )}
         </Button>
       </div>
     </div>

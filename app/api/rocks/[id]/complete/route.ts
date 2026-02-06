@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
 import { getRockById, completeRock, reopenRock } from "@/lib/db/rocks"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { completeRockSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 
 interface RouteParams {
@@ -70,8 +72,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    const body = await request.json().catch(() => ({}))
-    const { reopen } = body
+    const { reopen } = await validateBody(request, completeRockSchema)
 
     let updatedRock
     let message
@@ -111,6 +112,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       message,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Error completing rock")
     return NextResponse.json(
       {

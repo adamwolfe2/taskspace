@@ -91,8 +91,9 @@ export class ApiError extends Error {
       {
         success: false,
         error: this.message,
+        code: this.code,
         ...(process.env.NODE_ENV === "development" && this.details
-          ? { details: this.details }
+          ? { meta: this.details }
           : {}),
       },
       { status: this.statusCode }
@@ -217,11 +218,11 @@ export const Errors = {
  * Wraps an API handler with standardized error handling
  */
 export function withErrorHandler<T>(
-  handler: (request: Request, context?: any) => Promise<NextResponse<ApiResponse<T>>>
+  handler: (request: Request, context?: Record<string, unknown>) => Promise<NextResponse<ApiResponse<T>>>
 ) {
   return async (
     request: Request,
-    context?: any
+    context?: Record<string, unknown>
   ): Promise<NextResponse<ApiResponse<T> | ApiResponse<null>>> => {
     try {
       return await handler(request, context)
@@ -248,13 +249,9 @@ export function handleError(error: unknown): NextResponse<ApiResponse<null>> {
     return apiError.toResponse()
   }
 
-  // Unknown errors
-  const message =
-    process.env.NODE_ENV === "development" && error instanceof Error
-      ? error.message
-      : "An unexpected error occurred"
-
-  const internalError = Errors.internal(message)
+  // Unknown errors - never expose internal details or stack traces in responses
+  // The original error is still logged server-side via logError for debugging
+  const internalError = Errors.internal("An unexpected error occurred. Please try again later.")
   logError(internalError, error)
   return internalError.toResponse()
 }

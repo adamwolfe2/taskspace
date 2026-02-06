@@ -18,6 +18,8 @@ import { db } from "@/lib/db"
 import { taskSubtasks } from "@/lib/db/task-subtasks"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { isAdmin } from "@/lib/auth/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateSubtaskSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, TaskSubtask } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -38,17 +40,8 @@ export const PATCH = withAuth(async (request: NextRequest, auth, context?: Route
       )
     }
 
-    // Parse request body
-    const body = await request.json()
-    const { title, completed, orderIndex } = body
-
-    // Validate at least one field is being updated
-    if (title === undefined && completed === undefined && orderIndex === undefined) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "At least one field must be provided for update" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { title, completed, orderIndex } = await validateBody(request, updateSubtaskSchema)
 
     // Fetch subtask
     const subtask = await taskSubtasks.getById(subtaskId)
@@ -120,11 +113,10 @@ export const PATCH = withAuth(async (request: NextRequest, auth, context?: Route
       message: "Subtask updated successfully",
     })
   } catch (error) {
-    // Handle validation errors
-    if (error instanceof Error && error.message.includes("Subtask")) {
+    if (error instanceof ValidationError) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: error.message },
-        { status: 400 }
+        { status: error.statusCode }
       )
     }
 

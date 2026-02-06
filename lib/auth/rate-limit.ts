@@ -332,8 +332,10 @@ export async function resetLoginRateLimit(request: Request): Promise<void> {
 /**
  * Get rate limit headers for response
  */
-export function getRateLimitHeaders(result: RateLimitResult): Record<string, string> {
+export function getRateLimitHeaders(result: RateLimitResult, maxAttempts?: number): Record<string, string> {
+  const limit = maxAttempts ?? (result.remaining + 1)
   const headers: Record<string, string> = {
+    "X-RateLimit-Limit": limit.toString(),
     "X-RateLimit-Remaining": result.remaining.toString(),
     "X-RateLimit-Reset": new Date(result.resetAt).toISOString(),
   }

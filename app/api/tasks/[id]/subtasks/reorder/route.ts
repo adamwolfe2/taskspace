@@ -17,6 +17,8 @@ import { db } from "@/lib/db"
 import { taskSubtasks } from "@/lib/db/task-subtasks"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { isAdmin } from "@/lib/auth/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { reorderSubtasksSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, TaskSubtask } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -36,23 +38,8 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
       )
     }
 
-    // Parse request body
-    const body = await request.json()
-    const { subtaskIds } = body
-
-    if (!Array.isArray(subtaskIds)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "subtaskIds must be an array" },
-        { status: 400 }
-      )
-    }
-
-    if (subtaskIds.length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "subtaskIds array cannot be empty" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { subtaskIds } = await validateBody(request, reorderSubtasksSchema)
 
     // Fetch task
     const task = await db.assignedTasks.findById(taskId)
@@ -109,6 +96,12 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
       message: "Subtasks reordered successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Reorder task subtasks error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to reorder subtasks" },

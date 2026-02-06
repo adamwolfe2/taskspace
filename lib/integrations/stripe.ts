@@ -6,7 +6,9 @@
 import { getStripeConfig, STRIPE_PRICE_IDS, PLAN_FEATURES } from "./stripe-config"
 
 // Dynamic import for Stripe to handle cases where it's not installed
-let Stripe: any = null
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Stripe is dynamically imported
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Stripe: (new (key: string, options: Record<string, unknown>) => any) | null = null
 
 async function getStripeClient() {
   const config = getStripeConfig()
@@ -25,7 +27,7 @@ async function getStripeClient() {
     }
   }
 
-  return new Stripe(config.secretKey, {
+  return new Stripe(config.secretKey!, {
     apiVersion: "2024-06-20",
     typescript: true,
   })
@@ -58,7 +60,7 @@ export async function createCheckoutSession(params: CreateCheckoutParams) {
     throw new Error(`Invalid plan or billing cycle: ${params.plan} / ${params.billingCycle}`)
   }
 
-  const sessionParams: any = {
+  const sessionParams: Record<string, unknown> = {
     mode: "subscription",
     payment_method_types: ["card"],
     line_items: [

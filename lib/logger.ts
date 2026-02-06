@@ -100,7 +100,7 @@ interface LoggerInterface {
 function createLogger(bindings: Record<string, unknown> = {}): LoggerInterface {
   const baseContext = {
     env: process.env.NODE_ENV,
-    service: "aimseod",
+    service: "align",
     ...bindings,
   }
 

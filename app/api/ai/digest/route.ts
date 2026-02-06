@@ -1,29 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { generateDailyDigest, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, DailyDigest, TeamMember, EODInsight } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // POST /api/ai/digest - Generate a daily digest from EOD reports
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can generate daily digests" },
-        { status: 403 }
-      )
-    }
-
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },
@@ -47,9 +32,8 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Get EOD reports for the date
-    const allReports = await db.eodReports.findByOrganizationId(auth.organization.id)
-    const dateReports = allReports.filter(r => r.date === targetDate)
+    // OPTIMIZED: Fetch only reports for the target date instead of all reports
+    const dateReports = await db.eodReports.findByOrganizationAndDate(auth.organization.id, targetDate)
 
     if (dateReports.length === 0) {
       return NextResponse.json<ApiResponse<null>>(
@@ -58,8 +42,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get team members for context
-    const teamMembersData = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+    // OPTIMIZED: Fetch all independent data in parallel
+    const reportIds = dateReports.map(r => r.id)
+    const [teamMembersData, rocks, insights, previousDigest] = await Promise.all([
+      db.members.findWithUsersByOrganizationId(auth.organization.id),
+      db.rocks.findByOrganizationId(auth.organization.id),
+      db.eodInsights.findByReportIds(reportIds),
+      db.dailyDigests.getLatest(auth.organization.id),
+    ])
+
     const teamMembers: TeamMember[] = teamMembersData.map(m => ({
       id: m.id,
       name: m.name,
@@ -71,21 +62,6 @@ export async function POST(request: NextRequest) {
       weeklyMeasurable: m.weeklyMeasurable,
       status: m.status,
     }))
-
-    // Get rocks for context
-    const rocks = await db.rocks.findByOrganizationId(auth.organization.id)
-
-    // Get insights for the reports
-    const insights: EODInsight[] = []
-    for (const report of dateReports) {
-      const insight = await db.eodInsights.findByEODReportId(report.id)
-      if (insight) {
-        insights.push(insight)
-      }
-    }
-
-    // Get previous digest for trend comparison
-    const previousDigest = await db.dailyDigests.getLatest(auth.organization.id)
 
     // Generate digest with Claude
     const digestData = await generateDailyDigest(
@@ -120,26 +96,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // GET /api/ai/digest - Get daily digests
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can view daily digests" },
-        { status: 403 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const date = searchParams.get("date")
     const limit = parseInt(searchParams.get("limit") || "7", 10)
@@ -171,4 +132,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

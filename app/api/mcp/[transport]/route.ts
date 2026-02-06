@@ -1,11 +1,11 @@
 /**
- * AIMS EOD Tracker - Remote MCP Endpoint
+ * Taskspace - Remote MCP Endpoint
  *
  * Connect via Claude Desktop:
  * Settings → Connectors → Add custom connector
- * - Name: AIMS EOD Tracker
- * - URL: https://your-aims-app.vercel.app/api/mcp
- * - OAuth Client Secret: Your AIMS API key (aims_...)
+ * - Name: Taskspace
+ * - URL: https://your-align-app.vercel.app/api/mcp
+ * - OAuth Client Secret: Your Taskspace API key (aims_...)
  *
  * No local installation required!
  */
@@ -16,6 +16,80 @@ import { sql } from "@/lib/db/sql"
 import { db } from "@/lib/db"
 import { headers } from "next/headers"
 import { logger, logError } from "@/lib/logger"
+
+// Database row types for SQL query results
+interface MemberRow {
+  user_id: string
+  name: string
+  email: string
+  department: string | null
+  role: string
+  status: string
+  job_title: string | null
+}
+
+interface EodReportRow {
+  id: string
+  user_id: string
+  user_name?: string
+  report_date: string
+  notes: string | null
+  summary: string | null
+  tasks: Array<string | { title?: string; description?: string }> | null
+  blockers: Array<string | { text?: string }> | null
+  wins: Array<string | { text?: string }> | null
+  tomorrow_focus: string | null
+  focus_tomorrow: string | null
+  mood: string | null
+  needs_escalation: boolean
+  escalation_note: string | null
+  email?: string
+}
+
+interface RockRow {
+  id: string
+  title: string
+  status: string
+  progress: number | null
+  owner_name?: string
+  owner_id: string
+  created_at: string
+}
+
+interface TaskRow {
+  id: string
+  title: string
+  description: string | null
+  priority: string
+  status: string
+  due_date: string | null
+  assignee_id: string
+  assignee_name?: string
+  assigned_by_name?: string | null
+  completed_at: string | null
+  created_at: string
+  rock_id: string | null
+  organization_id: string
+  type: string | null
+}
+
+interface WorkloadRow {
+  user_id: string
+  name: string
+  department: string | null
+  email: string
+  pending_tasks: number
+  overdue_tasks: number
+  high_priority_tasks: number
+  active_rocks: number
+  blocked_rocks: number
+  recent_escalations: number
+}
+
+interface EscalationEntry {
+  name: string
+  note: string
+}
 
 // Get organization from API key in Authorization header
 async function getOrgIdFromAuth(): Promise<string | null> {
@@ -48,7 +122,7 @@ async function getOrgIdFromAuth(): Promise<string | null> {
 }
 
 // Database query helpers
-async function queryMembers(orgId: string) {
+async function queryMembers(orgId: string): Promise<MemberRow[]> {
   const result = await sql`
     SELECT om.*, u.name, u.email
     FROM organization_members om
@@ -56,10 +130,10 @@ async function queryMembers(orgId: string) {
     WHERE om.organization_id = ${orgId}
     AND om.status = 'active'
   `
-  return result.rows
+  return result.rows as unknown as MemberRow[]
 }
 
-async function queryEodReports(orgId: string, date: string) {
+async function queryEodReports(orgId: string, date: string): Promise<EodReportRow[]> {
   const result = await sql`
     SELECT er.*, u.name as user_name
     FROM eod_reports er
@@ -68,10 +142,10 @@ async function queryEodReports(orgId: string, date: string) {
     WHERE om.organization_id = ${orgId}
     AND er.report_date = ${date}
   `
-  return result.rows
+  return result.rows as unknown as EodReportRow[]
 }
 
-async function queryRocks(orgId: string, userId?: string) {
+async function queryRocks(orgId: string, userId?: string): Promise<RockRow[]> {
   if (userId) {
     const result = await sql`
       SELECT r.*, u.name as owner_name
@@ -81,7 +155,7 @@ async function queryRocks(orgId: string, userId?: string) {
       AND r.owner_id = ${userId}
       ORDER BY r.created_at DESC
     `
-    return result.rows
+    return result.rows as unknown as RockRow[]
   }
 
   const result = await sql`
@@ -91,10 +165,10 @@ async function queryRocks(orgId: string, userId?: string) {
     WHERE r.organization_id = ${orgId}
     ORDER BY r.created_at DESC
   `
-  return result.rows
+  return result.rows as unknown as RockRow[]
 }
 
-async function queryTasks(orgId: string, userId?: string, status?: string) {
+async function queryTasks(orgId: string, userId?: string, status?: string): Promise<TaskRow[]> {
   // Build query with Vercel postgres template literals
   let result
   if (userId && status) {
@@ -150,7 +224,7 @@ async function queryTasks(orgId: string, userId?: string, status?: string) {
       ORDER BY t.due_date ASC
     `
   }
-  return result.rows
+  return result.rows as unknown as TaskRow[]
 }
 
 const handler = createMcpHandler(
@@ -158,7 +232,7 @@ const handler = createMcpHandler(
     // Tool: Get Team Members
     server.tool(
       "get_team_members",
-      "Get all team members in your AIMS organization",
+      "Get all team members in your Taskspace organization",
       {
         department: z.string().optional().describe("Filter by department"),
       },
@@ -166,19 +240,19 @@ const handler = createMcpHandler(
         const orgId = await getOrgIdFromAuth()
         if (!orgId) {
           return {
-            content: [{ type: "text", text: "Authentication required. Add your AIMS API key (aims_...) to the connector's OAuth Client Secret field." }],
+            content: [{ type: "text", text: "Authentication required. Add your Taskspace API key (aims_...) to the connector's OAuth Client Secret field." }],
           }
         }
 
         let members = await queryMembers(orgId)
 
         if (department) {
-          members = members.filter((m: any) =>
+          members = members.filter((m) =>
             m.department?.toLowerCase().includes(department.toLowerCase())
           )
         }
 
-        const summary = members.map((m: any) =>
+        const summary = members.map((m) =>
           `- ${m.name} (${m.department || "No dept"}) - ${m.role}`
         ).join("\n")
 
@@ -211,16 +285,16 @@ const handler = createMcpHandler(
           queryEodReports(orgId, checkDate),
         ])
 
-        const submittedIds = new Set(reports.map((r: any) => r.user_id))
-        const activeMembers = members.filter((m: any) => m.role === "member")
-        const submitted = activeMembers.filter((m: any) => submittedIds.has(m.user_id))
-        const missing = activeMembers.filter((m: any) => !submittedIds.has(m.user_id))
+        const submittedIds = new Set(reports.map((r) => r.user_id))
+        const activeMembers = members.filter((m) => m.role === "member")
+        const submitted = activeMembers.filter((m) => submittedIds.has(m.user_id))
+        const missing = activeMembers.filter((m) => !submittedIds.has(m.user_id))
 
         let response = `EOD Status for ${checkDate}:\n\n`
         response += `✅ Submitted (${submitted.length}):\n`
-        response += submitted.map((m: any) => `  - ${m.name}`).join("\n") || "  None"
+        response += submitted.map((m) => `  - ${m.name}`).join("\n") || "  None"
         response += `\n\n❌ Missing (${missing.length}):\n`
-        response += missing.map((m: any) => `  - ${m.name}`).join("\n") || "  Everyone submitted!"
+        response += missing.map((m) => `  - ${m.name}`).join("\n") || "  Everyone submitted!"
 
         return { content: [{ type: "text", text: response }] }
       }
@@ -242,14 +316,14 @@ const handler = createMcpHandler(
         let rocks = await queryRocks(orgId)
 
         if (status) {
-          rocks = rocks.filter((r: any) => r.status === status)
+          rocks = rocks.filter((r) => r.status === status)
         }
 
         const emoji: Record<string, string> = {
           "on-track": "🟢", "at-risk": "🟡", "blocked": "🔴", "completed": "✅",
         }
 
-        const summary = rocks.map((r: any) =>
+        const summary = rocks.map((r) =>
           `${emoji[r.status] || "⚪"} ${r.title} (${r.progress || 0}%) - ${r.owner_name}`
         ).join("\n")
 
@@ -274,7 +348,7 @@ const handler = createMcpHandler(
 
         const emoji: Record<string, string> = { high: "🔴", medium: "🟡", normal: "🟢" }
 
-        const summary = tasks.slice(0, 20).map((t: any) => {
+        const summary = tasks.slice(0, 20).map((t) => {
           const dueDate = t.due_date ? new Date(t.due_date).toLocaleDateString() : "No date"
           return `${emoji[t.priority] || "⚪"} ${t.title} → ${t.assignee_name} (due: ${dueDate})`
         }).join("\n")
@@ -305,24 +379,24 @@ const handler = createMcpHandler(
           queryTasks(orgId),
         ])
 
-        const activeMembers = members.filter((m: any) => m.role === "member")
-        const submittedIds = new Set(reports.map((r: any) => r.user_id))
+        const activeMembers = members.filter((m) => m.role === "member")
+        const submittedIds = new Set(reports.map((r) => r.user_id))
         const submissionRate = activeMembers.length > 0
           ? Math.round((submittedIds.size / activeMembers.length) * 100) : 0
 
-        const atRiskRocks = rocks.filter((r: any) => r.status === "at-risk" || r.status === "blocked")
+        const atRiskRocks = rocks.filter((r) => r.status === "at-risk" || r.status === "blocked")
         const avgProgress = rocks.length > 0
-          ? Math.round(rocks.reduce((s: number, r: any) => s + (r.progress || 0), 0) / rocks.length) : 0
+          ? Math.round(rocks.reduce((s: number, r) => s + (r.progress || 0), 0) / rocks.length) : 0
 
-        const pendingTasks = tasks.filter((t: any) => t.status === "pending")
-        const overdueTasks = pendingTasks.filter((t: any) =>
+        const pendingTasks = tasks.filter((t) => t.status === "pending")
+        const overdueTasks = pendingTasks.filter((t) =>
           t.due_date && new Date(t.due_date) < new Date()
         )
 
         return {
           content: [{
             type: "text",
-            text: `📊 AIMS Team Overview - ${today}
+            text: `📊 Taskspace Team Overview - ${today}
 ================================
 👥 Team: ${members.length} members
 📝 EOD: ${submissionRate}% (${submittedIds.size}/${activeMembers.length})
@@ -360,12 +434,13 @@ const handler = createMcpHandler(
           return { content: [{ type: "text", text: "No blockers reported in the last 7 days" }] }
         }
 
-        const summary = result.rows.map((b: any) => {
+        const blockerRows = result.rows as unknown as EodReportRow[]
+        const summary = blockerRows.map((b) => {
           const date = new Date(b.report_date).toLocaleDateString()
           return `⚠️ ${date} - ${b.user_name}: ${b.escalation_note || "No details"}`
         }).join("\n\n")
 
-        return { content: [{ type: "text", text: `Blockers (${result.rows.length}):\n\n${summary}` }] }
+        return { content: [{ type: "text", text: `Blockers (${blockerRows.length}):\n\n${summary}` }] }
       }
     )
 
@@ -389,7 +464,7 @@ const handler = createMcpHandler(
 
         // Find the member
         const members = await queryMembers(orgId)
-        const member = members.find((m: any) =>
+        const member = members.find((m) =>
           m.name.toLowerCase().includes(memberName.toLowerCase())
         )
 
@@ -420,14 +495,14 @@ const handler = createMcpHandler(
           `,
         ])
 
-        const eods = eodReports.rows
-        const allTasks = tasks.rows
-        const memberRocks = rocks.rows
+        const eods = eodReports.rows as unknown as EodReportRow[]
+        const allTasks = tasks.rows as unknown as TaskRow[]
+        const memberRocks = rocks.rows as unknown as RockRow[]
 
         // Calculate metrics
-        const completedTasks = allTasks.filter((t: any) => t.status === "completed")
-        const pendingTasks = allTasks.filter((t: any) => t.status === "pending")
-        const overdueTasks = pendingTasks.filter((t: any) =>
+        const completedTasks = allTasks.filter((t) => t.status === "completed")
+        const pendingTasks = allTasks.filter((t) => t.status === "pending")
+        const overdueTasks = pendingTasks.filter((t) =>
           t.due_date && new Date(t.due_date) < new Date()
         )
         const completionRate = allTasks.length > 0
@@ -436,26 +511,26 @@ const handler = createMcpHandler(
         const eodSubmissionRate = days > 0
           ? Math.round((eods.length / Math.min(days, 30)) * 100) : 0
 
-        const escalationCount = eods.filter((e: any) => e.needs_escalation).length
+        const escalationCount = eods.filter((e) => e.needs_escalation).length
 
         // Mood/sentiment analysis from EODs
-        const moods = eods.map((e: any) => e.mood).filter(Boolean)
-        const moodBreakdown = moods.reduce((acc: any, m: string) => {
+        const moods = eods.map((e) => e.mood).filter(Boolean) as string[]
+        const moodBreakdown = moods.reduce<Record<string, number>>((acc, m) => {
           acc[m] = (acc[m] || 0) + 1
           return acc
         }, {})
 
         // Rock status
-        const rocksOnTrack = memberRocks.filter((r: any) => r.status === "on-track").length
-        const rocksAtRisk = memberRocks.filter((r: any) => r.status === "at-risk" || r.status === "blocked").length
+        const rocksOnTrack = memberRocks.filter((r) => r.status === "on-track").length
+        const rocksAtRisk = memberRocks.filter((r) => r.status === "at-risk" || r.status === "blocked").length
         const avgRockProgress = memberRocks.length > 0
-          ? Math.round(memberRocks.reduce((s: number, r: any) => s + (r.progress || 0), 0) / memberRocks.length) : 0
+          ? Math.round(memberRocks.reduce((s: number, r) => s + (r.progress || 0), 0) / memberRocks.length) : 0
 
         // Recent blockers
         const recentBlockers = eods
-          .filter((e: any) => e.needs_escalation && e.escalation_note)
+          .filter((e) => e.needs_escalation && e.escalation_note)
           .slice(0, 3)
-          .map((e: any) => `  - ${new Date(e.report_date).toLocaleDateString()}: ${e.escalation_note}`)
+          .map((e) => `  - ${new Date(e.report_date).toLocaleDateString()}: ${e.escalation_note}`)
 
         const analysis = `
 👤 MEMBER ANALYSIS: ${member.name}
@@ -475,9 +550,9 @@ const handler = createMcpHandler(
 ----------------------------------------
 Total: ${memberRocks.length} | On Track: ${rocksOnTrack} | At Risk: ${rocksAtRisk}
 Average Progress: ${avgRockProgress}%
-${memberRocks.slice(0, 5).map((r: any) => {
-  const emoji = r.status === "on-track" ? "🟢" : r.status === "at-risk" ? "🟡" : r.status === "blocked" ? "🔴" : "✅"
-  return `  ${emoji} ${r.title} (${r.progress || 0}%)`
+${memberRocks.slice(0, 5).map((r) => {
+  const statusEmoji = r.status === "on-track" ? "🟢" : r.status === "at-risk" ? "🟡" : r.status === "blocked" ? "🔴" : "✅"
+  return `  ${statusEmoji} ${r.title} (${r.progress || 0}%)`
 }).join("\n")}
 
 😊 MOOD TRENDS
@@ -518,7 +593,7 @@ ${overdueTasks.length > 2 ? "⚠️ HIGH - Multiple overdue tasks" :
 
         // Find the member
         const members = await queryMembers(orgId)
-        const member = members.find((m: any) =>
+        const member = members.find((m) =>
           m.name.toLowerCase().includes(memberName.toLowerCase())
         )
 
@@ -538,7 +613,7 @@ ${overdueTasks.length > 2 ? "⚠️ HIGH - Multiple overdue tasks" :
           return { content: [{ type: "text", text: `No EOD report found for ${member.name} on ${reportDate}` }] }
         }
 
-        const report = reportResult.rows[0]
+        const report = reportResult.rows[0] as unknown as EodReportRow
 
         // Get tasks completed that day
         const tasksResult = await sql`
@@ -549,7 +624,7 @@ ${overdueTasks.length > 2 ? "⚠️ HIGH - Multiple overdue tasks" :
           AND DATE(t.completed_at) = ${reportDate}
         `
 
-        const completedTasks = tasksResult.rows
+        const completedTasks = tasksResult.rows as unknown as TaskRow[]
 
         // Parse EOD data (stored as JSON in some cases)
         const eodData = {
@@ -577,25 +652,25 @@ ${eodData.notes || "No summary provided"}
 ✅ TASKS COMPLETED (${completedTasks.length})
 ----------------------------------------
 ${completedTasks.length > 0
-  ? completedTasks.map((t: any) => `  ✓ ${t.title}`).join("\n")
+  ? completedTasks.map((t) => `  ✓ ${t.title}`).join("\n")
   : "  No tasks completed"}
 
 ${Array.isArray(eodData.tasks) && eodData.tasks.length > 0 ? `
 📋 REPORTED TASKS
 ----------------------------------------
-${eodData.tasks.map((t: any) => `  - ${typeof t === 'string' ? t : t.title || t.description || JSON.stringify(t)}`).join("\n")}
+${eodData.tasks.map((t) => `  - ${typeof t === 'string' ? t : t.title || t.description || JSON.stringify(t)}`).join("\n")}
 ` : ""}
 
 🏆 WINS
 ----------------------------------------
 ${Array.isArray(eodData.wins) && eodData.wins.length > 0
-  ? eodData.wins.map((w: any) => `  🎉 ${typeof w === 'string' ? w : w.text || JSON.stringify(w)}`).join("\n")
+  ? eodData.wins.map((w) => `  🎉 ${typeof w === 'string' ? w : w.text || JSON.stringify(w)}`).join("\n")
   : "  No wins reported"}
 
 🚧 BLOCKERS
 ----------------------------------------
 ${Array.isArray(eodData.blockers) && eodData.blockers.length > 0
-  ? eodData.blockers.map((b: any) => `  ⚠️ ${typeof b === 'string' ? b : b.text || JSON.stringify(b)}`).join("\n")
+  ? eodData.blockers.map((b) => `  ⚠️ ${typeof b === 'string' ? b : b.text || JSON.stringify(b)}`).join("\n")
   : "  No blockers reported"}
 
 ${eodData.escalationNote ? `
@@ -642,10 +717,10 @@ ${eodData.tomorrowFocus || "Not specified"}
           `,
         ])
 
-        const reports = reportsResult.rows
-        const activeMembers = members.filter((m: any) => m.role === "member")
-        const submittedIds = new Set(reports.map((r: any) => r.user_id))
-        const missingMembers = activeMembers.filter((m: any) => !submittedIds.has(m.user_id))
+        const reports = reportsResult.rows as unknown as EodReportRow[]
+        const activeMembers = members.filter((m) => m.role === "member")
+        const submittedIds = new Set(reports.map((r) => r.user_id))
+        const missingMembers = activeMembers.filter((m) => !submittedIds.has(m.user_id))
 
         let fullDigest = `
 📊 COMPLETE TEAM EOD DIGEST
@@ -670,13 +745,13 @@ ${eodData.tomorrowFocus || "Not specified"}
 📝 Summary: ${report.notes || report.summary || "No summary"}
 
 ${report.tasks && Array.isArray(report.tasks) && report.tasks.length > 0 ? `✅ Tasks:
-${report.tasks.map((t: any) => `   - ${typeof t === 'string' ? t : t.title || JSON.stringify(t)}`).join("\n")}
+${report.tasks.map((t) => `   - ${typeof t === 'string' ? t : t.title || JSON.stringify(t)}`).join("\n")}
 ` : ""}
 ${report.wins && Array.isArray(report.wins) && report.wins.length > 0 ? `🏆 Wins:
-${report.wins.map((w: any) => `   - ${typeof w === 'string' ? w : w.text || JSON.stringify(w)}`).join("\n")}
+${report.wins.map((w) => `   - ${typeof w === 'string' ? w : w.text || JSON.stringify(w)}`).join("\n")}
 ` : ""}
 ${report.blockers && Array.isArray(report.blockers) && report.blockers.length > 0 ? `🚧 Blockers:
-${report.blockers.map((b: any) => `   - ${typeof b === 'string' ? b : b.text || JSON.stringify(b)}`).join("\n")}
+${report.blockers.map((b) => `   - ${typeof b === 'string' ? b : b.text || JSON.stringify(b)}`).join("\n")}
 ` : ""}
 ${report.needs_escalation && report.escalation_note ? `🚨 Escalation: ${report.escalation_note}
 ` : ""}
@@ -690,7 +765,7 @@ ${report.tomorrow_focus || report.focus_tomorrow ? `🔮 Tomorrow: ${report.tomo
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ❌ DID NOT SUBMIT (${missingMembers.length})
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${missingMembers.map((m: any) => `   - ${m.name} (${m.email})`).join("\n")}
+${missingMembers.map((m) => `   - ${m.name} (${m.email})`).join("\n")}
 `
         }
 
@@ -701,7 +776,7 @@ ${missingMembers.map((m: any) => `   - ${m.name} (${m.email})`).join("\n")}
     // Tool: Assign Task
     server.tool(
       "assign_task",
-      "Create and assign a task to a team member in AIMS",
+      "Create and assign a task to a team member in Taskspace",
       {
         assigneeName: z.string().describe("Name or partial name of the team member to assign to"),
         title: z.string().describe("Task title"),
@@ -718,19 +793,19 @@ ${missingMembers.map((m: any) => `   - ${m.name} (${m.email})`).join("\n")}
 
         // Find the assignee
         const members = await queryMembers(orgId)
-        const assignee = members.find((m: any) =>
+        const assignee = members.find((m) =>
           m.name.toLowerCase().includes(assigneeName.toLowerCase())
         )
 
         if (!assignee) {
-          return { content: [{ type: "text", text: `No member found matching "${assigneeName}". Available: ${members.map((m: any) => m.name).join(", ")}` }] }
+          return { content: [{ type: "text", text: `No member found matching "${assigneeName}". Available: ${members.map((m) => m.name).join(", ")}` }] }
         }
 
         // Find rock if specified
         let rockId = null
         if (rockTitle) {
           const rocks = await queryRocks(orgId)
-          const rock = rocks.find((r: any) =>
+          const rock = rocks.find((r) =>
             r.title.toLowerCase().includes(rockTitle.toLowerCase())
           )
           if (rock) {
@@ -795,64 +870,98 @@ Task ID: ${taskId}`,
         }
 
         const members = await queryMembers(orgId)
-        const activeMembers = members.filter((m: any) => m.role === "member")
+        const activeMembers = members.filter((m) => m.role === "member")
 
-        // Get workload data for each member
-        const workloadData = await Promise.all(
-          activeMembers.map(async (member: any) => {
-            const [tasksResult, rocksResult, eodResult] = await Promise.all([
-              sql`
-                SELECT t.*,
-                       CASE WHEN t.due_date < CURRENT_DATE AND t.status = 'pending' THEN true ELSE false END as is_overdue
-                FROM tasks t
-                WHERE t.assignee_id = ${member.user_id}
-                AND t.status = 'pending'
-              `,
-              sql`
-                SELECT r.*
-                FROM rocks r
-                WHERE r.owner_id = ${member.user_id}
-                AND r.status IN ('on-track', 'at-risk', 'blocked')
-              `,
-              sql`
-                SELECT COUNT(*) as escalation_count
-                FROM eod_reports er
-                WHERE er.user_id = ${member.user_id}
-                AND er.needs_escalation = true
-                AND er.report_date >= CURRENT_DATE - INTERVAL '7 days'
-              `,
-            ])
+        // OPTIMIZED: Single query with CTEs instead of 3*N queries (one per member)
+        const memberUserIds = activeMembers
+          .filter((m) => m.user_id)
+          .map((m) => m.user_id)
+        const userIdArray = memberUserIds.length > 0 ? `{${memberUserIds.join(',')}}` : '{}'
 
-            const pendingTasks = tasksResult.rows
-            const overdueTasks = pendingTasks.filter((t: any) => t.is_overdue)
-            const highPriorityTasks = pendingTasks.filter((t: any) => t.priority === "high")
-            const activeRocks = rocksResult.rows
-            const blockedRocks = activeRocks.filter((r: any) => r.status === "blocked")
-            const escalations = parseInt(eodResult.rows[0]?.escalation_count || "0")
+        const { rows: workloadRows } = await sql`
+          WITH member_tasks AS (
+            SELECT
+              assignee_id,
+              COUNT(*) as pending_count,
+              COUNT(*) FILTER (WHERE due_date < CURRENT_DATE) as overdue_count,
+              COUNT(*) FILTER (WHERE priority = 'high') as high_priority_count
+            FROM assigned_tasks
+            WHERE assignee_id = ANY(${userIdArray}::text[])
+              AND organization_id = ${orgId}
+              AND status = 'pending'
+            GROUP BY assignee_id
+          ),
+          member_rocks AS (
+            SELECT
+              user_id,
+              COUNT(*) as active_count,
+              COUNT(*) FILTER (WHERE status = 'blocked') as blocked_count
+            FROM rocks
+            WHERE user_id = ANY(${userIdArray}::text[])
+              AND organization_id = ${orgId}
+              AND status IN ('on-track', 'at-risk', 'blocked')
+            GROUP BY user_id
+          ),
+          member_escalations AS (
+            SELECT
+              user_id,
+              COUNT(*) as escalation_count
+            FROM eod_reports
+            WHERE user_id = ANY(${userIdArray}::text[])
+              AND organization_id = ${orgId}
+              AND needs_escalation = true
+              AND date >= CURRENT_DATE - INTERVAL '7 days'
+            GROUP BY user_id
+          )
+          SELECT
+            om.user_id,
+            om.name,
+            om.department,
+            om.email,
+            COALESCE(mt.pending_count, 0)::int as pending_tasks,
+            COALESCE(mt.overdue_count, 0)::int as overdue_tasks,
+            COALESCE(mt.high_priority_count, 0)::int as high_priority_tasks,
+            COALESCE(mr.active_count, 0)::int as active_rocks,
+            COALESCE(mr.blocked_count, 0)::int as blocked_rocks,
+            COALESCE(me.escalation_count, 0)::int as recent_escalations
+          FROM organization_members om
+          LEFT JOIN member_tasks mt ON mt.assignee_id = om.user_id
+          LEFT JOIN member_rocks mr ON mr.user_id = om.user_id
+          LEFT JOIN member_escalations me ON me.user_id = om.user_id
+          WHERE om.organization_id = ${orgId}
+            AND om.role = 'member'
+            AND om.user_id IS NOT NULL
+        `
 
-            // Calculate workload score (lower = more capacity)
-            const workloadScore =
-              pendingTasks.length * 1 +
-              overdueTasks.length * 3 +
-              highPriorityTasks.length * 2 +
-              blockedRocks.length * 5 +
-              escalations * 2
+        const typedWorkloadRows = workloadRows as unknown as WorkloadRow[]
+        const workloadData = typedWorkloadRows.map((row) => {
+          const pendingTasks = row.pending_tasks
+          const overdueTasks = row.overdue_tasks
+          const highPriorityTasks = row.high_priority_tasks
+          const blockedRocks = row.blocked_rocks
+          const escalations = row.recent_escalations
 
-            return {
-              name: member.name,
-              department: member.department,
-              email: member.email,
-              pendingTasks: pendingTasks.length,
-              overdueTasks: overdueTasks.length,
-              highPriorityTasks: highPriorityTasks.length,
-              activeRocks: activeRocks.length,
-              blockedRocks: blockedRocks.length,
-              recentEscalations: escalations,
-              workloadScore,
-              capacity: workloadScore < 5 ? "HIGH" : workloadScore < 10 ? "MEDIUM" : "LOW",
-            }
-          })
-        )
+          const workloadScore =
+            pendingTasks * 1 +
+            overdueTasks * 3 +
+            highPriorityTasks * 2 +
+            blockedRocks * 5 +
+            escalations * 2
+
+          return {
+            name: row.name,
+            department: row.department,
+            email: row.email,
+            pendingTasks,
+            overdueTasks,
+            highPriorityTasks,
+            activeRocks: row.active_rocks,
+            blockedRocks,
+            recentEscalations: escalations,
+            workloadScore,
+            capacity: workloadScore < 5 ? "HIGH" as const : workloadScore < 10 ? "MEDIUM" as const : "LOW" as const,
+          }
+        })
 
         // Sort by workload score (lowest first = most capacity)
         workloadData.sort((a, b) => a.workloadScore - b.workloadScore)
@@ -944,35 +1053,35 @@ ${highCapacity.slice(0, 3).map((w, i) => `  ${i + 1}. ${w.name} - ${w.pendingTas
           queryRocks(orgId),
         ])
 
-        const reports = reportsResult.rows
-        const completedTasks = tasksResult.rows
+        const reports = reportsResult.rows as unknown as EodReportRow[]
+        const completedTasks = tasksResult.rows as unknown as TaskRow[]
         const rocks = rocksResult
 
-        const activeMembers = members.filter((m: any) => m.role === "member")
+        const activeMembers = members.filter((m) => m.role === "member")
         const submissionRate = Math.round((reports.length / activeMembers.length) * 100)
 
         // Aggregate data
         const allWins: string[] = []
         const allBlockers: string[] = []
-        const escalations: any[] = []
+        const escalations: EscalationEntry[] = []
         const moodCounts: Record<string, number> = {}
 
         for (const report of reports) {
           if (report.wins && Array.isArray(report.wins)) {
-            report.wins.forEach((w: any) => {
+            report.wins.forEach((w) => {
               const winText = typeof w === 'string' ? w : w.text || ""
               if (winText) allWins.push(`${report.user_name}: ${winText}`)
             })
           }
           if (report.blockers && Array.isArray(report.blockers)) {
-            report.blockers.forEach((b: any) => {
+            report.blockers.forEach((b) => {
               const blockerText = typeof b === 'string' ? b : b.text || ""
               if (blockerText) allBlockers.push(`${report.user_name}: ${blockerText}`)
             })
           }
           if (report.needs_escalation) {
             escalations.push({
-              name: report.user_name,
+              name: report.user_name || "Unknown",
               note: report.escalation_note || "No details",
             })
           }
@@ -981,11 +1090,11 @@ ${highCapacity.slice(0, 3).map((w, i) => `  ${i + 1}. ${w.name} - ${w.pendingTas
         }
 
         // Rock status summary
-        const rocksOnTrack = rocks.filter((r: any) => r.status === "on-track").length
-        const rocksAtRisk = rocks.filter((r: any) => r.status === "at-risk").length
-        const rocksBlocked = rocks.filter((r: any) => r.status === "blocked").length
+        const rocksOnTrack = rocks.filter((r) => r.status === "on-track").length
+        const rocksAtRisk = rocks.filter((r) => r.status === "at-risk").length
+        const rocksBlocked = rocks.filter((r) => r.status === "blocked").length
         const avgRockProgress = rocks.length > 0
-          ? Math.round(rocks.reduce((s: number, r: any) => s + (r.progress || 0), 0) / rocks.length) : 0
+          ? Math.round(rocks.reduce((s: number, r) => s + (r.progress || 0), 0) / rocks.length) : 0
 
         // Team sentiment
         const positiveCount = moodCounts.positive || 0
@@ -1039,7 +1148,7 @@ ${allWins.slice(0, 5).map((w) => `• ${w}`).join("\n")}
 
 ✅ COMPLETED TODAY
 • ${completedTasks.length} tasks completed across the team
-${completedTasks.slice(0, 5).map((t: any) => `  - ${t.title} (${t.assignee_name})`).join("\n")}
+${completedTasks.slice(0, 5).map((t) => `  - ${t.title} (${t.assignee_name})`).join("\n")}
 ${completedTasks.length > 5 ? `  ... and ${completedTasks.length - 5} more` : ""}
 
 🎯 ROCK STATUS
@@ -1070,9 +1179,11 @@ ${allWins.length > 8 ? `  ... and ${allWins.length - 8} more` : ""}
     )
   },
   {
-    name: "aims-eod-tracker",
-    version: "2.0.0",
-  } as any,
+    serverInfo: {
+      name: "align-tracker",
+      version: "2.0.0",
+    },
+  },
   {
     basePath: "/api/mcp",
     maxDuration: 60,

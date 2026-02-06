@@ -5,10 +5,10 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   title: {
-    default: "Taskspace - EOS Management Platform",
+    default: "Taskspace - EOS Management Platform | Run All Your Teams In True Parallel",
     template: "%s | Taskspace",
   },
-  description: "The all-in-one platform for implementing the Entrepreneurial Operating System. Manage teams, track rocks, run Level 10 meetings, and drive accountability.",
+  description: "The all-in-one AI-powered EOS management platform for multi-company founders and leadership teams. EOD reports, quarterly rocks, scorecards, Level 10 meetings, and accountability charts.",
   keywords: [
     "EOS",
     "Entrepreneurial Operating System",
@@ -22,6 +22,8 @@ export const metadata: Metadata = {
     "team accountability",
     "EOS software",
     "traction tools",
+    "AI productivity",
+    "multi-company management",
   ],
   authors: [{ name: "Taskspace Team" }],
   creator: "Taskspace",
@@ -32,13 +34,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://trytaskspace.com",
     siteName: "Taskspace",
-    title: "Taskspace - EOS Management Platform",
-    description: "The all-in-one platform for implementing the Entrepreneurial Operating System. Run on EOS with confidence.",
+    title: "Taskspace - EOS Management Platform | Run All Your Teams In True Parallel",
+    description: "AI-powered EOS management for multi-company founders. EOD reports, rocks, scorecards, L10 meetings, and more. Start free today.",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Taskspace - EOS Management Platform",
-    description: "The all-in-one platform for implementing the Entrepreneurial Operating System.",
+    description: "AI-powered EOS management for multi-company founders. Run all your teams in true parallel.",
     creator: "@taskspace",
   },
   robots: {
@@ -53,7 +55,10 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/icon.png",
+    icon: [
+      { url: "/icon-light-32x32.png", media: "(prefers-color-scheme: light)" },
+      { url: "/icon-dark-32x32.png", media: "(prefers-color-scheme: dark)" },
+    ],
     apple: "/apple-icon.png",
   },
 }

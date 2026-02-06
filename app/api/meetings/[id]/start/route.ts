@@ -3,6 +3,7 @@ import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { logger } from "@/lib/logger"
+import { isValidTransition, getTransitionErrorMessage } from "@/lib/api/meetings"
 import type { ApiResponse } from "@/lib/types"
 import type { Meeting, MeetingSection, MeetingPrep } from "@/lib/db/meetings"
 
@@ -45,7 +46,7 @@ export async function POST(
       )
     }
 
-    // Can't start already started or completed meetings
+    // STATE MACHINE VALIDATION: Check if transition to in_progress is valid
     if (meetingData.status === "in_progress") {
       // Meeting already started, just return current state with prep
       const prep = await meetings.getPrep(meetingData.workspaceId)
@@ -59,9 +60,10 @@ export async function POST(
       })
     }
 
-    if (meetingData.status === "completed" || meetingData.status === "cancelled") {
+    // Verify transition from current state to in_progress is valid
+    if (!isValidTransition(meetingData.status, "in_progress")) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Cannot start a completed or cancelled meeting" },
+        { success: false, error: getTransitionErrorMessage(meetingData.status, "in_progress") },
         { status: 400 }
       )
     }

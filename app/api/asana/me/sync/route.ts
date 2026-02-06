@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     // Check if user is mapped in org-level Asana config
     if (asanaConfig?.enabled && asanaConfig?.userMappings?.length > 0) {
       const userMapping = asanaConfig.userMappings.find(
-        (m: any) => m.aimsUserId === auth.user.id || m.aimsUserEmail?.toLowerCase() === auth.user.email?.toLowerCase()
+        (m: { aimsUserId: string; aimsUserEmail?: string; asanaUserGid: string }) => m.aimsUserId === auth.user.id || m.aimsUserEmail?.toLowerCase() === auth.user.email?.toLowerCase()
       )
 
       if (userMapping) {

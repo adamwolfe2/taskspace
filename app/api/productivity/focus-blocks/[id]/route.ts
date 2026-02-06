@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext } from "@/lib/auth/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateFocusBlockSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, FocusBlock } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -62,7 +64,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const { id } = await params
-    const body = await request.json()
+    const body = await validateBody(request, updateFocusBlockSchema)
 
     // Get existing block to verify ownership
     const existingBlock = await db.focusBlocks.findById(id)
@@ -80,30 +82,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    // Validate category if provided
-    if (body.category) {
-      const validCategories = ["deep_work", "meetings", "admin", "collaboration", "learning", "planning"]
-      if (!validCategories.includes(body.category)) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: `Invalid category. Must be one of: ${validCategories.join(", ")}` },
-          { status: 400 }
-        )
-      }
-    }
-
-    // Validate quality if provided
-    if (body.quality !== undefined && (body.quality < 1 || body.quality > 5)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Quality must be between 1 and 5" },
-        { status: 400 }
-      )
-    }
-
     const updates: Partial<FocusBlock> = {}
     if (body.startTime) updates.startTime = body.startTime
     if (body.endTime) updates.endTime = body.endTime
     if (body.category) updates.category = body.category
-    if (body.quality !== undefined) updates.quality = body.quality
+    if (body.quality !== undefined) updates.quality = body.quality as 1 | 2 | 3 | 4 | 5
     if (body.interruptions !== undefined) updates.interruptions = body.interruptions
     if (body.notes !== undefined) updates.notes = body.notes
     if (body.taskId !== undefined) updates.taskId = body.taskId
@@ -123,6 +106,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       data: { updated: true },
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Update focus block error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update focus block" },

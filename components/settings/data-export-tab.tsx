@@ -11,8 +11,13 @@ export function DataExportTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Export Data</CardTitle>
-          <CardDescription>Download your organization's data in CSV or JSON format</CardDescription>
+          <div className="flex items-center gap-2">
+            <Download className="h-5 w-5 text-primary" />
+            <CardTitle>Export Data</CardTitle>
+          </div>
+          <CardDescription>
+            Download your organization's data in CSV or JSON format. Exports include all historical data for the current workspace. Use CSV for spreadsheet applications or JSON for data migration and programmatic access.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">

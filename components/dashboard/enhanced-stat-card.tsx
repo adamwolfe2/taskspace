@@ -35,20 +35,20 @@ export function EnhancedStatCard({
   badge,
 }: EnhancedStatCardProps) {
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-card p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-4">
-        <div className={cn("p-3 rounded-lg", iconBg)} style={iconBgStyle}>
-          <Icon className={cn("h-6 w-6", iconColor)} style={iconColorStyle} />
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card p-3 sm:p-6 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-2 sm:mb-4">
+        <div className={cn("p-2 sm:p-3 rounded-lg", iconBg)} style={iconBgStyle}>
+          <Icon className={cn("h-4 w-4 sm:h-6 sm:w-6", iconColor)} style={iconColorStyle} />
         </div>
         {badge && (
-          <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full", badge.color)}>
+          <span className={cn("text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full", badge.color)}>
             {badge.label}
           </span>
         )}
         {trend && !badge && (
           <span
             className={cn(
-              "text-xs font-medium px-2 py-1 rounded-full",
+              "text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full",
               trend.isPositive
                 ? "text-emerald-700 bg-emerald-50"
                 : "text-red-700 bg-red-50"
@@ -59,11 +59,11 @@ export function EnhancedStatCard({
           </span>
         )}
       </div>
-      <div className="space-y-1">
-        <p className="text-sm text-muted-foreground font-medium">{title}</p>
-        <p className="text-3xl font-bold text-foreground">{value}</p>
+      <div className="space-y-0.5 sm:space-y-1">
+        <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate">{title}</p>
+        <p className="text-xl sm:text-3xl font-bold text-foreground">{value}</p>
         {subtitle && (
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{subtitle}</p>
         )}
       </div>
     </div>

@@ -3,12 +3,10 @@ import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { db } from "@/lib/db"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { convertTodoToTaskSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
-
-interface ConvertToTaskRequest {
-  taskId: string
-}
 
 // POST /api/meetings/[id]/todos/[todoId] - Convert todo to task
 export async function POST(
@@ -25,15 +23,7 @@ export async function POST(
     }
 
     const { id: meetingId, todoId } = await params
-    const body: ConvertToTaskRequest = await request.json()
-    const { taskId } = body
-
-    if (!taskId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Task ID is required" },
-        { status: 400 }
-      )
-    }
+    const { taskId } = await validateBody(request, convertTodoToTaskSchema)
 
     // Get meeting to validate workspace access
     const meeting = await meetings.getById(meetingId)
@@ -95,6 +85,12 @@ export async function POST(
       message: "Todo successfully converted to task",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Convert todo to task error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to convert todo to task" },

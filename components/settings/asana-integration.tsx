@@ -218,12 +218,9 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
 
       toast({
         title: "Sync complete",
-        description: `Created ${data.result.tasksCreatedInAsana} in Asana, ${data.result.tasksCreatedInAims} in AIMS. Updated ${data.result.tasksUpdatedInAsana + data.result.tasksUpdatedInAims} tasks.`,
+        description: `Created ${data.result.tasksCreatedInAsana} in Asana, ${data.result.tasksCreatedInAims} in Taskspace. Updated ${data.result.tasksUpdatedInAsana + data.result.tasksUpdatedInAims} tasks.`,
       })
 
-      if (data.result.errors.length > 0) {
-        console.error("Sync errors:", data.result.errors)
-      }
     } catch (error) {
       toast({
         title: "Sync failed",
@@ -253,7 +250,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
           Asana Integration
         </CardTitle>
         <CardDescription>
-          Two-way sync tasks between AIMS and Asana for your team members
+          Two-way sync tasks between Taskspace and Asana for your team members
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -297,7 +294,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
               <div>
                 <Label>Enable Asana Sync</Label>
                 <p className="text-sm text-muted-foreground">
-                  Sync tasks between AIMS and Asana
+                  Sync tasks between Taskspace and Asana
                 </p>
               </div>
               <Switch
@@ -356,7 +353,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
                     <Label>User Mappings</Label>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Map AIMS team members to their Asana accounts. Only mapped users will have tasks synced.
+                    Map Taskspace team members to their Asana accounts. Only mapped users will have tasks synced.
                   </p>
 
                   <div className="space-y-3">

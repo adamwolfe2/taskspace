@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
 import { getMetricById, updateMetric, deleteMetric } from "@/lib/db/scorecard"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateScorecardMetricSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 
 interface RouteParams {
@@ -100,11 +102,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    const body = await request.json()
-    const { name, description, ownerId, targetValue, targetDirection, unit, frequency, displayOrder, isActive } = body
+    const { name, description, ownerId, targetValue, targetDirection, unit, frequency, displayOrder, isActive } =
+      await validateBody(request, updateScorecardMetricSchema)
 
     const updatedMetric = await updateMetric(id, {
-      name: name?.trim() || undefined,
+      name: name || undefined,
       description: description !== undefined ? description?.trim() || undefined : undefined,
       ownerId: ownerId !== undefined ? ownerId || undefined : undefined,
       targetValue: targetValue !== undefined ? (targetValue !== null ? Number(targetValue) : undefined) : undefined,
@@ -125,7 +127,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     logger.info({
       userId: auth.user.id,
       metricId: id,
-      updates: body,
+      updates: { name, description, ownerId, targetValue, targetDirection, unit, frequency, displayOrder, isActive },
     }, "Scorecard metric updated")
 
     return NextResponse.json({
@@ -134,6 +136,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       message: "Metric updated successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Error updating scorecard metric")
     return NextResponse.json(
       {

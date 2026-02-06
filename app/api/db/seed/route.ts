@@ -12,7 +12,7 @@ import { generateId } from "@/lib/auth/password"
 import { initialTeamMembers, initialRocks } from "@/lib/initial-data"
 import { logger, logError } from "@/lib/logger"
 
-export const POST = withAdmin(async (request: NextRequest, auth): Promise<NextResponse> => {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
     const orgId = auth.organization.id
 

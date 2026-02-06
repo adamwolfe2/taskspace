@@ -51,6 +51,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
   const [saveAsTemplate, setSaveAsTemplate] = useState(false)
   const [templateName, setTemplateName] = useState("")
   const [isSavingTemplate, setIsSavingTemplate] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
   // Load templates when modal opens
@@ -142,7 +143,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim() || !dueDate) return
 
     const selectedRock = rockId ? userRocks.find((r) => r.id === rockId) : null
@@ -154,27 +155,32 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
         }
       : undefined
 
-    onSubmit({
-      title: title.trim(),
-      description: description.trim(),
-      rockId: rockId,
-      rockTitle: selectedRock?.title || null,
-      priority,
-      dueDate,
-      recurrence,
-    })
+    setIsSubmitting(true)
+    try {
+      await onSubmit({
+        title: title.trim(),
+        description: description.trim(),
+        rockId: rockId,
+        rockTitle: selectedRock?.title || null,
+        priority,
+        dueDate,
+        recurrence,
+      })
 
-    setTitle("")
-    setDescription("")
-    setRockId(null)
-    setPriority("normal")
-    setDueDate("")
-    setIsRecurring(false)
-    setRecurrenceType("weekly")
-    setRecurrenceInterval(1)
-    setSaveAsTemplate(false)
-    setTemplateName("")
-    onOpenChange(false)
+      setTitle("")
+      setDescription("")
+      setRockId(null)
+      setPriority("normal")
+      setDueDate("")
+      setIsRecurring(false)
+      setRecurrenceType("weekly")
+      setRecurrenceInterval(1)
+      setSaveAsTemplate(false)
+      setTemplateName("")
+      onOpenChange(false)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -255,7 +261,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="priority">Priority</Label>
-              <Select value={priority} onValueChange={(v: any) => setPriority(v)}>
+              <Select value={priority} onValueChange={(v) => setPriority(v as "high" | "medium" | "normal")}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -298,7 +304,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
                   onChange={(e) => setRecurrenceInterval(Math.max(1, parseInt(e.target.value) || 1))}
                   className="w-16 text-center"
                 />
-                <Select value={recurrenceType} onValueChange={(v: any) => setRecurrenceType(v)}>
+                <Select value={recurrenceType} onValueChange={(v) => setRecurrenceType(v as "daily" | "weekly" | "monthly")}>
                   <SelectTrigger className="w-28">
                     <SelectValue />
                   </SelectTrigger>
@@ -355,11 +361,18 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!title.trim() || !dueDate}>
-            Add Task
+          <Button onClick={handleSubmit} disabled={!title.trim() || !dueDate || isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              "Add Task"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

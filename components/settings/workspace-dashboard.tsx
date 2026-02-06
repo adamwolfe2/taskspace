@@ -61,8 +61,8 @@ export function WorkspaceDashboard() {
         ])
 
         const members = membersRes.success ? membersRes.data : []
-        const activeMembers = members.filter((m: any) => m.status === "active")
-        const invitedMembers = members.filter((m: any) => m.status === "invited")
+        const activeMembers = members.filter((m: { status: string }) => m.status === "active")
+        const invitedMembers = members.filter((m: { status: string }) => m.status === "invited")
 
         // Get subscription data
         const subData = subscriptionRes.success ? subscriptionRes.data : null

@@ -98,8 +98,8 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
           setExpandedRock(0)
         }
       }
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred")
     } finally {
       setIsParsing(false)
     }
@@ -165,8 +165,8 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
       setParsedRocks([])
       setParsedMetrics([])
       setExpandedRock(null)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred")
     } finally {
       setIsCreating(false)
     }

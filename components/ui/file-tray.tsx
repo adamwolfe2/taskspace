@@ -145,8 +145,8 @@ export function FileTray({
       }
 
       onAttachmentsChange([...attachments, ...uploadedFiles])
-    } catch (err: any) {
-      setUploadError(err.message || "Failed to upload files")
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : "Failed to upload files")
     } finally {
       setIsUploading(false)
     }

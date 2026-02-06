@@ -130,9 +130,34 @@ export async function GET(request: NextRequest) {
 
       try {
         const today = getTodayInTimezone(timezone)
+        const currentHour = new Date().getUTCHours()
 
-        // Get all active team members
-        const teamMembersData = await db.members.findWithUsersByOrganizationId(org.id)
+        // IDEMPOTENCY CHECK: Track execution to prevent duplicate reminders
+        try {
+          await db.cronExecutions.recordExecution("eod-reminder", org.id, today, currentHour)
+        } catch (error) {
+          // If we get a unique constraint violation, it means reminders already sent this hour
+          if (error instanceof Error && error.message.includes("unique")) {
+            logger.info({ orgName: org.name, today, hour: currentHour }, "Reminders already sent this hour (duplicate run)")
+            results.push({
+              orgId: org.id,
+              orgName: org.name,
+              timezone,
+              reminders: 0,
+              skipped: "Already sent this hour",
+              errors: [],
+            })
+            continue
+          }
+          // For other errors, log and continue to try processing
+          logError(logger, `Failed to record cron execution for org ${org.name}`, error)
+        }
+
+        // OPTIMIZED: Fetch members and today's reports in parallel
+        const [teamMembersData, todayReports] = await Promise.all([
+          db.members.findWithUsersByOrganizationId(org.id),
+          db.eodReports.findByOrganizationAndDate(org.id, today),
+        ])
         const activeMembers = teamMembersData.filter(m => m.status === "active")
 
         if (activeMembers.length === 0) {
@@ -146,10 +171,6 @@ export async function GET(request: NextRequest) {
           })
           continue
         }
-
-        // Get today's EOD reports
-        const allReports = await db.eodReports.findByOrganizationId(org.id)
-        const todayReports = allReports.filter(r => r.date === today)
         const submittedUserIds = new Set(todayReports.map(r => r.userId))
 
         // Find members who haven't submitted
@@ -183,7 +204,17 @@ export async function GET(request: NextRequest) {
         const errors: string[] = []
         let remindersSent = 0
 
+        // Get list of members who already received reminder today (for deduplication)
+        const alreadySentToday = await db.emailDeliveryLog.getDeliveredToday("eod-reminder", org.id, today)
+        const alreadySentMemberIds = new Set(alreadySentToday.map(log => log.memberId))
+
         for (const member of missingMembers) {
+          // Skip if already sent reminder to this member today
+          if (alreadySentMemberIds.has(member.id)) {
+            logger.info({ memberName: member.name, orgName: org.name }, "Skipping member - reminder already sent today")
+            continue
+          }
+
           const memberInfo: TeamMember = {
             id: member.id,
             name: member.name,
@@ -196,6 +227,8 @@ export async function GET(request: NextRequest) {
           const result = await sendMissingEODReminder(memberInfo, org.name, adminMembers)
           if (result.success) {
             remindersSent++
+            // Track email delivery to prevent duplicates
+            await db.emailDeliveryLog.recordDelivery("eod-reminder", org.id, member.id, member.email, today)
           } else {
             errors.push(`${member.name}: ${result.error}`)
           }

@@ -215,7 +215,19 @@ export async function GET(request: NextRequest) {
     }
 
     // === WEEKLY HOURS DATA ===
-    // Generate placeholder data for the week (in production, this would come from focus_blocks table)
+    // Fetch focus blocks for the week from the database
+    const weekStartStr = weekStart.toISOString().split("T")[0]
+    const weekEndStr = new Date(weekStart)
+    weekEndStr.setDate(weekEndStr.getDate() + 7)
+    const weekEndISOStr = weekEndStr.toISOString().split("T")[0]
+
+    const focusBlocks = await db.focusBlocks.findByUserId(
+      userId,
+      auth.organization.id,
+      weekStartStr,
+      weekEndISOStr
+    )
+
     const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     const weeklyHours = []
 
@@ -224,28 +236,38 @@ export async function GET(request: NextRequest) {
       dayDate.setDate(dayDate.getDate() + i)
       const dateStr = dayDate.toISOString().split("T")[0]
 
-      // Calculate minutes from EOD reports (rough estimate based on tasks completed)
-      const dayReport = reports.find((r) => r.date === dateStr)
-      const taskCount = dayReport?.tasks?.length || 0
+      // Get focus blocks for this day
+      const dayBlocks = focusBlocks.filter(block => {
+        const blockDate = new Date(block.startTime).toISOString().split("T")[0]
+        return blockDate === dateStr
+      })
 
-      // Estimate: each task takes ~30 minutes on average
-      const estimatedMinutes = taskCount * 30
+      // Calculate total minutes from actual focus blocks
+      let totalMinutes = 0
+      const byCategory: Partial<Record<FocusBlockCategory, number>> = {}
+
+      dayBlocks.forEach(block => {
+        const start = new Date(block.startTime).getTime()
+        const end = new Date(block.endTime).getTime()
+        const minutes = Math.round((end - start) / 1000 / 60)
+
+        totalMinutes += minutes
+
+        if (!byCategory[block.category]) {
+          byCategory[block.category] = 0
+        }
+        byCategory[block.category]! += minutes
+      })
 
       weeklyHours.push({
         date: dateStr,
         dayLabel: dayLabels[dayDate.getDay()],
-        totalMinutes: estimatedMinutes,
-        byCategory: {
-          deep_work: Math.round(estimatedMinutes * 0.6),
-          meetings: Math.round(estimatedMinutes * 0.2),
-          admin: Math.round(estimatedMinutes * 0.1),
-          collaboration: Math.round(estimatedMinutes * 0.1),
-        } as Partial<Record<FocusBlockCategory, number>>,
+        totalMinutes,
+        byCategory,
       })
     }
 
     // === TASKS THIS WEEK ===
-    const weekStartStr = weekStart.toISOString().split("T")[0]
     // Use updatedAt as a proxy for completion date for completed tasks
     const thisWeekTasks = tasks.filter((t) => {
       if (!t.completed) return false

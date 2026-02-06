@@ -16,7 +16,7 @@ import {
 const colorCalculationCache = new Map<string, ExtractedColors>()
 
 // Debounce helper
-function debounce<T extends (...args: any[]) => any>(
+function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {

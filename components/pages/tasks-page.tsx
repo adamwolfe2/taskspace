@@ -12,6 +12,7 @@ import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { KanbanBoard } from "@/components/tasks/kanban-board"
 import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid } from "lucide-react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useToast } from "@/hooks/use-toast"
 import { addDays, addWeeks, addMonths } from "date-fns"
@@ -216,7 +217,7 @@ export function TasksPage({
           <h1 className="text-2xl sm:text-3xl font-bold truncate">Tasks</h1>
           <p className="text-muted-foreground text-sm sm:text-base mt-1">Manage your daily tasks and to-dos</p>
         </div>
-        <Button onClick={() => setShowAddTaskModal(true)} className="w-full sm:w-auto flex-shrink-0">
+        <Button onClick={() => setShowAddTaskModal(true)} className="w-full sm:w-auto flex-shrink-0 min-h-[44px]">
           <Plus className="mr-2 h-4 w-4" />
           Add Task
         </Button>
@@ -266,7 +267,7 @@ export function TasksPage({
 
       {/* Kanban View */}
       {viewMode === "kanban" ? (
-        <div className="space-y-4">
+        <div className="space-y-4 w-full">
           <KanbanBoard
             tasks={filteredTasks}
             onTaskStatusChange={handleKanbanStatusChange}
@@ -320,10 +321,16 @@ export function TasksPage({
             </CardHeader>
             <CardContent className="px-4 sm:px-6 overflow-hidden">
               {personalTasks.length === 0 ? (
-                <div className="text-center py-6 sm:py-8 text-muted-foreground">
-                  <p className="text-sm sm:text-base">No personal tasks yet</p>
-                  <p className="text-xs sm:text-sm mt-1">Click "+ Add Task" to create your first to-do</p>
-                </div>
+                <EmptyState
+                  icon={ClipboardList}
+                  title="No personal tasks yet"
+                  description="Stay organized by creating tasks for yourself. Track your daily to-dos and link them to your quarterly rocks."
+                  action={{
+                    label: "Create your first task!",
+                    onClick: () => setShowAddTaskModal(true),
+                  }}
+                  size="sm"
+                />
               ) : (
                 <div className="space-y-3">
                   {personalTasks.map((task) => (
@@ -347,8 +354,13 @@ export function TasksPage({
         <TabsContent value="completed" className="space-y-4 w-full overflow-hidden">
           {completedTasks.length === 0 ? (
             <Card className="w-full">
-              <CardContent className="py-6 sm:py-8 text-center text-muted-foreground text-sm sm:text-base">
-                No completed tasks yet
+              <CardContent className="py-2">
+                <EmptyState
+                  icon={ClipboardList}
+                  title="No completed tasks yet"
+                  description="Tasks you complete will appear here. Start checking off your to-dos to build momentum!"
+                  size="sm"
+                />
               </CardContent>
             </Card>
           ) : (

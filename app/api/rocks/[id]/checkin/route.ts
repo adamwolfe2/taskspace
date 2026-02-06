@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { getRockById, createRockCheckin, getWeekStart } from "@/lib/db/rocks"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createRockCheckinSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 
 interface RouteParams {
@@ -53,16 +55,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       }
     }
 
-    const body = await request.json()
-    const { confidence, notes, weekStart } = body
-
-    // Validate confidence
-    if (!confidence || !["on_track", "at_risk", "off_track"].includes(confidence)) {
-      return NextResponse.json(
-        { success: false, error: "Valid confidence level is required (on_track, at_risk, off_track)" },
-        { status: 400 }
-      )
-    }
+    const { confidence, notes, weekStart } = await validateBody(request, createRockCheckinSchema)
 
     const checkin = await createRockCheckin({
       rockId: id,
@@ -85,6 +78,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       message: "Check-in recorded successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Error creating rock check-in")
     return NextResponse.json(
       {

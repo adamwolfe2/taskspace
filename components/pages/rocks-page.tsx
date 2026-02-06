@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Target, Search, Calendar } from "lucide-react"
+import { EmptyState } from "@/components/shared/empty-state"
 
 interface RocksPageProps {
   currentUser: TeamMember
@@ -83,22 +84,22 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
     <FeatureGate feature="core.rocks">
       <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Rock Progress</h1>
-        <p className="text-slate-500 mt-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Rock Progress</h1>
+        <p className="text-sm sm:text-base text-slate-500 mt-1">
           {isAdmin ? "View all team rocks" : "Track your quarterly goals"}
         </p>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-card p-5">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
+      <div className="bg-white rounded-xl shadow-card p-3 sm:p-5">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="flex-1 relative min-w-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Search rocks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-slate-50 border-slate-200"
+              className="pl-9 bg-slate-50 border-slate-200 w-full"
             />
           </div>
           <Select value={quarterFilter} onValueChange={setQuarterFilter}>
@@ -146,100 +147,162 @@ export function RocksPage({ currentUser, teamMembers, rocks }: RocksPageProps) {
       </div>
 
       <div className="bg-white rounded-xl shadow-card overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
-          <Target className="h-5 w-5 text-slate-500" />
-          <h3 className="font-semibold text-slate-900">
+        <div className="px-3 sm:px-5 py-3 sm:py-4 border-b border-slate-100 flex items-center gap-2">
+          <Target className="h-5 w-5 text-slate-500 flex-shrink-0" />
+          <h3 className="font-semibold text-slate-900 text-sm sm:text-base">
             Rocks ({displayRocks.length}{baseRocks.length !== displayRocks.length ? ` of ${baseRocks.length}` : ""})
           </h3>
         </div>
-        <div className="p-5">
+        <div className="p-3 sm:p-5">
           {displayRocks.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Target className="h-6 w-6 text-slate-400" />
-              </div>
-              <p className="text-slate-600 font-medium">No rocks found</p>
-              <p className="text-sm text-slate-400 mt-1">
-                {searchQuery || statusFilter !== "all" || ownerFilter !== "all" || quarterFilter !== "all"
-                  ? "Try adjusting your search or filters"
-                  : `No rocks assigned for ${quarterFilter}`}
-              </p>
-            </div>
+            baseRocks.length === 0 ? (
+              <EmptyState
+                icon={Target}
+                title="No quarterly rocks yet"
+                description="Rocks are your most important quarterly goals. They keep your team focused on what matters most. Your admin will assign rocks to help drive your success."
+                size="md"
+              />
+            ) : (
+              <EmptyState
+                icon={Search}
+                title="No rocks match your filters"
+                description="Try adjusting your search query, status filter, or selected quarter to find what you're looking for."
+                size="sm"
+              />
+            )
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-slate-100">
-                    {isAdmin && <TableHead className="text-slate-500 font-medium">Owner</TableHead>}
-                    <TableHead className="text-slate-500 font-medium">Rock</TableHead>
-                    <TableHead className="text-slate-500 font-medium">Quarter</TableHead>
-                    <TableHead className="text-slate-500 font-medium">Status</TableHead>
-                    <TableHead className="text-slate-500 font-medium">Progress</TableHead>
-                    <TableHead className="text-slate-500 font-medium">Due Date</TableHead>
-                    <TableHead className="text-slate-500 font-medium">Days Left</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {displayRocks.map((rock) => {
-                    const owner = teamMembers.find((m) => m.userId === rock.userId)
-                    const daysLeft = getDaysUntil(rock.dueDate)
-                    const statusConfig = getStatusConfig(rock.status)
+            <>
+              {/* Mobile card layout */}
+              <div className="md:hidden space-y-3">
+                {displayRocks.map((rock) => {
+                  const owner = teamMembers.find((m) => m.userId === rock.userId)
+                  const daysLeft = getDaysUntil(rock.dueDate)
+                  const statusConfig = getStatusConfig(rock.status)
 
-                    return (
-                      <TableRow key={rock.id} className="border-slate-100 hover:bg-slate-50/50">
-                        {isAdmin && (
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {owner && <UserInitials name={owner.name} size="sm" />}
-                              <span className="text-sm text-slate-700">{owner?.name}</span>
-                            </div>
-                          </TableCell>
-                        )}
-                        <TableCell>
-                          <div>
-                            <p className="font-medium text-slate-900">{rock.title}</p>
-                            <p className="text-xs text-slate-400 mt-0.5">{rock.description}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {rock.quarter ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
+                  return (
+                    <div key={rock.id} className="border border-slate-200 rounded-lg p-3 space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-slate-900 text-sm leading-snug">{rock.title}</p>
+                          {rock.description && (
+                            <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{rock.description}</p>
+                          )}
+                        </div>
+                        <span className={`status-pill flex-shrink-0 text-xs ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+                          {statusConfig.label}
+                        </span>
+                      </div>
+                      {isAdmin && owner && (
+                        <div className="flex items-center gap-1.5">
+                          <UserInitials name={owner.name} size="sm" />
+                          <span className="text-xs text-slate-600">{owner.name}</span>
+                        </div>
+                      )}
+                      <div className="w-full">
+                        <ProgressBar value={rock.progress} status={rock.status} size="sm" />
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <div className="flex items-center gap-3">
+                          {rock.quarter && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
                               {rock.quarter}
                             </span>
-                          ) : (
-                            <span className="text-slate-400 text-sm">-</span>
                           )}
-                        </TableCell>
-                        <TableCell>
-                          <span className={`status-pill ${statusConfig.bgColor} ${statusConfig.textColor}`}>
-                            {statusConfig.label}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="w-32">
-                            <ProgressBar value={rock.progress} status={rock.status} size="sm" />
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-slate-600">{formatDate(rock.dueDate)}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`text-sm font-medium ${
-                              daysLeft < 0
-                                ? "text-red-600"
-                                : daysLeft < 7
-                                  ? "text-amber-600"
-                                  : "text-slate-500"
-                            }`}
-                          >
-                            {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                          <span>{formatDate(rock.dueDate)}</span>
+                        </div>
+                        <span
+                          className={`font-medium ${
+                            daysLeft < 0
+                              ? "text-red-600"
+                              : daysLeft < 7
+                                ? "text-amber-600"
+                                : "text-slate-500"
+                          }`}
+                        >
+                          {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Desktop table layout */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-slate-100">
+                      {isAdmin && <TableHead className="text-slate-500 font-medium">Owner</TableHead>}
+                      <TableHead className="text-slate-500 font-medium">Rock</TableHead>
+                      <TableHead className="text-slate-500 font-medium">Quarter</TableHead>
+                      <TableHead className="text-slate-500 font-medium">Status</TableHead>
+                      <TableHead className="text-slate-500 font-medium">Progress</TableHead>
+                      <TableHead className="text-slate-500 font-medium">Due Date</TableHead>
+                      <TableHead className="text-slate-500 font-medium">Days Left</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {displayRocks.map((rock) => {
+                      const owner = teamMembers.find((m) => m.userId === rock.userId)
+                      const daysLeft = getDaysUntil(rock.dueDate)
+                      const statusConfig = getStatusConfig(rock.status)
+
+                      return (
+                        <TableRow key={rock.id} className="border-slate-100 hover:bg-slate-50/50">
+                          {isAdmin && (
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {owner && <UserInitials name={owner.name} size="sm" />}
+                                <span className="text-sm text-slate-700">{owner?.name}</span>
+                              </div>
+                            </TableCell>
+                          )}
+                          <TableCell>
+                            <div>
+                              <p className="font-medium text-slate-900">{rock.title}</p>
+                              <p className="text-xs text-slate-400 mt-0.5">{rock.description}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {rock.quarter ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
+                                {rock.quarter}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-sm">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <span className={`status-pill ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+                              {statusConfig.label}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="w-32">
+                              <ProgressBar value={rock.progress} status={rock.status} size="sm" />
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-slate-600">{formatDate(rock.dueDate)}</TableCell>
+                          <TableCell>
+                            <span
+                              className={`text-sm font-medium ${
+                                daysLeft < 0
+                                  ? "text-red-600"
+                                  : daysLeft < 7
+                                    ? "text-amber-600"
+                                    : "text-slate-500"
+                              }`}
+                            >
+                              {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </div>
       </div>

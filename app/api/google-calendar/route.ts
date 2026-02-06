@@ -3,6 +3,8 @@ import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import * as googleCalendar from "@/lib/google-calendar"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateGoogleCalendarSettingsSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -114,16 +116,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { syncEnabled, calendarId, workspaceId } = body
-
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
+    const { syncEnabled, calendarId, workspaceId } = await validateBody(request, updateGoogleCalendarSettingsSchema)
 
     // Validate workspace access
     const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
@@ -161,6 +154,12 @@ export async function PATCH(request: NextRequest) {
       message: "Settings updated successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Update Google Calendar settings error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update settings" },

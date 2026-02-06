@@ -1,22 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, EODInsight } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // POST /api/ai/parse-eod - Parse an EOD report and extract insights
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },
@@ -102,19 +94,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // GET /api/ai/parse-eod - Get EOD insights
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const eodReportId = searchParams.get("eodReportId")
     const days = parseInt(searchParams.get("days") || "7", 10)
@@ -146,19 +130,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/ai/parse-eod/batch - Parse multiple EOD reports
-export async function PUT(request: NextRequest) {
+export const PUT = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "AI features are not configured" },
@@ -172,9 +148,8 @@ export async function PUT(request: NextRequest) {
     // Default to today
     const targetDate = date || new Date().toISOString().split("T")[0]
 
-    // Get all EOD reports for the date
-    const allReports = await db.eodReports.findByOrganizationId(auth.organization.id)
-    const dateReports = allReports.filter(r => r.date === targetDate)
+    // OPTIMIZED: Fetch only reports for the target date instead of all reports
+    const dateReports = await db.eodReports.findByOrganizationAndDate(auth.organization.id, targetDate)
 
     if (dateReports.length === 0) {
       return NextResponse.json<ApiResponse<null>>(
@@ -183,16 +158,32 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Get team members for context
-    const teamMembersData = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+    // OPTIMIZED: Fetch all independent data in parallel instead of sequentially
+    const reportIds = dateReports.map(r => r.id)
+    const uniqueUserIds = [...new Set(dateReports.map(r => r.userId))]
+
+    const [teamMembersData, existingInsights, allRocks] = await Promise.all([
+      db.members.findWithUsersByOrganizationId(auth.organization.id),
+      db.eodInsights.findByReportIds(reportIds),
+      db.rocks.findByUserIds(uniqueUserIds, auth.organization.id),
+    ])
+
     const memberMap = new Map(teamMembersData.map(m => [m.id, m]))
+    const existingInsightMap = new Map(existingInsights.map(i => [i.eodReportId, i]))
 
     const insights: EODInsight[] = []
     const alerts: Array<{ memberId: string; memberName: string; reason: string }> = []
+    const rocksByUser = new Map<string, typeof allRocks>()
+    for (const rock of allRocks) {
+      if (!rock.userId) continue
+      const existing = rocksByUser.get(rock.userId) || []
+      existing.push(rock)
+      rocksByUser.set(rock.userId, existing)
+    }
 
     for (const report of dateReports) {
-      // Skip if already processed
-      const existing = await db.eodInsights.findByEODReportId(report.id)
+      // Skip if already processed (using pre-fetched data)
+      const existing = existingInsightMap.get(report.id)
       if (existing) {
         insights.push(existing)
         continue
@@ -201,8 +192,8 @@ export async function PUT(request: NextRequest) {
       const member = memberMap.get(report.userId)
       if (!member) continue
 
-      // Get user's rocks
-      const rocks = await db.rocks.findByUserId(report.userId, auth.organization.id)
+      // Use pre-fetched rocks for this user
+      const rocks = rocksByUser.get(report.userId) || []
 
       // Parse with Claude
       const result = await parseEODReport(report, member.name, member.department, rocks)
@@ -249,4 +240,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

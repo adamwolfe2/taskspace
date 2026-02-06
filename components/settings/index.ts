@@ -10,6 +10,7 @@ export { NotificationPreferencesCard } from "./notification-preferences"
 export { PushNotificationsCard } from "./push-notifications"
 
 // Settings tab component exports
+export { ProfileSettingsTab } from "./profile-settings-tab"
 export { OrganizationSettingsTab } from "./organization-settings-tab"
 export { TeamManagementTab } from "./team-management-tab"
 export { WorkspaceSettingsTab } from "./workspace-settings-tab"

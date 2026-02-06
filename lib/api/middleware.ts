@@ -38,12 +38,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin, isOwner, type AuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
+import { handleError } from "@/lib/api/errors"
 import type { ApiResponse } from "@/lib/types"
 
 /**
  * Type for authenticated API route handler
  */
-export type AuthenticatedHandler<T = any> = (
+export type AuthenticatedHandler<T = unknown> = (
   request: NextRequest,
   auth: AuthContext
 ) => Promise<NextResponse<T>>
@@ -51,7 +52,7 @@ export type AuthenticatedHandler<T = any> = (
 /**
  * Type for workspace-scoped API route handler
  */
-export type WorkspaceHandler<T = any> = (
+export type WorkspaceHandler<T = unknown> = (
   request: NextRequest,
   auth: AuthContext,
   workspaceId: string
@@ -75,8 +76,8 @@ export type RouteContext = {
  * })
  */
 export function withAuth(
-  handler: AuthenticatedHandler<any>
-): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<any>> {
+  handler: AuthenticatedHandler<ApiResponse<unknown>>
+): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
     try {
       const auth = await getAuthContext(request)
@@ -90,11 +91,7 @@ export function withAuth(
 
       return await handler(request, auth)
     } catch (error) {
-      console.error("Auth middleware error:", error)
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Internal server error" },
-        { status: 500 }
-      )
+      return handleError(error)
     }
   }
 }
@@ -110,8 +107,8 @@ export function withAuth(
  * })
  */
 export function withAdmin(
-  handler: AuthenticatedHandler<any>
-): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<any>> {
+  handler: AuthenticatedHandler<ApiResponse<unknown>>
+): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
     try {
       const auth = await getAuthContext(request)
@@ -132,11 +129,7 @@ export function withAdmin(
 
       return await handler(request, auth)
     } catch (error) {
-      console.error("Admin middleware error:", error)
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Internal server error" },
-        { status: 500 }
-      )
+      return handleError(error)
     }
   }
 }
@@ -152,8 +145,8 @@ export function withAdmin(
  * })
  */
 export function withOwner(
-  handler: AuthenticatedHandler<any>
-): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<any>> {
+  handler: AuthenticatedHandler<ApiResponse<unknown>>
+): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
     try {
       const auth = await getAuthContext(request)
@@ -174,11 +167,7 @@ export function withOwner(
 
       return await handler(request, auth)
     } catch (error) {
-      console.error("Owner middleware error:", error)
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Internal server error" },
-        { status: 500 }
-      )
+      return handleError(error)
     }
   }
 }
@@ -197,8 +186,8 @@ export function withOwner(
  * })
  */
 export function withWorkspaceAccess(
-  handler: WorkspaceHandler<any>
-): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<any>> {
+  handler: WorkspaceHandler<ApiResponse<unknown>>
+): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
     try {
       const auth = await getAuthContext(request)
@@ -232,11 +221,7 @@ export function withWorkspaceAccess(
 
       return await handler(request, auth, workspaceId)
     } catch (error) {
-      console.error("Workspace access middleware error:", error)
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Internal server error" },
-        { status: 500 }
-      )
+      return handleError(error)
     }
   }
 }
@@ -260,8 +245,8 @@ export function withWorkspaceParam(
     auth: AuthContext,
     workspaceId: string,
     context: RouteContext
-  ) => Promise<NextResponse<any>>
-): (request: NextRequest, context: RouteContext) => Promise<NextResponse<any>> {
+  ) => Promise<NextResponse<ApiResponse<unknown>>>
+): (request: NextRequest, context: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context: RouteContext) => {
     try {
       const auth = await getAuthContext(request)
@@ -295,11 +280,7 @@ export function withWorkspaceParam(
 
       return await handler(request, auth, workspaceId, context)
     } catch (error) {
-      console.error("Workspace param middleware error:", error)
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Internal server error" },
-        { status: 500 }
-      )
+      return handleError(error)
     }
   }
 }
@@ -321,18 +302,14 @@ export function withWorkspaceParam(
  * })
  */
 export function withOptionalAuth(
-  handler: (request: NextRequest, auth: AuthContext | null) => Promise<NextResponse<any>>
-): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<any>> {
+  handler: (request: NextRequest, auth: AuthContext | null) => Promise<NextResponse<ApiResponse<unknown>>>
+): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
     try {
       const auth = await getAuthContext(request)
       return await handler(request, auth)
     } catch (error) {
-      console.error("Optional auth middleware error:", error)
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Internal server error" },
-        { status: 500 }
-      )
+      return handleError(error)
     }
   }
 }
@@ -349,7 +326,7 @@ export function withOptionalAuth(
  * )
  */
 export function withRoleCheck(requiredRole: "owner" | "admin" | "manager" | "member") {
-  return function (handler: AuthenticatedHandler<any>): AuthenticatedHandler<any> {
+  return function (handler: AuthenticatedHandler<ApiResponse<unknown>>): AuthenticatedHandler<ApiResponse<unknown>> {
     return async (request: NextRequest, auth: AuthContext) => {
       const roleHierarchy = {
         owner: 4,
@@ -388,7 +365,7 @@ export function withRoleCheck(requiredRole: "owner" | "admin" | "manager" | "mem
  *   })
  * )
  */
-export function withOrgMembership(handler: AuthenticatedHandler<any>): AuthenticatedHandler<any> {
+export function withOrgMembership(handler: AuthenticatedHandler<ApiResponse<unknown>>): AuthenticatedHandler<ApiResponse<unknown>> {
   return async (request: NextRequest, auth: AuthContext) => {
     if (!auth.member || auth.member.organizationId !== auth.organization.id) {
       return NextResponse.json<ApiResponse<null>>(
@@ -398,5 +375,39 @@ export function withOrgMembership(handler: AuthenticatedHandler<any>): Authentic
     }
 
     return await handler(request, auth)
+  }
+}
+
+/**
+ * Verify workspace belongs to the authenticated user's organization
+ *
+ * CRITICAL SECURITY: This prevents cross-organization data access by ensuring
+ * that a workspace ID belongs to the authenticated user's organization before
+ * allowing access. Returns 404 (not 403) to avoid information leakage.
+ *
+ * @param workspaceId - The workspace ID to verify
+ * @param organizationId - The authenticated user's organization ID
+ * @returns true if workspace belongs to organization, false otherwise
+ *
+ * @example
+ * const workspace = await getWorkspaceById(workspaceId)
+ * if (!workspace || !verifyWorkspaceOrgBoundary(workspace, auth.organization.id)) {
+ *   return NextResponse.json({ success: false, error: "Workspace not found" }, { status: 404 })
+ * }
+ */
+export async function verifyWorkspaceOrgBoundary(
+  workspaceId: string,
+  organizationId: string
+): Promise<boolean> {
+  try {
+    const { getWorkspaceById } = await import("@/lib/db/workspaces")
+    const workspace = await getWorkspaceById(workspaceId)
+    if (!workspace) {
+      return false
+    }
+    return workspace.organizationId === organizationId
+  } catch (error) {
+    console.error("Error verifying workspace org boundary:", error)
+    return false
   }
 }

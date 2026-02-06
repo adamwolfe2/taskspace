@@ -19,6 +19,8 @@ import { db } from "@/lib/db"
 import { taskSubtasks } from "@/lib/db/task-subtasks"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { isAdmin } from "@/lib/auth/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createSubtaskSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, TaskSubtask } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -98,16 +100,8 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
       )
     }
 
-    // Parse request body
-    const body = await request.json()
-    const { title, completed, orderIndex } = body
-
-    if (!title || typeof title !== "string" || title.trim().length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Subtask title is required" },
-        { status: 400 }
-      )
-    }
+    // Validate request body
+    const { title, completed, orderIndex } = await validateBody(request, createSubtaskSchema)
 
     // Fetch task
     const task = await db.assignedTasks.findById(taskId)
@@ -139,8 +133,8 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
 
     // Create subtask
     const newSubtask = await taskSubtasks.create(taskId, {
-      title: title.trim(),
-      completed: completed ?? false,
+      title,
+      completed,
       orderIndex,
     })
 
@@ -155,11 +149,10 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
       message: "Subtask created successfully",
     })
   } catch (error) {
-    // Handle validation errors
-    if (error instanceof Error && error.message.includes("Subtask")) {
+    if (error instanceof ValidationError) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: error.message },
-        { status: 400 }
+        { status: error.statusCode }
       )
     }
 

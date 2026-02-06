@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import {
   getSuggestions,
   getSuggestionStats,
@@ -23,24 +23,8 @@ interface SuggestionsResponse {
  * GET /api/ai/suggestions
  * List AI suggestions for the organization's inbox
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can view the AI inbox
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required to view AI suggestions" },
-        { status: 403 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
 
     // Parse filters from query params
@@ -83,7 +67,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * Parse comma-separated array params

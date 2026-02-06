@@ -285,11 +285,43 @@ class AuditLogger {
     const offset = filters.offset || 0
 
     try {
-      // TODO: Fix dynamic query with proper postgres.js syntax
-      // Complex parameterized queries need refactoring for postgres.js
-      // For now, return empty results to unblock build
-      console.warn("Audit log queries temporarily disabled - needs refactoring")
-      return []
+      // Use sql.query() for dynamic queries with parameterized values
+      const query = `
+        SELECT
+          id,
+          organization_id,
+          user_id,
+          action,
+          severity,
+          resource_type,
+          resource_id,
+          metadata,
+          ip_address,
+          user_agent,
+          created_at
+        FROM audit_logs
+        ${whereClause}
+        ORDER BY created_at DESC
+        LIMIT $${paramIndex++}
+        OFFSET $${paramIndex++}
+      `
+      values.push(limit, offset)
+
+      const result = await (sql as unknown as { query: (q: string, v: unknown[]) => Promise<{ rows: Record<string, unknown>[] }> }).query(query, values)
+
+      return result.rows.map((row: any) => ({
+        id: row.id,
+        organizationId: row.organization_id,
+        userId: row.user_id,
+        action: row.action,
+        severity: row.severity,
+        resourceType: row.resource_type,
+        resourceId: row.resource_id,
+        metadata: row.metadata,
+        ipAddress: row.ip_address,
+        userAgent: row.user_agent,
+        timestamp: row.created_at,
+      }))
     } catch (error) {
       console.error("Failed to query audit logs:", error)
       return []

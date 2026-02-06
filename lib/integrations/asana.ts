@@ -141,7 +141,7 @@ export interface AsanaTask {
   due_on: string | null
   assignee: AsanaUser | null
   projects: { gid: string; name: string }[]
-  custom_fields?: any[]
+  custom_fields?: Record<string, unknown>[]
 }
 
 export interface AsanaSection {

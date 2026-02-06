@@ -8,7 +8,7 @@ import { Loader2, CheckCircle, XCircle, AlertTriangle } from "lucide-react"
 export default function RunMigrationsPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [message, setMessage] = useState("")
-  const [results, setResults] = useState<any>(null)
+  const [results, setResults] = useState<{ migrations?: { status: string; file: string; error?: string }[]; succeeded?: number; failed?: number; steps?: string[] } | null>(null)
 
   const handleRunMigrations = async () => {
     setStatus("loading")
@@ -78,7 +78,7 @@ export default function RunMigrationsPage() {
                   <p className="text-sm text-green-700">{message}</p>
                   <p className="text-sm text-green-700 mt-2">
                     ✓ {results.succeeded} migrations succeeded
-                    {results.failed > 0 && ` · ${results.failed} failed`}
+                    {(results.failed ?? 0) > 0 && ` · ${results.failed} failed`}
                   </p>
                 </div>
               </div>
@@ -114,7 +114,7 @@ export default function RunMigrationsPage() {
                 </pre>
                 {results && (
                   <div className="mt-3 space-y-1">
-                    {results.migrations?.map((m: any, i: number) => (
+                    {results.migrations?.map((m, i) => (
                       <div key={i} className="flex items-center gap-2 text-xs font-mono">
                         {m.status === "success" ? (
                           <CheckCircle className="h-3 w-3 text-green-600" />

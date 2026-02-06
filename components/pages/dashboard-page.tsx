@@ -158,17 +158,17 @@ export function DashboardPage({
  }
 
  return (
- <div className="space-y-6">
+ <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
  {/* Keyboard Shortcuts Dialog */}
  <KeyboardShortcutsDialog />
 
  {/* Header with Quick Actions */}
- <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
- <div>
- <h1 className="text-2xl font-bold text-slate-900 ">
+ <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+ <div className="min-w-0">
+ <h1 className="text-xl sm:text-2xl font-bold text-slate-900 ">
  Welcome back, {currentUser.name.split(" ")[0]}
  </h1>
- <p className="text-slate-500  mt-1">Here's your overview for today</p>
+ <p className="text-sm sm:text-base text-slate-500 mt-1">Here's your overview for today</p>
  </div>
  {(hasEodFeature || hasTasksFeature) && (
  <QuickActionsBar
@@ -213,7 +213,7 @@ export function DashboardPage({
 
  {/* Rocks and Tasks Grid - Only show if at least one is enabled */}
  {(hasRocksFeature || hasTasksFeature) && (
- <div className={`grid grid-cols-1 ${hasRocksFeature && hasTasksFeature ? 'lg:grid-cols-2' : ''} gap-6`}>
+ <div className={`grid grid-cols-1 ${hasRocksFeature && hasTasksFeature ? 'lg:grid-cols-2' : ''} gap-4 sm:gap-6`}>
  {hasRocksFeature && (
  <ErrorBoundary title="Rocks section unavailable">
  <MyRocksSection
@@ -249,11 +249,11 @@ export function DashboardPage({
  <ErrorBoundary title="EOD submission unavailable">
  {/* All team members get tabs to switch between AI and Manual EOD submission */}
  <Tabs defaultValue="ai" className="w-full">
- <TabsList className="grid w-full grid-cols-2 mb-4">
- <TabsTrigger value="ai" className="data-[state=active]:bg-purple-100">
+ <TabsList className="grid w-full grid-cols-2 mb-3 sm:mb-4">
+ <TabsTrigger value="ai" className="data-[state=active]:bg-purple-100 text-xs sm:text-sm min-h-[44px]">
  ✨ AI Text Dump
  </TabsTrigger>
- <TabsTrigger value="manual">
+ <TabsTrigger value="manual" className="text-xs sm:text-sm min-h-[44px]">
  Manual Entry
  </TabsTrigger>
  </TabsList>
@@ -286,10 +286,10 @@ export function DashboardPage({
  {/* Empty Dashboard State */}
  {!hasTasksFeature && !hasRocksFeature && !hasEodFeature && !hasFocusBlocksFeature && (
  <Card>
- <CardContent className="flex flex-col items-center justify-center py-16">
- <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
- <h3 className="text-lg font-semibold mb-2">Dashboard Empty</h3>
- <p className="text-sm text-muted-foreground text-center max-w-md">
+ <CardContent className="flex flex-col items-center justify-center py-10 sm:py-16 px-4">
+ <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+ <h3 className="text-base sm:text-lg font-semibold mb-2">Dashboard Empty</h3>
+ <p className="text-xs sm:text-sm text-muted-foreground text-center max-w-md">
  No dashboard widgets are available. Contact your workspace admin to enable features.
  </p>
  </CardContent>

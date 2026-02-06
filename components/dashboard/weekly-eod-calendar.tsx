@@ -166,28 +166,29 @@ export function WeeklyEODCalendar({
 
  return (
  <TooltipProvider>
- <div className="section-card p-5">
- <div className="flex items-center justify-between mb-4">
+ <div className="section-card p-3 sm:p-5">
+ <div className="flex items-center justify-between mb-3 sm:mb-4">
  <div className="flex items-center gap-2">
- <div className="p-2 rounded-lg bg-slate-100 ">
- <Calendar className="h-5 w-5 text-slate-600 " />
+ <div className="p-1.5 sm:p-2 rounded-lg bg-slate-100 ">
+ <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 " />
  </div>
  <div>
- <h3 className="font-semibold text-slate-900 ">Weekly EOD Status</h3>
- <p className="text-xs text-slate-500 ">
+ <h3 className="text-sm sm:text-base font-semibold text-slate-900 ">Weekly EOD Status</h3>
+ <p className="text-[10px] sm:text-xs text-slate-500 ">
  {submittedCount} of {expectedCount} submitted
  </p>
  </div>
  </div>
  {submittedCount === expectedCount && expectedCount > 0 && (
- <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50   px-2 py-1 rounded-full">
+ <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium text-emerald-600 bg-emerald-50   px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
  <CheckCircle2 className="h-3 w-3" />
- On track
+ <span className="hidden sm:inline">On track</span>
+ <span className="sm:hidden">OK</span>
  </span>
  )}
  </div>
 
- <div className="flex justify-between gap-2">
+ <div className="flex justify-between gap-1 sm:gap-2">
  {weekDays.map((day) => {
  const isSelected = selectedDate === day.date
  const isClickable = !day.isFuture && onSelectDate
@@ -208,9 +209,9 @@ export function WeeklyEODCalendar({
  }}
  disabled={day.isFuture}
  className={cn(
- "flex-1 flex flex-col items-center p-3 rounded-lg transition-all relative",
+ "flex-1 flex flex-col items-center p-2 sm:p-3 rounded-lg transition-all relative min-w-0 min-h-[72px] sm:min-h-[88px]",
  showAsSelected
- ? "bg-gradient-to-br from-slate-500 to-slate-600 text-white ring-2 ring-slate-400 ring-offset-2"
+ ? "bg-gradient-to-br from-slate-500 to-slate-600 text-white ring-2 ring-slate-400 ring-offset-1 sm:ring-offset-2"
  : day.isFuture
  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
  : day.hasSubmission
@@ -229,7 +230,7 @@ export function WeeklyEODCalendar({
  )}
  <span
  className={cn(
- "text-xs font-medium",
+ "text-[10px] sm:text-xs font-medium",
  showAsSelected
  ? "text-slate-200"
  : day.isFuture
@@ -241,7 +242,7 @@ export function WeeklyEODCalendar({
  </span>
  <span
  className={cn(
- "text-lg font-bold mt-1",
+ "text-base sm:text-lg font-bold mt-0.5 sm:mt-1",
  showAsSelected
  ? "text-white"
  : day.isFuture
@@ -253,15 +254,15 @@ export function WeeklyEODCalendar({
  >
  {day.dayNumber}
  </span>
- <div className="mt-2">
+ <div className="mt-1 sm:mt-2">
  {day.isFuture ? (
- <Circle className="h-5 w-5 text-slate-300 " />
+ <Circle className="h-4 w-4 sm:h-5 sm:w-5 text-slate-300 " />
  ) : day.hasSubmission ? (
- <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+ <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500" />
  ) : showAsSelected ? (
- <Circle className="h-5 w-5 text-amber-400" />
+ <Circle className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400" />
  ) : (
- <Circle className="h-5 w-5 text-red-400" />
+ <Circle className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
  )}
  </div>
  </button>
@@ -322,8 +323,8 @@ export function WeeklyEODCalendar({
 
  {/* Mood Trend Line (optional) */}
  {showMoodTrend && submittedCount > 0 && (
- <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 ">
- <span className="text-xs text-slate-500 ">Mood:</span>
+ <div className="flex items-center gap-2 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-slate-100 ">
+ <span className="text-[10px] sm:text-xs text-slate-500 flex-shrink-0">Mood:</span>
  <div className="flex items-center gap-1">
  {weekDays.map((day, i) => {
  if (!day.hasSubmission) return null
@@ -342,17 +343,17 @@ export function WeeklyEODCalendar({
  </div>
  )}
 
- <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-slate-100 ">
- <div className="flex items-center gap-1.5 text-xs text-slate-500 ">
- <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+ <div className="flex items-center justify-center gap-3 sm:gap-6 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-100 flex-wrap">
+ <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-slate-500 ">
+ <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500 flex-shrink-0" />
  <span>Submitted</span>
  </div>
- <div className="flex items-center gap-1.5 text-xs text-slate-500 ">
- <Circle className="h-3.5 w-3.5 text-amber-400" />
- <span>Today (pending)</span>
+ <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-slate-500 ">
+ <Circle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-400 flex-shrink-0" />
+ <span>Pending</span>
  </div>
- <div className="flex items-center gap-1.5 text-xs text-slate-500 ">
- <Circle className="h-3.5 w-3.5 text-red-400" />
+ <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-slate-500 ">
+ <Circle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-red-400 flex-shrink-0" />
  <span>Missed</span>
  </div>
  </div>

@@ -4,6 +4,10 @@ import {
   hashPassword,
   isTokenExpired,
 } from "@/lib/auth/password"
+import {
+  checkPasswordResetRateLimit,
+  getRateLimitHeaders,
+} from "@/lib/auth/rate-limit"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { resetPasswordSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
@@ -11,6 +15,23 @@ import { logger, logError } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {
+    // Check rate limit
+    const rateLimitResult = checkPasswordResetRateLimit(request)
+    if (!rateLimitResult.success) {
+      const response = NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: "Too many password reset attempts. Please wait a few minutes and try again.",
+        },
+        { status: 429 }
+      )
+      const headers = getRateLimitHeaders(rateLimitResult, 3)
+      for (const [key, value] of Object.entries(headers)) {
+        response.headers.set(key, value)
+      }
+      return response
+    }
+
     // Validate request body
     const { token, password } = await validateBody(request, resetPasswordSchema)
 
@@ -58,12 +79,10 @@ export async function POST(request: NextRequest) {
     // Mark token as used
     await db.passwordResetTokens.markAsUsed(resetToken.id)
 
-    // Optionally: Invalidate all existing sessions for security
+    // Invalidate all existing sessions for security
     // This forces the user to log in with their new password
-    const sessions = await db.sessions.findByUserId(user.id)
-    for (const session of sessions) {
-      await db.sessions.delete(session.id)
-    }
+    // OPTIMIZED: Single batch delete instead of N+1 queries
+    await db.sessions.deleteByUserId(user.id)
 
     return NextResponse.json<ApiResponse<null>>({
       success: true,

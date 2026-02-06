@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateMeetingSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
+import { isTerminalState } from "@/lib/api/meetings"
 import type { ApiResponse } from "@/lib/types"
 import type { MeetingWithDetails, MeetingSection } from "@/lib/db/meetings"
 
@@ -24,6 +27,16 @@ export async function GET(
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Meeting not found" },
+        { status: 404 }
+      )
+    }
+
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(meeting.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Meeting not found" },
         { status: 404 }
@@ -67,10 +80,19 @@ export async function PATCH(
     }
 
     const { id } = await params
-    const body = await request.json()
 
     const meeting = await meetings.getById(id)
     if (!meeting) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Meeting not found" },
+        { status: 404 }
+      )
+    }
+
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(meeting.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Meeting not found" },
         { status: 404 }
@@ -86,7 +108,21 @@ export async function PATCH(
       )
     }
 
-    const { notes, attendees, title } = body
+    // STATE MACHINE VALIDATION: Once completed or cancelled, meetings are read-only
+    // Only admins can modify terminal state meetings
+    if (isTerminalState(meeting.status)) {
+      const isAdmin = auth.member.role === 'admin' || auth.member.role === 'owner'
+      if (!isAdmin) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: `Cannot modify a ${meeting.status} meeting. Meetings in terminal states are read-only.` },
+          { status: 400 }
+        )
+      }
+      // Log admin override for audit
+      logger.warn(`Admin ${auth.user.id} modifying ${meeting.status} meeting ${id}`)
+    }
+
+    const { notes, attendees, title } = await validateBody(request, updateMeetingSchema)
     const updates: Record<string, unknown> = {}
     if (notes !== undefined) updates.notes = notes
     if (attendees !== undefined) updates.attendees = JSON.stringify(attendees)
@@ -100,6 +136,12 @@ export async function PATCH(
       message: "Meeting updated successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Update meeting error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update meeting" },
@@ -126,6 +168,16 @@ export async function DELETE(
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Meeting not found" },
+        { status: 404 }
+      )
+    }
+
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(meeting.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Meeting not found" },
         { status: 404 }

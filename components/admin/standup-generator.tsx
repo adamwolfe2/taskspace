@@ -213,7 +213,7 @@ export function StandupGenerator({
         {/* Format Selection */}
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-500">Format:</span>
-          <Select value={outputFormat} onValueChange={(v) => setOutputFormat(v as any)}>
+          <Select value={outputFormat} onValueChange={(v) => setOutputFormat(v as "text" | "slack" | "markdown")}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>

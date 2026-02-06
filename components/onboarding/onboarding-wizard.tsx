@@ -1,37 +1,30 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import {
-  Building2,
-  Palette,
   Users,
   Target,
   CheckCircle,
   ArrowRight,
-  Upload,
+  ArrowLeft,
   Sparkles,
   Mail,
   Plus,
   X,
   Loader2,
+  SkipForward,
+  Globe,
+  Palette,
+  Building2,
+  AlertCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { Organization } from "@/lib/types"
-import {
-  extractColorsFromImage,
-  generateColorPresets,
-  analyzeColorQuality,
-  hexToHsl,
-  type ExtractedColors,
-  type BrandPersonality,
-} from "@/lib/utils/color-extractor"
 
 interface OnboardingWizardProps {
   onComplete: (data: OnboardingData) => Promise<void>
@@ -50,6 +43,7 @@ export interface OnboardingData {
     secondaryColor: string
     accentColor: string
     logoUrl?: string
+    faviconUrl?: string
   }
   teamInvites: Array<{
     email: string
@@ -62,117 +56,55 @@ export interface OnboardingData {
   }>
 }
 
-interface PresetTheme {
-  name: string
-  description: string
-  colors: ExtractedColors
+interface ScrapedBrand {
+  companyName: string | null
+  description: string | null
+  logoUrl: string | null
+  faviconUrl: string | null
+  colors: {
+    primary: string | null
+    secondary: string | null
+    accent: string | null
+  }
+  tagline: string | null
 }
 
-const PRESET_THEMES: PresetTheme[] = [
-  {
-    name: "Tech Blue",
-    description: "Professional & innovative",
-    colors: {
-      primary: "#3b82f6",
-      secondary: "#60a5fa",
-      accent: "#8b5cf6",
-      text: "#1e293b",
-      background: "#f8fafc",
-      personality: { vibrancy: "vibrant", temperature: "cool", formality: "professional" },
-    },
-  },
-  {
-    name: "Startup Orange",
-    description: "Bold & energetic",
-    colors: {
-      primary: "#f97316",
-      secondary: "#fb923c",
-      accent: "#fbbf24",
-      text: "#1e293b",
-      background: "#fffbeb",
-      personality: { vibrancy: "vibrant", temperature: "warm", formality: "creative" },
-    },
-  },
-  {
-    name: "Finance Green",
-    description: "Trustworthy & stable",
-    colors: {
-      primary: "#059669",
-      secondary: "#34d399",
-      accent: "#10b981",
-      text: "#1e293b",
-      background: "#f0fdf4",
-      personality: { vibrancy: "balanced", temperature: "cool", formality: "professional" },
-    },
-  },
-  {
-    name: "Creative Purple",
-    description: "Innovative & unique",
-    colors: {
-      primary: "#7c3aed",
-      secondary: "#a78bfa",
-      accent: "#c084fc",
-      text: "#1e293b",
-      background: "#faf5ff",
-      personality: { vibrancy: "vibrant", temperature: "cool", formality: "creative" },
-    },
-  },
-  {
-    name: "Ruby Red",
-    description: "Powerful & confident",
-    colors: {
-      primary: "#dc2626",
-      secondary: "#ef4444",
-      accent: "#f87171",
-      text: "#1e293b",
-      background: "#fef2f2",
-      personality: { vibrancy: "vibrant", temperature: "warm", formality: "professional" },
-    },
-  },
-  {
-    name: "Midnight Navy",
-    description: "Sophisticated & timeless",
-    colors: {
-      primary: "#1e40af",
-      secondary: "#3b82f6",
-      accent: "#60a5fa",
-      text: "#1e293b",
-      background: "#eff6ff",
-      personality: { vibrancy: "muted", temperature: "cool", formality: "professional" },
-    },
-  },
-]
-
 const STEPS = [
-  { id: 1, name: "Organization", icon: Building2 },
-  { id: 2, name: "Branding", icon: Palette },
-  { id: 3, name: "Team", icon: Users },
-  { id: 4, name: "Goals", icon: Target },
-  { id: 5, name: "Launch", icon: Sparkles },
+  { id: 1, name: "Your Website", optional: true },
+  { id: 2, name: "Your Organization", optional: false },
+  { id: 3, name: "Invite Your Team", optional: true },
+  { id: 4, name: "Set Your First Goal", optional: true },
 ]
 
 export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Form state
+  // Step 1: Website scrape
+  const [websiteUrl, setWebsiteUrl] = useState("")
+  const [isScraping, setIsScraping] = useState(false)
+  const [scrapeError, setScrapeError] = useState("")
+  const [scrapedBrand, setScrapedBrand] = useState<ScrapedBrand | null>(null)
+  const [hasScraped, setHasScraped] = useState(false)
+
+  // Step 2: Organization (auto-populated from scrape)
   const [orgName, setOrgName] = useState("")
   const [orgSlug, setOrgSlug] = useState("")
   const [orgDescription, setOrgDescription] = useState("")
 
-  const [workspaceName, setWorkspaceName] = useState("")
-  const [primaryColor, setPrimaryColor] = useState(PRESET_THEMES[0].colors.primary)
-  const [secondaryColor, setSecondaryColor] = useState(PRESET_THEMES[0].colors.secondary)
-  const [accentColor, setAccentColor] = useState(PRESET_THEMES[0].colors.accent)
+  // Brand colors (auto-populated from scrape)
+  const [primaryColor, setPrimaryColor] = useState("#3b82f6")
+  const [secondaryColor, setSecondaryColor] = useState("#60a5fa")
+  const [accentColor, setAccentColor] = useState("#8b5cf6")
   const [logoUrl, setLogoUrl] = useState("")
-  const [logoFile, setLogoFile] = useState<File | null>(null)
-  const [isExtractingColors, setIsExtractingColors] = useState(false)
-  const [personality, setPersonality] = useState<BrandPersonality | null>(null)
-  const [selectedPreset, setSelectedPreset] = useState<PresetTheme | null>(PRESET_THEMES[0])
+  const [faviconUrl, setFaviconUrl] = useState("")
 
+  // Step 3: Team invites
   const [teamInvites, setTeamInvites] = useState<Array<{ email: string; role: "admin" | "manager" | "member"; name?: string }>>([])
   const [newInviteEmail, setNewInviteEmail] = useState("")
+  const [emailError, setEmailError] = useState("")
 
+  // Step 4: First rock/goal
   const [rocks, setRocks] = useState<Array<{ title: string; description: string }>>([])
   const [newRockTitle, setNewRockTitle] = useState("")
   const [newRockDescription, setNewRockDescription] = useState("")
@@ -182,44 +114,107 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
     setOrgName(name)
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
     setOrgSlug(slug)
-    if (!workspaceName) {
-      setWorkspaceName(name)
+  }
+
+  // Website scraping
+  const handleScrapeWebsite = useCallback(async () => {
+    let url = websiteUrl.trim()
+    if (!url) return
+
+    // Add https:// if not present
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = `https://${url}`
+      setWebsiteUrl(url)
     }
-  }
 
-  const applyTheme = (theme: PresetTheme) => {
-    setPrimaryColor(theme.colors.primary)
-    setSecondaryColor(theme.colors.secondary)
-    setAccentColor(theme.colors.accent)
-    setPersonality(theme.colors.personality || null)
-    setSelectedPreset(theme)
-  }
-
-  const handleExtractColorsFromLogo = async () => {
-    if (!logoFile && !logoUrl) return
-
-    setIsExtractingColors(true)
+    // Basic URL validation
     try {
-      const imageUrl = logoFile ? URL.createObjectURL(logoFile) : logoUrl
-      const extracted = await extractColorsFromImage(imageUrl)
-
-      setPrimaryColor(extracted.primary)
-      setSecondaryColor(extracted.secondary)
-      setAccentColor(extracted.accent)
-      setPersonality(extracted.personality || null)
-      setSelectedPreset(null) // Clear preset selection when extracting
-    } catch (error) {
-      console.error("Failed to extract colors:", error)
-    } finally {
-      setIsExtractingColors(false)
+      new URL(url)
+    } catch {
+      setScrapeError("Please enter a valid website URL")
+      return
     }
+
+    setIsScraping(true)
+    setScrapeError("")
+
+    try {
+      const response = await fetch("/api/firecrawl/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        setScrapeError(data.error || "Failed to analyze website. You can skip this step and set up manually.")
+        setIsScraping(false)
+        return
+      }
+
+      const brand: ScrapedBrand = data.data.brand
+      setScrapedBrand(brand)
+      setHasScraped(true)
+
+      // Auto-populate fields from scraped data
+      if (brand.companyName && !orgName) {
+        handleOrgNameChange(brand.companyName)
+      }
+      if (brand.description && !orgDescription) {
+        setOrgDescription(brand.description)
+      }
+      if (brand.logoUrl) {
+        setLogoUrl(brand.logoUrl)
+      }
+      if (brand.faviconUrl) {
+        setFaviconUrl(brand.faviconUrl)
+      }
+      if (brand.colors.primary) {
+        setPrimaryColor(brand.colors.primary)
+      }
+      if (brand.colors.secondary) {
+        setSecondaryColor(brand.colors.secondary)
+      }
+      if (brand.colors.accent) {
+        setAccentColor(brand.colors.accent)
+      }
+    } catch (err) {
+      setScrapeError("Could not connect to website. You can skip this step and set up manually.")
+    } finally {
+      setIsScraping(false)
+    }
+  }, [websiteUrl, orgName, orgDescription])
+
+  const validateEmail = (email: string): boolean => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return re.test(email)
   }
 
   const addTeamInvite = () => {
-    if (newInviteEmail.trim() && !teamInvites.find(i => i.email === newInviteEmail)) {
-      setTeamInvites([...teamInvites, { email: newInviteEmail, role: "member" }])
-      setNewInviteEmail("")
+    const email = newInviteEmail.trim().toLowerCase()
+    setEmailError("")
+
+    if (!email) return
+
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address")
+      return
     }
+
+    if (email === currentUser.email.toLowerCase()) {
+      setEmailError("You cannot invite yourself")
+      return
+    }
+
+    if (teamInvites.find(i => i.email === email)) {
+      setEmailError("This email has already been added")
+      return
+    }
+
+    setTeamInvites([...teamInvites, { email, role: "member" }])
+    setNewInviteEmail("")
+    setEmailError("")
   }
 
   const removeTeamInvite = (email: string) => {
@@ -228,7 +223,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
 
   const addRock = () => {
     if (newRockTitle.trim()) {
-      setRocks([...rocks, { title: newRockTitle, description: newRockDescription }])
+      setRocks([...rocks, { title: newRockTitle.trim(), description: newRockDescription.trim() }])
       setNewRockTitle("")
       setNewRockDescription("")
     }
@@ -250,6 +245,14 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
     }
   }
 
+  const handleSkip = () => {
+    if (currentStep < STEPS.length) {
+      setCurrentStep(currentStep + 1)
+    } else {
+      handleComplete()
+    }
+  }
+
   const handleComplete = async () => {
     setIsSubmitting(true)
     try {
@@ -260,11 +263,12 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
           description: orgDescription || undefined,
         },
         workspace: {
-          name: workspaceName || orgName,
+          name: orgName,
           primaryColor,
           secondaryColor,
           accentColor,
           logoUrl: logoUrl || undefined,
+          faviconUrl: faviconUrl || undefined,
         },
         teamInvites,
         rocks,
@@ -278,51 +282,66 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return orgName.trim().length > 0 && orgSlug.trim().length > 0
+        return true // Website step is always skippable
       case 2:
-        return workspaceName.trim().length > 0
+        return orgName.trim().length >= 2 && orgSlug.trim().length >= 2
       case 3:
       case 4:
-        return true // These steps are optional
-      case 5:
         return true
       default:
         return false
     }
   }
 
+  const isOptionalStep = STEPS[currentStep - 1]?.optional ?? false
+  const isLastStep = currentStep === STEPS.length
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-red-50/30 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-2xl">
+        {/* Header with step indicator text */}
+        <div className="text-center mb-6 sm:mb-8">
+          <p className="text-sm font-medium text-slate-500 mb-1">
+            Step {currentStep} of {STEPS.length}
+          </p>
+          <h1 className="text-lg sm:text-xl font-semibold text-slate-700">
+            {STEPS[currentStep - 1].name}
+          </h1>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {STEPS.map((step, index) => {
-              const Icon = step.icon
               const isActive = currentStep === step.id
               const isCompleted = currentStep > step.id
-
               return (
                 <div key={step.id} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
                     <div
                       className={cn(
-                        "w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all",
-                        isActive && "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg scale-110",
+                        "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300",
+                        isActive && "bg-black text-white shadow-md",
                         isCompleted && "bg-emerald-500 text-white",
                         !isActive && !isCompleted && "bg-slate-200 text-slate-400"
                       )}
                     >
                       {isCompleted ? (
-                        <CheckCircle className="w-6 h-6" />
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                      ) : step.id === 1 ? (
+                        <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
+                      ) : step.id === 2 ? (
+                        <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                      ) : step.id === 3 ? (
+                        <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                       ) : (
-                        <Icon className="w-6 h-6" />
+                        <Target className="w-4 h-4 sm:w-5 sm:h-5" />
                       )}
                     </div>
                     <span
                       className={cn(
-                        "text-sm font-medium",
-                        isActive && "text-red-600",
+                        "text-xs mt-1 hidden sm:block font-medium",
+                        isActive && "text-black",
                         isCompleted && "text-emerald-600",
                         !isActive && !isCompleted && "text-slate-400"
                       )}
@@ -333,7 +352,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                   {index < STEPS.length - 1 && (
                     <div
                       className={cn(
-                        "h-1 flex-1 mx-2 rounded transition-all",
+                        "h-0.5 flex-1 mx-1 sm:mx-2 rounded transition-all duration-300",
                         isCompleted ? "bg-emerald-500" : "bg-slate-200"
                       )}
                     />
@@ -345,282 +364,346 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
         </div>
 
         {/* Content Card */}
-        <Card className="border-slate-200 shadow-xl">
-          <div className="p-8">
+        <Card className="border-slate-200 shadow-lg">
+          <div className="p-5 sm:p-8">
             <AnimatePresence mode="wait">
-              {/* Step 1: Organization */}
+              {/* Step 1: Website URL */}
               {currentStep === 1 && (
                 <motion.div
                   key="step1"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-2">
-                      Welcome to Taskspace! 👋
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+                      Welcome, {currentUser.name?.split(" ")[0] || "there"}!
                     </h2>
-                    <p className="text-slate-600">
-                      Let's start by setting up your organization. This is the top-level entity
-                      that will contain your workspaces and teams.
+                    <p className="text-slate-600 text-sm sm:text-base">
+                      Drop in your company website and we'll automatically set up your workspace with your brand colors, logo, and details.
                     </p>
                   </div>
 
                   <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="orgName">Organization Name *</Label>
-                      <Input
-                        id="orgName"
-                        placeholder="e.g., Acme Inc, TechStartup, Marketing Team"
-                        value={orgName}
-                        onChange={(e) => handleOrgNameChange(e.target.value)}
-                        className="mt-2"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="orgSlug">URL Slug *</Label>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-sm text-slate-500">app.getalign.io/</span>
-                        <Input
-                          id="orgSlug"
-                          placeholder="acme-inc"
-                          value={orgSlug}
-                          onChange={(e) => setOrgSlug(e.target.value)}
-                          className="flex-1"
-                        />
+                    <div className="space-y-2">
+                      <Label htmlFor="websiteUrl">Company Website</Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <Input
+                            id="websiteUrl"
+                            type="url"
+                            placeholder="www.yourcompany.com"
+                            value={websiteUrl}
+                            onChange={(e) => {
+                              setWebsiteUrl(e.target.value)
+                              setScrapeError("")
+                            }}
+                            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleScrapeWebsite())}
+                            className="pl-10 text-base"
+                            autoFocus
+                            disabled={isScraping}
+                          />
+                        </div>
+                        <Button
+                          onClick={handleScrapeWebsite}
+                          disabled={isScraping || !websiteUrl.trim()}
+                          className="bg-black hover:bg-gray-800 text-white shrink-0"
+                        >
+                          {isScraping ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin sm:mr-2" />
+                              <span className="hidden sm:inline">Analyzing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Analyze</span>
+                            </>
+                          )}
+                        </Button>
                       </div>
-                      <p className="text-xs text-slate-500 mt-1">
-                        This will be your unique URL. Only lowercase letters, numbers, and hyphens.
+                      {scrapeError && (
+                        <div className="flex items-start gap-2 text-sm text-amber-600">
+                          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                          <span>{scrapeError}</span>
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-500">
+                        We'll extract your logo, colors, and company info to personalize your workspace.
                       </p>
                     </div>
 
-                    <div>
-                      <Label htmlFor="orgDescription">Description (Optional)</Label>
-                      <Textarea
-                        id="orgDescription"
-                        placeholder="Brief description of your organization..."
-                        value={orgDescription}
-                        onChange={(e) => setOrgDescription(e.target.value)}
-                        className="mt-2"
-                        rows={3}
-                      />
-                    </div>
+                    {/* Scrape Results Preview */}
+                    {hasScraped && scrapedBrand && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-4"
+                      >
+                        <div className="flex items-center gap-2 text-emerald-700">
+                          <CheckCircle className="w-5 h-5" />
+                          <span className="font-medium text-sm">Brand detected!</span>
+                        </div>
+
+                        <div className="space-y-3">
+                          {/* Logo + Company Name */}
+                          <div className="flex items-center gap-3">
+                            {scrapedBrand.logoUrl && (
+                              <img
+                                src={scrapedBrand.logoUrl}
+                                alt="Logo"
+                                className="w-10 h-10 object-contain rounded border border-slate-200 bg-white p-1"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = "none"
+                                }}
+                              />
+                            )}
+                            <div>
+                              {scrapedBrand.companyName && (
+                                <p className="font-semibold text-slate-900">{scrapedBrand.companyName}</p>
+                              )}
+                              {scrapedBrand.tagline && (
+                                <p className="text-xs text-slate-600 line-clamp-1">{scrapedBrand.tagline}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Colors */}
+                          {(scrapedBrand.colors.primary || scrapedBrand.colors.secondary || scrapedBrand.colors.accent) && (
+                            <div>
+                              <p className="text-xs text-slate-500 mb-1.5">Brand Colors</p>
+                              <div className="flex items-center gap-2">
+                                {scrapedBrand.colors.primary && (
+                                  <div className="flex items-center gap-1.5">
+                                    <div
+                                      className="w-8 h-8 rounded-lg shadow-sm border border-slate-200"
+                                      style={{ backgroundColor: scrapedBrand.colors.primary }}
+                                    />
+                                    <span className="text-xs font-mono text-slate-500">{scrapedBrand.colors.primary}</span>
+                                  </div>
+                                )}
+                                {scrapedBrand.colors.secondary && (
+                                  <div
+                                    className="w-8 h-8 rounded-lg shadow-sm border border-slate-200"
+                                    style={{ backgroundColor: scrapedBrand.colors.secondary }}
+                                  />
+                                )}
+                                {scrapedBrand.colors.accent && (
+                                  <div
+                                    className="w-8 h-8 rounded-lg shadow-sm border border-slate-200"
+                                    style={{ backgroundColor: scrapedBrand.colors.accent }}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Description preview */}
+                          {scrapedBrand.description && (
+                            <div>
+                              <p className="text-xs text-slate-500 mb-1">Description</p>
+                              <p className="text-xs text-slate-700 line-clamp-2">{scrapedBrand.description}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-emerald-600">
+                          These details will be used to set up your workspace. You can adjust everything in the next step.
+                        </p>
+                      </motion.div>
+                    )}
+
+                    {/* Loading state */}
+                    {isScraping && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="p-6 bg-slate-50 border border-slate-200 rounded-lg text-center"
+                      >
+                        <Loader2 className="w-8 h-8 text-slate-400 mx-auto mb-3 animate-spin" />
+                        <p className="text-sm text-slate-600 font-medium">Analyzing your website...</p>
+                        <p className="text-xs text-slate-500 mt-1">Extracting logo, colors, and brand details</p>
+                      </motion.div>
+                    )}
                   </div>
                 </motion.div>
               )}
 
-              {/* Step 2: Branding */}
+              {/* Step 2: Organization */}
               {currentStep === 2 && (
                 <motion.div
                   key="step2"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-2">
-                      Customize Your Workspace 🎨
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+                      {hasScraped ? "Confirm your details" : "Set up your organization"}
                     </h2>
-                    <p className="text-slate-600">
-                      Make it yours! Choose colors and upload your logo to match your brand.
+                    <p className="text-slate-600 text-sm sm:text-base">
+                      {hasScraped
+                        ? "We filled in what we found. Review and adjust anything that needs tweaking."
+                        : "Your organization is the shared home for your team's goals, tasks, and daily accountability."}
                     </p>
                   </div>
 
-                  <div className="space-y-6">
-                    <div>
-                      <Label htmlFor="workspaceName">Workspace Name *</Label>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="orgName">Organization Name <span className="text-red-500">*</span></Label>
                       <Input
-                        id="workspaceName"
-                        placeholder="Default Workspace"
-                        value={workspaceName}
-                        onChange={(e) => setWorkspaceName(e.target.value)}
-                        className="mt-2"
+                        id="orgName"
+                        placeholder="e.g., Acme Inc, Marketing Team, TechCo"
+                        value={orgName}
+                        onChange={(e) => handleOrgNameChange(e.target.value)}
+                        autoFocus={!hasScraped}
+                        className="text-base"
+                      />
+                      <p className="text-xs text-slate-500">
+                        Your company or team name. You can always change this later in settings.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="orgSlug">URL Slug <span className="text-red-500">*</span></Label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-slate-500 whitespace-nowrap hidden sm:block">app.trytaskspace.com/</span>
+                        <Input
+                          id="orgSlug"
+                          placeholder="acme-inc"
+                          value={orgSlug}
+                          onChange={(e) => setOrgSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                          className="flex-1"
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        <span className="sm:hidden">Your unique URL: app.trytaskspace.com/{orgSlug || "..."}</span>
+                        <span className="hidden sm:inline">Only lowercase letters, numbers, and hyphens allowed.</span>
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="orgDescription">
+                        Description <span className="text-slate-400 font-normal">(optional)</span>
+                      </Label>
+                      <Textarea
+                        id="orgDescription"
+                        placeholder="What does your organization do? This helps us personalize your experience."
+                        value={orgDescription}
+                        onChange={(e) => setOrgDescription(e.target.value)}
+                        rows={2}
+                        className="resize-none"
                       />
                     </div>
 
-                    {/* Theme Presets */}
-                    <div>
-                      <Label>Quick Themes</Label>
-                      <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {PRESET_THEMES.map((theme) => (
-                          <button
-                            key={theme.name}
-                            onClick={() => applyTheme(theme)}
-                            className={cn(
-                              "p-4 border-2 rounded-lg hover:border-primary transition-all text-left group",
-                              selectedPreset?.name === theme.name
-                                ? "border-primary bg-primary/5"
-                                : "border-slate-200"
-                            )}
+                    {/* Brand Colors Section */}
+                    <div className="space-y-2 pt-2">
+                      <div className="flex items-center gap-2">
+                        <Palette className="w-4 h-4 text-slate-500" />
+                        <Label>Brand Colors</Label>
+                      </div>
+
+                      {/* Logo preview */}
+                      {logoUrl && (
+                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                          <img
+                            src={logoUrl}
+                            alt="Your logo"
+                            className="w-10 h-10 object-contain rounded"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none"
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-slate-500">Logo detected</p>
+                            <p className="text-xs text-slate-400 truncate">{logoUrl}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setLogoUrl("")}
+                            className="text-slate-400 hover:text-red-500 shrink-0"
                           >
-                            <div className="flex items-center gap-2 mb-2">
-                              <div
-                                className="w-6 h-6 rounded-full shadow-sm"
-                                style={{ backgroundColor: theme.colors.primary }}
-                              />
-                              <div
-                                className="w-6 h-6 rounded-full shadow-sm"
-                                style={{ backgroundColor: theme.colors.accent }}
-                              />
-                            </div>
-                            <div className="text-sm font-medium text-slate-900 group-hover:text-primary transition-colors">
-                              {theme.name}
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {theme.description}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
 
-                    {/* Custom Colors */}
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="primaryColor">Primary Color</Label>
-                        <div className="mt-2 flex items-center gap-2">
-                          <input
-                            type="color"
-                            id="primaryColor"
-                            value={primaryColor}
-                            onChange={(e) => setPrimaryColor(e.target.value)}
-                            className="w-12 h-12 rounded border border-slate-200 cursor-pointer"
-                          />
-                          <Input
-                            value={primaryColor}
-                            onChange={(e) => setPrimaryColor(e.target.value)}
-                            className="flex-1 font-mono text-sm"
-                          />
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <Label className="text-xs text-slate-500">Primary</Label>
+                          <div className="mt-1 flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={primaryColor}
+                              onChange={(e) => setPrimaryColor(e.target.value)}
+                              className="w-10 h-10 rounded border border-slate-200 cursor-pointer"
+                            />
+                            <Input
+                              value={primaryColor}
+                              onChange={(e) => setPrimaryColor(e.target.value)}
+                              className="flex-1 font-mono text-xs h-8"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-slate-500">Secondary</Label>
+                          <div className="mt-1 flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={secondaryColor}
+                              onChange={(e) => setSecondaryColor(e.target.value)}
+                              className="w-10 h-10 rounded border border-slate-200 cursor-pointer"
+                            />
+                            <Input
+                              value={secondaryColor}
+                              onChange={(e) => setSecondaryColor(e.target.value)}
+                              className="flex-1 font-mono text-xs h-8"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-slate-500">Accent</Label>
+                          <div className="mt-1 flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={accentColor}
+                              onChange={(e) => setAccentColor(e.target.value)}
+                              className="w-10 h-10 rounded border border-slate-200 cursor-pointer"
+                            />
+                            <Input
+                              value={accentColor}
+                              onChange={(e) => setAccentColor(e.target.value)}
+                              className="flex-1 font-mono text-xs h-8"
+                            />
+                          </div>
                         </div>
                       </div>
 
-                      <div>
-                        <Label htmlFor="secondaryColor">Secondary Color</Label>
-                        <div className="mt-2 flex items-center gap-2">
-                          <input
-                            type="color"
-                            id="secondaryColor"
-                            value={secondaryColor}
-                            onChange={(e) => setSecondaryColor(e.target.value)}
-                            className="w-12 h-12 rounded border border-slate-200 cursor-pointer"
-                          />
-                          <Input
-                            value={secondaryColor}
-                            onChange={(e) => setSecondaryColor(e.target.value)}
-                            className="flex-1 font-mono text-sm"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="accentColor">Accent Color</Label>
-                        <div className="mt-2 flex items-center gap-2">
-                          <input
-                            type="color"
-                            id="accentColor"
-                            value={accentColor}
-                            onChange={(e) => setAccentColor(e.target.value)}
-                            className="w-12 h-12 rounded border border-slate-200 cursor-pointer"
-                          />
-                          <Input
-                            value={accentColor}
-                            onChange={(e) => setAccentColor(e.target.value)}
-                            className="flex-1 font-mono text-sm"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Logo Upload */}
-                    <div>
-                      <Label>Logo (Optional)</Label>
-                      <div className="mt-2 border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-primary/30 transition-all cursor-pointer">
-                        <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-sm text-slate-600">
-                          Click to upload or drag and drop
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          PNG, JPG or SVG (max 2MB)
-                        </p>
-                      </div>
-
-                      {(logoFile || logoUrl) && (
-                        <Button
-                          onClick={handleExtractColorsFromLogo}
-                          disabled={isExtractingColors}
-                          variant="outline"
-                          className="w-full mt-3"
+                      {/* Mini preview */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <div
+                          className="px-3 py-1.5 rounded text-white text-xs font-medium"
+                          style={{ backgroundColor: primaryColor }}
                         >
-                          {isExtractingColors ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Extracting colors...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-4 h-4 mr-2" />
-                              Extract Colors from Logo
-                            </>
-                          )}
-                        </Button>
-                      )}
-
-                      {/* Show personality if extracted */}
-                      {personality && (
-                        <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                          <div className="text-xs text-muted-foreground mb-2">
-                            Brand Personality Detected:
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              <Sparkles className="w-3 h-3 mr-1" />
-                              {personality.vibrancy}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              {personality.temperature === "warm" ? "🔥" : personality.temperature === "cool" ? "❄️" : "⚖️"}
-                              {" "}{personality.temperature}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              {personality.formality}
-                            </Badge>
-                          </div>
+                          Primary
                         </div>
-                      )}
-                    </div>
-
-                    {/* Preview */}
-                    <div>
-                      <Label>Preview</Label>
-                      <div
-                        className="mt-2 p-6 rounded-lg border-2 border-slate-200"
-                        style={{ backgroundColor: `${primaryColor}10` }}
-                      >
-                        <div className="flex items-center gap-4 mb-4">
-                          <div
-                            className="w-12 h-12 rounded-lg"
-                            style={{ backgroundColor: primaryColor }}
-                          />
-                          <div>
-                            <h3 className="font-semibold text-slate-900">{workspaceName || "Your Workspace"}</h3>
-                            <p className="text-sm text-slate-600">Dashboard Preview</p>
-                          </div>
+                        <div
+                          className="px-3 py-1.5 rounded text-white text-xs font-medium"
+                          style={{ backgroundColor: secondaryColor }}
+                        >
+                          Secondary
                         </div>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div
-                            className="h-20 rounded-lg"
-                            style={{ backgroundColor: primaryColor }}
-                          />
-                          <div
-                            className="h-20 rounded-lg"
-                            style={{ backgroundColor: secondaryColor }}
-                          />
-                          <div
-                            className="h-20 rounded-lg"
-                            style={{ backgroundColor: accentColor }}
-                          />
+                        <div
+                          className="px-3 py-1.5 rounded text-white text-xs font-medium"
+                          style={{ backgroundColor: accentColor }}
+                        >
+                          Accent
                         </div>
                       </div>
                     </div>
@@ -628,153 +711,93 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                 </motion.div>
               )}
 
-              {/* Step 3: Team */}
+              {/* Step 3: Team Invites */}
               {currentStep === 3 && (
                 <motion.div
                   key="step3"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-2">
-                      Invite Your Team 👥
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+                      Bring your team along
                     </h2>
-                    <p className="text-slate-600">
-                      Add team members who will use this workspace. They'll receive an email invitation.
+                    <p className="text-slate-600 text-sm sm:text-base">
+                      Collaboration is at the heart of what we do. Invite your team members so you can
+                      set goals together, track progress, and build daily accountability as a group.
                     </p>
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="colleague@company.com"
-                        value={newInviteEmail}
-                        onChange={(e) => setNewInviteEmail(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && addTeamInvite()}
-                        className="flex-1"
-                      />
-                      <Button onClick={addTeamInvite} variant="outline">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add
-                      </Button>
+                    <div className="space-y-2">
+                      <Label htmlFor="inviteEmail">Email Address</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="inviteEmail"
+                          type="email"
+                          placeholder="colleague@company.com"
+                          value={newInviteEmail}
+                          onChange={(e) => {
+                            setNewInviteEmail(e.target.value)
+                            setEmailError("")
+                          }}
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTeamInvite())}
+                          className="flex-1"
+                        />
+                        <Button onClick={addTeamInvite} variant="outline" className="shrink-0">
+                          <Plus className="w-4 h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Add</span>
+                        </Button>
+                      </div>
+                      {emailError && (
+                        <p className="text-xs text-red-600">{emailError}</p>
+                      )}
+                      <p className="text-xs text-slate-500">
+                        They will receive an email invitation to join. You can also invite people later from settings.
+                      </p>
                     </div>
 
                     {teamInvites.length > 0 && (
                       <div className="space-y-2">
-                        <Label>Team Members ({teamInvites.length})</Label>
-                        {teamInvites.map((invite) => (
-                          <div
-                            key={invite.email}
-                            className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full flex items-center justify-center">
-                                <Mail className="w-5 h-5 text-slate-600" />
-                              </div>
-                              <div>
-                                <div className="font-medium text-slate-900">{invite.email}</div>
-                                <div className="text-xs text-slate-500">Will receive invitation email</div>
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeTeamInvite(invite.email)}
+                        <Label className="text-sm">Pending Invitations ({teamInvites.length})</Label>
+                        <div className="space-y-2 max-h-[240px] overflow-y-auto">
+                          {teamInvites.map((invite) => (
+                            <div
+                              key={invite.email}
+                              className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200"
                             >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {teamInvites.length === 0 && (
-                      <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-lg">
-                        <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500">No team members added yet</p>
-                        <p className="text-sm text-slate-400 mt-1">You can always invite people later</p>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Step 4: Goals */}
-              {currentStep === 4 && (
-                <motion.div
-                  key="step4"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-2">
-                      Set Quarterly Goals 🎯
-                    </h2>
-                    <p className="text-slate-600">
-                      What are your top 3-7 priorities this quarter? We call them "Rocks" - big goals that matter most.
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="space-y-3">
-                      <Input
-                        placeholder="e.g., Launch new product feature"
-                        value={newRockTitle}
-                        onChange={(e) => setNewRockTitle(e.target.value)}
-                      />
-                      <Textarea
-                        placeholder="Brief description of this goal..."
-                        value={newRockDescription}
-                        onChange={(e) => setNewRockDescription(e.target.value)}
-                        rows={2}
-                      />
-                      <Button onClick={addRock} variant="outline" className="w-full">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Quarterly Rock
-                      </Button>
-                    </div>
-
-                    {rocks.length > 0 && (
-                      <div className="space-y-3">
-                        <Label>Your Q1 2026 Rocks ({rocks.length})</Label>
-                        {rocks.map((rock, index) => (
-                          <div
-                            key={index}
-                            className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Target className="w-4 h-4 text-emerald-600" />
-                                  <h4 className="font-semibold text-slate-900">{rock.title}</h4>
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <Mail className="w-4 h-4 text-blue-600" />
                                 </div>
-                                {rock.description && (
-                                  <p className="text-sm text-slate-600 mt-1">{rock.description}</p>
-                                )}
+                                <div className="min-w-0">
+                                  <p className="font-medium text-sm text-slate-900 truncate">{invite.email}</p>
+                                  <p className="text-xs text-slate-500">Will be added as a member</p>
+                                </div>
                               </div>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => removeRock(index)}
+                                onClick={() => removeTeamInvite(invite.email)}
+                                className="text-slate-400 hover:text-red-600 flex-shrink-0 ml-2"
                               >
                                 <X className="w-4 h-4" />
                               </Button>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     )}
 
-                    {rocks.length === 0 && (
-                      <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-lg">
-                        <Target className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500">No rocks added yet</p>
-                        <p className="text-sm text-slate-400 mt-1">
-                          Add 3-7 quarterly goals to get started
+                    {teamInvites.length === 0 && (
+                      <div className="text-center py-8 sm:py-10 border-2 border-dashed border-slate-200 rounded-lg">
+                        <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-500 text-sm">No team members added yet</p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          You can always invite people later from Settings
                         </p>
                       </div>
                     )}
@@ -782,82 +805,197 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                 </motion.div>
               )}
 
-              {/* Step 5: Launch */}
-              {currentStep === 5 && (
+              {/* Step 4: First Rock/Goal */}
+              {currentStep === 4 && (
                 <motion.div
-                  key="step5"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="text-center space-y-6 py-8"
+                  key="step4"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-6"
                 >
-                  <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto">
-                    <Sparkles className="w-10 h-10 text-white" />
-                  </div>
-
                   <div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-3">
-                      You're All Set! 🎉
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+                      What are you working toward?
                     </h2>
-                    <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                      Your workspace is ready. Let's launch and start building daily accountability.
+                    <p className="text-slate-600 text-sm sm:text-base">
+                      We call big quarterly priorities "Rocks" -- the 3 to 7 things that matter most
+                      this quarter. Add one now to hit the ground running, or skip this and add them later.
                     </p>
                   </div>
 
-                  <div className="bg-slate-50 rounded-xl p-6 max-w-md mx-auto">
-                    <h3 className="font-semibold text-slate-900 mb-4">What happens next:</h3>
-                    <div className="space-y-3 text-left">
-                      {[
-                        "We'll create your organization and workspace",
-                        `${teamInvites.length > 0 ? `Send ${teamInvites.length} team invitation${teamInvites.length > 1 ? "s" : ""}` : "You can invite team members later"}`,
-                        `${rocks.length > 0 ? `Create ${rocks.length} quarterly rock${rocks.length > 1 ? "s" : ""}` : "You can add rocks anytime"}`,
-                        "Take you to your personalized dashboard",
-                      ].map((item, i) => (
-                        <div key={i} className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                          <span className="text-slate-600">{item}</span>
-                        </div>
-                      ))}
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="rockTitle">Goal Title</Label>
+                        <Input
+                          id="rockTitle"
+                          placeholder="e.g., Launch new product feature, Increase MRR by 20%"
+                          value={newRockTitle}
+                          onChange={(e) => setNewRockTitle(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && newRockTitle.trim() && (e.preventDefault(), addRock())}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="rockDesc">
+                          Description <span className="text-slate-400 font-normal">(optional)</span>
+                        </Label>
+                        <Textarea
+                          id="rockDesc"
+                          placeholder="What does success look like for this goal?"
+                          value={newRockDescription}
+                          onChange={(e) => setNewRockDescription(e.target.value)}
+                          rows={2}
+                          className="resize-none"
+                        />
+                      </div>
+                      <Button
+                        onClick={addRock}
+                        variant="outline"
+                        className="w-full"
+                        disabled={!newRockTitle.trim()}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Rock
+                      </Button>
                     </div>
+
+                    {rocks.length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-sm">Your Rocks ({rocks.length})</Label>
+                        <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                          {rocks.map((rock, index) => (
+                            <div
+                              key={index}
+                              className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <Target className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                                    <h4 className="font-medium text-sm text-slate-900 truncate">{rock.title}</h4>
+                                  </div>
+                                  {rock.description && (
+                                    <p className="text-xs text-slate-600 mt-1 ml-6 line-clamp-2">{rock.description}</p>
+                                  )}
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeRock(index)}
+                                  className="text-slate-400 hover:text-red-600 flex-shrink-0"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {rocks.length === 0 && (
+                      <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-lg">
+                        <Target className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-500 text-sm">No goals added yet</p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Add your top priorities or skip for now
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Navigation Buttons */}
-            <div className="mt-8 flex items-center justify-between pt-6 border-t border-slate-200">
-              <Button
-                variant="ghost"
-                onClick={handleBack}
-                disabled={currentStep === 1}
-              >
-                Back
-              </Button>
-
-              <div className="flex gap-3">
-                {currentStep < STEPS.length ? (
+            {/* Navigation */}
+            <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-slate-200">
+              {/* Back button */}
+              <div>
+                {currentStep > 1 ? (
                   <Button
-                    onClick={handleNext}
-                    disabled={!canProceed()}
-                    className="bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700"
+                    variant="ghost"
+                    onClick={handleBack}
+                    className="w-full sm:w-auto gap-2"
                   >
-                    Continue
-                    <ArrowRight className="ml-2 w-4 h-4" />
+                    <ArrowLeft className="w-4 h-4" />
+                    Back
                   </Button>
                 ) : (
+                  <div />
+                )}
+              </div>
+
+              {/* Forward buttons */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                {/* Skip button for optional steps */}
+                {isOptionalStep && !isLastStep && (
                   <Button
-                    onClick={handleComplete}
-                    disabled={isSubmitting}
-                    className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700"
+                    variant="ghost"
+                    onClick={handleSkip}
+                    disabled={isScraping}
+                    className="w-full sm:w-auto gap-2 text-slate-500 order-2 sm:order-1"
                   >
-                    {isSubmitting ? "Launching..." : "Launch Workspace"}
-                    <Sparkles className="ml-2 w-4 h-4" />
+                    <SkipForward className="w-4 h-4" />
+                    {currentStep === 1 ? "Skip, I'll set up manually" : "Skip for now"}
                   </Button>
+                )}
+
+                {/* Main action button */}
+                {!isLastStep ? (
+                  <Button
+                    onClick={handleNext}
+                    disabled={!canProceed() || isScraping}
+                    className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white gap-2 order-1 sm:order-2"
+                  >
+                    {currentStep === 1 && hasScraped ? "Use these details" : "Continue"}
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-2 order-1 sm:order-2">
+                    {isOptionalStep && (
+                      <Button
+                        variant="ghost"
+                        onClick={handleComplete}
+                        disabled={isSubmitting}
+                        className="w-full sm:w-auto gap-2 text-slate-500"
+                      >
+                        <SkipForward className="w-4 h-4" />
+                        Skip and launch
+                      </Button>
+                    )}
+                    <Button
+                      onClick={handleComplete}
+                      disabled={isSubmitting}
+                      className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Creating workspace...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          Launch Workspace
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         </Card>
+
+        {/* Bottom helper text */}
+        <p className="text-center text-xs text-slate-400 mt-4">
+          All settings can be changed later. Need help?{" "}
+          <a href="mailto:support@trytaskspace.com" className="underline hover:text-slate-600">
+            Contact support
+          </a>
+        </p>
       </div>
     </div>
   )

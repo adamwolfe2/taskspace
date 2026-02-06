@@ -67,6 +67,16 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     const { title, description, dueDate, bucket, outcome, doneWhen, userId, quarter, workspaceId } =
       await validateBody(request, createRockSchema)
 
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
     // Validate workspace access (unless org admin)
     if (!isAdmin(auth)) {
       const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)

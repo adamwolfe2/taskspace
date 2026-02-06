@@ -11,6 +11,16 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Key,
   Loader2,
   Copy,
@@ -68,6 +78,8 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
   const [testEmailResult, setTestEmailResult] = useState<{ success: boolean; message: string } | null>(
     null
   )
+  const [apiKeyToDelete, setApiKeyToDelete] = useState<ApiKey | null>(null)
+  const [isDeletingKey, setIsDeletingKey] = useState(false)
 
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
 
@@ -259,6 +271,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
   }
 
   const handleDeleteApiKey = async (keyId: string) => {
+    setIsDeletingKey(true)
     try {
       const response = await fetch(`/api/auth/api-key?id=${keyId}`, {
         method: "DELETE",
@@ -270,9 +283,10 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
       }
 
       setApiKeys(apiKeys.filter((k) => k.id !== keyId))
+      setApiKeyToDelete(null)
       toast({
-        title: "API key deleted",
-        description: "The API key has been revoked",
+        title: "API key revoked",
+        description: "The API key has been permanently deleted. Any integrations using this key will stop working.",
       })
     } catch (err: unknown) {
       toast({
@@ -280,6 +294,8 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
         description: getErrorMessage(err),
         variant: "destructive",
       })
+    } finally {
+      setIsDeletingKey(false)
     }
   }
 
@@ -565,8 +581,8 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => handleDeleteApiKey(apiKey.id)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setApiKeyToDelete(apiKey)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -659,6 +675,44 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
 
       {/* Google Calendar Integration */}
       {currentUser && <GoogleCalendarIntegration userId={currentUser.id} />}
+
+      {/* Delete API Key Confirmation */}
+      <AlertDialog open={!!apiKeyToDelete} onOpenChange={() => setApiKeyToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Revoke API Key?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the API key{" "}
+              <strong>"{apiKeyToDelete?.name}"</strong>. Any integrations or applications using this key
+              (including Claude Desktop MCP connections) will immediately lose access and stop working.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingKey}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => apiKeyToDelete && handleDeleteApiKey(apiKeyToDelete.id)}
+              disabled={isDeletingKey}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingKey ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Revoking...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Revoke Key
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

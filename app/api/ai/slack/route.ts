@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import {
   sendSlackMessage,
@@ -12,23 +12,8 @@ import type { ApiResponse, DailyDigest } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // POST /api/ai/slack - Send a Slack notification
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can send Slack notifications" },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
     const { type, data, workspaceId } = body
 
@@ -59,7 +44,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if Slack is configured for this workspace (or fallback to org level)
-    const webhookUrl = workspace.settings?.slackWebhookUrl || auth.organization.settings?.slackWebhookUrl
+    const wsSettings = workspace.settings as Record<string, unknown>
+    const webhookUrl = (wsSettings?.slackWebhookUrl as string | undefined) || auth.organization.settings?.slackWebhookUrl
     if (!isSlackConfigured(webhookUrl)) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Slack is not configured for this workspace. Add a webhook URL in workspace settings." },
@@ -192,4 +178,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

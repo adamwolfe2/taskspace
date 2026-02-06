@@ -1,11 +1,20 @@
 /**
- * Next.js Middleware for Rate Limiting and Security
+ * Next.js Middleware for Rate Limiting and Security Headers
  *
- * Implements edge-compatible rate limiting for auth endpoints.
- * Uses in-memory storage (resets on cold start, which is OK for basic protection).
+ * Features:
+ * 1. Rate Limiting: Edge-compatible rate limiting for API endpoints
+ *    - Uses in-memory storage (resets on cold start, which is OK for basic protection)
+ *    - Primary rate limiting is database-backed in lib/auth/rate-limit.ts
+ *    - This middleware provides additional edge protection
  *
- * The primary rate limiting is database-backed in lib/auth/rate-limit.ts.
- * This middleware provides additional edge protection.
+ * 2. Security Headers: Applied to all routes (API and frontend)
+ *    - Content-Security-Policy (CSP)
+ *    - X-Frame-Options
+ *    - X-Content-Type-Options
+ *    - Referrer-Policy
+ *    - X-XSS-Protection
+ *    - Permissions-Policy
+ *    - Strict-Transport-Security (production only)
  */
 
 import { NextResponse } from "next/server"
@@ -41,11 +50,13 @@ function cleanupStaleEntries() {
   if (now - lastCleanup < CLEANUP_INTERVAL) return
 
   lastCleanup = now
-  for (const [key, entry] of rateLimitStore.entries()) {
+  const keysToDelete: string[] = []
+  rateLimitStore.forEach((entry, key) => {
     if (entry.resetAt < now) {
-      rateLimitStore.delete(key)
+      keysToDelete.push(key)
     }
-  }
+  })
+  keysToDelete.forEach((key) => rateLimitStore.delete(key))
 }
 
 /**
@@ -117,52 +128,112 @@ function checkRateLimit(
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const ip = getClientIP(request)
 
-  // Determine rate limit config based on path
-  let config = RATE_LIMIT_CONFIG.api
-  let key = `api:${ip}`
+  // Only apply rate limiting to API routes
+  if (pathname.startsWith("/api/")) {
+    const ip = getClientIP(request)
 
-  if (pathname.startsWith("/api/auth/")) {
-    config = RATE_LIMIT_CONFIG.auth
-    key = `auth:${ip}`
+    // Determine rate limit config based on path
+    let config = RATE_LIMIT_CONFIG.api
+    let key = `api:${ip}`
+
+    if (pathname.startsWith("/api/auth/")) {
+      config = RATE_LIMIT_CONFIG.auth
+      key = `auth:${ip}`
+    }
+
+    // Check rate limit
+    const result = checkRateLimit(key, config)
+
+    // Add rate limit headers to all responses
+    const headers = {
+      "X-RateLimit-Limit": config.maxRequests.toString(),
+      "X-RateLimit-Remaining": result.remaining.toString(),
+      "X-RateLimit-Reset": new Date(result.resetAt).toISOString(),
+    }
+
+    if (!result.allowed) {
+      // Return 429 Too Many Requests
+      return new NextResponse(
+        JSON.stringify({
+          success: false,
+          error: `Too many requests. Please try again in ${result.retryAfter} seconds.`,
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            ...headers,
+            "Retry-After": result.retryAfter?.toString() || "60",
+          },
+        }
+      )
+    }
+
+    // Continue with request, adding rate limit headers and security headers
+    const response = NextResponse.next()
+    Object.entries(headers).forEach(([key, value]) => {
+      response.headers.set(key, value)
+    })
+
+    // Add security headers
+    addSecurityHeaders(response)
+
+    return response
   }
 
-  // Check rate limit
-  const result = checkRateLimit(key, config)
+  // For non-API routes, just add security headers
+  const response = NextResponse.next()
+  addSecurityHeaders(response)
+  return response
+}
 
-  // Add rate limit headers to all responses
-  const headers = {
-    "X-RateLimit-Limit": config.maxRequests.toString(),
-    "X-RateLimit-Remaining": result.remaining.toString(),
-    "X-RateLimit-Reset": new Date(result.resetAt).toISOString(),
-  }
+/**
+ * Add security headers to the response
+ */
+function addSecurityHeaders(response: NextResponse) {
+  // Content Security Policy
+  // Allow self, inline styles (for Tailwind), and specific external domains
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://va.vercel-scripts.com",
+    "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Tailwind
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://api.anthropic.com https://app.asana.com https://vercel.live https://va.vercel-scripts.com https://*.ingest.sentry.io",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ")
 
-  if (!result.allowed) {
-    // Return 429 Too Many Requests
-    return new NextResponse(
-      JSON.stringify({
-        success: false,
-        error: `Too many requests. Please try again in ${result.retryAfter} seconds.`,
-      }),
-      {
-        status: 429,
-        headers: {
-          "Content-Type": "application/json",
-          ...headers,
-          "Retry-After": result.retryAfter?.toString() || "60",
-        },
-      }
+  response.headers.set("Content-Security-Policy", csp)
+
+  // Prevent clickjacking
+  response.headers.set("X-Frame-Options", "DENY")
+
+  // Prevent MIME type sniffing
+  response.headers.set("X-Content-Type-Options", "nosniff")
+
+  // Referrer policy
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+
+  // Disable legacy XSS protection (CSP replaces it)
+  response.headers.set("X-XSS-Protection", "0")
+
+  // Permissions policy - restrict sensitive features
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()"
+  )
+
+  // Strict Transport Security (HSTS)
+  // Only set in production with HTTPS
+  if (process.env.NODE_ENV === "production") {
+    response.headers.set(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains"
     )
   }
-
-  // Continue with request, adding rate limit headers
-  const response = NextResponse.next()
-  Object.entries(headers).forEach(([key, value]) => {
-    response.headers.set(key, value)
-  })
-
-  return response
 }
 
 /**
@@ -170,7 +241,8 @@ export function middleware(request: NextRequest) {
  */
 export const config = {
   matcher: [
-    // Match all API routes
-    "/api/:path*",
+    // Match all routes to apply security headers
+    // Exclude Next.js internal routes and static files
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)).*)",
   ],
 }

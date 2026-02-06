@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next"
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://aims.io"
+  const baseUrl = "https://align.app"
 
   // Static marketing pages
   const staticPages = [

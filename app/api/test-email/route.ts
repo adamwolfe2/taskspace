@@ -93,10 +93,10 @@ export async function POST(request: NextRequest) {
       resendResponse: data,
       debug: debugInfo,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     logError(logger, "Test email error", error)
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error.message || "Failed to send test email" },
+      { success: false, error: error instanceof Error ? error.message : "Failed to send test email" },
       { status: 500 }
     )
   }
@@ -136,9 +136,9 @@ export async function GET(request: NextRequest) {
         appUrlConfigured: APP_URL !== "http://localhost:3000",
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error.message },
+      { success: false, error: error instanceof Error ? error.message : "An error occurred" },
       { status: 500 }
     )
   }

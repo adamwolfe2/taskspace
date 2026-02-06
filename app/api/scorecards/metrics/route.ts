@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
 import { getMetricsByWorkspace, createMetric } from "@/lib/db/scorecard"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createScorecardMetricSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
@@ -74,22 +76,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { workspaceId, name, description, ownerId, targetValue, targetDirection, unit, frequency, displayOrder } = body
-
-    if (!workspaceId) {
-      return NextResponse.json(
-        { success: false, error: "Workspace ID is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, error: "Metric name is required" },
-        { status: 400 }
-      )
-    }
+    const { workspaceId, name, description, ownerId, targetValue, targetDirection, unit, frequency, displayOrder } =
+      await validateBody(request, createScorecardMetricSchema)
 
     // Check workspace access and role (admin/owner or workspace admin/owner)
     const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
@@ -112,14 +100,14 @@ export async function POST(request: NextRequest) {
 
     const metric = await createMetric({
       workspaceId,
-      name: name.trim(),
+      name,
       description: description?.trim() || undefined,
       ownerId: ownerId || undefined,
-      targetValue: targetValue !== undefined && targetValue !== null ? Number(targetValue) : undefined,
-      targetDirection: targetDirection || "above",
-      unit: unit || "",
-      frequency: frequency || "weekly",
-      displayOrder: displayOrder !== undefined ? Number(displayOrder) : 0,
+      targetValue,
+      targetDirection,
+      unit,
+      frequency,
+      displayOrder,
       createdBy: auth.user.id,
     })
 
@@ -136,6 +124,12 @@ export async function POST(request: NextRequest) {
       message: "Metric created successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Error creating scorecard metric")
     return NextResponse.json(
       {

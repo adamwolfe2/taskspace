@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
 
 const siteConfig = {
-  name: "AIMS",
-  description: "Accountability and Internal Management System - Transform how your team tracks progress and achieves goals with AI-powered accountability tools.",
-  url: "https://aims.io",
-  ogImage: "https://aims.io/og-image.png",
-  twitterHandle: "@aimsapp",
+  name: "Taskspace",
+  description: "Transform how your team tracks progress and achieves goals with AI-powered accountability tools.",
+  url: "https://align.app",
+  ogImage: "https://align.app/og-image.png",
+  twitterHandle: "@alignapp",
 }
 
 export function createMetadata({
@@ -89,9 +89,9 @@ export const defaultMetadata: Metadata = {
     "AI productivity",
     "remote team management",
   ],
-  authors: [{ name: "AIMS Team" }],
-  creator: "AIMS",
-  publisher: "AIMS",
+  authors: [{ name: "Taskspace Team" }],
+  creator: "Taskspace",
+  publisher: "Taskspace",
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -130,12 +130,12 @@ export const defaultMetadata: Metadata = {
 export const pageMetadata = {
   home: createMetadata({
     title: "Home",
-    description: "AIMS - Transform how your team tracks progress and achieves goals with AI-powered end-of-day reports and intelligent accountability tools.",
+    description: "Taskspace - Transform how your team tracks progress and achieves goals with AI-powered end-of-day reports and intelligent accountability tools.",
     path: "",
   }),
   features: createMetadata({
     title: "Features",
-    description: "Explore AIMS features: AI-powered EOD reports, team management, rocks & goals tracking, analytics dashboards, and more.",
+    description: "Explore Taskspace features: AI-powered EOD reports, team management, rocks & goals tracking, analytics dashboards, and more.",
     path: "/features",
   }),
   pricing: createMetadata({
@@ -145,22 +145,22 @@ export const pageMetadata = {
   }),
   about: createMetadata({
     title: "About Us",
-    description: "Learn about the AIMS mission, team, and values. We're building the future of team accountability.",
+    description: "Learn about the Taskspace mission, team, and values. We're building the future of team accountability.",
     path: "/about",
   }),
   contact: createMetadata({
     title: "Contact Us",
-    description: "Get in touch with the AIMS team. We're here to help with questions, demos, and enterprise inquiries.",
+    description: "Get in touch with the Taskspace team. We're here to help with questions, demos, and enterprise inquiries.",
     path: "/contact",
   }),
   resources: createMetadata({
     title: "Resources",
-    description: "Guides, templates, videos, and case studies to help you get the most out of AIMS and build a world-class team.",
+    description: "Guides, templates, videos, and case studies to help you get the most out of Taskspace and build a world-class team.",
     path: "/resources",
   }),
   help: createMetadata({
     title: "Help Center",
-    description: "Find answers to common questions and learn how to use AIMS effectively. Browse our knowledge base or contact support.",
+    description: "Find answers to common questions and learn how to use Taskspace effectively. Browse our knowledge base or contact support.",
     path: "/help",
   }),
   eodReports: createMetadata({

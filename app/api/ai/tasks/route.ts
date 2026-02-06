@@ -1,29 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import { sendTaskAssignmentEmail, isEmailConfigured } from "@/lib/integrations/email"
 import type { ApiResponse, AIGeneratedTask, AssignedTask, TeamMember } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/ai/tasks - Get pending AI-generated tasks
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can view AI-generated tasks" },
-        { status: 403 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
 
@@ -45,26 +30,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // PATCH /api/ai/tasks - Approve, reject, or update AI-generated tasks
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can manage AI-generated tasks" },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
     const { taskId, action, updates } = body
 
@@ -212,26 +182,11 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/ai/tasks - Delete an AI-generated task
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can delete AI-generated tasks" },
-        { status: 403 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const taskId = searchParams.get("taskId")
 
@@ -262,4 +217,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

@@ -125,7 +125,9 @@ export function NotificationsTab({ teamMembers, setTeamMembers }: NotificationsT
       const updated = await api.organizations.update({
         name: currentOrganization?.name || "",
         settings: {
+          ...currentOrganization?.settings,
           timezone: currentOrganization?.settings.timezone || "America/New_York",
+          weekStartDay: currentOrganization?.settings.weekStartDay ?? 1,
           eodReminderTime: currentOrganization?.settings.eodReminderTime || "17:00",
           enableEmailNotifications: emailNotifications,
           enableSlackIntegration: slackIntegration,

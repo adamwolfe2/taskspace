@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -25,7 +25,7 @@ function generateICS(events: Array<{
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//AIMS EOD Tracker//Calendar Export//EN",
+    "PRODID:-//Taskspace//Calendar Export//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
   ]
@@ -64,16 +64,8 @@ function generateICS(events: Array<{
 }
 
 // GET /api/export/calendar - Export tasks and rocks as ICS calendar
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const type = searchParams.get("type") || "all" // tasks, rocks, or all
     const startDate = searchParams.get("startDate")
@@ -105,9 +97,9 @@ export async function GET(request: NextRequest) {
 
       for (const task of tasks) {
         if (task.dueDate) {
-          const priorityLabel = task.priority === "high" ? "🔴 " : task.priority === "medium" ? "🟡 " : ""
+          const priorityLabel = task.priority === "high" ? "\uD83D\uDD34 " : task.priority === "medium" ? "\uD83D\uDFE1 " : ""
           events.push({
-            uid: `task-${task.id}@aims-eod`,
+            uid: `task-${task.id}@align`,
             summary: `${priorityLabel}[Task] ${task.title}`,
             description: task.description || undefined,
             dtstart: task.dueDate,
@@ -135,8 +127,8 @@ export async function GET(request: NextRequest) {
       for (const rock of rocks) {
         if (rock.dueDate) {
           events.push({
-            uid: `rock-${rock.id}@aims-eod`,
-            summary: `🎯 [Rock] ${rock.title}`,
+            uid: `rock-${rock.id}@align`,
+            summary: `\uD83C\uDFAF [Rock] ${rock.title}`,
             description: rock.description || undefined,
             dtstart: rock.dueDate,
             categories: ["Rock", rock.quarter || "Q1"],
@@ -146,7 +138,7 @@ export async function GET(request: NextRequest) {
     }
 
     const ics = generateICS(events)
-    const filename = `aims-calendar-${new Date().toISOString().split("T")[0]}.ics`
+    const filename = `align-calendar-${new Date().toISOString().split("T")[0]}.ics`
 
     return new NextResponse(ics, {
       headers: {
@@ -161,4 +153,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

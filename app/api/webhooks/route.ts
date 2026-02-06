@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
     const workspaceId = searchParams.get("workspaceId")
 
     // Build query to get org-wide webhooks OR workspace-specific webhooks
-    let webhooks: any[]
+    let webhooks: Record<string, unknown>[]
     if (workspaceId) {
       // Get org-wide (NULL) + workspace-specific webhooks
       const { rows } = await sql`

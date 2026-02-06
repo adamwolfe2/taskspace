@@ -109,7 +109,9 @@ export function OrganizationSettingsTab() {
       const updated = await api.organizations.update({
         name: orgName,
         settings: {
+          ...currentOrganization?.settings,
           timezone,
+          weekStartDay: currentOrganization?.settings.weekStartDay ?? 1,
           eodReminderTime,
           enableEmailNotifications: currentOrganization?.settings.enableEmailNotifications ?? true,
           enableSlackIntegration: currentOrganization?.settings.enableSlackIntegration ?? false,
@@ -141,8 +143,13 @@ export function OrganizationSettingsTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Organization Details</CardTitle>
-          <CardDescription>Basic information about your organization</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Check className="h-5 w-5 text-primary" />
+            Organization Details
+          </CardTitle>
+          <CardDescription>
+            Basic information about your organization. These settings apply to all workspaces and team members.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Logo Upload */}
@@ -215,11 +222,15 @@ export function OrganizationSettingsTab() {
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
               disabled={!isOwner || isLoading}
+              placeholder="e.g., Acme Corp"
             />
+            <p className="text-xs text-muted-foreground">
+              The name displayed across the platform for your organization.
+            </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="timezone">Timezone</Label>
+            <Label htmlFor="timezone">Default Timezone</Label>
             <Select value={timezone} onValueChange={setTimezone} disabled={!isOwner || isLoading}>
               <SelectTrigger>
                 <SelectValue placeholder="Select timezone" />
@@ -232,10 +243,13 @@ export function OrganizationSettingsTab() {
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              Used as the default for all team members. Individual members can override this in their personal settings.
+            </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="eodTime">EOD Reminder Time</Label>
+            <Label htmlFor="eodTime">Default EOD Reminder Time</Label>
             <Input
               id="eodTime"
               type="time"
@@ -244,7 +258,7 @@ export function OrganizationSettingsTab() {
               disabled={!isOwner || isLoading}
             />
             <p className="text-xs text-muted-foreground">
-              Team members will receive a reminder to submit their EOD at this time
+              Team members will receive a daily reminder to submit their end-of-day report at this time. Each member can set their own preferred time in Notifications settings.
             </p>
           </div>
 

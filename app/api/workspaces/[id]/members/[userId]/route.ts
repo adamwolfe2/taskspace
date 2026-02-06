@@ -7,6 +7,8 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateWorkspaceMemberRoleSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import {
   getWorkspaceById,
@@ -63,17 +65,7 @@ export async function PATCH(
       )
     }
 
-    const body = await request.json()
-    const { role } = body
-
-    // Validation
-    const validRoles = ["owner", "admin", "member", "viewer"]
-    if (!validRoles.includes(role)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `Invalid role. Must be one of: ${validRoles.join(", ")}` },
-        { status: 400 }
-      )
-    }
+    const { role } = await validateBody(request, updateWorkspaceMemberRoleSchema)
 
     // Update member role
     const member = await updateWorkspaceMemberRole(id, userId, role as WorkspaceMember["role"])
@@ -91,6 +83,12 @@ export async function PATCH(
       message: "Member role updated successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Update workspace member role error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update member role" },

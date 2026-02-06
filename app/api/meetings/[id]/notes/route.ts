@@ -2,14 +2,12 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateMeetingNotesSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
+import { isTerminalState } from "@/lib/api/meetings"
 import type { ApiResponse } from "@/lib/types"
 import type { SectionType } from "@/lib/db/meetings"
-
-interface NotesUpdate {
-  section: SectionType
-  content: string
-}
 
 // GET /api/meetings/[id]/notes - Get all notes for a meeting
 export async function GET(
@@ -79,15 +77,7 @@ export async function POST(
     }
 
     const { id } = await params
-    const body: NotesUpdate = await request.json()
-    const { section, content } = body
-
-    if (!section) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Section is required" },
-        { status: 400 }
-      )
-    }
+    const { section, content } = await validateBody(request, updateMeetingNotesSchema)
 
     const meeting = await meetings.getById(id)
 
@@ -104,6 +94,14 @@ export async function POST(
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Access denied" },
         { status: 403 }
+      )
+    }
+
+    // STATE MACHINE VALIDATION: Prevent note modifications on completed meetings
+    if (isTerminalState(meeting.status)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: `Cannot modify notes on a ${meeting.status} meeting. Notes are read-only after meeting ends.` },
+        { status: 400 }
       )
     }
 
@@ -141,6 +139,12 @@ export async function POST(
       message: "Notes updated successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Update meeting notes error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update meeting notes" },

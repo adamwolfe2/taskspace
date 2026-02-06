@@ -44,14 +44,29 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     }
 
     const now = new Date().toISOString()
+    const normalizedEmails = emails.map(e => e.toLowerCase())
 
-    for (const email of emails) {
-      const trimmedEmail = email.toLowerCase() // Already validated by schema
+    // OPTIMIZED: Batch fetch all users and existing invitations upfront instead of N+1 queries
+    const [existingUsers, orgMembers, existingInvitations2] = await Promise.all([
+      db.users.findByEmails(normalizedEmails),
+      db.members.findByOrganizationId(auth.organization.id),
+      db.invitations.findByOrganizationId(auth.organization.id),
+    ])
 
+    // Build lookup maps for O(1) checks
+    const userByEmail = new Map(existingUsers.map(u => [u.email.toLowerCase(), u]))
+    const memberByUserId = new Map(orgMembers.map(m => [m.userId, m]))
+    const pendingInviteEmails = new Set(
+      existingInvitations2
+        .filter(i => i.status === "pending")
+        .map(i => i.email.toLowerCase())
+    )
+
+    for (const trimmedEmail of normalizedEmails) {
       // Check if user is already a member
-      const existingUser = await db.users.findByEmail(trimmedEmail)
+      const existingUser = userByEmail.get(trimmedEmail)
       if (existingUser) {
-        const existingMember = await db.members.findByOrgAndUser(auth.organization.id, existingUser.id)
+        const existingMember = memberByUserId.get(existingUser.id)
         if (existingMember) {
           result.failed.push({ email: trimmedEmail, error: "Already a member" })
           continue
@@ -59,9 +74,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       }
 
       // Check for existing pending invitation
-      const existingPending = await db.invitations.findPendingByEmail(trimmedEmail)
-      const existingOrgInvite = existingPending.find(i => i.organizationId === auth.organization.id)
-      if (existingOrgInvite) {
+      if (pendingInviteEmails.has(trimmedEmail)) {
         result.failed.push({ email: trimmedEmail, error: "Invitation already sent" })
         continue
       }

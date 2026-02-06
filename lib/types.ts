@@ -344,6 +344,7 @@ export type PageType =
   | "reset-password"
   | "setup-organization"
   | "accept-invitation"
+  | "welcome"
   | "dashboard"
   | "calendar"
   | "history"

@@ -324,7 +324,7 @@ export function invalidateEodCache(orgId: string, userId: string, date: string):
 /**
  * Decorator to cache function results
  */
-export function cached<T extends (...args: any[]) => Promise<any>>(
+export function cached<T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   keyGenerator: (...args: Parameters<T>) => string,
   ttlSeconds?: number

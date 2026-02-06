@@ -44,7 +44,7 @@ async function migrateWorkspaceColors(options: MigrationOptions): Promise<Migrat
     console.log('🎨 Starting workspace color migration...\n')
 
     // Build query filters
-    const whereClause: any = {}
+    const whereClause: Record<string, unknown> = {}
 
     if (options.workspaceId) {
       whereClause.id = options.workspaceId

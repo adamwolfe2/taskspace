@@ -1,164 +1,448 @@
-import type { ApiResponse } from "@/lib/types"
+import type {
+  ApiResponse,
+  AuthResponse,
+  Organization,
+  OrganizationSettings,
+  OrganizationMember,
+  Invitation,
+  Rock,
+  AssignedTask,
+  EODReport,
+  Notification,
+  EODInsight,
+  DailyDigest,
+  UserOrganizationItem,
+  SwitchOrganizationResponse,
+  SubscriptionInfo,
+} from "@/lib/types"
+
+/** Branding settings for an organization */
+interface OrganizationBranding {
+  logoUrl?: string
+  primaryColor?: string
+  secondaryColor?: string
+  accentColor?: string
+  faviconUrl?: string
+  customDomain?: string
+}
+
+/** Member update fields */
+interface MemberUpdate {
+  role?: "owner" | "admin" | "member"
+  department?: string
+  weeklyMeasurable?: string
+  status?: "active" | "invited" | "pending" | "inactive"
+  timezone?: string
+  eodReminderTime?: string
+  managerId?: string | null
+  jobTitle?: string
+}
+
+/** Rock creation input */
+interface RockCreateInput {
+  title: string
+  description?: string
+  userId?: string
+  dueDate?: string
+  status?: Rock["status"]
+  bucket?: string
+  outcome?: string
+  milestones?: Rock["milestones"]
+  quarter?: string
+  workspaceId?: string
+}
+
+/** Task creation input */
+interface TaskCreateInput {
+  title: string
+  description?: string
+  assigneeId: string
+  assigneeName?: string
+  rockId?: string | null
+  priority?: AssignedTask["priority"]
+  dueDate?: string | null
+  workspaceId?: string
+}
+
+/** EOD report creation input */
+interface EODReportCreateInput {
+  date: string
+  tasks: EODReport["tasks"]
+  challenges: string
+  tomorrowPriorities: EODReport["tomorrowPriorities"]
+  needsEscalation: boolean
+  escalationNote?: string | null
+  metricValueToday?: number | null
+  attachments?: EODReport["attachments"]
+  workspaceId?: string
+}
 
 const API_BASE = "/api"
 
+// ============================================
+// ERROR CLASSES
+// ============================================
+
 class ApiError extends Error {
   status: number
+  code?: string
   data?: unknown  // Include any data from the error response (e.g., existing report for 409)
 
-  constructor(message: string, status: number, data?: unknown) {
+  constructor(message: string, status: number, data?: unknown, code?: string) {
     super(message)
     this.name = "ApiError"
     this.status = status
     this.data = data
+    this.code = code
   }
 }
 
+// ============================================
+// USER-FRIENDLY ERROR MESSAGES
+// ============================================
+
+const USER_FRIENDLY_MESSAGES: Record<number, string> = {
+  400: "The request was invalid. Please check your input and try again.",
+  401: "Your session has expired. Please log in again.",
+  403: "You don't have permission to perform this action.",
+  404: "The requested resource was not found.",
+  408: "The request timed out. Please try again.",
+  409: "This conflicts with an existing record.",
+  413: "The uploaded file is too large.",
+  429: "You're making requests too quickly. Please wait a moment and try again.",
+  500: "Something went wrong on our end. Please try again later.",
+  502: "Our servers are temporarily unavailable. Please try again in a moment.",
+  503: "The service is temporarily unavailable. Please try again in a moment.",
+  504: "The request timed out. Please try again.",
+}
+
+/**
+ * Get a user-friendly error message for an HTTP status code.
+ * Prefers the server-provided message if it looks user-friendly,
+ * otherwise falls back to a generic message for the status code.
+ */
+function getUserFriendlyMessage(status: number, serverMessage?: string): string {
+  // If the server provided a message and it doesn't look like a raw error/stack trace, use it
+  if (
+    serverMessage &&
+    serverMessage.length < 200 &&
+    !serverMessage.includes("Error:") &&
+    !serverMessage.includes("at ") &&
+    !serverMessage.includes("node_modules") &&
+    !serverMessage.includes("ECONNREFUSED") &&
+    !serverMessage.includes("relation") &&
+    !serverMessage.includes("does not exist")
+  ) {
+    return serverMessage
+  }
+
+  return USER_FRIENDLY_MESSAGES[status] || "An unexpected error occurred. Please try again."
+}
+
+// ============================================
+// RETRY LOGIC WITH EXPONENTIAL BACKOFF
+// ============================================
+
+interface RetryConfig {
+  maxRetries: number
+  baseDelayMs: number
+  maxDelayMs: number
+  retryableStatuses: number[]
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  baseDelayMs: 1000,
+  maxDelayMs: 30000,
+  retryableStatuses: [429, 503],
+}
+
+/**
+ * Calculate delay with exponential backoff and jitter.
+ * For 429 responses, respects the Retry-After header if present.
+ */
+function calculateRetryDelay(
+  attempt: number,
+  config: RetryConfig,
+  retryAfterHeader?: string | null
+): number {
+  // Respect Retry-After header if present (typically from 429 responses)
+  if (retryAfterHeader) {
+    const retryAfterSeconds = parseInt(retryAfterHeader, 10)
+    if (!isNaN(retryAfterSeconds) && retryAfterSeconds > 0) {
+      return Math.min(retryAfterSeconds * 1000, config.maxDelayMs)
+    }
+  }
+
+  // Exponential backoff: baseDelay * 2^attempt with jitter
+  const exponentialDelay = config.baseDelayMs * Math.pow(2, attempt)
+  const jitter = Math.random() * config.baseDelayMs * 0.5
+  return Math.min(exponentialDelay + jitter, config.maxDelayMs)
+}
+
+/**
+ * Execute a fetch request with retry logic for transient failures.
+ */
+async function fetchWithRetry(
+  url: string,
+  options?: RequestInit,
+  retryConfig: RetryConfig = DEFAULT_RETRY_CONFIG
+): Promise<Response> {
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options)
+
+      // If the response is retryable and we haven't exhausted retries, wait and retry
+      if (
+        retryConfig.retryableStatuses.includes(response.status) &&
+        attempt < retryConfig.maxRetries
+      ) {
+        const delay = calculateRetryDelay(
+          attempt,
+          retryConfig,
+          response.headers.get("Retry-After")
+        )
+        console.warn(
+          `[API Client] Request to ${url} returned ${response.status}, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${retryConfig.maxRetries})`
+        )
+        await new Promise((resolve) => setTimeout(resolve, delay))
+        continue
+      }
+
+      return response
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+
+      // Network errors are retryable
+      if (attempt < retryConfig.maxRetries) {
+        const delay = calculateRetryDelay(attempt, retryConfig)
+        console.warn(
+          `[API Client] Network error for ${url}, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${retryConfig.maxRetries}):`,
+          lastError.message
+        )
+        await new Promise((resolve) => setTimeout(resolve, delay))
+        continue
+      }
+    }
+  }
+
+  throw new ApiError(
+    "Unable to reach the server. Please check your connection and try again.",
+    0,
+    undefined,
+    "NETWORK_ERROR"
+  )
+}
+
+// ============================================
+// RESPONSE HANDLING
+// ============================================
+
 async function handleResponse<T>(response: Response): Promise<T> {
-  const data: ApiResponse<T> = await response.json()
+  let data: ApiResponse<T>
+
+  try {
+    data = await response.json()
+  } catch {
+    // Response body was not valid JSON
+    throw new ApiError(
+      getUserFriendlyMessage(response.status),
+      response.status
+    )
+  }
 
   if (!response.ok || !data.success) {
-    // Include any data in the error (useful for 409 conflicts that return existing record)
-    throw new ApiError(data.error || "An error occurred", response.status, data.data)
+    const friendlyMessage = getUserFriendlyMessage(response.status, data.error)
+    throw new ApiError(friendlyMessage, response.status, data.data, data.code)
   }
 
   return data.data as T
+}
+
+// ============================================
+// GLOBAL UNHANDLED PROMISE REJECTION HANDLER
+// ============================================
+
+/**
+ * Initialize the global error toast handler.
+ * Call this once in your app root to catch unhandled promise rejections
+ * and display user-friendly toast notifications.
+ *
+ * Usage: import { initGlobalErrorHandler } from "@/lib/api/client"
+ *        // In a useEffect in your root component:
+ *        const cleanup = initGlobalErrorHandler()
+ *        return cleanup
+ */
+export function initGlobalErrorHandler(): () => void {
+  if (typeof window === "undefined") return () => {}
+
+  const handler = (event: PromiseRejectionEvent) => {
+    const error = event.reason
+
+    // Only handle ApiErrors - other rejections should be handled by their callers
+    if (error instanceof ApiError) {
+      event.preventDefault()
+
+      // Dynamically import toast to avoid circular dependencies
+      import("@/hooks/use-toast").then(({ toast }) => {
+        // For 401s, show a session expiration message
+        if (error.status === 401) {
+          toast({
+            variant: "destructive",
+            title: "Session Expired",
+            description: "Please log in again to continue.",
+          })
+          return
+        }
+
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        })
+      }).catch(() => {
+        // Toast module not available, fall back to console
+        console.error("[API Error]", error.message)
+      })
+    }
+
+    // Log all unhandled rejections for debugging
+    console.error("[Unhandled Promise Rejection]", error)
+  }
+
+  window.addEventListener("unhandledrejection", handler)
+  return () => window.removeEventListener("unhandledrejection", handler)
 }
 
 export const api = {
   // Auth
   auth: {
     async login(email: string, password: string, organizationId?: string) {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await fetchWithRetry(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, organizationId }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<AuthResponse>(response)
     },
 
     async register(email: string, password: string, name: string, organizationName?: string) {
-      const response = await fetch(`${API_BASE}/auth/register`, {
+      const response = await fetchWithRetry(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name, organizationName }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<AuthResponse>(response)
     },
 
     async logout() {
-      const response = await fetch(`${API_BASE}/auth/logout`, {
+      const response = await fetchWithRetry(`${API_BASE}/auth/logout`, {
         method: "POST",
       })
       return handleResponse<null>(response)
     },
 
     async getSession() {
-      const response = await fetch(`${API_BASE}/auth/session`)
-      return handleResponse<any>(response)
+      const response = await fetchWithRetry(`${API_BASE}/auth/session`)
+      return handleResponse<AuthResponse>(response)
     },
   },
 
   // Organizations
   organizations: {
     async list() {
-      const response = await fetch(`${API_BASE}/organizations`)
-      return handleResponse<any[]>(response)
+      const response = await fetchWithRetry(`${API_BASE}/organizations`)
+      return handleResponse<Organization[]>(response)
     },
 
     async create(name: string, timezone?: string) {
-      const response = await fetch(`${API_BASE}/organizations`, {
+      const response = await fetchWithRetry(`${API_BASE}/organizations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, timezone }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<Organization>(response)
     },
 
-    async update(settings: any) {
-      const response = await fetch(`${API_BASE}/organizations`, {
+    async update(settings: Partial<Organization>) {
+      const response = await fetchWithRetry(`${API_BASE}/organizations`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       })
-      return handleResponse<any>(response)
+      return handleResponse<Organization>(response)
     },
 
-    async updateSettings(settings: any) {
-      const response = await fetch(`${API_BASE}/organizations`, {
+    async updateSettings(settings: Partial<OrganizationSettings>) {
+      const response = await fetchWithRetry(`${API_BASE}/organizations`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       })
-      return handleResponse<any>(response)
+      return handleResponse<Organization>(response)
     },
 
     async getBranding() {
-      const response = await fetch(`${API_BASE}/organizations/branding`)
-      return handleResponse<any>(response)
+      const response = await fetchWithRetry(`${API_BASE}/organizations/branding`)
+      return handleResponse<OrganizationBranding>(response)
     },
 
-    async updateBranding(branding: {
-      logoUrl?: string
-      primaryColor?: string
-      secondaryColor?: string
-      accentColor?: string
-      faviconUrl?: string
-      customDomain?: string
-    }) {
-      const response = await fetch(`${API_BASE}/organizations/branding`, {
+    async updateBranding(branding: OrganizationBranding) {
+      const response = await fetchWithRetry(`${API_BASE}/organizations/branding`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(branding),
       })
-      return handleResponse<any>(response)
+      return handleResponse<OrganizationBranding>(response)
     },
   },
 
   // User-specific endpoints
   user: {
     async getOrganizations() {
-      const response = await fetch(`${API_BASE}/user/organizations`)
-      return handleResponse<any[]>(response)
+      const response = await fetchWithRetry(`${API_BASE}/user/organizations`)
+      return handleResponse<UserOrganizationItem[]>(response)
     },
 
     async createOrganization(name: string, timezone?: string) {
-      const response = await fetch(`${API_BASE}/user/organizations`, {
+      const response = await fetchWithRetry(`${API_BASE}/user/organizations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, timezone }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<Organization>(response)
     },
 
     async switchOrganization(organizationId: string) {
-      const response = await fetch(`${API_BASE}/user/switch-organization`, {
+      const response = await fetchWithRetry(`${API_BASE}/user/switch-organization`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ organizationId }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<SwitchOrganizationResponse>(response)
     },
   },
 
   // Members
   members: {
     async list() {
-      const response = await fetch(`${API_BASE}/members`)
-      return handleResponse<any[]>(response)
+      const response = await fetchWithRetry(`${API_BASE}/members`)
+      return handleResponse<OrganizationMember[]>(response)
     },
 
-    async update(memberId: string, updates: any) {
-      const response = await fetch(`${API_BASE}/members`, {
+    async update(memberId: string, updates: MemberUpdate) {
+      const response = await fetchWithRetry(`${API_BASE}/members`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ memberId, ...updates }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<OrganizationMember>(response)
     },
 
     async remove(memberId: string) {
-      const response = await fetch(`${API_BASE}/members?memberId=${memberId}`, {
+      const response = await fetchWithRetry(`${API_BASE}/members?memberId=${memberId}`, {
         method: "DELETE",
       })
       return handleResponse<null>(response)
@@ -168,57 +452,57 @@ export const api = {
   // Invitations
   invitations: {
     async list() {
-      const response = await fetch(`${API_BASE}/invitations`)
-      return handleResponse<any[]>(response)
+      const response = await fetchWithRetry(`${API_BASE}/invitations`)
+      return handleResponse<Invitation[]>(response)
     },
 
     async create(data: { email: string; role: string; department: string; workspaceId?: string }) {
-      const response = await fetch(`${API_BASE}/invitations`, {
+      const response = await fetchWithRetry(`${API_BASE}/invitations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      return handleResponse<any>(response)
+      return handleResponse<Invitation>(response)
     },
 
     async createBulk(data: { emails: string[]; role: string; department: string }) {
-      const response = await fetch(`${API_BASE}/invitations/bulk`, {
+      const response = await fetchWithRetry(`${API_BASE}/invitations/bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      return handleResponse<any>(response)
+      return handleResponse<{ successful: Invitation[]; failed: { email: string; error: string }[] }>(response)
     },
 
     // Simplified bulk create for onboarding (defaults to member role)
     async bulkCreate(emails: string[], role: string = "member", department: string = "General") {
-      const response = await fetch(`${API_BASE}/invitations/bulk`, {
+      const response = await fetchWithRetry(`${API_BASE}/invitations/bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emails, role, department }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<{ sent: number; failed: string[] }>(response)
     },
 
     async cancel(id: string) {
-      const response = await fetch(`${API_BASE}/invitations?id=${id}`, {
+      const response = await fetchWithRetry(`${API_BASE}/invitations?id=${id}`, {
         method: "DELETE",
       })
       return handleResponse<null>(response)
     },
 
     async getByToken(token: string) {
-      const response = await fetch(`${API_BASE}/invitations/accept?token=${token}`)
-      return handleResponse<any>(response)
+      const response = await fetchWithRetry(`${API_BASE}/invitations/accept?token=${token}`)
+      return handleResponse<{ invitation: Invitation; existingUser: boolean; organizationName: string }>(response)
     },
 
     async accept(token: string, name?: string, password?: string) {
-      const response = await fetch(`${API_BASE}/invitations/accept`, {
+      const response = await fetchWithRetry(`${API_BASE}/invitations/accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, name, password }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<AuthResponse>(response)
     },
   },
 
@@ -228,30 +512,30 @@ export const api = {
       const params = new URLSearchParams()
       if (userId) params.set("userId", userId)
       if (workspaceId) params.set("workspaceId", workspaceId)
-      const response = await fetch(`${API_BASE}/rocks?${params}`)
-      return handleResponse<any[]>(response)
+      const response = await fetchWithRetry(`${API_BASE}/rocks?${params}`)
+      return handleResponse<Rock[]>(response)
     },
 
-    async create(rock: any) {
-      const response = await fetch(`${API_BASE}/rocks`, {
+    async create(rock: RockCreateInput) {
+      const response = await fetchWithRetry(`${API_BASE}/rocks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(rock),
       })
-      return handleResponse<any>(response)
+      return handleResponse<Rock>(response)
     },
 
-    async update(id: string, updates: any) {
-      const response = await fetch(`${API_BASE}/rocks`, {
+    async update(id: string, updates: Partial<Rock>) {
+      const response = await fetchWithRetry(`${API_BASE}/rocks`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, ...updates }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<Rock>(response)
     },
 
     async delete(id: string) {
-      const response = await fetch(`${API_BASE}/rocks?id=${id}`, {
+      const response = await fetchWithRetry(`${API_BASE}/rocks?id=${id}`, {
         method: "DELETE",
       })
       return handleResponse<null>(response)
@@ -265,30 +549,30 @@ export const api = {
       if (userId) params.set("userId", userId)
       if (status) params.set("status", status)
       if (workspaceId) params.set("workspaceId", workspaceId)
-      const response = await fetch(`${API_BASE}/tasks?${params}`)
-      return handleResponse<any[]>(response)
+      const response = await fetchWithRetry(`${API_BASE}/tasks?${params}`)
+      return handleResponse<AssignedTask[]>(response)
     },
 
-    async create(task: any) {
-      const response = await fetch(`${API_BASE}/tasks`, {
+    async create(task: TaskCreateInput) {
+      const response = await fetchWithRetry(`${API_BASE}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(task),
       })
-      return handleResponse<any>(response)
+      return handleResponse<AssignedTask>(response)
     },
 
-    async update(id: string, updates: any) {
-      const response = await fetch(`${API_BASE}/tasks`, {
+    async update(id: string, updates: Partial<AssignedTask>) {
+      const response = await fetchWithRetry(`${API_BASE}/tasks`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, ...updates }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<AssignedTask>(response)
     },
 
     async delete(id: string) {
-      const response = await fetch(`${API_BASE}/tasks?id=${id}`, {
+      const response = await fetchWithRetry(`${API_BASE}/tasks?id=${id}`, {
         method: "DELETE",
       })
       return handleResponse<null>(response)
@@ -304,30 +588,30 @@ export const api = {
       if (params?.startDate) searchParams.set("startDate", params.startDate)
       if (params?.endDate) searchParams.set("endDate", params.endDate)
       if (params?.workspaceId) searchParams.set("workspaceId", params.workspaceId)
-      const response = await fetch(`${API_BASE}/eod-reports?${searchParams}`)
-      return handleResponse<any[]>(response)
+      const response = await fetchWithRetry(`${API_BASE}/eod-reports?${searchParams}`)
+      return handleResponse<EODReport[]>(response)
     },
 
-    async create(report: any) {
-      const response = await fetch(`${API_BASE}/eod-reports`, {
+    async create(report: EODReportCreateInput) {
+      const response = await fetchWithRetry(`${API_BASE}/eod-reports`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(report),
       })
-      return handleResponse<any>(response)
+      return handleResponse<EODReport>(response)
     },
 
-    async update(id: string, updates: any) {
-      const response = await fetch(`${API_BASE}/eod-reports`, {
+    async update(id: string, updates: Partial<EODReport>) {
+      const response = await fetchWithRetry(`${API_BASE}/eod-reports`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, ...updates }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<EODReport>(response)
     },
 
     async delete(id: string) {
-      const response = await fetch(`${API_BASE}/eod-reports?id=${id}`, {
+      const response = await fetchWithRetry(`${API_BASE}/eod-reports?id=${id}`, {
         method: "DELETE",
       })
       return handleResponse<null>(response)
@@ -338,26 +622,26 @@ export const api = {
   notifications: {
     async list(unreadOnly: boolean = false) {
       const params = unreadOnly ? "?unread=true" : ""
-      const response = await fetch(`${API_BASE}/notifications${params}`)
-      return handleResponse<any[]>(response)
+      const response = await fetchWithRetry(`${API_BASE}/notifications${params}`)
+      return handleResponse<Notification[]>(response)
     },
 
     async getUnreadCount() {
-      const response = await fetch(`${API_BASE}/notifications?count=true`)
+      const response = await fetchWithRetry(`${API_BASE}/notifications?count=true`)
       return handleResponse<{ count: number }>(response)
     },
 
     async markAsRead(id: string) {
-      const response = await fetch(`${API_BASE}/notifications`, {
+      const response = await fetchWithRetry(`${API_BASE}/notifications`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<Notification>(response)
     },
 
     async markAllAsRead() {
-      const response = await fetch(`${API_BASE}/notifications`, {
+      const response = await fetchWithRetry(`${API_BASE}/notifications`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ markAllRead: true }),
@@ -366,7 +650,7 @@ export const api = {
     },
 
     async delete(id: string) {
-      const response = await fetch(`${API_BASE}/notifications?id=${id}`, {
+      const response = await fetchWithRetry(`${API_BASE}/notifications?id=${id}`, {
         method: "DELETE",
       })
       return handleResponse<null>(response)
@@ -376,35 +660,35 @@ export const api = {
   // AI Insights
   ai: {
     async getInsights(days: number = 7) {
-      const response = await fetch(`${API_BASE}/ai/parse-eod?days=${days}`)
-      return handleResponse<any[]>(response)
+      const response = await fetchWithRetry(`${API_BASE}/ai/parse-eod?days=${days}`)
+      return handleResponse<EODInsight[]>(response)
     },
 
     async getDigest(date?: string) {
       const params = date ? `?date=${date}` : ""
-      const response = await fetch(`${API_BASE}/ai/digest${params}`)
-      return handleResponse<any>(response)
+      const response = await fetchWithRetry(`${API_BASE}/ai/digest${params}`)
+      return handleResponse<DailyDigest>(response)
     },
 
     async generateDigest(date?: string) {
-      const response = await fetch(`${API_BASE}/ai/digest`, {
+      const response = await fetchWithRetry(`${API_BASE}/ai/digest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<DailyDigest>(response)
     },
   },
 
   // Billing
   billing: {
     async getSubscription() {
-      const response = await fetch(`${API_BASE}/billing/subscription`)
-      return handleResponse<any>(response)
+      const response = await fetchWithRetry(`${API_BASE}/billing/subscription`)
+      return handleResponse<{ subscription: SubscriptionInfo; organization: Organization }>(response)
     },
 
     async createCheckout(plan: string, billingCycle: "monthly" | "yearly" = "monthly") {
-      const response = await fetch(`${API_BASE}/billing/checkout`, {
+      const response = await fetchWithRetry(`${API_BASE}/billing/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan, billingCycle }),
@@ -413,34 +697,34 @@ export const api = {
     },
 
     async changePlan(plan: string, billingCycle: "monthly" | "yearly" = "monthly") {
-      const response = await fetch(`${API_BASE}/billing/subscription`, {
+      const response = await fetchWithRetry(`${API_BASE}/billing/subscription`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "change_plan", plan, billingCycle }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<{ subscription: SubscriptionInfo }>(response)
     },
 
     async cancelSubscription() {
-      const response = await fetch(`${API_BASE}/billing/subscription`, {
+      const response = await fetchWithRetry(`${API_BASE}/billing/subscription`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "cancel" }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<{ subscription: SubscriptionInfo }>(response)
     },
 
     async resumeSubscription() {
-      const response = await fetch(`${API_BASE}/billing/subscription`, {
+      const response = await fetchWithRetry(`${API_BASE}/billing/subscription`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "resume" }),
       })
-      return handleResponse<any>(response)
+      return handleResponse<{ subscription: SubscriptionInfo }>(response)
     },
 
     async openPortal() {
-      const response = await fetch(`${API_BASE}/billing/subscription`, {
+      const response = await fetchWithRetry(`${API_BASE}/billing/subscription`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "portal" }),

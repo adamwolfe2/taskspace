@@ -5,6 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Check,
   Loader2,
   ArrowRight,
@@ -13,6 +23,7 @@ import {
   Building2,
   Sparkles,
   ExternalLink,
+  AlertTriangle,
 } from "lucide-react"
 import { IntegrationLogo } from "@/components/ui/integration-logo"
 import { cn } from "@/lib/utils"
@@ -101,6 +112,7 @@ export function BillingSettings() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly")
   const [processingPlan, setProcessingPlan] = useState<string | null>(null)
   const [isManaging, setIsManaging] = useState(false)
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   const currentPlan = subscription?.plan || "free"
 
@@ -213,10 +225,6 @@ export function BillingSettings() {
   }
 
   const handleCancelSubscription = async () => {
-    if (!confirm("Are you sure you want to cancel your subscription? You'll retain access until the end of your billing period.")) {
-      return
-    }
-
     setIsManaging(true)
     try {
       const response = await fetch("/api/billing/subscription", {
@@ -230,9 +238,10 @@ export function BillingSettings() {
       if (data.success) {
         toast({
           title: "Subscription canceled",
-          description: "Your subscription will end at the current billing period",
+          description: "Your subscription will remain active until the end of your current billing period.",
         })
         setSubscription((prev) => prev ? { ...prev, cancelAtPeriodEnd: true } : null)
+        setShowCancelDialog(false)
       } else {
         throw new Error(data.error || "Failed to cancel subscription")
       }
@@ -362,7 +371,7 @@ export function BillingSettings() {
                     <Button
                       variant="ghost"
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={handleCancelSubscription}
+                      onClick={() => setShowCancelDialog(true)}
                       disabled={isManaging}
                     >
                       Cancel
@@ -537,6 +546,46 @@ export function BillingSettings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cancel Subscription Confirmation */}
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Cancel your subscription?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Your <strong>{PLANS[currentPlan].name}</strong> plan will remain active until the end of your current billing period
+                {subscription?.currentPeriodEnd && (
+                  <> ({new Date(subscription.currentPeriodEnd).toLocaleDateString()})</>
+                )}.
+              </p>
+              <p>
+                After that, your account will be downgraded to the Free plan. You will lose access to premium features including AI insights, advanced analytics, and integrations.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isManaging}>Keep Subscription</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelSubscription}
+              disabled={isManaging}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isManaging ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Cancelling...
+                </>
+              ) : (
+                "Cancel Subscription"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

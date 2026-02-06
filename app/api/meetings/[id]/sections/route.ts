@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateMeetingSectionSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 import type { MeetingSection, SectionType } from "@/lib/db/meetings"
@@ -21,26 +23,7 @@ export async function PATCH(
     }
 
     const { id } = await params
-    const body = await request.json()
-    const { sectionType, action, data } = body as {
-      sectionType: SectionType
-      action: "start" | "complete" | "update"
-      data?: Record<string, unknown>
-    }
-
-    if (!sectionType) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Section type is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!action) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Action is required" },
-        { status: 400 }
-      )
-    }
+    const { sectionType, action, data } = await validateBody(request, updateMeetingSectionSchema)
 
     const meeting = await meetings.getById(id)
 
@@ -103,6 +86,12 @@ export async function PATCH(
       message: `Section ${action}ed successfully`,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Update section error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update section" },

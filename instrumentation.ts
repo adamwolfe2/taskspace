@@ -48,7 +48,7 @@ export async function register() {
       // Log feature status in development
       if (process.env.NODE_ENV === "development") {
         const result = validateEnv()
-        console.log("\n🚀 AIMS EOD Server Starting...")
+        console.log("\n🚀 Taskspace Server Starting...")
         console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         console.log("Feature Status:")
         result.features.forEach((f) => {

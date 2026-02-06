@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAuth } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateNotificationSchema } from "@/lib/validation/schemas"
 import type { Notification, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -39,8 +41,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // PATCH /api/notifications - Mark notification(s) as read
 export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { id, markAllRead } = body
+    const { id, markAllRead } = await validateBody(request, updateNotificationSchema)
 
     if (markAllRead) {
       const count = await db.notifications.markAllAsRead(auth.user.id, auth.organization.id)
@@ -71,6 +72,12 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       data: notification,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Update notification error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update notification" },

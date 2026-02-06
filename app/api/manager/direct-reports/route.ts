@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { assignManagerSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, TeamMember } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -107,15 +109,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { memberId, managerId } = body
-
-    if (!memberId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Member ID is required" },
-        { status: 400 }
-      )
-    }
+    const { memberId, managerId } = await validateBody(request, assignManagerSchema)
 
     // Get the member to update
     const member = await db.members.findByOrgAndUser(auth.organization.id, memberId)
@@ -152,6 +146,12 @@ export async function PATCH(request: NextRequest) {
       message: managerId ? "Manager assigned successfully" : "Manager unassigned successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Assign manager error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to assign manager" },

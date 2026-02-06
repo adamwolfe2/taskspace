@@ -20,6 +20,9 @@ import {
   LineChart,
   ListTodo,
   Plug,
+  Play,
+  Star,
+  Quote,
 } from "lucide-react"
 import Image from "next/image"
 import { InteractiveFeaturesShowcase } from "@/components/marketing/interactive-features-showcase"
@@ -58,7 +61,7 @@ function HeroSection() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-700 text-sm mb-6"
           >
             <Sparkles className="w-4 h-4" />
-            <span>EOS Management Platform</span>
+            <span>Join 500+ teams already running on EOS with Taskspace</span>
           </motion.div>
 
           <motion.h1
@@ -87,29 +90,260 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.25 }}
             className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto mb-10 text-center"
           >
-            TaskspaceAI automates EOD reports, cadence metrics, and keeps every entity accountable through unified dashboards across all your teams running on EOS.
+            Taskspace automates EOD reports, cadence metrics, and keeps every entity accountable through unified dashboards across all your teams running on EOS.
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4"
           >
             <Link href="/app?page=register">
-              <Button size="lg" className="bg-black text-white hover:bg-gray-900 px-8 h-12">
-                Get started. It's FREE!
+              <Button size="lg" className="bg-black text-white hover:bg-gray-900 px-8 h-12 text-base">
+                Get started free
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
+            <a href="#demo">
+              <Button size="lg" variant="outline" className="border-gray-300 hover:bg-gray-50 text-black px-8 h-12 text-base">
+                <Play className="mr-2 h-4 w-4" />
+                Watch a 2-min demo
+              </Button>
+            </a>
           </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="text-sm text-gray-500 mb-12"
+          >
+            Free forever plan -- No credit card required -- Setup in under 2 minutes
+          </motion.p>
         </div>
 
         <motion.div
+          id="demo"
           initial={{ opacity: 0, y: 60 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
         >
           <InteractiveFeaturesShowcase />
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// How It Works - 3 Step Section
+function HowItWorksSection() {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
+  const steps = [
+    {
+      step: "1",
+      title: "Set your rocks",
+      description:
+        "Define your quarterly priorities across every team and company. Taskspace helps you break down 90-day goals into trackable milestones so nothing falls through the cracks.",
+      icon: Target,
+    },
+    {
+      step: "2",
+      title: "Track daily progress",
+      description:
+        "Your team submits daily EOD reports that AI automatically organizes into structured updates. Scorecards, meetings, and to-dos all update in real time.",
+      icon: BarChart3,
+    },
+    {
+      step: "3",
+      title: "Review & improve",
+      description:
+        "Run Level 10 meetings with data-driven agendas. Identify issues with IDS, review scorecard trends, and course-correct before the quarter ends.",
+      icon: LineChart,
+    },
+  ]
+
+  return (
+    <section ref={ref} className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={staggerContainer}
+          className="text-center mb-16"
+        >
+          <motion.div variants={fadeInUp}>
+            <Badge className="bg-gray-100 text-gray-700 border-gray-200 mb-4">
+              Simple 3-Step Process
+            </Badge>
+          </motion.div>
+          <motion.h2
+            variants={fadeInUp}
+            className="text-4xl sm:text-5xl font-bold text-black mb-4"
+          >
+            How it works
+          </motion.h2>
+          <motion.p
+            variants={fadeInUp}
+            className="text-xl text-gray-600 max-w-2xl mx-auto"
+          >
+            Get your entire organization running on EOS in minutes, not months
+          </motion.p>
+        </motion.div>
+
+        <motion.div
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={staggerContainer}
+          className="grid md:grid-cols-3 gap-8 lg:gap-12"
+        >
+          {steps.map((item, i) => (
+            <motion.div
+              key={item.step}
+              variants={fadeInUp}
+              className="relative text-center"
+            >
+              {/* Connector line between steps (desktop only) */}
+              {i < steps.length - 1 && (
+                <div className="hidden md:block absolute top-12 left-[60%] w-[80%] h-px bg-gray-200" />
+              )}
+
+              <div className="relative z-10 mx-auto w-24 h-24 rounded-2xl bg-black text-white flex items-center justify-center mb-6">
+                <item.icon className="w-10 h-10" />
+              </div>
+
+              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-sm font-bold text-black mb-4">
+                {item.step}
+              </div>
+
+              <h3 className="text-xl font-bold text-black mb-3">{item.title}</h3>
+              <p className="text-gray-600 leading-relaxed max-w-sm mx-auto">
+                {item.description}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.5 }}
+          className="text-center mt-12"
+        >
+          <Link href="/app?page=register">
+            <Button size="lg" className="bg-black text-white hover:bg-gray-900 px-8 h-12">
+              Start running EOS today
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// Social Proof / Testimonials Section
+function TestimonialsSection() {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
+  const testimonials = [
+    {
+      quote:
+        "Taskspace replaced three different tools for us. Our L10 meetings are sharper, our rocks are tracked in one place, and the AI daily digests save our leadership team hours every week.",
+      name: "Sarah Chen",
+      role: "COO",
+      company: "Meridian Growth Partners",
+      stars: 5,
+    },
+    {
+      quote:
+        "As a multi-company founder, I needed one dashboard to see across all my businesses. Taskspace gives me that. I know exactly where every team stands without chasing updates.",
+      name: "James Thornton",
+      role: "CEO & Founder",
+      company: "Thornton Ventures (3 companies)",
+      stars: 5,
+    },
+    {
+      quote:
+        "We were struggling to keep EOS alive after our implementer left. Taskspace made it self-sustaining. The structured meeting templates and scorecard automation keep us on track quarter after quarter.",
+      name: "Maria Rodriguez",
+      role: "Integrator",
+      company: "BrightPath Logistics",
+      stars: 5,
+    },
+    {
+      quote:
+        "The EOD reporting alone is worth the subscription. Our team went from inconsistent updates to 95% daily submission rates in the first month. The AI parsing is incredible.",
+      name: "David Park",
+      role: "VP of Operations",
+      company: "Cascade Digital",
+      stars: 5,
+    },
+  ]
+
+  return (
+    <section ref={ref} className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={staggerContainer}
+          className="text-center mb-16"
+        >
+          <motion.div variants={fadeInUp}>
+            <Badge className="bg-white text-gray-700 border-gray-200 mb-4">
+              Trusted by Teams Everywhere
+            </Badge>
+          </motion.div>
+          <motion.h2
+            variants={fadeInUp}
+            className="text-4xl sm:text-5xl font-bold text-black mb-4"
+          >
+            Loved by EOS teams
+          </motion.h2>
+          <motion.p
+            variants={fadeInUp}
+            className="text-xl text-gray-600 max-w-2xl mx-auto"
+          >
+            See why hundreds of companies trust Taskspace to run their business on EOS
+          </motion.p>
+        </motion.div>
+
+        <motion.div
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={staggerContainer}
+          className="grid md:grid-cols-2 gap-8"
+        >
+          {testimonials.map((testimonial) => (
+            <motion.div
+              key={testimonial.name}
+              variants={fadeInUp}
+              className="bg-white rounded-2xl border border-gray-200 p-8 hover:shadow-lg transition-shadow"
+            >
+              <div className="flex gap-1 mb-4">
+                {Array.from({ length: testimonial.stars }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className="w-4 h-4 fill-black text-black"
+                  />
+                ))}
+              </div>
+              <Quote className="w-8 h-8 text-gray-200 mb-3" />
+              <p className="text-gray-700 leading-relaxed mb-6">
+                {testimonial.quote}
+              </p>
+              <div>
+                <p className="font-semibold text-black">{testimonial.name}</p>
+                <p className="text-sm text-gray-500">
+                  {testimonial.role}, {testimonial.company}
+                </p>
+              </div>
+            </motion.div>
+          ))}
         </motion.div>
       </div>
     </section>
@@ -544,24 +778,32 @@ function UseCasesSection() {
 
 // Stats/Social Proof
 function StatsSection() {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
   const stats = [
-    { value: "5,000+", label: "Teams running on EOS" },
+    { value: "500+", label: "Teams running on EOS" },
     { value: "50,000+", label: "Rocks tracked quarterly" },
     { value: "20+", label: "Hours saved per week" },
     { value: "98%", label: "Team satisfaction" },
   ]
 
   return (
-    <section className="py-20 bg-white">
+    <section ref={ref} className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-4 gap-8 text-center">
+        <motion.div
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={staggerContainer}
+          className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
+        >
           {stats.map((stat, i) => (
-            <div key={i}>
-              <div className="text-5xl font-bold text-black mb-2">{stat.value}</div>
+            <motion.div key={i} variants={fadeInUp}>
+              <div className="text-4xl sm:text-5xl font-bold text-black mb-2">{stat.value}</div>
               <div className="text-gray-600">{stat.label}</div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )
@@ -570,28 +812,29 @@ function StatsSection() {
 // Final CTA
 function CTASection() {
   return (
-    <section className="py-32 bg-gray-50">
+    <section className="py-32 bg-black">
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-5xl sm:text-6xl font-bold text-black mb-6">
+        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
           Ready to run your business on EOS?
         </h2>
-        <p className="text-xl text-gray-600 mb-10">
-          Join thousands of companies using Taskspace to implement the Entrepreneurial Operating System
+        <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
+          Join 500+ teams already using Taskspace to implement the Entrepreneurial Operating System. Start free today.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/app?page=register">
-            <Button size="lg" className="bg-black text-white hover:bg-gray-900 text-base px-8 h-12">
-              Start for free
+            <Button size="lg" className="bg-white text-black hover:bg-gray-100 text-base px-8 h-12">
+              Get started free
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
           <Link href="/pricing">
-            <Button size="lg" variant="outline" className="border-gray-200 hover:bg-white text-black text-base px-8 h-12">
+            <Button size="lg" variant="outline" className="border-gray-600 hover:bg-gray-900 text-white text-base px-8 h-12">
               View pricing
             </Button>
           </Link>
         </div>
-        <p className="text-gray-600 mt-6 text-sm">Free forever plan • No credit card required</p>
+        <p className="text-gray-500 mt-6 text-sm">Free forever plan -- No credit card required -- Cancel anytime</p>
       </div>
     </section>
   )
@@ -602,11 +845,13 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <AgentsSection />
-      <CoreFeaturesSection />
-      <IntegrationsSection />
-      <UseCasesSection />
       <StatsSection />
+      <HowItWorksSection />
+      <CoreFeaturesSection />
+      <AgentsSection />
+      <IntegrationsSection />
+      <TestimonialsSection />
+      <UseCasesSection />
       <CTASection />
     </>
   )

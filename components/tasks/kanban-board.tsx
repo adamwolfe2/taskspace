@@ -136,7 +136,7 @@ function Column({
         </div>
 
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-          <div className="space-y-3 flex-1 overflow-y-auto min-h-[300px] max-h-[calc(100vh-300px)]">
+          <div className="space-y-3 flex-1 overflow-y-auto min-h-[200px] sm:min-h-[300px] max-h-[calc(100vh-300px)]">
             {tasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-[200px] text-sm text-muted-foreground border-2 border-dashed rounded-xl bg-background/50">
                 <config.icon className={cn("h-8 w-8 mb-2 opacity-30", config.color)} />
@@ -246,15 +246,17 @@ export function KanbanBoard({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {columns.map((column) => (
-          <Column
-            key={column.id}
-            config={column}
-            tasks={tasksByColumn[column.id]}
-            onTaskClick={onTaskClick}
-          />
-        ))}
+      <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 pb-2 sm:pb-0">
+        <div className="grid grid-cols-[repeat(3,minmax(260px,1fr))] md:grid-cols-3 gap-3 sm:gap-4 min-w-[800px] md:min-w-0">
+          {columns.map((column) => (
+            <Column
+              key={column.id}
+              config={column}
+              tasks={tasksByColumn[column.id]}
+              onTaskClick={onTaskClick}
+            />
+          ))}
+        </div>
       </div>
 
       <DragOverlay>

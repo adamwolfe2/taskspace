@@ -36,9 +36,15 @@ export function AcceptInvitationPage({ token }: AcceptInvitationPageProps) {
     async function fetchInvitation() {
       try {
         const data = await api.invitations.getByToken(token)
-        setInvitation(data)
-      } catch (err: any) {
-        setError(err.message || "Invalid or expired invitation")
+        setInvitation({
+          email: data.invitation.email,
+          organizationName: data.organizationName,
+          role: data.invitation.role,
+          department: data.invitation.department,
+          existingUser: data.existingUser,
+        })
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Invalid or expired invitation")
       } finally {
         setIsLoading(false)
       }
@@ -78,18 +84,18 @@ export function AcceptInvitationPage({ token }: AcceptInvitationPageProps) {
         id: data.user.id,
         name: data.user.name,
         email: data.user.email,
-        role: data.member.role,
-        department: data.member.department,
+        role: data.member?.role ?? "member",
+        department: data.member?.department ?? "",
         avatar: data.user.avatar,
-        joinDate: data.member.joinedAt,
-        status: data.member.status,
+        joinDate: data.member?.joinedAt ?? new Date().toISOString(),
+        status: data.member?.status ?? "active",
       }
 
       setCurrentUser(teamMember)
-      setCurrentOrganization(data.organization)
-      setCurrentPage("dashboard")
-    } catch (err: any) {
-      setError(err.message || "Failed to accept invitation")
+      setCurrentOrganization(data.organization ?? null)
+      setCurrentPage("welcome")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to accept invitation")
     } finally {
       setIsSubmitting(false)
     }

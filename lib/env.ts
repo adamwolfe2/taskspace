@@ -99,7 +99,7 @@ const EMAIL_VARS: FeatureEnvVars = {
     EMAIL_FROM: {
       required: false,
       description: "Default from email address",
-      example: "AIMS <noreply@example.com>",
+      example: "Taskspace <noreply@example.com>",
     },
   },
 }
@@ -345,7 +345,7 @@ export const env = {
     return process.env.RESEND_API_KEY
   },
   get EMAIL_FROM() {
-    return process.env.EMAIL_FROM || "AIMS <noreply@aims.app>"
+    return process.env.EMAIL_FROM || "Taskspace <noreply@align.app>"
   },
   get emailConfigured() {
     return !!this.RESEND_API_KEY

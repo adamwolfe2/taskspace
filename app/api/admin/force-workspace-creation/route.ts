@@ -27,7 +27,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 
     if (existingWorkspaces.length > 0) {
       logger.info({ count: existingWorkspaces.length }, "Workspace already exists")
-      return NextResponse.json<ApiResponse<any>>({
+      return NextResponse.json<ApiResponse<{ workspace: Record<string, unknown>; alreadyExisted: boolean }>>({
         success: true,
         data: { workspace: existingWorkspaces[0], alreadyExisted: true },
         message: "Workspace already exists"

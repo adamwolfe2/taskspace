@@ -117,6 +117,21 @@ export async function GET(request: NextRequest) {
 
       logger.info({ orgName: org.name, timezone }, "Processing digest for org")
       const today = getTodayInTimezone(timezone)
+      const currentHour = new Date().getUTCHours()
+
+      // IDEMPOTENCY CHECK: Track execution to prevent duplicates on retry
+      try {
+        await db.cronExecutions.recordExecution("daily-digest", org.id, today, currentHour)
+      } catch (error) {
+        // If we get a unique constraint violation, it means this job already ran for this org/hour
+        if (error instanceof Error && error.message.includes("unique")) {
+          logger.info({ orgName: org.name, today, hour: currentHour }, "Digest already processed this hour (duplicate run)")
+          results.push({ orgId: org.id, orgName: org.name, success: true, skipped: "Already processed this hour" })
+          continue
+        }
+        // For other errors, log and continue to try processing
+        logError(logger, `Failed to record cron execution for org ${org.name}`, error)
+      }
 
       try {
         // Check if digest already exists
@@ -127,9 +142,8 @@ export async function GET(request: NextRequest) {
           continue
         }
 
-        // Get today's EOD reports
-        const allReports = await db.eodReports.findByOrganizationId(org.id)
-        const todayReports = allReports.filter(r => r.date === today)
+        // OPTIMIZED: Fetch only today's reports instead of all reports
+        const todayReports = await db.eodReports.findByOrganizationAndDate(org.id, today)
 
         if (todayReports.length === 0) {
           logger.info({ orgName: org.name }, "No reports for org")
@@ -137,8 +151,15 @@ export async function GET(request: NextRequest) {
           continue
         }
 
-        // Get team members
-        const teamMembersData = await db.members.findWithUsersByOrganizationId(org.id)
+        // OPTIMIZED: Fetch all independent data in parallel
+        const reportIds = todayReports.map(r => r.id)
+        const [teamMembersData, rocks, insights, previousDigest] = await Promise.all([
+          db.members.findWithUsersByOrganizationId(org.id),
+          db.rocks.findByOrganizationId(org.id),
+          db.eodInsights.findByReportIds(reportIds),
+          db.dailyDigests.getLatest(org.id),
+        ])
+
         const teamMembers: TeamMember[] = teamMembersData.map(m => ({
           id: m.id,
           name: m.name,
@@ -150,16 +171,6 @@ export async function GET(request: NextRequest) {
           weeklyMeasurable: m.weeklyMeasurable,
           status: m.status,
         }))
-
-        // Get rocks
-        const rocks = await db.rocks.findByOrganizationId(org.id)
-
-        // OPTIMIZED: Batch fetch insights instead of N+1 queries
-        const reportIds = todayReports.map(r => r.id)
-        const insights = await db.eodInsights.findByReportIds(reportIds)
-
-        // Get previous digest
-        const previousDigest = await db.dailyDigests.getLatest(org.id)
 
         // Generate digest
         const digestData = await generateDailyDigest(
@@ -208,7 +219,7 @@ export async function GET(request: NextRequest) {
               const adminEmails = admins.map(a => a.email)
 
               await resend.emails.send({
-                from: process.env.EMAIL_FROM || "AIMS EOD <noreply@aims.app>",
+                from: process.env.EMAIL_FROM || "Taskspace <noreply@align.app>",
                 to: adminEmails,
                 subject: `📊 Daily Rock Progress Summary - ${consolidatedDigest.formattedDate}`,
                 html: formatConsolidatedDigestHTML(consolidatedDigest),

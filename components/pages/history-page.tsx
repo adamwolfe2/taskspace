@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserInitials } from "@/components/shared/user-initials"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Search, AlertCircle, ChevronDown, ChevronUp, Pencil, Trash2, Loader2 } from "lucide-react"
+import { Search, AlertCircle, ChevronDown, ChevronUp, Pencil, Trash2, Loader2, FileText } from "lucide-react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { EditEODModal } from "@/components/dashboard/edit-eod-modal"
 
@@ -128,12 +129,22 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
 
       <div className="space-y-4">
         {filteredReports.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-card py-16 text-center">
-            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="h-6 w-6 text-slate-400" />
-            </div>
-            <p className="text-slate-600 font-medium">No EOD reports found</p>
-            <p className="text-sm text-slate-400 mt-1">Try adjusting your search or filters</p>
+          <div className="bg-white rounded-xl shadow-card">
+            {eodReports.length === 0 ? (
+              <EmptyState
+                icon={FileText}
+                title="No EOD reports yet"
+                description="End-of-day reports help you reflect on your progress and plan for tomorrow. Head to the Dashboard to submit your first EOD report!"
+                size="lg"
+              />
+            ) : (
+              <EmptyState
+                icon={Search}
+                title="No reports match your search"
+                description="Try adjusting your search query or filters to find the reports you're looking for."
+                size="md"
+              />
+            )}
           </div>
         ) : (
           filteredReports.map((report) => {

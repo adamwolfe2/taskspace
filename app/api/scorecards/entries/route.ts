@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { getMetricById, upsertEntry, getWeekStart } from "@/lib/db/scorecard"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createScorecardEntrySchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
@@ -20,22 +22,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { metricId, value, weekStart, notes } = body
-
-    if (!metricId) {
-      return NextResponse.json(
-        { success: false, error: "Metric ID is required" },
-        { status: 400 }
-      )
-    }
-
-    if (value === undefined || value === null || isNaN(Number(value))) {
-      return NextResponse.json(
-        { success: false, error: "Valid numeric value is required" },
-        { status: 400 }
-      )
-    }
+    const { metricId, value, weekStart, notes } = await validateBody(request, createScorecardEntrySchema)
 
     // Get the metric to verify access
     const metric = await getMetricById(metricId)
@@ -60,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     const entry = await upsertEntry({
       metricId,
-      value: Number(value),
+      value,
       weekStart: entryWeekStart,
       notes: notes?.trim() || undefined,
       enteredBy: auth.user.id,
@@ -70,7 +57,7 @@ export async function POST(request: NextRequest) {
       userId: auth.user.id,
       metricId,
       weekStart: entryWeekStart,
-      value: Number(value),
+      value,
       status: entry.status,
     }, "Scorecard entry submitted")
 
@@ -80,6 +67,12 @@ export async function POST(request: NextRequest) {
       message: "Entry submitted successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Error submitting scorecard entry")
     return NextResponse.json(
       {

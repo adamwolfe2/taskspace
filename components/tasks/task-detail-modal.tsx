@@ -102,12 +102,12 @@ export function TaskDetailModal({
         title: "Comment added",
         description: "Your note has been saved",
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Revert on error
       setComments(comments)
       toast({
         title: "Failed to add comment",
-        description: err.message || "Please try again",
+        description: err instanceof Error ? err.message : "Please try again",
         variant: "destructive",
       })
     }
@@ -153,10 +153,10 @@ export function TaskDetailModal({
         title: "Subtask added",
         description: "Subtask has been added to the task",
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Failed to add subtask",
-        description: error.message || "Please try again",
+        description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       })
       throw error
@@ -180,10 +180,10 @@ export function TaskDetailModal({
       }
 
       setSubtasks(subtasks.map((s) => (s.id === subtaskId ? result.data : s)))
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Failed to update subtask",
-        description: error.message || "Please try again",
+        description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       })
     }
@@ -205,10 +205,10 @@ export function TaskDetailModal({
         title: "Subtask deleted",
         description: "Subtask has been removed",
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Failed to delete subtask",
-        description: error.message || "Please try again",
+        description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       })
     }
@@ -228,10 +228,10 @@ export function TaskDetailModal({
       }
 
       setSubtasks(result.data)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Failed to reorder subtasks",
-        description: error.message || "Please try again",
+        description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       })
     }
@@ -248,10 +248,10 @@ export function TaskDetailModal({
         description: isCompleted ? "Task marked as pending" : "Great job!",
       })
       onOpenChange(false)
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Update failed",
-        description: err.message || "Please try again",
+        description: err instanceof Error ? err.message : "Please try again",
         variant: "destructive",
       })
     }

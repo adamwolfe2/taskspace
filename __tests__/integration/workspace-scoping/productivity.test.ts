@@ -115,7 +115,7 @@ describe("Productivity Features - Workspace Scoping", () => {
 
         expect(response.status).toBe(200)
         expect(data.data.focusBlocks).toHaveLength(2)
-        expect(data.data.focusBlocks.every((fb: any) => fb.workspaceId === WORKSPACE_1)).toBe(true)
+        expect(data.data.focusBlocks.every((fb: { workspaceId: string }) => fb.workspaceId === WORKSPACE_1)).toBe(true)
       })
 
       it("should allow admins to access any workspace", async () => {
@@ -229,7 +229,7 @@ describe("Productivity Features - Workspace Scoping", () => {
 
       expect(response.status).toBe(200)
       expect(data.data.energyData).toHaveLength(2)
-      expect(data.data.energyData.every((e: any) => e.workspaceId === WORKSPACE_1)).toBe(true)
+      expect(data.data.energyData.every((e: { workspaceId: string }) => e.workspaceId === WORKSPACE_1)).toBe(true)
     })
 
     it("should validate workspace access when creating energy entry", async () => {

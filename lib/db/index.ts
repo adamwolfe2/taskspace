@@ -281,6 +281,16 @@ export const db = {
       const { rowCount } = await sql`DELETE FROM users WHERE id = ${id}`
       return (rowCount ?? 0) > 0
     },
+    // Optimized: batch find users by emails (avoids N+1 in bulk invite)
+    async findByEmails(emails: string[]): Promise<User[]> {
+      if (emails.length === 0) return []
+      const lowerEmails = emails.map(e => e.toLowerCase())
+      const emailArray = `{${lowerEmails.join(',')}}`
+      const { rows } = await sql`
+        SELECT * FROM users WHERE LOWER(email) = ANY(${emailArray}::text[])
+      `
+      return rows.map(parseUser)
+    },
   },
 
   // Organizations
@@ -661,6 +671,10 @@ export const db = {
       const { rowCount } = await sql`DELETE FROM sessions WHERE expires_at < NOW()`
       return rowCount ?? 0
     },
+    async deleteByUserId(userId: string): Promise<number> {
+      const { rowCount } = await sql`DELETE FROM sessions WHERE user_id = ${userId}`
+      return rowCount ?? 0
+    },
     async updateOrganization(token: string, organizationId: string): Promise<boolean> {
       const { rowCount } = await sql`
         UPDATE sessions SET organization_id = ${organizationId}
@@ -892,16 +906,21 @@ export const db = {
       }
     },
     async createMany(rockId: string, milestones: string[]): Promise<void> {
-      // Insert all milestones for a rock
-      for (let i = 0; i < milestones.length; i++) {
-        const text = milestones[i]
-        if (text && text.trim()) {
-          await sql`
+      // Filter and trim milestones first
+      const validMilestones = milestones
+        .map((text, i) => ({ text: text?.trim(), position: i }))
+        .filter(m => m.text && m.text.length > 0)
+      if (validMilestones.length === 0) return
+
+      // Batch insert all milestones in parallel instead of sequential N queries
+      await Promise.all(
+        validMilestones.map(({ text, position }) =>
+          sql`
             INSERT INTO rock_milestones (rock_id, text, completed, position, created_at, updated_at)
-            VALUES (${rockId}, ${text.trim()}, false, ${i}, NOW(), NOW())
+            VALUES (${rockId}, ${text}, false, ${position}, NOW(), NOW())
           `
-        }
-      }
+        )
+      )
     },
     async update(id: string, updates: { text?: string; completed?: boolean; position?: number }): Promise<boolean> {
       const completedAt = updates.completed ? "NOW()" : null
@@ -1132,9 +1151,10 @@ export const db = {
                   ${JSON.stringify(report.tomorrowPriorities)}, ${report.needsEscalation},
                   ${report.escalationNote}, ${report.metricValueToday}, ${report.submittedAt}, ${report.createdAt})
         `
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Fallback if metric_value_today column doesn't exist (migration not run)
-        if (err.message?.includes('metric_value_today') || err.message?.includes('column')) {
+        const errMessage = err instanceof Error ? err.message : String(err)
+        if (errMessage.includes('metric_value_today') || errMessage.includes('column')) {
           await sql`
             INSERT INTO eod_reports (id, organization_id, user_id, date, tasks, challenges,
               tomorrow_priorities, needs_escalation, escalation_note, submitted_at, created_at)
@@ -1166,9 +1186,10 @@ export const db = {
           RETURNING *
         `
         return rows[0] ? parseEODReport(rows[0]) : null
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Fallback if metric_value_today column doesn't exist
-        if (err.message?.includes('metric_value_today') || err.message?.includes('column')) {
+        const errMessage = err instanceof Error ? err.message : String(err)
+        if (errMessage.includes('metric_value_today') || errMessage.includes('column')) {
           const { rows } = await sql`
             UPDATE eod_reports SET
               tasks = COALESCE(${updates.tasks ? JSON.stringify(updates.tasks) : null}::jsonb, tasks),
@@ -1207,6 +1228,15 @@ export const db = {
           AND date >= ${startDate}
           AND date <= ${endDate}
         ORDER BY date DESC
+      `
+      return rows.map(parseEODReport)
+    },
+    // Optimized: fetch EOD reports for a specific org + date (avoids loading all reports)
+    async findByOrganizationAndDate(orgId: string, date: string): Promise<EODReport[]> {
+      const { rows } = await sql`
+        SELECT * FROM eod_reports
+        WHERE organization_id = ${orgId} AND date = ${date}
+        ORDER BY submitted_at DESC
       `
       return rows.map(parseEODReport)
     },
@@ -3228,7 +3258,7 @@ export const db = {
       createdBy?: string
       createdAt: string
       updatedAt: string
-      settings?: any
+      settings?: Record<string, unknown>
     }): Promise<void> {
       await sql`
         INSERT INTO workspaces (id, organization_id, name, slug, type, description, is_default, created_by, created_at, updated_at, settings)
@@ -3237,13 +3267,13 @@ export const db = {
                 ${workspace.createdAt}, ${workspace.updatedAt}, ${JSON.stringify(workspace.settings || {})})
       `
     },
-    async findByOrganizationId(orgId: string): Promise<any[]> {
+    async findByOrganizationId(orgId: string): Promise<Record<string, unknown>[]> {
       const { rows } = await sql`
         SELECT * FROM workspaces WHERE organization_id = ${orgId} ORDER BY is_default DESC, name ASC
       `
       return rows
     },
-    async findById(id: string): Promise<any | null> {
+    async findById(id: string): Promise<Record<string, unknown> | null> {
       const { rows } = await sql`SELECT * FROM workspaces WHERE id = ${id}`
       return rows[0] || null
     },
@@ -3263,13 +3293,13 @@ export const db = {
         VALUES (${member.id}, ${member.workspaceId}, ${member.userId}, ${member.role}, ${member.joinedAt})
       `
     },
-    async findByWorkspaceId(workspaceId: string): Promise<any[]> {
+    async findByWorkspaceId(workspaceId: string): Promise<Record<string, unknown>[]> {
       const { rows } = await sql`
         SELECT * FROM workspace_members WHERE workspace_id = ${workspaceId}
       `
       return rows
     },
-    async findByUserId(userId: string): Promise<any[]> {
+    async findByUserId(userId: string): Promise<Record<string, unknown>[]> {
       const { rows } = await sql`
         SELECT * FROM workspace_members WHERE user_id = ${userId}
       `
@@ -3388,6 +3418,137 @@ export const db = {
             updated_at = NOW()
         WHERE organization_id = ${organizationId}
       `
+    },
+  },
+
+  // Cron Executions (for idempotency)
+  cronExecutions: {
+    /**
+     * Record a cron execution to prevent duplicate runs
+     * Throws a unique constraint error if already executed for this hour
+     */
+    async recordExecution(
+      jobName: string,
+      organizationId: string,
+      executionDate: string,
+      executionHour: number
+    ): Promise<void> {
+      await sql`
+        INSERT INTO cron_executions (job_name, organization_id, execution_date, execution_hour, status)
+        VALUES (${jobName}, ${organizationId}, ${executionDate}, ${executionHour}, 'running')
+      `
+    },
+
+    /**
+     * Mark a cron execution as completed
+     */
+    async markCompleted(
+      jobName: string,
+      organizationId: string,
+      executionDate: string,
+      executionHour: number,
+      metadata?: Record<string, unknown>
+    ): Promise<void> {
+      await sql`
+        UPDATE cron_executions
+        SET status = 'completed',
+            completed_at = NOW(),
+            metadata = ${metadata ? JSON.stringify(metadata) : null}
+        WHERE job_name = ${jobName}
+          AND organization_id = ${organizationId}
+          AND execution_date = ${executionDate}
+          AND execution_hour = ${executionHour}
+      `
+    },
+
+    /**
+     * Check if a cron job has already been executed for a given hour
+     */
+    async hasExecuted(
+      jobName: string,
+      organizationId: string,
+      executionDate: string,
+      executionHour: number
+    ): Promise<boolean> {
+      const { rows } = await sql`
+        SELECT 1 FROM cron_executions
+        WHERE job_name = ${jobName}
+          AND organization_id = ${organizationId}
+          AND execution_date = ${executionDate}
+          AND execution_hour = ${executionHour}
+        LIMIT 1
+      `
+      return rows.length > 0
+    },
+  },
+
+  // Email Delivery Log (for per-member deduplication)
+  emailDeliveryLog: {
+    /**
+     * Record an email delivery to prevent duplicate sends
+     */
+    async recordDelivery(
+      emailType: string,
+      organizationId: string,
+      memberId: string,
+      memberEmail: string,
+      deliveryDate: string
+    ): Promise<void> {
+      try {
+        await sql`
+          INSERT INTO email_delivery_log (email_type, organization_id, member_id, member_email, delivery_date, status)
+          VALUES (${emailType}, ${organizationId}, ${memberId}, ${memberEmail}, ${deliveryDate}, 'sent')
+          ON CONFLICT (email_type, organization_id, member_id, delivery_date) DO NOTHING
+        `
+      } catch (error) {
+        // Ignore unique constraint violations - already delivered
+        if (error instanceof Error && !error.message.includes("unique")) {
+          throw error
+        }
+      }
+    },
+
+    /**
+     * Get all members who received a specific email type today
+     */
+    async getDeliveredToday(
+      emailType: string,
+      organizationId: string,
+      deliveryDate: string
+    ): Promise<Array<{ memberId: string; memberEmail: string; sentAt: string }>> {
+      const { rows } = await sql`
+        SELECT member_id, member_email, sent_at
+        FROM email_delivery_log
+        WHERE email_type = ${emailType}
+          AND organization_id = ${organizationId}
+          AND delivery_date = ${deliveryDate}
+          AND status = 'sent'
+      `
+      return rows.map(row => ({
+        memberId: row.member_id,
+        memberEmail: row.member_email,
+        sentAt: (row.sent_at as Date)?.toISOString() || "",
+      }))
+    },
+
+    /**
+     * Check if an email has already been sent to a specific member today
+     */
+    async hasDelivered(
+      emailType: string,
+      organizationId: string,
+      memberId: string,
+      deliveryDate: string
+    ): Promise<boolean> {
+      const { rows } = await sql`
+        SELECT 1 FROM email_delivery_log
+        WHERE email_type = ${emailType}
+          AND organization_id = ${organizationId}
+          AND member_id = ${memberId}
+          AND delivery_date = ${deliveryDate}
+        LIMIT 1
+      `
+      return rows.length > 0
     },
   },
 }

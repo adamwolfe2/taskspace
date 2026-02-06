@@ -10,6 +10,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Loader2, Mail, UserPlus, Copy, Trash2, AlertTriangle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
@@ -47,6 +57,8 @@ export function TeamManagementTab() {
   const [isInviting, setIsInviting] = useState(false)
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
+  const [invitationToCancel, setInvitationToCancel] = useState<Invitation | null>(null)
+  const [isCancellingInvitation, setIsCancellingInvitation] = useState(false)
 
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
 
@@ -65,7 +77,11 @@ export function TeamManagementTab() {
           api.members.list(),
           api.invitations.list().catch(() => []),
         ])
-        setTeamMembers(members)
+        setTeamMembers(members.map(m => ({
+          ...m,
+          joinDate: m.joinedAt,
+          userId: m.userId ?? undefined,
+        })))
         setPendingInvitations(invitations)
       } catch (err) {
         console.error("Failed to load team data:", err)
@@ -166,6 +182,7 @@ export function TeamManagementTab() {
   }
 
   const cancelInvitation = async (invitationId: string) => {
+    setIsCancellingInvitation(true)
     try {
       const response = await fetch(`/api/invitations?id=${invitationId}`, {
         method: "DELETE",
@@ -178,10 +195,11 @@ export function TeamManagementTab() {
 
       // Remove from local state
       setPendingInvitations((prev) => prev.filter((inv) => inv.id !== invitationId))
+      setInvitationToCancel(null)
 
       toast({
         title: "Invitation cancelled",
-        description: "The invitation has been removed",
+        description: "The invitation has been revoked and the link is no longer valid.",
       })
     } catch (err: unknown) {
       toast({
@@ -189,6 +207,8 @@ export function TeamManagementTab() {
         description: getErrorMessage(err, "Failed to cancel invitation"),
         variant: "destructive",
       })
+    } finally {
+      setIsCancellingInvitation(false)
     }
   }
 
@@ -240,6 +260,9 @@ export function TeamManagementTab() {
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    They will receive an email with a link to join your organization.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Role</Label>
@@ -252,6 +275,9 @@ export function TeamManagementTab() {
                       <SelectItem value="admin">Administrator</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Admins can manage settings, invite members, and configure workspaces. Members can view and contribute to their assigned workspaces.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Department</Label>
@@ -260,6 +286,9 @@ export function TeamManagementTab() {
                     value={inviteDepartment}
                     onChange={(e) => setInviteDepartment(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Used for organizing team members and filtering reports.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Workspace</Label>
@@ -326,7 +355,7 @@ export function TeamManagementTab() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => cancelInvitation(inv.id)}
+                        onClick={() => setInvitationToCancel(inv)}
                         className="text-red-500 hover:text-red-700 hover:bg-red-50"
                         title="Cancel invitation"
                       >
@@ -363,6 +392,7 @@ export function TeamManagementTab() {
           </div>
           {teamCount >= (currentOrganization?.subscription.maxUsers || 100) && (
             <Alert className="mt-4">
+              <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 You've reached your team member limit. Upgrade your plan to add more members.
               </AlertDescription>
@@ -370,6 +400,36 @@ export function TeamManagementTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* Cancel Invitation Confirmation */}
+      <AlertDialog open={!!invitationToCancel} onOpenChange={() => setInvitationToCancel(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel invitation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will revoke the invitation sent to{" "}
+              <strong>{invitationToCancel?.email}</strong>. The invite link will no longer be valid and they will not be able to join your organization with it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isCancellingInvitation}>Keep Invitation</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => invitationToCancel && cancelInvitation(invitationToCancel.id)}
+              disabled={isCancellingInvitation}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isCancellingInvitation ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Cancelling...
+                </>
+              ) : (
+                "Cancel Invitation"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

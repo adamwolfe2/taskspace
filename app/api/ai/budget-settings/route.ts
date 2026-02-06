@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { getBudgetSettings, updateBudgetSettings } from "@/lib/ai/suggestions"
 import type { ApiResponse, AIBudgetSettings } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -8,23 +8,8 @@ import { logger, logError } from "@/lib/logger"
  * GET /api/ai/budget-settings
  * Get AI budget settings for organization
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
-      )
-    }
-
     const settings = await getBudgetSettings(auth.organization.id)
 
     return NextResponse.json<ApiResponse<AIBudgetSettings>>({
@@ -41,29 +26,14 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * PUT /api/ai/budget-settings
  * Update AI budget settings
  */
-export async function PUT(request: NextRequest) {
+export const PUT = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
 
     // Validate settings
@@ -118,4 +88,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

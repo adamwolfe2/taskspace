@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -30,23 +30,8 @@ const MODEL = "claude-sonnet-4-20250514"
  * POST /api/rocks/parse
  * Parse unstructured text into structured rocks using AI
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can import rocks" },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
     const { text } = body
 
@@ -174,11 +159,11 @@ Rules:
       const metricsArray = Array.isArray(parsed) ? [] : (parsed.metrics || [])
 
       // Validate rocks structure
-      parsedRocks = rocksArray.map((rock: any) => ({
+      parsedRocks = rocksArray.map((rock: Record<string, unknown>) => ({
         title: String(rock.title || "Untitled Rock"),
         description: String(rock.description || ""),
         milestones: Array.isArray(rock.milestones)
-          ? rock.milestones.map((m: any) => String(m))
+          ? (rock.milestones as unknown[]).map((m) => String(m))
           : [],
         suggestedQuarter: rock.suggestedQuarter ? String(rock.suggestedQuarter) : undefined,
         assigneeName: rock.assigneeName ? String(rock.assigneeName) : undefined,
@@ -186,8 +171,8 @@ Rules:
 
       // Validate metrics structure
       parsedMetrics = metricsArray
-        .filter((m: any) => m.assigneeName && m.metricName && typeof m.weeklyGoal === "number")
-        .map((metric: any) => ({
+        .filter((m: Record<string, unknown>) => m.assigneeName && m.metricName && typeof m.weeklyGoal === "number")
+        .map((metric: Record<string, unknown>) => ({
           assigneeName: String(metric.assigneeName),
           metricName: String(metric.metricName),
           weeklyGoal: Number(metric.weeklyGoal),
@@ -226,4 +211,4 @@ Rules:
       { status: 500 }
     )
   }
-}
+})

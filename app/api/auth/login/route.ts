@@ -24,12 +24,12 @@ export async function POST(request: NextRequest) {
       const response = NextResponse.json<ApiResponse<null>>(
         {
           success: false,
-          error: `Too many login attempts. Please try again in ${rateLimitResult.retryAfter} seconds.`,
+          error: "Too many login attempts. Please wait a few minutes and try again.",
         },
         { status: 429 }
       )
       // Add rate limit headers
-      const headers = getRateLimitHeaders(rateLimitResult)
+      const headers = getRateLimitHeaders(rateLimitResult, 5)
       for (const [key, value] of Object.entries(headers)) {
         response.headers.set(key, value)
       }
@@ -164,20 +164,9 @@ export async function POST(request: NextRequest) {
     logger.error({ error: formatError(error) }, "Login error")
     logAuthEvent("login", undefined, false, { error: formatError(error) })
 
-    let errorMessage = "An error occurred during login"
-
-    if (error instanceof Error) {
-      if (error.message.includes("relation") && error.message.includes("does not exist")) {
-        errorMessage = "Database tables not initialized. Please run the database migration."
-      } else if (error.message.includes("connect") || error.message.includes("ECONNREFUSED")) {
-        errorMessage = "Unable to connect to database. Please check database configuration."
-      } else if (process.env.NODE_ENV !== "production") {
-        errorMessage = error.message
-      }
-    }
-
+    // Never expose internal error details in responses
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: errorMessage },
+      { success: false, error: "An error occurred during login. Please try again later." },
       { status: 500 }
     )
   }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
+import { TransformWrapper, TransformComponent, type ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch"
 import useSWR from "swr"
 import { OrgChart } from "@/components/org-chart/org-chart"
 import { OrgChartUploadWizard } from "@/components/org-chart/org-chart-upload-wizard"
@@ -31,7 +31,7 @@ export function OrgChartPage() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [showUploadWizard, setShowUploadWizard] = useState(false)
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
-  const transformRef = useRef<any>(null)
+  const transformRef = useRef<ReactZoomPanPinchContentRef | null>(null)
 
   // Fetch employees for current workspace
   const {
@@ -56,7 +56,7 @@ export function OrgChartPage() {
   useEffect(() => {
     if (progressResponse?.success && progressResponse.progress) {
       const newMap = new Map<string, boolean>()
-      progressResponse.progress.forEach((p: any) => {
+      progressResponse.progress.forEach((p: { employeeName: string; rockIndex: number; bulletIndex: number; completed: boolean }) => {
         const key = `${p.employeeName}-${p.rockIndex}-${p.bulletIndex}`
         newMap.set(key, p.completed)
       })

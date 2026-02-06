@@ -3,19 +3,11 @@ import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { sql } from "@/lib/db/sql"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateAgendaSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 import type { SectionType } from "@/lib/db/meetings"
-
-interface AgendaSection {
-  sectionType: SectionType
-  orderIndex: number
-  durationTarget: number
-}
-
-interface UpdateAgendaRequest {
-  sections: AgendaSection[]
-}
 
 // GET /api/meetings/[id]/agenda - Get meeting agenda
 export async function GET(
@@ -88,15 +80,7 @@ export async function POST(
     }
 
     const { id } = await params
-    const body: UpdateAgendaRequest = await request.json()
-    const { sections } = body
-
-    if (!sections || !Array.isArray(sections)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Sections array is required" },
-        { status: 400 }
-      )
-    }
+    const { sections } = await validateBody(request, updateAgendaSchema)
 
     const meeting = await meetings.getById(id)
     if (!meeting) {
@@ -123,19 +107,8 @@ export async function POST(
       )
     }
 
-    // Validate section types
-    const validSectionTypes: SectionType[] = ["segue", "scorecard", "rocks", "headlines", "ids", "conclude"]
+    // Validate no duplicate section types
     const sectionTypes = sections.map((s) => s.sectionType)
-    const hasInvalidTypes = sectionTypes.some((type) => !validSectionTypes.includes(type))
-
-    if (hasInvalidTypes) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid section type" },
-        { status: 400 }
-      )
-    }
-
-    // Ensure all required sections are present
     const hasDuplicates = new Set(sectionTypes).size !== sectionTypes.length
     if (hasDuplicates) {
       return NextResponse.json<ApiResponse<null>>(
@@ -147,14 +120,6 @@ export async function POST(
     // Update each section
     for (const section of sections) {
       const { sectionType, orderIndex, durationTarget } = section
-
-      // Validate duration
-      if (durationTarget < 1 || durationTarget > 120) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: `Duration for ${sectionType} must be between 1 and 120 minutes` },
-          { status: 400 }
-        )
-      }
 
       // Update section
       await sql`
@@ -190,6 +155,12 @@ export async function POST(
       message: "Agenda updated successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Update meeting agenda error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update meeting agenda" },

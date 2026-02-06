@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "./middleware"
-import { isFeatureEnabled as isOrgFeatureEnabled } from "./feature-gate"
+import { isFeatureEnabled as isOrgFeatureEnabled, type FeatureKey } from "./feature-gate"
 import type { Organization, ApiResponse } from "@/lib/types"
 import type { Workspace } from "@/lib/db/workspaces"
 import type {
@@ -125,7 +125,7 @@ export function isWorkspaceFeatureEnabled(
 
   // Layer 1: Check org-level feature requirements
   if (metadata.requiredOrgFeature) {
-    if (!isOrgFeatureEnabled(org, metadata.requiredOrgFeature as any)) {
+    if (!isOrgFeatureEnabled(org, metadata.requiredOrgFeature as FeatureKey)) {
       return false
     }
   }
@@ -194,7 +194,7 @@ function getDisabledReason(
   metadata: WorkspaceFeatureMetadata
 ): string | undefined {
   // Check org-level requirement
-  if (metadata.requiredOrgFeature && !isOrgFeatureEnabled(org, metadata.requiredOrgFeature as any)) {
+  if (metadata.requiredOrgFeature && !isOrgFeatureEnabled(org, metadata.requiredOrgFeature as FeatureKey)) {
     const plan = org.subscription?.plan || "free"
     return `Requires ${metadata.requiredOrgFeature} (available in ${plan} plan or higher)`
   }
@@ -261,7 +261,7 @@ export function validateFeatureToggles(
     const willBeEnabled = categoryFeatures[name] === true
 
     if (willBeEnabled && metadata.requiredOrgFeature) {
-      if (!isOrgFeatureEnabled(org, metadata.requiredOrgFeature as any)) {
+      if (!isOrgFeatureEnabled(org, metadata.requiredOrgFeature as FeatureKey)) {
         errors.push(`Cannot enable ${metadata.name}: requires ${metadata.requiredOrgFeature} in organization plan`)
       }
     }

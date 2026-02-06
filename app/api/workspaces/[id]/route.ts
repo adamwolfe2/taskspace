@@ -54,7 +54,7 @@ export const GET = withAuth(async (
       )
     }
 
-    // Verify user is in same organization
+    // SECURITY: Verify workspace belongs to user's organization (organization boundary check)
     if (workspace.organizationId !== auth.organization.id) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Workspace not found" },
@@ -119,7 +119,7 @@ export const PATCH = withAdmin(async (
       )
     }
 
-    // Verify user is in same organization
+    // SECURITY: Verify workspace belongs to user's organization (organization boundary check)
     if (workspace.organizationId !== auth.organization.id) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Workspace not found" },
@@ -215,7 +215,7 @@ export const DELETE = withAdmin(async (
       )
     }
 
-    // Verify user is in same organization
+    // SECURITY: Verify workspace belongs to user's organization (organization boundary check)
     if (workspace.organizationId !== auth.organization.id) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Workspace not found" },

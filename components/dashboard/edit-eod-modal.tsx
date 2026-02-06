@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, X, Save, Paperclip, Calendar, AlertTriangle } from "lucide-react"
+import { Plus, X, Save, Paperclip, Calendar, AlertTriangle, Loader2 } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, FileAttachment } from "@/lib/types"
 import { formatDate, getTodayInTimezone } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
@@ -200,10 +200,10 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
         description: message,
       })
       onOpenChange(false)
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Update Failed",
-        description: err.message || "Failed to update EOD report",
+        description: err instanceof Error ? err.message : "Failed to update EOD report",
         variant: "destructive",
       })
     } finally {
@@ -422,8 +422,17 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isSaving} className="bg-slate-900 hover:bg-slate-800">
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Saving..." : "Save Changes"}
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
             </Button>
           </div>
         </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { TeamMember, EODReport, Rock, AssignedTask, EODInsight } from "@/lib/types"
+import type { TeamMember, EODReport, Rock, AssignedTask, EODInsight, Organization } from "@/lib/types"
 import { api } from "@/lib/api/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -112,10 +112,10 @@ export function AdminPage({
         title: "Task assigned",
         description: `Task assigned to ${taskData.assigneeName}`,
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to assign task",
+        description: err instanceof Error ? err.message : "Failed to assign task",
         variant: "destructive",
       })
     }
@@ -171,7 +171,7 @@ export function AdminPage({
       {/* Daily Report Share Link */}
       {organization && (
         <DailyReportShare
-          organization={organization as any}
+          organization={organization as Organization}
           eodReports={eodReports}
           teamMembers={teamMembers}
         />
@@ -179,7 +179,7 @@ export function AdminPage({
 
       {/* Weekly Report Share Link */}
       {organization && (
-        <WeeklyReportShare organization={organization as any} />
+        <WeeklyReportShare organization={organization as Organization} />
       )}
 
       <Card>

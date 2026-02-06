@@ -2,19 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createMeetingTodoSchema, updateMeetingTodoSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
+import { isTerminalState } from "@/lib/api/meetings"
 import type { ApiResponse } from "@/lib/types"
-
-interface CreateTodoRequest {
-  title: string
-  assigneeId?: string
-  dueDate?: string
-  issueId?: string
-}
-
-interface UpdateTodoRequest {
-  completed?: boolean
-}
 
 // GET /api/meetings/[id]/todos - Get todos for a meeting
 export async function GET(
@@ -34,6 +26,16 @@ export async function GET(
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Meeting not found" },
+        { status: 404 }
+      )
+    }
+
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(meeting.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Meeting not found" },
         { status: 404 }
@@ -79,18 +81,20 @@ export async function POST(
     }
 
     const { id } = await params
-    const body: CreateTodoRequest = await request.json()
-    const { title, assigneeId, dueDate, issueId } = body
-
-    if (!title || title.trim().length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Title is required" },
-        { status: 400 }
-      )
-    }
+    const { title, assigneeId, dueDate, issueId } = await validateBody(request, createMeetingTodoSchema)
 
     const meeting = await meetings.getById(id)
     if (!meeting) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Meeting not found" },
+        { status: 404 }
+      )
+    }
+
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(meeting.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Meeting not found" },
         { status: 404 }
@@ -106,9 +110,15 @@ export async function POST(
       )
     }
 
+    // STATE MACHINE: Allow creating todos on completed meetings (for follow-up actions)
+    // but log it for tracking
+    if (isTerminalState(meeting.status)) {
+      logger.info(`Todo created on ${meeting.status} meeting ${id} by user ${auth.user.id}`)
+    }
+
     const todo = await meetings.createTodo({
       meetingId: id,
-      title: title.trim(),
+      title,
       assigneeId,
       dueDate,
       issueId,
@@ -122,6 +132,12 @@ export async function POST(
       message: "Todo created successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Create meeting todo error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create todo" },
@@ -155,10 +171,20 @@ export async function PATCH(
       )
     }
 
-    const body: UpdateTodoRequest = await request.json()
+    const body = await validateBody(request, updateMeetingTodoSchema)
 
     const meeting = await meetings.getById(id)
     if (!meeting) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Meeting not found" },
+        { status: 404 }
+      )
+    }
+
+    // SECURITY: Verify workspace belongs to user's organization
+    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(meeting.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Meeting not found" },
         { status: 404 }
@@ -198,6 +224,12 @@ export async function PATCH(
       { status: 400 }
     )
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "Update meeting todo error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update todo" },

@@ -101,9 +101,9 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
         expect(response.status).toBe(200)
         expect(data.data).toHaveLength(2) // Org-wide + WS1
-        expect(data.data.some((t: any) => t.id === "t-1")).toBe(true) // Org-wide included
-        expect(data.data.some((t: any) => t.id === "t-2")).toBe(true) // WS1 included
-        expect(data.data.some((t: any) => t.id === "t-3")).toBe(false) // WS2 excluded
+        expect(data.data.some((t: { id: string }) => t.id === "t-1")).toBe(true) // Org-wide included
+        expect(data.data.some((t: { id: string }) => t.id === "t-2")).toBe(true) // WS1 included
+        expect(data.data.some((t: { id: string }) => t.id === "t-3")).toBe(false) // WS2 excluded
       })
 
       it("should reject users without workspace access", async () => {
@@ -485,7 +485,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
       const response1 = await templatesGET(request1)
       const data1 = await response1.json()
 
-      expect(data1.data.some((t: any) => t.id === "t-org")).toBe(true) // Org template visible
+      expect(data1.data.some((t: { id: string }) => t.id === "t-org")).toBe(true) // Org template visible
 
       // Query from workspace-2
       const request2 = new NextRequest(
@@ -494,7 +494,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
       const response2 = await templatesGET(request2)
       const data2 = await response2.json()
 
-      expect(data2.data.some((t: any) => t.id === "t-org")).toBe(true) // Same org template visible
+      expect(data2.data.some((t: { id: string }) => t.id === "t-org")).toBe(true) // Same org template visible
     })
 
     it("should isolate workspace-specific templates", async () => {
@@ -511,8 +511,8 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
       const response1 = await templatesGET(request1)
       const data1 = await response1.json()
 
-      expect(data1.data.some((t: any) => t.id === "t-ws1")).toBe(true)
-      expect(data1.data.some((t: any) => t.id === "t-ws2")).toBe(false) // WS2 not visible
+      expect(data1.data.some((t: { id: string }) => t.id === "t-ws1")).toBe(true)
+      expect(data1.data.some((t: { id: string }) => t.id === "t-ws2")).toBe(false) // WS2 not visible
 
       // Query from workspace-2
       const request2 = new NextRequest(
@@ -521,8 +521,8 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
       const response2 = await templatesGET(request2)
       const data2 = await response2.json()
 
-      expect(data2.data.some((t: any) => t.id === "t-ws1")).toBe(false) // WS1 not visible
-      expect(data2.data.some((t: any) => t.id === "t-ws2")).toBe(true)
+      expect(data2.data.some((t: { id: string }) => t.id === "t-ws1")).toBe(false) // WS1 not visible
+      expect(data2.data.some((t: { id: string }) => t.id === "t-ws2")).toBe(true)
     })
   })
 })

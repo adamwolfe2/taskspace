@@ -117,6 +117,17 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     } = await validateBody(request, createEODReportSchema)
 
     // workspaceId is optional - workspace feature temporarily disabled
+    // SECURITY: If workspaceId is provided, verify it belongs to user's organization
+    if (workspaceId) {
+      const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+      const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+      if (!isValidWorkspace) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Workspace not found" },
+          { status: 404 }
+        )
+      }
+    }
 
     // Get the organization's timezone (default to PST)
     const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"

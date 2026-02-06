@@ -310,10 +310,11 @@ export function AIEODSubmission({
         title: "EOD Report Submitted",
         description: `Your AI-generated EOD report for ${dateLabel} has been recorded. You can submit another report for the same day if needed.`,
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Check if this is a duplicate submission (409 conflict)
-      if (err.status === 409 && err.data) {
-        const existingReport = err.data
+      const apiErr = err as { status?: number; data?: { id: string }; message?: string }
+      if (apiErr.status === 409 && apiErr.data) {
+        const existingReport = apiErr.data
         toast({
           title: "Report Already Exists",
           description: "You already submitted an EOD report for today. Click to view and edit it.",
@@ -332,7 +333,7 @@ export function AIEODSubmission({
       } else {
         toast({
           title: "Submission Failed",
-          description: err.message || "Failed to submit EOD report",
+          description: err instanceof Error ? err.message : "Failed to submit EOD report",
           variant: "destructive",
         })
       }

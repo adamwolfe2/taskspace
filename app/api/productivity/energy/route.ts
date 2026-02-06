@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createDailyEnergySchema } from "@/lib/validation/schemas"
 import type { ApiResponse, DailyEnergy } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -111,23 +113,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-
-    // Validate required fields
-    if (!body.date) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Missing required field: date" },
-        { status: 400 }
-      )
-    }
-
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!body.workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
+    const body = await validateBody(request, createDailyEnergySchema)
 
     // Validate workspace access
     const hasAccess = await userHasWorkspaceAccess(auth.user.id, body.workspaceId)
@@ -138,17 +124,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate energy level if provided
-    if (body.energyLevel) {
-      const validLevels = ["low", "medium", "high", "peak"]
-      if (!validLevels.includes(body.energyLevel)) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: `Invalid energy level. Must be one of: ${validLevels.join(", ")}` },
-          { status: 400 }
-        )
-      }
-    }
-
     const energy: Omit<DailyEnergy, "id" | "createdAt" | "updatedAt"> = {
       organizationId: auth.organization.id,
       userId: auth.user.id,
@@ -156,7 +131,7 @@ export async function POST(request: NextRequest) {
       date: body.date,
       energyLevel: body.energyLevel,
       mood: body.mood,
-      factors: body.factors || [],
+      factors: body.factors,
       notes: body.notes,
     }
 
@@ -167,6 +142,12 @@ export async function POST(request: NextRequest) {
       data: result,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Create/update energy error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to save energy data" },

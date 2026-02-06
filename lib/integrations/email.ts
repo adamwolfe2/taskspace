@@ -1,6 +1,6 @@
 /**
  * Email Integration using Resend
- * Handles all email notifications for the AIMS EOD Tracker
+ * Handles all email notifications for Taskspace
  */
 
 import { Resend } from "resend"
@@ -20,8 +20,8 @@ export function isEmailConfigured(): boolean {
   return !!process.env.RESEND_API_KEY
 }
 
-const FROM_EMAIL = process.env.EMAIL_FROM || "AIMS EOD <noreply@aims.app>"
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://aims.app"
+const FROM_EMAIL = process.env.EMAIL_FROM || "Taskspace <noreply@align.app>"
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://align.app"
 
 interface EmailResult {
   success: boolean
@@ -101,7 +101,7 @@ export async function sendEscalationNotification(
     </div>
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from AIMS EOD Tracker • ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+      Sent from Taskspace • ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
     </p>
   </div>
 </body>
@@ -254,7 +254,7 @@ export async function sendDailySummaryEmail(
     </div>
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from AIMS EOD Tracker • Generated at ${new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+      Sent from Taskspace • Generated at ${new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
     </p>
   </div>
 </body>
@@ -342,7 +342,7 @@ export async function sendAIAlertEmail(
     </div>
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      AI-generated alert from AIMS EOD Tracker • ${new Date().toLocaleString("en-US")}
+      AI-generated alert from Taskspace • ${new Date().toLocaleString("en-US")}
     </p>
   </div>
 </body>
@@ -430,7 +430,7 @@ export async function sendTaskAssignmentEmail(
     </div>
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from AIMS EOD Tracker
+      Sent from Taskspace
     </p>
   </div>
 </body>
@@ -531,7 +531,7 @@ export async function sendDailyEODLinkEmail(
     </p>
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from AIMS EOD Tracker • ${escapeHtml(organizationName)}
+      Sent from Taskspace • ${escapeHtml(organizationName)}
     </p>
   </div>
 </body>
@@ -611,7 +611,7 @@ export async function sendMissingEODReminder(
     </div>
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from AIMS EOD Tracker • ${escapeHtml(organizationName)}
+      Sent from Taskspace • ${escapeHtml(organizationName)}
     </p>
   </div>
 </body>
@@ -639,6 +639,93 @@ export async function sendMissingEODReminder(
     return { success: true, id: result.data?.id }
   } catch (error) {
     logError(logger, "EOD reminder email error", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+interface BillingAlertParams {
+  to: string[]
+  subject: string
+  alertType: "payment_failed" | "subscription_canceled" | "subscription_updated"
+  organizationName: string
+  message: string
+  details: string
+  invoiceUrl?: string
+}
+
+/**
+ * Send a billing alert email to organization admins
+ */
+export async function sendBillingAlertEmail(params: BillingAlertParams): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    logger.debug("Email not configured, skipping billing alert")
+    return { success: false, error: "Email not configured" }
+  }
+
+  const alertColors = {
+    payment_failed: { bg: "#fef2f2", border: "#ef4444", emoji: "💳" },
+    subscription_canceled: { bg: "#fef3c7", border: "#f59e0b", emoji: "⚠️" },
+    subscription_updated: { bg: "#f0f9ff", border: "#3b82f6", emoji: "ℹ️" },
+  }
+
+  const color = alertColors[params.alertType]
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(params.subject)}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: ${color.border}; padding: 20px; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">${color.emoji} Billing Alert</h1>
+    <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0;">${escapeHtml(params.organizationName)}</p>
+  </div>
+
+  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
+    <div style="background: ${color.bg}; border-left: 4px solid ${color.border}; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
+      <h3 style="margin: 0 0 8px 0;">${escapeHtml(params.message)}</h3>
+      <p style="margin: 0;">${escapeHtml(params.details)}</p>
+    </div>
+
+    ${params.invoiceUrl ? `
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+      <a href="${params.invoiceUrl}" style="display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">View Invoice</a>
+    </div>
+    ` : ""}
+
+    <div style="margin-top: ${params.invoiceUrl ? "20px" : "30px"}; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+      <a href="${APP_URL}/settings/billing" style="display: inline-block; background: ${color.border}; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Manage Billing</a>
+    </div>
+
+    <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
+      Sent from Taskspace • ${new Date().toLocaleString("en-US")}
+    </p>
+  </div>
+</body>
+</html>
+`
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: params.to,
+      subject: params.subject,
+      html,
+    })
+
+    if (result.error) {
+      logger.error({ error: result.error.message }, "Billing alert email failed")
+      return { success: false, error: result.error.message }
+    }
+
+    logger.info({ emailId: result.data?.id }, "Billing alert email sent")
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    logError(logger, "Billing alert email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }

@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { endMeetingSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
+import { isValidTransition, getTransitionErrorMessage } from "@/lib/api/meetings"
 import type { ApiResponse } from "@/lib/types"
 import type { Meeting, MeetingStats } from "@/lib/db/meetings"
 
@@ -26,8 +29,7 @@ export async function POST(
     }
 
     const { id } = await params
-    const body = await request.json()
-    const { rating, notes } = body
+    const { rating, notes } = await validateBody(request, endMeetingSchema)
 
     const meeting = await meetings.getById(id)
 
@@ -47,18 +49,10 @@ export async function POST(
       )
     }
 
-    // Can only end meetings that are in progress
-    if (meeting.status !== "in_progress") {
+    // STATE MACHINE VALIDATION: Can only end meetings that are in progress
+    if (!isValidTransition(meeting.status, "completed")) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Can only end meetings that are in progress" },
-        { status: 400 }
-      )
-    }
-
-    // Validate rating if provided
-    if (rating !== undefined && (rating < 1 || rating > 10)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Rating must be between 1 and 10" },
+        { success: false, error: getTransitionErrorMessage(meeting.status, "completed") },
         { status: 400 }
       )
     }
@@ -86,6 +80,12 @@ export async function POST(
       message: "Meeting ended successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logger.error({ error }, "End meeting error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to end meeting" },

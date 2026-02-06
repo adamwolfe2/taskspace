@@ -1,7 +1,7 @@
 "use client"
 
 import React, { Component, ErrorInfo, ReactNode } from "react"
-import { AlertTriangle, RefreshCw } from "lucide-react"
+import { AlertTriangle, RefreshCw, Home, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { logger, logError } from "@/lib/logger"
 
@@ -17,25 +17,72 @@ interface Props {
 interface State {
  hasError: boolean
  error: Error | null
+ errorInfo: ErrorInfo | null
 }
 
 export class ErrorBoundary extends Component<Props, State> {
  public state: State = {
  hasError: false,
  error: null,
+ errorInfo: null,
  }
 
- public static getDerivedStateFromError(error: Error): State {
+ public static getDerivedStateFromError(error: Error): Partial<State> {
  return { hasError: true, error }
  }
 
  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
- logError(logger, "ErrorBoundary caught an error", error, { componentStack: errorInfo.componentStack })
+ // Log error with full context for debugging
+ const errorContext = {
+   componentStack: errorInfo.componentStack,
+   errorName: error.name,
+   errorMessage: error.message,
+   url: typeof window !== "undefined" ? window.location.href : "unknown",
+   userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
+   timestamp: new Date().toISOString(),
+ }
+
+ logError(logger, "ErrorBoundary caught an error", error, errorContext)
+
+ // Also log to console for development visibility
+ console.error(
+   "[ErrorBoundary] Caught error:",
+   "\n  Name:", error.name,
+   "\n  Message:", error.message,
+   "\n  Component Stack:", errorInfo.componentStack,
+   "\n  URL:", typeof window !== "undefined" ? window.location.href : "unknown"
+ )
+
+ this.setState({ errorInfo })
  this.props.onError?.(error, errorInfo)
  }
 
  private handleRetry = () => {
- this.setState({ hasError: false, error: null })
+ this.setState({ hasError: false, error: null, errorInfo: null })
+ }
+
+ private handleGoHome = () => {
+ if (typeof window !== "undefined") {
+   window.location.href = "/app"
+ }
+ }
+
+ private handleReportIssue = () => {
+ if (!this.state.error) return
+
+ const subject = encodeURIComponent(`Bug Report: ${this.state.error.name}`)
+ const body = encodeURIComponent(
+   `I encountered an error while using the application.\n\n` +
+   `Error: ${this.state.error.message}\n` +
+   `Page: ${typeof window !== "undefined" ? window.location.href : "unknown"}\n` +
+   `Time: ${new Date().toISOString()}\n\n` +
+   `Steps to reproduce:\n1. \n2. \n3. \n\n` +
+   `What I expected to happen:\n\n` +
+   `What actually happened:\n`
+ )
+
+ // Open mailto link for bug reporting
+ window.open(`mailto:support@trytaskspace.com?subject=${subject}&body=${body}`, "_blank")
  }
 
  public render() {
@@ -45,14 +92,17 @@ export class ErrorBoundary extends Component<Props, State> {
  }
 
  return (
- <div className="flex flex-col items-center justify-center p-6 bg-red-50  rounded-lg border border-red-200 ">
+ <div className="flex flex-col items-center justify-center p-6 bg-red-50 rounded-lg border border-red-200">
  <AlertTriangle className="h-10 w-10 text-red-500 mb-3" />
- <h3 className="text-lg font-semibold text-red-800  mb-1">
+ <h3 className="text-lg font-semibold text-red-800 mb-1">
  {this.props.title || "Something went wrong"}
  </h3>
- <p className="text-sm text-red-600  text-center mb-4">
- {this.props.description || "An error occurred while rendering this section."}
+ <p className="text-sm text-red-600 text-center mb-4 max-w-md">
+ {this.props.description || "An unexpected error occurred. You can try again, go back to the home page, or report this issue if it persists."}
  </p>
+
+ {/* Recovery actions */}
+ <div className="flex flex-wrap gap-2 justify-center">
  {this.props.showRetry !== false && (
  <Button
  variant="outline"
@@ -64,13 +114,44 @@ export class ErrorBoundary extends Component<Props, State> {
  Try Again
  </Button>
  )}
+ <Button
+ variant="outline"
+ size="sm"
+ onClick={this.handleGoHome}
+ className="gap-2 border-red-300 text-red-700 hover:bg-red-100"
+ >
+ <Home className="h-4 w-4" />
+ Go to Dashboard
+ </Button>
+ <Button
+ variant="outline"
+ size="sm"
+ onClick={this.handleReportIssue}
+ className="gap-2 border-red-300 text-red-700 hover:bg-red-100"
+ >
+ <MessageSquare className="h-4 w-4" />
+ Report this Issue
+ </Button>
+ </div>
+
+ {/* Additional help text */}
+ <p className="text-xs text-red-400 mt-4 text-center">
+ If the problem persists after retrying, try refreshing the page or clearing your browser cache.
+ </p>
+
  {process.env.NODE_ENV === "development" && this.state.error && (
- <details className="mt-4 text-xs text-red-600  max-w-full overflow-auto">
- <summary className="cursor-pointer">Error Details</summary>
- <pre className="mt-2 p-2 bg-red-100  rounded text-left whitespace-pre-wrap">
- {this.state.error.toString()}
- {"\n"}
+ <details className="mt-4 text-xs text-red-600 max-w-full overflow-auto">
+ <summary className="cursor-pointer font-medium">Error Details (Development Only)</summary>
+ <pre className="mt-2 p-2 bg-red-100 rounded text-left whitespace-pre-wrap">
+ {this.state.error.name}: {this.state.error.message}
+ {"\n\n"}
  {this.state.error.stack}
+ {this.state.errorInfo?.componentStack && (
+   <>
+     {"\n\nComponent Stack:"}
+     {this.state.errorInfo.componentStack}
+   </>
+ )}
  </pre>
  </details>
  )}

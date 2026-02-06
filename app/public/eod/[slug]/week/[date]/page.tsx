@@ -739,7 +739,7 @@ export default function PublicEODWeeklyReportPage() {
       <footer className="border-t border-slate-200 bg-white mt-12">
         <div className="max-w-5xl mx-auto px-4 py-6 sm:px-6">
           <p className="text-center text-sm text-slate-400">
-            Powered by AIMS EOD Dashboard
+            Powered by Taskspace
           </p>
         </div>
       </footer>

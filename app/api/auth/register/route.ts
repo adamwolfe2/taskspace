@@ -24,11 +24,11 @@ export async function POST(request: NextRequest) {
       const response = NextResponse.json<ApiResponse<null>>(
         {
           success: false,
-          error: `Too many registration attempts. Please try again in ${rateLimitResult.retryAfter} seconds.`,
+          error: "Too many registration attempts. Please wait a few minutes and try again.",
         },
         { status: 429 }
       )
-      const headers = getRateLimitHeaders(rateLimitResult)
+      const headers = getRateLimitHeaders(rateLimitResult, 3)
       for (const [key, value] of Object.entries(headers)) {
         response.headers.set(key, value)
       }
@@ -210,24 +210,17 @@ export async function POST(request: NextRequest) {
     logger.error({ error: formatError(error) }, "Registration error")
     logAuthEvent("register", undefined, false, { error: formatError(error) })
 
-    // Provide more specific error messages
-    let errorMessage = "An error occurred during registration"
-
-    if (error instanceof Error) {
-      if (error.message.includes("relation") && error.message.includes("does not exist")) {
-        errorMessage = "Database tables not initialized. Please run the database migration."
-      } else if (error.message.includes("connect") || error.message.includes("ECONNREFUSED")) {
-        errorMessage = "Unable to connect to database. Please check database configuration."
-      } else if (error.message.includes("duplicate key")) {
-        errorMessage = "An account with this email already exists."
-      } else if (process.env.NODE_ENV !== "production") {
-        // In development, show the actual error
-        errorMessage = error.message
-      }
+    // Handle duplicate key errors with appropriate status code
+    if (error instanceof Error && error.message.includes("duplicate key")) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "An account with this email already exists." },
+        { status: 409 }
+      )
     }
 
+    // Never expose internal error details in responses
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: errorMessage },
+      { success: false, error: "An error occurred during registration. Please try again later." },
       { status: 500 }
     )
   }

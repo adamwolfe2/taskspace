@@ -93,7 +93,7 @@ export function InlineEditable({
  return (
  <div className={cn("flex items-start gap-1", className)}>
  <InputComponent
- ref={inputRef as any}
+ ref={inputRef as React.RefObject<HTMLInputElement & HTMLTextAreaElement>}
  value={editValue}
  onChange={(e) => setEditValue(e.target.value)}
  onKeyDown={handleKeyDown}

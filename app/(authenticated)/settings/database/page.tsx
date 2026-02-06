@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 export default function DatabaseManagementPage() {
   const { toast } = useToast()
   const [isRunning, setIsRunning] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<{ migratedRecords?: number; steps?: string[]; error?: string } | null>(null)
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
 
   const handleRunSetup = async () => {

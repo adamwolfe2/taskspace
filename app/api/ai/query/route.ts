@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { answerQuery, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
@@ -8,23 +8,8 @@ import type { ApiResponse, AIQueryResponse, AIConversation, TeamMember } from "@
 import { logger, logError } from "@/lib/logger"
 
 // POST /api/ai/query - Ask a natural language question about team data
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can use the AI query feature" },
-        { status: 403 }
-      )
-    }
-
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },
@@ -38,7 +23,7 @@ export async function POST(request: NextRequest) {
       userId: auth.user.id,
     })
     if (creditCheck instanceof NextResponse) {
-      return creditCheck
+      return creditCheck as NextResponse<ApiResponse<null>>
     }
 
     const body = await request.json()
@@ -167,19 +152,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // GET /api/ai/query - Get conversation history
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get("limit") || "50", 10)
 
@@ -200,4 +177,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

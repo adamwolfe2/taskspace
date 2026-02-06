@@ -52,13 +52,13 @@ function parseCSV(content: string): CSVRow[] {
     if (!line.trim()) continue
 
     const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""))
-    const row: any = {}
+    const row: Record<string, string> = {}
 
     headers.forEach((header, index) => {
       row[header] = values[index] || ""
     })
 
-    rows.push(row as CSVRow)
+    rows.push(row as unknown as CSVRow)
   }
 
   return rows

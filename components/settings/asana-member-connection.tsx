@@ -254,7 +254,7 @@ export function AsanaMemberConnection() {
                       <ol className="list-decimal list-inside text-sm space-y-1">
                         <li>Go to <a href="https://app.asana.com/0/my-apps" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Asana Developer Console</a></li>
                         <li>Click "Create new token"</li>
-                        <li>Give it a name like "AIMS EOD Sync"</li>
+                        <li>Give it a name like "Taskspace Sync"</li>
                         <li>Copy and paste the token here</li>
                       </ol>
                     </AlertDescription>
