@@ -8,9 +8,9 @@ export const PRODUCT_CONFIG = {
   name: "Taskspace",
   tagline: "Team Productivity Platform",
   description: "Transform how your team tracks progress and achieves goals with AI-powered accountability tools",
-  domain: "align.app", // TODO: Update when domain is purchased
-  supportEmail: "support@align.app", // TODO: Update when email is set up
-  company: "Taskspace", // TODO: Update with LLC name when registered
+  domain: "trytaskspace.com",
+  supportEmail: "support@trytaskspace.com",
+  company: "Taskspace",
 } as const
 
 export const CONFIG = {

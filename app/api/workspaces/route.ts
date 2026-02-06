@@ -56,7 +56,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
     // Validate request body
-    const { name, type, description, settings, isDefault } = await validateBody(request, createWorkspaceSchema)
+    const { name, type, description, settings, isDefault, logoUrl, primaryColor, secondaryColor, accentColor, faviconUrl } = await validateBody(request, createWorkspaceSchema)
 
     // Check feature gate: Can create workspace?
     const allWorkspaces = await getUserWorkspaces(auth.user.id)
@@ -98,6 +98,11 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       settings: settings || {},
       isDefault: isDefault || false,
       createdBy: auth.user.id,
+      logoUrl: logoUrl || null,
+      primaryColor: primaryColor || null,
+      secondaryColor: secondaryColor || null,
+      accentColor: accentColor || null,
+      faviconUrl: faviconUrl || null,
     }
 
     const workspace = await createWorkspace(params)

@@ -185,6 +185,11 @@ export interface CreateWorkspaceParams {
   settings?: Record<string, unknown>
   isDefault?: boolean
   createdBy?: string
+  logoUrl?: string | null
+  primaryColor?: string | null
+  secondaryColor?: string | null
+  accentColor?: string | null
+  faviconUrl?: string | null
 }
 
 /**
@@ -200,15 +205,22 @@ export async function createWorkspace(params: CreateWorkspaceParams): Promise<Wo
     settings = {},
     isDefault = false,
     createdBy = null,
+    logoUrl = null,
+    primaryColor = null,
+    secondaryColor = null,
+    accentColor = null,
+    faviconUrl = null,
   } = params
 
   const { rows } = await sql`
     INSERT INTO workspaces (
-      organization_id, name, slug, type, description, settings, is_default, created_by
+      organization_id, name, slug, type, description, settings, is_default, created_by,
+      logo_url, primary_color, secondary_color, accent_color, favicon_url
     )
     VALUES (
       ${organizationId}, ${name}, ${slug}, ${type}, ${description},
-      ${JSON.stringify(settings)}::jsonb, ${isDefault}, ${createdBy}
+      ${JSON.stringify(settings)}::jsonb, ${isDefault}, ${createdBy},
+      ${logoUrl}, ${primaryColor}, ${secondaryColor}, ${accentColor}, ${faviconUrl}
     )
     RETURNING *
   `

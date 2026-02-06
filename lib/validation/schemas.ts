@@ -444,6 +444,11 @@ export const createWorkspaceSchema = z.object({
   description: z.string().max(500).optional(),
   isDefault: z.boolean().default(false),
   settings: z.record(z.unknown()).optional(),
+  logoUrl: z.string().url().nullable().optional(),
+  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color format").nullable().optional(),
+  secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color format").nullable().optional(),
+  accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color format").nullable().optional(),
+  faviconUrl: z.string().url().nullable().optional(),
 })
 
 export const updateWorkspaceSchema = z.object({
