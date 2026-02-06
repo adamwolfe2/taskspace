@@ -46,7 +46,7 @@ export function MarketingHeader() {
                 <Link href="/login">Sign in</Link>
               </Button>
               <Button asChild>
-                <Link href="/register">Get started</Link>
+                <Link href="/app?page=register">Get started</Link>
               </Button>
             </div>
           </div>
@@ -90,7 +90,7 @@ export function MarketingHeader() {
                 <Link href="/login">Sign in</Link>
               </Button>
               <Button asChild className="w-full">
-                <Link href="/register">Get started</Link>
+                <Link href="/app?page=register">Get started</Link>
               </Button>
             </div>
           </div>

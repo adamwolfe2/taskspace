@@ -8,6 +8,7 @@
 import { sql, type QueryResult, type QueryResultRow } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import { recordUsage } from "@/lib/ai/credits"
+import { logger, logError } from "@/lib/logger"
 import type {
   AISuggestion,
   AISuggestionSourceType,
@@ -404,7 +405,7 @@ export async function bulkApproveSuggestions(
       const result = await approveSuggestion({ suggestionId: id, reviewedBy }, createEntity)
       results.push(result)
     } catch (error) {
-      console.error(`Failed to approve suggestion ${id}:`, error)
+      logError(logger, `Failed to approve suggestion ${id}`, error)
       // Continue with other suggestions
     }
   }
@@ -427,7 +428,7 @@ export async function bulkRejectSuggestions(
       const result = await rejectSuggestion(id, reviewedBy, reviewerNotes)
       results.push(result)
     } catch (error) {
-      console.error(`Failed to reject suggestion ${id}:`, error)
+      logError(logger, `Failed to reject suggestion ${id}`, error)
     }
   }
 

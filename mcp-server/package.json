@@ -1,7 +1,7 @@
 {
-  "name": "align-mcp-server",
+  "name": "taskspace-mcp-server",
   "version": "1.0.0",
-  "description": "MCP server for Align - enables Claude to manage team tasks and EOD reports",
+  "description": "MCP server for Taskspace - enables Claude to manage team tasks and EOD reports",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {

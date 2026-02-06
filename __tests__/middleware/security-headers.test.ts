@@ -10,15 +10,24 @@ import { middleware } from "@/middleware"
 // Mock environment
 const originalEnv = process.env.NODE_ENV
 
+function setNodeEnv(value: string) {
+  Object.defineProperty(process.env, "NODE_ENV", {
+    value,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  })
+}
+
 describe("Security Headers Middleware", () => {
   beforeEach(() => {
     // Reset environment before each test
-    process.env.NODE_ENV = "test"
+    setNodeEnv("test")
   })
 
   afterAll(() => {
     // Restore original environment
-    process.env.NODE_ENV = originalEnv
+    setNodeEnv(originalEnv as string)
   })
 
   describe("Security Headers on Frontend Routes", () => {
@@ -110,7 +119,7 @@ describe("Security Headers Middleware", () => {
 
   describe("HSTS Header", () => {
     it("should not add HSTS in development/test", () => {
-      process.env.NODE_ENV = "test"
+      setNodeEnv("test")
       const request = new NextRequest(new URL("http://localhost:3000/"))
       const response = middleware(request)
 
@@ -118,7 +127,7 @@ describe("Security Headers Middleware", () => {
     })
 
     it("should add HSTS in production", () => {
-      process.env.NODE_ENV = "production"
+      setNodeEnv("production")
       const request = new NextRequest(new URL("http://localhost:3000/"))
       const response = middleware(request)
 

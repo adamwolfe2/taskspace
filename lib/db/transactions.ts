@@ -6,6 +6,7 @@
  */
 
 import { sql, VercelPoolClient, LocalPoolClient, QueryResult, QueryResultRow } from "./sql"
+import { logger, logError } from "@/lib/logger"
 
 // ============================================
 // TRANSACTION TYPES
@@ -188,7 +189,7 @@ export async function batchInsert<T extends Record<string, unknown>>(
         skipped += batch.length - (result.rowCount || 0)
       }
     } catch (error) {
-      console.error(`Batch insert error for ${tableName}:`, error)
+      logError(logger, `Batch insert error for ${tableName}`, error)
       throw error
     }
   }

@@ -11,6 +11,7 @@
  */
 
 import { sql } from "./sql"
+import { logger } from "@/lib/logger"
 
 export interface MigrationStatus {
   applied: string[]
@@ -243,6 +244,6 @@ export async function logMigrationActivity(
     `
   } catch {
     // Audit log failure shouldn't break migrations
-    console.error("Failed to log migration activity")
+    logger.error({}, "Failed to log migration activity")
   }
 }

@@ -26,6 +26,8 @@ import {
   ExternalLink,
 } from "lucide-react"
 import { UserBentoCard, UserBentoGrid, type UserBentoData } from "@/components/public/user-bento-card"
+import { ExportDropdown } from "@/components/public/export-dropdown"
+import { generateWeeklyMarkdown } from "@/lib/utils/report-export"
 
 interface WeeklyTask {
   description: string
@@ -453,9 +455,18 @@ export default function PublicEODWeeklyReportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 print:bg-white print:min-h-0">
+      {/* Print styles */}
+      <style jsx global>{`
+        @media print {
+          header { position: static !important; border: none !important; }
+          footer { display: none !important; }
+          .print\\:hidden { display: none !important; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+      `}</style>
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-10 print:static print:border-none">
         <div className="max-w-5xl mx-auto px-4 py-4 sm:px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -475,14 +486,25 @@ export default function PublicEODWeeklyReportPage() {
                 <p className="text-sm text-slate-500">Weekly EOD Report</p>
               </div>
             </div>
-            <button
-              onClick={() => fetchReport(true)}
-              disabled={isRefreshing}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-              Refresh
-            </button>
+            <div className="flex items-center gap-1">
+              {data && data.userReports.length > 0 && (
+                <ExportDropdown
+                  markdownText={generateWeeklyMarkdown(
+                    data.organizationName,
+                    data.weekRange,
+                    data.userReports
+                  )}
+                />
+              )}
+              <button
+                onClick={() => fetchReport(true)}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 print:hidden"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
       </header>

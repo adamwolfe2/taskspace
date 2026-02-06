@@ -35,7 +35,7 @@ export interface CacheStats {
 // CACHE IMPLEMENTATION
 // ============================================
 
-class Cache<T = unknown> {
+export class Cache<T = unknown> {
   private cache: Map<string, CacheEntry<T>> = new Map()
   private hits = 0
   private misses = 0
@@ -92,6 +92,13 @@ class Cache<T = unknown> {
       createdAt: Date.now(),
       hitCount: 0,
     })
+  }
+
+  /**
+   * Get the number of entries in the cache
+   */
+  get size(): number {
+    return this.cache.size
   }
 
   /**

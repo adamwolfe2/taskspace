@@ -128,6 +128,14 @@ export const DELETE = withAuth(async (request, auth) => {
       )
     }
 
+    // SECURITY: Verify template belongs to user's organization
+    if (template.organizationId !== auth.organization.id) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Template not found" },
+        { status: 404 }
+      )
+    }
+
     // Check workspace access if template is workspace-specific
     if (template.workspaceId && !isAdmin(auth)) {
       const hasAccess = await userHasWorkspaceAccess(auth.user.id, template.workspaceId)

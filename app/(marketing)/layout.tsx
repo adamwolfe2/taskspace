@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     default: "Taskspace - EOS Management Platform | Run All Your Teams In True Parallel",
     template: "%s | Taskspace",
   },
-  description: "The all-in-one EOS management platform for multi-company founders and leadership teams. AI-powered EOD reports, quarterly rocks, scorecards, Level 10 meetings, and accountability charts. Join 500+ teams running on EOS with Taskspace.",
+  description: "The all-in-one EOS management platform for multi-company founders and leadership teams. AI-powered EOD reports, quarterly rocks, scorecards, Level 10 meetings, and accountability charts.",
   keywords: ["EOS", "Entrepreneurial Operating System", "EOS tools", "Level 10 meetings", "quarterly rocks", "scorecard", "EOD reports", "team management", "accountability chart", "IDS process", "traction", "business management", "AI productivity", "multi-company founders"],
   icons: {
     icon: [

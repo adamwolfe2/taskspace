@@ -44,8 +44,8 @@ export default function AboutPage() {
               variants={fadeInUp}
               className="text-xl text-gray-600 leading-relaxed"
             >
-              Intelligent AI agents for Enterprise and Entrepreneurs.
-              We're building the future of work automation.
+              The all-in-one EOS management platform for multi-company founders
+              and leadership teams running on the Entrepreneurial Operating System.
             </motion.p>
           </motion.div>
 
@@ -57,16 +57,19 @@ export default function AboutPage() {
           >
             <motion.div variants={fadeInUp} className="space-y-6 text-gray-600">
               <p>
-                Taskspace is the all-in-one AI platform with agents that connect to your
-                tools and partner with humans to drive smarter, faster outcomes.
+                Taskspace is built for teams running on EOS (the Entrepreneurial Operating System).
+                We provide a unified platform that brings together AI-powered EOD reports, quarterly
+                rocks tracking, scorecards, Level 10 meetings, the IDS process, and accountability
+                charts -- all in one place.
               </p>
               <p>
-                Our mission is to empower teams with AI agents that automate workflows,
-                integrate with existing tools, and enable businesses to focus on what matters most.
+                Our mission is to help multi-company founders and leadership teams run all their
+                organizations in true parallel. With AI-assisted workflows and real-time dashboards,
+                Taskspace eliminates the friction of managing multiple teams across multiple companies.
               </p>
               <p>
-                From marketing automation to sales pipeline management, our platform provides
-                enterprise-grade security and reliability that scales with your organization.
+                Whether you are a Visionary, an Integrator, or a department head, Taskspace gives
+                you the tools to execute on the EOS framework with clarity, accountability, and speed.
               </p>
             </motion.div>
           </motion.div>

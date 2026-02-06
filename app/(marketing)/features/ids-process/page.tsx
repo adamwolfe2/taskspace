@@ -9,7 +9,6 @@ import {
   Zap,
   MessageSquare,
   CheckSquare,
-  Star,
   X,
   AlertCircle,
   Target,
@@ -19,7 +18,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { MegaMenu } from "@/components/marketing/mega-menu"
 import { PageTransition } from "@/components/marketing/page-transition"
 
 const fadeInUp = {
@@ -40,7 +38,6 @@ export default function IDSProcessPage() {
 
   return (
     <>
-      <MegaMenu />
       <PageTransition>
       <div className="min-h-screen bg-white">
 
@@ -85,18 +82,6 @@ export default function IDSProcessPage() {
                 </div>
               </motion.div>
 
-              <motion.div variants={fadeInUp} className="flex items-center gap-6 pt-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <span className="text-sm font-medium text-slate-600">4.9/5 on G2</span>
-                </div>
-                <div className="text-sm text-slate-400">|</div>
-                <div className="text-sm font-medium text-slate-600">100,000+ issues solved</div>
-              </motion.div>
             </motion.div>
 
             {/* Right - Interactive IDS Demo */}
@@ -249,19 +234,6 @@ export default function IDSProcessPage() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-12 bg-white border-y border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm font-semibold text-slate-500 mb-8 uppercase tracking-wider">
-            TRUSTED BY PROBLEM-SOLVING TEAMS
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-12 opacity-50 grayscale">
-            {["Amazon", "NVIDIA", "Spotify", "Verizon"].map((logo) => (
-              <div key={logo} className="text-2xl font-bold text-slate-900">{logo}</div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Problem/Solution */}
       <section className="py-20 lg:py-32 bg-slate-50">
@@ -621,113 +593,31 @@ export default function IDSProcessPage() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* CTA Section */}
       <section className="py-20 lg:py-32 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Teams solve 5x more issues with IDS
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-8">
-            {[
-              { value: "10 min", label: "Average time to solve an issue" },
-              { value: "5x", label: "More issues solved vs ad-hoc meetings" },
-              { value: "94%", label: "Of issues stay solved (don't recur)" },
-              { value: "100%", label: "Action item completion rate" },
-            ].map((stat, i) => (
-              <div key={i} className="text-center">
-                <div className="text-5xl font-bold text-black mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-slate-600">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 lg:py-32 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Teams finally solve problems instead of just talking about them
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                quote: "IDS changed everything. We used to spend 30 minutes debating, now we solve in 10 minutes with clear action items.",
-                author: "Michael Rodriguez",
-                role: "Integrator, TechCorp",
-              },
-              {
-                quote: "The structured framework keeps us from going in circles. Identify, Discuss, Solve - it just works.",
-                author: "Sarah Chen",
-                role: "CEO, StartupXYZ",
-              },
-              {
-                quote: "Our Level 10 meetings are actually productive now. We solve real problems instead of just talking about symptoms.",
-                author: "Emily Watson",
-                role: "VP Operations, GrowthLabs",
-              },
-            ].map((testimonial, i) => (
-              <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-white/90 mb-6 leading-relaxed">"{testimonial.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
-                  <div>
-                    <div className="font-semibold text-white">{testimonial.author}</div>
-                    <div className="text-sm text-white/60">{testimonial.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Zap className="w-20 h-20 text-white mx-auto mb-6" />
-          <h2 className="text-5xl font-bold text-white mb-6">
-            Start solving problems in minutes, not meetings
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+            Ready to solve problems faster?
           </h2>
-          <p className="text-xl text-white/90 mb-8">
-            Join thousands of teams using IDS to solve real problems
+          <p className="text-lg text-slate-600 mb-8">
+            Start using the IDS framework to turn issues into action items. Free forever, no credit card required.
           </p>
-          <Link href="/app?page=register">
-            <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 rounded-full px-8 h-14 text-base font-semibold">
-              Get started FREE
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-          <p className="text-white/80 mt-4 text-sm">Free forever. No credit card required.</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/app?page=register">
+              <Button size="lg" className="bg-black text-white hover:bg-gray-900 rounded-full px-8">
+                Get started free
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/features">
+              <Button size="lg" variant="outline" className="border-gray-200 hover:bg-white text-black rounded-full px-8">
+                Explore all features
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
-            <div>© 2026 Taskspace. All rights reserved.</div>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">Security</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
     </PageTransition>
     </>

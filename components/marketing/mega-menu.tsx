@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-type MenuType = "features" | "solutions" | "resources" | null
+type MenuType = "features" | "solutions" | null
 
 export function MegaMenu() {
   const [activeMenu, setActiveMenu] = useState<MenuType>(null)
@@ -100,24 +100,6 @@ export function MegaMenu() {
             <Link href="/pricing" className="text-sm font-medium text-gray-700 hover:text-black transition-colors">
               Pricing
             </Link>
-
-            <Link href="/customers" className="text-sm font-medium text-gray-700 hover:text-black transition-colors">
-              Customers
-            </Link>
-
-            <div
-              className="relative"
-              onMouseEnter={() => setActiveMenu("resources")}
-              onMouseLeave={() => setActiveMenu(null)}
-            >
-              <button className="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-black transition-colors py-2">
-                Resources
-                <ChevronDown className={cn(
-                  "w-4 h-4 transition-transform",
-                  activeMenu === "resources" && "rotate-180"
-                )} />
-              </button>
-            </div>
           </div>
 
           {/* Right CTAs */}
@@ -320,20 +302,6 @@ export function MegaMenu() {
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Pricing
-                      </Link>
-                      <Link
-                        href="/customers"
-                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Customers
-                      </Link>
-                      <Link
-                        href="/resources"
-                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Resources
                       </Link>
                       <Link
                         href="/about"
@@ -560,55 +528,9 @@ export function MegaMenu() {
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
-                      SUCCESS STORIES
-                    </h3>
-                    <Link
-                      href="/customers"
-                      className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="font-medium text-black mb-1">Customer Stories</div>
-                      <div className="text-sm text-gray-600">See how teams succeed with Taskspace</div>
-                    </Link>
-                  </div>
                 </div>
               )}
 
-              {/* Resources Menu */}
-              {activeMenu === "resources" && (
-                <div className="grid grid-cols-3 gap-8">
-                  <div>
-                    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
-                      LEARN
-                    </h3>
-                    <div className="space-y-2">
-                      <Link href="/help" className="block text-sm text-gray-700 hover:text-black py-1">Help Center</Link>
-                      <Link href="/resources" className="block text-sm text-gray-700 hover:text-black py-1">Blog & Resources</Link>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
-                      COMPANY
-                    </h3>
-                    <div className="space-y-2">
-                      <Link href="/about" className="block text-sm text-gray-700 hover:text-black py-1">About</Link>
-                      <Link href="/contact" className="block text-sm text-gray-700 hover:text-black py-1">Contact</Link>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-4">
-                      CONNECT
-                    </h3>
-                    <div className="space-y-2">
-                      <a href="#" className="block text-sm text-gray-700 hover:text-black py-1">Twitter</a>
-                      <a href="#" className="block text-sm text-gray-700 hover:text-black py-1">LinkedIn</a>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </motion.div>
         )}

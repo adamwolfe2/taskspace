@@ -10,7 +10,6 @@ import {
   TrendingUp,
   TrendingDown,
   Calendar,
-  Star,
   X,
   AlertCircle,
   Target,
@@ -84,18 +83,6 @@ export default function ScorecardPage() {
                 </div>
               </motion.div>
 
-              <motion.div variants={fadeInUp} className="flex items-center gap-6 pt-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <span className="text-sm font-medium text-slate-600">4.9/5 on G2</span>
-                </div>
-                <div className="text-sm text-slate-400">|</div>
-                <div className="text-sm font-medium text-slate-600">Used in 10,000+ Level 10s</div>
-              </motion.div>
             </motion.div>
 
             {/* Right - Interactive Scorecard Demo */}
@@ -178,20 +165,6 @@ export default function ScorecardPage() {
                 </div>
               </div>
             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Social Proof */}
-      <section className="py-12 bg-white border-y border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm font-semibold text-slate-500 mb-8 uppercase tracking-wider">
-            TRUSTED BY THE BEST
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-12 opacity-50 grayscale">
-            {["Amazon", "NVIDIA", "Spotify", "Verizon"].map((logo) => (
-              <div key={logo} className="text-2xl font-bold text-slate-900">{logo}</div>
-            ))}
           </div>
         </div>
       </section>
@@ -546,97 +519,28 @@ export default function ScorecardPage() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 lg:py-32 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Teams using scorecards hit targets 3x more often
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-8">
-            {[
-              { value: "15 min", label: "Saved per week vs spreadsheets" },
-              { value: "3x", label: "More likely to hit targets" },
-              { value: "100%", label: "Visibility into business health" },
-              { value: "5 min", label: "Scorecard review in Level 10" },
-            ].map((stat, i) => (
-              <div key={i} className="text-center">
-                <div className="text-5xl font-bold text-black mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-slate-600">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 lg:py-32 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Leadership teams love scorecard tracking
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                quote: "We finally have visibility into what's working and what's not. The AI alerts saved us from missing a critical trend.",
-                author: "Sarah Chen",
-                role: "Integrator, TechCorp",
-              },
-              {
-                quote: "Scorecard review went from 20 minutes of spreadsheet updates to 5 minutes of strategic discussion.",
-                author: "Michael Rodriguez",
-                role: "CEO, StartupXYZ",
-              },
-              {
-                quote: "Every team member knows their numbers and owns them. Game changer for our accountability culture.",
-                author: "Emily Watson",
-                role: "Visionary, GrowthLabs",
-              },
-            ].map((testimonial, i) => (
-              <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-white/90 mb-6 leading-relaxed">"{testimonial.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
-                  <div>
-                    <div className="font-semibold text-white">{testimonial.author}</div>
-                    <div className="text-sm text-white/60">{testimonial.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-black">
+      {/* CTA Section */}
+      <section className="py-20 lg:py-32 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <BarChart3 className="w-20 h-20 text-white mx-auto mb-6" />
-          <h2 className="text-5xl font-bold text-white mb-6">
-            Start tracking what matters today
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+            Ready to track the metrics that matter?
           </h2>
-          <p className="text-xl text-white/90 mb-8">
-            Join thousands of teams running on data-driven scorecards
+          <p className="text-lg text-slate-600 mb-8">
+            Start building your weekly scorecard today. Free forever, no credit card required.
           </p>
-          <Link href="/app?page=register">
-            <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 rounded-full px-8 h-14 text-base font-semibold">
-              Get started FREE
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-          <p className="text-white/80 mt-4 text-sm">Free forever. No credit card required.</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/app?page=register">
+              <Button size="lg" className="bg-black text-white hover:bg-gray-900 rounded-full px-8">
+                Get started free
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/features">
+              <Button size="lg" variant="outline" className="border-gray-200 hover:bg-white text-black rounded-full px-8">
+                Explore all features
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 

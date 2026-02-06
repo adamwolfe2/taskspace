@@ -1309,11 +1309,16 @@ export const db = {
       `
       return notification
     },
-    async markAsRead(id: string): Promise<Notification | null> {
-      const { rows } = await sql`
-        UPDATE notifications SET read = TRUE WHERE id = ${id}
-        RETURNING *
-      `
+    async markAsRead(id: string, userId?: string): Promise<Notification | null> {
+      const { rows } = userId
+        ? await sql`
+            UPDATE notifications SET read = TRUE WHERE id = ${id} AND user_id = ${userId}
+            RETURNING *
+          `
+        : await sql`
+            UPDATE notifications SET read = TRUE WHERE id = ${id}
+            RETURNING *
+          `
       if (!rows[0]) return null
       const row = rows[0]
       return {
@@ -1336,8 +1341,10 @@ export const db = {
       `
       return rowCount ?? 0
     },
-    async delete(id: string): Promise<boolean> {
-      const { rowCount } = await sql`DELETE FROM notifications WHERE id = ${id}`
+    async delete(id: string, userId?: string): Promise<boolean> {
+      const { rowCount } = userId
+        ? await sql`DELETE FROM notifications WHERE id = ${id} AND user_id = ${userId}`
+        : await sql`DELETE FROM notifications WHERE id = ${id}`
       return (rowCount ?? 0) > 0
     },
     async deleteOld(days: number = 30): Promise<number> {
@@ -1936,8 +1943,10 @@ export const db = {
       const now = new Date().toISOString()
       await sql`UPDATE push_subscriptions SET last_used_at = ${now} WHERE id = ${id}`
     },
-    async delete(endpoint: string): Promise<boolean> {
-      const { rowCount } = await sql`DELETE FROM push_subscriptions WHERE endpoint = ${endpoint}`
+    async delete(endpoint: string, userId?: string): Promise<boolean> {
+      const { rowCount } = userId
+        ? await sql`DELETE FROM push_subscriptions WHERE endpoint = ${endpoint} AND user_id = ${userId}`
+        : await sql`DELETE FROM push_subscriptions WHERE endpoint = ${endpoint}`
       return (rowCount ?? 0) > 0
     },
     async deleteByUserId(userId: string): Promise<number> {
@@ -2311,6 +2320,7 @@ export const db = {
       email: string | null
       rocks: string | null
       isActive: boolean
+      workspaceId: string | null
       createdAt: string
       updatedAt: string
     } | null> {
@@ -2333,6 +2343,7 @@ export const db = {
         email: row.email as string | null,
         rocks: row.rocks as string | null,
         isActive: row.is_active as boolean,
+        workspaceId: (row.workspace_id as string) || null,
         createdAt: (row.created_at as Date)?.toISOString() || "",
         updatedAt: (row.updated_at as Date)?.toISOString() || "",
       }

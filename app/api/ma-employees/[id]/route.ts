@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import type { RouteContext } from "@/lib/api/middleware"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
+
+// Helper to verify employee belongs to the authenticated user's organization via workspace
+async function verifyEmployeeOrgAccess(employee: { workspaceId: string | null }, orgId: string): Promise<boolean> {
+  if (!employee.workspaceId) {
+    // Employee has no workspace_id - legacy data, allow access (no way to verify org)
+    return true
+  }
+  return verifyWorkspaceOrgBoundary(employee.workspaceId, orgId)
+}
 
 // GET - Fetch a single MA employee by ID
 export const GET = withAuth(async (request, auth, context?) => {
@@ -24,8 +33,14 @@ export const GET = withAuth(async (request, auth, context?) => {
       )
     }
 
-    // Note: Additional workspace validation could be added here if needed
-    // by checking if employee.workspace_id matches user's workspace access
+    // Verify employee belongs to user's organization via workspace
+    const hasAccess = await verifyEmployeeOrgAccess(employee, auth.organization.id)
+    if (!hasAccess) {
+      return NextResponse.json(
+        { success: false, error: "Employee not found" },
+        { status: 404 }
+      )
+    }
 
     return NextResponse.json({
       success: true,
@@ -55,6 +70,15 @@ export const PATCH = withAuth(async (request, auth, context?) => {
     // Check if employee exists first
     const existing = await db.maEmployees.findById(id)
     if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Employee not found" },
+        { status: 404 }
+      )
+    }
+
+    // Verify employee belongs to user's organization via workspace
+    const hasAccess = await verifyEmployeeOrgAccess(existing, auth.organization.id)
+    if (!hasAccess) {
       return NextResponse.json(
         { success: false, error: "Employee not found" },
         { status: 404 }
@@ -115,6 +139,15 @@ export const DELETE = withAuth(async (request, auth, context?) => {
     // Check if employee exists first
     const existing = await db.maEmployees.findById(id)
     if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Employee not found" },
+        { status: 404 }
+      )
+    }
+
+    // Verify employee belongs to user's organization via workspace
+    const hasAccess = await verifyEmployeeOrgAccess(existing, auth.organization.id)
+    if (!hasAccess) {
       return NextResponse.json(
         { success: false, error: "Employee not found" },
         { status: 404 }

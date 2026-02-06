@@ -1,7 +1,7 @@
 "use client"
 
-import { motion, useInView, AnimatePresence } from "framer-motion"
-import { useRef, useState } from "react"
+import { motion, useInView } from "framer-motion"
+import { useRef } from "react"
 import Link from "next/link"
 import {
   ArrowRight,
@@ -15,20 +15,14 @@ import {
   FileText,
   MessageSquare,
   CheckSquare,
-  Sparkles,
   Building2,
   LineChart,
   ListTodo,
-  Plug,
-  Play,
-  Star,
-  Quote,
 } from "lucide-react"
 import Image from "next/image"
 import { InteractiveFeaturesShowcase } from "@/components/marketing/interactive-features-showcase"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
 import { integrations, agentUseCases } from "@/lib/integrations-data"
 
 // Animation variants
@@ -54,16 +48,6 @@ function HeroSection() {
     <section ref={ref} className="pt-12 pb-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-700 text-sm mb-6"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Join 500+ teams already running on EOS with Taskspace</span>
-          </motion.div>
-
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -105,12 +89,6 @@ function HeroSection() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <a href="#demo">
-              <Button size="lg" variant="outline" className="border-gray-300 hover:bg-gray-50 text-black px-8 h-12 text-base">
-                <Play className="mr-2 h-4 w-4" />
-                Watch a 2-min demo
-              </Button>
-            </a>
           </motion.div>
 
           <motion.p
@@ -238,112 +216,6 @@ function HowItWorksSection() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
-        </motion.div>
-      </div>
-    </section>
-  )
-}
-
-// Social Proof / Testimonials Section
-function TestimonialsSection() {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: "-100px" })
-
-  const testimonials = [
-    {
-      quote:
-        "Taskspace replaced three different tools for us. Our L10 meetings are sharper, our rocks are tracked in one place, and the AI daily digests save our leadership team hours every week.",
-      name: "Sarah Chen",
-      role: "COO",
-      company: "Meridian Growth Partners",
-      stars: 5,
-    },
-    {
-      quote:
-        "As a multi-company founder, I needed one dashboard to see across all my businesses. Taskspace gives me that. I know exactly where every team stands without chasing updates.",
-      name: "James Thornton",
-      role: "CEO & Founder",
-      company: "Thornton Ventures (3 companies)",
-      stars: 5,
-    },
-    {
-      quote:
-        "We were struggling to keep EOS alive after our implementer left. Taskspace made it self-sustaining. The structured meeting templates and scorecard automation keep us on track quarter after quarter.",
-      name: "Maria Rodriguez",
-      role: "Integrator",
-      company: "BrightPath Logistics",
-      stars: 5,
-    },
-    {
-      quote:
-        "The EOD reporting alone is worth the subscription. Our team went from inconsistent updates to 95% daily submission rates in the first month. The AI parsing is incredible.",
-      name: "David Park",
-      role: "VP of Operations",
-      company: "Cascade Digital",
-      stars: 5,
-    },
-  ]
-
-  return (
-    <section ref={ref} className="py-20 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          variants={staggerContainer}
-          className="text-center mb-16"
-        >
-          <motion.div variants={fadeInUp}>
-            <Badge className="bg-white text-gray-700 border-gray-200 mb-4">
-              Trusted by Teams Everywhere
-            </Badge>
-          </motion.div>
-          <motion.h2
-            variants={fadeInUp}
-            className="text-4xl sm:text-5xl font-bold text-black mb-4"
-          >
-            Loved by EOS teams
-          </motion.h2>
-          <motion.p
-            variants={fadeInUp}
-            className="text-xl text-gray-600 max-w-2xl mx-auto"
-          >
-            See why hundreds of companies trust Taskspace to run their business on EOS
-          </motion.p>
-        </motion.div>
-
-        <motion.div
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          variants={staggerContainer}
-          className="grid md:grid-cols-2 gap-8"
-        >
-          {testimonials.map((testimonial) => (
-            <motion.div
-              key={testimonial.name}
-              variants={fadeInUp}
-              className="bg-white rounded-2xl border border-gray-200 p-8 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex gap-1 mb-4">
-                {Array.from({ length: testimonial.stars }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className="w-4 h-4 fill-black text-black"
-                  />
-                ))}
-              </div>
-              <Quote className="w-8 h-8 text-gray-200 mb-3" />
-              <p className="text-gray-700 leading-relaxed mb-6">
-                {testimonial.quote}
-              </p>
-              <div>
-                <p className="font-semibold text-black">{testimonial.name}</p>
-                <p className="text-sm text-gray-500">
-                  {testimonial.role}, {testimonial.company}
-                </p>
-              </div>
-            </motion.div>
-          ))}
         </motion.div>
       </div>
     </section>
@@ -776,60 +648,28 @@ function UseCasesSection() {
   )
 }
 
-// Stats/Social Proof
-function StatsSection() {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: "-100px" })
-
-  const stats = [
-    { value: "500+", label: "Teams running on EOS" },
-    { value: "50,000+", label: "Rocks tracked quarterly" },
-    { value: "20+", label: "Hours saved per week" },
-    { value: "98%", label: "Team satisfaction" },
-  ]
-
-  return (
-    <section ref={ref} className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          variants={staggerContainer}
-          className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
-        >
-          {stats.map((stat, i) => (
-            <motion.div key={i} variants={fadeInUp}>
-              <div className="text-4xl sm:text-5xl font-bold text-black mb-2">{stat.value}</div>
-              <div className="text-gray-600">{stat.label}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
-    </section>
-  )
-}
 
 // Final CTA
 function CTASection() {
   return (
-    <section className="py-32 bg-black">
+    <section className="py-32 bg-gray-50">
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
+        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black mb-6">
           Ready to run your business on EOS?
         </h2>
-        <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-          Join 500+ teams already using Taskspace to implement the Entrepreneurial Operating System. Start free today.
+        <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+          Start using Taskspace to implement the Entrepreneurial Operating System. Free today.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/app?page=register">
-            <Button size="lg" className="bg-white text-black hover:bg-gray-100 text-base px-8 h-12">
+            <Button size="lg" className="bg-black text-white hover:bg-gray-900 text-base px-8 h-12">
               Get started free
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
           <Link href="/pricing">
-            <Button size="lg" variant="outline" className="border-gray-600 hover:bg-gray-900 text-white text-base px-8 h-12">
+            <Button size="lg" variant="outline" className="border-gray-300 text-black hover:bg-gray-100 text-base px-8 h-12">
               View pricing
             </Button>
           </Link>
@@ -845,12 +685,10 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <StatsSection />
       <HowItWorksSection />
       <CoreFeaturesSection />
       <AgentsSection />
       <IntegrationsSection />
-      <TestimonialsSection />
       <UseCasesSection />
       <CTASection />
     </>

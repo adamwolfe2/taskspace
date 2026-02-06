@@ -361,6 +361,42 @@ export type PageType =
   | "settings"
   | "profile"
   | "org-chart"
+  | "ids-board"
+  | "notes"
+
+// ============================================
+// IDS BOARD TYPES
+// ============================================
+
+export type IdsBoardColumn = "identify" | "discuss" | "solve"
+export type IdsBoardItemType = "issue" | "rock" | "custom"
+
+export interface IdsBoardItem {
+  id: string
+  workspaceId: string
+  title: string
+  description?: string
+  columnName: IdsBoardColumn
+  orderIndex: number
+  itemType: IdsBoardItemType
+  linkedId?: string
+  createdBy?: string
+  createdByName?: string
+  assignedTo?: string
+  assignedToName?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Workspace Notes
+export interface WorkspaceNote {
+  id: string
+  workspaceId: string
+  content: string
+  lastEditedBy: string | null
+  createdAt: string
+  updatedAt: string
+}
 
 // API Response Types
 export interface ApiResponse<T> {

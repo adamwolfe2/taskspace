@@ -72,7 +72,7 @@ describe("Integrations - Workspace Scoping", () => {
       it("should require workspaceId parameter", async () => {
         const request = new NextRequest("http://localhost/api/google-calendar")
         const response = await googleCalendarGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -85,7 +85,7 @@ describe("Integrations - Workspace Scoping", () => {
           `http://localhost/api/google-calendar?workspaceId=${WORKSPACE_1}`
         )
         const response = await googleCalendarGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -106,7 +106,7 @@ describe("Integrations - Workspace Scoping", () => {
           `http://localhost/api/google-calendar?workspaceId=${WORKSPACE_1}`
         )
         const response = await googleCalendarGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.connected).toBe(true)
@@ -125,7 +125,7 @@ describe("Integrations - Workspace Scoping", () => {
           `http://localhost/api/google-calendar?workspaceId=${WORKSPACE_1}`
         )
         const response = await googleCalendarGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.authUrl).toBeDefined()
@@ -151,7 +151,7 @@ describe("Integrations - Workspace Scoping", () => {
         })
 
         const response = await googleCalendarPATCH(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -192,7 +192,7 @@ describe("Integrations - Workspace Scoping", () => {
         })
 
         const response = await googleCalendarDELETE(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -224,7 +224,7 @@ describe("Integrations - Workspace Scoping", () => {
       it("should require workspaceId parameter", async () => {
         const request = new NextRequest("http://localhost/api/asana/me/connect")
         const response = await asanaGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -237,7 +237,7 @@ describe("Integrations - Workspace Scoping", () => {
           `http://localhost/api/asana/me/connect?workspaceId=${WORKSPACE_1}`
         )
         const response = await asanaGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -245,7 +245,7 @@ describe("Integrations - Workspace Scoping", () => {
 
       it("should query workspace-specific asana_connections table", async () => {
         ;(userHasWorkspaceAccess as jest.Mock).mockResolvedValue(true)
-        ;(sql as jest.Mock).mockResolvedValue({
+        ;(sql as unknown as jest.Mock).mockResolvedValue({
           rows: [
             {
               personal_access_token: "pat-123",
@@ -260,7 +260,7 @@ describe("Integrations - Workspace Scoping", () => {
           `http://localhost/api/asana/me/connect?workspaceId=${WORKSPACE_1}`
         )
         const response = await asanaGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.connected).toBe(true)
@@ -301,7 +301,7 @@ describe("Integrations - Workspace Scoping", () => {
         })
 
         const response = await asanaPOST(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -319,7 +319,7 @@ describe("Integrations - Workspace Scoping", () => {
         })
 
         const response = await asanaPOST(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -327,7 +327,7 @@ describe("Integrations - Workspace Scoping", () => {
 
       it("should insert connection into workspace-specific asana_connections table", async () => {
         ;(userHasWorkspaceAccess as jest.Mock).mockResolvedValue(true)
-        ;(sql as jest.Mock).mockResolvedValue({ rows: [] })
+        ;(sql as unknown as jest.Mock).mockResolvedValue({ rows: [] })
 
         const request = new NextRequest("http://localhost/api/asana/me/connect", {
           method: "POST",
@@ -358,7 +358,7 @@ describe("Integrations - Workspace Scoping", () => {
 
       it("should upsert connection (UPDATE on conflict)", async () => {
         ;(userHasWorkspaceAccess as jest.Mock).mockResolvedValue(true)
-        ;(sql as jest.Mock).mockResolvedValue({ rows: [] })
+        ;(sql as unknown as jest.Mock).mockResolvedValue({ rows: [] })
 
         const request = new NextRequest("http://localhost/api/asana/me/connect", {
           method: "POST",
@@ -386,7 +386,7 @@ describe("Integrations - Workspace Scoping", () => {
         })
 
         const response = await asanaDELETE(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -394,7 +394,7 @@ describe("Integrations - Workspace Scoping", () => {
 
       it("should delete only workspace-specific connection", async () => {
         ;(userHasWorkspaceAccess as jest.Mock).mockResolvedValue(true)
-        ;(sql as jest.Mock).mockResolvedValue({ rows: [] })
+        ;(sql as unknown as jest.Mock).mockResolvedValue({ rows: [] })
 
         const request = new NextRequest(
           `http://localhost/api/asana/me/connect?workspaceId=${WORKSPACE_1}`,
@@ -436,8 +436,9 @@ describe("Integrations - Workspace Scoping", () => {
       // This would be tested in the Slack API route
       // Verifying workspace settings contain workspace-specific webhook
       const workspace = await db.workspaces.findById(WORKSPACE_1)
+      const settings = workspace!.settings as Record<string, unknown>
 
-      expect(workspace.settings.slackWebhookUrl).toBe(
+      expect(settings.slackWebhookUrl).toBe(
         "https://hooks.slack.com/services/workspace1"
       )
     })
@@ -450,8 +451,9 @@ describe("Integrations - Workspace Scoping", () => {
       })
 
       const workspace = await db.workspaces.findById(WORKSPACE_2)
+      const settings = workspace!.settings as Record<string, unknown>
 
-      expect(workspace.settings.slackWebhookUrl).toBeUndefined()
+      expect(settings.slackWebhookUrl).toBeUndefined()
       // API would fallback to auth.organization.settings?.slackWebhookUrl
     })
   })
@@ -495,7 +497,7 @@ describe("Integrations - Workspace Scoping", () => {
 
     it("should not leak Asana connections across workspaces", async () => {
       ;(userHasWorkspaceAccess as jest.Mock).mockResolvedValue(true)
-      ;(sql as jest.Mock).mockImplementation((query) => {
+      ;(sql as unknown as jest.Mock).mockImplementation((query) => {
         const queryString = query.join("")
 
         // Simulate workspace-1 has connection, workspace-2 doesn't

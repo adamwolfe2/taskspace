@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -19,7 +20,6 @@ import {
   Shield,
   Clock,
   AlertCircle,
-  Star,
   ChevronRight,
   Gauge,
   ClipboardCheck,
@@ -121,30 +121,19 @@ export default function OperationsPage() {
               </div>
 
               <div className="flex items-center gap-4">
-                <Button size="lg" className="bg-slate-900 hover:bg-slate-800 text-white h-12 px-8">
-                  Get Started Free
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-                <Button size="lg" variant="outline" className="h-12 px-8">
-                  Watch Demo
-                </Button>
+                <Link href="/app?page=register">
+                  <Button size="lg" className="bg-slate-900 hover:bg-slate-800 text-white h-12 px-8">
+                    Get Started Free
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+                <Link href="/features">
+                  <Button size="lg" variant="outline" className="h-12 px-8">
+                    Explore Features
+                  </Button>
+                </Link>
               </div>
 
-              <div className="flex items-center gap-6 pt-4">
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white" />
-                  ))}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  <span className="ml-2 text-sm text-slate-600">Loved by 10,000+ operations teams</span>
-                </div>
-              </div>
             </motion.div>
 
             {/* Right Column - Layered Screenshots */}
@@ -258,19 +247,6 @@ export default function OperationsPage() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-12 border-y border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-slate-500 mb-8">
-            TRUSTED BY OPERATIONS LEADERS AT
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center opacity-40">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-8 bg-slate-300 rounded" />
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* AI Agents Section */}
       <section className="py-20 lg:py-32">
@@ -311,28 +287,28 @@ export default function OperationsPage() {
                 description: "Monitors SOPs and workflows, alerts when deviations occur, suggests process improvements",
                 icon: Settings,
                 color: "from-gray-400 to-gray-600",
-                stats: "Reduced errors by 42%"
+                stats: "SOP compliance tracking"
               },
               {
                 name: "Resource Agent",
                 description: "Tracks capacity and utilization, predicts bottlenecks, optimizes allocation",
                 icon: Users,
                 color: "from-gray-400 to-gray-600",
-                stats: "15% efficiency gain"
+                stats: "Capacity planning"
               },
               {
                 name: "Quality Agent",
                 description: "Analyzes quality metrics, flags trends early, recommends corrective actions",
                 icon: Shield,
                 color: "from-gray-400 to-gray-600",
-                stats: "99.2% quality score"
+                stats: "Quality monitoring"
               },
               {
                 name: "Efficiency Agent",
                 description: "Identifies waste and delays, suggests automation opportunities, tracks improvements",
                 icon: Zap,
                 color: "from-gray-400 to-gray-600",
-                stats: "23hrs saved per week"
+                stats: "Workflow optimization"
               }
             ].map((agent, _index) => (
               <motion.div
@@ -359,10 +335,10 @@ export default function OperationsPage() {
                   </div>
 
                   <div className="pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <a href="#" className="text-sm font-medium text-black hover:text-gray-700 flex items-center gap-1">
+                    <span className="text-sm font-medium text-black hover:text-gray-700 flex items-center gap-1 cursor-pointer">
                       Learn more
                       <ChevronRight className="w-3 h-3" />
-                    </a>
+                    </span>
                   </div>
                 </div>
 
@@ -498,10 +474,12 @@ export default function OperationsPage() {
                 ))}
               </div>
 
-              <Button className="bg-slate-900 hover:bg-slate-800 mt-6">
-                Explore Process Docs
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <Link href="/app?page=register">
+                <Button className="bg-slate-900 hover:bg-slate-800 mt-6">
+                  Explore Process Docs
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
             </motion.div>
 
             <motion.div
@@ -694,10 +672,12 @@ export default function OperationsPage() {
                 ))}
               </div>
 
-              <Button className="bg-slate-900 hover:bg-slate-800 mt-6">
-                Manage Resources
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <Link href="/app?page=register">
+                <Button className="bg-slate-900 hover:bg-slate-800 mt-6">
+                  Manage Resources
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
             </motion.div>
           </div>
         </div>
@@ -758,10 +738,12 @@ export default function OperationsPage() {
                 ))}
               </div>
 
-              <Button className="bg-slate-900 hover:bg-slate-800 mt-6">
-                View Metrics
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <Link href="/app?page=register">
+                <Button className="bg-slate-900 hover:bg-slate-800 mt-6">
+                  View Metrics
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
             </motion.div>
 
             <motion.div
@@ -824,131 +806,7 @@ export default function OperationsPage() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="text-center mb-16"
-          >
-            <motion.h2 variants={fadeInUp} className="text-4xl lg:text-5xl font-bold text-white mb-6">
-              Operations teams love
-              <br />
-              <span className="text-black">
-                measurable results
-              </span>
-            </motion.h2>
-          </motion.div>
 
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid md:grid-cols-4 gap-8"
-          >
-            {[
-              { value: "42%", label: "Reduction in process errors" },
-              { value: "23hrs", label: "Saved per week per team" },
-              { value: "99.2%", label: "Average quality score" },
-              { value: "15%", label: "Efficiency improvement" }
-            ].map((stat, index) => (
-              <motion.div key={index} variants={fadeInUp} className="text-center">
-                <div className="text-5xl font-bold text-black mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-slate-400">{stat.label}</div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid md:grid-cols-3 gap-8"
-          >
-            {[
-              {
-                quote: "We reduced process errors by 42% in the first quarter. The AI catches issues before they become problems.",
-                author: "Michael Rodriguez",
-                role: "VP of Operations",
-                company: "TechFlow Manufacturing"
-              },
-              {
-                quote: "Finally, operations metrics that people actually look at. Everything flows into our scorecard automatically.",
-                author: "Lisa Chang",
-                role: "Director of Operations",
-                company: "Precision Parts Co"
-              },
-              {
-                quote: "The SOP library saved us. New team members are productive in days instead of weeks.",
-                author: "David Okonkwo",
-                role: "Operations Manager",
-                company: "LogisticsHub"
-              }
-            ].map((testimonial, index) => (
-              <motion.div
-                key={index}
-                variants={fadeInUp}
-                className="bg-slate-800 rounded-2xl p-8 border border-slate-700"
-              >
-                <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-slate-300 mb-6 leading-relaxed">"{testimonial.quote}"</p>
-                <div>
-                  <div className="font-semibold text-white">{testimonial.author}</div>
-                  <div className="text-sm text-slate-400">{testimonial.role}</div>
-                  <div className="text-sm text-slate-500">{testimonial.company}</div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-black">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="space-y-8"
-          >
-            <h2 className="text-5xl lg:text-6xl font-bold text-white">
-              Ready for flawless operations?
-            </h2>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              Join 10,000+ operations teams running more efficiently with Taskspace. Free forever for up to 10 users.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 h-14 px-8 text-lg">
-                Get Started Free
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 h-14 px-8 text-lg">
-                Schedule Demo
-              </Button>
-            </div>
-            <p className="text-white/80 text-sm">
-              No credit card required • Free forever • 2 minute setup
-            </p>
-          </motion.div>
-        </div>
-      </section>
     </div>
     </PageTransition>
   )

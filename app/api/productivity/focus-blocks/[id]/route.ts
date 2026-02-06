@@ -76,6 +76,14 @@ export const PUT = withAuth(async (request, auth, context?) => {
       )
     }
 
+    // Verify user owns this focus block
+    if (existingBlock.userId !== auth.user.id) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "You can only update your own focus blocks" },
+        { status: 403 }
+      )
+    }
+
     const updates: Partial<FocusBlock> = {}
     if (body.startTime) updates.startTime = body.startTime
     if (body.endTime) updates.endTime = body.endTime
@@ -137,6 +145,14 @@ export const DELETE = withAuth(async (request, auth, context?) => {
     if (existingBlock.organizationId !== auth.organization.id) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Unauthorized" },
+        { status: 403 }
+      )
+    }
+
+    // Verify user owns this focus block
+    if (existingBlock.userId !== auth.user.id) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "You can only delete your own focus blocks" },
         { status: 403 }
       )
     }

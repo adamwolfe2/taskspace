@@ -323,17 +323,17 @@ export default function TeamManagementPage() {
                 className="flex flex-wrap gap-4"
               >
                 <Link
-                  href="/register"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
+                  href="/app?page=register"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-semibold rounded-xl shadow-lg hover:bg-gray-900 transition-all"
                 >
                   Try It Free
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link
-                  href="/demo"
+                  href="/features"
                   className="inline-flex items-center gap-2 px-6 py-3 text-slate-700 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition-colors font-medium"
                 >
-                  Watch Demo
+                  Explore Features
                 </Link>
               </motion.div>
             </motion.div>
@@ -529,8 +529,8 @@ export default function TeamManagementPage() {
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
               <Link
-                href="/register"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gray-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
+                href="/app?page=register"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-black text-white font-semibold rounded-xl shadow-lg hover:bg-gray-900 transition-all"
               >
                 Get Started Free
                 <ArrowRight className="w-5 h-5" />

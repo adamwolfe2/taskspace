@@ -96,8 +96,8 @@ export const DELETE = withAuth(async (request, auth) => {
       })
     }
 
-    // Delete specific subscription
-    const deleted = await db.pushSubscriptions.delete(endpoint)
+    // Delete specific subscription (scoped to current user)
+    const deleted = await db.pushSubscriptions.delete(endpoint, auth.user.id)
 
     if (!deleted) {
       return NextResponse.json<ApiResponse<null>>(

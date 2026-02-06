@@ -25,6 +25,8 @@ import { CalendarPage } from "@/components/pages/calendar-page"
 import { ManagerDashboardPage } from "@/components/pages/manager-dashboard-page"
 import { ScorecardPage } from "@/components/pages/scorecard-page"
 import { OrgChartPage } from "@/components/pages/org-chart-page"
+import { IdsBoardPage } from "@/components/pages/ids-board-page"
+import { NotesPage } from "@/components/pages/notes-page"
 import { SetupOrganizationPage } from "@/components/pages/setup-organization-page"
 import { InvitedUserWelcome } from "@/components/onboarding/invited-user-welcome"
 import { BrandThemeProvider } from "@/lib/contexts/brand-theme-context"
@@ -258,6 +260,10 @@ function AppContent() {
         return <SettingsPage />
       case "org-chart":
         return <OrgChartPage />
+      case "ids-board":
+        return <IdsBoardPage />
+      case "notes":
+        return <NotesPage />
       default:
         return <DashboardPage {...dashboardProps} />
     }

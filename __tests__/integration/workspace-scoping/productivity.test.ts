@@ -37,8 +37,9 @@ jest.mock("@/lib/db", () => ({
       create: jest.fn(),
     },
     dailyEnergy: {
-      findByUserId: jest.fn(),
-      create: jest.fn(),
+      findByUserAndDate: jest.fn(),
+      findByUserDateRange: jest.fn(),
+      upsert: jest.fn(),
     },
     eodReports: {
       findByUserId: jest.fn(),
@@ -80,7 +81,7 @@ describe("Productivity Features - Workspace Scoping", () => {
       it("should require workspaceId parameter", async () => {
         const request = new NextRequest("http://localhost/api/productivity/focus-blocks")
         const response = await focusBlocksGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -93,7 +94,7 @@ describe("Productivity Features - Workspace Scoping", () => {
           `http://localhost/api/productivity/focus-blocks?workspaceId=${WORKSPACE_1}`
         )
         const response = await focusBlocksGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -111,7 +112,7 @@ describe("Productivity Features - Workspace Scoping", () => {
           `http://localhost/api/productivity/focus-blocks?workspaceId=${WORKSPACE_1}`
         )
         const response = await focusBlocksGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.focusBlocks).toHaveLength(2)
@@ -146,7 +147,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         })
 
         const response = await focusBlocksPOST(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("workspaceId is required")
@@ -166,7 +167,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         })
 
         const response = await focusBlocksPOST(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -191,7 +192,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         })
 
         const response = await focusBlocksPOST(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(db.focusBlocks.create).toHaveBeenCalledWith(
@@ -207,7 +208,7 @@ describe("Productivity Features - Workspace Scoping", () => {
     it("should require workspaceId parameter", async () => {
       const request = new NextRequest("http://localhost/api/productivity/energy")
       const response = await energyGET(request)
-      const _data = await response.json()
+      const data = await response.json()
 
       expect(response.status).toBe(400)
       expect(data.error).toContain("workspaceId is required")
@@ -215,7 +216,7 @@ describe("Productivity Features - Workspace Scoping", () => {
 
     it("should filter energy data by workspace", async () => {
       ;(userHasWorkspaceAccess as jest.Mock).mockResolvedValue(true)
-      ;(db.dailyEnergy.findByUserId as jest.Mock).mockResolvedValue([
+      ;(db.dailyEnergy.findByUserDateRange as jest.Mock).mockResolvedValue([
         { id: "e-1", workspaceId: WORKSPACE_1, energyLevel: 8 },
         { id: "e-2", workspaceId: WORKSPACE_2, energyLevel: 6 },
         { id: "e-3", workspaceId: WORKSPACE_1, energyLevel: 7 },
@@ -225,7 +226,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         `http://localhost/api/productivity/energy?workspaceId=${WORKSPACE_1}`
       )
       const response = await energyGET(request)
-      const _data = await response.json()
+      const data = await response.json()
 
       expect(response.status).toBe(200)
       expect(data.data.energyData).toHaveLength(2)
@@ -245,10 +246,10 @@ describe("Productivity Features - Workspace Scoping", () => {
       })
 
       const response = await energyPOST(request)
-      const _data = await response.json()
+      const data = await response.json()
 
       expect(response.status).toBe(403)
-      expect(db.dailyEnergy.create).not.toHaveBeenCalled()
+      expect(db.dailyEnergy.upsert).not.toHaveBeenCalled()
     })
   })
 
@@ -256,7 +257,7 @@ describe("Productivity Features - Workspace Scoping", () => {
     it("should require workspaceId parameter", async () => {
       const request = new NextRequest("http://localhost/api/productivity/streak")
       const response = await streakGET(request)
-      const _data = await response.json()
+      const data = await response.json()
 
       expect(response.status).toBe(400)
       expect(data.error).toContain("workspaceId is required")
@@ -277,7 +278,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         `http://localhost/api/productivity/streak?workspaceId=${WORKSPACE_1}`
       )
       const response = await streakGET(request)
-      const _data = await response.json()
+      const data = await response.json()
 
       expect(response.status).toBe(200)
       // Streak calculation should only use WORKSPACE_1 reports (r-1, r-3, r-4)
@@ -289,7 +290,7 @@ describe("Productivity Features - Workspace Scoping", () => {
     it("should require workspaceId parameter", async () => {
       const request = new NextRequest("http://localhost/api/productivity/focus-score")
       const response = await focusScoreGET(request)
-      const _data = await response.json()
+      const data = await response.json()
 
       expect(response.status).toBe(400)
       expect(data.error).toContain("workspaceId is required")
@@ -316,7 +317,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         `http://localhost/api/productivity/focus-score?workspaceId=${WORKSPACE_1}`
       )
       const response = await focusScoreGET(request)
-      const _data = await response.json()
+      const data = await response.json()
 
       expect(response.status).toBe(200)
       // Score calculation should only use WORKSPACE_1 data

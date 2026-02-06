@@ -23,6 +23,9 @@ import {
   BarChart3,
   Sparkles,
   Users,
+  Search,
+  FileText,
+  Network,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -43,6 +46,9 @@ export function MobileNav() {
   // Secondary nav items (in "More" menu)
   const secondaryItems: { id: PageType; label: string; icon: typeof LayoutDashboard; adminOnly?: boolean }[] = [
     { id: "history", label: "EOD History", icon: History },
+    { id: "ids-board", label: "IDS Board", icon: Search },
+    { id: "notes", label: "Notes", icon: FileText },
+    { id: "org-chart", label: "Org Chart", icon: Network },
     { id: "settings", label: "Settings", icon: Settings },
     { id: "admin", label: "Team Dashboard", icon: Shield, adminOnly: true },
     { id: "admin-team", label: "Team Members", icon: Users, adminOnly: true },

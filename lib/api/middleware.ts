@@ -40,6 +40,7 @@ import { getAuthContext, isAdmin, isOwner, type AuthContext } from "@/lib/auth/m
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { handleError } from "@/lib/api/errors"
 import type { ApiResponse } from "@/lib/types"
+import { logger, logError } from "@/lib/logger"
 
 /**
  * Type for authenticated API route handler
@@ -409,7 +410,7 @@ export async function verifyWorkspaceOrgBoundary(
     }
     return workspace.organizationId === organizationId
   } catch (error) {
-    console.error("Error verifying workspace org boundary:", error)
+    logError(logger, "Error verifying workspace org boundary", error)
     return false
   }
 }

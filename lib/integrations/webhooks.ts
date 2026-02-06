@@ -3,6 +3,8 @@
  * Allows sending notifications to external systems via webhooks
  */
 
+import { logger, logError } from "@/lib/logger"
+
 export interface WebhookPayload {
   event: string
   timestamp: string
@@ -97,13 +99,13 @@ export async function sendWebhook(
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(`Webhook delivery failed: ${response.status} - ${errorText}`)
+      logger.error({ status: response.status, errorText }, "Webhook delivery failed")
       return { success: false, error: `HTTP ${response.status}: ${errorText}` }
     }
 
     return { success: true }
   } catch (error) {
-    console.error("Webhook delivery error:", error)
+    logError(logger, "Webhook delivery error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }

@@ -4,7 +4,7 @@
  * Connect via Claude Desktop:
  * Settings → Connectors → Add custom connector
  * - Name: Taskspace
- * - URL: https://your-align-app.vercel.app/api/mcp
+ * - URL: https://trytaskspace.com/api/mcp
  * - OAuth Client Secret: Your Taskspace API key (aims_...)
  *
  * No local installation required!

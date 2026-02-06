@@ -844,3 +844,47 @@ export type UpdateGoogleCalendarSettingsInput = z.infer<typeof updateGoogleCalen
 export type AddWorkspaceMemberInput = z.infer<typeof addWorkspaceMemberSchema>
 export type UpdateWorkspaceMemberRoleInput = z.infer<typeof updateWorkspaceMemberRoleSchema>
 export type AssignManagerInput = z.infer<typeof assignManagerSchema>
+
+// ============================================
+// IDS BOARD SCHEMAS
+// ============================================
+
+export const idsBoardColumnSchema = z.enum(["identify", "discuss", "solve"])
+export const idsBoardItemTypeSchema = z.enum(["issue", "rock", "custom"])
+
+export const createIdsBoardItemSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  title: z.string().min(1, "Title is required").max(500).trim(),
+  description: z.string().max(5000).optional(),
+  columnName: idsBoardColumnSchema,
+  itemType: idsBoardItemTypeSchema.default("custom"),
+  linkedId: z.string().optional(),
+  assignedTo: z.string().optional(),
+})
+
+export const updateIdsBoardItemSchema = z.object({
+  title: z.string().min(1).max(500).trim().optional(),
+  description: z.string().max(5000).nullable().optional(),
+  assignedTo: z.string().nullable().optional(),
+  itemType: idsBoardItemTypeSchema.optional(),
+})
+
+export const moveIdsBoardItemSchema = z.object({
+  columnName: idsBoardColumnSchema,
+  orderIndex: z.number().int().min(0),
+})
+
+export type CreateIdsBoardItemInput = z.infer<typeof createIdsBoardItemSchema>
+export type UpdateIdsBoardItemInput = z.infer<typeof updateIdsBoardItemSchema>
+export type MoveIdsBoardItemInput = z.infer<typeof moveIdsBoardItemSchema>
+
+// ============================================
+// WORKSPACE NOTES SCHEMAS
+// ============================================
+
+export const upsertWorkspaceNoteSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  content: z.string().max(500000, "Content too large"), // ~500KB limit for rich text
+})
+
+export type UpsertWorkspaceNoteInput = z.infer<typeof upsertWorkspaceNoteSchema>

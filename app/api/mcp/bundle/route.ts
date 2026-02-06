@@ -239,13 +239,13 @@ main().catch(console.error);
 // Manifest template for the MCPB bundle
 const getManifest = (orgName: string) => ({
   schema_version: "1.0",
-  name: "align-tracker",
+  name: "taskspace-tracker",
   display_name: `Taskspace${orgName ? ` - ${orgName}` : ""}`,
   description: "Track your team's EOD reports, manage tasks, and view quarterly rocks directly from Claude Desktop.",
   version: "2.0.0",
   author: {
     name: "Taskspace",
-    url: "https://align.app",
+    url: "https://trytaskspace.com",
   },
   server: {
     type: "node",
@@ -266,7 +266,7 @@ const getManifest = (orgName: string) => ({
     { name: "generate_daily_digest", description: "Generate daily summary" },
   ],
   permissions: {
-    network: ["https://align.app"],
+    network: ["https://trytaskspace.com"],
   },
 })
 
@@ -309,7 +309,7 @@ export const GET = withAuth(async (request, auth) => {
     const orgName = org?.name || ""
 
     // Build the API URL
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://align.app"
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"
 
     // Create the ZIP bundle
     const zip = new JSZip()

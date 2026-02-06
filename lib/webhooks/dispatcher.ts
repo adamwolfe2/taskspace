@@ -10,6 +10,7 @@
 
 import crypto from "crypto"
 import { sql } from "../db/sql"
+import { logger } from "@/lib/logger"
 
 // ============================================
 // TYPES
@@ -277,7 +278,7 @@ class WebhookDispatcher {
         WHERE id = ${webhookId}
       `
 
-      console.warn(`Webhook ${webhookId} auto-disabled after 10 consecutive failures`)
+      logger.warn({ webhookId }, "Webhook auto-disabled after 10 consecutive failures")
     }
   }
 

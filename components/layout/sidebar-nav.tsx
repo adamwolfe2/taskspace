@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
-import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle, Search, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
@@ -37,6 +37,8 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     { id: "tasks", label: "Tasks", icon: CheckSquare, requiredFeature: "core.tasks" },
     { id: "manager", label: "My Team", icon: UsersRound, requiredFeature: "advanced.managerDashboard" },
     { id: "org-chart", label: "Org Chart", icon: Network, requiredFeature: "core.orgChart" },
+    { id: "ids-board", label: "IDS Board", icon: Search, requiredFeature: "core.ids" },
+    { id: "notes", label: "Notes", icon: FileText, requiredFeature: "core.notes" },
   ]
 
   const adminItems: {

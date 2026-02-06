@@ -3,9 +3,9 @@ import type { Metadata } from "next"
 const siteConfig = {
   name: "Taskspace",
   description: "Transform how your team tracks progress and achieves goals with AI-powered accountability tools.",
-  url: "https://align.app",
-  ogImage: "https://align.app/og-image.png",
-  twitterHandle: "@alignapp",
+  url: "https://trytaskspace.com",
+  ogImage: "https://trytaskspace.com/og-image.png",
+  twitterHandle: "@taskspace",
 }
 
 export function createMetadata({
@@ -152,11 +152,6 @@ export const pageMetadata = {
     title: "Contact Us",
     description: "Get in touch with the Taskspace team. We're here to help with questions, demos, and enterprise inquiries.",
     path: "/contact",
-  }),
-  resources: createMetadata({
-    title: "Resources",
-    description: "Guides, templates, videos, and case studies to help you get the most out of Taskspace and build a world-class team.",
-    path: "/resources",
   }),
   help: createMetadata({
     title: "Help Center",

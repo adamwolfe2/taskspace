@@ -421,30 +421,30 @@ export default function PricingPage() {
       </div>
 
       {/* Bottom CTA Section */}
-      <div className="bg-black py-24">
+      <div className="bg-gray-50 py-24">
         <div className="mx-auto max-w-4xl px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-black sm:text-4xl">
             Ready to run your teams in true parallel?
           </h2>
-          <p className="mt-4 text-lg text-gray-400">
+          <p className="mt-4 text-lg text-gray-600">
             Start your 14-day free trial today. No credit card required.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/app?page=register"
-              className="rounded-lg bg-white px-8 py-3.5 text-sm font-semibold text-black shadow-sm hover:bg-gray-100 transition-colors"
+              className="rounded-lg bg-black px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-900 transition-colors"
             >
               Start Free Trial
             </Link>
             <Link
               href="/contact"
-              className="rounded-lg border border-gray-600 bg-transparent px-8 py-3.5 text-sm font-semibold text-white hover:bg-gray-900 transition-colors"
+              className="rounded-lg border border-gray-300 bg-white px-8 py-3.5 text-sm font-semibold text-black hover:bg-gray-100 transition-colors"
             >
               Contact Sales
             </Link>
           </div>
           <p className="text-gray-500 mt-6 text-sm">
-            Join 500+ teams already running on EOS with Taskspace
+            Free forever plan -- No credit card required -- Cancel anytime
           </p>
         </div>
       </div>

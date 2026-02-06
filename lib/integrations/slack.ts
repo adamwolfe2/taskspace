@@ -5,6 +5,7 @@
  */
 
 import { createHmac, timingSafeEqual } from "crypto"
+import { logger, logError } from "@/lib/logger"
 
 // ============================================
 // SLACK WEBHOOK SIGNATURE VERIFICATION
@@ -38,7 +39,7 @@ export function verifySlackSignature(
   const fiveMinutesAgo = nowSeconds - 60 * 5
 
   if (timestampSeconds < fiveMinutesAgo) {
-    console.warn("Slack webhook: Request timestamp too old, possible replay attack")
+    logger.warn({}, "Slack webhook: Request timestamp too old, possible replay attack")
     return false
   }
 
@@ -160,13 +161,13 @@ export async function sendSlackMessage(
     })
 
     if (!response.ok) {
-      console.error("Slack webhook error:", response.status, await response.text())
+      logger.error({ status: response.status, body: await response.text() }, "Slack webhook error")
       return false
     }
 
     return true
   } catch (error) {
-    console.error("Slack webhook error:", error)
+    logError(logger, "Slack webhook error", error)
     return false
   }
 }

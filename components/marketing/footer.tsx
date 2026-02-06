@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Twitter, Linkedin, Instagram, Youtube } from "lucide-react"
 
 export function MarketingFooter() {
   const currentYear = new Date().getFullYear()
@@ -26,20 +25,6 @@ export function MarketingFooter() {
             <p className="text-sm text-gray-600 mb-4">
               The all-in-one EOS platform for teams running on the Entrepreneurial Operating System.
             </p>
-            <div className="flex items-center gap-4">
-              <a href="#" className="text-gray-600 hover:text-black transition-colors">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-600 hover:text-black transition-colors">
-                <Linkedin className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-600 hover:text-black transition-colors">
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-600 hover:text-black transition-colors">
-                <Youtube className="w-5 h-5" />
-              </a>
-            </div>
             <div className="mt-6">
               <div className="flex items-center gap-2 text-sm">
                 <div className="w-2 h-2 rounded-full bg-green-500" />
@@ -94,11 +79,6 @@ export function MarketingFooter() {
                   Pricing
                 </Link>
               </li>
-              <li>
-                <Link href="/templates" className="text-sm text-gray-600 hover:text-black transition-colors">
-                  Templates
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -106,11 +86,6 @@ export function MarketingFooter() {
           <div>
             <h3 className="text-sm font-semibold text-black mb-4">Resources</h3>
             <ul className="space-y-3">
-              <li>
-                <Link href="/resources" className="text-sm text-gray-600 hover:text-black transition-colors">
-                  Blog
-                </Link>
-              </li>
               <li>
                 <Link href="/help" className="text-sm text-gray-600 hover:text-black transition-colors">
                   Documentation
@@ -142,16 +117,6 @@ export function MarketingFooter() {
                 <Link href="/contact" className="text-sm text-gray-600 hover:text-black transition-colors">
                   Support
                 </Link>
-              </li>
-              <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-black transition-colors">
-                  X (Twitter)
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-sm text-gray-600 hover:text-black transition-colors">
-                  LinkedIn
-                </a>
               </li>
             </ul>
           </div>

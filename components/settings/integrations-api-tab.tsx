@@ -375,7 +375,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
                     </p>
                     <p className="text-sm text-amber-700 mt-2">Add this environment variable in Vercel:</p>
                     <div className="mt-2 p-2 bg-white rounded border border-amber-300 font-mono text-xs">
-                      NEXT_PUBLIC_APP_URL=https://eod.aimanagingservices.com
+                      NEXT_PUBLIC_APP_URL=https://trytaskspace.com
                     </div>
                     <p className="text-xs text-amber-600 mt-2">
                       After adding the variable, redeploy your app for changes to take effect.

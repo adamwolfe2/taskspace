@@ -79,7 +79,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
         const request = new NextRequest("http://localhost/api/task-templates")
         const response = await templatesGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data).toHaveLength(3)
@@ -97,7 +97,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
           `http://localhost/api/task-templates?workspaceId=${WORKSPACE_1}`
         )
         const response = await templatesGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data).toHaveLength(2) // Org-wide + WS1
@@ -114,7 +114,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
           `http://localhost/api/task-templates?workspaceId=${WORKSPACE_1}`
         )
         const response = await templatesGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -153,7 +153,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await templatesPOST(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(db.taskTemplates.create).toHaveBeenCalledWith(
@@ -181,7 +181,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await templatesPOST(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -205,7 +205,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await templatesPOST(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(403)
         expect(db.taskTemplates.create).not.toHaveBeenCalled()
@@ -227,7 +227,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await templatesDELETE(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(403)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -258,7 +258,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
   describe("Webhooks", () => {
     describe("GET /api/webhooks", () => {
       it("should return all org webhooks when no workspaceId provided", async () => {
-        ;(sql as jest.Mock).mockResolvedValue({
+        ;(sql as unknown as jest.Mock).mockResolvedValue({
           rows: [
             { id: "wh-1", name: "Org Webhook", workspace_id: null },
             { id: "wh-2", name: "WS1 Webhook", workspace_id: WORKSPACE_1 },
@@ -268,14 +268,14 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
         const request = new NextRequest("http://localhost/api/webhooks")
         const response = await webhooksGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.webhooks).toHaveLength(3)
       })
 
       it("should return org-wide + workspace-specific webhooks when workspaceId provided", async () => {
-        ;(sql as jest.Mock).mockResolvedValue({
+        ;(sql as unknown as jest.Mock).mockResolvedValue({
           rows: [
             { id: "wh-1", name: "Org Webhook", workspace_id: null, secret: "sec1" },
             { id: "wh-2", name: "WS1 Webhook", workspace_id: WORKSPACE_1, secret: "sec2" },
@@ -284,7 +284,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
         const request = new NextRequest(`http://localhost/api/webhooks?workspaceId=${WORKSPACE_1}`)
         const response = await webhooksGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.webhooks).toHaveLength(2)
@@ -301,7 +301,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
       })
 
       it("should mask secrets in response", async () => {
-        ;(sql as jest.Mock).mockResolvedValue({
+        ;(sql as unknown as jest.Mock).mockResolvedValue({
           rows: [
             {
               id: "wh-1",
@@ -314,7 +314,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
         const request = new NextRequest("http://localhost/api/webhooks")
         const response = await webhooksGET(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.webhooks[0].secret).not.toBe("whsec_1234567890abcdef1234567890abcdef")
@@ -324,7 +324,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
     describe("POST /api/webhooks", () => {
       it("should create org-wide webhook when workspaceId is not provided", async () => {
-        ;(sql as jest.Mock).mockResolvedValue({ rows: [{ count: 5 }] })
+        ;(sql as unknown as jest.Mock).mockResolvedValue({ rows: [{ count: 5 }] })
 
         const request = new NextRequest("http://localhost/api/webhooks", {
           method: "POST",
@@ -337,7 +337,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await webhooksPOST(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.webhook.scope).toBe("organization")
@@ -354,7 +354,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
       })
 
       it("should create workspace-specific webhook when workspaceId is provided", async () => {
-        ;(sql as jest.Mock).mockResolvedValue({ rows: [{ count: 5 }] })
+        ;(sql as unknown as jest.Mock).mockResolvedValue({ rows: [{ count: 5 }] })
 
         const request = new NextRequest("http://localhost/api/webhooks", {
           method: "POST",
@@ -368,7 +368,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await webhooksPOST(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(200)
         expect(data.data.webhook.scope).toBe("workspace")
@@ -385,7 +385,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
       })
 
       it("should enforce webhook limit per organization", async () => {
-        ;(sql as jest.Mock).mockResolvedValue({ rows: [{ count: 10 }] })
+        ;(sql as unknown as jest.Mock).mockResolvedValue({ rows: [{ count: 10 }] })
 
         const request = new NextRequest("http://localhost/api/webhooks", {
           method: "POST",
@@ -397,7 +397,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await webhooksPOST(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(400)
         expect(data.error).toContain("Maximum webhook limit")
@@ -406,7 +406,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
     describe("PATCH /api/webhooks", () => {
       it("should validate workspace access for workspace-specific webhooks", async () => {
-        ;(sql as jest.Mock).mockResolvedValueOnce({
+        ;(sql as unknown as jest.Mock).mockResolvedValueOnce({
           rows: [{ id: "wh-1", secret: "sec-1", workspace_id: WORKSPACE_1 }],
         })
         ;(isAdmin as jest.Mock).mockReturnValue(false)
@@ -424,13 +424,13 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await webhooksPATCH(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(403)
       })
 
       it("should allow updating org-wide webhooks without workspace validation", async () => {
-        ;(sql as jest.Mock)
+        ;(sql as unknown as jest.Mock)
           .mockResolvedValueOnce({
             rows: [{ id: "wh-1", secret: "sec-1", workspace_id: null }],
           })
@@ -452,7 +452,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
 
     describe("DELETE /api/webhooks", () => {
       it("should validate workspace access for workspace-specific webhooks", async () => {
-        ;(sql as jest.Mock).mockResolvedValueOnce({
+        ;(sql as unknown as jest.Mock).mockResolvedValueOnce({
           rows: [{ id: "wh-1", name: "Webhook", workspace_id: WORKSPACE_1 }],
         })
         ;(isAdmin as jest.Mock).mockReturnValue(false)
@@ -462,7 +462,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         })
 
         const response = await webhooksDELETE(request)
-        const _data = await response.json()
+        const data = await response.json()
 
         expect(response.status).toBe(403)
       })

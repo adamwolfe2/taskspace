@@ -59,7 +59,7 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    const notification = await db.notifications.markAsRead(id)
+    const notification = await db.notifications.markAsRead(id, auth.user.id)
     if (!notification) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Notification not found" },
@@ -99,7 +99,7 @@ export const DELETE = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    const deleted = await db.notifications.delete(id)
+    const deleted = await db.notifications.delete(id, auth.user.id)
     if (!deleted) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Notification not found" },

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { logger, logError } from "@/lib/logger"
 
 // GET - Fetch all MA employees for a workspace
@@ -14,6 +14,15 @@ export const GET = withAuth(async (request, auth) => {
       return NextResponse.json(
         { success: false, error: "workspaceId is required" },
         { status: 400 }
+      )
+    }
+
+    // Verify workspace belongs to user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
       )
     }
 
@@ -50,6 +59,15 @@ export const POST = withAuth(async (request, auth) => {
       return NextResponse.json(
         { success: false, error: "workspaceId is required" },
         { status: 400 }
+      )
+    }
+
+    // Verify workspace belongs to user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
       )
     }
 

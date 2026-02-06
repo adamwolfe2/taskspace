@@ -7,6 +7,7 @@
 
 import { sql } from "./sql"
 import { generateId } from "@/lib/auth/password"
+import { logger, logError } from "@/lib/logger"
 
 // ============================================
 // TYPES
@@ -417,7 +418,7 @@ export async function getScorecardSummary(
     `
     return rows.map(parseSummary)
   } catch (error) {
-    console.error("Error in getScorecardSummary:", error)
+    logError(logger, "Error in getScorecardSummary", error)
     // Return empty array if tables don't exist yet
     return []
   }

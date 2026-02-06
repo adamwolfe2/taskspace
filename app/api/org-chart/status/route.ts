@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { checkAirtableConnection } from "@/lib/org-chart/airtable"
+import { withAuth } from "@/lib/api/middleware"
 import { logger, logError } from "@/lib/logger"
 
-export async function GET() {
+export const GET = withAuth(async (request, auth) => {
   try {
     // Check database for employees (primary source)
     let databaseConnected = false
@@ -48,4 +49,4 @@ export async function GET() {
       message: "Connection check failed",
     })
   }
-}
+})

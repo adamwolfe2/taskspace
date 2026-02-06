@@ -316,17 +316,17 @@ export default function AnalyticsPage() {
                 className="flex flex-wrap gap-4"
               >
                 <Link
-                  href="/register"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
+                  href="/app?page=register"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-semibold rounded-xl shadow-lg hover:bg-gray-900 transition-all"
                 >
                   Try It Free
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link
-                  href="/demo"
+                  href="/features"
                   className="inline-flex items-center gap-2 px-6 py-3 text-slate-700 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition-colors font-medium"
                 >
-                  Watch Demo
+                  Explore Features
                 </Link>
               </motion.div>
             </motion.div>
@@ -405,7 +405,7 @@ export default function AnalyticsPage() {
       </section>
 
       {/* AI Insights Section */}
-      <section className="py-20 bg-slate-900">
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -416,20 +416,20 @@ export default function AnalyticsPage() {
             >
               <motion.div
                 variants={fadeInUp}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-500/10 border border-purple-500/20 text-gray-400 text-sm font-medium mb-6"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 border border-gray-200 text-gray-700 text-sm font-medium mb-6"
               >
                 <Zap className="w-4 h-4" />
                 AI-Powered Insights
               </motion.div>
               <motion.h2
                 variants={fadeInUp}
-                className="text-3xl sm:text-4xl font-bold text-white mb-6"
+                className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6"
               >
                 Let AI Surface What Matters
               </motion.h2>
               <motion.p
                 variants={fadeInUp}
-                className="text-lg text-slate-300 mb-8"
+                className="text-lg text-slate-600 mb-8"
               >
                 Our AI analyzes your team&apos;s data to surface important insights,
                 patterns, and recommendations you might otherwise miss.
@@ -446,10 +446,10 @@ export default function AnalyticsPage() {
                     variants={fadeInUp}
                     className="flex items-center gap-3"
                   >
-                    <div className="w-6 h-6 rounded-full bg-gray-500/20 flex items-center justify-center">
-                      <CheckCircle className="w-4 h-4 text-gray-400" />
+                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-gray-700" />
                     </div>
-                    <span className="text-slate-200">{item}</span>
+                    <span className="text-slate-700">{item}</span>
                   </motion.li>
                 ))}
               </motion.ul>
@@ -469,12 +469,12 @@ export default function AnalyticsPage() {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   className={cn(
-                    "p-4 rounded-xl border",
+                    "p-4 rounded-xl border bg-white",
                     insight.type === "success"
-                      ? "bg-gray-500/10 border-emerald-500/20"
+                      ? "border-emerald-200"
                       : insight.type === "warning"
-                      ? "bg-amber-500/10 border-amber-500/20"
-                      : "bg-gray-500/10 border-blue-500/20"
+                      ? "border-amber-200"
+                      : "border-blue-200"
                   )}
                 >
                   <div className="flex items-start gap-3">
@@ -482,23 +482,23 @@ export default function AnalyticsPage() {
                       className={cn(
                         "w-8 h-8 rounded-lg flex items-center justify-center",
                         insight.type === "success"
-                          ? "bg-gray-500/20"
+                          ? "bg-emerald-100"
                           : insight.type === "warning"
-                          ? "bg-amber-500/20"
-                          : "bg-gray-500/20"
+                          ? "bg-amber-100"
+                          : "bg-blue-100"
                       )}
                     >
                       {insight.type === "success" ? (
-                        <TrendingUp className="w-4 h-4 text-gray-400" />
+                        <TrendingUp className="w-4 h-4 text-emerald-600" />
                       ) : insight.type === "warning" ? (
-                        <TrendingDown className="w-4 h-4 text-amber-400" />
+                        <TrendingDown className="w-4 h-4 text-amber-600" />
                       ) : (
-                        <Target className="w-4 h-4 text-gray-400" />
+                        <Target className="w-4 h-4 text-blue-600" />
                       )}
                     </div>
                     <div>
-                      <div className="font-medium text-white">{insight.title}</div>
-                      <div className="text-sm text-slate-400">
+                      <div className="font-medium text-slate-900">{insight.title}</div>
+                      <div className="text-sm text-slate-600">
                         {insight.description}
                       </div>
                     </div>
@@ -536,8 +536,8 @@ export default function AnalyticsPage() {
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
               <Link
-                href="/register"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gray-600 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
+                href="/app?page=register"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-black text-white font-semibold rounded-xl shadow-lg hover:bg-gray-900 transition-all"
               >
                 Get Started Free
                 <ArrowRight className="w-5 h-5" />

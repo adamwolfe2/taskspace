@@ -10,9 +10,7 @@ import {
   Megaphone,
   Calendar,
   Brain,
-  Star,
   BarChart3,
-  Rocket,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -91,16 +89,6 @@ export default function MarketingSolutionPage() {
                 </div>
               </motion.div>
 
-              <motion.div variants={fadeInUp} className="flex items-center gap-6 pt-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <span className="text-sm font-medium text-slate-600">4.9/5 on G2</span>
-                </div>
-              </motion.div>
             </motion.div>
 
             {/* Right - Layered Product Demo */}
@@ -158,29 +146,16 @@ export default function MarketingSolutionPage() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-12 bg-white border-y border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm font-semibold text-slate-500 mb-8 uppercase tracking-wider">
-            TRUSTED BY HIGH-PERFORMING MARKETING TEAMS
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-12 opacity-50 grayscale">
-            {["Amazon", "Spotify", "NVIDIA", "Wayfair"].map((logo) => (
-              <div key={logo} className="text-2xl font-bold text-slate-900">{logo}</div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* AI Agents Section */}
-      <section className="py-20 lg:py-32 bg-slate-900">
+      <section className="py-20 lg:py-32 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <Badge className="bg-black text-white mb-6">
+            <Badge className="bg-gray-100 text-gray-700 mb-6">
               <Brain className="w-4 h-4 mr-1" />
               AI AGENTS FOR MARKETING
             </Badge>
-            <h2 className="text-5xl font-bold text-white mb-4">
+            <h2 className="text-5xl font-bold text-gray-900 mb-4">
               Your marketing workflows, powered by AI
             </h2>
           </div>
@@ -214,22 +189,22 @@ export default function MarketingSolutionPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6"
+                className="bg-white border border-gray-200 rounded-2xl p-6"
               >
                 <div className={cn("w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-4", agent.color)}>
                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                     <Brain className="w-4 h-4 text-white" />
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">{agent.name}</h3>
-                <p className="text-sm text-white/70">{agent.description}</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{agent.name}</h3>
+                <p className="text-sm text-gray-600">{agent.description}</p>
               </motion.div>
             ))}
           </div>
 
           <div className="text-center mt-12">
             <Link href="/app?page=register">
-              <Button className="bg-black hover:bg-gray-900 text-white rounded-full px-8">
+              <Button className="bg-slate-900 hover:bg-slate-800 text-white rounded-full px-8">
                 Explore AI Agents
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -482,99 +457,7 @@ export default function MarketingSolutionPage() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 lg:py-32 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Marketing teams execute 2.8x faster with Taskspace
-            </h2>
-          </div>
 
-          <div className="grid md:grid-cols-4 gap-8">
-            {[
-              { value: "2.8x", label: "Faster campaign execution" },
-              { value: "90%", label: "On-time content delivery" },
-              { value: "35%", label: "More leads generated" },
-              { value: "100%", label: "Team alignment on goals" },
-            ].map((stat, i) => (
-              <div key={i} className="text-center">
-                <div className="text-5xl font-bold text-black mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-slate-600">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 lg:py-32 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Marketing leaders love Taskspace
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                quote: "We finally hit all our campaign launch dates. The content calendar integration with rocks keeps everyone on track.",
-                author: "Sarah Chen",
-                role: "VP Marketing, TechCorp",
-              },
-              {
-                quote: "The AI Campaign Agent saved our Q1 launch. It flagged missing assets 2 weeks before go-live, giving us time to fix.",
-                author: "Michael Rodriguez",
-                role: "Head of Marketing, StartupXYZ",
-              },
-              {
-                quote: "Our lead gen increased 35% after we started tracking campaigns as rocks. The accountability is unmatched.",
-                author: "Emily Watson",
-                role: "CMO, GrowthLabs",
-              },
-            ].map((testimonial, i) => (
-              <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-white/90 mb-6 leading-relaxed">"{testimonial.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-600" />
-                  <div>
-                    <div className="font-semibold text-white">{testimonial.author}</div>
-                    <div className="text-sm text-white/60">{testimonial.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-20 lg:py-32 bg-black">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Rocket className="w-20 h-20 text-white mx-auto mb-6" />
-          <h2 className="text-5xl font-bold text-white mb-6">
-            Launch better campaigns today
-          </h2>
-          <p className="text-xl text-white/90 mb-8">
-            Join thousands of marketing teams executing flawlessly
-          </p>
-          <Link href="/app?page=register">
-            <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 rounded-full px-8 h-14 text-base font-semibold">
-              Get started FREE
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-          <p className="text-white/80 mt-4 text-sm">Free forever. No credit card required.</p>
-        </div>
-      </section>
     </div>
     </PageTransition>
   )

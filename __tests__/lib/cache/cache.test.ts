@@ -16,7 +16,7 @@ describe('Cache', () => {
   let cache: Cache<string>
 
   beforeEach(() => {
-    cache = new Cache<string>({ defaultTTL: 1000, maxSize: 10 })
+    cache = new Cache<string>({ ttlSeconds: 1, maxSize: 10 })
   })
 
   afterEach(() => {
@@ -49,7 +49,8 @@ describe('Cache', () => {
 
   describe('TTL expiration', () => {
     it('should expire items after TTL', async () => {
-      const shortCache = new Cache<string>({ defaultTTL: 50 })
+      // TTL of 0.05 seconds = 50ms
+      const shortCache = new Cache<string>({ ttlSeconds: 0.05 })
       shortCache.set('expiring', 'value')
 
       expect(shortCache.get('expiring')).toBe('value')
@@ -61,8 +62,8 @@ describe('Cache', () => {
     })
 
     it('should allow custom TTL per item', async () => {
-      cache.set('long', 'value', 5000)
-      cache.set('short', 'value', 50)
+      cache.set('long', 'value', 5)
+      cache.set('short', 'value', 0.05)
 
       await new Promise((resolve) => setTimeout(resolve, 60))
 
@@ -94,7 +95,7 @@ describe('Cache', () => {
     })
 
     it('should return false for expired keys', async () => {
-      const shortCache = new Cache<string>({ defaultTTL: 50 })
+      const shortCache = new Cache<string>({ ttlSeconds: 0.05 })
       shortCache.set('expiring', 'value')
 
       await new Promise((resolve) => setTimeout(resolve, 60))
@@ -172,7 +173,7 @@ describe('Cache', () => {
     it('should use custom TTL', async () => {
       const factory = jest.fn().mockResolvedValue('value')
 
-      await cache.getOrSet('key', factory, 5000)
+      await cache.getOrSet('key', factory, 5)
 
       // Value should still be there after short wait
       await new Promise((resolve) => setTimeout(resolve, 50))
@@ -186,36 +187,36 @@ describe('CacheKeys', () => {
     expect(CacheKeys.user('user123')).toBe('user:user123')
   })
 
-  it('should generate session key', () => {
-    expect(CacheKeys.session('token123')).toBe('session:token123')
+  it('should generate userSession key', () => {
+    expect(CacheKeys.userSession('token123')).toBe('session:token123')
   })
 
-  it('should generate org key', () => {
-    expect(CacheKeys.org('org123')).toBe('org:org123')
+  it('should generate organization key', () => {
+    expect(CacheKeys.organization('org123')).toBe('org:org123')
   })
 
-  it('should generate tasks key', () => {
-    expect(CacheKeys.tasks('org123', 'user456')).toBe('tasks:org123:user456')
+  it('should generate userTasks key', () => {
+    expect(CacheKeys.userTasks('user456')).toBe('user:user456:tasks')
   })
 
-  it('should generate rocks key', () => {
-    expect(CacheKeys.rocks('org123', 'user456')).toBe('rocks:org123:user456')
+  it('should generate userRocks key', () => {
+    expect(CacheKeys.userRocks('user456')).toBe('user:user456:rocks')
   })
 
-  it('should generate eod key', () => {
-    expect(CacheKeys.eod('org123', 'user456', '2024-01-15')).toBe(
-      'eod:org123:user456:2024-01-15'
+  it('should generate userEodReports key', () => {
+    expect(CacheKeys.userEodReports('user456', '2024-01-15')).toBe(
+      'user:user456:eod:2024-01-15'
     )
   })
 
-  it('should generate orgSettings key', () => {
-    expect(CacheKeys.orgSettings('org123')).toBe('settings:org123')
+  it('should generate organizationSettings key', () => {
+    expect(CacheKeys.organizationSettings('org123')).toBe('org:org123:settings')
   })
 })
 
 describe('Cache Invalidation Helpers', () => {
   it('should invalidate user cache', () => {
-    // These are async but we're just testing they don't throw
+    // These are sync but we're just testing they don't throw
     expect(() => invalidateUserCache('user123')).not.toThrow()
   })
 

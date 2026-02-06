@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod'
+import { NextRequest } from 'next/server'
 
 // Mock NextRequest
 class MockNextRequest {
@@ -35,7 +36,7 @@ import {
   validateQuery,
   ValidationError,
   sanitizeString,
-  parsePaginationParams,
+  getPaginationParams,
 } from '@/lib/validation/middleware'
 
 describe('Validation Middleware', () => {
@@ -55,7 +56,7 @@ describe('Validation Middleware', () => {
         },
       })
 
-      const result = await validateBody(request as unknown as Request, testSchema)
+      const result = await validateBody(request as unknown as NextRequest, testSchema)
 
       expect(result).toEqual({
         name: 'John Doe',
@@ -72,7 +73,7 @@ describe('Validation Middleware', () => {
         },
       })
 
-      const result = await validateBody(request as unknown as Request, testSchema)
+      const result = await validateBody(request as unknown as NextRequest, testSchema)
 
       expect(result).toEqual({
         name: 'John Doe',
@@ -88,7 +89,7 @@ describe('Validation Middleware', () => {
         },
       })
 
-      await expect(validateBody(request as unknown as Request, testSchema)).rejects.toThrow(
+      await expect(validateBody(request as unknown as NextRequest, testSchema)).rejects.toThrow(
         ValidationError
       )
     })
@@ -100,7 +101,7 @@ describe('Validation Middleware', () => {
         },
       })
 
-      await expect(validateBody(request as unknown as Request, testSchema)).rejects.toThrow(
+      await expect(validateBody(request as unknown as NextRequest, testSchema)).rejects.toThrow(
         ValidationError
       )
     })
@@ -113,7 +114,7 @@ describe('Validation Middleware', () => {
         },
       })
 
-      await expect(validateBody(request as unknown as Request, testSchema)).rejects.toThrow(
+      await expect(validateBody(request as unknown as NextRequest, testSchema)).rejects.toThrow(
         ValidationError
       )
     })
@@ -142,46 +143,46 @@ describe('Validation Middleware', () => {
     })
   })
 
-  describe('parsePaginationParams', () => {
+  describe('getPaginationParams', () => {
     it('should parse valid pagination params', () => {
-      const searchParams = new URLSearchParams('page=2&limit=20')
-      const result = parsePaginationParams(searchParams)
+      const searchParams = new URLSearchParams('page=2&pageSize=20')
+      const result = getPaginationParams(searchParams)
 
       expect(result).toEqual({
         page: 2,
-        limit: 20,
+        pageSize: 20,
         offset: 20,
       })
     })
 
     it('should use defaults for missing params', () => {
       const searchParams = new URLSearchParams('')
-      const result = parsePaginationParams(searchParams)
+      const result = getPaginationParams(searchParams)
 
       expect(result).toEqual({
         page: 1,
-        limit: 50,
+        pageSize: 20,
         offset: 0,
       })
     })
 
-    it('should clamp limit to max value', () => {
-      const searchParams = new URLSearchParams('limit=500')
-      const result = parsePaginationParams(searchParams, { maxLimit: 100 })
+    it('should clamp pageSize to max value of 100', () => {
+      const searchParams = new URLSearchParams('pageSize=500')
+      const result = getPaginationParams(searchParams)
 
-      expect(result.limit).toBe(100)
+      expect(result.pageSize).toBe(100)
     })
 
     it('should handle invalid page numbers', () => {
       const searchParams = new URLSearchParams('page=-5')
-      const result = parsePaginationParams(searchParams)
+      const result = getPaginationParams(searchParams)
 
       expect(result.page).toBe(1)
     })
 
     it('should calculate correct offset', () => {
-      const searchParams = new URLSearchParams('page=3&limit=25')
-      const result = parsePaginationParams(searchParams)
+      const searchParams = new URLSearchParams('page=3&pageSize=25')
+      const result = getPaginationParams(searchParams)
 
       expect(result.offset).toBe(50) // (3-1) * 25
     })

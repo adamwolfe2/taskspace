@@ -567,7 +567,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 server.setRequestHandler(ListResourcesRequestSchema, async () => ({
   resources: [
     {
-      uri: "align://team/overview",
+      uri: "taskspace://team/overview",
       name: "Team Overview",
       description: "Current team status, EOD submissions, and key metrics",
       mimeType: "text/plain",
@@ -579,7 +579,7 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => ({
 server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   const { uri } = request.params
 
-  if (uri === "align://team/overview") {
+  if (uri === "taskspace://team/overview") {
     const today = new Date().toISOString().split("T")[0]
 
     const [membersResult, reportsResult, rocksResult] = await Promise.all([

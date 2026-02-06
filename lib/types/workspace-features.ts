@@ -18,6 +18,7 @@ export interface WorkspaceFeatureToggles {
     meetings: boolean
     ids: boolean
     orgChart: boolean
+    notes: boolean
   }
   productivity: {
     focusBlocks: boolean
@@ -69,6 +70,7 @@ export const DEFAULT_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     meetings: true,
     ids: true,
     orgChart: true,
+    notes: true,
   },
   productivity: {
     focusBlocks: true,
@@ -164,6 +166,13 @@ export const WORKSPACE_FEATURE_METADATA: Record<WorkspaceFeatureKey, WorkspaceFe
     description: "Visual hierarchy and team structure",
     category: "core",
     icon: "Network",
+    impact: { navigation: true, dashboard: false, api: true },
+  },
+  "core.notes": {
+    name: "Workspace Notes",
+    description: "Collaborative Notion-style notes shared across the workspace",
+    category: "core",
+    icon: "FileText",
     impact: { navigation: true, dashboard: false, api: true },
   },
 
