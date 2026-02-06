@@ -185,11 +185,11 @@ function HowItWorksSection() {
             >
               {/* Connector line between steps (desktop only) */}
               {i < steps.length - 1 && (
-                <div className="hidden md:block absolute top-12 left-[60%] w-[80%] h-px bg-gray-200" />
+                <div className="hidden md:block absolute top-6 left-[60%] w-[80%] h-px bg-gray-200" />
               )}
 
-              <div className="relative z-10 mx-auto w-24 h-24 rounded-2xl bg-black text-white flex items-center justify-center mb-6">
-                <item.icon className="w-10 h-10" />
+              <div className="relative z-10 mx-auto w-12 h-12 rounded-xl bg-black text-white flex items-center justify-center mb-4">
+                <item.icon className="w-5 h-5" />
               </div>
 
               <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-sm font-bold text-black mb-4">
@@ -279,7 +279,7 @@ function CoreFeaturesSection() {
       title: "AI Agents",
       description: "Intelligent AI assistants that automate routine tasks, analyze data, and provide insights to save time.",
       features: ["Task automation", "Data analysis", "Smart suggestions", "24/7 assistance"],
-      href: "/features/analytics"
+      href: "/features/ai-agents"
     },
     {
       icon: LineChart,
@@ -293,21 +293,21 @@ function CoreFeaturesSection() {
       title: "Vision/Traction Organizer",
       description: "Document your company vision and ensure everyone is aligned on core values, focus, and goals.",
       features: ["Vision documentation", "Core values", "10-year target", "3-year picture"],
-      href: "/features"
+      href: "/features/vto"
     },
     {
       icon: ListTodo,
       title: "To-Do List & Tasks",
       description: "Kanban-style task management integrated with your rocks and meetings. Track action items to completion.",
       features: ["Kanban boards", "Task assignments", "Due dates", "Priority management"],
-      href: "/features"
+      href: "/features/tasks"
     },
     {
       icon: MessageSquare,
       title: "Team Communication",
       description: "Built-in commenting and feedback on reports. Keep all team communication in context.",
       features: ["Inline comments", "@mentions", "Notifications", "Discussion threads"],
-      href: "/features"
+      href: "/features/communication"
     },
   ]
 
