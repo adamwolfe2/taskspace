@@ -76,8 +76,12 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     }
 
     // Filter by workspace if specified (workspace feature temporarily optional)
+    // IMPORTANT: Include reports with null workspaceId for backwards compatibility
+    // (old reports created before workspace system was fully implemented)
     if (workspaceId) {
-      reports = reports.filter((report) => report.workspaceId === workspaceId)
+      reports = reports.filter((report) =>
+        report.workspaceId === workspaceId || report.workspaceId === null
+      )
     }
 
     // Sort by date descending (already done in DB, but ensure consistency)
