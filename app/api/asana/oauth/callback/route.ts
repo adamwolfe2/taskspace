@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import crypto from "crypto"
 import { logger, logError } from "@/lib/logger"
+import { encryptToken } from "@/lib/crypto/token-encryption"
 
 /**
  * GET /api/asana/oauth/callback
@@ -117,15 +118,16 @@ export async function GET(request: NextRequest) {
 
     logger.info({ email: tokenData.data?.email }, "Asana OAuth successful for user")
 
-    // Store the tokens in the database for the user from state
-    // Note: In production, encrypt tokens before storing
+    // Encrypt tokens before storing in database
+    const encryptedAccessToken = encryptToken(tokenData.access_token)
+    const encryptedRefreshToken = encryptToken(tokenData.refresh_token || null)
     const expiresAt = new Date(Date.now() + (tokenData.expires_in || 3600) * 1000).toISOString()
 
     await sql`
       UPDATE organization_members
       SET
-        asana_pat = ${tokenData.access_token},
-        asana_refresh_token = ${tokenData.refresh_token || null},
+        asana_pat = ${encryptedAccessToken},
+        asana_refresh_token = ${encryptedRefreshToken},
         asana_token_expires_at = ${expiresAt}
       WHERE organization_id = ${stateData.orgId} AND user_id = ${stateData.userId}
     `

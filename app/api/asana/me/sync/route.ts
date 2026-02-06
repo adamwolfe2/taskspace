@@ -5,6 +5,7 @@ import { generateId } from "@/lib/auth/password"
 import { db } from "@/lib/db"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { decryptToken } from "@/lib/crypto/token-encryption"
 
 const ASANA_API_BASE = "https://app.asana.com/api/1.0"
 
@@ -77,17 +78,20 @@ export async function POST(request: NextRequest) {
 
       const member = memberRows[0]
       if (member?.asana_pat) {
-        pat = member.asana_pat
+        // Decrypt the token from database
+        pat = decryptToken(member.asana_pat)
         workspaceGid = member.asana_workspace_gid
 
-        // Get user GID from their PAT
-        const meResponse = await fetch(`${ASANA_API_BASE}/users/me`, {
-          headers: { Authorization: `Bearer ${pat}` },
-        })
+        if (pat) {
+          // Get user GID from their PAT
+          const meResponse = await fetch(`${ASANA_API_BASE}/users/me`, {
+            headers: { Authorization: `Bearer ${pat}` },
+          })
 
-        if (meResponse.ok) {
-          const meData = await meResponse.json()
-          asanaUserGid = meData.data.gid
+          if (meResponse.ok) {
+            const meData = await meResponse.json()
+            asanaUserGid = meData.data.gid
+          }
         }
       }
     }

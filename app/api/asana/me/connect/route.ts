@@ -6,6 +6,7 @@ import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { encryptToken, decryptToken } from "@/lib/crypto/token-encryption"
 
 const ASANA_API_BASE = "https://app.asana.com/api/1.0"
 
@@ -126,7 +127,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Store the PAT and workspace in the asana_connections table
+    // Encrypt the PAT before storing in database
+    const encryptedPAT = encryptToken(personalAccessToken)
+
+    // Store the encrypted PAT and workspace in the asana_connections table
     const connectionId = generateId()
     await sql`
       INSERT INTO asana_connections (
@@ -144,14 +148,14 @@ export async function POST(request: NextRequest) {
         ${auth.organization.id},
         ${aimsWorkspaceId},
         ${auth.user.id},
-        ${personalAccessToken},
+        ${encryptedPAT},
         ${selectedWorkspaceGid || null},
         true,
         NOW(),
         NOW()
       )
       ON CONFLICT (user_id, workspace_id) DO UPDATE SET
-        personal_access_token = ${personalAccessToken},
+        personal_access_token = ${encryptedPAT},
         asana_workspace_gid = ${selectedWorkspaceGid || null},
         updated_at = NOW()
     `
