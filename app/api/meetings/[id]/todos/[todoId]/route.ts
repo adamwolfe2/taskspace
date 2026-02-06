@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { db } from "@/lib/db"
@@ -9,20 +10,9 @@ import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
 // POST /api/meetings/[id]/todos/[todoId] - Convert todo to task
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; todoId: string }> }
-) {
+export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id: meetingId, todoId } = await params
+    const { id: meetingId, todoId } = await context!.params
     const { taskId } = await validateBody(request, convertTodoToTaskSchema)
 
     // Get meeting to validate workspace access
@@ -97,4 +87,4 @@ export async function POST(
       { status: 500 }
     )
   }
-}
+})

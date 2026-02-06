@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import { calculateFocusScore, calculateTrend } from "@/lib/productivity/calculations"
 import { logger, logError } from "@/lib/logger"
 import type {
@@ -34,16 +34,8 @@ interface ProductivityDashboardResponse {
 }
 
 // GET /api/productivity/dashboard - Get all productivity data for dashboard
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId") || auth.user.id
 
@@ -309,7 +301,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 function countWorkingDays(start: Date, end: Date): number {
   let count = 0

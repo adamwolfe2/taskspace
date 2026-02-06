@@ -23,6 +23,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db/sql"
 import { logger, logError } from "@/lib/logger"
+import { enforceIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
 
 interface PublicEODTask {
   description: string
@@ -88,6 +89,13 @@ export async function GET(
   { params }: { params: Promise<{ slug: string; date: string }> }
 ) {
   try {
+    // IP-based rate limiting: 60 requests per IP per 15 minutes
+    const { result: rateLimitResult, response: rateLimitResponse } = enforceIpRateLimit(
+      request,
+      { endpoint: "public-eod-daily", maxRequests: 60 }
+    )
+    if (rateLimitResponse) return rateLimitResponse
+
     const { slug, date } = await params
 
     // Validate date format (YYYY-MM-DD)
@@ -276,6 +284,12 @@ export async function GET(
     // Add cache headers for 30 second caching
     const headers = new Headers()
     headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60")
+
+    // Include rate limit headers on successful responses
+    const rlHeaders = ipRateLimitHeaders(rateLimitResult)
+    for (const [key, value] of Object.entries(rlHeaders)) {
+      headers.set(key, value)
+    }
 
     return NextResponse.json(
       { success: true, data: dailyReport },

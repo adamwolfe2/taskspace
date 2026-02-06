@@ -8,11 +8,11 @@
  */
 
 import { NextRequest } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
 import { sql } from "@/lib/db/sql"
 import { Errors, paginatedResponse, successResponse } from "@/lib/api/errors"
 import { z } from "zod"
 import { logger, logError } from "@/lib/logger"
+import { withAdmin } from "@/lib/api/middleware"
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -35,18 +35,8 @@ const auditQuerySchema = z.object({
 // GET - Query Audit Logs
 // ============================================
 
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    // Only admins and owners can view audit logs
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return Errors.insufficientPermissions("view audit logs").toResponse()
-    }
-
     // Parse query params with defaults
     const searchParams = new URL(request.url).searchParams
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10))
@@ -136,23 +126,14 @@ export async function GET(request: NextRequest) {
     logError(logger, "Audit log query error", error)
     return Errors.internal().toResponse()
   }
-}
+})
 
 // ============================================
 // Audit Log Summary Statistics
 // ============================================
 
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return Errors.insufficientPermissions("view audit statistics").toResponse()
-    }
-
     const body = await request.json()
     const { startDate, endDate } = body
 
@@ -244,4 +225,4 @@ export async function POST(request: NextRequest) {
     logError(logger, "Audit statistics error", error)
     return Errors.internal().toResponse()
   }
-}
+})

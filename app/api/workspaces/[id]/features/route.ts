@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
 import type { ApiResponse } from "@/lib/types"
 import {
@@ -39,7 +40,7 @@ interface FeatureConfigResponse {
 export const GET = withAuth(async (
   request: NextRequest,
   auth,
-  context?: { params: Promise<{ id: string }> }
+  context?: RouteContext
 ) => {
   try {
     const { id } = await context!.params
@@ -117,7 +118,7 @@ export const GET = withAuth(async (
 export const PATCH = withAuth(async (
   request: NextRequest,
   auth,
-  context?: { params: Promise<{ id: string }> }
+  context?: RouteContext
 ) => {
   try {
     const { id } = await context!.params

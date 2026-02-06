@@ -12,8 +12,9 @@
  *   - value: new metric value
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces"
 import { getScorecardData } from "@/lib/metrics"
 import { sql } from "@/lib/db/sql"
@@ -23,16 +24,8 @@ import { safeParseInt, clamp } from "@/lib/utils"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateScorecardEntrySchema } from "@/lib/validation/schemas"
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
     const url = new URL(request.url)
     const workspaceId = url.searchParams.get("workspaceId")
 
@@ -85,21 +78,13 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * PATCH /api/scorecard - Update a weekly metric entry (admin only)
  */
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
     // Only admins can edit scorecard entries
     if (!isAdmin(auth)) {
       return NextResponse.json(
@@ -207,4 +192,4 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

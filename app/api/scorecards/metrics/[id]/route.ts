@@ -6,29 +6,19 @@
  * DELETE /api/scorecards/metrics/[id] - Delete a metric (soft delete)
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
 import { getMetricById, updateMetric, deleteMetric } from "@/lib/db/scorecard"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateScorecardMetricSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
-
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const metric = await getMetricById(id)
 
     if (!metric) {
@@ -61,19 +51,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     )
   }
-}
+})
 
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const metric = await getMetricById(id)
 
     if (!metric) {
@@ -151,19 +133,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     )
   }
-}
+})
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export const DELETE = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const metric = await getMetricById(id)
 
     if (!metric) {
@@ -221,4 +195,4 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     )
   }
-}
+})

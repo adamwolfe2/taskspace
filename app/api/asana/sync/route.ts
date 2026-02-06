@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { asanaClient, AsanaTask } from "@/lib/integrations/asana"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
-import type { AsanaUserMapping, AssignedTask } from "@/lib/types"
+import type { AsanaUserMapping, AssignedTask, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
 
 interface SyncResult {
   tasksCreatedInAsana: number
@@ -14,37 +14,34 @@ interface SyncResult {
   errors: string[]
 }
 
+interface SyncStatusData {
+  enabled: boolean
+  lastSyncAt: string | null
+  projectName: string | null
+  userMappingsCount: number
+}
+
 /**
  * POST /api/asana/sync
  * Trigger a two-way sync between AIMS and Asana
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Check admin permissions
-    if (!isAdmin(auth)) {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 })
-    }
-
     const body = await request.json()
     const { direction = "both" } = body // "to_asana", "from_asana", or "both"
 
     const org = await db.organizations.findById(auth.organization.id)
     if (!org?.settings?.asanaIntegration?.enabled) {
-      return NextResponse.json(
-        { error: "Asana integration not enabled" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Asana integration not enabled" },
         { status: 400 }
       )
     }
 
     const asanaConfig = org.settings.asanaIntegration
     if (!asanaConfig.projectGid || asanaConfig.userMappings.length === 0) {
-      return NextResponse.json(
-        { error: "Asana integration not fully configured" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Asana integration not fully configured" },
         { status: 400 }
       )
     }
@@ -232,45 +229,45 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({
+    return NextResponse.json<ApiResponse<{ result: SyncResult; syncedAt: string }>>({
       success: true,
-      result,
-      syncedAt: new Date().toISOString(),
+      data: {
+        result,
+        syncedAt: new Date().toISOString(),
+      },
     })
   } catch (error) {
     logError(logger, "Asana sync error", error)
-    return NextResponse.json(
-      { error: "Failed to sync with Asana" },
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: "Failed to sync with Asana" },
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * GET /api/asana/sync
  * Get sync status and last sync info
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
     const org = await db.organizations.findById(auth.organization.id)
     const asanaConfig = org?.settings?.asanaIntegration
 
-    return NextResponse.json({
-      enabled: asanaConfig?.enabled || false,
-      lastSyncAt: asanaConfig?.lastSyncAt || null,
-      projectName: asanaConfig?.projectName || null,
-      userMappingsCount: asanaConfig?.userMappings?.length || 0,
+    return NextResponse.json<ApiResponse<SyncStatusData>>({
+      success: true,
+      data: {
+        enabled: asanaConfig?.enabled || false,
+        lastSyncAt: asanaConfig?.lastSyncAt || null,
+        projectName: asanaConfig?.projectName || null,
+        userMappingsCount: asanaConfig?.userMappings?.length || 0,
+      },
     })
   } catch (error) {
     logError(logger, "Asana sync status error", error)
-    return NextResponse.json(
-      { error: "Failed to get sync status" },
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: "Failed to get sync status" },
       { status: 500 }
     )
   }
-}
+})

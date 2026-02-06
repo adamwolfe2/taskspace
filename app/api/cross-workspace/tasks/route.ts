@@ -1,23 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { logger, logError } from "@/lib/logger"
+import { withAuth } from "@/lib/api/middleware"
+import type { ApiResponse } from "@/lib/types"
 
 // GET /api/cross-workspace/tasks - Get all cross-workspace tasks for the user
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // Get all cross-workspace tasks assigned by this user
     const tasks = await db.crossWorkspaceTasks.findByUser(auth.user.id)
 
-    return NextResponse.json({
+    return NextResponse.json<ApiResponse<{ tasks: typeof tasks; totalCount: number }>>({
       success: true,
       data: {
         tasks,
@@ -26,24 +19,16 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logError(logger, "Error fetching cross-workspace tasks", error)
-    return NextResponse.json(
+    return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to fetch cross-workspace tasks" },
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/cross-workspace/tasks - Create a cross-workspace task
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const {
       targetOrganizationId,
@@ -56,14 +41,14 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!targetOrganizationId || typeof targetOrganizationId !== "string") {
-      return NextResponse.json(
+      return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Target organization ID is required" },
         { status: 400 }
       )
     }
 
     if (!title || typeof title !== "string" || title.trim().length < 2) {
-      return NextResponse.json(
+      return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Task title is required (min 2 characters)" },
         { status: 400 }
       )
@@ -83,7 +68,7 @@ export async function POST(request: NextRequest) {
           (org.role === "owner" || org.role === "admin")
       )
       if (!hasAccessToTarget) {
-        return NextResponse.json(
+        return NextResponse.json<ApiResponse<null>>(
           { success: false, error: "You do not have access to the target organization" },
           { status: 403 }
         )
@@ -93,7 +78,7 @@ export async function POST(request: NextRequest) {
     // Get target organization
     const targetOrg = await db.organizations.findById(targetOrganizationId)
     if (!targetOrg) {
-      return NextResponse.json(
+      return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Target organization not found" },
         { status: 404 }
       )
@@ -172,7 +157,7 @@ export async function POST(request: NextRequest) {
       // Audit log might not exist yet
     }
 
-    return NextResponse.json({
+    return NextResponse.json<ApiResponse<unknown>>({
       success: true,
       data: {
         crossWorkspaceTask: {
@@ -186,9 +171,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     logError(logger, "Error creating cross-workspace task", error)
-    return NextResponse.json(
+    return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create cross-workspace task" },
       { status: 500 }
     )
   }
-}
+})

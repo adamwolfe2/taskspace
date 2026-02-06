@@ -4,8 +4,10 @@
  * POST /api/workspaces/[id]/members - Add member to workspace
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { addWorkspaceMemberSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
@@ -21,20 +23,9 @@ import { logger, logError } from "@/lib/logger"
  * POST /api/workspaces/[id]/members
  * Add a member to the workspace
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
 
     // Get workspace
     const workspace = await getWorkspaceById(id)
@@ -94,4 +85,4 @@ export async function POST(
       { status: 500 }
     )
   }
-}
+})

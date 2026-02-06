@@ -43,10 +43,12 @@ import type { ApiResponse } from "@/lib/types"
 
 /**
  * Type for authenticated API route handler
+ * context is optional - only present for dynamic routes (e.g., /api/foo/[id])
  */
 export type AuthenticatedHandler<T = unknown> = (
   request: NextRequest,
-  auth: AuthContext
+  auth: AuthContext,
+  context?: RouteContext
 ) => Promise<NextResponse<T>>
 
 /**
@@ -89,7 +91,7 @@ export function withAuth(
         )
       }
 
-      return await handler(request, auth)
+      return await handler(request, auth, context)
     } catch (error) {
       return handleError(error)
     }
@@ -127,7 +129,7 @@ export function withAdmin(
         )
       }
 
-      return await handler(request, auth)
+      return await handler(request, auth, context)
     } catch (error) {
       return handleError(error)
     }
@@ -165,7 +167,7 @@ export function withOwner(
         )
       }
 
-      return await handler(request, auth)
+      return await handler(request, auth, context)
     } catch (error) {
       return handleError(error)
     }
@@ -302,12 +304,12 @@ export function withWorkspaceParam(
  * })
  */
 export function withOptionalAuth(
-  handler: (request: NextRequest, auth: AuthContext | null) => Promise<NextResponse<ApiResponse<unknown>>>
+  handler: (request: NextRequest, auth: AuthContext | null, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>>
 ): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
     try {
       const auth = await getAuthContext(request)
-      return await handler(request, auth)
+      return await handler(request, auth, context)
     } catch (error) {
       return handleError(error)
     }

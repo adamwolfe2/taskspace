@@ -11,8 +11,8 @@
  * - icon.png (optional extension icon)
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import JSZip from "jszip"
 import { logger, logError } from "@/lib/logger"
@@ -280,17 +280,8 @@ const getIcon = () => {
   )
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    // Get authentication context
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
     // Get query parameters
     const url = new URL(request.url)
     const apiKeyId = url.searchParams.get("keyId")
@@ -365,4 +356,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

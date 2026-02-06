@@ -1,24 +1,13 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { logger, logError } from "@/lib/logger"
 
 // GET - Fetch a single MA employee by ID
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAuth(async (request, auth, context?) => {
   try {
-    // Auth check
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const employee = await db.maEmployees.findById(id)
 
     if (!employee) {
@@ -42,24 +31,12 @@ export async function GET(
       { status: 500 }
     )
   }
-}
+})
 
 // PATCH - Update an MA employee
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    // Auth check
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const body = await request.json()
 
     // Check if employee exists first
@@ -107,24 +84,12 @@ export async function PATCH(
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE - Soft delete an MA employee (set is_active = false)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAuth(async (request, auth, context?) => {
   try {
-    // Auth check
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const { searchParams } = new URL(request.url)
     const hard = searchParams.get("hard") === "true"
 
@@ -164,4 +129,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-}
+})

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { put } from "@vercel/blob"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, FileAttachment } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -25,16 +25,8 @@ const ALLOWED_TYPES = [
   "text/csv",
 ]
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const formData = await request.formData()
     const file = formData.get("file") as File | null
 
@@ -102,4 +94,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

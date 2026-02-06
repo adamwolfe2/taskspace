@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { withAdmin } from "@/lib/api/middleware"
 
 interface IntegrationStatus {
   email: {
@@ -22,23 +22,8 @@ interface IntegrationStatus {
 }
 
 // GET /api/integrations/status - Get integration status
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can view integration status" },
-        { status: 403 }
-      )
-    }
-
     // Check email configuration
     const resendApiKey = process.env.RESEND_API_KEY
     const emailFrom = process.env.EMAIL_FROM
@@ -83,4 +68,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

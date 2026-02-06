@@ -4,29 +4,18 @@
  * POST /api/rocks/[id]/checkin - Create weekly check-in
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { getRockById, createRockCheckin, getWeekStart } from "@/lib/db/rocks"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createRockCheckinSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
-
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const rock = await getRockById(id)
 
     if (!rock) {
@@ -93,4 +82,4 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     )
   }
-}
+})

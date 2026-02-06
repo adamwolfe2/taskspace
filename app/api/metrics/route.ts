@@ -6,8 +6,9 @@
  * POST /api/metrics - Create/update metric for a team member (admin only)
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import {
   getActiveMetricForUser,
@@ -17,16 +18,8 @@ import {
 } from "@/lib/metrics"
 import { logger, logError } from "@/lib/logger"
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
     const url = new URL(request.url)
     const memberId = url.searchParams.get("memberId")
     const includeHistory = url.searchParams.get("history") === "true"
@@ -133,27 +126,10 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can set metrics
-    if (!isAdmin(auth)) {
-      logger.info({ role: auth.member.role }, "Metrics API: Access denied")
-      return NextResponse.json(
-        { success: false, error: "Admin access required to set metrics" },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
     const { memberId, metricName, weeklyGoal } = body
 
@@ -202,4 +178,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

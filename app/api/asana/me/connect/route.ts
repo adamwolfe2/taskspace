@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { sql } from "@/lib/db/sql"
 import { db } from "@/lib/db"
@@ -7,6 +6,7 @@ import { generateId } from "@/lib/auth/password"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { encryptToken, decryptToken } from "@/lib/crypto/token-encryption"
+import { withAuth } from "@/lib/api/middleware"
 
 const ASANA_API_BASE = "https://app.asana.com/api/1.0"
 
@@ -19,16 +19,8 @@ interface AsanaWorkspace {
  * GET /api/asana/me/connect
  * Check if the current user has Asana connected for a specific workspace
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     // workspaceId is optional - workspace feature temporarily disabled
     const workspaceId = searchParams.get("workspaceId")
@@ -64,22 +56,14 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * POST /api/asana/me/connect
  * Connect the current user's Asana account for a specific workspace
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { personalAccessToken, workspaceGid, aimsWorkspaceId } = body
 
@@ -182,22 +166,14 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * DELETE /api/asana/me/connect
  * Disconnect the current user's Asana account for a specific workspace
  */
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
 
@@ -235,4 +211,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

@@ -5,8 +5,10 @@
  * DELETE /api/workspaces/[id]/members/[userId] - Remove member from workspace
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateWorkspaceMemberRoleSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
@@ -24,20 +26,9 @@ import { logger, logError } from "@/lib/logger"
  * PATCH /api/workspaces/[id]/members/[userId]
  * Update a workspace member's role
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; userId: string }> }
-) {
+export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id, userId } = await params
+    const { id, userId } = await context!.params
 
     // Get workspace
     const workspace = await getWorkspaceById(id)
@@ -95,26 +86,15 @@ export async function PATCH(
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * DELETE /api/workspaces/[id]/members/[userId]
  * Remove a member from the workspace
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; userId: string }> }
-) {
+export const DELETE = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id, userId } = await params
+    const { id, userId } = await context!.params
 
     // Get workspace
     const workspace = await getWorkspaceById(id)
@@ -176,4 +156,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-}
+})

@@ -4,24 +4,16 @@
  * POST /api/scorecards/entries - Submit/update weekly entry
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { getMetricById, upsertEntry, getWeekStart } from "@/lib/db/scorecard"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createScorecardEntrySchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
     const { metricId, value, weekStart, notes } = await validateBody(request, createScorecardEntrySchema)
 
     // Get the metric to verify access
@@ -82,4 +74,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -10,20 +11,9 @@ import type { ApiResponse } from "@/lib/types"
 import type { MeetingWithDetails, MeetingSection } from "@/lib/db/meetings"
 
 // GET /api/meetings/[id] - Get meeting with full details
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
@@ -63,23 +53,12 @@ export async function GET(
       { status: 500 }
     )
   }
-}
+})
 
 // PATCH /api/meetings/[id] - Update meeting details
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
 
     const meeting = await meetings.getById(id)
     if (!meeting) {
@@ -148,23 +127,12 @@ export async function PATCH(
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/meetings/[id] - Cancel/delete a meeting
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
@@ -214,4 +182,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-}
+})

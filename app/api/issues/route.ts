@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -9,16 +9,8 @@ import type { ApiResponse } from "@/lib/types"
 import type { Issue, IssueStatus } from "@/lib/db/meetings"
 
 // GET /api/issues - List issues for a workspace
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
     const status = searchParams.get("status") as IssueStatus | null
@@ -68,19 +60,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/issues - Create a new issue
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { workspaceId, title, description, priority, ownerId, sourceType, sourceId } =
       await validateBody(request, createIssueSchema)
 
@@ -134,4 +118,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

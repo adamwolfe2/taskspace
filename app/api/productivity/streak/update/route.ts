@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -11,16 +11,8 @@ interface StreakUpdateResponse {
 }
 
 // POST /api/productivity/streak/update - Update streak on EOD submission
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const date = body.date || new Date().toISOString().split("T")[0]
 
@@ -42,4 +34,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

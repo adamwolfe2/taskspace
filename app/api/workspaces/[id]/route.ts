@@ -8,7 +8,7 @@
  * Part of SESSION 5: Multi-Workspace Architecture
  */
 
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -37,11 +37,7 @@ interface WorkspaceDetailResponse {
  *
  * Returns workspace details and members
  */
-export const GET = withAuth(async (
-  request: NextRequest,
-  auth,
-  context?: { params: Promise<{ id: string }> }
-) => {
+export const GET = withAuth(async (request, auth, context?) => {
   try {
     const { id } = await context!.params
 
@@ -102,11 +98,7 @@ export const GET = withAuth(async (
  *
  * Updates a workspace (admin only)
  */
-export const PATCH = withAdmin(async (
-  request: NextRequest,
-  auth,
-  context?: { params: Promise<{ id: string }> }
-) => {
+export const PATCH = withAdmin(async (request, auth, context?) => {
   try {
     const { id } = await context!.params
 
@@ -198,11 +190,7 @@ export const PATCH = withAdmin(async (
  *
  * Deletes a workspace (admin only, cannot delete default)
  */
-export const DELETE = withAdmin(async (
-  request: NextRequest,
-  auth,
-  context?: { params: Promise<{ id: string }> }
-) => {
+export const DELETE = withAdmin(async (request, auth, context?) => {
   try {
     const { id } = await context!.params
 

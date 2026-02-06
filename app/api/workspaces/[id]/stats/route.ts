@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
 import { getWorkspaceById, userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { sql } from "@/lib/db/sql"
@@ -21,7 +22,7 @@ interface WorkspaceStats {
 export const GET = withAuth(async (
   request: NextRequest,
   auth,
-  context?: { params: Promise<{ id: string }> }
+  context?: RouteContext
 ) => {
   try {
     const { id } = await context!.params

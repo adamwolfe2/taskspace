@@ -1,26 +1,11 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAdmin } from "@/lib/api/middleware"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // POST /api/test-email - Test email configuration
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can test email" },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
     const { testEmail } = body
 
@@ -100,26 +85,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // GET /api/test-email - Get email configuration status (debug)
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can view email config" },
-        { status: 403 }
-      )
-    }
-
     const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
     const EMAIL_FROM = process.env.EMAIL_FROM || "Taskspace <onboarding@resend.dev>"
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
@@ -142,4 +112,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

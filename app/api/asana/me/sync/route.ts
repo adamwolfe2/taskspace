@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
 import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import { db } from "@/lib/db"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { decryptToken } from "@/lib/crypto/token-encryption"
+import { withAuth } from "@/lib/api/middleware"
 
 const ASANA_API_BASE = "https://app.asana.com/api/1.0"
 
@@ -36,16 +36,8 @@ interface SyncResult {
  * Sync tasks from Asana that are assigned to the current user
  * Uses org-level Asana integration if user is mapped, otherwise uses member PAT
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // First, check if org has Asana integration with user mappings
     const org = await db.organizations.findById(auth.organization.id)
     const asanaConfig = org?.settings?.asanaIntegration
@@ -182,7 +174,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 async function processAsanaTasks(
   asanaTasks: AsanaTask[],
@@ -330,16 +322,8 @@ async function processAsanaTasks(
  * GET /api/asana/me/sync
  * Get the last sync status
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { rows } = await sql`
       SELECT asana_last_sync_at
       FROM organization_members
@@ -374,4 +358,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

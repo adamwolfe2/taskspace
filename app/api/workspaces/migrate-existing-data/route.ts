@@ -5,30 +5,14 @@
  * This handles legacy data created before workspace implementation.
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAdmin } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can run migrations
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can migrate data" },
-        { status: 403 }
-      )
-    }
-
     // Get default workspace for this organization
     const { rows: workspaces } = await sql`
       SELECT id FROM workspaces
@@ -170,4 +154,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

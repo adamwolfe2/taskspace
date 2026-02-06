@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
 import type { Rock, ApiResponse } from "@/lib/types"
@@ -30,23 +30,8 @@ interface BulkCreateResponse {
  * POST /api/rocks/bulk
  * Create multiple rocks at once for a user
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can bulk create rocks" },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
     const { rocks, userId, metrics } = body as {
       rocks: BulkRockInput[]
@@ -222,4 +207,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

@@ -1,23 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { assignManagerSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, TeamMember } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
 
 // GET /api/manager/direct-reports - Get direct reports for the current user
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // Get managerId and workspaceId from query params
     const { searchParams } = new URL(request.url)
     const managerId = searchParams.get("managerId") || auth.user.id
@@ -88,27 +81,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // PATCH /api/manager/direct-reports - Assign a manager to a team member
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can assign managers
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can assign managers" },
-        { status: 403 }
-      )
-    }
-
     const { memberId, managerId } = await validateBody(request, assignManagerSchema)
 
     // Get the member to update
@@ -158,4 +135,4 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

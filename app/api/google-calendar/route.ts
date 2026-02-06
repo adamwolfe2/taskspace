@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import * as googleCalendar from "@/lib/google-calendar"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -9,16 +10,8 @@ import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/google-calendar - Get connection status and auth URL
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
 
@@ -103,19 +96,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // PATCH /api/google-calendar - Update settings
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { syncEnabled, calendarId, workspaceId } = await validateBody(request, updateGoogleCalendarSettingsSchema)
 
     // Validate workspace access
@@ -166,19 +151,11 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/google-calendar - Disconnect
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
 
@@ -212,4 +189,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
 import { checkAICredits } from "@/lib/billing/stripe"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { withAuth } from "@/lib/api/middleware"
 
 interface CreditUsage {
   creditsUsed: number
@@ -15,16 +15,8 @@ interface CreditUsage {
  * GET /api/billing/ai-usage
  * Get AI credit usage for the current organization
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // Get credit status from billing
     const creditStatus = await checkAICredits(auth.organization.id)
 
@@ -53,4 +45,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

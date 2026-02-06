@@ -7,8 +7,8 @@
  * - Manually trigger task generation
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { Errors, successResponse } from "@/lib/api/errors"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { logTaskEvent } from "@/lib/audit/logger"
@@ -65,13 +65,8 @@ const updateRecurringTaskSchema = z.object({
 // GET - List Recurring Task Templates
 // ============================================
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
     const templates = await getRecurringTasks(auth.organization.id)
 
     return successResponse({
@@ -82,24 +77,14 @@ export async function GET(request: NextRequest) {
     logError(logger, "Error fetching recurring tasks", error)
     return Errors.internal().toResponse()
   }
-}
+})
 
 // ============================================
-// POST - Create Recurring Task Template
+// POST - Create Recurring Task Template (admin only)
 // ============================================
 
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    // Only admins can create recurring tasks
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return Errors.insufficientPermissions("create recurring tasks").toResponse()
-    }
-
     const body = await validateBody(request, createRecurringTaskSchema)
 
     const templateId = await createRecurringTask(
@@ -140,23 +125,14 @@ export async function POST(request: NextRequest) {
     logError(logger, "Error creating recurring task", error)
     return Errors.internal().toResponse()
   }
-}
+})
 
 // ============================================
-// PATCH - Update Recurring Task Template
+// PATCH - Update Recurring Task Template (admin only)
 // ============================================
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return Errors.insufficientPermissions("update recurring tasks").toResponse()
-    }
-
     const { searchParams } = new URL(request.url)
     const templateId = searchParams.get("id")
 
@@ -195,23 +171,14 @@ export async function PATCH(request: NextRequest) {
     logError(logger, "Error updating recurring task", error)
     return Errors.internal().toResponse()
   }
-}
+})
 
 // ============================================
-// DELETE - Remove Recurring Task Template
+// DELETE - Remove Recurring Task Template (admin only)
 // ============================================
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return Errors.insufficientPermissions("delete recurring tasks").toResponse()
-    }
-
     const { searchParams } = new URL(request.url)
     const templateId = searchParams.get("id")
 
@@ -236,24 +203,14 @@ export async function DELETE(request: NextRequest) {
     logError(logger, "Error deleting recurring task", error)
     return Errors.internal().toResponse()
   }
-}
+})
 
 // ============================================
-// PUT - Manually Process Due Tasks
+// PUT - Manually Process Due Tasks (admin only)
 // ============================================
 
-export async function PUT(request: NextRequest) {
+export const PUT = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    // Only admins can manually trigger processing
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return Errors.insufficientPermissions("process recurring tasks").toResponse()
-    }
-
     const processed = await processDueRecurringTasks()
 
     await logTaskEvent(
@@ -272,4 +229,4 @@ export async function PUT(request: NextRequest) {
     logError(logger, "Error processing recurring tasks", error)
     return Errors.internal().toResponse()
   }
-}
+})

@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -15,20 +16,9 @@ interface EndMeetingResponse {
 }
 
 // POST /api/meetings/[id]/end - End a meeting with rating
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const { rating, notes } = await validateBody(request, endMeetingSchema)
 
     const meeting = await meetings.getById(id)
@@ -92,4 +82,4 @@ export async function POST(
       { status: 500 }
     )
   }
-}
+})

@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { switchOrganizationSchema } from "@/lib/validation/schemas"
@@ -10,16 +10,8 @@ import { logger, logError } from "@/lib/logger"
  * POST /api/user/switch-organization
  * Switch the current user's session to a different organization
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // Validate request body using Zod schema
     const { organizationId } = await validateBody(request, switchOrganizationSchema)
 
@@ -76,4 +68,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import type { ApiResponse, EODReport } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { withAdmin } from "@/lib/api/middleware"
 
 interface UserEODStatus {
   userId: string
@@ -87,24 +87,8 @@ function getThisWeekDates(): string[] {
 }
 
 // GET /api/eod-reports/verify - Verify EOD data sync for all users
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can verify all users
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
-      )
-    }
-
     const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"
     const todayInOrgTz = getTodayInTimezone(orgTimezone)
 
@@ -160,4 +144,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

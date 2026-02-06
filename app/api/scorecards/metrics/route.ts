@@ -5,24 +5,17 @@
  * POST /api/scorecards/metrics - Create a new metric (admin/manager only)
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
 import { getMetricsByWorkspace, createMetric } from "@/lib/db/scorecard"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createScorecardMetricSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
     const url = new URL(request.url)
     const workspaceId = url.searchParams.get("workspaceId")
 
@@ -64,18 +57,10 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
     const { workspaceId, name, description, ownerId, targetValue, targetDirection, unit, frequency, displayOrder } =
       await validateBody(request, createScorecardMetricSchema)
 
@@ -139,4 +124,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

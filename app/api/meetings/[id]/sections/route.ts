@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -9,20 +10,9 @@ import type { ApiResponse } from "@/lib/types"
 import type { MeetingSection, SectionType } from "@/lib/db/meetings"
 
 // PATCH /api/meetings/[id]/sections - Update a section (start, complete, update data)
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const { sectionType, action, data } = await validateBody(request, updateMeetingSectionSchema)
 
     const meeting = await meetings.getById(id)
@@ -98,4 +88,4 @@ export async function PATCH(
       { status: 500 }
     )
   }
-}
+})

@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -10,20 +11,9 @@ import type { ApiResponse } from "@/lib/types"
 import type { SectionType } from "@/lib/db/meetings"
 
 // GET /api/meetings/[id]/notes - Get all notes for a meeting
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
@@ -60,23 +50,12 @@ export async function GET(
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/meetings/[id]/notes - Create/update notes for a section
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const { section, content } = await validateBody(request, updateMeetingNotesSchema)
 
     const meeting = await meetings.getById(id)
@@ -151,4 +130,4 @@ export async function POST(
       { status: 500 }
     )
   }
-}
+})

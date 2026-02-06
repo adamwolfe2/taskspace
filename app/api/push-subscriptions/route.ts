@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import type { PushSubscription, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -8,16 +8,8 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createPushSubscriptionSchema } from "@/lib/validation/schemas"
 
 // GET /api/push-subscriptions - Get VAPID public key and current subscriptions
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // Get VAPID public key from environment
     const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
 
@@ -43,19 +35,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/push-subscriptions - Subscribe to push notifications
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // Validate request body
     const { subscription } = await validateBody(request, createPushSubscriptionSchema, {
       errorPrefix: "Invalid subscription data",
@@ -94,19 +78,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/push-subscriptions - Unsubscribe from push notifications
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const endpoint = searchParams.get("endpoint")
 
@@ -141,4 +117,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

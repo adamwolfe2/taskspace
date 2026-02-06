@@ -6,8 +6,8 @@
  * regardless of their local timezone.
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
 import { getTodayInTimezone, getCurrentTimeInTimezone, formatDateForDisplay } from "@/lib/utils/date-utils"
 import { logger, logError } from "@/lib/logger"
 
@@ -20,16 +20,8 @@ interface CurrentDateResponse {
 }
 
 // GET /api/organizations/current-date - Get the current date in the org's timezone
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const timezone = auth.organization.settings?.timezone || "America/Los_Angeles"
     const currentDate = getTodayInTimezone(timezone)
     const currentTime = getCurrentTimeInTimezone(timezone)
@@ -69,4 +61,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

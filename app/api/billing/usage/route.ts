@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { getUserWorkspaces } from "@/lib/db/workspaces"
 import { PLANS, type PlanTier } from "@/lib/billing/plans"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { withAuth } from "@/lib/api/middleware"
 
 interface BillingUsageResponse {
   currentPlan: PlanTier
@@ -25,16 +25,8 @@ interface BillingUsageResponse {
  * GET /api/billing/usage
  * Get billing and usage statistics for the organization
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const org = auth.organization
     const currentPlan = (org.subscription?.plan || "free") as PlanTier
     const plan = PLANS[currentPlan]
@@ -75,4 +67,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

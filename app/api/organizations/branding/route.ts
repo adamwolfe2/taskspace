@@ -1,22 +1,14 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateBrandingSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, Organization } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/organizations/branding - Get organization branding settings
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const org = auth.organization
 
     return NextResponse.json<ApiResponse<{
@@ -42,27 +34,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
-// PATCH /api/organizations/branding - Update organization branding
-export async function PATCH(request: NextRequest) {
+// PATCH /api/organizations/branding - Update organization branding (admin only)
+export const PATCH = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can update branding
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can update branding settings" },
-        { status: 403 }
-      )
-    }
-
     // Validate request body using Zod schema
     const {
       logoUrl,
@@ -133,4 +109,4 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

@@ -1,22 +1,15 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { generateId } from "@/lib/auth/password"
 import type { TaskTemplate, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/task-templates - Get all templates for the user
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
 
@@ -57,19 +50,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/task-templates - Create a new template
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { name, title, description, priority, defaultRockId, recurrence, isShared, workspaceId } = body
 
@@ -119,19 +104,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/task-templates?id=xxx - Delete a template
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 
@@ -182,4 +159,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

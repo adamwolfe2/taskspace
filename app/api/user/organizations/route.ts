@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { generateId, slugify } from "@/lib/auth/password"
 import type { ApiResponse, UserOrganizationItem } from "@/lib/types"
@@ -9,16 +9,8 @@ import { logger, logError } from "@/lib/logger"
  * GET /api/user/organizations
  * Get all organizations the current user is a member of
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // Get all organization memberships for this user
     const memberships = await db.members.findByUserId(auth.user.id)
 
@@ -64,22 +56,14 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * POST /api/user/organizations
  * Create a new organization for the current user
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { name } = body
 
@@ -185,4 +169,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

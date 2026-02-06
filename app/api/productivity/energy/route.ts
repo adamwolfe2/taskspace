@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createDailyEnergySchema } from "@/lib/validation/schemas"
@@ -8,16 +9,8 @@ import type { ApiResponse, DailyEnergy } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/productivity/energy - Get energy data for user
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     // workspaceId is optional - workspace feature temporarily disabled
     const workspaceId = searchParams.get("workspaceId")
@@ -100,19 +93,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/productivity/energy - Create or update daily energy
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await validateBody(request, createDailyEnergySchema)
 
     // Validate workspace access
@@ -154,4 +139,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

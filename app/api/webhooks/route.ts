@@ -7,8 +7,8 @@
  * - View delivery history and retry failed deliveries
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import { Errors, successResponse, paginatedResponse } from "@/lib/api/errors"
@@ -67,17 +67,8 @@ function maskSecret(secret: string): string {
 // GET - List Webhooks
 // ============================================
 
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return Errors.insufficientPermissions("manage webhooks").toResponse()
-    }
-
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
 
@@ -179,23 +170,14 @@ export async function GET(request: NextRequest) {
     logError(logger, "Webhook list error", error)
     return Errors.internal().toResponse()
   }
-}
+})
 
 // ============================================
 // POST - Create Webhook
 // ============================================
 
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return Errors.insufficientPermissions("create webhooks").toResponse()
-    }
-
     const body = await validateBody(request, createWebhookSchema)
 
     // Check webhook limit (max 10 per org)
@@ -270,23 +252,14 @@ export async function POST(request: NextRequest) {
     logError(logger, "Webhook creation error", error)
     return Errors.internal().toResponse()
   }
-}
+})
 
 // ============================================
 // PATCH - Update Webhook
 // ============================================
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return Errors.insufficientPermissions("update webhooks").toResponse()
-    }
-
     const { searchParams } = new URL(request.url)
     const webhookId = searchParams.get("id")
 
@@ -356,23 +329,14 @@ export async function PATCH(request: NextRequest) {
     logError(logger, "Webhook update error", error)
     return Errors.internal().toResponse()
   }
-}
+})
 
 // ============================================
 // DELETE - Remove Webhook
 // ============================================
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return Errors.unauthorized().toResponse()
-    }
-
-    if (auth.member.role !== "admin" && auth.member.role !== "owner") {
-      return Errors.insufficientPermissions("delete webhooks").toResponse()
-    }
-
     const { searchParams } = new URL(request.url)
     const webhookId = searchParams.get("id")
 
@@ -426,4 +390,4 @@ export async function DELETE(request: NextRequest) {
     logError(logger, "Webhook deletion error", error)
     return Errors.internal().toResponse()
   }
-}
+})

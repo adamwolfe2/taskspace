@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db/sql"
 import { logger, logError } from "@/lib/logger"
+import { enforceIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
 
 interface WeeklyTask {
   description: string
@@ -105,6 +106,13 @@ export async function GET(
   { params }: { params: Promise<{ slug: string; date: string }> }
 ) {
   try {
+    // IP-based rate limiting: 30 requests per IP per 15 minutes
+    const { result: rateLimitResult, response: rateLimitResponse } = enforceIpRateLimit(
+      request,
+      { endpoint: "public-eod-weekly", maxRequests: 30 }
+    )
+    if (rateLimitResponse) return rateLimitResponse
+
     const { slug, date } = await params
 
     // Validate date format (YYYY-MM-DD) - should be a Thursday
@@ -427,6 +435,12 @@ export async function GET(
     // Add cache headers for 5 minute caching
     const headers = new Headers()
     headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600")
+
+    // Include rate limit headers on successful responses
+    const rlHeaders = ipRateLimitHeaders(rateLimitResult)
+    for (const [key, value] of Object.entries(rlHeaders)) {
+      headers.set(key, value)
+    }
 
     return NextResponse.json(
       { success: true, data: weeklyReport },

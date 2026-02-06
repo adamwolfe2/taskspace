@@ -1,20 +1,11 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import { logger, logError } from "@/lib/logger"
 
 // GET - Fetch all MA employees for a workspace
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    // Auth check
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // Get workspaceId from query params
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
@@ -40,20 +31,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST - Create a new MA employee
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    // Auth check
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { firstName, lastName, supervisor, department, jobTitle, responsibilities, notes, email, workspaceId } = body
 
@@ -95,4 +77,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

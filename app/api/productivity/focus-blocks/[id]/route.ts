@@ -1,27 +1,17 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateFocusBlockSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, FocusBlock } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
-
 // GET /api/productivity/focus-blocks/[id] - Get single focus block
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export const GET = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
+    const { id } = await context!.params
 
-    const { id } = await params
     const focusBlock = await db.focusBlocks.findById(id)
 
     if (!focusBlock) {
@@ -50,20 +40,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     )
   }
-}
+})
 
 // PUT /api/productivity/focus-blocks/[id] - Update focus block
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export const PUT = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
     const body = await validateBody(request, updateFocusBlockSchema)
 
     // Get existing block to verify ownership
@@ -118,20 +100,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/productivity/focus-blocks/[id] - Delete focus block
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export const DELETE = withAuth(async (request, auth, context?) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context!.params
 
     // Get existing block to verify ownership
     const existingBlock = await db.focusBlocks.findById(id)
@@ -169,4 +143,4 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     )
   }
-}
+})

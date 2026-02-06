@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
+import type { RouteContext } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import {
   getRockById,
@@ -15,11 +16,7 @@ import {
 } from "@/lib/db/rocks"
 import { logger } from "@/lib/logger"
 
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
-
-export const GET = withAuth(async (request: NextRequest, auth, context?: RouteParams) => {
+export const GET = withAuth(async (request: NextRequest, auth, context?: RouteContext) => {
   try {
     const { id } = await context!.params
     const rock = await getRockById(id)

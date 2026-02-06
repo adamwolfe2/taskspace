@@ -5,26 +5,17 @@
  * This handles legacy users who signed up before workspace implementation.
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { withAuth } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
     logger.info("Ensure default workspace called")
-
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      logger.error("No auth context found")
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
 
     logger.info({ userId: auth.user.id, orgId: auth.organization.id }, "Auth context obtained")
 
@@ -218,4 +209,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

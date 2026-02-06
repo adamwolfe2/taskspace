@@ -4,8 +4,9 @@
  * GET /api/scorecards/summary - Get scorecard summary with stats
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { NextResponse } from "next/server"
+import { isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
 import {
   getScorecardSummary,
@@ -16,16 +17,8 @@ import {
 } from "@/lib/db/scorecard"
 import { logger } from "@/lib/logger"
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      )
-    }
-
     const url = new URL(request.url)
     const workspaceId = url.searchParams.get("workspaceId")
     const weekStart = url.searchParams.get("weekStart")
@@ -96,4 +89,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

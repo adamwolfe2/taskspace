@@ -1,30 +1,14 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { MA_EMPLOYEES_SEED, TOTAL_EMPLOYEES } from "@/lib/org-chart/seed-data"
 import { logger, logError } from "@/lib/logger"
 
 // POST - Seed the database with all MA employees
 // This will clear existing employees and insert fresh data
 // ADMIN ONLY - requires authentication
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, auth) => {
   try {
-    // Require admin authentication
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const clearFirst = searchParams.get("clear") !== "false" // Default to clearing first
     const workspaceId = searchParams.get("workspaceId")
@@ -71,27 +55,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // GET - Check current employee count (admin only)
-export async function GET(request: NextRequest) {
+export const GET = withAdmin(async (request, auth) => {
   try {
-    // Require admin authentication
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
 
@@ -117,4 +85,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
