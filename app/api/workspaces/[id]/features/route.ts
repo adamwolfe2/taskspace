@@ -90,7 +90,7 @@ export const GET = withAuth(async (
     }
 
     const response: FeatureConfigResponse = {
-      features: features as WorkspaceFeatureToggles,
+      features: features as unknown as WorkspaceFeatureToggles,
       config,
     }
 
@@ -220,7 +220,7 @@ export const PATCH = withAuth(async (
     }
 
     const response: FeatureConfigResponse = {
-      features: features as WorkspaceFeatureToggles,
+      features: features as unknown as WorkspaceFeatureToggles,
       config,
     }
 
