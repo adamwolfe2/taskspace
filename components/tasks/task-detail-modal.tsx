@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import type { AssignedTask, TaskComment, TeamMember, Rock } from "@/lib/types"
+import { useState, useEffect } from "react"
+import type { AssignedTask, TaskComment, TaskSubtask, TeamMember, Rock } from "@/lib/types"
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { TaskComments } from "./task-comments"
+import { TaskSubtasks } from "./task-subtasks"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
 import { Calendar, User, Target, AlertCircle, Clock, CheckCircle2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -67,6 +68,8 @@ export function TaskDetailModal({
   onUpdateTask,
 }: TaskDetailModalProps) {
   const [comments, setComments] = useState<TaskComment[]>(task.comments || [])
+  const [subtasks, setSubtasks] = useState<TaskSubtask[]>([])
+  const [isLoadingSubtasks, setIsLoadingSubtasks] = useState(false)
   const { toast } = useToast()
 
   const isCompleted = task.status === "completed"
@@ -105,6 +108,130 @@ export function TaskDetailModal({
       toast({
         title: "Failed to add comment",
         description: err.message || "Please try again",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Load subtasks when modal opens
+  useEffect(() => {
+    if (open) {
+      loadSubtasks()
+    }
+  }, [open, task.id])
+
+  const loadSubtasks = async () => {
+    setIsLoadingSubtasks(true)
+    try {
+      const response = await fetch(`/api/tasks/${task.id}/subtasks`)
+      const result = await response.json()
+      if (result.success && result.data) {
+        setSubtasks(result.data)
+      }
+    } catch (error) {
+      console.error("Failed to load subtasks:", error)
+    } finally {
+      setIsLoadingSubtasks(false)
+    }
+  }
+
+  const handleAddSubtask = async (title: string) => {
+    try {
+      const response = await fetch(`/api/tasks/${task.id}/subtasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error || "Failed to add subtask")
+      }
+
+      setSubtasks([...subtasks, result.data])
+      toast({
+        title: "Subtask added",
+        description: "Subtask has been added to the task",
+      })
+    } catch (error: any) {
+      toast({
+        title: "Failed to add subtask",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      })
+      throw error
+    }
+  }
+
+  const handleToggleSubtask = async (subtaskId: string) => {
+    try {
+      const subtask = subtasks.find((s) => s.id === subtaskId)
+      if (!subtask) return
+
+      const response = await fetch(`/api/tasks/${task.id}/subtasks/${subtaskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: !subtask.completed }),
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error || "Failed to toggle subtask")
+      }
+
+      setSubtasks(subtasks.map((s) => (s.id === subtaskId ? result.data : s)))
+    } catch (error: any) {
+      toast({
+        title: "Failed to update subtask",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDeleteSubtask = async (subtaskId: string) => {
+    try {
+      const response = await fetch(`/api/tasks/${task.id}/subtasks/${subtaskId}`, {
+        method: "DELETE",
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error || "Failed to delete subtask")
+      }
+
+      setSubtasks(subtasks.filter((s) => s.id !== subtaskId))
+      toast({
+        title: "Subtask deleted",
+        description: "Subtask has been removed",
+      })
+    } catch (error: any) {
+      toast({
+        title: "Failed to delete subtask",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleReorderSubtasks = async (subtaskIds: string[]) => {
+    try {
+      const response = await fetch(`/api/tasks/${task.id}/subtasks/reorder`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subtaskIds }),
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error || "Failed to reorder subtasks")
+      }
+
+      setSubtasks(result.data)
+    } catch (error: any) {
+      toast({
+        title: "Failed to reorder subtasks",
+        description: error.message || "Please try again",
         variant: "destructive",
       })
     }
@@ -214,6 +341,21 @@ export function TaskDetailModal({
               <span className="text-emerald-700">
                 Completed on {format(new Date(task.completedAt), "MMM d, yyyy 'at' h:mm a")}
               </span>
+            </div>
+          )}
+
+          {/* Subtasks section */}
+          {!isLoadingSubtasks && (
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium text-slate-700 mb-3">Subtasks</h4>
+              <TaskSubtasks
+                subtasks={subtasks}
+                onAdd={handleAddSubtask}
+                onToggle={handleToggleSubtask}
+                onDelete={handleDeleteSubtask}
+                onReorder={handleReorderSubtasks}
+                disabled={isCompleted}
+              />
             </div>
           )}
 
