@@ -17,6 +17,8 @@ import type {
   FeatureValidationResult,
   FeatureToggleConfig,
   WorkspaceFeatureConfig,
+} from "@/lib/types/workspace-features"
+import {
   DEFAULT_WORKSPACE_FEATURES,
   WORKSPACE_FEATURE_METADATA,
 } from "@/lib/types/workspace-features"

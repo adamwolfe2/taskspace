@@ -94,7 +94,7 @@ export const GET = withAuth(async (
       config,
     }
 
-    logger.debug("Retrieved workspace features", { workspaceId: id, userId: auth.user.id })
+    logger.debug({ workspaceId: id, userId: auth.user.id }, "Retrieved workspace features")
 
     return NextResponse.json<ApiResponse<FeatureConfigResponse>>({
       success: true,
@@ -224,11 +224,11 @@ export const PATCH = withAuth(async (
       config,
     }
 
-    logger.info("Updated workspace features", {
+    logger.info({
       workspaceId: id,
       userId: auth.user.id,
       warnings: validation.warnings,
-    })
+    }, "Updated workspace features")
 
     return NextResponse.json<ApiResponse<FeatureConfigResponse>>({
       success: true,
