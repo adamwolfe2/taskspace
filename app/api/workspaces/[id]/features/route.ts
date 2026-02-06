@@ -74,7 +74,7 @@ export const GET = withAuth(async (
     const config = getWorkspaceFeatureConfig(auth.organization, workspace)
 
     // Extract just the enabled/disabled values for the features object
-    const features: Partial<WorkspaceFeatureToggles> = {
+    const features: Record<string, Record<string, boolean>> = {
       core: {},
       productivity: {},
       integrations: {},
@@ -204,7 +204,7 @@ export const PATCH = withAuth(async (
     const config = getWorkspaceFeatureConfig(auth.organization, updatedWorkspace)
 
     // Extract features object
-    const features: Partial<WorkspaceFeatureToggles> = {
+    const features: Record<string, Record<string, boolean>> = {
       core: {},
       productivity: {},
       integrations: {},
