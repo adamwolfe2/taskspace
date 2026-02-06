@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
 import * as googleCalendar from "@/lib/google-calendar"
 import { logger, logError } from "@/lib/logger"
+import { encryptToken } from "@/lib/crypto/token-encryption"
 
 // GET /api/google-calendar/callback - OAuth callback
 export async function GET(request: NextRequest) {
@@ -55,16 +56,20 @@ export async function GET(request: NextRequest) {
     // Exchange code for tokens
     const tokens = await googleCalendar.exchangeCodeForTokens(code)
 
+    // Encrypt tokens before storing in database
+    const encryptedAccessToken = encryptToken(tokens.access_token)
+    const encryptedRefreshToken = encryptToken(tokens.refresh_token)
+
     const now = new Date().toISOString()
 
-    // Save tokens to database with workspace context
+    // Save encrypted tokens to database with workspace context
     await db.googleCalendarTokens.create({
       id: generateId(),
       userId: stateData.userId,
       organizationId: stateData.orgId,
       workspaceId: stateData.workspaceId,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
+      accessToken: encryptedAccessToken!,
+      refreshToken: encryptedRefreshToken!,
       tokenType: tokens.token_type,
       expiryDate: tokens.expiry_date,
       scope: tokens.scope,

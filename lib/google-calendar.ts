@@ -3,6 +3,7 @@
 import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
 import type { GoogleCalendarToken, GoogleCalendarEventMapping, AssignedTask, Rock } from "@/lib/types"
+import { encryptToken, decryptToken } from "@/lib/crypto/token-encryption"
 
 // OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
@@ -113,12 +114,23 @@ export async function getValidAccessToken(userId: string, orgId: string, workspa
     const token = await db.googleCalendarTokens.findByUserIdAndWorkspace(userId, orgId, workspaceId)
     if (!token) return null
 
+    // Decrypt tokens from database
+    const decryptedAccessToken = decryptToken(token.accessToken)
+    const decryptedRefreshToken = decryptToken(token.refreshToken)
+
+    if (!decryptedAccessToken || !decryptedRefreshToken) {
+      console.error('Failed to decrypt Google Calendar tokens')
+      return null
+    }
+
     // Check if token is expired (with 5 min buffer)
     if (token.expiryDate < Date.now() + 5 * 60 * 1000) {
       try {
-        const refreshed = await refreshAccessToken(token.refreshToken)
+        const refreshed = await refreshAccessToken(decryptedRefreshToken)
+        // Encrypt new access token before storing
+        const encryptedAccessToken = encryptToken(refreshed.access_token)
         await db.googleCalendarTokens.updateByWorkspace(userId, orgId, workspaceId, {
-          accessToken: refreshed.access_token,
+          accessToken: encryptedAccessToken!,
           expiryDate: refreshed.expiry_date,
         })
         return refreshed.access_token
@@ -128,19 +140,30 @@ export async function getValidAccessToken(userId: string, orgId: string, workspa
       }
     }
 
-    return token.accessToken
+    return decryptedAccessToken
   }
 
   // Legacy: org-scoped lookup
   const token = await db.googleCalendarTokens.findByUserId(userId, orgId)
   if (!token) return null
 
+  // Decrypt tokens from database
+  const decryptedAccessToken = decryptToken(token.accessToken)
+  const decryptedRefreshToken = decryptToken(token.refreshToken)
+
+  if (!decryptedAccessToken || !decryptedRefreshToken) {
+    console.error('Failed to decrypt Google Calendar tokens')
+    return null
+  }
+
   // Check if token is expired (with 5 min buffer)
   if (token.expiryDate < Date.now() + 5 * 60 * 1000) {
     try {
-      const refreshed = await refreshAccessToken(token.refreshToken)
+      const refreshed = await refreshAccessToken(decryptedRefreshToken)
+      // Encrypt new access token before storing
+      const encryptedAccessToken = encryptToken(refreshed.access_token)
       await db.googleCalendarTokens.update(userId, orgId, {
-        accessToken: refreshed.access_token,
+        accessToken: encryptedAccessToken!,
         expiryDate: refreshed.expiry_date,
       })
       return refreshed.access_token
@@ -150,7 +173,7 @@ export async function getValidAccessToken(userId: string, orgId: string, workspa
     }
   }
 
-  return token.accessToken
+  return decryptedAccessToken
 }
 
 // Calendar API helpers
