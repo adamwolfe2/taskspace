@@ -13,6 +13,14 @@ import { initialTeamMembers, initialRocks } from "@/lib/initial-data"
 import { logger, logError } from "@/lib/logger"
 
 export const POST = withAdmin(async (request: NextRequest, auth) => {
+  // SECURITY: Disable seed endpoint in production
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { success: false, error: "Not available in production" },
+      { status: 403 }
+    )
+  }
+
   try {
     const orgId = auth.organization.id
 

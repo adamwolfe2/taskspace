@@ -56,6 +56,14 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
+    const MAX_CONTENT_LENGTH = 50000
+    if (content.length > MAX_CONTENT_LENGTH) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: `Content too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.` },
+        { status: 400 }
+      )
+    }
+
     // Create brain dump record
     const brainDumpId = generateId()
     const now = new Date().toISOString()

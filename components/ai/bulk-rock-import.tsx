@@ -28,6 +28,7 @@ import {
   ChevronDown,
 } from "lucide-react"
 import type { TeamMember } from "@/lib/types"
+import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
 
 interface ParsedRock {
   title: string
@@ -56,6 +57,7 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [expandedRock, setExpandedRock] = useState<number | null>(null)
+  const { currentWorkspaceId } = useWorkspaceStore()
   const { toast } = useToast()
 
   const handleParse = async () => {
@@ -125,6 +127,7 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: selectedUserId,
+          workspaceId: currentWorkspaceId,
           rocks: parsedRocks.map((rock) => ({
             title: rock.title,
             description: rock.description,

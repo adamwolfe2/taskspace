@@ -150,7 +150,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
     env: {
       valid: envStatus.valid,
       nodeEnv: process.env.NODE_ENV || "development",
-      features: envStatus.features,
+      features: [], // Removed internal feature flags from public health check
     },
   }
 

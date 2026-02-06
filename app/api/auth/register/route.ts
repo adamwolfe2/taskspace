@@ -106,24 +106,6 @@ export async function POST(request: NextRequest) {
 
       await db.organizations.create(organization)
 
-      // Create default workspace for the organization
-      const defaultWorkspaceId = generateId()
-      const defaultWorkspace = {
-        id: defaultWorkspaceId,
-        organizationId: orgId,
-        name: "Default",
-        slug: "default",
-        type: "team",
-        description: "Default workspace for all organization members",
-        isDefault: true,
-        createdBy: userId,
-        createdAt: now,
-        updatedAt: now,
-        settings: {},
-      }
-
-      await db.workspaces.create(defaultWorkspace)
-
       // Create member record for owner
       member = {
         id: generateId(),
@@ -139,16 +121,44 @@ export async function POST(request: NextRequest) {
 
       await db.members.create(member)
 
-      // Add owner to default workspace as admin
-      const workspaceMember = {
-        id: generateId(),
-        workspaceId: defaultWorkspaceId,
-        userId,
-        role: "admin",
-        joinedAt: now,
-      }
+      // Try to create default workspace
+      // If this fails, registration still succeeds - workspace can be created via ensure-default endpoint
+      try {
+        const defaultWorkspaceId = generateId()
+        const defaultWorkspace = {
+          id: defaultWorkspaceId,
+          organizationId: orgId,
+          name: "Default",
+          slug: "default",
+          type: "team",
+          description: "Default workspace for all organization members",
+          isDefault: true,
+          createdBy: userId,
+          createdAt: now,
+          updatedAt: now,
+          settings: {},
+        }
 
-      await db.workspaceMembers.create(workspaceMember)
+        await db.workspaces.create(defaultWorkspace)
+
+        // Add owner to default workspace as admin
+        const workspaceMember = {
+          id: generateId(),
+          workspaceId: defaultWorkspaceId,
+          userId,
+          role: "admin",
+          joinedAt: now,
+        }
+
+        await db.workspaceMembers.create(workspaceMember)
+      } catch (workspaceError) {
+        // Log warning but don't fail registration - workspace can be created later
+        logger.warn({
+          error: formatError(workspaceError),
+          userId,
+          orgId,
+        }, "Failed to create default workspace during registration")
+      }
     }
 
     // Create session

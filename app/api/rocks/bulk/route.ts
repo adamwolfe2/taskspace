@@ -33,10 +33,11 @@ interface BulkCreateResponse {
 export const POST = withAdmin(async (request, auth) => {
   try {
     const body = await request.json()
-    const { rocks, userId, metrics } = body as {
+    const { rocks, userId, metrics, workspaceId } = body as {
       rocks: BulkRockInput[]
       userId: string
       metrics?: MetricInput[]
+      workspaceId?: string
     }
 
     if (!rocks || !Array.isArray(rocks) || rocks.length === 0) {
@@ -51,6 +52,18 @@ export const POST = withAdmin(async (request, auth) => {
         { success: false, error: "User ID is required" },
         { status: 400 }
       )
+    }
+
+    // Validate workspace if provided
+    if (workspaceId) {
+      const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+      const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+      if (!isValidWorkspace) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Workspace not found" },
+          { status: 404 }
+        )
+      }
     }
 
     // Verify target user is in the organization
@@ -126,6 +139,7 @@ export const POST = withAdmin(async (request, auth) => {
           updatedAt: timestamp,
           doneWhen: rockInput.milestones || [], // Store in JSONB for compatibility
           quarter: rockInput.quarter || defaultQuarter,
+          workspaceId: workspaceId || undefined,
         }
 
         await db.rocks.create(rock)
