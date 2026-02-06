@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import * as Sentry from "@sentry/nextjs"
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -12,6 +13,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       return item ? JSON.parse(item) : initialValue
     } catch (error) {
       console.error(`Error loading ${key} from localStorage:`, error)
+      Sentry.captureException(error)
       return initialValue
     }
   })
@@ -25,6 +27,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       }
     } catch (error) {
       console.error(`Error saving ${key} to localStorage:`, error)
+      Sentry.captureException(error)
     }
   }
 

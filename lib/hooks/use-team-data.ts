@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import * as Sentry from "@sentry/nextjs"
 import type { TeamMember, Rock, AssignedTask, EODReport } from "../types"
 import { api } from "../api/client"
 import { useApp } from "../contexts/app-context"
@@ -38,8 +39,8 @@ function loadFromStorage<T>(key: string, fallback: T): T {
     if (stored) {
       return JSON.parse(stored)
     }
-  } catch (error) {
-    console.warn(`Failed to load ${key} from localStorage:`, error)
+  } catch {
+    // localStorage read failure is non-critical; fall through to fallback
   }
   return fallback
 }
@@ -50,8 +51,8 @@ function saveToStorage<T>(key: string, data: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(data))
     localStorage.setItem(DEMO_STORAGE_KEYS.lastSaved, new Date().toISOString())
-  } catch (error) {
-    console.warn(`Failed to save ${key} to localStorage:`, error)
+  } catch {
+    // localStorage write failure is non-critical in demo mode
   }
 }
 
@@ -223,6 +224,7 @@ export function useTeamData() {
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Failed to load data"))
       console.error("Failed to load team data:", err)
+      Sentry.captureException(err)
     } finally {
       setIsLoading(false)
     }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
+import * as Sentry from "@sentry/nextjs"
 import { TransformWrapper, TransformComponent, type ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch"
 import useSWR from "swr"
 import { OrgChart } from "@/components/org-chart/org-chart"
@@ -166,6 +167,7 @@ export function OrgChartPage() {
       refreshProgress()
     } catch (error) {
       console.error("Failed to save progress:", error)
+      Sentry.captureException(error)
       // Revert on error
       setProgressData((prev) => {
         const newMap = new Map(prev)

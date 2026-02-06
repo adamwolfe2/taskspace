@@ -1,6 +1,7 @@
 "use client"
 
 import React, { Component, ErrorInfo, ReactNode } from "react"
+import * as Sentry from "@sentry/nextjs"
 import { AlertTriangle, RefreshCw, Home, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { logger, logError } from "@/lib/logger"
@@ -43,6 +44,14 @@ export class ErrorBoundary extends Component<Props, State> {
  }
 
  logError(logger, "ErrorBoundary caught an error", error, errorContext)
+
+ Sentry.captureException(error, {
+   contexts: {
+     react: {
+       componentStack: errorInfo.componentStack,
+     },
+   },
+ })
 
  // Also log to console for development visibility
  console.error(

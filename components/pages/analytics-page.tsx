@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useWorkspaces } from "@/lib/hooks/use-workspace"
+import { useWorkspaces, useWorkspaceStore } from "@/lib/hooks/use-workspace"
+import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -53,6 +54,7 @@ interface AnalyticsData {
 
 export function AnalyticsPage() {
   const { currentWorkspace, workspaces } = useWorkspaces()
+  const { currentWorkspaceId } = useWorkspaceStore()
   const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "1y">("30d")
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null)
   const [data, setData] = useState<AnalyticsData | null>(null)
@@ -66,12 +68,13 @@ export function AnalyticsPage() {
     { value: "1y", label: "Last year" },
   ]
 
-  // Sync selected workspace with current workspace
+  // Sync selected workspace with current workspace from the store
+  // This ensures analytics refresh when the user switches workspaces via the sidebar
   useEffect(() => {
-    if (currentWorkspace && !selectedWorkspaceId) {
-      setSelectedWorkspaceId(currentWorkspace.id)
+    if (currentWorkspaceId && currentWorkspaceId !== selectedWorkspaceId) {
+      setSelectedWorkspaceId(currentWorkspaceId)
     }
-  }, [currentWorkspace, selectedWorkspaceId])
+  }, [currentWorkspaceId, selectedWorkspaceId])
 
   useEffect(() => {
     if (selectedWorkspaceId) {
@@ -171,6 +174,8 @@ export function AnalyticsPage() {
 
   return (
     <div className="flex-1 space-y-6 p-8">
+      <NoWorkspaceAlert />
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">

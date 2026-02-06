@@ -6,6 +6,7 @@
  */
 
 import { ErrorFallback } from "@/components/error-boundary"
+import * as Sentry from "@sentry/nextjs"
 import { useEffect } from "react"
 
 export default function Error({
@@ -16,10 +17,8 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    // Log error to error tracking service (e.g., Sentry)
     console.error("Root error boundary caught:", error)
-    // TODO: Send to error tracking service
-    // Sentry.captureException(error)
+    Sentry.captureException(error)
   }, [error])
 
   return <ErrorFallback error={error} reset={reset} />

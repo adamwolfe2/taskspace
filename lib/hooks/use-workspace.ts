@@ -10,6 +10,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { useCallback, useEffect, useRef } from "react"
+import * as Sentry from "@sentry/nextjs"
 import useSWR from "swr"
 import type { WorkspaceFeatureToggles, WorkspaceFeatureKey } from "@/lib/types/workspace-features"
 import { DEFAULT_WORKSPACE_FEATURES } from "@/lib/types/workspace-features"
@@ -150,6 +151,7 @@ export function useWorkspaces() {
         })
         .catch((err) => {
           console.error("Failed to create default workspace:", err)
+          Sentry.captureException(err)
         })
 
       return
