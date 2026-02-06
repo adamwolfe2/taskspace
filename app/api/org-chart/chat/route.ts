@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
 import { findRelevantEmployees } from "@/lib/org-chart/utils"
 import type { OrgChartEmployee } from "@/lib/org-chart/types"
 import { logger, logError } from "@/lib/logger"
@@ -66,17 +66,8 @@ async function callClaude(context: string, userMessage: string): Promise<string>
   return data.content[0].text
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, auth) => {
   try {
-    // SECURITY: Require authentication for org chart chat
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     // SECURITY: Do not accept employee data in request body
     // Employee data should be fetched server-side based on authenticated user's organization
@@ -238,4 +229,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

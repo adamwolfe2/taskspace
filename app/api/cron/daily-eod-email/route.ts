@@ -17,9 +17,15 @@ import { logger, logError } from "@/lib/logger"
 // Verify cron secret to prevent unauthorized calls
 function verifyCronSecret(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET
+  const isProduction = process.env.NODE_ENV === "production"
+
   if (!cronSecret) {
-    logger.info("CRON_SECRET not configured, allowing request")
-    return true // Allow in development
+    if (isProduction) {
+      logger.error("CRON_SECRET not configured in production - denying request")
+      return false
+    }
+    logger.info("CRON_SECRET not configured, allowing request in development")
+    return true
   }
 
   const authHeader = request.headers.get("authorization")

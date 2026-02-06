@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
@@ -113,23 +113,8 @@ function validateCSVData(rows: CSVRow[]): string[] {
 }
 
 // POST /api/org-chart/upload - Upload org chart CSV
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Only admins can upload org charts" },
-        { status: 403 }
-      )
-    }
-
     const formData = await request.formData()
     const file = formData.get("file") as File
     const workspaceId = formData.get("workspaceId") as string
@@ -270,4 +255,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

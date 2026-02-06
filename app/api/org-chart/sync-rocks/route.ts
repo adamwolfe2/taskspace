@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
 import type { Rock, RockMilestone } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -36,25 +36,8 @@ function getCurrentQuarter(): string {
   return `Q${quarter} ${year}`
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, auth) => {
   try {
-    // Auth check
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
-    // Admin check
-    if (!isAdmin(auth)) {
-      return NextResponse.json(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
-      )
-    }
-
     // Get workspaceId from request body
     const body = await request.json()
     const workspaceId = body.workspaceId
@@ -224,19 +207,10 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    // Auth check
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     // Get workspaceId from query params
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
@@ -340,4 +314,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

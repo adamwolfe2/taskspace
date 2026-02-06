@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
-import { getAuthContext, isAdmin } from "@/lib/auth/middleware"
+import { withAuth } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { fetchEmployeesFromAirtable } from "@/lib/org-chart/airtable"
 import type { OrgChartEmployee } from "@/lib/org-chart/types"
@@ -45,16 +46,8 @@ const FALLBACK_EMPLOYEES: OrgChartEmployee[] = [
   },
 ]
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, auth) => {
   try {
-    const auth = await getAuthContext(request)
-    if (!auth) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
 
@@ -196,4 +189,4 @@ export async function GET(request: NextRequest) {
       warning: "Failed to fetch employees, using fallback data",
     })
   }
-}
+})
