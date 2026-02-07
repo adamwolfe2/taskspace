@@ -62,12 +62,21 @@ export function validateComment(comment: TaskCommentInput): void {
 // ============================================
 
 /**
- * Get all comments for a task
+ * Get all comments for a task (workspace-scoped via JOIN)
  */
-export async function getTaskComments(taskId: string): Promise<TaskComment[]> {
-  const { rows } = await sql`
-    SELECT comments FROM assigned_tasks WHERE id = ${taskId}
-  `
+export async function getTaskComments(taskId: string, workspaceId?: string): Promise<TaskComment[]> {
+  let rows
+  if (workspaceId) {
+    const result = await sql`
+      SELECT comments FROM assigned_tasks WHERE id = ${taskId} AND workspace_id = ${workspaceId}
+    `
+    rows = result.rows
+  } else {
+    const result = await sql`
+      SELECT comments FROM assigned_tasks WHERE id = ${taskId}
+    `
+    rows = result.rows
+  }
   if (rows.length === 0) return []
   return parseComments(rows[0].comments)
 }
@@ -81,7 +90,8 @@ export async function addTaskComment(
   mentionContext?: {
     workspaceId: string
     teamMembers: Array<{ id: string; name: string; email?: string }>
-  }
+  },
+  workspaceId?: string
 ): Promise<TaskComment> {
   validateComment(input)
 
@@ -94,19 +104,29 @@ export async function addTaskComment(
   }
 
   // Fetch current comments
-  const currentComments = await getTaskComments(taskId)
+  const currentComments = await getTaskComments(taskId, workspaceId)
 
   // Append new comment
   const updatedComments = [...currentComments, newComment]
 
-  // Update task
-  await sql`
-    UPDATE assigned_tasks
-    SET
-      comments = ${JSON.stringify(updatedComments)}::jsonb,
-      updated_at = NOW()
-    WHERE id = ${taskId}
-  `
+  // Update task (workspace-scoped when workspaceId provided)
+  if (workspaceId) {
+    await sql`
+      UPDATE assigned_tasks
+      SET
+        comments = ${JSON.stringify(updatedComments)}::jsonb,
+        updated_at = NOW()
+      WHERE id = ${taskId} AND workspace_id = ${workspaceId}
+    `
+  } else {
+    await sql`
+      UPDATE assigned_tasks
+      SET
+        comments = ${JSON.stringify(updatedComments)}::jsonb,
+        updated_at = NOW()
+      WHERE id = ${taskId}
+    `
+  }
 
   // Parse and create mention records if context provided
   if (mentionContext) {
@@ -132,10 +152,11 @@ export async function addTaskComment(
  */
 export async function deleteTaskComment(
   taskId: string,
-  commentId: string
+  commentId: string,
+  workspaceId?: string
 ): Promise<boolean> {
   // Fetch current comments
-  const currentComments = await getTaskComments(taskId)
+  const currentComments = await getTaskComments(taskId, workspaceId)
 
   // Filter out the comment
   const updatedComments = currentComments.filter((c) => c.id !== commentId)
@@ -145,14 +166,24 @@ export async function deleteTaskComment(
     return false
   }
 
-  // Update task
-  await sql`
-    UPDATE assigned_tasks
-    SET
-      comments = ${JSON.stringify(updatedComments)}::jsonb,
-      updated_at = NOW()
-    WHERE id = ${taskId}
-  `
+  // Update task (workspace-scoped when workspaceId provided)
+  if (workspaceId) {
+    await sql`
+      UPDATE assigned_tasks
+      SET
+        comments = ${JSON.stringify(updatedComments)}::jsonb,
+        updated_at = NOW()
+      WHERE id = ${taskId} AND workspace_id = ${workspaceId}
+    `
+  } else {
+    await sql`
+      UPDATE assigned_tasks
+      SET
+        comments = ${JSON.stringify(updatedComments)}::jsonb,
+        updated_at = NOW()
+      WHERE id = ${taskId}
+    `
+  }
 
   return true
 }
@@ -162,9 +193,10 @@ export async function deleteTaskComment(
  */
 export async function findTaskComment(
   taskId: string,
-  commentId: string
+  commentId: string,
+  workspaceId?: string
 ): Promise<TaskComment | null> {
-  const comments = await getTaskComments(taskId)
+  const comments = await getTaskComments(taskId, workspaceId)
   return comments.find((c) => c.id === commentId) || null
 }
 

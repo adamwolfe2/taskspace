@@ -7,6 +7,8 @@ import { createIssueSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 import type { Issue, IssueStatus } from "@/lib/db/meetings"
+import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
+import type { PaginatedResponse } from "@/lib/utils/pagination"
 
 // GET /api/issues - List issues for a workspace
 export const GET = withAuth(async (request, auth) => {
@@ -42,6 +44,33 @@ export const GET = withAuth(async (request, auth) => {
       )
     }
 
+    // Check if cursor-based pagination is requested
+    const cursor = searchParams.get("cursor")
+    const usePagination = cursor !== null
+
+    if (usePagination) {
+      const pagination = parsePaginationParams(searchParams)
+      const { issues, totalCount } = await meetings.listIssuesPaginated(
+        workspaceId,
+        pagination,
+        { status }
+      )
+
+      const response = buildPaginatedResponse(
+        issues,
+        pagination.limit,
+        totalCount,
+        (i) => i.createdAt,
+        (i) => i.id
+      )
+
+      return NextResponse.json<ApiResponse<PaginatedResponse<Issue>>>({
+        success: true,
+        data: response,
+      })
+    }
+
+    // Legacy non-paginated path (backward compatible)
     let issues: Issue[]
     if (status === "open") {
       issues = await meetings.getOpenIssues(workspaceId, limit)

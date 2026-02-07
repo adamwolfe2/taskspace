@@ -76,10 +76,10 @@ export async function getAssessments(workspaceId: string): Promise<PeopleAssessm
   return rows.map(parseAssessment)
 }
 
-export async function getAssessment(id: string): Promise<PeopleAssessment | null> {
-  const { rows } = await sql`
-    SELECT * FROM people_assessments WHERE id = ${id}
-  `
+export async function getAssessment(id: string, workspaceId?: string): Promise<PeopleAssessment | null> {
+  const { rows } = workspaceId
+    ? await sql`SELECT * FROM people_assessments WHERE id = ${id} AND workspace_id = ${workspaceId}`
+    : await sql`SELECT * FROM people_assessments WHERE id = ${id}`
   if (rows.length === 0) return null
   return parseAssessment(rows[0])
 }
@@ -109,9 +109,10 @@ export async function createAssessment(data: {
 
 export async function updateAssessment(
   id: string,
-  data: Partial<Pick<PeopleAssessment, "getsIt" | "wantsIt" | "hasCapacity" | "coreValuesRating" | "rightPersonRightSeat" | "notes">>
+  data: Partial<Pick<PeopleAssessment, "getsIt" | "wantsIt" | "hasCapacity" | "coreValuesRating" | "rightPersonRightSeat" | "notes">>,
+  workspaceId?: string
 ): Promise<PeopleAssessment | null> {
-  const existing = await getAssessment(id)
+  const existing = await getAssessment(id, workspaceId)
   if (!existing) return null
 
   const getsIt = data.getsIt ?? existing.getsIt
@@ -121,22 +122,36 @@ export async function updateAssessment(
   const rprs = data.rightPersonRightSeat ?? existing.rightPersonRightSeat
   const notes = data.notes ?? existing.notes
 
-  const { rows } = await sql`
-    UPDATE people_assessments
-    SET gets_it = ${getsIt}, wants_it = ${wantsIt}, has_capacity = ${hasCapacity},
-        core_values_rating = ${coreValuesRating}::jsonb, right_person_right_seat = ${rprs},
-        notes = ${notes}, updated_at = NOW()
-    WHERE id = ${id}
-    RETURNING *
-  `
+  let rows
+  if (workspaceId) {
+    const result = await sql`
+      UPDATE people_assessments
+      SET gets_it = ${getsIt}, wants_it = ${wantsIt}, has_capacity = ${hasCapacity},
+          core_values_rating = ${coreValuesRating}::jsonb, right_person_right_seat = ${rprs},
+          notes = ${notes}, updated_at = NOW()
+      WHERE id = ${id} AND workspace_id = ${workspaceId}
+      RETURNING *
+    `
+    rows = result.rows
+  } else {
+    const result = await sql`
+      UPDATE people_assessments
+      SET gets_it = ${getsIt}, wants_it = ${wantsIt}, has_capacity = ${hasCapacity},
+          core_values_rating = ${coreValuesRating}::jsonb, right_person_right_seat = ${rprs},
+          notes = ${notes}, updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `
+    rows = result.rows
+  }
   if (rows.length === 0) return null
   return parseAssessment(rows[0])
 }
 
-export async function deleteAssessment(id: string): Promise<boolean> {
-  const { rows } = await sql`
-    DELETE FROM people_assessments WHERE id = ${id} RETURNING id
-  `
+export async function deleteAssessment(id: string, workspaceId?: string): Promise<boolean> {
+  const { rows } = workspaceId
+    ? await sql`DELETE FROM people_assessments WHERE id = ${id} AND workspace_id = ${workspaceId} RETURNING id`
+    : await sql`DELETE FROM people_assessments WHERE id = ${id} RETURNING id`
   return rows.length > 0
 }
 

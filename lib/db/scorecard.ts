@@ -214,16 +214,25 @@ export async function getMetricsByWorkspace(workspaceId: string): Promise<Scorec
 }
 
 /**
- * Get a single metric by ID
+ * Get a single metric by ID (optionally workspace-scoped)
  */
-export async function getMetricById(metricId: string): Promise<ScorecardMetric | null> {
-  const { rows } = await sql`
-    SELECT sm.*, u.name as owner_name
-    FROM scorecard_metrics sm
-    LEFT JOIN users u ON u.id = sm.owner_id
-    WHERE sm.id = ${metricId}
-      AND sm.deleted_at IS NULL
-  `
+export async function getMetricById(metricId: string, workspaceId?: string): Promise<ScorecardMetric | null> {
+  const { rows } = workspaceId
+    ? await sql`
+        SELECT sm.*, u.name as owner_name
+        FROM scorecard_metrics sm
+        LEFT JOIN users u ON u.id = sm.owner_id
+        WHERE sm.id = ${metricId}
+          AND sm.workspace_id = ${workspaceId}
+          AND sm.deleted_at IS NULL
+      `
+    : await sql`
+        SELECT sm.*, u.name as owner_name
+        FROM scorecard_metrics sm
+        LEFT JOIN users u ON u.id = sm.owner_id
+        WHERE sm.id = ${metricId}
+          AND sm.deleted_at IS NULL
+      `
   if (rows.length === 0) return null
   return parseMetric(rows[0])
 }

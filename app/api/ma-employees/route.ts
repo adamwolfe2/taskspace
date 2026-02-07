@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { maEmployeeCreateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // GET - Fetch all MA employees for a workspace
@@ -45,22 +47,7 @@ export const GET = withAuth(async (request, auth) => {
 // POST - Create a new MA employee
 export const POST = withAuth(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { firstName, lastName, supervisor, department, jobTitle, responsibilities, notes, email, workspaceId } = body
-
-    if (!firstName || !lastName) {
-      return NextResponse.json(
-        { success: false, error: "First name and last name are required" },
-        { status: 400 }
-      )
-    }
-
-    if (!workspaceId) {
-      return NextResponse.json(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
+    const { firstName, lastName, supervisor, department, jobTitle, responsibilities, notes, email, workspaceId } = await validateBody(request, maEmployeeCreateSchema)
 
     // Verify workspace belongs to user's organization
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)

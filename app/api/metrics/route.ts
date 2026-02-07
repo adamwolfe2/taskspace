@@ -16,6 +16,8 @@ import {
   getMetricHistory,
   type TeamMemberMetric,
 } from "@/lib/metrics"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { metricsCreateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 export const GET = withAuth(async (request, auth) => {
@@ -130,24 +132,9 @@ export const GET = withAuth(async (request, auth) => {
 
 export const POST = withAdmin(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { memberId, metricName, weeklyGoal } = body
+    const { memberId, metricName, weeklyGoal } = await validateBody(request, metricsCreateSchema)
 
     logger.info({ memberId, metricName, weeklyGoal }, "Metrics API: Setting metric for member")
-
-    if (!memberId || !metricName || weeklyGoal === undefined) {
-      return NextResponse.json(
-        { success: false, error: "memberId, metricName, and weeklyGoal are required" },
-        { status: 400 }
-      )
-    }
-
-    if (typeof weeklyGoal !== "number" || weeklyGoal < 0) {
-      return NextResponse.json(
-        { success: false, error: "weeklyGoal must be a non-negative number" },
-        { status: 400 }
-      )
-    }
 
     // Verify the member belongs to this organization
     const members = await db.members.findWithUsersByOrganizationId(auth.organization.id)

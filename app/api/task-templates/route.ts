@@ -5,6 +5,8 @@ import { isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { generateId } from "@/lib/auth/password"
 import type { TaskTemplate, ApiResponse } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { taskTemplateCreateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/task-templates - Get all templates for the user
@@ -55,15 +57,7 @@ export const GET = withAuth(async (request, auth) => {
 // POST /api/task-templates - Create a new template
 export const POST = withAuth(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { name, title, description, priority, defaultRockId, recurrence, isShared, workspaceId } = body
-
-    if (!name || !title) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Template name and title are required" },
-        { status: 400 }
-      )
-    }
+    const { name, title, description, priority, defaultRockId, recurrence, isShared, workspaceId } = await validateBody(request, taskTemplateCreateSchema)
 
     // If workspace-specific, validate access
     if (workspaceId) {

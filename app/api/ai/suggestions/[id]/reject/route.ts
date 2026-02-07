@@ -3,6 +3,8 @@ import { withAdmin } from "@/lib/api/middleware"
 import { getSuggestionById, rejectSuggestion } from "@/lib/ai/suggestions"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AISuggestion } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiSuggestionRejectSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // Rate limit: 30 suggestion rejections per user per hour
@@ -53,8 +55,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
-    const body = await request.json().catch(() => ({}))
-    const { reviewerNotes } = body as { reviewerNotes?: string }
+    const { reviewerNotes } = await validateBody(request, aiSuggestionRejectSchema).catch(() => ({ reviewerNotes: undefined }))
 
     // Verify suggestion exists and belongs to this org
     const suggestion = await getSuggestionById(id)

@@ -7,6 +7,8 @@ import { AI_OPERATION_COSTS } from "@/lib/billing/plans"
 import { getUserWorkspaces } from "@/lib/db/workspaces"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiEodParseSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // Rate limit: 20 EOD parses per user per hour
@@ -88,24 +90,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    const body = await request.json()
-    const { content, quarter } = body
-
-    if (!content || typeof content !== "string" || content.trim().length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Text dump content is required" },
-        { status: 400 }
-      )
-    }
-
-    // Prevent excessively large inputs from exhausting AI credits
-    const MAX_CONTENT_LENGTH = 50000 // ~50KB, roughly 12,500 tokens
-    if (content.length > MAX_CONTENT_LENGTH) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `Content too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.` },
-        { status: 400 }
-      )
-    }
+    const { content, quarter } = await validateBody(request, aiEodParseSchema)
 
     // Use provided quarter or default to current
     const targetQuarter = quarter || getCurrentQuarter()

@@ -11,6 +11,8 @@ import { NextRequest } from "next/server"
 import { sql } from "@/lib/db/sql"
 import { Errors, paginatedResponse, successResponse } from "@/lib/api/errors"
 import { z } from "zod"
+import { validateBody, validateQuery, ValidationError } from "@/lib/validation/middleware"
+import { auditSummarySchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 import { withAdmin } from "@/lib/api/middleware"
 
@@ -37,18 +39,18 @@ const auditQuerySchema = z.object({
 
 export const GET = withAdmin(async (request, auth) => {
   try {
-    // Parse query params with defaults
-    const searchParams = new URL(request.url).searchParams
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10))
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10)))
-    const action = searchParams.get("action")
-    const actorId = searchParams.get("actorId")
-    const resourceType = searchParams.get("resourceType")
-    const resourceId = searchParams.get("resourceId")
-    const severity = searchParams.get("severity")
-    const startDate = searchParams.get("startDate")
-    const endDate = searchParams.get("endDate")
-    const search = searchParams.get("search")
+    // Validate and parse query params
+    const validated = validateQuery(request, auditQuerySchema)
+    const page = validated.page
+    const limit = validated.limit
+    const action = validated.action || null
+    const actorId = validated.actorId || null
+    const resourceType = validated.resourceType || null
+    const resourceId = validated.resourceId || null
+    const severity = validated.severity || null
+    const startDate = validated.startDate || null
+    const endDate = validated.endDate || null
+    const search = validated.search || null
 
     const offset = (page - 1) * limit
 
@@ -134,8 +136,7 @@ export const GET = withAdmin(async (request, auth) => {
 
 export const POST = withAdmin(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { startDate, endDate } = body
+    const { startDate, endDate } = await validateBody(request, auditSummarySchema)
 
     // Get activity summary
     const { rows: activityByAction } = await sql`

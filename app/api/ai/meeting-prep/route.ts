@@ -3,19 +3,19 @@ import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { generateMeetingPrep } from "@/lib/ai/claude-client"
 import { getScorecardTrends } from "@/lib/db/scorecard"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiMeetingPrepSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
 export const POST = withAuth(async (request, auth) => {
   try {
-    const { workspaceId, rocks, tasks, issues } = await request.json()
-
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Workspace ID is required" },
-        { status: 400 }
-      )
-    }
+    const validated = await validateBody(request, aiMeetingPrepSchema)
+    const { workspaceId } = validated
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rocks = validated.rocks as any
+    const tasks = validated.tasks as any
+    const issues = validated.issues as any
 
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {

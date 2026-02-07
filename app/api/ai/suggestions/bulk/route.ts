@@ -10,6 +10,8 @@ import {
 import { generateId } from "@/lib/auth/password"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AISuggestion, AssignedTask } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiBulkSuggestionSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // Rate limit: 10 bulk operations per user per hour
@@ -64,30 +66,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       return response
     }
 
-    const body = await request.json()
-    const { action, suggestionIds, reviewerNotes } = body as BulkActionRequest
-
-    if (!action || !["approve", "reject"].includes(action)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid action. Must be 'approve' or 'reject'" },
-        { status: 400 }
-      )
-    }
-
-    if (!suggestionIds || !Array.isArray(suggestionIds) || suggestionIds.length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "suggestionIds array is required" },
-        { status: 400 }
-      )
-    }
-
-    // Limit bulk operations
-    if (suggestionIds.length > 100) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Maximum 100 suggestions per bulk operation" },
-        { status: 400 }
-      )
-    }
+    const { action, suggestionIds, reviewerNotes } = await validateBody(request, aiBulkSuggestionSchema)
 
     // Verify all suggestions belong to this org
     const suggestions = await getSuggestions(auth.organization.id, {

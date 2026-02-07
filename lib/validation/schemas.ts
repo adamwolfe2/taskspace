@@ -888,3 +888,284 @@ export const upsertWorkspaceNoteSchema = z.object({
 })
 
 export type UpsertWorkspaceNoteInput = z.infer<typeof upsertWorkspaceNoteSchema>
+
+// ============================================
+// AI ENDPOINT SCHEMAS
+// ============================================
+
+export const aiBrainDumpSchema = z.object({
+  content: z.string().min(1, "Brain dump content is required").max(50000),
+})
+
+export const aiQueryRequestSchema = z.object({
+  query: z.string().min(1, "Query is required").max(50000),
+  workspaceId: z.string().min(1).optional(),
+})
+
+export const aiEodParseSchema = z.object({
+  content: z.string().min(1, "Text dump content is required").max(50000),
+  quarter: z.string().regex(/^Q[1-4] \d{4}$/).optional(),
+})
+
+export const aiDigestSchema = z.object({
+  date: dateSchema.optional(),
+})
+
+export const aiSlackNotificationSchema = z.object({
+  type: z.enum(["task", "digest", "custom"]),
+  workspaceId: z.string().min(1, "workspaceId is required"),
+  data: z.record(z.unknown()).default({}),
+})
+
+export const aiTaskPatchSchema = z.object({
+  taskId: z.string().min(1, "Task ID is required"),
+  action: z.enum(["approve", "reject", "update"]),
+  updates: z.record(z.unknown()).optional(),
+})
+
+export const aiBulkSuggestionSchema = z.object({
+  action: z.enum(["approve", "reject"]),
+  suggestionIds: z.array(z.string().min(1)).min(1).max(100),
+  reviewerNotes: z.string().max(2000).optional(),
+})
+
+export const aiSuggestionApproveSchema = z.object({
+  modifiedData: z.record(z.unknown()).optional(),
+  reviewerNotes: z.string().max(2000).optional(),
+})
+
+export const aiSuggestionRejectSchema = z.object({
+  reviewerNotes: z.string().max(2000).optional(),
+})
+
+export const aiPrioritizeSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  tasks: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    priority: z.string(),
+    status: z.string(),
+    dueDate: z.string().optional(),
+    assigneeName: z.string().optional(),
+    rockTitle: z.string().optional(),
+  })).default([]),
+  rocks: z.array(z.object({
+    title: z.string(),
+    progress: z.number(),
+    status: z.string(),
+  })).default([]),
+})
+
+export const aiMeetingNotesSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  meetingData: z.record(z.unknown()),
+})
+
+export const aiManagerInsightsSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  directReports: z.array(z.record(z.unknown())).optional(),
+  rocks: z.array(z.record(z.unknown())).optional(),
+  tasks: z.array(z.record(z.unknown())).optional(),
+  eodReports: z.array(z.record(z.unknown())).optional(),
+})
+
+export const aiMeetingPrepSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  rocks: z.array(z.record(z.unknown())).optional(),
+  tasks: z.array(z.record(z.unknown())).optional(),
+  issues: z.array(z.record(z.unknown())).optional(),
+})
+
+export const aiScorecardInsightsSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+})
+
+export const rockParseSchema = z.object({
+  text: z.string().min(10, "Please provide rock text to parse (at least 10 characters)").max(50000),
+})
+
+// ============================================
+// FEATURE ENDPOINT SCHEMAS
+// ============================================
+
+export const metricsCreateSchema = z.object({
+  memberId: z.string().min(1, "memberId is required"),
+  metricName: z.string().min(1, "metricName is required").max(200),
+  weeklyGoal: z.number().min(0, "weeklyGoal must be a non-negative number"),
+})
+
+export const asanaSyncSchema = z.object({
+  direction: z.enum(["to_asana", "from_asana", "both"]).default("both"),
+})
+
+export const asanaConnectSchema = z.object({
+  personalAccessToken: z.string().min(1, "Personal Access Token is required"),
+  workspaceGid: z.string().optional(),
+  aimsWorkspaceId: z.string().optional(),
+})
+
+export const peopleAssessmentCreateSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  employeeId: z.string().min(1, "Employee ID is required"),
+  employeeName: z.string().optional(),
+  getsIt: z.boolean().default(false),
+  wantsIt: z.boolean().default(false),
+  hasCapacity: z.boolean().default(false),
+  coreValuesRating: z.record(z.unknown()).optional(),
+  rightPersonRightSeat: z.enum(["right", "wrong", "unsure"]).optional(),
+  notes: z.string().max(5000).optional(),
+})
+
+export const peopleAssessmentUpdateSchema = z.object({
+  getsIt: z.boolean().optional(),
+  wantsIt: z.boolean().optional(),
+  hasCapacity: z.boolean().optional(),
+  coreValuesRating: z.record(z.unknown()).optional(),
+  rightPersonRightSeat: z.enum(["right", "wrong", "unsure"]).optional(),
+  notes: z.string().max(5000).optional(),
+})
+
+export const vtoUpsertSchema = z.object({
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+}).passthrough()
+
+export const taskTemplateCreateSchema = z.object({
+  name: z.string().min(1, "Template name is required").max(200),
+  title: z.string().min(1, "Title is required").max(500),
+  description: z.string().max(5000).optional(),
+  priority: prioritySchema.default("normal"),
+  defaultRockId: z.string().optional(),
+  recurrence: recurrenceSchema.optional(),
+  isShared: z.boolean().default(false),
+  workspaceId: z.string().optional(),
+})
+
+export const workspaceFeaturesUpdateSchema = z.object({
+  features: z.record(z.record(z.boolean())),
+})
+
+export const bulkRockCreateSchema = z.object({
+  rocks: z.array(z.object({
+    title: z.string().min(1).max(500),
+    description: z.string().max(5000).optional(),
+    milestones: z.array(z.string()).optional(),
+    quarter: z.string().optional(),
+    dueDate: z.string().optional(),
+  })).min(1, "At least one rock is required").max(50),
+  userId: z.string().min(1, "User ID is required"),
+  metrics: z.array(z.object({
+    assigneeName: z.string(),
+    metricName: z.string(),
+    weeklyGoal: z.number(),
+  })).optional(),
+  workspaceId: z.string().optional(),
+})
+
+export const orgChartChatSchema = z.object({
+  message: z.string().min(1, "Message is required").max(50000),
+  workspaceId: z.string().min(1, "workspaceId is required"),
+})
+
+export const orgChartProgressSchema = z.object({
+  employeeName: z.string().min(1, "Employee name is required"),
+  rockIndex: z.number().int().min(0),
+  bulletIndex: z.number().int().min(0),
+  completed: z.boolean(),
+  updatedBy: z.string().optional(),
+})
+
+export const orgChartSyncRocksSchema = z.object({
+  workspaceId: z.string().min(1, "workspaceId is required"),
+})
+
+export const maEmployeeCreateSchema = z.object({
+  firstName: z.string().min(1, "First name is required").max(100),
+  lastName: z.string().min(1, "Last name is required").max(100),
+  supervisor: z.string().max(200).nullable().optional(),
+  department: z.string().max(100).nullable().optional(),
+  jobTitle: z.string().max(200).nullable().optional(),
+  responsibilities: z.string().max(5000).nullable().optional(),
+  notes: z.string().max(5000).nullable().optional(),
+  email: z.string().email().nullable().optional(),
+  workspaceId: z.string().min(1, "workspaceId is required"),
+})
+
+export const maEmployeeUpdateSchema = z.object({
+  firstName: z.string().min(1).max(100).optional(),
+  lastName: z.string().min(1).max(100).optional(),
+  supervisor: z.string().max(200).nullable().optional(),
+  department: z.string().max(100).nullable().optional(),
+  jobTitle: z.string().max(200).nullable().optional(),
+  responsibilities: z.string().max(5000).nullable().optional(),
+  notes: z.string().max(5000).nullable().optional(),
+  email: z.string().email().nullable().optional(),
+  isActive: z.boolean().optional(),
+})
+
+export const userCreateOrganizationSchema = z.object({
+  name: z.string().min(1, "Organization name is required").max(100),
+})
+
+export const streakUpdateSchema = z.object({
+  date: dateSchema.optional(),
+})
+
+export const auditSummarySchema = z.object({
+  startDate: dateSchema.optional(),
+  endDate: dateSchema.optional(),
+})
+
+export const firecrawlScrapeSchema = z.object({
+  url: z.string().min(1, "URL is required").max(2048),
+})
+
+export const orgChartEmployeeRocksSchema = z.object({
+  rocks: z.string(),
+})
+
+export const crossWorkspaceTaskCreateSchema = z.object({
+  targetOrganizationId: z.string().min(1, "Target organization ID is required"),
+  title: z.string().min(2, "Task title is required (min 2 characters)").max(500),
+  description: z.string().max(5000).optional(),
+  priority: prioritySchema.default("normal"),
+  assigneeId: z.string().optional(),
+  dueDate: dateSchema.optional(),
+})
+
+// ============================================
+// TYPE EXPORTS - NEW SCHEMAS
+// ============================================
+
+export type AIBrainDumpInput = z.infer<typeof aiBrainDumpSchema>
+export type AIQueryRequestInput = z.infer<typeof aiQueryRequestSchema>
+export type AIEodParseInput = z.infer<typeof aiEodParseSchema>
+export type AIDigestInput = z.infer<typeof aiDigestSchema>
+export type AISlackNotificationInput = z.infer<typeof aiSlackNotificationSchema>
+export type AITaskPatchInput = z.infer<typeof aiTaskPatchSchema>
+export type AIBulkSuggestionInput = z.infer<typeof aiBulkSuggestionSchema>
+export type AIPrioritizeInput = z.infer<typeof aiPrioritizeSchema>
+export type AIMeetingNotesInput = z.infer<typeof aiMeetingNotesSchema>
+export type AIManagerInsightsInput = z.infer<typeof aiManagerInsightsSchema>
+export type AIMeetingPrepInput = z.infer<typeof aiMeetingPrepSchema>
+export type AIScorecardInsightsInput = z.infer<typeof aiScorecardInsightsSchema>
+export type RockParseInput = z.infer<typeof rockParseSchema>
+export type MetricsCreateInput = z.infer<typeof metricsCreateSchema>
+export type AsanaSyncInput = z.infer<typeof asanaSyncSchema>
+export type AsanaConnectInput = z.infer<typeof asanaConnectSchema>
+export type PeopleAssessmentCreateInput = z.infer<typeof peopleAssessmentCreateSchema>
+export type PeopleAssessmentUpdateInput = z.infer<typeof peopleAssessmentUpdateSchema>
+export type VtoUpsertInput = z.infer<typeof vtoUpsertSchema>
+export type TaskTemplateCreateInput = z.infer<typeof taskTemplateCreateSchema>
+export type WorkspaceFeaturesUpdateInput = z.infer<typeof workspaceFeaturesUpdateSchema>
+export type BulkRockCreateInput = z.infer<typeof bulkRockCreateSchema>
+export type OrgChartChatInput = z.infer<typeof orgChartChatSchema>
+export type OrgChartProgressInput = z.infer<typeof orgChartProgressSchema>
+export type OrgChartSyncRocksInput = z.infer<typeof orgChartSyncRocksSchema>
+export type MaEmployeeCreateInput = z.infer<typeof maEmployeeCreateSchema>
+export type MaEmployeeUpdateInput = z.infer<typeof maEmployeeUpdateSchema>
+export type UserCreateOrganizationInput = z.infer<typeof userCreateOrganizationSchema>
+export type StreakUpdateInput = z.infer<typeof streakUpdateSchema>
+export type AuditSummaryInput = z.infer<typeof auditSummarySchema>
+export type FirecrawlScrapeInput = z.infer<typeof firecrawlScrapeSchema>
+export type OrgChartEmployeeRocksInput = z.infer<typeof orgChartEmployeeRocksSchema>
+export type CrossWorkspaceTaskCreateInput = z.infer<typeof crossWorkspaceTaskCreateSchema>

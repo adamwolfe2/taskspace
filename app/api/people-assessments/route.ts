@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { peopleAssessments } from "@/lib/db/people-assessments"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { peopleAssessmentCreateSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 import type { PeopleAssessment, PeopleAnalyzerSummary } from "@/lib/db/people-assessments"
@@ -61,15 +63,7 @@ export const GET = withAuth(async (request, auth) => {
 // POST /api/people-assessments
 export const POST = withAuth(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { workspaceId, employeeId, employeeName, getsIt, wantsIt, hasCapacity, coreValuesRating, rightPersonRightSeat, notes } = body
-
-    if (!workspaceId || !employeeId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Workspace ID and employee ID are required" },
-        { status: 400 }
-      )
-    }
+    const { workspaceId, employeeId, employeeName, getsIt, wantsIt, hasCapacity, coreValuesRating, rightPersonRightSeat, notes } = await validateBody(request, peopleAssessmentCreateSchema)
 
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {

@@ -7,6 +7,8 @@ import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { encryptToken, decryptToken } from "@/lib/crypto/token-encryption"
 import { withAuth } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { asanaConnectSchema } from "@/lib/validation/schemas"
 
 const ASANA_API_BASE = "https://app.asana.com/api/1.0"
 
@@ -64,17 +66,7 @@ export const GET = withAuth(async (request, auth) => {
  */
 export const POST = withAuth(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { personalAccessToken, workspaceGid, aimsWorkspaceId } = body
-
-    if (!personalAccessToken) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Personal Access Token is required" },
-        { status: 400 }
-      )
-    }
-
-    // workspaceId is optional - workspace feature temporarily disabled
+    const { personalAccessToken, workspaceGid, aimsWorkspaceId } = await validateBody(request, asanaConnectSchema)
 
     // Validate the PAT by fetching user info
     const meResponse = await fetch(`${ASANA_API_BASE}/users/me`, {
@@ -155,7 +147,7 @@ export const POST = withAuth(async (request, auth) => {
         connected: true,
         asanaEmail: asanaUser.email,
         asanaName: asanaUser.name,
-        workspaceGid: selectedWorkspaceGid,
+        workspaceGid: selectedWorkspaceGid || null,
       },
       message: "Asana account connected successfully for this workspace",
     })

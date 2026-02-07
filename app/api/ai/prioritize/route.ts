@@ -2,23 +2,14 @@ import { NextResponse } from "next/server"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { prioritizeTasks } from "@/lib/ai/claude-client"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiPrioritizeSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
 export const POST = withAuth(async (request, auth) => {
   try {
-    const { workspaceId, tasks, rocks } = await request.json() as {
-      workspaceId: string
-      tasks: Array<{ id: string; title: string; priority: string; status: string; dueDate?: string; assigneeName?: string; rockTitle?: string }>
-      rocks: Array<{ title: string; progress: number; status: string }>
-    }
-
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Workspace ID is required" },
-        { status: 400 }
-      )
-    }
+    const { workspaceId, tasks, rocks } = await validateBody(request, aiPrioritizeSchema)
 
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {

@@ -16,6 +16,8 @@ import { withAuth } from "@/lib/api/middleware"
 import { scrapeWebsite, FirecrawlError } from "@/lib/integrations/firecrawl"
 import { extractBrandData, type BrandExtractionResult } from "@/lib/utils/brand-extractor"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { firecrawlScrapeSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
@@ -116,24 +118,23 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
   }
 
   // Parse and validate request body
-  let body: { url?: unknown }
+  let parsedBody: { url: string }
   try {
-    body = await request.json()
-  } catch {
+    parsedBody = await validateBody(request, firecrawlScrapeSchema)
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: 400 }
+      )
+    }
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Invalid JSON in request body" },
       { status: 400 }
     )
   }
 
-  if (!body.url || typeof body.url !== "string") {
-    return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Missing required field: url" },
-      { status: 400 }
-    )
-  }
-
-  const validatedUrl = validateUrl(body.url)
+  const validatedUrl = validateUrl(parsedBody.url)
   if (!validatedUrl) {
     return NextResponse.json<ApiResponse<null>>(
       {

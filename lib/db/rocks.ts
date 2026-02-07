@@ -312,9 +312,20 @@ export async function getActiveRocksByWorkspace(workspaceId: string): Promise<Ro
 }
 
 /**
- * Get a single rock by ID with user info
+ * Get a single rock by ID with user info (optionally workspace-scoped)
  */
-export async function getRockById(rockId: string): Promise<Rock | null> {
+export async function getRockById(rockId: string, workspaceId?: string): Promise<Rock | null> {
+  if (workspaceId) {
+    const { rows } = await sql`
+      SELECT r.*, u.name as user_name
+      FROM rocks r
+      LEFT JOIN users u ON u.id = r.user_id
+      WHERE r.id = ${rockId} AND r.workspace_id = ${workspaceId}
+      LIMIT 1
+    `
+    if (rows.length === 0) return null
+    return parseRock(rows[0])
+  }
   const { rows } = await sql`
     SELECT r.*, u.name as user_name
     FROM rocks r
@@ -327,13 +338,28 @@ export async function getRockById(rockId: string): Promise<Rock | null> {
 }
 
 /**
- * Update rock confidence with notes
+ * Update rock confidence with notes (optionally workspace-scoped)
  */
 export async function updateRockConfidence(
   rockId: string,
   confidence: RockConfidence,
-  notes?: string
+  notes?: string,
+  workspaceId?: string
 ): Promise<Rock | null> {
+  if (workspaceId) {
+    const { rows } = await sql`
+      UPDATE rocks
+      SET
+        confidence = ${confidence},
+        confidence_notes = ${notes || null},
+        confidence_updated_at = NOW(),
+        updated_at = NOW()
+      WHERE id = ${rockId} AND workspace_id = ${workspaceId}
+      RETURNING *
+    `
+    if (rows.length === 0) return null
+    return parseRock(rows[0])
+  }
   const { rows } = await sql`
     UPDATE rocks
     SET
@@ -349,9 +375,24 @@ export async function updateRockConfidence(
 }
 
 /**
- * Mark a rock as completed
+ * Mark a rock as completed (optionally workspace-scoped)
  */
-export async function completeRock(rockId: string): Promise<Rock | null> {
+export async function completeRock(rockId: string, workspaceId?: string): Promise<Rock | null> {
+  if (workspaceId) {
+    const { rows } = await sql`
+      UPDATE rocks
+      SET
+        status = 'completed',
+        progress = 100,
+        completed_at = NOW(),
+        confidence = 'on_track',
+        updated_at = NOW()
+      WHERE id = ${rockId} AND workspace_id = ${workspaceId}
+      RETURNING *
+    `
+    if (rows.length === 0) return null
+    return parseRock(rows[0])
+  }
   const { rows } = await sql`
     UPDATE rocks
     SET
@@ -368,9 +409,22 @@ export async function completeRock(rockId: string): Promise<Rock | null> {
 }
 
 /**
- * Reopen a completed rock
+ * Reopen a completed rock (optionally workspace-scoped)
  */
-export async function reopenRock(rockId: string): Promise<Rock | null> {
+export async function reopenRock(rockId: string, workspaceId?: string): Promise<Rock | null> {
+  if (workspaceId) {
+    const { rows } = await sql`
+      UPDATE rocks
+      SET
+        status = 'on-track',
+        completed_at = NULL,
+        updated_at = NOW()
+      WHERE id = ${rockId} AND workspace_id = ${workspaceId}
+      RETURNING *
+    `
+    if (rows.length === 0) return null
+    return parseRock(rows[0])
+  }
   const { rows } = await sql`
     UPDATE rocks
     SET

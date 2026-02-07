@@ -4,6 +4,8 @@ import { withAdmin } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
 import type { Rock, ApiResponse } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { bulkRockCreateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 interface BulkRockInput {
@@ -32,27 +34,7 @@ interface BulkCreateResponse {
  */
 export const POST = withAdmin(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { rocks, userId, metrics, workspaceId } = body as {
-      rocks: BulkRockInput[]
-      userId: string
-      metrics?: MetricInput[]
-      workspaceId?: string
-    }
-
-    if (!rocks || !Array.isArray(rocks) || rocks.length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "At least one rock is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!userId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "User ID is required" },
-        { status: 400 }
-      )
-    }
+    const { rocks, userId, metrics, workspaceId } = await validateBody(request, bulkRockCreateSchema)
 
     // Validate workspace if provided
     if (workspaceId) {

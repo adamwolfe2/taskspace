@@ -285,12 +285,12 @@ export async function createMeeting(params: CreateMeetingParams): Promise<Meetin
 }
 
 /**
- * Get a meeting by ID with all sections
+ * Get a meeting by ID with all sections (optionally workspace-scoped)
  */
-export async function getMeetingById(meetingId: string): Promise<MeetingWithDetails | null> {
-  const { rows: meetingRows } = await sql`
-    SELECT * FROM meetings WHERE id = ${meetingId}
-  `
+export async function getMeetingById(meetingId: string, workspaceId?: string): Promise<MeetingWithDetails | null> {
+  const { rows: meetingRows } = workspaceId
+    ? await sql`SELECT * FROM meetings WHERE id = ${meetingId} AND workspace_id = ${workspaceId}`
+    : await sql`SELECT * FROM meetings WHERE id = ${meetingId}`
 
   if (meetingRows.length === 0) return null
 
@@ -697,15 +697,22 @@ export async function createIssue(params: CreateIssueParams): Promise<Issue> {
 }
 
 /**
- * Get issue by ID
+ * Get issue by ID (optionally workspace-scoped)
  */
-export async function getIssueById(issueId: string): Promise<Issue | null> {
-  const { rows } = await sql`
-    SELECT i.*, u.name as owner_name
-    FROM issues i
-    LEFT JOIN users u ON u.id = i.owner_id
-    WHERE i.id = ${issueId}
-  `
+export async function getIssueById(issueId: string, workspaceId?: string): Promise<Issue | null> {
+  const { rows } = workspaceId
+    ? await sql`
+        SELECT i.*, u.name as owner_name
+        FROM issues i
+        LEFT JOIN users u ON u.id = i.owner_id
+        WHERE i.id = ${issueId} AND i.workspace_id = ${workspaceId}
+      `
+    : await sql`
+        SELECT i.*, u.name as owner_name
+        FROM issues i
+        LEFT JOIN users u ON u.id = i.owner_id
+        WHERE i.id = ${issueId}
+      `
 
   if (rows.length === 0) return null
   return parseIssue(rows[0])
@@ -1020,6 +1027,120 @@ export async function deleteMeetingTodo(todoId: string): Promise<boolean> {
 }
 
 // ============================================
+// PAGINATED QUERIES
+// ============================================
+
+import type { PaginationParams } from "../utils/pagination"
+
+/**
+ * List meetings with cursor-based pagination (ordered by scheduled_at desc)
+ */
+export async function listMeetingsPaginated(
+  workspaceId: string,
+  pagination: PaginationParams,
+  filters?: { status?: MeetingStatus | null }
+): Promise<{ meetings: Meeting[]; totalCount: number }> {
+  const { cursor, limit } = pagination
+  const fetchLimit = limit + 1
+  const status = filters?.status || null
+
+  let cursorTimestamp: string | null = null
+  let cursorId: string | null = null
+  if (cursor) {
+    const { decodeCursor } = await import("../utils/pagination")
+    const decoded = decodeCursor(cursor)
+    if (decoded) {
+      cursorTimestamp = decoded.timestamp
+      cursorId = decoded.id
+    }
+  }
+
+  // Count
+  let countPromise
+  if (status) {
+    countPromise = sql`SELECT COUNT(*) as count FROM meetings WHERE workspace_id = ${workspaceId} AND status = ${status}`
+  } else {
+    countPromise = sql`SELECT COUNT(*) as count FROM meetings WHERE workspace_id = ${workspaceId}`
+  }
+
+  // Data - cursor uses scheduled_at for meetings
+  let dataPromise
+  if (cursorTimestamp && cursorId) {
+    if (status) {
+      dataPromise = sql`SELECT * FROM meetings WHERE workspace_id = ${workspaceId} AND status = ${status} AND (scheduled_at < ${cursorTimestamp}::timestamptz OR (scheduled_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY scheduled_at DESC, id DESC LIMIT ${fetchLimit}`
+    } else {
+      dataPromise = sql`SELECT * FROM meetings WHERE workspace_id = ${workspaceId} AND (scheduled_at < ${cursorTimestamp}::timestamptz OR (scheduled_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY scheduled_at DESC, id DESC LIMIT ${fetchLimit}`
+    }
+  } else {
+    if (status) {
+      dataPromise = sql`SELECT * FROM meetings WHERE workspace_id = ${workspaceId} AND status = ${status} ORDER BY scheduled_at DESC, id DESC LIMIT ${fetchLimit}`
+    } else {
+      dataPromise = sql`SELECT * FROM meetings WHERE workspace_id = ${workspaceId} ORDER BY scheduled_at DESC, id DESC LIMIT ${fetchLimit}`
+    }
+  }
+
+  const [countResult, dataResult] = await Promise.all([countPromise, dataPromise])
+  const totalCount = parseInt(countResult.rows[0]?.count || "0", 10)
+  const meetingsList = dataResult.rows.map(parseMeeting)
+
+  return { meetings: meetingsList, totalCount }
+}
+
+/**
+ * List issues with cursor-based pagination
+ */
+export async function listIssuesPaginated(
+  workspaceId: string,
+  pagination: PaginationParams,
+  filters?: { status?: IssueStatus | null }
+): Promise<{ issues: Issue[]; totalCount: number }> {
+  const { cursor, limit } = pagination
+  const fetchLimit = limit + 1
+  const status = filters?.status || null
+
+  let cursorTimestamp: string | null = null
+  let cursorId: string | null = null
+  if (cursor) {
+    const { decodeCursor } = await import("../utils/pagination")
+    const decoded = decodeCursor(cursor)
+    if (decoded) {
+      cursorTimestamp = decoded.timestamp
+      cursorId = decoded.id
+    }
+  }
+
+  // Count
+  let countPromise
+  if (status) {
+    countPromise = sql`SELECT COUNT(*) as count FROM issues WHERE workspace_id = ${workspaceId} AND status = ${status}`
+  } else {
+    countPromise = sql`SELECT COUNT(*) as count FROM issues WHERE workspace_id = ${workspaceId}`
+  }
+
+  // Data
+  let dataPromise
+  if (cursorTimestamp && cursorId) {
+    if (status) {
+      dataPromise = sql`SELECT i.*, u.name as owner_name FROM issues i LEFT JOIN users u ON u.id = i.owner_id WHERE i.workspace_id = ${workspaceId} AND i.status = ${status} AND (i.created_at < ${cursorTimestamp}::timestamptz OR (i.created_at = ${cursorTimestamp}::timestamptz AND i.id < ${cursorId})) ORDER BY i.created_at DESC, i.id DESC LIMIT ${fetchLimit}`
+    } else {
+      dataPromise = sql`SELECT i.*, u.name as owner_name FROM issues i LEFT JOIN users u ON u.id = i.owner_id WHERE i.workspace_id = ${workspaceId} AND (i.created_at < ${cursorTimestamp}::timestamptz OR (i.created_at = ${cursorTimestamp}::timestamptz AND i.id < ${cursorId})) ORDER BY i.created_at DESC, i.id DESC LIMIT ${fetchLimit}`
+    }
+  } else {
+    if (status) {
+      dataPromise = sql`SELECT i.*, u.name as owner_name FROM issues i LEFT JOIN users u ON u.id = i.owner_id WHERE i.workspace_id = ${workspaceId} AND i.status = ${status} ORDER BY i.created_at DESC, i.id DESC LIMIT ${fetchLimit}`
+    } else {
+      dataPromise = sql`SELECT i.*, u.name as owner_name FROM issues i LEFT JOIN users u ON u.id = i.owner_id WHERE i.workspace_id = ${workspaceId} ORDER BY i.created_at DESC, i.id DESC LIMIT ${fetchLimit}`
+    }
+  }
+
+  const [countResult, dataResult] = await Promise.all([countPromise, dataPromise])
+  const totalCount = parseInt(countResult.rows[0]?.count || "0", 10)
+  const issues = dataResult.rows.map(parseIssue)
+
+  return { issues, totalCount }
+}
+
+// ============================================
 // EXPORT
 // ============================================
 
@@ -1029,6 +1150,7 @@ export const meetings = {
   getById: getMeetingById,
   getByWorkspace: getMeetingsByWorkspace,
   list: listMeetings,
+  listPaginated: listMeetingsPaginated,
   update: updateMeeting,
   getUpcoming: getUpcomingMeetings,
   start: startMeeting,
@@ -1047,6 +1169,7 @@ export const meetings = {
   getOpenIssues,
   getIssuesByWorkspace,
   listIssues,
+  listIssuesPaginated,
   updateIssue,
   resolveIssue,
   dropIssue,

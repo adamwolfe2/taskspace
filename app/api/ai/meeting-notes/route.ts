@@ -2,19 +2,17 @@ import { NextResponse } from "next/server"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { generateMeetingNotesSummary } from "@/lib/ai/claude-client"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiMeetingNotesSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
 export const POST = withAuth(async (request, auth) => {
   try {
-    const { workspaceId, meetingData } = await request.json()
-
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Workspace ID is required" },
-        { status: 400 }
-      )
-    }
+    const validated = await validateBody(request, aiMeetingNotesSchema)
+    const { workspaceId } = validated
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const meetingData = validated.meetingData as any
 
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {

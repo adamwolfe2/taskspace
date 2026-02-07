@@ -64,18 +64,28 @@ export async function getIdsBoardItems(workspaceId: string): Promise<IdsBoardIte
 }
 
 /**
- * Get a single IDS board item by ID
+ * Get a single IDS board item by ID (optionally workspace-scoped)
  */
-export async function getIdsBoardItemById(itemId: string): Promise<IdsBoardItem | null> {
-  const { rows } = await sql`
-    SELECT i.*,
-      cu.name as created_by_name,
-      au.name as assigned_to_name
-    FROM ids_board_items i
-    LEFT JOIN users cu ON cu.id = i.created_by
-    LEFT JOIN users au ON au.id = i.assigned_to
-    WHERE i.id = ${itemId}
-  `
+export async function getIdsBoardItemById(itemId: string, workspaceId?: string): Promise<IdsBoardItem | null> {
+  const { rows } = workspaceId
+    ? await sql`
+        SELECT i.*,
+          cu.name as created_by_name,
+          au.name as assigned_to_name
+        FROM ids_board_items i
+        LEFT JOIN users cu ON cu.id = i.created_by
+        LEFT JOIN users au ON au.id = i.assigned_to
+        WHERE i.id = ${itemId} AND i.workspace_id = ${workspaceId}
+      `
+    : await sql`
+        SELECT i.*,
+          cu.name as created_by_name,
+          au.name as assigned_to_name
+        FROM ids_board_items i
+        LEFT JOIN users cu ON cu.id = i.created_by
+        LEFT JOIN users au ON au.id = i.assigned_to
+        WHERE i.id = ${itemId}
+      `
   if (rows.length === 0) return null
   return parseItem(rows[0])
 }

@@ -7,6 +7,8 @@ import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createRockSchema, updateRockSchema } from "@/lib/validation/schemas"
 import type { Rock, ApiResponse } from "@/lib/types"
+import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
+import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/rocks - Get rocks
@@ -46,6 +48,47 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       }
     }
 
+    // Check if pagination params are provided
+    const cursor = searchParams.get("cursor")
+    const limitParam = searchParams.get("limit")
+    const usePagination = cursor !== null || limitParam !== null
+
+    if (usePagination) {
+      // Paginated path
+      const pagination = parsePaginationParams(searchParams)
+      const filterUserId = userId
+        ? (userId !== auth.user.id && !isAdmin(auth) ? "__denied__" : userId)
+        : (isAdmin(auth) ? undefined : auth.user.id)
+
+      if (filterUserId === "__denied__") {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "You can only view your own rocks" },
+          { status: 403 }
+        )
+      }
+
+      const { rocks, totalCount } = await db.rocks.findPaginated(
+        auth.organization.id,
+        workspaceId,
+        pagination,
+        { userId: filterUserId, quarter: quarter || undefined }
+      )
+
+      const response = buildPaginatedResponse(
+        rocks,
+        pagination.limit,
+        totalCount,
+        (r) => r.createdAt,
+        (r) => r.id
+      )
+
+      return NextResponse.json<ApiResponse<PaginatedResponse<Rock>>>({
+        success: true,
+        data: response,
+      })
+    }
+
+    // Legacy non-paginated path (backward compatible)
     let rocks: Rock[]
 
     if (userId) {
@@ -57,16 +100,17 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
         )
       }
       rocks = await db.rocks.findByUserId(userId, auth.organization.id)
+      // Filter by workspace since findByUserId doesn't support workspaceId
+      rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
     } else if (isAdmin(auth)) {
-      // Admins can see all rocks in the workspace
-      rocks = await db.rocks.findByOrganizationId(auth.organization.id)
+      // Admins can see all rocks in the workspace - workspace-scoped at SQL level
+      rocks = await db.rocks.findByOrganizationId(auth.organization.id, workspaceId)
     } else {
       // Regular members see only their rocks
       rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
+      // Filter by workspace since findByUserId doesn't support workspaceId
+      rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
     }
-
-    // Filter by workspace - strict filtering to prevent cross-workspace data leakage
-    rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
 
     // Filter by quarter if specified
     if (quarter) {

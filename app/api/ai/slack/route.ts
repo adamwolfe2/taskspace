@@ -10,6 +10,8 @@ import {
 } from "@/lib/integrations/slack"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, DailyDigest } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiSlackNotificationSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // Rate limit: 20 Slack notifications per user per hour
@@ -43,16 +45,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       return response
     }
 
-    const body = await request.json()
-    const { type, data, workspaceId } = body
-
-    // CRITICAL: workspaceId is REQUIRED for data isolation
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
+    const { type, data, workspaceId } = await validateBody(request, aiSlackNotificationSchema)
 
     // Validate workspace access
     const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
@@ -82,19 +75,12 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
-    if (!type) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Notification type is required" },
-        { status: 400 }
-      )
-    }
-
     let success = false
 
     switch (type) {
       case "task": {
         // Push a task assignment to Slack
-        const { taskId } = data
+        const taskId = data.taskId as string | undefined
         if (!taskId) {
           return NextResponse.json<ApiResponse<null>>(
             { success: false, error: "Task ID is required" },
@@ -137,7 +123,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 
       case "digest": {
         // Push daily digest to Slack
-        const { digestId } = data
+        const digestId = data.digestId as string | undefined
 
         let digest: DailyDigest | null = null
         if (digestId) {
@@ -169,7 +155,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 
       case "custom": {
         // Send a custom message
-        const { text } = data
+        const text = data.text as string | undefined
         if (!text) {
           return NextResponse.json<ApiResponse<null>>(
             { success: false, error: "Message text is required" },

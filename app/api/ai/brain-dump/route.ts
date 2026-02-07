@@ -6,6 +6,8 @@ import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AdminBrainDump, AIGeneratedTask, TeamMember, ParsedScorecardMetric } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiBrainDumpSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // Rate limit: 10 brain dumps per user per hour (expensive operation)
@@ -46,23 +48,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
-    const body = await request.json()
-    const { content } = body
-
-    if (!content || typeof content !== "string" || content.trim().length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Brain dump content is required" },
-        { status: 400 }
-      )
-    }
-
-    const MAX_CONTENT_LENGTH = 50000
-    if (content.length > MAX_CONTENT_LENGTH) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `Content too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.` },
-        { status: 400 }
-      )
-    }
+    const { content } = await validateBody(request, aiBrainDumpSchema)
 
     // Create brain dump record
     const brainDumpId = generateId()

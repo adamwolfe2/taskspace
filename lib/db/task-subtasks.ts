@@ -62,9 +62,18 @@ export function validateSubtask(input: TaskSubtaskInput): void {
 // ============================================
 
 /**
- * Get all subtasks for a task (ordered by order_index)
+ * Get all subtasks for a task (ordered by order_index, workspace-scoped via JOIN)
  */
-export async function getSubtasksByTaskId(taskId: string): Promise<TaskSubtask[]> {
+export async function getSubtasksByTaskId(taskId: string, workspaceId?: string): Promise<TaskSubtask[]> {
+  if (workspaceId) {
+    const { rows } = await sql`
+      SELECT ts.* FROM task_subtasks ts
+      JOIN assigned_tasks at ON at.id = ts.task_id
+      WHERE ts.task_id = ${taskId} AND at.workspace_id = ${workspaceId}
+      ORDER BY ts.order_index ASC
+    `
+    return rows.map(parseSubtask)
+  }
   const { rows } = await sql`
     SELECT * FROM task_subtasks
     WHERE task_id = ${taskId}
@@ -74,9 +83,18 @@ export async function getSubtasksByTaskId(taskId: string): Promise<TaskSubtask[]
 }
 
 /**
- * Get a single subtask by ID
+ * Get a single subtask by ID (optionally workspace-scoped via JOIN)
  */
-export async function getSubtaskById(subtaskId: string): Promise<TaskSubtask | null> {
+export async function getSubtaskById(subtaskId: string, workspaceId?: string): Promise<TaskSubtask | null> {
+  if (workspaceId) {
+    const { rows } = await sql`
+      SELECT ts.* FROM task_subtasks ts
+      JOIN assigned_tasks at ON at.id = ts.task_id
+      WHERE ts.id = ${subtaskId} AND at.workspace_id = ${workspaceId}
+    `
+    if (rows.length === 0) return null
+    return parseSubtask(rows[0])
+  }
   const { rows } = await sql`
     SELECT * FROM task_subtasks WHERE id = ${subtaskId}
   `

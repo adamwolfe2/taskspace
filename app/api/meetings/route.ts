@@ -8,6 +8,8 @@ import { createMeetingSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 import type { Meeting } from "@/lib/db/meetings"
+import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
+import type { PaginatedResponse } from "@/lib/utils/pagination"
 
 // GET /api/meetings - List meetings for a workspace
 export const GET = withAuth(async (request: NextRequest, auth) => {
@@ -44,6 +46,33 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
+    // Check if cursor-based pagination is requested
+    const cursor = searchParams.get("cursor")
+    const usePagination = cursor !== null
+
+    if (usePagination) {
+      const pagination = parsePaginationParams(searchParams)
+      const { meetings: meetingsPaginated, totalCount } = await meetings.listPaginated(
+        workspaceId,
+        pagination,
+        { status }
+      )
+
+      const response = buildPaginatedResponse(
+        meetingsPaginated,
+        pagination.limit,
+        totalCount,
+        (m) => m.scheduledAt,
+        (m) => m.id
+      )
+
+      return NextResponse.json<ApiResponse<PaginatedResponse<Meeting>>>({
+        success: true,
+        data: response,
+      })
+    }
+
+    // Legacy non-paginated path (backward compatible)
     const meetingsList = await meetings.list(workspaceId, { status, limit, offset })
 
     return NextResponse.json<ApiResponse<Meeting[]>>({

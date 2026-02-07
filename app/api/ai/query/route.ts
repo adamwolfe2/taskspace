@@ -6,6 +6,8 @@ import { generateId } from "@/lib/auth/password"
 import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AIQueryResponse, AIConversation, TeamMember } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiQueryRequestSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // Rate limit: 30 AI queries per user per hour
@@ -55,27 +57,11 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       return creditCheck as NextResponse<ApiResponse<null>>
     }
 
-    const body = await request.json()
-    const { query, workspaceId } = body
-
-    if (!query || typeof query !== "string" || query.trim().length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Query is required" },
-        { status: 400 }
-      )
-    }
-
-    const MAX_CONTENT_LENGTH = 50000
-    if (query.length > MAX_CONTENT_LENGTH) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `Query too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.` },
-        { status: 400 }
-      )
-    }
+    const { query, workspaceId } = await validateBody(request, aiQueryRequestSchema)
 
     // SECURITY: Add optional workspace filtering to prevent cross-workspace data leakage
     // If workspaceId is provided, filter data to only that workspace
-    const workspaceFilter = workspaceId && typeof workspaceId === "string" ? workspaceId : null
+    const workspaceFilter = workspaceId || null
 
     // Build context from team data
     const teamMembersData = await db.members.findWithUsersByOrganizationId(auth.organization.id)

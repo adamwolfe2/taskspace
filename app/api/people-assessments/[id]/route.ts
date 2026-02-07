@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { withAuth, type RouteContext } from "@/lib/api/middleware"
 import { peopleAssessments } from "@/lib/db/people-assessments"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { peopleAssessmentUpdateSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 import type { PeopleAssessment } from "@/lib/db/people-assessments"
@@ -10,7 +12,7 @@ export const PUT = withAuth(async (request, auth, context) => {
   try {
     const params = await (context as RouteContext).params
     const id = params.id
-    const body = await request.json()
+    const body = await validateBody(request, peopleAssessmentUpdateSchema)
 
     const existing = await peopleAssessments.get(id)
     if (!existing) {

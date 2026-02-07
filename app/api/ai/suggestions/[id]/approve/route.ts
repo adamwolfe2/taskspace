@@ -9,6 +9,8 @@ import {
 import { generateId } from "@/lib/auth/password"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AISuggestion, AssignedTask } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiSuggestionApproveSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // Rate limit: 30 suggestion approvals per user per hour
@@ -59,11 +61,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
-    const body = await request.json().catch(() => ({}))
-    const { modifiedData, reviewerNotes } = body as {
-      modifiedData?: Record<string, unknown>
-      reviewerNotes?: string
-    }
+    const { modifiedData, reviewerNotes } = await validateBody(request, aiSuggestionApproveSchema).catch(() => ({ modifiedData: undefined, reviewerNotes: undefined }))
 
     // Verify suggestion exists and belongs to this org
     const suggestion = await getSuggestionById(id)

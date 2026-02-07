@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { rockParseSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -32,15 +34,7 @@ const MODEL = "claude-sonnet-4-20250514"
  */
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { text } = body
-
-    if (!text || typeof text !== "string" || text.trim().length < 10) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Please provide rock text to parse (at least 10 characters)" },
-        { status: 400 }
-      )
-    }
+    const { text } = await validateBody(request, rockParseSchema)
 
     // Check for Anthropic API key
     const apiKey = process.env.ANTHROPIC_API_KEY

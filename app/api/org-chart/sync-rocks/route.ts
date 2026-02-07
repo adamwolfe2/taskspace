@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { orgChartSyncRocksSchema } from "@/lib/validation/schemas"
 import type { Rock, RockMilestone } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -38,16 +40,7 @@ function getCurrentQuarter(): string {
 
 export const POST = withAdmin(async (request, auth) => {
   try {
-    // Get workspaceId from request body
-    const body = await request.json()
-    const workspaceId = body.workspaceId
-
-    if (!workspaceId) {
-      return NextResponse.json(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
+    const { workspaceId } = await validateBody(request, orgChartSyncRocksSchema)
 
     const orgId = auth.organization.id
     const currentQuarter = getCurrentQuarter()

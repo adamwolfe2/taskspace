@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAuth } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { orgChartProgressSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // GET - Fetch all rock progress or for a specific employee
@@ -34,15 +36,7 @@ export const GET = withAuth(async (request, auth) => {
 // POST - Update rock progress (toggle bullet completion)
 export const POST = withAuth(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { employeeName, rockIndex, bulletIndex, completed, updatedBy } = body
-
-    if (!employeeName || rockIndex === undefined || bulletIndex === undefined || completed === undefined) {
-      return NextResponse.json(
-        { success: false, error: "Missing required fields" },
-        { status: 400 }
-      )
-    }
+    const { employeeName, rockIndex, bulletIndex, completed, updatedBy } = await validateBody(request, orgChartProgressSchema)
 
     await db.orgChartRockProgress.upsert(
       employeeName,

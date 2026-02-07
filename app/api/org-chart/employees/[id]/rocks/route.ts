@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { updateEmployeeRocks } from "@/lib/org-chart/airtable"
 import { withAuth } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { orgChartEmployeeRocksSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -13,15 +15,7 @@ export const PATCH = withAuth(async (request, auth, context?) => {
       )
     }
     const { id } = await context.params
-    const body = await request.json()
-    const { rocks } = body
-
-    if (typeof rocks !== "string") {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Rocks must be a string" },
-        { status: 400 }
-      )
-    }
+    const { rocks } = await validateBody(request, orgChartEmployeeRocksSchema)
 
     // Check if Airtable is configured
     if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {

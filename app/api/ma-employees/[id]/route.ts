@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import type { RouteContext } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { maEmployeeUpdateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
@@ -65,7 +67,7 @@ export const PATCH = withAuth(async (request, auth, context?) => {
       )
     }
     const { id } = await context.params
-    const body = await request.json()
+    const body = await validateBody(request, maEmployeeUpdateSchema)
 
     // Check if employee exists first
     const existing = await db.maEmployees.findById(id)
@@ -85,19 +87,7 @@ export const PATCH = withAuth(async (request, auth, context?) => {
       )
     }
 
-    const { firstName, lastName, supervisor, department, jobTitle, responsibilities, notes, email, isActive } = body
-
-    const updated = await db.maEmployees.update(id, {
-      firstName,
-      lastName,
-      supervisor,
-      department,
-      jobTitle,
-      responsibilities,
-      notes,
-      email,
-      isActive,
-    })
+    const updated = await db.maEmployees.update(id, body)
 
     if (!updated) {
       return NextResponse.json(

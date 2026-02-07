@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { logger, logError } from "@/lib/logger"
 import { withAuth } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { crossWorkspaceTaskCreateSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 
 // GET /api/cross-workspace/tasks - Get all cross-workspace tasks for the user
@@ -29,7 +31,6 @@ export const GET = withAuth(async (request, auth) => {
 // POST /api/cross-workspace/tasks - Create a cross-workspace task
 export const POST = withAuth(async (request, auth) => {
   try {
-    const body = await request.json()
     const {
       targetOrganizationId,
       title,
@@ -37,22 +38,7 @@ export const POST = withAuth(async (request, auth) => {
       priority,
       assigneeId,
       dueDate,
-    } = body
-
-    // Validate required fields
-    if (!targetOrganizationId || typeof targetOrganizationId !== "string") {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Target organization ID is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!title || typeof title !== "string" || title.trim().length < 2) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Task title is required (min 2 characters)" },
-        { status: 400 }
-      )
-    }
+    } = await validateBody(request, crossWorkspaceTaskCreateSchema)
 
     // Verify user is a member of the target organization
     const targetMember = await db.members.findByOrgAndUser(

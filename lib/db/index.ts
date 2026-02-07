@@ -29,6 +29,7 @@ import type {
   MoodEmoji,
   EnergyFactor,
 } from "../types"
+import type { PaginationParams } from "../utils/pagination"
 
 // Helper to convert snake_case DB rows to camelCase
 function toCamelCase<T>(row: Record<string, unknown>): T {
@@ -845,6 +846,72 @@ export const db = {
       `
       return rows.map(parseRock)
     },
+    // Paginated: fetch rocks with cursor-based pagination
+    async findPaginated(
+      orgId: string,
+      workspaceId: string,
+      pagination: PaginationParams,
+      filters?: { userId?: string; quarter?: string }
+    ): Promise<{ rocks: Rock[]; totalCount: number }> {
+      const { cursor, limit } = pagination
+      const fetchLimit = limit + 1
+
+      let cursorTimestamp: string | null = null
+      let cursorId: string | null = null
+      if (cursor) {
+        const { decodeCursor } = await import("../utils/pagination")
+        const decoded = decodeCursor(cursor)
+        if (decoded) {
+          cursorTimestamp = decoded.timestamp
+          cursorId = decoded.id
+        }
+      }
+
+      const userId = filters?.userId || null
+      const quarter = filters?.quarter || null
+
+      // Count query
+      let countPromise
+      if (userId && quarter) {
+        countPromise = sql`SELECT COUNT(*) as count FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND user_id = ${userId} AND quarter = ${quarter}`
+      } else if (userId) {
+        countPromise = sql`SELECT COUNT(*) as count FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND user_id = ${userId}`
+      } else if (quarter) {
+        countPromise = sql`SELECT COUNT(*) as count FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND quarter = ${quarter}`
+      } else {
+        countPromise = sql`SELECT COUNT(*) as count FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId}`
+      }
+
+      // Data query
+      let dataPromise
+      if (cursorTimestamp && cursorId) {
+        if (userId && quarter) {
+          dataPromise = sql`SELECT * FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND user_id = ${userId} AND quarter = ${quarter} AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else if (userId) {
+          dataPromise = sql`SELECT * FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND user_id = ${userId} AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else if (quarter) {
+          dataPromise = sql`SELECT * FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND quarter = ${quarter} AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else {
+          dataPromise = sql`SELECT * FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        }
+      } else {
+        if (userId && quarter) {
+          dataPromise = sql`SELECT * FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND user_id = ${userId} AND quarter = ${quarter} ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else if (userId) {
+          dataPromise = sql`SELECT * FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND user_id = ${userId} ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else if (quarter) {
+          dataPromise = sql`SELECT * FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND quarter = ${quarter} ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else {
+          dataPromise = sql`SELECT * FROM rocks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        }
+      }
+
+      const [countResult, dataResult] = await Promise.all([countPromise, dataPromise])
+      const totalCount = parseInt(countResult.rows[0]?.count || "0", 10)
+      const rocks = dataResult.rows.map(parseRock)
+
+      return { rocks, totalCount }
+    },
   },
 
   // Rock Milestones
@@ -1083,6 +1150,73 @@ export const db = {
       `
       return rows.map(parseAssignedTask)
     },
+    // Paginated: fetch tasks for an organization with cursor-based pagination
+    async findPaginated(
+      orgId: string,
+      workspaceId: string,
+      pagination: PaginationParams,
+      filters?: { userId?: string; status?: string }
+    ): Promise<{ tasks: AssignedTask[]; totalCount: number }> {
+      const { cursor, limit } = pagination
+      const fetchLimit = limit + 1 // Fetch one extra to detect hasMore
+
+      let cursorTimestamp: string | null = null
+      let cursorId: string | null = null
+      if (cursor) {
+        const { decodeCursor } = await import("../utils/pagination")
+        const decoded = decodeCursor(cursor)
+        if (decoded) {
+          cursorTimestamp = decoded.timestamp
+          cursorId = decoded.id
+        }
+      }
+
+      const userId = filters?.userId || null
+      const status = filters?.status || null
+
+      // Run count and data queries in parallel
+      // Count query - uses different branches for filter combos
+      let countPromise
+      if (userId && status) {
+        countPromise = sql`SELECT COUNT(*) as count FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND assignee_id = ${userId} AND status = ${status}`
+      } else if (userId) {
+        countPromise = sql`SELECT COUNT(*) as count FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND assignee_id = ${userId}`
+      } else if (status) {
+        countPromise = sql`SELECT COUNT(*) as count FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND status = ${status}`
+      } else {
+        countPromise = sql`SELECT COUNT(*) as count FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId}`
+      }
+
+      // Data query - branches for cursor presence and filter combos
+      let dataPromise
+      if (cursorTimestamp && cursorId) {
+        if (userId && status) {
+          dataPromise = sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND assignee_id = ${userId} AND status = ${status} AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else if (userId) {
+          dataPromise = sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND assignee_id = ${userId} AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else if (status) {
+          dataPromise = sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND status = ${status} AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else {
+          dataPromise = sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        }
+      } else {
+        if (userId && status) {
+          dataPromise = sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND assignee_id = ${userId} AND status = ${status} ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else if (userId) {
+          dataPromise = sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND assignee_id = ${userId} ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else if (status) {
+          dataPromise = sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND status = ${status} ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else {
+          dataPromise = sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        }
+      }
+
+      const [countResult, dataResult] = await Promise.all([countPromise, dataPromise])
+      const totalCount = parseInt(countResult.rows[0]?.count || "0", 10)
+      const tasks = dataResult.rows.map(parseAssignedTask)
+
+      return { tasks, totalCount }
+    },
   },
 
   // EOD Reports
@@ -1216,11 +1350,24 @@ export const db = {
       userIds: string[],
       orgId: string,
       startDate: string,
-      endDate: string
+      endDate: string,
+      workspaceId?: string
     ): Promise<EODReport[]> {
       if (userIds.length === 0) return []
       // Use PostgreSQL array literal format for ANY clause
       const userIdArray = `{${userIds.join(',')}}`
+      if (workspaceId) {
+        const { rows } = await sql`
+          SELECT * FROM eod_reports
+          WHERE organization_id = ${orgId}
+            AND user_id = ANY(${userIdArray}::text[])
+            AND workspace_id = ${workspaceId}
+            AND date >= ${startDate}
+            AND date <= ${endDate}
+          ORDER BY date DESC
+        `
+        return rows.map(parseEODReport)
+      }
       const { rows } = await sql`
         SELECT * FROM eod_reports
         WHERE organization_id = ${orgId}
@@ -1230,6 +1377,59 @@ export const db = {
         ORDER BY date DESC
       `
       return rows.map(parseEODReport)
+    },
+    // Paginated: fetch EOD reports with cursor-based pagination
+    async findPaginated(
+      orgId: string,
+      workspaceId: string,
+      pagination: PaginationParams,
+      filters?: { userId?: string }
+    ): Promise<{ reports: EODReport[]; totalCount: number }> {
+      const { cursor, limit } = pagination
+      const fetchLimit = limit + 1
+
+      let cursorTimestamp: string | null = null
+      let cursorId: string | null = null
+      if (cursor) {
+        const { decodeCursor } = await import("../utils/pagination")
+        const decoded = decodeCursor(cursor)
+        if (decoded) {
+          cursorTimestamp = decoded.timestamp
+          cursorId = decoded.id
+        }
+      }
+
+      const userId = filters?.userId || null
+
+      // Count query
+      let countPromise
+      if (userId) {
+        countPromise = sql`SELECT COUNT(*) as count FROM eod_reports WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND user_id = ${userId}`
+      } else {
+        countPromise = sql`SELECT COUNT(*) as count FROM eod_reports WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId}`
+      }
+
+      // Data query - order by created_at DESC for cursor pagination
+      let dataPromise
+      if (cursorTimestamp && cursorId) {
+        if (userId) {
+          dataPromise = sql`SELECT * FROM eod_reports WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND user_id = ${userId} AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else {
+          dataPromise = sql`SELECT * FROM eod_reports WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        }
+      } else {
+        if (userId) {
+          dataPromise = sql`SELECT * FROM eod_reports WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND user_id = ${userId} ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else {
+          dataPromise = sql`SELECT * FROM eod_reports WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        }
+      }
+
+      const [countResult, dataResult] = await Promise.all([countPromise, dataPromise])
+      const totalCount = parseInt(countResult.rows[0]?.count || "0", 10)
+      const reports = dataResult.rows.map(parseEODReport)
+
+      return { reports, totalCount }
     },
     // Optimized: fetch EOD reports for a specific org + date (avoids loading all reports)
     async findByOrganizationAndDate(orgId: string, date: string): Promise<EODReport[]> {
@@ -1353,6 +1553,70 @@ export const db = {
         WHERE created_at < NOW() - INTERVAL '1 day' * ${days} AND read = TRUE
       `
       return rowCount ?? 0
+    },
+    // Paginated: fetch notifications with cursor-based pagination
+    async findPaginated(
+      userId: string,
+      orgId: string,
+      pagination: PaginationParams,
+      filters?: { unreadOnly?: boolean }
+    ): Promise<{ notifications: Notification[]; totalCount: number }> {
+      const { cursor, limit } = pagination
+      const fetchLimit = limit + 1
+
+      let cursorTimestamp: string | null = null
+      let cursorId: string | null = null
+      if (cursor) {
+        const { decodeCursor } = await import("../utils/pagination")
+        const decoded = decodeCursor(cursor)
+        if (decoded) {
+          cursorTimestamp = decoded.timestamp
+          cursorId = decoded.id
+        }
+      }
+
+      const unreadOnly = filters?.unreadOnly || false
+
+      // Count query
+      let countPromise
+      if (unreadOnly) {
+        countPromise = sql`SELECT COUNT(*) as count FROM notifications WHERE user_id = ${userId} AND organization_id = ${orgId} AND read = FALSE`
+      } else {
+        countPromise = sql`SELECT COUNT(*) as count FROM notifications WHERE user_id = ${userId} AND organization_id = ${orgId}`
+      }
+
+      // Data query
+      let dataPromise
+      if (cursorTimestamp && cursorId) {
+        if (unreadOnly) {
+          dataPromise = sql`SELECT * FROM notifications WHERE user_id = ${userId} AND organization_id = ${orgId} AND read = FALSE AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else {
+          dataPromise = sql`SELECT * FROM notifications WHERE user_id = ${userId} AND organization_id = ${orgId} AND (created_at < ${cursorTimestamp}::timestamptz OR (created_at = ${cursorTimestamp}::timestamptz AND id < ${cursorId})) ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        }
+      } else {
+        if (unreadOnly) {
+          dataPromise = sql`SELECT * FROM notifications WHERE user_id = ${userId} AND organization_id = ${orgId} AND read = FALSE ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        } else {
+          dataPromise = sql`SELECT * FROM notifications WHERE user_id = ${userId} AND organization_id = ${orgId} ORDER BY created_at DESC, id DESC LIMIT ${fetchLimit}`
+        }
+      }
+
+      const [countResult, dataResult] = await Promise.all([countPromise, dataPromise])
+      const totalCount = parseInt(countResult.rows[0]?.count || "0", 10)
+      const notifications = dataResult.rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        type: row.type as Notification["type"],
+        title: row.title as string,
+        message: row.message as string || "",
+        read: row.read as boolean,
+        createdAt: (row.created_at as Date)?.toISOString() || "",
+        actionUrl: row.action_url as string | undefined,
+        metadata: row.metadata as Record<string, unknown> | undefined,
+      }))
+
+      return { notifications, totalCount }
     },
   },
 

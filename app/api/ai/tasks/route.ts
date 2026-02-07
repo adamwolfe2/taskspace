@@ -5,6 +5,8 @@ import { generateId } from "@/lib/auth/password"
 import { sendTaskAssignmentEmail, isEmailConfigured } from "@/lib/integrations/email"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AIGeneratedTask, AssignedTask, TeamMember } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiTaskPatchSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // Rate limit: 30 AI task operations per user per hour
@@ -64,15 +66,10 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
       return response
     }
 
-    const body = await request.json()
-    const { taskId, action, updates } = body
-
-    if (!taskId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Task ID is required" },
-        { status: 400 }
-      )
-    }
+    const validated = await validateBody(request, aiTaskPatchSchema)
+    const { taskId, action } = validated
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updates = validated.updates as Record<string, any> | undefined
 
     // Get the existing task
     const tasks = await db.aiGeneratedTasks.findByOrganizationId(auth.organization.id)

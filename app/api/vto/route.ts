@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { vto } from "@/lib/db/vto"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { vtoUpsertSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 import type { VTODocument } from "@/lib/db/vto"
@@ -53,15 +55,7 @@ export const GET = withAuth(async (request, auth) => {
 // PUT /api/vto - Upsert VTO document
 export const PUT = withAuth(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { workspaceId, ...data } = body
-
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Workspace ID is required" },
-        { status: 400 }
-      )
-    }
+    const { workspaceId, ...data } = await validateBody(request, vtoUpsertSchema) as { workspaceId: string; [key: string]: unknown }
 
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {

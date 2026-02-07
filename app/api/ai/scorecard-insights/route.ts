@@ -3,19 +3,14 @@ import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { generateScorecardInsights } from "@/lib/ai/claude-client"
 import { getScorecardTrends } from "@/lib/db/scorecard"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiScorecardInsightsSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
 export const POST = withAuth(async (request, auth) => {
   try {
-    const { workspaceId } = await request.json()
-
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Workspace ID is required" },
-        { status: 400 }
-      )
-    }
+    const { workspaceId } = await validateBody(request, aiScorecardInsightsSchema)
 
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {

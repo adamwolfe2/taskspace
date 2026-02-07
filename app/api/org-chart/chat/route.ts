@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
 import { findRelevantEmployees } from "@/lib/org-chart/utils"
 import type { OrgChartEmployee } from "@/lib/org-chart/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { orgChartChatSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
@@ -68,35 +70,9 @@ async function callClaude(context: string, userMessage: string): Promise<string>
 
 export const POST = withAuth(async (request, auth) => {
   try {
-    const body = await request.json()
     // SECURITY: Do not accept employee data in request body
     // Employee data should be fetched server-side based on authenticated user's organization
-    const { message, workspaceId } = body as {
-      message: string
-      workspaceId?: string
-    }
-
-    if (!message) {
-      return NextResponse.json(
-        { success: false, error: "Message is required" },
-        { status: 400 }
-      )
-    }
-
-    const MAX_CONTENT_LENGTH = 50000
-    if (message.length > MAX_CONTENT_LENGTH) {
-      return NextResponse.json(
-        { success: false, error: `Message too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.` },
-        { status: 400 }
-      )
-    }
-
-    if (!workspaceId) {
-      return NextResponse.json(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
+    const { message, workspaceId } = await validateBody(request, orgChartChatSchema)
 
     // Fetch employees from the database based on authenticated user's organization
     // Primary source: ma_employees database table with workspace filtering

@@ -25,6 +25,8 @@ import {
   type WorkspaceFeatureToggles,
   type WorkspaceFeatureConfig,
 } from "@/lib/auth/workspace-features"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { workspaceFeaturesUpdateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 interface FeatureConfigResponse {
@@ -163,19 +165,11 @@ export const PATCH = withAuth(async (
       )
     }
 
-    // Parse request body
-    const body = await request.json()
-    const newFeatures = body.features as Partial<WorkspaceFeatureToggles>
-
-    if (!newFeatures) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Features object required" },
-        { status: 400 }
-      )
-    }
+    // Parse and validate request body
+    const { features: newFeatures } = await validateBody(request, workspaceFeaturesUpdateSchema)
 
     // Validate feature changes
-    const validation = validateFeatureToggles(auth.organization, workspace, newFeatures)
+    const validation = validateFeatureToggles(auth.organization, workspace, newFeatures as Partial<WorkspaceFeatureToggles>)
 
     if (!validation.valid) {
       return NextResponse.json<ApiResponse<{ errors: string[]; warnings: string[] }>>(

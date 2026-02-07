@@ -14,6 +14,8 @@ import { getActiveMetricForUser, upsertWeeklyMetricEntry } from "@/lib/metrics"
 import { getTodayInTimezone, isValidEODDate, formatDateForDisplay } from "@/lib/utils/date-utils"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
+import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
+import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { format, subDays } from "date-fns"
 import { logger, logError } from "@/lib/logger"
 
@@ -56,6 +58,38 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       }
     }
 
+    // Check if pagination params are provided
+    const cursor = searchParams.get("cursor")
+    const limitParam = searchParams.get("limit")
+    const usePagination = cursor !== null || limitParam !== null
+
+    if (usePagination) {
+      // Paginated path
+      const pagination = parsePaginationParams(searchParams)
+      const filterUserId = isAdmin(auth) ? (userId || undefined) : auth.user.id
+
+      const { reports, totalCount } = await db.eodReports.findPaginated(
+        auth.organization.id,
+        workspaceId,
+        pagination,
+        { userId: filterUserId }
+      )
+
+      const response = buildPaginatedResponse(
+        reports,
+        pagination.limit,
+        totalCount,
+        (r) => r.createdAt,
+        (r) => r.id
+      )
+
+      return NextResponse.json<ApiResponse<PaginatedResponse<EODReport>>>({
+        success: true,
+        data: response,
+      })
+    }
+
+    // Legacy non-paginated path (backward compatible)
     let reports: EODReport[]
 
     // OPTIMIZED: Default to last 90 days to reduce data transfer
@@ -70,12 +104,13 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     const targetUserId = isAdmin(auth) && userId ? userId : (isAdmin(auth) ? null : auth.user.id)
 
     if (targetUserId) {
-      // Fetch reports for a specific user with date range
+      // Fetch reports for a specific user with date range - workspace-scoped at SQL level
       reports = await db.eodReports.findByUserIdsWithDateRange(
         [targetUserId],
         auth.organization.id,
         date || effectiveStartDate,
-        date || effectiveEndDate
+        date || effectiveEndDate,
+        workspaceId
       )
     } else if (isAdmin(auth)) {
       // Admin fetching all users - still apply date range limit
@@ -88,23 +123,22 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
           userIds,
           auth.organization.id,
           date || effectiveStartDate,
-          date || effectiveEndDate
+          date || effectiveEndDate,
+          workspaceId
         )
       } else {
         reports = []
       }
     } else {
-      // Regular member - only their own reports
+      // Regular member - only their own reports - workspace-scoped at SQL level
       reports = await db.eodReports.findByUserIdsWithDateRange(
         [auth.user.id],
         auth.organization.id,
         date || effectiveStartDate,
-        date || effectiveEndDate
+        date || effectiveEndDate,
+        workspaceId
       )
     }
-
-    // Filter by workspace - strict filtering to prevent cross-workspace data leakage
-    reports = reports.filter((report) => report.workspaceId === workspaceId)
 
     // Sort by date descending (already done in DB, but ensure consistency)
     reports.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

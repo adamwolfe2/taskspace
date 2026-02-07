@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { testEmailSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // POST /api/test-email - Test email configuration
 export const POST = withAdmin(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { testEmail } = body
+    const { testEmail } = await validateBody(request, testEmailSchema)
 
     // Get environment variables
     const RESEND_API_KEY = process.env.RESEND_API_KEY || ""

@@ -3,6 +3,8 @@ import { withAuth } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { generateId, slugify } from "@/lib/auth/password"
 import type { ApiResponse, UserOrganizationItem } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { userCreateOrganizationSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 /**
@@ -64,15 +66,7 @@ export const GET = withAuth(async (request, auth) => {
  */
 export const POST = withAuth(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { name } = body
-
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Organization name is required" },
-        { status: 400 }
-      )
-    }
+    const { name } = await validateBody(request, userCreateOrganizationSchema)
 
     const now = new Date().toISOString()
     const orgId = generateId()

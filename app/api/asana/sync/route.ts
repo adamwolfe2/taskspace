@@ -5,6 +5,8 @@ import { generateId } from "@/lib/auth/password"
 import type { AsanaUserMapping, AssignedTask, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { asanaSyncSchema } from "@/lib/validation/schemas"
 
 interface SyncResult {
   tasksCreatedInAsana: number
@@ -27,8 +29,7 @@ interface SyncStatusData {
  */
 export const POST = withAdmin(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { direction = "both" } = body // "to_asana", "from_asana", or "both"
+    const { direction } = await validateBody(request, asanaSyncSchema)
 
     const org = await db.organizations.findById(auth.organization.id)
     if (!org?.settings?.asanaIntegration?.enabled) {

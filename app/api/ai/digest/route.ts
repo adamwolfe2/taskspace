@@ -5,6 +5,8 @@ import { generateDailyDigest, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, DailyDigest, TeamMember, EODInsight } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { aiDigestSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // Rate limit: 5 digest generations per user per hour (very expensive operation)
@@ -45,8 +47,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
-    const body = await request.json()
-    const { date } = body
+    const { date } = await validateBody(request, aiDigestSchema)
 
     // Default to today
     const targetDate = date || new Date().toISOString().split("T")[0]

@@ -9,6 +9,8 @@ import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createTaskSchema, updateTaskSchema } from "@/lib/validation/schemas"
 import type { AssignedTask, ApiResponse, Notification } from "@/lib/types"
+import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
+import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/tasks - Get tasks
@@ -48,21 +50,51 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       }
     }
 
+    // Check if pagination params are provided
+    const cursor = searchParams.get("cursor")
+    const limitParam = searchParams.get("limit")
+    const usePagination = cursor !== null || limitParam !== null
+
+    if (usePagination) {
+      // Paginated path - uses SQL-level filtering for efficiency
+      const pagination = parsePaginationParams(searchParams)
+      const filterUserId = isAdmin(auth) ? (userId || undefined) : auth.user.id
+      const { tasks, totalCount } = await db.assignedTasks.findPaginated(
+        auth.organization.id,
+        workspaceId,
+        pagination,
+        { userId: filterUserId, status: status || undefined }
+      )
+
+      const response = buildPaginatedResponse(
+        tasks,
+        pagination.limit,
+        totalCount,
+        (t) => t.createdAt,
+        (t) => t.id
+      )
+
+      return NextResponse.json<ApiResponse<PaginatedResponse<AssignedTask>>>({
+        success: true,
+        data: response,
+      })
+    }
+
+    // Legacy non-paginated path (backward compatible)
     let tasks: AssignedTask[]
 
     if (isAdmin(auth)) {
       // Admins can see all tasks in the workspace, optionally filtered by user
-      tasks = await db.assignedTasks.findByOrganizationId(auth.organization.id)
+      tasks = await db.assignedTasks.findByOrganizationId(auth.organization.id, workspaceId)
       if (userId) {
         tasks = tasks.filter(t => t.assigneeId === userId)
       }
     } else {
-      // Regular members see only their tasks
+      // Regular members see only their tasks - workspace-scoped at SQL level
       tasks = await db.assignedTasks.findByAssigneeId(auth.user.id, auth.organization.id)
+      // Filter by workspace at application level since findByAssigneeId doesn't support workspaceId
+      tasks = tasks.filter(t => t.workspaceId === workspaceId)
     }
-
-    // Filter by workspace - strict filtering to prevent cross-workspace data leakage
-    tasks = tasks.filter(t => t.workspaceId === workspaceId)
 
     // Filter by status if specified
     if (status) {

@@ -4,6 +4,8 @@ import { withAuth } from "@/lib/api/middleware"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateNotificationSchema } from "@/lib/validation/schemas"
 import type { Notification, ApiResponse } from "@/lib/types"
+import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
+import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { logger, logError } from "@/lib/logger"
 
 // GET /api/notifications - Get user's notifications
@@ -21,6 +23,35 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       })
     }
 
+    // Check if cursor-based pagination is requested
+    const cursor = searchParams.get("cursor")
+    const limitParam = searchParams.get("limit")
+    const usePagination = cursor !== null || limitParam !== null
+
+    if (usePagination) {
+      const pagination = parsePaginationParams(searchParams)
+      const { notifications, totalCount } = await db.notifications.findPaginated(
+        auth.user.id,
+        auth.organization.id,
+        pagination,
+        { unreadOnly }
+      )
+
+      const response = buildPaginatedResponse(
+        notifications,
+        pagination.limit,
+        totalCount,
+        (n) => n.createdAt,
+        (n) => n.id
+      )
+
+      return NextResponse.json<ApiResponse<PaginatedResponse<Notification>>>({
+        success: true,
+        data: response,
+      })
+    }
+
+    // Legacy non-paginated path (backward compatible)
     const notifications = unreadOnly
       ? await db.notifications.findUnreadByUserId(auth.user.id, auth.organization.id)
       : await db.notifications.findByUserId(auth.user.id, auth.organization.id)
