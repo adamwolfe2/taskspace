@@ -74,11 +74,11 @@ const DEMO_ORG: Organization = {
     enableSlackIntegration: false,
   },
   subscription: {
-    plan: "professional",
+    plan: "business",
     status: "active",
     // Demo mode never expires - set far in the future
     currentPeriodEnd: "2099-12-31",
-    maxUsers: 100,
+    maxUsers: 999,
     features: ["ai-insights", "slack-integration", "email-notifications"],
   },
 }

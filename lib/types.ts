@@ -59,7 +59,7 @@ export interface AsanaUserMapping {
 }
 
 export interface SubscriptionInfo {
-  plan: "free" | "starter" | "professional" | "enterprise"
+  plan: "free" | "team" | "business"
   status: "active" | "trialing" | "past_due" | "canceled"
   currentPeriodEnd: string | null
   maxUsers: number

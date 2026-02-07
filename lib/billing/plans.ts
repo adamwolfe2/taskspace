@@ -5,7 +5,7 @@
  * Used across the application for feature gating, billing, and pricing display.
  */
 
-export type PlanTier = "free" | "starter" | "professional" | "enterprise"
+export type PlanTier = "free" | "team" | "business"
 
 export interface PlanLimits {
   maxUsers: number | null // null = unlimited
@@ -42,7 +42,7 @@ export interface PlanFeatures {
   unlimitedAI: boolean
 
   // Support
-  supportLevel: "community" | "standard" | "priority" | "dedicated"
+  supportLevel: "community" | "standard" | "priority"
   responseTime: string
   onboarding: boolean
   dedicatedSuccessManager: boolean
@@ -69,14 +69,14 @@ export interface PlanConfig {
 export const PLANS: Record<PlanTier, PlanConfig> = {
   free: {
     id: "free",
-    name: "Free Trial",
-    description: "Try Taskspace for 14 days, no credit card required",
+    name: "Free",
+    description: "For individuals and small teams getting started with EOS",
     priceMonthly: 0,
     priceYearly: 0,
     stripePriceIdMonthly: null,
     stripePriceIdYearly: null,
     limits: {
-      maxUsers: 5,
+      maxUsers: 3,
       maxWorkspaces: 1,
       maxManagers: 1,
       aiCreditsPerUser: 50,
@@ -85,13 +85,13 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
     features: {
       eodReports: true,
       rocksAndTasks: true,
-      l10Meetings: true,
-      managerDashboard: true,
+      l10Meetings: false,
+      managerDashboard: false,
       multipleWorkspaces: false,
       customBranding: false,
       apiAccess: false,
       advancedAnalytics: false,
-      slackIntegration: true,
+      slackIntegration: false,
       asanaSync: false,
       googleCalendarSync: false,
       ssoAuth: false,
@@ -105,64 +105,23 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
       onboarding: false,
       dedicatedSuccessManager: false,
     },
-    cta: "Start Free Trial",
+    cta: "Start Free",
   },
 
-  starter: {
-    id: "starter",
-    name: "Starter",
-    description: "Perfect for small teams just adopting EOS",
-    priceMonthly: 1200, // $12/user
-    priceYearly: 12000, // $10/user * 12 = $120/user/year
-    stripePriceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY || "price_starter_monthly",
-    stripePriceIdYearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_YEARLY || "price_starter_yearly",
+  team: {
+    id: "team",
+    name: "Team",
+    description: "For teams running on EOS with full meeting and tracking tools",
+    priceMonthly: 900, // $9/user/month
+    priceYearly: 8640, // $7.20/user/month billed annually ($86.40/user/year) — 20% savings
+    stripePriceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_TEAM_MONTHLY || "",
+    stripePriceIdYearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_TEAM_YEARLY || "",
     limits: {
-      maxUsers: 10,
-      maxWorkspaces: 1,
-      maxManagers: 1,
-      aiCreditsPerUser: 100,
-      maxStorageGB: 10,
-    },
-    features: {
-      eodReports: true,
-      rocksAndTasks: true,
-      l10Meetings: true,
-      managerDashboard: true,
-      multipleWorkspaces: false,
-      customBranding: false,
-      apiAccess: false,
-      advancedAnalytics: false,
-      slackIntegration: true,
-      asanaSync: false,
-      googleCalendarSync: false,
-      ssoAuth: false,
-      aiEodParsing: true,
-      aiQuery: true,
-      aiDailyDigest: true,
-      aiBrainDump: false,
-      unlimitedAI: false,
-      supportLevel: "standard",
-      responseTime: "48 hours",
-      onboarding: false,
-      dedicatedSuccessManager: false,
-    },
-    cta: "Get Started",
-  },
-
-  professional: {
-    id: "professional",
-    name: "Professional",
-    description: "For growing companies with multiple teams",
-    priceMonthly: 2000, // $20/user
-    priceYearly: 19200, // $16/user * 12 = $192/user/year
-    stripePriceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || "price_pro_monthly",
-    stripePriceIdYearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || "price_pro_yearly",
-    limits: {
-      maxUsers: 50,
-      maxWorkspaces: null, // unlimited
-      maxManagers: null, // unlimited
-      aiCreditsPerUser: 500,
-      maxStorageGB: 100,
+      maxUsers: 25,
+      maxWorkspaces: 3,
+      maxManagers: 3,
+      aiCreditsPerUser: 200,
+      maxStorageGB: 25,
     },
     features: {
       eodReports: true,
@@ -170,8 +129,8 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
       l10Meetings: true,
       managerDashboard: true,
       multipleWorkspaces: true,
-      customBranding: true,
-      apiAccess: true,
+      customBranding: false,
+      apiAccess: false,
       advancedAnalytics: true,
       slackIntegration: true,
       asanaSync: true,
@@ -182,9 +141,9 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
       aiDailyDigest: true,
       aiBrainDump: true,
       unlimitedAI: false,
-      supportLevel: "priority",
+      supportLevel: "standard",
       responseTime: "24 hours",
-      onboarding: true,
+      onboarding: false,
       dedicatedSuccessManager: false,
     },
     badge: "Most Popular",
@@ -192,14 +151,14 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
     cta: "Start Free Trial",
   },
 
-  enterprise: {
-    id: "enterprise",
-    name: "Enterprise",
-    description: "For large organizations and multi-company portfolios",
-    priceMonthly: 3500, // $35/user (display only, actual billing is custom)
-    priceYearly: 42000, // $35/user * 12 = $420/user/year
-    stripePriceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY || "price_enterprise_monthly",
-    stripePriceIdYearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_YEARLY || "price_enterprise_yearly",
+  business: {
+    id: "business",
+    name: "Business",
+    description: "For scaling organizations that need branding, API access, and unlimited AI",
+    priceMonthly: 1900, // $19/user/month
+    priceYearly: 18240, // $15.20/user/month billed annually ($182.40/user/year) — 20% savings
+    stripePriceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY || "",
+    stripePriceIdYearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_YEARLY || "",
     limits: {
       maxUsers: null, // unlimited
       maxWorkspaces: null, // unlimited
@@ -225,13 +184,12 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
       aiDailyDigest: true,
       aiBrainDump: true,
       unlimitedAI: true,
-      supportLevel: "dedicated",
+      supportLevel: "priority",
       responseTime: "4 hours",
       onboarding: true,
-      dedicatedSuccessManager: true,
+      dedicatedSuccessManager: false,
     },
-    badge: "Best Value",
-    cta: "Contact Sales",
+    cta: "Start Free Trial",
   },
 }
 

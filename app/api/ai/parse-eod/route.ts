@@ -4,6 +4,7 @@ import { withAuth } from "@/lib/api/middleware"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
+import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import type { ApiResponse, EODInsight } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -43,6 +44,15 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },
         { status: 503 }
       )
+    }
+
+    // Check AI credits before processing
+    const creditCheck = await checkCreditsOrRespond({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+    })
+    if (creditCheck instanceof NextResponse) {
+      return creditCheck as NextResponse<ApiResponse<null>>
     }
 
     const body = await request.json()
@@ -89,7 +99,17 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     const rocks = await db.rocks.findByUserId(eodReport.userId, auth.organization.id)
 
     // Parse EOD report with Claude
-    const result = await parseEODReport(eodReport, member.name, member.department, rocks)
+    const { result, usage } = await parseEODReport(eodReport, member.name, member.department, rocks)
+
+    // Record AI usage
+    await recordUsage({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+      action: "parse-eod",
+      model: usage.model,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+    })
 
     // Create insight record
     const now = new Date().toISOString()
@@ -249,7 +269,17 @@ export const PUT = withAuth(async (request: NextRequest, auth) => {
       const rocks = rocksByUser.get(report.userId) || []
 
       // Parse with Claude
-      const result = await parseEODReport(report, member.name, member.department, rocks)
+      const { result, usage: batchUsage } = await parseEODReport(report, member.name, member.department, rocks)
+
+      // Record AI usage for each parse
+      await recordUsage({
+        organizationId: auth.organization.id,
+        userId: auth.user.id,
+        action: "parse-eod-batch",
+        model: batchUsage.model,
+        inputTokens: batchUsage.inputTokens,
+        outputTokens: batchUsage.outputTokens,
+      })
 
       // Create insight
       const now = new Date().toISOString()

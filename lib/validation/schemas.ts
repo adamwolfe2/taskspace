@@ -511,13 +511,13 @@ export const createFocusBlockSchema = z.object({
 // ============================================
 
 export const checkoutSchema = z.object({
-  plan: z.enum(["starter", "professional", "enterprise"]),
+  plan: z.enum(["team", "business"]),
   billingCycle: z.enum(["monthly", "yearly"]),
 })
 
 export const updateSubscriptionSchema = z.object({
   action: z.enum(["change_plan", "cancel", "resume", "portal"]),
-  plan: z.enum(["starter", "professional", "enterprise"]).optional(),
+  plan: z.enum(["team", "business"]).optional(),
   billingCycle: z.enum(["monthly", "yearly"]).optional(),
 }).refine(
   (data) => {

@@ -92,7 +92,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     await db.aiConversations.create(conversation)
 
     // Answer query with Claude
-    const result = await answerQuery(query.trim(), {
+    const { result, usage } = await answerQuery(query.trim(), {
       teamMembers,
       tasks,
       rocks,
@@ -100,20 +100,18 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     })
 
     // Record AI usage
-    if (result.usage) {
-      await recordUsage({
-        organizationId: auth.organization.id,
-        userId: auth.user.id,
-        action: "query",
-        model: result.usage.model,
-        inputTokens: result.usage.inputTokens,
-        outputTokens: result.usage.outputTokens,
-        metadata: {
-          conversationId: conversation.id,
-          queryLength: query.length,
-        },
-      })
-    }
+    await recordUsage({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+      action: "query",
+      model: usage.model,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+      metadata: {
+        conversationId: conversation.id,
+        queryLength: query.length,
+      },
+    })
 
     // Update conversation with response
     await db.aiConversations.update(conversation.id, {
@@ -126,13 +124,10 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       },
     })
 
-    // Remove usage from response (internal tracking only)
-    const { usage: _usage, ...responseData } = result
-
     return NextResponse.json<ApiResponse<AIQueryResponse & { conversationId: string }>>({
       success: true,
       data: {
-        ...responseData,
+        ...result,
         conversationId: conversation.id,
       },
     })

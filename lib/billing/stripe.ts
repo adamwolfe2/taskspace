@@ -31,71 +31,64 @@ export const PLANS: Record<string, PlanConfig> = {
     id: "free",
     name: "free",
     displayName: "Free",
-    maxSeats: 5,
-    aiCreditsMonthly: 100,
+    maxSeats: 3,
+    aiCreditsMonthly: 50,
     priceMonthly: 0,
     priceYearly: 0,
     features: ["basic_rocks", "basic_tasks", "eod_reports"],
-  },
-  pro: {
-    id: "pro",
-    name: "pro",
-    displayName: "Pro",
-    maxSeats: 20,
-    aiCreditsMonthly: 1000,
-    priceMonthly: 1500, // $15/user/mo
-    priceYearly: 14400, // $144/user/yr
-    features: [
-      "basic_rocks",
-      "basic_tasks",
-      "eod_reports",
-      "ai_insights",
-      "team_analytics",
-      "asana_integration",
-    ],
   },
   team: {
     id: "team",
     name: "team",
     displayName: "Team",
-    maxSeats: 100,
-    aiCreditsMonthly: 5000,
-    priceMonthly: 2500, // $25/user/mo
-    priceYearly: 24000, // $240/user/yr
+    maxSeats: 25,
+    aiCreditsMonthly: 200,
+    priceMonthly: 900, // $9/user/mo
+    priceYearly: 8640, // $86.40/user/yr (20% off)
     features: [
       "basic_rocks",
       "basic_tasks",
       "eod_reports",
+      "l10_meetings",
+      "ids_board",
+      "scorecard",
+      "manager_dashboard",
       "ai_insights",
       "team_analytics",
+      "slack_integration",
       "asana_integration",
-      "custom_branding",
-      "api_access",
-      "priority_support",
+      "google_calendar",
+      "multiple_workspaces",
     ],
   },
-  enterprise: {
-    id: "enterprise",
-    name: "enterprise",
-    displayName: "Enterprise",
+  business: {
+    id: "business",
+    name: "business",
+    displayName: "Business",
     maxSeats: null, // unlimited
     aiCreditsMonthly: -1, // unlimited
-    priceMonthly: 7500, // $75/user/mo (custom pricing usually)
-    priceYearly: 72000,
+    priceMonthly: 1900, // $19/user/mo
+    priceYearly: 18240, // $182.40/user/yr (20% off)
     features: [
       "basic_rocks",
       "basic_tasks",
       "eod_reports",
+      "l10_meetings",
+      "ids_board",
+      "scorecard",
+      "manager_dashboard",
       "ai_insights",
       "team_analytics",
+      "slack_integration",
       "asana_integration",
+      "google_calendar",
+      "multiple_workspaces",
       "custom_branding",
       "api_access",
-      "priority_support",
       "sso_saml",
-      "dedicated_support",
-      "sla_guarantee",
+      "priority_support",
       "unlimited_ai",
+      "unlimited_workspaces",
     ],
   },
 }
@@ -321,7 +314,7 @@ export async function canAddSeat(organizationId: string): Promise<{
     }
   } catch (error) {
     logger.error({ error, organizationId }, "Failed to check seat availability")
-    return { canAdd: false, currentSeats: 0, maxSeats: 5 }
+    return { canAdd: false, currentSeats: 0, maxSeats: 3 }
   }
 }
 

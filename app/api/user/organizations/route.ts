@@ -97,10 +97,10 @@ export const POST = withAuth(async (request, auth) => {
         enableSlackIntegration: false,
       },
       subscription: {
-        plan: "free" as "free" | "starter" | "professional" | "enterprise",
+        plan: "free" as "free" | "team" | "business",
         status: "active" as "active" | "trialing" | "past_due" | "canceled",
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        maxUsers: 5,
+        maxUsers: 3,
         features: ["basic_rocks", "basic_tasks", "eod_reports"],
       },
     }

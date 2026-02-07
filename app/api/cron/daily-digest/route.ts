@@ -187,13 +187,28 @@ export async function GET(request: NextRequest) {
         }))
 
         // Generate digest
-        const digestData = await generateDailyDigest(
+        const { result: digestData, usage: digestUsage } = await generateDailyDigest(
           todayReports,
           insights,
           teamMembers,
           rocks,
           previousDigest || undefined
         )
+
+        // Record AI usage for cron-generated digest (attribute to org, no specific user)
+        try {
+          const { recordUsage } = await import("@/lib/ai/credits")
+          await recordUsage({
+            organizationId: org.id,
+            userId: "system-cron",
+            action: "cron-daily-digest",
+            model: digestUsage.model,
+            inputTokens: digestUsage.inputTokens,
+            outputTokens: digestUsage.outputTokens,
+          })
+        } catch (usageErr) {
+          logError(logger, "Failed to record cron digest AI usage", usageErr)
+        }
 
         const now = new Date().toISOString()
         const digest: DailyDigest = {

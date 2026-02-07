@@ -80,20 +80,20 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     const allRocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
 
     // Parse the text dump
-    const parsedReport = await parseEODTextDump(
+    const { result: parsedReport, usage } = await parseEODTextDump(
       content.trim(),
       allRocks,
       targetQuarter
     )
 
-    // Track AI usage and deduct credits
+    // Track AI usage and deduct credits (using actual token counts)
     await db.aiUsage.track({
       organizationId: auth.organization.id,
       userId: auth.user.id,
       action: "eod_parsing",
-      model: "claude-3-5-sonnet",
-      inputTokens: Math.ceil(content.length / 4), // rough estimate
-      outputTokens: Math.ceil(JSON.stringify(parsedReport).length / 4),
+      model: usage.model,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
       creditsUsed: AI_OPERATION_COSTS.eodParsing,
       metadata: {
         taskCount: parsedReport.tasks.length,

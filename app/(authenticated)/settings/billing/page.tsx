@@ -189,7 +189,7 @@ export default function BillingSettingsPage() {
                 </div>
               </div>
 
-              {currentPlan !== "enterprise" && data.aiCreditsUsed > data.aiCreditsTotal * 0.8 && (
+              {currentPlan !== "business" && data.aiCreditsUsed > data.aiCreditsTotal * 0.8 && (
                 <div className="mt-4 rounded-lg bg-yellow-50 p-4 border border-yellow-200">
                   <p className="text-sm text-yellow-800">
                     You're using {Math.round((data.aiCreditsUsed / data.aiCreditsTotal) * 100)}% of your monthly AI credits.
@@ -203,15 +203,15 @@ export default function BillingSettingsPage() {
           {/* Sidebar - Quick Actions */}
           <div className="space-y-6">
             {/* Upgrade CTA */}
-            {currentPlan !== "enterprise" && (
+            {currentPlan !== "business" && (
               <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
                 <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                  {currentPlan === "free" ? "Start Your Trial" : "Upgrade Your Plan"}
+                  {currentPlan === "free" ? "Upgrade Your Plan" : "Upgrade to Business"}
                 </h3>
                 <p className="text-sm text-blue-700 mb-4">
                   {currentPlan === "free"
-                    ? "Get access to unlimited workspaces, more AI credits, and premium integrations."
-                    : "Unlock unlimited features and AI credits with Enterprise."}
+                    ? "Get access to L10 meetings, integrations, analytics, and more AI credits."
+                    : "Unlock custom branding, unlimited AI credits, API access, and SSO."}
                 </p>
                 <Link
                   href="/pricing"

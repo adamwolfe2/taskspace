@@ -4,6 +4,7 @@ import { withAdmin } from "@/lib/api/middleware"
 import { generateDailyDigest, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import { aiRateLimit } from "@/lib/api/rate-limit"
+import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import type { ApiResponse, DailyDigest, TeamMember, EODInsight } from "@/lib/types"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { aiDigestSchema } from "@/lib/validation/schemas"
@@ -26,6 +27,15 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },
         { status: 503 }
       )
+    }
+
+    // Check AI credits before processing
+    const creditCheck = await checkCreditsOrRespond({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+    })
+    if (creditCheck instanceof NextResponse) {
+      return creditCheck as NextResponse<ApiResponse<null>>
     }
 
     const { date } = await validateBody(request, aiDigestSchema)
@@ -75,13 +85,23 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     }))
 
     // Generate digest with Claude
-    const digestData = await generateDailyDigest(
+    const { result: digestData, usage } = await generateDailyDigest(
       dateReports,
       insights,
       teamMembers,
       rocks,
       previousDigest || undefined
     )
+
+    // Record AI usage
+    await recordUsage({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+      action: "digest",
+      model: usage.model,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+    })
 
     // Create digest record
     const now = new Date().toISOString()

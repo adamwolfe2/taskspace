@@ -38,8 +38,8 @@ export function canCreateWorkspace(context: FeatureGateContext): {
   if (!plan.features.multipleWorkspaces) {
     return {
       allowed: false,
-      reason: "Multiple workspaces require Professional plan or higher",
-      upgradeRequired: "professional",
+      reason: "Multiple workspaces require Team plan or higher",
+      upgradeRequired: "team",
     }
   }
 
@@ -48,7 +48,7 @@ export function canCreateWorkspace(context: FeatureGateContext): {
     return {
       allowed: false,
       reason: `Workspace limit reached (${plan.limits.maxWorkspaces}). Upgrade for unlimited workspaces.`,
-      upgradeRequired: "professional",
+      upgradeRequired: "business",
     }
   }
 
@@ -71,10 +71,9 @@ export function canAddUser(context: FeatureGateContext): {
 
   if (context.usage.activeUsers >= plan.limits.maxUsers) {
     // Suggest next tier based on current plan
-    let upgradeRequired: PlanTier = "starter"
-    if (plan.id === "free") upgradeRequired = "starter"
-    else if (plan.id === "starter") upgradeRequired = "professional"
-    else if (plan.id === "professional") upgradeRequired = "enterprise"
+    let upgradeRequired: PlanTier = "team"
+    if (plan.id === "free") upgradeRequired = "team"
+    else if (plan.id === "team") upgradeRequired = "business"
 
     return {
       allowed: false,
@@ -103,8 +102,8 @@ export function canAddManager(context: FeatureGateContext): {
   if (context.usage.managers >= plan.limits.maxManagers) {
     return {
       allowed: false,
-      reason: `Manager limit reached (${plan.limits.maxManagers}). Upgrade to Professional for unlimited managers.`,
-      upgradeRequired: "professional",
+      reason: `Manager limit reached (${plan.limits.maxManagers}). Upgrade to Business for unlimited managers.`,
+      upgradeRequired: "business",
     }
   }
 
@@ -141,7 +140,7 @@ export function canUseAI(
       reason: `Insufficient AI credits. Need ${operationCost}, have ${creditsRemaining}.`,
       creditsNeeded: operationCost,
       creditsAvailable: creditsRemaining,
-      upgradeRequired: "professional", // or suggest buying credit pack
+      upgradeRequired: "business", // or suggest buying credit pack
     }
   }
 
@@ -172,32 +171,22 @@ export function canUseIntegration(
   const allowed = plan.features[featureKey]
 
   if (!allowed) {
-    let upgradeRequired: PlanTier = "professional"
-    let featureName = integration === "slack" ? "Slack" :
+    const featureName = integration === "slack" ? "Slack" :
                       integration === "asana" ? "Asana" :
                       integration === "googleCalendar" ? "Google Calendar" : "SSO"
 
     if (integration === "sso") {
-      upgradeRequired = "enterprise"
       return {
         allowed: false,
-        reason: `${featureName} integration requires Enterprise plan`,
-        upgradeRequired,
-      }
-    }
-
-    if (integration === "asana" || integration === "googleCalendar") {
-      return {
-        allowed: false,
-        reason: `${featureName} integration requires Professional plan or higher`,
-        upgradeRequired,
+        reason: `${featureName} integration requires Business plan`,
+        upgradeRequired: "business" as PlanTier,
       }
     }
 
     return {
       allowed: false,
-      reason: `${featureName} integration not available on your plan`,
-      upgradeRequired: "starter",
+      reason: `${featureName} integration requires Team plan or higher`,
+      upgradeRequired: "team" as PlanTier,
     }
   }
 
@@ -217,8 +206,8 @@ export function canCustomizeBranding(context: FeatureGateContext): {
   if (!plan.features.customBranding) {
     return {
       allowed: false,
-      reason: "Custom branding requires Professional plan or higher",
-      upgradeRequired: "professional",
+      reason: "Custom branding requires Business plan",
+      upgradeRequired: "business",
     }
   }
 
@@ -238,8 +227,8 @@ export function canAccessAPI(context: FeatureGateContext): {
   if (!plan.features.apiAccess) {
     return {
       allowed: false,
-      reason: "API access requires Professional plan or higher",
-      upgradeRequired: "professional",
+      reason: "API access requires Business plan",
+      upgradeRequired: "business",
     }
   }
 
@@ -259,8 +248,8 @@ export function canAccessAdvancedAnalytics(context: FeatureGateContext): {
   if (!plan.features.advancedAnalytics) {
     return {
       allowed: false,
-      reason: "Advanced analytics requires Professional plan or higher",
-      upgradeRequired: "professional",
+      reason: "Advanced analytics requires Team plan or higher",
+      upgradeRequired: "team",
     }
   }
 

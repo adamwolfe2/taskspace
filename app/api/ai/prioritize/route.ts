@@ -3,6 +3,7 @@ import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { prioritizeTasks } from "@/lib/ai/claude-client"
 import { aiRateLimit } from "@/lib/api/rate-limit"
+import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { aiPrioritizeSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
@@ -17,6 +18,15 @@ export const POST = withAuth(async (request, auth) => {
         { success: false, error: "Rate limit exceeded. Try again later." },
         { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
       )
+    }
+
+    // Check AI credits before processing
+    const creditCheck = await checkCreditsOrRespond({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+    })
+    if (creditCheck instanceof NextResponse) {
+      return creditCheck as NextResponse<ApiResponse<null>>
     }
 
     const { workspaceId, tasks, rocks } = await validateBody(request, aiPrioritizeSchema)
@@ -37,7 +47,17 @@ export const POST = withAuth(async (request, auth) => {
       )
     }
 
-    const result = await prioritizeTasks(tasks, rocks)
+    const { result, usage } = await prioritizeTasks(tasks, rocks)
+
+    // Record AI usage
+    await recordUsage({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+      action: "prioritize",
+      model: usage.model,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+    })
 
     return NextResponse.json<ApiResponse<typeof result>>({
       success: true,

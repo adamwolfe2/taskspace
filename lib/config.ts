@@ -34,10 +34,9 @@ export const CONFIG = {
   // Subscription/Plan defaults
   subscription: {
     trialDays: 30,
-    freePlanMaxUsers: 5,
-    starterPlanMaxUsers: 15,
-    professionalPlanMaxUsers: 50,
-    enterprisePlanMaxUsers: Infinity,
+    freePlanMaxUsers: 3,
+    teamPlanMaxUsers: 25,
+    businessPlanMaxUsers: Infinity,
   },
 
   // Organization defaults

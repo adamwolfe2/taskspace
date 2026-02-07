@@ -98,7 +98,7 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
         }
 
         // Check seat limits before downgrade
-        if (plan !== "enterprise") {
+        if (plan !== "business") {
           const newPlanConfig = PLAN_FEATURES[plan]
           if (newPlanConfig?.maxSeats) {
             const members = await db.members.findWithUsersByOrganizationId(org.id)

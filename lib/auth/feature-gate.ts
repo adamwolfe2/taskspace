@@ -15,22 +15,27 @@ export const FEATURES = {
   basic_tasks: { name: "Task Management", tier: "free", description: "Assign and track tasks" },
   eod_reports: { name: "EOD Reports", tier: "free", description: "Daily end-of-day reporting" },
 
-  // Starter tier features
-  email_notifications: { name: "Email Notifications", tier: "starter", description: "Automated email reminders" },
-  basic_analytics: { name: "Basic Analytics", tier: "starter", description: "Team performance charts" },
+  // Team tier features
+  l10_meetings: { name: "L10 Meetings", tier: "team", description: "Weekly Level 10 meeting management" },
+  ids_board: { name: "IDS Board", tier: "team", description: "Identify, Discuss, Solve workflow" },
+  scorecard: { name: "Scorecard", tier: "team", description: "Weekly measurables tracking" },
+  manager_dashboard: { name: "Manager Dashboard", tier: "team", description: "Team performance insights" },
+  email_notifications: { name: "Email Notifications", tier: "team", description: "Automated email reminders" },
+  basic_analytics: { name: "Basic Analytics", tier: "team", description: "Team performance charts" },
+  advanced_analytics: { name: "Advanced Analytics", tier: "team", description: "Deep dive analytics" },
+  ai_insights: { name: "AI Insights", tier: "team", description: "AI-powered team analysis" },
+  slack_integration: { name: "Slack Integration", tier: "team", description: "Push notifications to Slack" },
+  asana_integration: { name: "Asana Sync", tier: "team", description: "Bidirectional task sync" },
+  google_calendar: { name: "Google Calendar", tier: "team", description: "Sync tasks to Google Calendar" },
+  multiple_workspaces: { name: "Multiple Workspaces", tier: "team", description: "Separate spaces for teams" },
 
-  // Professional tier features
-  advanced_analytics: { name: "Advanced Analytics", tier: "professional", description: "Deep dive analytics" },
-  ai_insights: { name: "AI Insights", tier: "professional", description: "AI-powered team analysis" },
-  custom_branding: { name: "Custom Branding", tier: "professional", description: "Logo and color customization" },
-  api_access: { name: "API Access", tier: "professional", description: "Programmatic API access" },
-  priority_support: { name: "Priority Support", tier: "professional", description: "Fast-track support" },
-
-  // Enterprise tier features
-  sso_saml: { name: "SSO/SAML", tier: "enterprise", description: "Single sign-on integration" },
-  custom_integrations: { name: "Custom Integrations", tier: "enterprise", description: "Custom API integrations" },
-  dedicated_support: { name: "Dedicated Support", tier: "enterprise", description: "Dedicated account manager" },
-  sla_guarantee: { name: "SLA Guarantee", tier: "enterprise", description: "99.9% uptime SLA" },
+  // Business tier features
+  custom_branding: { name: "Custom Branding", tier: "business", description: "Logo and color customization" },
+  api_access: { name: "API Access", tier: "business", description: "Programmatic API access" },
+  priority_support: { name: "Priority Support", tier: "business", description: "Fast-track support" },
+  sso_saml: { name: "SSO/SAML", tier: "business", description: "Single sign-on integration" },
+  unlimited_ai: { name: "Unlimited AI", tier: "business", description: "Unlimited AI credits" },
+  unlimited_workspaces: { name: "Unlimited Workspaces", tier: "business", description: "No workspace limit" },
 } as const
 
 export type FeatureKey = keyof typeof FEATURES

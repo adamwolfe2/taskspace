@@ -58,7 +58,7 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
             <span className="text-sm font-normal text-gray-600">/user/month</span>
           </p>
         </div>
-        {currentPlan !== "enterprise" && (
+        {currentPlan !== "business" && (
           <Link
             href="/settings/billing"
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"

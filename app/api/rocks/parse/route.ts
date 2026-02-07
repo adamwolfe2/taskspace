@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
+import { isClaudeConfigured } from "@/lib/ai/claude-client"
 import { aiRateLimit } from "@/lib/api/rate-limit"
+import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { rockParseSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
@@ -44,16 +46,25 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
-    const { text } = await validateBody(request, rockParseSchema)
-
-    // Check for Anthropic API key
-    const apiKey = process.env.ANTHROPIC_API_KEY
-    if (!apiKey) {
+    if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "AI parsing not configured. Please add ANTHROPIC_API_KEY to environment variables." },
-        { status: 500 }
+        { status: 503 }
       )
     }
+
+    // Check AI credits before processing
+    const creditCheck = await checkCreditsOrRespond({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+    })
+    if (creditCheck instanceof NextResponse) {
+      return creditCheck as NextResponse<ApiResponse<null>>
+    }
+
+    const { text } = await validateBody(request, rockParseSchema)
+
+    const apiKey = process.env.ANTHROPIC_API_KEY!
 
     const systemPrompt = `You are a helpful assistant that parses quarterly rock/goal descriptions and weekly scorecard metrics into structured data.
 
@@ -139,6 +150,18 @@ Rules:
 
     const data = await response.json()
     const responseText = data.content?.[0]?.text || ""
+    const inputTokens = data.usage?.input_tokens || 0
+    const outputTokens = data.usage?.output_tokens || 0
+
+    // Record AI usage
+    await recordUsage({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+      action: "rocks-parse",
+      model: data.model || MODEL,
+      inputTokens,
+      outputTokens,
+    })
 
     // Parse the JSON response
     let parsedRocks: ParsedRock[] = []

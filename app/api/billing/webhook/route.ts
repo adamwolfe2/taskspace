@@ -218,20 +218,20 @@ async function handleSubscriptionUpdated(subscription: StripeWebhookObject) {
     // Get plan from price ID
     const priceId = subscription.items?.data?.[0]?.price?.id
     const planInfo = priceId ? getPlanFromPriceId(priceId) : null
-    const plan = planInfo?.plan || subscription.metadata?.plan || "starter"
+    const plan = planInfo?.plan || subscription.metadata?.plan || "team"
     const billingCycle = planInfo?.billingCycle || subscription.metadata?.billingCycle || "monthly"
 
     // Get plan configuration
-    const planConfig = PLAN_FEATURES[plan] || PLAN_FEATURES.starter
+    const planConfig = PLAN_FEATURES[plan] || PLAN_FEATURES.team
 
     // Update organization subscription within transaction
     const subscriptionData = {
-      plan: plan as "free" | "starter" | "professional" | "enterprise",
+      plan: plan as "free" | "team" | "business",
       status: subscription.status as "active" | "trialing" | "past_due" | "canceled",
       billingCycle: billingCycle as "monthly" | "yearly" | null,
       currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : new Date().toISOString(),
       cancelAtPeriodEnd: (subscription.cancel_at_period_end as boolean) ?? false,
-      maxUsers: planConfig.maxSeats ?? 5, // Default to 5 if null
+      maxUsers: planConfig.maxSeats ?? 3, // Default to 3 if null
       features: planConfig.features,
     }
 
@@ -298,7 +298,7 @@ async function handleSubscriptionDeleted(subscription: StripeWebhookObject) {
       billingCycle: null,
       currentPeriodEnd: null,
       cancelAtPeriodEnd: false,
-      maxUsers: freeConfig.maxSeats ?? 5,
+      maxUsers: freeConfig.maxSeats ?? 3,
       features: freeConfig.features,
     }
 

@@ -322,7 +322,18 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
       // Parse EOD with AI in background (don't await)
       parseEODReport(report, member.name, member.department, rocks)
-        .then(async (result) => {
+        .then(async ({ result, usage }) => {
+          // Record AI usage for background parse
+          const { recordUsage } = await import("@/lib/ai/credits")
+          await recordUsage({
+            organizationId: auth.organization.id,
+            userId: auth.user.id,
+            action: "eod-report-parse",
+            model: usage.model,
+            inputTokens: usage.inputTokens,
+            outputTokens: usage.outputTokens,
+          }).catch(err => logError(logger, "Failed to record AI usage", err))
+
           // Create insight record
           const insight: EODInsight = {
             id: generateId(),

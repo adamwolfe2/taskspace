@@ -52,35 +52,60 @@ const BILLING_VARS: FeatureEnvVars = {
       example: "whsec_...",
       validate: (v) => v.startsWith("whsec_"),
     },
-    STRIPE_PRICE_STARTER_MONTHLY: {
+    STRIPE_PRICE_TEAM_MONTHLY: {
       required: false,
-      description: "Stripe price ID for Starter plan (monthly)",
+      description: "Stripe price ID for Team plan (monthly)",
       example: "price_...",
     },
-    STRIPE_PRICE_STARTER_YEARLY: {
+    STRIPE_PRICE_TEAM_YEARLY: {
       required: false,
-      description: "Stripe price ID for Starter plan (yearly)",
+      description: "Stripe price ID for Team plan (yearly)",
       example: "price_...",
     },
-    STRIPE_PRICE_PROFESSIONAL_MONTHLY: {
+    STRIPE_PRICE_BUSINESS_MONTHLY: {
       required: false,
-      description: "Stripe price ID for Professional plan (monthly)",
+      description: "Stripe price ID for Business plan (monthly)",
       example: "price_...",
     },
-    STRIPE_PRICE_PROFESSIONAL_YEARLY: {
+    STRIPE_PRICE_BUSINESS_YEARLY: {
       required: false,
-      description: "Stripe price ID for Professional plan (yearly)",
+      description: "Stripe price ID for Business plan (yearly)",
       example: "price_...",
     },
-    STRIPE_PRICE_ENTERPRISE_MONTHLY: {
+    NEXT_PUBLIC_STRIPE_LINK_TEAM_MONTHLY: {
       required: false,
-      description: "Stripe price ID for Enterprise plan (monthly)",
-      example: "price_...",
+      description: "Stripe payment link for Team plan (monthly)",
+      example: "https://buy.stripe.com/...",
     },
-    STRIPE_PRICE_ENTERPRISE_YEARLY: {
+    NEXT_PUBLIC_STRIPE_LINK_TEAM_YEARLY: {
       required: false,
-      description: "Stripe price ID for Enterprise plan (yearly)",
-      example: "price_...",
+      description: "Stripe payment link for Team plan (yearly)",
+      example: "https://buy.stripe.com/...",
+    },
+    NEXT_PUBLIC_STRIPE_LINK_BUSINESS_MONTHLY: {
+      required: false,
+      description: "Stripe payment link for Business plan (monthly)",
+      example: "https://buy.stripe.com/...",
+    },
+    NEXT_PUBLIC_STRIPE_LINK_BUSINESS_YEARLY: {
+      required: false,
+      description: "Stripe payment link for Business plan (yearly)",
+      example: "https://buy.stripe.com/...",
+    },
+    NEXT_PUBLIC_STRIPE_LINK_AI_500: {
+      required: false,
+      description: "Stripe payment link for 500 AI credits",
+      example: "https://buy.stripe.com/...",
+    },
+    NEXT_PUBLIC_STRIPE_LINK_AI_2000: {
+      required: false,
+      description: "Stripe payment link for 2000 AI credits",
+      example: "https://buy.stripe.com/...",
+    },
+    NEXT_PUBLIC_STRIPE_LINK_AI_5000: {
+      required: false,
+      description: "Stripe payment link for 5000 AI credits",
+      example: "https://buy.stripe.com/...",
     },
   },
 }

@@ -5,6 +5,7 @@ import { parseBrainDump, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
 import { aiRateLimit } from "@/lib/api/rate-limit"
+import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import type { ApiResponse, AdminBrainDump, AIGeneratedTask, TeamMember, ParsedScorecardMetric } from "@/lib/types"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { aiBrainDumpSchema } from "@/lib/validation/schemas"
@@ -27,6 +28,15 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         { success: false, error: "AI features are not configured. Please add ANTHROPIC_API_KEY to environment." },
         { status: 503 }
       )
+    }
+
+    // Check AI credits before processing
+    const creditCheck = await checkCreditsOrRespond({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+    })
+    if (creditCheck instanceof NextResponse) {
+      return creditCheck as NextResponse<ApiResponse<null>>
     }
 
     const { content } = await validateBody(request, aiBrainDumpSchema)
@@ -65,7 +75,17 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     const rocks = await db.rocks.findByOrganizationId(auth.organization.id)
 
     // Parse brain dump with Claude
-    const result = await parseBrainDump(content.trim(), teamMembers, currentTasks, rocks)
+    const { result, usage } = await parseBrainDump(content.trim(), teamMembers, currentTasks, rocks)
+
+    // Record AI usage
+    await recordUsage({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+      action: "brain-dump",
+      model: usage.model,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+    })
 
     // Create AI generated tasks
     const generatedTasks: AIGeneratedTask[] = []

@@ -4,6 +4,7 @@ import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { generateMeetingPrep } from "@/lib/ai/claude-client"
 import { getScorecardTrends } from "@/lib/db/scorecard"
 import { aiRateLimit } from "@/lib/api/rate-limit"
+import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { aiMeetingPrepSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
@@ -18,6 +19,15 @@ export const POST = withAuth(async (request, auth) => {
         { success: false, error: "Rate limit exceeded. Try again later." },
         { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
       )
+    }
+
+    // Check AI credits before processing
+    const creditCheck = await checkCreditsOrRespond({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+    })
+    if (creditCheck instanceof NextResponse) {
+      return creditCheck as NextResponse<ApiResponse<null>>
     }
 
     const validated = await validateBody(request, aiMeetingPrepSchema)
@@ -44,7 +54,17 @@ export const POST = withAuth(async (request, auth) => {
     }
 
     const trends = await getScorecardTrends(workspaceId, 4)
-    const prep = await generateMeetingPrep({ rocks, tasks, issues, scorecardTrends: trends })
+    const { result: prep, usage } = await generateMeetingPrep({ rocks, tasks, issues, scorecardTrends: trends })
+
+    // Record AI usage
+    await recordUsage({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+      action: "meeting-prep",
+      model: usage.model,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+    })
 
     return NextResponse.json<ApiResponse<typeof prep>>({
       success: true,

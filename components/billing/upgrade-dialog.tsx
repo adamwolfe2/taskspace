@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Check, Loader2, Sparkles, Crown, Building2, ArrowRight, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { STRIPE_PAYMENT_LINKS } from "@/lib/integrations/stripe-config"
 
 interface UpgradeDialogProps {
   open: boolean
@@ -23,57 +24,38 @@ interface UpgradeDialogProps {
 }
 
 const PLANS = {
-  starter: {
-    name: "Starter",
-    description: "For small teams",
-    monthlyPrice: 29,
-    yearlyPrice: 290,
-    aiCredits: 500,
-    maxSeats: 15,
+  team: {
+    name: "Team",
+    description: "For teams running on EOS",
+    monthlyPrice: 9,
+    yearlyPrice: 86.40,
+    aiCredits: 200,
+    maxSeats: 25,
     features: [
-      "15 team members",
-      "500 AI credits/month",
-      "Email notifications",
-      "Basic analytics",
-      "Email support",
+      "25 team members",
+      "L10 meetings & IDS board",
+      "Scorecard & analytics",
+      "Slack, Asana & Calendar sync",
+      "200 AI credits/user/month",
     ],
     icon: Sparkles,
-  },
-  professional: {
-    name: "Professional",
-    description: "For growing organizations",
-    monthlyPrice: 79,
-    yearlyPrice: 790,
-    aiCredits: 2000,
-    maxSeats: 50,
-    features: [
-      "50 team members",
-      "2,000 AI credits/month",
-      "Advanced analytics",
-      "AI insights",
-      "Custom branding",
-      "API access",
-      "Priority support",
-    ],
-    icon: Crown,
     popular: true,
   },
-  enterprise: {
-    name: "Enterprise",
-    description: "For large organizations",
-    monthlyPrice: 199,
-    yearlyPrice: 1990,
+  business: {
+    name: "Business",
+    description: "For scaling organizations",
+    monthlyPrice: 19,
+    yearlyPrice: 182.40,
     aiCredits: -1,
     maxSeats: null,
     features: [
       "Unlimited team members",
       "Unlimited AI credits",
+      "Custom branding & API access",
       "SSO/SAML",
-      "Custom integrations",
-      "Dedicated support",
-      "SLA guarantee",
+      "Priority support",
     ],
-    icon: Building2,
+    icon: Crown,
   },
 }
 
@@ -130,9 +112,21 @@ export function UpgradeDialog({
       if (data.success && data.data?.checkoutUrl) {
         window.location.href = data.data.checkoutUrl
       } else {
-        throw new Error(data.error || "Failed to create checkout session")
+        // Fall back to payment links if Stripe API checkout fails
+        const paymentLink = STRIPE_PAYMENT_LINKS[plan]?.[billingCycle]
+        if (paymentLink) {
+          window.location.href = paymentLink
+        } else {
+          throw new Error(data.error || "Failed to create checkout session")
+        }
       }
     } catch (error) {
+      // Last resort: try payment link before showing error
+      const paymentLink = STRIPE_PAYMENT_LINKS[plan]?.[billingCycle]
+      if (paymentLink) {
+        window.location.href = paymentLink
+        return
+      }
       console.error("Upgrade failed:", error)
       toast({
         title: "Upgrade failed",
@@ -146,7 +140,7 @@ export function UpgradeDialog({
 
   // Filter plans to only show upgrades from current plan
   const availablePlans = Object.entries(PLANS).filter(([key]) => {
-    const planOrder = ["free", "starter", "professional", "enterprise"]
+    const planOrder = ["free", "team", "business"]
     return planOrder.indexOf(key) > planOrder.indexOf(currentPlan)
   }) as [PlanKey, typeof PLANS[PlanKey]][]
 
@@ -186,7 +180,7 @@ export function UpgradeDialog({
             >
               Yearly
               <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700">
-                Save 17%
+                Save 20%
               </Badge>
             </button>
           </div>

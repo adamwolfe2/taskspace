@@ -55,6 +55,23 @@ export interface ClaudeCallResult {
 }
 
 /**
+ * Standardized usage info returned by all AI functions
+ */
+export interface AIUsageInfo {
+  inputTokens: number
+  outputTokens: number
+  model: string
+}
+
+/**
+ * Wrapper type for AI function results with usage tracking
+ */
+export interface AIResultWithUsage<T> {
+  result: T
+  usage: AIUsageInfo
+}
+
+/**
  * Make a request to the Claude API (with usage tracking)
  */
 async function callClaudeWithUsage(
@@ -115,7 +132,8 @@ async function callClaudeWithUsage(
 }
 
 /**
- * Make a request to the Claude API (legacy - returns text only)
+ * Make a request to the Claude API (returns text only, usage discarded)
+ * @deprecated Use callClaudeWithUsage instead for proper credit tracking
  */
 async function callClaude(
   systemPrompt: string,
@@ -127,6 +145,23 @@ async function callClaude(
 ): Promise<string> {
   const result = await callClaudeWithUsage(systemPrompt, userMessage, options)
   return result.text
+}
+
+/**
+ * Make a request to the Claude API and return both parsed result and usage
+ * Used by all AI functions that need credit tracking
+ */
+async function callClaudeJSONWithUsage<T>(
+  systemPrompt: string,
+  userMessage: string,
+  options?: {
+    maxTokens?: number
+    temperature?: number
+  }
+): Promise<{ result: T; usage: { inputTokens: number; outputTokens: number }; model: string }> {
+  const callResult = await callClaudeWithUsage(systemPrompt, userMessage, options)
+  const parsed = parseClaudeJSON<T>(callResult.text)
+  return { result: parsed, usage: callResult.usage, model: callResult.model }
 }
 
 /**
@@ -165,7 +200,7 @@ export async function parseBrainDump(
   teamMembers: TeamMember[],
   currentTasks?: AssignedTask[],
   rocks?: Rock[]
-): Promise<AITaskGenerationResponse> {
+): Promise<AIResultWithUsage<AITaskGenerationResponse>> {
   const context = buildContext({ teamMembers, currentTasks, rocks })
 
   const userMessage = `
@@ -177,11 +212,11 @@ ${context}
 
 Parse this brain dump into specific task assignments. Return JSON only.`
 
-  const response = await callClaude(PROMPTS.brainDumpParser, userMessage, {
-    temperature: 0.5, // Lower temperature for more consistent outputs
+  const { result, usage, model } = await callClaudeJSONWithUsage<AITaskGenerationResponse>(PROMPTS.brainDumpParser, userMessage, {
+    temperature: 0.5,
   })
 
-  return parseClaudeJSON<AITaskGenerationResponse>(response)
+  return { result, usage: { ...usage, model } }
 }
 
 /**
@@ -192,7 +227,7 @@ export async function parseEODReport(
   memberName: string,
   memberDepartment: string,
   rocks?: Rock[]
-): Promise<EODParseResponse> {
+): Promise<AIResultWithUsage<EODParseResponse>> {
   const tasksText = eodReport.tasks
     ?.map(t => `- ${t.text}${t.rockTitle ? ` (Rock: ${t.rockTitle})` : ""}`)
     .join("\n") || "No tasks listed"
@@ -221,11 +256,11 @@ ${rocks ? `THEIR ROCKS:\n${rocks.map(r => `- ${r.title} (${r.progress}% complete
 
 Analyze this EOD report. Return JSON only.`
 
-  const response = await callClaude(PROMPTS.eodParser, userMessage, {
-    temperature: 0.3, // Very consistent for parsing
+  const { result, usage, model } = await callClaudeJSONWithUsage<EODParseResponse>(PROMPTS.eodParser, userMessage, {
+    temperature: 0.3,
   })
 
-  return parseClaudeJSON<EODParseResponse>(response)
+  return { result, usage: { ...usage, model } }
 }
 
 /**
@@ -237,7 +272,7 @@ export async function generateDailyDigest(
   teamMembers: TeamMember[],
   rocks: Rock[],
   previousDigest?: DailyDigest
-): Promise<Omit<DailyDigest, "id" | "organizationId" | "digestDate" | "generatedAt">> {
+): Promise<AIResultWithUsage<Omit<DailyDigest, "id" | "organizationId" | "digestDate" | "generatedAt">>> {
   const memberMap = new Map(teamMembers.map(m => [m.id, m]))
 
   const reportsWithNames = eodReports.map(report => {
@@ -289,15 +324,17 @@ YESTERDAY'S DIGEST:
 
 Generate the daily digest. Focus on what actually matters. Challenge my thinking. Return JSON only.`
 
-  const response = await callClaude(PROMPTS.digestGenerator, userMessage, {
+  const { result: parsed, usage, model } = await callClaudeJSONWithUsage<Omit<DailyDigest, "id" | "organizationId" | "digestDate" | "generatedAt">>(PROMPTS.digestGenerator, userMessage, {
     maxTokens: 6000,
     temperature: 0.6,
   })
 
-  const parsed = parseClaudeJSON<Omit<DailyDigest, "id" | "organizationId" | "digestDate" | "generatedAt">>(response)
   return {
-    ...parsed,
-    reportsAnalyzed: eodReports.length,
+    result: {
+      ...parsed,
+      reportsAnalyzed: eodReports.length,
+    },
+    usage: { ...usage, model },
   }
 }
 
@@ -312,7 +349,7 @@ export async function answerQuery(
     rocks?: Rock[]
     teamMembers?: TeamMember[]
   }
-): Promise<AIQueryResponse & { usage?: { inputTokens: number; outputTokens: number; model: string } }> {
+): Promise<AIResultWithUsage<AIQueryResponse>> {
   const contextStr = buildContext(context)
 
   const userMessage = `
@@ -324,19 +361,11 @@ ${contextStr}
 
 Answer the question based on the data provided. Return JSON only.`
 
-  const result = await callClaudeWithUsage(PROMPTS.queryHandler, userMessage, {
+  const { result, usage, model } = await callClaudeJSONWithUsage<AIQueryResponse>(PROMPTS.queryHandler, userMessage, {
     temperature: 0.5,
   })
 
-  const parsed = parseClaudeJSON<AIQueryResponse>(result.text)
-  return {
-    ...parsed,
-    usage: {
-      inputTokens: result.usage.inputTokens,
-      outputTokens: result.usage.outputTokens,
-      model: result.model,
-    },
-  }
+  return { result, usage: { ...usage, model } }
 }
 
 /**
@@ -405,7 +434,7 @@ export async function parseEODTextDump(
   textDump: string,
   rocks: Rock[],
   currentQuarter: string
-): Promise<ParsedEODReport> {
+): Promise<AIResultWithUsage<ParsedEODReport>> {
   // Filter to current quarter rocks for better matching
   const quarterRocks = rocks.filter(r => r.quarter === currentQuarter)
 
@@ -422,22 +451,22 @@ ${textDump}
 
 Parse this into a structured EOD report. Match tasks to my rocks where possible. Return JSON only.`
 
-  const response = await callClaude(PROMPTS.eodTextParser, userMessage, {
-    temperature: 0.3, // Low temperature for consistent parsing
+  const { result: parsed, usage, model } = await callClaudeJSONWithUsage<ParsedEODReport>(PROMPTS.eodTextParser, userMessage, {
+    temperature: 0.3,
   })
 
-  const parsed = parseClaudeJSON<ParsedEODReport>(response)
-
-  // Validate and clean up the response
   return {
-    tasks: parsed.tasks || [],
-    challenges: parsed.challenges || "No challenges mentioned",
-    tomorrowPriorities: parsed.tomorrowPriorities || [],
-    needsEscalation: parsed.needsEscalation || false,
-    escalationNote: parsed.escalationNote || null,
-    metricValue: typeof parsed.metricValue === "number" ? parsed.metricValue : null,
-    summary: parsed.summary || "Daily tasks completed",
-    warnings: parsed.warnings || [],
+    result: {
+      tasks: parsed.tasks || [],
+      challenges: parsed.challenges || "No challenges mentioned",
+      tomorrowPriorities: parsed.tomorrowPriorities || [],
+      needsEscalation: parsed.needsEscalation || false,
+      escalationNote: parsed.escalationNote || null,
+      metricValue: typeof parsed.metricValue === "number" ? parsed.metricValue : null,
+      summary: parsed.summary || "Daily tasks completed",
+      warnings: parsed.warnings || [],
+    },
+    usage: { ...usage, model },
   }
 }
 
@@ -452,11 +481,17 @@ export async function generateScorecardInsights(
       entries: Record<string, { value: number; status: string } | null>
     }>
   }
-): Promise<{
+): Promise<AIResultWithUsage<{
   insights: Array<{ metricName: string; trend: string; message: string; severity: "info" | "warning" | "critical" }>
   summary: string
   suggestedActions: string[]
-}> {
+}>> {
+  type ScorecardInsightsResult = {
+    insights: Array<{ metricName: string; trend: string; message: string; severity: "info" | "warning" | "critical" }>
+    summary: string
+    suggestedActions: string[]
+  }
+
   const metricsContext = trends.metrics.map((m) => {
     const recentEntries = trends.weeks.slice(0, 4).map((w) => {
       const entry = m.entries[w]
@@ -467,8 +502,8 @@ export async function generateScorecardInsights(
 
   const userMessage = `SCORECARD METRICS (last 4 weeks):\n${metricsContext}\n\nAnalyze these scorecard trends. Identify declining metrics, patterns, and suggest actions. Return JSON only.`
 
-  const response = await callClaude(PROMPTS.scorecardInsights, userMessage, { temperature: 0.4 })
-  return parseClaudeJSON(response)
+  const { result, usage, model } = await callClaudeJSONWithUsage<ScorecardInsightsResult>(PROMPTS.scorecardInsights, userMessage, { temperature: 0.4 })
+  return { result, usage: { ...usage, model } }
 }
 
 /**
@@ -479,14 +514,23 @@ export async function generateMeetingPrep(context: {
   tasks?: Array<{ title: string; status: string; priority: string; assigneeName?: string; dueDate?: string }>
   issues?: Array<{ title: string; status: string; priority: number }>
   scorecardTrends?: { weeks: string[]; metrics: Array<{ metric: { name: string }; entries: Record<string, { value: number; status: string } | null> }> }
-}): Promise<{
+}): Promise<AIResultWithUsage<{
   summary: string
   talkingPoints: string[]
   atRiskRocks: string[]
   decliningMetrics: string[]
   overdueTasks: string[]
   openIssues: string[]
-}> {
+}>> {
+  type MeetingPrepResult = {
+    summary: string
+    talkingPoints: string[]
+    atRiskRocks: string[]
+    decliningMetrics: string[]
+    overdueTasks: string[]
+    openIssues: string[]
+  }
+
   const parts: string[] = []
 
   if (context.rocks) {
@@ -502,8 +546,8 @@ export async function generateMeetingPrep(context: {
   }
 
   const userMessage = `${parts.join("\n\n")}\n\nPrepare a concise L10 meeting prep summary. Return JSON only.`
-  const response = await callClaude(PROMPTS.meetingPrep, userMessage, { temperature: 0.4 })
-  return parseClaudeJSON(response)
+  const { result, usage, model } = await callClaudeJSONWithUsage<MeetingPrepResult>(PROMPTS.meetingPrep, userMessage, { temperature: 0.4 })
+  return { result, usage: { ...usage, model } }
 }
 
 /**
@@ -512,16 +556,21 @@ export async function generateMeetingPrep(context: {
 export async function prioritizeTasks(
   tasks: Array<{ id: string; title: string; priority: string; status: string; dueDate?: string; assigneeName?: string; rockTitle?: string }>,
   rocks?: Array<{ title: string; progress: number; status: string }>
-): Promise<{
+): Promise<AIResultWithUsage<{
   prioritizedTasks: Array<{ taskId: string; rank: number; reasoning: string }>
   summary: string
-}> {
+}>> {
+  type PrioritizeResult = {
+    prioritizedTasks: Array<{ taskId: string; rank: number; reasoning: string }>
+    summary: string
+  }
+
   const tasksContext = tasks.map((t) => `- ID: ${t.id} | "${t.title}" | Priority: ${t.priority} | Status: ${t.status} | Due: ${t.dueDate || "none"} | Rock: ${t.rockTitle || "none"}`).join("\n")
   const rocksContext = rocks ? rocks.map((r) => `- ${r.title}: ${r.progress}% (${r.status})`).join("\n") : "No rocks data"
 
   const userMessage = `TASKS TO PRIORITIZE:\n${tasksContext}\n\nROCKS CONTEXT:\n${rocksContext}\n\nPrioritize these tasks by impact and urgency. Return JSON only.`
-  const response = await callClaude(PROMPTS.taskPrioritizer, userMessage, { temperature: 0.3 })
-  return parseClaudeJSON(response)
+  const { result, usage, model } = await callClaudeJSONWithUsage<PrioritizeResult>(PROMPTS.taskPrioritizer, userMessage, { temperature: 0.3 })
+  return { result, usage: { ...usage, model } }
 }
 
 /**
@@ -532,12 +581,19 @@ export async function generateManagerInsights(context: {
   rocks?: Array<{ title: string; progress: number; status: string; ownerName?: string }>
   tasks?: Array<{ title: string; status: string; assigneeName?: string }>
   eodReports?: Array<{ userId: string; date: string; sentiment?: string }>
-}): Promise<{
+}): Promise<AIResultWithUsage<{
   summary: string
   teamHealth: "good" | "warning" | "critical"
   insights: Array<{ title: string; description: string; type: "positive" | "warning" | "action" }>
   suggestedActions: string[]
-}> {
+}>> {
+  type ManagerInsightsResult = {
+    summary: string
+    teamHealth: "good" | "warning" | "critical"
+    insights: Array<{ title: string; description: string; type: "positive" | "warning" | "action" }>
+    suggestedActions: string[]
+  }
+
   const parts: string[] = []
 
   if (context.directReports) {
@@ -548,8 +604,8 @@ export async function generateManagerInsights(context: {
   }
 
   const userMessage = `${parts.join("\n\n")}\n\nGenerate manager insights for the team. Return JSON only.`
-  const response = await callClaude(PROMPTS.managerInsights, userMessage, { temperature: 0.5 })
-  return parseClaudeJSON(response)
+  const { result, usage, model } = await callClaudeJSONWithUsage<ManagerInsightsResult>(PROMPTS.managerInsights, userMessage, { temperature: 0.5 })
+  return { result, usage: { ...usage, model } }
 }
 
 /**
@@ -562,12 +618,19 @@ export async function generateMeetingNotesSummary(meetingData: {
   issues?: Array<{ title: string; status: string; resolution?: string }>
   notes?: string
   duration?: number
-}): Promise<{
+}): Promise<AIResultWithUsage<{
   summary: string
   keyDecisions: string[]
   actionItems: string[]
   unresolvedIssues: string[]
-}> {
+}>> {
+  type MeetingNotesResult = {
+    summary: string
+    keyDecisions: string[]
+    actionItems: string[]
+    unresolvedIssues: string[]
+  }
+
   const parts: string[] = [`MEETING: ${meetingData.title}`]
 
   if (meetingData.duration) parts.push(`Duration: ${meetingData.duration} minutes`)
@@ -582,8 +645,8 @@ export async function generateMeetingNotesSummary(meetingData: {
   }
 
   const userMessage = `${parts.join("\n\n")}\n\nSummarize this meeting. Return JSON only.`
-  const response = await callClaude(PROMPTS.meetingNotesSummary, userMessage, { temperature: 0.4 })
-  return parseClaudeJSON(response)
+  const { result, usage, model } = await callClaudeJSONWithUsage<MeetingNotesResult>(PROMPTS.meetingNotesSummary, userMessage, { temperature: 0.4 })
+  return { result, usage: { ...usage, model } }
 }
 
 /**

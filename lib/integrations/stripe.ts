@@ -37,7 +37,7 @@ export interface CreateCheckoutParams {
   organizationId: string
   organizationName: string
   billingEmail: string
-  plan: "starter" | "professional" | "enterprise"
+  plan: "team" | "business"
   billingCycle: "monthly" | "yearly"
   successUrl: string
   cancelUrl: string
@@ -160,7 +160,7 @@ export async function getSubscription(subscriptionId: string) {
  */
 export async function updateSubscription(
   subscriptionId: string,
-  newPlan: "starter" | "professional" | "enterprise",
+  newPlan: "team" | "business",
   billingCycle: "monthly" | "yearly"
 ) {
   const stripe = await getStripeClient()

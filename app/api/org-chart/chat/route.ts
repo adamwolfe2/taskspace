@@ -7,6 +7,9 @@ import { orgChartChatSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
+import { aiRateLimit } from "@/lib/api/rate-limit"
+import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
+import type { ApiResponse } from "@/lib/types"
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 const MODEL = "claude-sonnet-4-20250514"
@@ -25,7 +28,11 @@ When answering:
 
 You are representing Modern Amenities Group. Be professional and friendly.`
 
-async function callClaude(context: string, userMessage: string): Promise<string> {
+async function callClaudeChat(context: string, userMessage: string): Promise<{
+  text: string
+  usage: { inputTokens: number; outputTokens: number }
+  model: string
+}> {
   const apiKey = process.env.ANTHROPIC_API_KEY
 
   if (!apiKey) {
@@ -65,11 +72,36 @@ async function callClaude(context: string, userMessage: string): Promise<string>
     throw new Error("Empty response from Claude")
   }
 
-  return data.content[0].text
+  return {
+    text: data.content[0].text,
+    usage: {
+      inputTokens: data.usage?.input_tokens || 0,
+      outputTokens: data.usage?.output_tokens || 0,
+    },
+    model: data.model || MODEL,
+  }
 }
 
 export const POST = withAuth(async (request, auth) => {
   try {
+    // Rate limit: 20 org chart chats per user per hour
+    const rateCheck = aiRateLimit(auth.user.id, 'org-chart-chat')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Try again later." },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
+      )
+    }
+
+    // Check AI credits before processing
+    const creditCheck = await checkCreditsOrRespond({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+    })
+    if (creditCheck instanceof NextResponse) {
+      return creditCheck as NextResponse<ApiResponse<null>>
+    }
+
     // SECURITY: Do not accept employee data in request body
     // Employee data should be fetched server-side based on authenticated user's organization
     const { message, workspaceId } = await validateBody(request, orgChartChatSchema)
@@ -187,13 +219,23 @@ export const POST = withAuth(async (request, auth) => {
       })
     }
 
-    const response = await callClaude(context, message)
+    const { text: responseText, usage, model } = await callClaudeChat(context, message)
+
+    // Record AI usage
+    await recordUsage({
+      organizationId: auth.organization.id,
+      userId: auth.user.id,
+      action: "org-chart-chat",
+      model,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+    })
 
     // Extract mentioned employee names from the response
     const mentionedEmployees: string[] = []
     const boldNameRegex = /\*\*([^*]+)\*\*/g
     let match
-    while ((match = boldNameRegex.exec(response)) !== null) {
+    while ((match = boldNameRegex.exec(responseText)) !== null) {
       const name = match[1]
       // Verify this is actually an employee name
       if (employees.some(e => e.fullName.toLowerCase() === name.toLowerCase())) {
@@ -203,7 +245,7 @@ export const POST = withAuth(async (request, auth) => {
 
     return NextResponse.json({
       success: true,
-      response,
+      response: responseText,
       mentionedEmployees,
     })
   } catch (error) {

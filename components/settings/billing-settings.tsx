@@ -29,8 +29,9 @@ import { IntegrationLogo } from "@/components/ui/integration-logo"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
+import { STRIPE_PAYMENT_LINKS, AI_CREDIT_PAYMENT_LINKS } from "@/lib/integrations/stripe-config"
 
-// Plan configurations matching stripe-config.ts and database
+// Plan configurations matching plans.ts and stripe-config.ts
 const PLANS = {
   free: {
     name: "Free",
@@ -38,57 +39,42 @@ const PLANS = {
     monthlyPrice: 0,
     yearlyPrice: 0,
     features: [
-      "5 team members",
-      "Basic rocks & tasks",
+      "3 team members",
       "EOD reports",
-      "100 AI credits/month",
+      "Rocks & tasks",
+      "50 AI credits/user/month",
     ],
     icon: null,
   },
-  pro: {
-    name: "Pro",
-    description: "For small teams",
-    monthlyPrice: 15,
-    yearlyPrice: 144,
-    features: [
-      "20 team members",
-      "AI insights",
-      "Team analytics",
-      "Asana integration",
-      "1,000 AI credits/month",
-    ],
-    icon: Sparkles,
-  },
   team: {
     name: "Team",
-    description: "For growing organizations",
-    monthlyPrice: 25,
-    yearlyPrice: 240,
+    description: "For teams running on EOS",
+    monthlyPrice: 9,
+    yearlyPrice: 86.40,
     features: [
-      "100 team members",
-      "Everything in Pro",
-      "Custom branding",
-      "API access",
-      "Priority support",
-      "5,000 AI credits/month",
+      "25 team members",
+      "L10 meetings & IDS board",
+      "Scorecard & analytics",
+      "Slack, Asana & Calendar sync",
+      "200 AI credits/user/month",
     ],
-    icon: Crown,
+    icon: Sparkles,
     popular: true,
   },
-  enterprise: {
-    name: "Enterprise",
-    description: "For large organizations",
-    monthlyPrice: 75,
-    yearlyPrice: 720,
+  business: {
+    name: "Business",
+    description: "For scaling organizations",
+    monthlyPrice: 19,
+    yearlyPrice: 182.40,
     features: [
       "Unlimited team members",
       "Everything in Team",
-      "SSO/SAML",
-      "Dedicated support",
-      "SLA guarantee",
+      "Custom branding",
+      "API access & SSO/SAML",
+      "Priority support",
       "Unlimited AI credits",
     ],
-    icon: Building2,
+    icon: Crown,
   },
 }
 
@@ -154,10 +140,16 @@ export function BillingSettings() {
 
         const data = await response.json()
 
-        if (data.success && data.data?.url) {
-          window.location.href = data.data.url
+        if (data.success && data.data?.checkoutUrl) {
+          window.location.href = data.data.checkoutUrl
         } else {
-          throw new Error(data.error || "Failed to create checkout session")
+          // Fall back to payment links if Stripe API checkout fails
+          const paymentLink = STRIPE_PAYMENT_LINKS[plan]?.[billingCycle]
+          if (paymentLink) {
+            window.location.href = paymentLink
+          } else {
+            throw new Error(data.error || "Failed to create checkout session")
+          }
         }
       } else {
         // Already subscribed - upgrade/downgrade
@@ -185,6 +177,12 @@ export function BillingSettings() {
         }
       }
     } catch (error) {
+      // Last resort: try payment link before showing error
+      const paymentLink = STRIPE_PAYMENT_LINKS[plan]?.[billingCycle]
+      if (paymentLink && currentPlan === "free") {
+        window.location.href = paymentLink
+        return
+      }
       console.error("Upgrade failed:", error)
       toast({
         title: "Upgrade failed",
@@ -444,7 +442,7 @@ export function BillingSettings() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-3">
             {(Object.entries(PLANS) as [PlanKey, typeof PLANS[PlanKey]][]).map(([key, plan]) => {
               const Icon = plan.icon
               const isCurrentPlan = key === currentPlan
@@ -543,6 +541,61 @@ export function BillingSettings() {
                 </div>
               )
             })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* AI Credit Add-ons */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-amber-500" />
+            AI Credit Add-ons
+          </CardTitle>
+          <CardDescription>
+            Purchase additional AI credits for your team
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              { name: "500 Credits", price: "$10", link: AI_CREDIT_PAYMENT_LINKS.credits_500, savings: null },
+              { name: "2,000 Credits", price: "$30", link: AI_CREDIT_PAYMENT_LINKS.credits_2000, savings: "Save $10" },
+              { name: "5,000 Credits", price: "$60", link: AI_CREDIT_PAYMENT_LINKS.credits_5000, savings: "Save $40" },
+            ].map((pack) => (
+              <div
+                key={pack.name}
+                className="rounded-xl border border-slate-200 p-4 text-center hover:border-slate-300 transition-colors"
+              >
+                <h4 className="font-semibold">{pack.name}</h4>
+                <p className="text-2xl font-bold mt-1">{pack.price}</p>
+                <p className="text-xs text-slate-500 mt-0.5">one-time purchase</p>
+                {pack.savings && (
+                  <Badge variant="secondary" className="mt-2 bg-emerald-100 text-emerald-700 text-xs">
+                    {pack.savings}
+                  </Badge>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-3"
+                  onClick={() => {
+                    if (pack.link) {
+                      window.open(pack.link, "_blank")
+                    } else {
+                      toast({
+                        title: "Not available",
+                        description: "AI credit purchases are not yet configured. Please contact support.",
+                        variant: "destructive",
+                      })
+                    }
+                  }}
+                >
+                  Buy Credits
+                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+                </Button>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
