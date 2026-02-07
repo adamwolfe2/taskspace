@@ -52,10 +52,14 @@ interface WorkspaceState {
   currentWorkspaceId: string | null
   currentWorkspace: WorkspaceWithMemberInfo | null
 
+  // Hydration tracking
+  _hasHydrated: boolean
+
   // Actions
   setCurrentWorkspace: (workspace: WorkspaceWithMemberInfo | null) => void
   setCurrentWorkspaceId: (id: string | null) => void
   clearWorkspace: () => void
+  setHasHydrated: (hydrated: boolean) => void
 }
 
 export const useWorkspaceStore = create<WorkspaceState>()(
@@ -63,6 +67,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
     (set) => ({
       currentWorkspaceId: null,
       currentWorkspace: null,
+      _hasHydrated: false,
 
       setCurrentWorkspace: (workspace) =>
         set({
@@ -80,6 +85,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           currentWorkspace: null,
           currentWorkspaceId: null,
         }),
+
+      setHasHydrated: (hydrated) =>
+        set({ _hasHydrated: hydrated }),
     }),
     {
       name: "workspace-storage",
@@ -87,6 +95,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       partialize: (state) => ({
         currentWorkspaceId: state.currentWorkspaceId,
       }),
+      onRehydrateStorage: () => () => {
+        useWorkspaceStore.setState({ _hasHydrated: true })
+      },
     }
   )
 )

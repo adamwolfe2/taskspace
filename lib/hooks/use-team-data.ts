@@ -155,7 +155,7 @@ function getDemoEODReports(): EODReport[] {
 
 export function useTeamData() {
   const { isAuthenticated, currentOrganization, isDemoMode } = useApp()
-  const { currentWorkspaceId } = useWorkspaceStore()
+  const { currentWorkspaceId, _hasHydrated } = useWorkspaceStore()
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [rocks, setRocks] = useState<Rock[]>([])
   const [assignedTasks, setAssignedTasks] = useState<AssignedTask[]>([])
@@ -168,6 +168,12 @@ export function useTeamData() {
 
   // Fetch all data
   const fetchData = useCallback(async () => {
+    // Wait for Zustand store to rehydrate from localStorage before fetching
+    // This prevents a race condition where we fetch with null workspaceId
+    if (!_hasHydrated && !isDemoMode) {
+      return
+    }
+
     if (!isAuthenticated || !currentOrganization) {
       setIsLoading(false)
       return
@@ -228,7 +234,7 @@ export function useTeamData() {
     } finally {
       setIsLoading(false)
     }
-  }, [isAuthenticated, currentOrganization, isDemoMode, currentWorkspaceId])
+  }, [isAuthenticated, currentOrganization, isDemoMode, currentWorkspaceId, _hasHydrated])
 
   useEffect(() => {
     fetchData()
