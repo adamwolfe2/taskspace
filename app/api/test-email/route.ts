@@ -13,7 +13,7 @@ export const POST = withAdmin(async (request, auth) => {
     // Get environment variables
     const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
     const EMAIL_FROM = process.env.EMAIL_FROM || "Taskspace <onboarding@resend.dev>"
-    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
 
     // Debug info
     const debugInfo = {
@@ -22,7 +22,7 @@ export const POST = withAdmin(async (request, auth) => {
       resendKeyValid: RESEND_API_KEY.startsWith("re_"),
       emailFrom: EMAIL_FROM,
       appUrl: APP_URL,
-      appUrlConfigured: APP_URL !== "http://localhost:3000",
+      appUrlConfigured: !!process.env.NEXT_PUBLIC_APP_URL,
       testEmailTo: testEmail || auth.user.email,
     }
 
@@ -93,7 +93,7 @@ export const GET = withAdmin(async (request, auth) => {
   try {
     const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
     const EMAIL_FROM = process.env.EMAIL_FROM || "Taskspace <onboarding@resend.dev>"
-    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
 
     return NextResponse.json({
       success: true,
@@ -104,7 +104,7 @@ export const GET = withAdmin(async (request, auth) => {
         emailFrom: EMAIL_FROM,
         emailFromDefault: EMAIL_FROM === "Taskspace <onboarding@resend.dev>",
         appUrl: APP_URL,
-        appUrlConfigured: APP_URL !== "http://localhost:3000",
+        appUrlConfigured: !!process.env.NEXT_PUBLIC_APP_URL,
       },
     })
   } catch (error: unknown) {

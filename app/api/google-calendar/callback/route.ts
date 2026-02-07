@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     // Handle user denial
     if (error) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.trytaskspace.com'
       return NextResponse.redirect(`${appUrl}?page=settings&tab=integrations&calendar_error=access_denied`)
     }
 
@@ -80,11 +80,11 @@ export async function GET(request: NextRequest) {
     })
 
     // Redirect back to settings page
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.trytaskspace.com'
     return NextResponse.redirect(`${appUrl}?page=settings&tab=integrations&calendar_connected=true`)
   } catch (error) {
     logError(logger, "Google Calendar OAuth callback error", error)
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.trytaskspace.com'
     return NextResponse.redirect(`${appUrl}?page=settings&tab=integrations&calendar_error=failed`)
   }
 }

@@ -323,7 +323,7 @@ export const env = {
 
   // App
   get APP_URL() {
-    return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    return process.env.NEXT_PUBLIC_APP_URL || (this.isDevelopment ? "http://localhost:3000" : "https://www.trytaskspace.com")
   },
 
   // Stripe

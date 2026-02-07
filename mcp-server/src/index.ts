@@ -20,7 +20,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js"
 
 // Configuration
-const ALIGN_API_URL = process.env.ALIGN_API_URL || process.env.AIMS_API_URL || "http://localhost:3000"
+const ALIGN_API_URL = process.env.ALIGN_API_URL || process.env.AIMS_API_URL || "https://www.trytaskspace.com"
 const ALIGN_API_KEY = process.env.ALIGN_API_KEY || process.env.AIMS_API_KEY || ""
 
 interface ApiResponse<T> {

@@ -196,7 +196,7 @@ function addSecurityHeaders(response: NextResponse) {
   // Allow self, inline styles (for Tailwind), and specific external domains
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://va.vercel-scripts.com",
+    "script-src 'self' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com",
     "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Tailwind
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",

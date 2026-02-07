@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
 import type { WorkspaceFeatureKey } from "@/lib/types/workspace-features"
+import { GettingStartedChecklist } from "@/components/onboarding/getting-started-checklist"
 
 interface SidebarNavProps {
   onNavigate?: () => void
@@ -165,8 +166,10 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
         )}
       </div>
 
-      {/* Settings at bottom */}
-      <div className="px-3 pt-4 mt-auto border-t border-slate-100">
+      {/* Onboarding checklist + Settings at bottom */}
+      <div className="mt-auto space-y-0">
+        <GettingStartedChecklist onNavigate={(page) => handleNavigation(page)} />
+      <div className="px-3 pt-2 border-t border-slate-100">
         <button
           onClick={() => handleNavigation("settings")}
           className={cn(
@@ -179,6 +182,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
           <Settings className={cn("h-4 w-4", currentPage === "settings" ? "text-white" : "text-slate-400")} />
           Settings
         </button>
+      </div>
       </div>
     </nav>
   )

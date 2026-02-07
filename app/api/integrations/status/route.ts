@@ -27,7 +27,7 @@ export const GET = withAdmin(async (request, auth) => {
     // Check email configuration
     const resendApiKey = process.env.RESEND_API_KEY
     const emailFrom = process.env.EMAIL_FROM
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
     const emailConfigured = !!resendApiKey && resendApiKey.startsWith("re_")
 
     // Check Slack configuration
@@ -45,7 +45,7 @@ export const GET = withAdmin(async (request, auth) => {
         provider: "Resend",
         fromAddress: emailConfigured ? (emailFrom || "Not set") : null,
         appUrl: appUrl,
-        appUrlConfigured: appUrl !== "http://localhost:3000",
+        appUrlConfigured: !!process.env.NEXT_PUBLIC_APP_URL,
       },
       slack: {
         configured: slackConfigured,

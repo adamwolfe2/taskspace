@@ -25,9 +25,19 @@ import { AIBudgetControls } from "@/components/ai/ai-budget-controls"
 export function SettingsPage() {
   const { currentUser, currentOrganization } = useApp()
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [activeTab, setActiveTab] = useState("profile")
 
   const isOwner = currentUser?.role === "owner"
   const isAdmin = currentUser?.role === "admin" || isOwner
+
+  // Check for onboarding navigation hint
+  useEffect(() => {
+    const tab = localStorage.getItem("settings-tab")
+    if (tab) {
+      setActiveTab(tab)
+      localStorage.removeItem("settings-tab")
+    }
+  }, [])
 
   // Load team members
   useEffect(() => {
@@ -56,7 +66,7 @@ export function SettingsPage() {
         <WorkspaceSwitcher className="w-full sm:w-auto" />
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
         {/* Scrollable tabs container for mobile */}
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           <TabsList className="inline-flex min-w-max bg-gray-100/80">

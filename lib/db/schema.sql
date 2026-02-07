@@ -477,3 +477,10 @@ CREATE TABLE IF NOT EXISTS ma_employees (
 CREATE INDEX IF NOT EXISTS idx_ma_employees_supervisor ON ma_employees(supervisor);
 CREATE INDEX IF NOT EXISTS idx_ma_employees_department ON ma_employees(department);
 CREATE INDEX IF NOT EXISTS idx_ma_employees_active ON ma_employees(is_active) WHERE is_active = TRUE;
+
+-- ============================================
+-- ONBOARDING PROGRESS COLUMNS
+-- ============================================
+
+ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS onboarding_dismissed BOOLEAN DEFAULT FALSE;

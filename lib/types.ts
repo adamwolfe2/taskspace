@@ -118,6 +118,8 @@ export interface OrganizationMember {
   managerId?: string | null // ID of the user who manages this member
   jobTitle?: string // Job title for display
   notificationPreferences?: NotificationPreferences
+  onboardingCompletedAt?: string | null
+  onboardingDismissed?: boolean
 }
 
 export interface Invitation {

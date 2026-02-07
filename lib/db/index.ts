@@ -98,6 +98,8 @@ function parseMember(row: Record<string, unknown>): OrganizationMember {
     managerId: (row.manager_id as string) || null,
     jobTitle: row.job_title as string | undefined,
     notificationPreferences: row.notification_preferences as OrganizationMember["notificationPreferences"],
+    onboardingCompletedAt: row.onboarding_completed_at ? (row.onboarding_completed_at as Date).toISOString() : null,
+    onboardingDismissed: (row.onboarding_dismissed as boolean) || false,
   }
 }
 
