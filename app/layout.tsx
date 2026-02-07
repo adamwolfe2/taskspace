@@ -36,12 +36,21 @@ export const metadata: Metadata = {
     siteName: "Taskspace",
     title: "Taskspace - EOS Management Platform | Run All Your Teams In True Parallel",
     description: "AI-powered EOS management for multi-company founders. EOD reports, rocks, scorecards, L10 meetings, and more. Start free today.",
+    images: [
+      {
+        url: "https://www.trytaskspace.com/2026-02-03_17.24.49.png",
+        width: 1200,
+        height: 630,
+        alt: "Taskspace - Run All Your Teams In True Parallel",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Taskspace - EOS Management Platform",
     description: "AI-powered EOS management for multi-company founders. Run all your teams in true parallel.",
     creator: "@taskspace",
+    images: ["https://www.trytaskspace.com/2026-02-03_17.24.49.png"],
   },
   robots: {
     index: true,
