@@ -442,6 +442,151 @@ Parse this into a structured EOD report. Match tasks to my rocks where possible.
 }
 
 /**
+ * Generate scorecard insights from trend data
+ */
+export async function generateScorecardInsights(
+  trends: {
+    weeks: string[]
+    metrics: Array<{
+      metric: { id: string; name: string; targetValue?: number; targetDirection: string; unit: string; ownerName?: string }
+      entries: Record<string, { value: number; status: string } | null>
+    }>
+  }
+): Promise<{
+  insights: Array<{ metricName: string; trend: string; message: string; severity: "info" | "warning" | "critical" }>
+  summary: string
+  suggestedActions: string[]
+}> {
+  const metricsContext = trends.metrics.map((m) => {
+    const recentEntries = trends.weeks.slice(0, 4).map((w) => {
+      const entry = m.entries[w]
+      return entry ? `${w}: ${entry.value} (${entry.status})` : `${w}: no data`
+    })
+    return `${m.metric.name} (owner: ${m.metric.ownerName || "unassigned"}, target: ${m.metric.targetValue || "N/A"} ${m.metric.unit}): ${recentEntries.join(", ")}`
+  }).join("\n")
+
+  const userMessage = `SCORECARD METRICS (last 4 weeks):\n${metricsContext}\n\nAnalyze these scorecard trends. Identify declining metrics, patterns, and suggest actions. Return JSON only.`
+
+  const response = await callClaude(PROMPTS.scorecardInsights, userMessage, { temperature: 0.4 })
+  return parseClaudeJSON(response)
+}
+
+/**
+ * Generate meeting preparation summary
+ */
+export async function generateMeetingPrep(context: {
+  rocks?: Array<{ title: string; progress: number; status: string; ownerName?: string }>
+  tasks?: Array<{ title: string; status: string; priority: string; assigneeName?: string; dueDate?: string }>
+  issues?: Array<{ title: string; status: string; priority: number }>
+  scorecardTrends?: { weeks: string[]; metrics: Array<{ metric: { name: string }; entries: Record<string, { value: number; status: string } | null> }> }
+}): Promise<{
+  summary: string
+  talkingPoints: string[]
+  atRiskRocks: string[]
+  decliningMetrics: string[]
+  overdueTasks: string[]
+  openIssues: string[]
+}> {
+  const parts: string[] = []
+
+  if (context.rocks) {
+    parts.push(`ROCKS:\n${context.rocks.map((r) => `- ${r.title}: ${r.progress}% (${r.status}) - ${r.ownerName || "unassigned"}`).join("\n")}`)
+  }
+  if (context.tasks) {
+    const overdue = context.tasks.filter((t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "completed")
+    parts.push(`OVERDUE TASKS (${overdue.length}):\n${overdue.slice(0, 10).map((t) => `- ${t.title} (${t.assigneeName || "unassigned"}, due: ${t.dueDate})`).join("\n")}`)
+  }
+  if (context.issues) {
+    const open = context.issues.filter((i) => i.status === "open")
+    parts.push(`OPEN ISSUES (${open.length}):\n${open.slice(0, 10).map((i) => `- ${i.title} (priority: ${i.priority})`).join("\n")}`)
+  }
+
+  const userMessage = `${parts.join("\n\n")}\n\nPrepare a concise L10 meeting prep summary. Return JSON only.`
+  const response = await callClaude(PROMPTS.meetingPrep, userMessage, { temperature: 0.4 })
+  return parseClaudeJSON(response)
+}
+
+/**
+ * Prioritize a list of tasks using AI
+ */
+export async function prioritizeTasks(
+  tasks: Array<{ id: string; title: string; priority: string; status: string; dueDate?: string; assigneeName?: string; rockTitle?: string }>,
+  rocks?: Array<{ title: string; progress: number; status: string }>
+): Promise<{
+  prioritizedTasks: Array<{ taskId: string; rank: number; reasoning: string }>
+  summary: string
+}> {
+  const tasksContext = tasks.map((t) => `- ID: ${t.id} | "${t.title}" | Priority: ${t.priority} | Status: ${t.status} | Due: ${t.dueDate || "none"} | Rock: ${t.rockTitle || "none"}`).join("\n")
+  const rocksContext = rocks ? rocks.map((r) => `- ${r.title}: ${r.progress}% (${r.status})`).join("\n") : "No rocks data"
+
+  const userMessage = `TASKS TO PRIORITIZE:\n${tasksContext}\n\nROCKS CONTEXT:\n${rocksContext}\n\nPrioritize these tasks by impact and urgency. Return JSON only.`
+  const response = await callClaude(PROMPTS.taskPrioritizer, userMessage, { temperature: 0.3 })
+  return parseClaudeJSON(response)
+}
+
+/**
+ * Generate manager insights from team data
+ */
+export async function generateManagerInsights(context: {
+  directReports?: Array<{ name: string; tasksCompleted: number; rocksOnTrack: number; eodRate: number }>
+  rocks?: Array<{ title: string; progress: number; status: string; ownerName?: string }>
+  tasks?: Array<{ title: string; status: string; assigneeName?: string }>
+  eodReports?: Array<{ userId: string; date: string; sentiment?: string }>
+}): Promise<{
+  summary: string
+  teamHealth: "good" | "warning" | "critical"
+  insights: Array<{ title: string; description: string; type: "positive" | "warning" | "action" }>
+  suggestedActions: string[]
+}> {
+  const parts: string[] = []
+
+  if (context.directReports) {
+    parts.push(`DIRECT REPORTS:\n${context.directReports.map((r) => `- ${r.name}: ${r.tasksCompleted} tasks done, ${r.rocksOnTrack} rocks on track, ${r.eodRate}% EOD rate`).join("\n")}`)
+  }
+  if (context.rocks) {
+    parts.push(`TEAM ROCKS:\n${context.rocks.map((r) => `- ${r.title}: ${r.progress}% (${r.status}) - ${r.ownerName || "unassigned"}`).join("\n")}`)
+  }
+
+  const userMessage = `${parts.join("\n\n")}\n\nGenerate manager insights for the team. Return JSON only.`
+  const response = await callClaude(PROMPTS.managerInsights, userMessage, { temperature: 0.5 })
+  return parseClaudeJSON(response)
+}
+
+/**
+ * Generate a summary of meeting notes
+ */
+export async function generateMeetingNotesSummary(meetingData: {
+  title: string
+  sections?: Array<{ sectionType: string; data: Record<string, unknown> }>
+  todos?: Array<{ title: string; assigneeName?: string; completed: boolean }>
+  issues?: Array<{ title: string; status: string; resolution?: string }>
+  notes?: string
+  duration?: number
+}): Promise<{
+  summary: string
+  keyDecisions: string[]
+  actionItems: string[]
+  unresolvedIssues: string[]
+}> {
+  const parts: string[] = [`MEETING: ${meetingData.title}`]
+
+  if (meetingData.duration) parts.push(`Duration: ${meetingData.duration} minutes`)
+  if (meetingData.notes) parts.push(`Notes: ${meetingData.notes}`)
+
+  if (meetingData.todos) {
+    parts.push(`TODOS (${meetingData.todos.length}):\n${meetingData.todos.map((t) => `- [${t.completed ? "x" : " "}] ${t.title} (${t.assigneeName || "unassigned"})`).join("\n")}`)
+  }
+
+  if (meetingData.issues) {
+    parts.push(`ISSUES (${meetingData.issues.length}):\n${meetingData.issues.map((i) => `- ${i.title} [${i.status}]${i.resolution ? `: ${i.resolution}` : ""}`).join("\n")}`)
+  }
+
+  const userMessage = `${parts.join("\n\n")}\n\nSummarize this meeting. Return JSON only.`
+  const response = await callClaude(PROMPTS.meetingNotesSummary, userMessage, { temperature: 0.4 })
+  return parseClaudeJSON(response)
+}
+
+/**
  * Check if Claude API is configured
  */
 export function isClaudeConfigured(): boolean {

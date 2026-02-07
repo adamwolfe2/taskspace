@@ -11,13 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { KanbanBoard } from "@/components/tasks/kanban-board"
-import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye } from "lucide-react"
+import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2 } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useToast } from "@/hooks/use-toast"
 import { addDays, addWeeks, addMonths } from "date-fns"
 import { getErrorMessage } from "@/lib/utils"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
+import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
 
 interface TasksPageProps {
   currentUser: TeamMember
@@ -53,7 +54,47 @@ export function TasksPage({
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list")
   const [viewingUserId, setViewingUserId] = useState<string | null>(initialAssigneeFilter || null)
   const [viewingUserName, setViewingUserName] = useState<string | null>(filterUserName || null)
+  const [aiPrioritizing, setAiPrioritizing] = useState(false)
+  const [aiPrioritized, setAiPrioritized] = useState<Array<{ taskId: string; rank: number; reasoning: string }> | null>(null)
   const { toast } = useToast()
+  const { currentWorkspaceId } = useWorkspaceStore()
+
+  const handleAiPrioritize = async () => {
+    if (!currentWorkspaceId) return
+    setAiPrioritizing(true)
+    try {
+      const pendingTasks = userTasks.filter((t) => t.status !== "completed")
+      const response = await fetch("/api/ai/prioritize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          workspaceId: currentWorkspaceId,
+          tasks: pendingTasks.map((t) => ({
+            id: t.id,
+            title: t.title,
+            priority: t.priority,
+            status: t.status,
+            dueDate: t.dueDate,
+            assigneeName: t.assigneeName,
+            rockTitle: t.rockTitle,
+          })),
+          rocks: rocks.map((r) => ({ title: r.title, progress: r.progress, status: r.status })),
+        }),
+      })
+      const result = await response.json()
+      if (result.success) {
+        setAiPrioritized(result.data.prioritizedTasks)
+        toast({ title: "Tasks Prioritized", description: result.data.summary })
+      } else {
+        toast({ title: "Error", description: result.error, variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to prioritize tasks", variant: "destructive" })
+    } finally {
+      setAiPrioritizing(false)
+    }
+  }
 
   // Apply initial filter from navigation (e.g., manager dashboard drill-down)
   useEffect(() => {
@@ -275,10 +316,22 @@ export function TasksPage({
           </p>
         </div>
         {!isViewingOtherUser && (
-          <Button onClick={() => setShowAddTaskModal(true)} className="w-full sm:w-auto flex-shrink-0 min-h-[44px]">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Task
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAiPrioritize}
+              disabled={aiPrioritizing || userTasks.filter((t) => t.status !== "completed").length === 0}
+              className="min-h-[44px]"
+            >
+              {aiPrioritizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              AI Prioritize
+            </Button>
+            <Button onClick={() => setShowAddTaskModal(true)} className="flex-1 sm:flex-initial min-h-[44px]">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Task
+            </Button>
+          </div>
         )}
       </div>
 

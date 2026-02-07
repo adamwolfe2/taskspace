@@ -252,6 +252,114 @@ IMPORTANT:
 - Tomorrow priorities are optional - only include if mentioned in the text
 - metricValue should only be set if the user mentions their scorecard metric number`
 
+// Prompt for scorecard insights
+export const SCORECARD_INSIGHTS_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Analyze scorecard metrics trends and provide actionable insights.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "insights": [
+    { "metricName": "Metric name", "trend": "declining|improving|stable|volatile", "message": "What this means", "severity": "info|warning|critical" }
+  ],
+  "summary": "2-3 sentence overview of scorecard health",
+  "suggestedActions": ["Specific action items to improve off-track metrics"]
+}
+
+RULES:
+- Flag any metric that has been red for 2+ consecutive weeks as critical
+- Note positive trends too, not just negatives
+- Suggested actions should be specific and assignable
+- Keep summary concise and direct`
+
+// Prompt for meeting prep
+export const MEETING_PREP_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Prepare a concise L10 meeting prep summary based on current team data.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "summary": "Brief overview of what to focus on in the meeting",
+  "talkingPoints": ["Key items to discuss"],
+  "atRiskRocks": ["Rocks that are behind schedule"],
+  "decliningMetrics": ["Scorecard metrics trending down"],
+  "overdueTasks": ["Tasks past their due date"],
+  "openIssues": ["Unresolved issues to address"]
+}
+
+RULES:
+- Prioritize items by urgency and impact
+- Keep talking points to 5-7 max
+- Be specific about what's at risk and why`
+
+// Prompt for task prioritization
+export const TASK_PRIORITIZER_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Prioritize the given tasks by impact and urgency.
+
+Consider:
+1. Due date urgency (overdue > due today > due this week > later)
+2. Rock alignment (tasks tied to rocks are higher priority)
+3. Priority level (urgent > high > medium > low)
+4. Dependencies and blocking potential
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "prioritizedTasks": [
+    { "taskId": "id", "rank": 1, "reasoning": "Why this is #1" }
+  ],
+  "summary": "Brief explanation of the prioritization logic"
+}
+
+RULES:
+- Every task must appear in the output
+- Rank 1 = highest priority
+- Reasoning should be specific, not generic`
+
+// Prompt for manager insights
+export const MANAGER_INSIGHTS_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Generate manager insights from team performance data.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "summary": "2-3 sentence overview of team health",
+  "teamHealth": "good|warning|critical",
+  "insights": [
+    { "title": "Insight title", "description": "Details", "type": "positive|warning|action" }
+  ],
+  "suggestedActions": ["Specific actions the manager should take"]
+}
+
+RULES:
+- Balance positive and constructive feedback
+- Flag workload imbalances
+- Note team members who may need support
+- Keep suggestions actionable and specific`
+
+// Prompt for meeting notes summary
+export const MEETING_NOTES_SUMMARY_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Summarize meeting notes into key decisions, action items, and unresolved issues.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "summary": "2-3 paragraph meeting summary",
+  "keyDecisions": ["Decisions that were made"],
+  "actionItems": ["Action items with owners if known"],
+  "unresolvedIssues": ["Issues that still need resolution"]
+}
+
+RULES:
+- Focus on decisions and outcomes, not process
+- Action items should be specific and assignable
+- Note anything that was deferred or needs follow-up`
+
 // Export all prompts
 export const PROMPTS = {
   teamContext: TEAM_CONTEXT,
@@ -260,4 +368,9 @@ export const PROMPTS = {
   digestGenerator: DIGEST_GENERATOR_PROMPT,
   queryHandler: QUERY_HANDLER_PROMPT,
   eodTextParser: EOD_TEXT_PARSER_PROMPT,
+  scorecardInsights: SCORECARD_INSIGHTS_PROMPT,
+  meetingPrep: MEETING_PREP_PROMPT,
+  taskPrioritizer: TASK_PRIORITIZER_PROMPT,
+  managerInsights: MANAGER_INSIGHTS_PROMPT,
+  meetingNotesSummary: MEETING_NOTES_SUMMARY_PROMPT,
 }

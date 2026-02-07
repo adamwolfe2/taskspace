@@ -55,6 +55,13 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [filterStatus, setFilterStatus] = useState<"all" | "needs_attention" | "on_track">("all")
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [aiInsights, setAiInsights] = useState<{
+    summary: string
+    teamHealth: "good" | "warning" | "critical"
+    insights: Array<{ title: string; description: string; type: "positive" | "warning" | "action" }>
+    suggestedActions: string[]
+  } | null>(null)
+  const [aiInsightsLoading, setAiInsightsLoading] = useState(false)
 
   // Fetch dashboard data
   const fetchDashboard = async () => {
@@ -88,6 +95,35 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
       fetchDashboard()
     }
   }, [currentWorkspace?.id])
+
+  const handleAiInsights = async () => {
+    if (!currentWorkspace || !dashboard) return
+    setAiInsightsLoading(true)
+    try {
+      const response = await fetch("/api/ai/manager-insights", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          workspaceId: currentWorkspace.id,
+          directReports: dashboard.directReports.map((r) => ({
+            name: r.name,
+            tasksCompleted: r.metrics.completedTasks,
+            rocksOnTrack: r.rocks.filter((rock) => rock.status === "on-track").length,
+            eodRate: r.eodStatus.submittedToday ? 100 : 0,
+          })),
+        }),
+      })
+      const result = await response.json()
+      if (result.success) {
+        setAiInsights(result.data)
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setAiInsightsLoading(false)
+    }
+  }
 
   // Filter direct reports
   const filteredReports = useMemo(() => {
@@ -205,6 +241,15 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAiInsights}
+            disabled={aiInsightsLoading}
+          >
+            {aiInsightsLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+            AI Insights
+          </Button>
           <Button
             variant="outline"
             size="icon"
@@ -384,6 +429,48 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* AI Insights Card */}
+      {aiInsights && (
+        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              AI Team Insights
+              <Badge variant={aiInsights.teamHealth === "good" ? "default" : aiInsights.teamHealth === "warning" ? "secondary" : "destructive"} className="ml-2">
+                {aiInsights.teamHealth}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-slate-700">{aiInsights.summary}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {aiInsights.insights.map((insight, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "p-3 rounded-lg border text-sm",
+                    insight.type === "positive" ? "bg-emerald-50 border-emerald-200" :
+                    insight.type === "warning" ? "bg-yellow-50 border-yellow-200" :
+                    "bg-blue-50 border-blue-200"
+                  )}
+                >
+                  <p className="font-medium">{insight.title}</p>
+                  <p className="text-slate-600 text-xs mt-1">{insight.description}</p>
+                </div>
+              ))}
+            </div>
+            {aiInsights.suggestedActions.length > 0 && (
+              <div className="pt-2 border-t">
+                <p className="text-xs font-medium text-slate-700 mb-1">Suggested Actions:</p>
+                <ul className="text-xs text-slate-600 space-y-1">
+                  {aiInsights.suggestedActions.map((a, i) => <li key={i}>- {a}</li>)}
+                </ul>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

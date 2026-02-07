@@ -7,6 +7,8 @@
 
 import { sql } from "./sql"
 import { generateId } from "@/lib/auth/password"
+import { mentions as mentionsDb } from "./mentions"
+import { resolveMentions } from "@/lib/utils/mentions"
 import type { TaskComment } from "@/lib/types"
 
 // ============================================
@@ -75,7 +77,11 @@ export async function getTaskComments(taskId: string): Promise<TaskComment[]> {
  */
 export async function addTaskComment(
   taskId: string,
-  input: TaskCommentInput
+  input: TaskCommentInput,
+  mentionContext?: {
+    workspaceId: string
+    teamMembers: Array<{ id: string; name: string; email?: string }>
+  }
 ): Promise<TaskComment> {
   validateComment(input)
 
@@ -101,6 +107,22 @@ export async function addTaskComment(
       updated_at = NOW()
     WHERE id = ${taskId}
   `
+
+  // Parse and create mention records if context provided
+  if (mentionContext) {
+    const resolved = resolveMentions(input.text, mentionContext.teamMembers)
+    if (resolved.length > 0) {
+      await mentionsDb.createMany(
+        resolved.map((m) => ({
+          workspaceId: mentionContext.workspaceId,
+          sourceType: "task_comment",
+          sourceId: newComment.id,
+          mentionedUserId: m.userId,
+          mentionedBy: input.userId,
+        }))
+      )
+    }
+  }
 
   return newComment
 }

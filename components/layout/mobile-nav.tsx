@@ -26,6 +26,8 @@ import {
   Search,
   FileText,
   Network,
+  BookOpen,
+  UserCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -49,6 +51,8 @@ export function MobileNav() {
     { id: "ids-board", label: "IDS Board", icon: Search },
     { id: "notes", label: "Notes", icon: FileText },
     { id: "org-chart", label: "Org Chart", icon: Network },
+    { id: "vto", label: "V/TO", icon: BookOpen },
+    { id: "people-analyzer", label: "People", icon: UserCheck },
     { id: "settings", label: "Settings", icon: Settings },
     { id: "admin", label: "Team Dashboard", icon: Shield, adminOnly: true },
     { id: "admin-team", label: "Team Members", icon: Users, adminOnly: true },

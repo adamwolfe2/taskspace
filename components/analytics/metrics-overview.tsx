@@ -15,9 +15,19 @@ interface MetricsOverviewProps {
     completedTasks: number
     totalReports: number
   }
+  previousMetrics?: {
+    rockCompletionRate: number
+    taskCompletionRate: number
+    eodCompletionRate: number
+  }
 }
 
-export function MetricsOverview({ metrics }: MetricsOverviewProps) {
+export function MetricsOverview({ metrics, previousMetrics }: MetricsOverviewProps) {
+  const getChange = (current: number, previous?: number) => {
+    if (previous === undefined || previous === 0) return null
+    return Math.round(current - previous)
+  }
+
   const stats = [
     {
       label: "Rock Completion",
@@ -27,6 +37,7 @@ export function MetricsOverview({ metrics }: MetricsOverviewProps) {
       color: "text-blue-600",
       bgColor: "bg-blue-50",
       trend: metrics.rockCompletionRate >= 70 ? "up" : metrics.rockCompletionRate >= 50 ? "neutral" : "down",
+      change: getChange(metrics.rockCompletionRate, previousMetrics?.rockCompletionRate),
     },
     {
       label: "Task Completion",
@@ -36,6 +47,7 @@ export function MetricsOverview({ metrics }: MetricsOverviewProps) {
       color: "text-emerald-600",
       bgColor: "bg-emerald-50",
       trend: metrics.taskCompletionRate >= 70 ? "up" : metrics.taskCompletionRate >= 50 ? "neutral" : "down",
+      change: getChange(metrics.taskCompletionRate, previousMetrics?.taskCompletionRate),
     },
     {
       label: "EOD Submission Rate",
@@ -45,6 +57,7 @@ export function MetricsOverview({ metrics }: MetricsOverviewProps) {
       color: "text-purple-600",
       bgColor: "bg-purple-50",
       trend: metrics.eodCompletionRate >= 80 ? "up" : metrics.eodCompletionRate >= 60 ? "neutral" : "down",
+      change: getChange(metrics.eodCompletionRate, previousMetrics?.eodCompletionRate),
     },
   ]
 
@@ -69,7 +82,7 @@ export function MetricsOverview({ metrics }: MetricsOverviewProps) {
                     {showTrend && (
                       <span
                         className={cn(
-                          "flex items-center text-sm font-medium",
+                          "flex items-center gap-0.5 text-sm font-medium",
                           stat.trend === "up" ? "text-emerald-600" : "text-red-600"
                         )}
                       >
@@ -77,6 +90,11 @@ export function MetricsOverview({ metrics }: MetricsOverviewProps) {
                           <TrendingUp className="h-4 w-4" />
                         ) : (
                           <TrendingDown className="h-4 w-4" />
+                        )}
+                        {stat.change !== null && stat.change !== undefined && (
+                          <span className="text-xs">
+                            {stat.change > 0 ? "+" : ""}{stat.change}%
+                          </span>
                         )}
                       </span>
                     )}

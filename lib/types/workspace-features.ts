@@ -19,6 +19,8 @@ export interface WorkspaceFeatureToggles {
     ids: boolean
     orgChart: boolean
     notes: boolean
+    vto: boolean
+    peopleAnalyzer: boolean
   }
   productivity: {
     focusBlocks: boolean
@@ -71,6 +73,8 @@ export const DEFAULT_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     ids: true,
     orgChart: true,
     notes: true,
+    vto: true,
+    peopleAnalyzer: true,
   },
   productivity: {
     focusBlocks: true,
@@ -173,6 +177,21 @@ export const WORKSPACE_FEATURE_METADATA: Record<WorkspaceFeatureKey, WorkspaceFe
     description: "Collaborative Notion-style notes shared across the workspace",
     category: "core",
     icon: "FileText",
+    impact: { navigation: true, dashboard: false, api: true },
+  },
+  "core.vto": {
+    name: "V/TO (Vision/Traction Organizer)",
+    description: "Define and track your company vision, core values, and strategic plan",
+    category: "core",
+    icon: "BookOpen",
+    impact: { navigation: true, dashboard: false, api: true },
+  },
+  "core.peopleAnalyzer": {
+    name: "People Analyzer (GWC)",
+    description: "Assess team members on Gets It, Wants It, and Capacity to Do It",
+    category: "core",
+    icon: "UserCheck",
+    dependencies: ["core.orgChart"],
     impact: { navigation: true, dashboard: false, api: true },
   },
 

@@ -55,6 +55,7 @@ import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher"
 import { MetricCard } from "./metric-card"
 import { AddMetricDialog } from "./add-metric-dialog"
+import { ScorecardTrendChart } from "./scorecard-trend-chart"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import type { ScorecardSummary } from "@/lib/db/scorecard"
@@ -88,6 +89,21 @@ export function WorkspaceScorecardPage() {
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [editMetric, setEditMetric] = useState<ScorecardSummary | null>(null)
   const [deleteMetricId, setDeleteMetricId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<"scorecard" | "trends">("scorecard")
+  const [trendsData, setTrendsData] = useState<{
+    weeks: string[]
+    metrics: Array<{
+      metric: { id: string; name: string; targetValue?: number; targetDirection: string; unit: string; ownerName?: string }
+      entries: Record<string, { value: number; status: string } | null>
+    }>
+  } | null>(null)
+  const [trendsLoading, setTrendsLoading] = useState(false)
+  const [aiInsights, setAiInsights] = useState<{
+    insights: Array<{ metricName: string; trend: string; message: string; severity: "info" | "warning" | "critical" }>
+    summary: string
+    suggestedActions: string[]
+  } | null>(null)
+  const [aiInsightsLoading, setAiInsightsLoading] = useState(false)
 
   // Calculate week start based on offset
   const getWeekStartDate = useCallback((offset: number) => {
@@ -135,6 +151,54 @@ export function WorkspaceScorecardPage() {
   useEffect(() => {
     fetchScorecard()
   }, [fetchScorecard])
+
+  const fetchTrends = useCallback(async () => {
+    if (!currentWorkspaceId) return
+    setTrendsLoading(true)
+    try {
+      const response = await fetch(
+        `/api/scorecards/trends?workspaceId=${currentWorkspaceId}&weeks=13`,
+        { credentials: "include" }
+      )
+      const result = await response.json()
+      if (result.success) {
+        setTrendsData(result.data)
+      }
+    } catch {
+      // Silently fail for trends
+    } finally {
+      setTrendsLoading(false)
+    }
+  }, [currentWorkspaceId])
+
+  useEffect(() => {
+    if (activeTab === "trends") {
+      fetchTrends()
+    }
+  }, [activeTab, fetchTrends])
+
+  const fetchAiInsights = async () => {
+    if (!currentWorkspaceId) return
+    setAiInsightsLoading(true)
+    try {
+      const response = await fetch("/api/ai/scorecard-insights", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ workspaceId: currentWorkspaceId }),
+      })
+      const result = await response.json()
+      if (result.success) {
+        setAiInsights(result.data)
+      } else {
+        toast({ title: "Error", description: result.error || "Failed to generate insights", variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to generate AI insights", variant: "destructive" })
+    } finally {
+      setAiInsightsLoading(false)
+    }
+  }
 
   const handleUpdateEntry = async (metricId: string, value: number, notes?: string) => {
     try {
@@ -326,6 +390,31 @@ export function WorkspaceScorecardPage() {
         </div>
       )}
 
+      {/* Tab Navigation */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "scorecard" | "trends")}>
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="scorecard">Scorecard</TabsTrigger>
+            <TabsTrigger value="trends">Trends</TabsTrigger>
+          </TabsList>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchAiInsights}
+              disabled={aiInsightsLoading}
+            >
+              {aiInsightsLoading ? (
+                <><span className="animate-spin mr-1">...</span> Analyzing</>
+              ) : (
+                "AI Insights"
+              )}
+            </Button>
+          </div>
+        </div>
+
+        <TabsContent value="scorecard">
+
       {/* Week Navigation & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2">
@@ -511,6 +600,45 @@ export function WorkspaceScorecardPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* AI Insights Display */}
+      {aiInsights && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="text-base">AI Scorecard Insights</CardTitle>
+            <CardDescription>{aiInsights.summary}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {aiInsights.insights.map((insight, i) => (
+              <div key={i} className={cn(
+                "p-3 rounded-lg border",
+                insight.severity === "critical" ? "bg-red-50 border-red-200" :
+                insight.severity === "warning" ? "bg-yellow-50 border-yellow-200" : "bg-slate-50 border-slate-200"
+              )}>
+                <p className="font-medium text-sm">{insight.metricName} ({insight.trend})</p>
+                <p className="text-sm text-slate-600">{insight.message}</p>
+              </div>
+            ))}
+            {aiInsights.suggestedActions.length > 0 && (
+              <div className="pt-2 border-t">
+                <p className="text-sm font-medium mb-1">Suggested Actions:</p>
+                <ul className="text-sm text-slate-600 space-y-1">
+                  {aiInsights.suggestedActions.map((action, i) => (
+                    <li key={i}>- {action}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+        </TabsContent>
+
+        <TabsContent value="trends">
+          <ScorecardTrendChart trends={trendsData} loading={trendsLoading} />
+        </TabsContent>
+      </Tabs>
 
       {/* Help Section */}
       <Card className="bg-slate-50 border-slate-200">

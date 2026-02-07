@@ -363,6 +363,8 @@ export type PageType =
   | "org-chart"
   | "ids-board"
   | "notes"
+  | "vto"
+  | "people-analyzer"
 
 // ============================================
 // IDS BOARD TYPES

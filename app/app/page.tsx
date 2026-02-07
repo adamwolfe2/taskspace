@@ -27,6 +27,8 @@ import { ScorecardPage } from "@/components/pages/scorecard-page"
 import { OrgChartPage } from "@/components/pages/org-chart-page"
 import { IdsBoardPage } from "@/components/pages/ids-board-page"
 import { NotesPage } from "@/components/pages/notes-page"
+import { VTOPage } from "@/components/pages/vto-page"
+import { PeopleAnalyzerPage } from "@/components/pages/people-analyzer-page"
 import { SetupOrganizationPage } from "@/components/pages/setup-organization-page"
 import { InvitedUserWelcome } from "@/components/onboarding/invited-user-welcome"
 import { BrandThemeProvider } from "@/lib/contexts/brand-theme-context"
@@ -264,6 +266,10 @@ function AppContent() {
         return <IdsBoardPage />
       case "notes":
         return <NotesPage />
+      case "vto":
+        return <VTOPage />
+      case "people-analyzer":
+        return <PeopleAnalyzerPage />
       default:
         return <DashboardPage {...dashboardProps} />
     }

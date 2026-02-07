@@ -17,8 +17,9 @@ import { TaskCompletionChart } from "@/components/analytics/task-completion-char
 import { EODSubmissionChart } from "@/components/analytics/eod-submission-chart"
 import { TopPerformersCard } from "@/components/analytics/top-performers-card"
 import { ActivityHeatmap } from "@/components/analytics/activity-heatmap"
+import { GoalVsActualChart } from "@/components/analytics/goal-vs-actual-chart"
 import { Skeleton } from "@/components/ui/skeleton"
-import { BarChart3, Calendar } from "lucide-react"
+import { BarChart3, Calendar, Download } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { EmptyState } from "@/components/shared/empty-state"
 
@@ -60,6 +61,32 @@ export function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const exportToCSV = (analyticsData: AnalyticsData) => {
+    const rows: string[][] = [
+      ["Metric", "Value"],
+      ["Rock Completion Rate", `${analyticsData.metrics.rockCompletionRate}%`],
+      ["Completed Rocks", `${analyticsData.metrics.completedRocks}`],
+      ["Total Rocks", `${analyticsData.metrics.totalRocks}`],
+      ["Task Completion Rate", `${analyticsData.metrics.taskCompletionRate}%`],
+      ["Completed Tasks", `${analyticsData.metrics.completedTasks}`],
+      ["Total Tasks", `${analyticsData.metrics.totalTasks}`],
+      ["EOD Completion Rate", `${analyticsData.metrics.eodCompletionRate}%`],
+      ["Total Reports", `${analyticsData.metrics.totalReports}`],
+      [],
+      ["Top Performers"],
+      ["Name", "Tasks Completed", "Rocks Completed", "EOD Reports", "Score"],
+      ...analyticsData.topPerformers.map((p) => [p.name, `${p.tasksCompleted}`, `${p.rocksCompleted}`, `${p.eodReports}`, `${p.score}`]),
+    ]
+    const csv = rows.map((r) => r.join(",")).join("\n")
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `taskspace-analytics-${dateRange}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const dateRangeOptions = [
     { value: "7d", label: "Last 7 days" },
@@ -177,16 +204,24 @@ export function AnalyticsPage() {
       <NoWorkspaceAlert />
 
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-          <div className="rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 p-2.5">
-            <BarChart3 className="h-6 w-6 text-white" />
-          </div>
-          Analytics Dashboard
-        </h1>
-        <p className="text-slate-500 mt-2">
-          Track team performance, completion rates, and activity patterns
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+            <div className="rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 p-2.5">
+              <BarChart3 className="h-6 w-6 text-white" />
+            </div>
+            Analytics Dashboard
+          </h1>
+          <p className="text-slate-500 mt-2">
+            Track team performance, completion rates, and activity patterns
+          </p>
+        </div>
+        {data && !hasNoActivity && (
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => exportToCSV(data)}>
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -254,8 +289,16 @@ export function AnalyticsPage() {
             <ActivityHeatmap data={data.activityByDayOfWeek} />
           </div>
 
-          {/* Top Performers */}
-          <TopPerformersCard performers={data.topPerformers} />
+          {/* Goal vs Actual + Top Performers */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <GoalVsActualChart data={{
+              rocksPlanned: data.metrics.totalRocks,
+              rocksCompleted: data.metrics.completedRocks,
+              tasksCreated: data.metrics.totalTasks,
+              tasksCompleted: data.metrics.completedTasks,
+            }} />
+            <TopPerformersCard performers={data.topPerformers} />
+          </div>
         </>
       )}
     </div>
