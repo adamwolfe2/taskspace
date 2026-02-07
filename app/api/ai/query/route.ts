@@ -147,7 +147,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     }
 
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error instanceof Error ? error.message : "Failed to process query" },
+      { success: false, error: "Failed to process query" },
       { status: 500 }
     )
   }
@@ -157,7 +157,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get("limit") || "50", 10)
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100)
 
     const conversations = await db.aiConversations.findByUserId(
       auth.user.id,

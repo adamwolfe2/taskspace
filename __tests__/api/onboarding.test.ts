@@ -40,12 +40,12 @@ import { isAdmin } from "@/lib/auth/middleware"
 
 function createRequest(method: string, body?: unknown): NextRequest {
   const url = "http://localhost:3000/api/onboarding"
-  const init: RequestInit = { method }
+  const options: { method: string; body?: string; headers?: Record<string, string> } = { method }
   if (body) {
-    init.body = JSON.stringify(body)
-    init.headers = { "Content-Type": "application/json" }
+    options.body = JSON.stringify(body)
+    options.headers = { "Content-Type": "application/json" }
   }
-  return new NextRequest(url, init)
+  return new NextRequest(url, options)
 }
 
 describe("GET /api/onboarding", () => {

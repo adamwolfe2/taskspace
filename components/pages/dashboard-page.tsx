@@ -21,6 +21,7 @@ import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
+import { ActivityFeed } from "@/components/dashboard/activity-feed"
 
 // Get current quarter string (e.g., "Q1 2026")
 function getCurrentQuarter(): string {
@@ -286,6 +287,11 @@ export function DashboardPage({
  </ErrorBoundary>
  </div>
  )}
+
+ {/* Recent Activity Feed */}
+ <ErrorBoundary title="Activity feed unavailable">
+ <ActivityFeed />
+ </ErrorBoundary>
 
  {/* Empty Dashboard State */}
  {!hasTasksFeature && !hasRocksFeature && !hasEodFeature && !hasFocusBlocksFeature && (

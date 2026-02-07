@@ -4,6 +4,17 @@ import { getBudgetSettings, updateBudgetSettings } from "@/lib/ai/suggestions"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AIBudgetSettings } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { z } from "zod"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+
+const updateBudgetSettingsSchema = z.object({
+  monthlyBudgetCredits: z.number().int().min(0).optional(),
+  warningThresholdPercent: z.number().min(50).max(95).optional(),
+  autoApproveEnabled: z.boolean().optional(),
+  autoApproveMinConfidence: z.number().min(0.5).max(1).optional(),
+  autoApproveTypes: z.array(z.string()).optional(),
+  pauseOnBudgetExceeded: z.boolean().optional(),
+})
 
 // Rate limit: 10 budget settings requests per user per hour
 const MAX_BUDGET_SETTINGS_PER_HOUR = 10
@@ -63,9 +74,6 @@ export const PUT = withAdmin(async (request: NextRequest, auth) => {
       return response
     }
 
-    const body = await request.json()
-
-    // Validate settings
     const {
       monthlyBudgetCredits,
       warningThresholdPercent,
@@ -73,26 +81,7 @@ export const PUT = withAdmin(async (request: NextRequest, auth) => {
       autoApproveMinConfidence,
       autoApproveTypes,
       pauseOnBudgetExceeded,
-    } = body as Partial<AIBudgetSettings>
-
-    // Validate ranges
-    if (warningThresholdPercent !== undefined) {
-      if (warningThresholdPercent < 50 || warningThresholdPercent > 95) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "Warning threshold must be between 50 and 95" },
-          { status: 400 }
-        )
-      }
-    }
-
-    if (autoApproveMinConfidence !== undefined) {
-      if (autoApproveMinConfidence < 0.5 || autoApproveMinConfidence > 1) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "Auto-approve confidence must be between 0.5 and 1" },
-          { status: 400 }
-        )
-      }
-    }
+    } = await validateBody(request, updateBudgetSettingsSchema)
 
     const updatedSettings = await updateBudgetSettings(auth.organization.id, {
       monthlyBudgetCredits,
@@ -108,6 +97,12 @@ export const PUT = withAdmin(async (request: NextRequest, auth) => {
       data: updatedSettings,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Update budget settings error", error)
     return NextResponse.json<ApiResponse<null>>(
       {

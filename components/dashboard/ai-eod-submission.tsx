@@ -140,7 +140,7 @@ export function AIEODSubmission({
           }
         }
       } catch (err) {
-        console.error("Failed to fetch organization date:", err)
+        // Error fetching organization date
       }
     }
     fetchOrgDate()
@@ -161,7 +161,7 @@ export function AIEODSubmission({
           }
         }
       } catch (err) {
-        console.error("Failed to fetch active metric:", err)
+        // Error fetching active metric
       }
     }
     fetchMetric()
@@ -284,13 +284,13 @@ export function AIEODSubmission({
           })
         }
       } catch (streakError) {
-        console.error("Failed to update streak:", streakError)
+        // Streak update failed, but EOD was submitted successfully
       }
 
       try {
         await sendEODNotification(report as EODReport, currentUser, allRocks)
       } catch (error) {
-        console.error("Failed to send email notification:", error)
+        // Email notification failed, but EOD was saved successfully
       }
 
       // Reset everything

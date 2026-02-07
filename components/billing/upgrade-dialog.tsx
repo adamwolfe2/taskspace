@@ -127,7 +127,6 @@ export function UpgradeDialog({
         window.location.href = paymentLink
         return
       }
-      console.error("Upgrade failed:", error)
       toast({
         title: "Upgrade failed",
         description: error instanceof Error ? error.message : "Please try again",

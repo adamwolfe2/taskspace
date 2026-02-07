@@ -274,7 +274,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
         rocks,
       })
     } catch (error) {
-      console.error("Onboarding error:", error)
+      // Onboarding failed
       setIsSubmitting(false)
     }
   }

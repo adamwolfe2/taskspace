@@ -11,6 +11,13 @@ import { sql } from "@/lib/db/sql"
 import { isAdmin as checkIsAdmin } from "@/lib/auth/middleware"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
+import { z } from "zod"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+
+const updateOnboardingSchema = z.object({
+  dismissed: z.boolean().optional(),
+  completed: z.boolean().optional(),
+})
 
 export interface ChecklistItem {
   id: string
@@ -204,7 +211,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 
 export const PUT = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
+    const body = await validateBody(request, updateOnboardingSchema)
     const userId = auth.user.id
     const orgId = auth.organization.id
 
@@ -229,6 +236,12 @@ export const PUT = withAuth(async (request: NextRequest, auth) => {
       data: { success: true },
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Update onboarding status error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update onboarding status" },

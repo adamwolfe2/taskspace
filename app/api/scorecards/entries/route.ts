@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from "next/server"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { getMetricById, upsertEntry, getWeekStart } from "@/lib/db/scorecard"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -19,6 +19,15 @@ export const POST = withAuth(async (request, auth) => {
     // Get the metric to verify access
     const metric = await getMetricById(metricId)
     if (!metric) {
+      return NextResponse.json(
+        { success: false, error: "Metric not found" },
+        { status: 404 }
+      )
+    }
+
+    // Verify metric's workspace belongs to user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(metric.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json(
         { success: false, error: "Metric not found" },
         { status: 404 }

@@ -8,7 +8,7 @@
 
 import { NextResponse } from "next/server"
 import { isAdmin } from "@/lib/auth/middleware"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import type { RouteContext } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
 import { getMetricById, updateMetric, deleteMetric } from "@/lib/db/scorecard"
@@ -29,6 +29,15 @@ export const GET = withAuth(async (request, auth, context?) => {
     const metric = await getMetricById(id)
 
     if (!metric) {
+      return NextResponse.json(
+        { success: false, error: "Metric not found" },
+        { status: 404 }
+      )
+    }
+
+    // Verify metric's workspace belongs to user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(metric.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json(
         { success: false, error: "Metric not found" },
         { status: 404 }
@@ -72,6 +81,15 @@ export const PATCH = withAuth(async (request, auth, context?) => {
     const metric = await getMetricById(id)
 
     if (!metric) {
+      return NextResponse.json(
+        { success: false, error: "Metric not found" },
+        { status: 404 }
+      )
+    }
+
+    // Verify metric's workspace belongs to user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(metric.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json(
         { success: false, error: "Metric not found" },
         { status: 404 }
@@ -160,6 +178,15 @@ export const DELETE = withAuth(async (request, auth, context?) => {
     const metric = await getMetricById(id)
 
     if (!metric) {
+      return NextResponse.json(
+        { success: false, error: "Metric not found" },
+        { status: 404 }
+      )
+    }
+
+    // Verify metric's workspace belongs to user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(metric.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json(
         { success: false, error: "Metric not found" },
         { status: 404 }

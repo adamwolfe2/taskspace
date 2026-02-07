@@ -134,7 +134,7 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
     const { searchParams } = new URL(request.url)
     const date = searchParams.get("date")
-    const limit = parseInt(searchParams.get("limit") || "7", 10)
+    const limit = Math.min(parseInt(searchParams.get("limit") || "7", 10), 30)
 
     if (date) {
       const digest = await db.dailyDigests.findByDate(auth.organization.id, date)

@@ -17,6 +17,7 @@ import { logIntegrationEvent, logSecurityEvent } from "@/lib/audit/logger"
 import { z } from "zod"
 import crypto from "crypto"
 import { logger, logError } from "@/lib/logger"
+import { validateWebhookUrl } from "@/lib/validation/url"
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -180,6 +181,16 @@ export const POST = withAdmin(async (request, auth) => {
   try {
     const body = await validateBody(request, createWebhookSchema)
 
+    // Validate URL is safe (blocks private IPs, internal hosts, non-HTTPS)
+    const safeUrl = validateWebhookUrl(body.url)
+    if (!safeUrl) {
+      return Errors.validationError(
+        "Invalid webhook URL. Must be a public HTTPS URL (private IPs, localhost, and internal hostnames are not allowed)."
+      ).toResponse()
+    }
+    // Use the normalized URL going forward
+    body.url = safeUrl
+
     // Check webhook limit (max 10 per org)
     const { rows: existingCount } = await sql`
       SELECT COUNT(*) as count
@@ -277,6 +288,17 @@ export const PATCH = withAdmin(async (request, auth) => {
 
     if (existing.length === 0) {
       return Errors.notFound("Webhook").toResponse()
+    }
+
+    // Validate updated URL if provided
+    if (body.url) {
+      const safeUrl = validateWebhookUrl(body.url)
+      if (!safeUrl) {
+        return Errors.validationError(
+          "Invalid webhook URL. Must be a public HTTPS URL (private IPs, localhost, and internal hostnames are not allowed)."
+        ).toResponse()
+      }
+      body.url = safeUrl
     }
 
     // If webhook is workspace-specific, validate access

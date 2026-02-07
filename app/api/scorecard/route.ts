@@ -14,7 +14,7 @@
 
 import { NextResponse } from "next/server"
 import { isAdmin } from "@/lib/auth/middleware"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces"
 import { getScorecardData } from "@/lib/metrics"
 import { sql } from "@/lib/db/sql"
@@ -34,6 +34,15 @@ export const GET = withAuth(async (request, auth) => {
       return NextResponse.json(
         { success: false, error: "workspaceId is required" },
         { status: 400 }
+      )
+    }
+
+    // Verify workspace belongs to user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
       )
     }
 
@@ -106,6 +115,15 @@ export const PATCH = withAuth(async (request, auth) => {
       return NextResponse.json(
         { success: false, error: "workspaceId is required" },
         { status: 400 }
+      )
+    }
+
+    // Verify workspace belongs to user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
       )
     }
 

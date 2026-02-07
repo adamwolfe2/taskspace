@@ -75,7 +75,6 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
         throw new Error(data.error || "Failed to fetch suggestions")
       }
     } catch (error) {
-      console.error("Error fetching suggestions:", error)
       toast({
         title: "Error",
         description: "Failed to load suggestions",
@@ -119,7 +118,6 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
         throw new Error(data.error || "Failed to approve")
       }
     } catch (error) {
-      console.error("Error approving suggestion:", error)
       toast({
         title: "Error",
         description: "Failed to approve suggestion",
@@ -154,7 +152,6 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
         throw new Error(data.error || "Failed to reject")
       }
     } catch (error) {
-      console.error("Error rejecting suggestion:", error)
       toast({
         title: "Error",
         description: "Failed to reject suggestion",
@@ -193,7 +190,6 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
         throw new Error(data.error || "Bulk approve failed")
       }
     } catch (error) {
-      console.error("Error bulk approving:", error)
       toast({
         title: "Error",
         description: "Bulk approve failed",
@@ -233,7 +229,6 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
         throw new Error(data.error || "Bulk reject failed")
       }
     } catch (error) {
-      console.error("Error bulk rejecting:", error)
       toast({
         title: "Error",
         description: "Bulk reject failed",

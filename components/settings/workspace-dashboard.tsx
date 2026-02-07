@@ -91,7 +91,6 @@ export function WorkspaceDashboard() {
         })
       } catch (err) {
         setError("Failed to load workspace metrics")
-        console.error("Error loading workspace metrics:", err)
       } finally {
         setIsLoading(false)
       }

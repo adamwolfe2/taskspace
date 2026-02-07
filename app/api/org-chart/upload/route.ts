@@ -133,6 +133,33 @@ export const POST = withAdmin(async (request, auth) => {
       )
     }
 
+    // Check file size (5MB max)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json<UploadResult>(
+        {
+          success: false,
+          created: 0,
+          errors: [`File size exceeds maximum limit of 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB`],
+        },
+        { status: 400 }
+      )
+    }
+
+    // Check file type (must be CSV)
+    const fileName = file.name.toLowerCase()
+    const fileType = file.type.toLowerCase()
+    if (!fileName.endsWith('.csv') && fileType !== 'text/csv' && fileType !== 'application/csv') {
+      return NextResponse.json<UploadResult>(
+        {
+          success: false,
+          created: 0,
+          errors: ['Invalid file type. Please upload a CSV file'],
+        },
+        { status: 400 }
+      )
+    }
+
     // Read file content
     const content = await file.text()
 

@@ -148,7 +148,7 @@ export function CustomizableLayout({
  await onSave()
  setIsEditing(false)
  } catch (error) {
- console.error("Failed to save layout:", error)
+ // Error saving layout
  } finally {
  setIsSaving(false)
  }

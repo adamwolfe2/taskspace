@@ -461,14 +461,29 @@ export interface TeamStats {
 }
 
 // Notification Types
+export type NotificationType =
+  | "task_assigned"
+  | "task_completed"
+  | "rock_updated"
+  | "eod_reminder"
+  | "escalation"
+  | "invitation"
+  | "mention"
+  | "meeting_starting"
+  | "issue_created"
+  | "system"
+
 export interface Notification {
   id: string
   organizationId: string
+  workspaceId?: string
   userId: string
-  type: "task_assigned" | "rock_updated" | "eod_reminder" | "escalation" | "invitation" | "system"
+  type: NotificationType
   title: string
   message: string
+  link?: string
   read: boolean
+  readAt?: string
   createdAt: string
   actionUrl?: string
   metadata?: Record<string, unknown>

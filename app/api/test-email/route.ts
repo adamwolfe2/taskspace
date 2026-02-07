@@ -7,6 +7,11 @@ import { logger, logError } from "@/lib/logger"
 
 // POST /api/test-email - Test email configuration
 export const POST = withAdmin(async (request, auth) => {
+  // Production guard
+  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_ADMIN_DANGEROUS_OPS) {
+    return NextResponse.json({ success: false, error: "This endpoint is disabled in production" }, { status: 403 })
+  }
+
   try {
     const { testEmail } = await validateBody(request, testEmailSchema)
 
@@ -18,7 +23,6 @@ export const POST = withAdmin(async (request, auth) => {
     // Debug info
     const debugInfo = {
       resendKeySet: !!RESEND_API_KEY,
-      resendKeyPrefix: RESEND_API_KEY ? RESEND_API_KEY.substring(0, 10) + "..." : "not set",
       resendKeyValid: RESEND_API_KEY.startsWith("re_"),
       emailFrom: EMAIL_FROM,
       appUrl: APP_URL,
@@ -90,6 +94,11 @@ export const POST = withAdmin(async (request, auth) => {
 
 // GET /api/test-email - Get email configuration status (debug)
 export const GET = withAdmin(async (request, auth) => {
+  // Production guard
+  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_ADMIN_DANGEROUS_OPS) {
+    return NextResponse.json({ success: false, error: "This endpoint is disabled in production" }, { status: 403 })
+  }
+
   try {
     const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
     const EMAIL_FROM = process.env.EMAIL_FROM || "Taskspace <onboarding@resend.dev>"
@@ -99,7 +108,6 @@ export const GET = withAdmin(async (request, auth) => {
       success: true,
       config: {
         resendKeySet: !!RESEND_API_KEY,
-        resendKeyPrefix: RESEND_API_KEY ? RESEND_API_KEY.substring(0, 10) + "..." : "not set",
         resendKeyValid: RESEND_API_KEY.startsWith("re_"),
         emailFrom: EMAIL_FROM,
         emailFromDefault: EMAIL_FROM === "Taskspace <onboarding@resend.dev>",

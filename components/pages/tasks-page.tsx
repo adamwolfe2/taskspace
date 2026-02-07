@@ -1,6 +1,7 @@
 "use client"
 
 import { FeatureGate } from "@/components/shared/feature-gate"
+import { ExportButton } from "@/components/shared/export-button"
 import { useState, useMemo, useEffect } from "react"
 import type { AssignedTask, Rock, TeamMember } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { KanbanBoard } from "@/components/tasks/kanban-board"
-import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2 } from "lucide-react"
+import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2, CheckSquare, X, Trash2 } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useToast } from "@/hooks/use-toast"
@@ -19,6 +20,7 @@ import { addDays, addWeeks, addMonths } from "date-fns"
 import { getErrorMessage } from "@/lib/utils"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface TasksPageProps {
   currentUser: TeamMember
@@ -56,6 +58,7 @@ export function TasksPage({
   const [viewingUserName, setViewingUserName] = useState<string | null>(filterUserName || null)
   const [aiPrioritizing, setAiPrioritizing] = useState(false)
   const [aiPrioritized, setAiPrioritized] = useState<Array<{ taskId: string; rank: number; reasoning: string }> | null>(null)
+  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
 
@@ -253,6 +256,118 @@ export function TasksPage({
     }
   }
 
+  const handleToggleTaskSelection = (taskId: string) => {
+    setSelectedTasks((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(taskId)) {
+        newSet.delete(taskId)
+      } else {
+        newSet.add(taskId)
+      }
+      return newSet
+    })
+  }
+
+  const handleSelectAll = (tasks: AssignedTask[]) => {
+    const taskIds = tasks.map((t) => t.id)
+    setSelectedTasks(new Set(taskIds))
+  }
+
+  const handleClearSelection = () => {
+    setSelectedTasks(new Set())
+  }
+
+  const handleBulkComplete = async () => {
+    const tasksToComplete = Array.from(selectedTasks)
+    let successCount = 0
+    let errorCount = 0
+
+    for (const taskId of tasksToComplete) {
+      try {
+        const task = userTasks.find((t) => t.id === taskId)
+        if (task && task.status !== "completed") {
+          await updateTask(taskId, {
+            status: "completed",
+            completedAt: new Date().toISOString(),
+          })
+          successCount++
+
+          // Handle recurring tasks
+          if (task.recurrence && task.dueDate) {
+            const nextDueDate = calculateNextDueDate(task.dueDate, task.recurrence)
+            if (!task.recurrence.endDate || nextDueDate <= new Date(task.recurrence.endDate)) {
+              await createTask({
+                title: task.title,
+                description: task.description,
+                assigneeId: task.assigneeId,
+                rockId: task.rockId,
+                priority: task.priority,
+                dueDate: nextDueDate.toISOString().split("T")[0],
+                recurrence: task.recurrence,
+                parentRecurringTaskId: task.parentRecurringTaskId || task.id,
+              })
+            }
+          }
+        }
+      } catch (err: unknown) {
+        console.error(`Failed to complete task ${taskId}:`, err)
+        errorCount++
+      }
+    }
+
+    setSelectedTasks(new Set())
+
+    if (successCount > 0) {
+      toast({
+        title: "Tasks completed",
+        description: `${successCount} task${successCount > 1 ? "s" : ""} marked as complete`,
+      })
+    }
+    if (errorCount > 0) {
+      toast({
+        title: "Some tasks failed",
+        description: `${errorCount} task${errorCount > 1 ? "s" : ""} could not be completed`,
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${selectedTasks.size} task${selectedTasks.size > 1 ? "s" : ""}?`)) {
+      return
+    }
+
+    const tasksToDelete = Array.from(selectedTasks)
+    let successCount = 0
+    let errorCount = 0
+
+    for (const taskId of tasksToDelete) {
+      try {
+        await deleteTask(taskId)
+        successCount++
+      } catch (err: unknown) {
+        console.error(`Failed to delete task ${taskId}:`, err)
+        errorCount++
+      }
+    }
+
+    setSelectedTasks(new Set())
+
+    if (successCount > 0) {
+      toast({
+        title: "Tasks deleted",
+        description: `${successCount} task${successCount > 1 ? "s" : ""} removed`,
+      })
+    }
+    if (errorCount > 0) {
+      toast({
+        title: "Some tasks failed",
+        description: `${errorCount} task${errorCount > 1 ? "s" : ""} could not be deleted`,
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleKanbanStatusChange = async (taskId: string, newStatus: AssignedTask["status"]) => {
     try {
       const updates: Partial<AssignedTask> = { status: newStatus }
@@ -317,6 +432,7 @@ export function TasksPage({
         </div>
         {!isViewingOtherUser && (
           <div className="flex gap-2 w-full sm:w-auto">
+            <ExportButton type="tasks" />
             <Button
               variant="outline"
               size="sm"
@@ -402,11 +518,31 @@ export function TasksPage({
           {assignedByAdmin.length > 0 && (
             <Card className="w-full overflow-hidden">
               <CardHeader className="px-4 sm:px-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <UserCheck className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                  <span className="truncate">Assigned by Admin</span>
-                </CardTitle>
-                <CardDescription className="text-sm">Priority tasks assigned to you</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <UserCheck className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                      <span className="truncate">Assigned by Admin</span>
+                    </CardTitle>
+                    <CardDescription className="text-sm">Priority tasks assigned to you</CardDescription>
+                  </div>
+                  {!isViewingOtherUser && assignedByAdmin.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={assignedByAdmin.every((t) => selectedTasks.has(t.id))}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            handleSelectAll(assignedByAdmin)
+                          } else {
+                            handleClearSelection()
+                          }
+                        }}
+                        aria-label="Select all assigned tasks"
+                      />
+                      <span className="text-sm text-muted-foreground">Select All</span>
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-3 px-4 sm:px-6 overflow-hidden">
                 {assignedByAdmin.map((task) => (
@@ -417,6 +553,9 @@ export function TasksPage({
                     onUpdateTask={updateTask}
                     rocks={rocks}
                     currentUser={currentUser}
+                    isSelected={selectedTasks.has(task.id)}
+                    onToggleSelection={handleToggleTaskSelection}
+                    showSelectionCheckbox={!isViewingOtherUser}
                   />
                 ))}
               </CardContent>
@@ -425,11 +564,31 @@ export function TasksPage({
 
           <Card className="w-full overflow-hidden">
             <CardHeader className="px-4 sm:px-6">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <ClipboardList className="h-5 w-5 text-primary flex-shrink-0" />
-                <span className="truncate">My Personal Tasks</span>
-              </CardTitle>
-              <CardDescription className="text-sm">Tasks you've created for yourself</CardDescription>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <ClipboardList className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="truncate">My Personal Tasks</span>
+                  </CardTitle>
+                  <CardDescription className="text-sm">Tasks you've created for yourself</CardDescription>
+                </div>
+                {!isViewingOtherUser && personalTasks.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={personalTasks.every((t) => selectedTasks.has(t.id))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          handleSelectAll(personalTasks)
+                        } else {
+                          handleClearSelection()
+                        }
+                      }}
+                      aria-label="Select all personal tasks"
+                    />
+                    <span className="text-sm text-muted-foreground">Select All</span>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="px-4 sm:px-6 overflow-hidden">
               {personalTasks.length === 0 ? (
@@ -455,6 +614,9 @@ export function TasksPage({
                       onUpdateTask={updateTask}
                       rocks={rocks}
                       currentUser={currentUser}
+                      isSelected={selectedTasks.has(task.id)}
+                      onToggleSelection={handleToggleTaskSelection}
+                      showSelectionCheckbox={!isViewingOtherUser}
                     />
                   ))}
                 </div>
@@ -476,18 +638,47 @@ export function TasksPage({
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {completedTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onComplete={handleCompleteTask}
-                  onUpdateTask={updateTask}
-                  rocks={rocks}
-                  currentUser={currentUser}
-                />
-              ))}
-            </div>
+            <Card className="w-full overflow-hidden">
+              <CardHeader className="px-4 sm:px-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-base sm:text-lg">Completed Tasks</CardTitle>
+                    <CardDescription className="text-sm">Tasks you've finished</CardDescription>
+                  </div>
+                  {!isViewingOtherUser && completedTasks.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={completedTasks.every((t) => selectedTasks.has(t.id))}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            handleSelectAll(completedTasks)
+                          } else {
+                            handleClearSelection()
+                          }
+                        }}
+                        aria-label="Select all completed tasks"
+                      />
+                      <span className="text-sm text-muted-foreground">Select All</span>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3 px-4 sm:px-6 overflow-hidden">
+                {completedTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onComplete={handleCompleteTask}
+                    onUpdateTask={updateTask}
+                    rocks={rocks}
+                    currentUser={currentUser}
+                    isSelected={selectedTasks.has(task.id)}
+                    onToggleSelection={handleToggleTaskSelection}
+                    showSelectionCheckbox={!isViewingOtherUser}
+                  />
+                ))}
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
       </Tabs>
@@ -499,6 +690,53 @@ export function TasksPage({
         onSubmit={handleAddTask}
         userRocks={userRocks}
       />
+
+      {/* Bulk Action Bar */}
+      {selectedTasks.size > 0 && !isViewingOtherUser && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-semibold text-sm">
+                  {selectedTasks.size}
+                </div>
+                <span className="font-medium text-slate-900">
+                  {selectedTasks.size} task{selectedTasks.size > 1 ? "s" : ""} selected
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearSelection}
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Clear Selection
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleBulkComplete}
+                  className="gap-2"
+                >
+                  <CheckSquare className="h-4 w-4" />
+                  Mark Complete
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  className="gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </FeatureGate>
   )

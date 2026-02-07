@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { withAuth } from "@/lib/api/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { createCustomerPortalSession } from "@/lib/integrations/stripe"
 import { getStripeConfig } from "@/lib/integrations/stripe-config"
 import type { ApiResponse } from "@/lib/types"
@@ -8,8 +8,9 @@ import { logger, logError } from "@/lib/logger"
 /**
  * POST /api/billing/portal
  * Create a Stripe Customer Portal session for managing subscription and payment methods
+ * Admin-only: Only organization admins/owners can manage billing
  */
-export const POST = withAuth(async (request: NextRequest, auth) => {
+export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
     // Check if Stripe is configured
     const stripeConfig = getStripeConfig()
@@ -44,7 +45,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create billing portal session",
+        error: "Failed to create billing portal session",
       },
       { status: 500 }
     ) as NextResponse<ApiResponse<unknown>>

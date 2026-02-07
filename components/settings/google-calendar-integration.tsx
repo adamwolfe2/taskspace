@@ -72,7 +72,6 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
         }
       }
     } catch (error) {
-      console.error("Failed to load Google Calendar status:", error)
     } finally {
       setIsLoading(false)
     }

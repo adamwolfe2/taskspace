@@ -47,6 +47,7 @@ import {
   RocksPageSkeleton,
 } from "@/components/dashboard/skeletons"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
+import { KeyboardShortcutsDialog, useKeyboardShortcuts } from "@/components/shared/keyboard-shortcuts-dialog"
 
 function AppContent() {
   const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization, pageFilter, clearPageFilter } = useApp()
@@ -58,6 +59,18 @@ function AppContent() {
   // inside WorkspaceSwitcher (in Header), which may not run soon enough.
   useWorkspaces()
   const teamData = useTeamData()
+  const [showQuickTask, setShowQuickTask] = useState(false)
+
+  // Register global keyboard shortcuts
+  useKeyboardShortcuts([
+    { key: "d", meta: true, shift: true, handler: () => setCurrentPage("dashboard") },
+    { key: "t", meta: true, shift: true, handler: () => setCurrentPage("tasks") },
+    { key: "r", meta: true, shift: true, handler: () => setCurrentPage("rocks") },
+    { key: "h", meta: true, shift: true, handler: () => setCurrentPage("history") },
+    { key: "s", meta: true, shift: true, handler: () => setCurrentPage("settings") },
+    { key: "m", meta: true, shift: true, handler: () => setCurrentPage("calendar") },
+    { key: "i", meta: true, shift: true, handler: () => setCurrentPage("ids-board") },
+  ])
 
   // Initialize global error handler for unhandled promise rejections
   useEffect(() => {
@@ -330,6 +343,7 @@ function AppContent() {
       <MobileNav />
       <Toaster />
       <CommandPalette />
+      <KeyboardShortcutsDialog />
     </div>
   )
 }

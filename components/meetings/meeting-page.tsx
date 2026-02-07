@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -71,6 +71,8 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
   const [attendees, setAttendees] = useState<Attendee[]>([])
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0)
 
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   const currentSection = sections[currentSectionIndex]
   const isInProgress = meeting?.status === "in_progress"
   const isCompleted = meeting?.status === "completed"
@@ -107,15 +109,64 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
       if (data.success) {
         setIssues(data.data || [])
       }
-    } catch (err) {
-      console.error("Failed to load issues:", err)
+    } catch {
+      // Issues load is non-critical, silently ignore
     }
   }, [workspaceId])
+
+  // Load workspace members for attendees
+  const loadAttendees = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/workspaces/${workspaceId}/members`)
+      const data = await res.json()
+      if (data.success && data.data) {
+        setAttendees(
+          data.data.map((m: { userId: string; name: string; email?: string }) => ({
+            id: m.userId,
+            name: m.name,
+            email: m.email,
+          }))
+        )
+      }
+    } catch {
+      // Attendee load is non-critical
+    }
+  }, [workspaceId])
+
+  // Load todos from API
+  const loadTodos = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/meetings/${meetingId}/todos`)
+      const data = await res.json()
+      if (data.success) {
+        setTodos(data.data || [])
+      }
+    } catch {
+      // Todos load is non-critical
+    }
+  }, [meetingId])
 
   useEffect(() => {
     loadMeeting()
     loadIssues()
-  }, [loadMeeting, loadIssues])
+    loadTodos()
+  }, [loadMeeting, loadIssues, loadTodos])
+
+  // Poll for updates during active meeting (every 15 seconds)
+  useEffect(() => {
+    if (isInProgress) {
+      pollRef.current = setInterval(() => {
+        loadMeeting()
+        loadTodos()
+      }, 15000)
+    }
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+      }
+    }
+  }, [isInProgress, loadMeeting, loadTodos])
 
   // Start meeting
   const handleStartMeeting = async () => {
@@ -142,22 +193,8 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
         })
       }
 
-      // Mock attendees from meeting data (in real app, fetch from workspace members)
-      if (data.data.meeting.attendees?.length) {
-        setAttendees(
-          data.data.meeting.attendees.map((id: string, idx: number) => ({
-            id,
-            name: `Team Member ${idx + 1}`,
-          }))
-        )
-      } else {
-        // Default attendees for demo
-        setAttendees([
-          { id: "1", name: "Team Lead" },
-          { id: "2", name: "Developer" },
-          { id: "3", name: "Designer" },
-        ])
-      }
+      // Load real workspace members as attendees
+      await loadAttendees()
 
       setCurrentSectionIndex(0)
     } catch (err) {
@@ -197,8 +234,8 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
       if (currentSectionIndex < sections.length - 1) {
         setCurrentSectionIndex((prev) => prev + 1)
       }
-    } catch (err) {
-      console.error("Failed to complete section:", err)
+    } catch {
+      setError("Failed to complete section. Please try again.")
     }
   }
 
@@ -243,8 +280,8 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
       if (data.success) {
         setIssues((prev) => [...prev, data.data])
       }
-    } catch (err) {
-      console.error("Failed to create issue:", err)
+    } catch {
+      // Issue creation failed - non-critical
     }
   }
 
@@ -262,8 +299,8 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
           prev.map((i) => (i.id === issueId ? { ...i, status: "resolved" } : i))
         )
       }
-    } catch (err) {
-      console.error("Failed to resolve issue:", err)
+    } catch {
+      // Issue resolution failed - non-critical
     }
   }
 
@@ -274,27 +311,25 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
       setIssues((prev) =>
         prev.map((i) => (i.id === issueId ? { ...i, status: "dropped" } : i))
       )
-    } catch (err) {
-      console.error("Failed to drop issue:", err)
+    } catch {
+      // Issue drop failed - non-critical
     }
   }
 
-  // Create todo
+  // Create todo via API
   const handleCreateTodo = async (title: string, issueId?: string) => {
     try {
-      // In real app, this would create via API
-      const newTodo: MeetingTodo = {
-        id: `todo_${Date.now()}`,
-        meetingId,
-        issueId,
-        title,
-        completed: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+      const res = await fetch(`/api/meetings/${meetingId}/todos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, issueId }),
+      })
+      const data = await res.json()
+      if (data.success && data.data) {
+        setTodos((prev) => [...prev, data.data])
       }
-      setTodos((prev) => [...prev, newTodo])
-    } catch (err) {
-      console.error("Failed to create todo:", err)
+    } catch {
+      // Todo creation failed silently - user can retry
     }
   }
 

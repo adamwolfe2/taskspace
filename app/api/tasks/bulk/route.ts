@@ -182,7 +182,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 async function bulkComplete(
   taskIds: string[],
   taskMap: Map<string, AssignedTask>,
-  _organizationId: string,
+  organizationId: string,
   _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
   let processed = 0
@@ -207,7 +207,7 @@ async function bulkComplete(
         await client.sql`
           UPDATE assigned_tasks
           SET status = 'completed', completed_at = ${completedAt}, updated_at = NOW()
-          WHERE id = ${id}
+          WHERE id = ${id} AND organization_id = ${organizationId}
         `
         processed++
       } catch (error) {
@@ -276,7 +276,7 @@ async function bulkReassign(
         await client.sql`
           UPDATE assigned_tasks
           SET assignee_id = ${newAssigneeId}, assignee_name = ${assignee.name}, updated_at = NOW()
-          WHERE id = ${id}
+          WHERE id = ${id} AND organization_id = ${organizationId}
         `
         processed++
       } catch (error) {
@@ -293,7 +293,7 @@ async function bulkChangePriority(
   taskIds: string[],
   priority: "high" | "medium" | "normal",
   taskMap: Map<string, AssignedTask>,
-  _organizationId: string,
+  organizationId: string,
   _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
   let processed = 0
@@ -312,7 +312,7 @@ async function bulkChangePriority(
         await client.sql`
           UPDATE assigned_tasks
           SET priority = ${priority}, updated_at = NOW()
-          WHERE id = ${id}
+          WHERE id = ${id} AND organization_id = ${organizationId}
         `
         processed++
       } catch (error) {
@@ -329,7 +329,7 @@ async function bulkChangeDueDate(
   taskIds: string[],
   dueDate: string,
   taskMap: Map<string, AssignedTask>,
-  _organizationId: string,
+  organizationId: string,
   _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
   let processed = 0
@@ -348,7 +348,7 @@ async function bulkChangeDueDate(
         await client.sql`
           UPDATE assigned_tasks
           SET due_date = ${dueDate}, updated_at = NOW()
-          WHERE id = ${id}
+          WHERE id = ${id} AND organization_id = ${organizationId}
         `
         processed++
       } catch (error) {

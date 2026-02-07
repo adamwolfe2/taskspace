@@ -100,7 +100,6 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
         setSelectedWorkspace(data.workspaces[0].gid)
       }
     } catch (error) {
-      console.error("Failed to check Asana status:", error)
       setAsanaStatus({ connected: false, configured: false })
     } finally {
       setIsLoading(false)
@@ -113,7 +112,6 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
       const data = await response.json()
       setProjects(data.projects || [])
     } catch (error) {
-      console.error("Failed to load projects:", error)
     }
   }
 
@@ -123,7 +121,6 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
       const data = await response.json()
       setAsanaUsers(data.users || [])
     } catch (error) {
-      console.error("Failed to load Asana users:", error)
     }
   }
 

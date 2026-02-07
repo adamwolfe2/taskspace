@@ -10,7 +10,7 @@ export const GET = withAuth(async (request, auth) => {
   try {
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
-    const weeks = parseInt(searchParams.get("weeks") || "13", 10)
+    const weeks = Math.min(parseInt(searchParams.get("weeks") || "13", 10), 52)
 
     if (!workspaceId) {
       return NextResponse.json<ApiResponse<null>>(

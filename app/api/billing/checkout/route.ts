@@ -78,7 +78,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create checkout session",
+        error: "Failed to create checkout session",
       },
       { status: 500 }
     )

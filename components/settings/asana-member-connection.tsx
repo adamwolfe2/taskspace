@@ -57,7 +57,6 @@ export function AsanaMemberConnection() {
         setStatus(data.data)
       }
     } catch (err) {
-      console.error("Failed to check Asana connection:", err)
     } finally {
       setIsLoading(false)
     }

@@ -1,6 +1,7 @@
 "use client"
 
 import { FeatureGate } from "@/components/shared/feature-gate"
+import { ExportButton } from "@/components/shared/export-button"
 import { useState, useMemo, useEffect } from "react"
 import type { TeamMember, Rock } from "@/lib/types"
 import { ProgressBar } from "@/components/shared/progress-bar"
@@ -97,11 +98,14 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
     <FeatureGate feature="core.rocks">
       <div className="space-y-6">
       <NoWorkspaceAlert />
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Rock Progress</h1>
-        <p className="text-sm sm:text-base text-slate-500 mt-1">
-          {isAdmin ? "View all team rocks" : "Track your quarterly goals"}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Rock Progress</h1>
+          <p className="text-sm sm:text-base text-slate-500 mt-1">
+            {isAdmin ? "View all team rocks" : "Track your quarterly goals"}
+          </p>
+        </div>
+        <ExportButton type="rocks" />
       </div>
 
       {/* Search and Filters */}

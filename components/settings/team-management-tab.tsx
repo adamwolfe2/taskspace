@@ -84,7 +84,6 @@ export function TeamManagementTab() {
         })))
         setPendingInvitations(invitations)
       } catch (err) {
-        console.error("Failed to load team data:", err)
       }
     }
     loadTeamData()
@@ -103,7 +102,6 @@ export function TeamManagementTab() {
           }
         }
       } catch (err) {
-        console.error("Failed to load integration status:", err)
       }
     }
     loadIntegrationStatus()

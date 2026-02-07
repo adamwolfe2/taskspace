@@ -342,7 +342,7 @@ export const DELETE = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    await db.rocks.delete(id)
+    await db.rocks.delete(id, auth.organization.id)
 
     return NextResponse.json<ApiResponse<null>>({
       success: true,

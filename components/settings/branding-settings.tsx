@@ -94,13 +94,11 @@ export function BrandingSettings() {
           description: "We've automatically generated colors from your logo",
         })
       } catch (error) {
-        console.error("Color extraction failed:", error)
         // Keep existing colors
       } finally {
         setIsExtractingColors(false)
       }
     } catch (error) {
-      console.error("Logo upload failed:", error)
       toast({
         title: "Upload failed",
         description: "Failed to upload logo. Please try again.",
@@ -166,7 +164,6 @@ export function BrandingSettings() {
       })
       setHasChanges(false)
     } catch (error) {
-      console.error("Save failed:", error)
       toast({
         title: "Save failed",
         description: error instanceof Error ? error.message : "Failed to save branding settings",

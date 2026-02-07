@@ -46,7 +46,7 @@ export function PushNotificationsCard({ userId }: PushNotificationsCardProps) {
         }
       }
     } catch (error) {
-      console.error("Failed to check push subscription status:", error)
+      // Error checking push subscription status
     } finally {
       setIsLoading(false)
     }
@@ -58,7 +58,6 @@ export function PushNotificationsCard({ userId }: PushNotificationsCardProps) {
       await navigator.serviceWorker.ready
       return registration
     } catch (error) {
-      console.error("Service worker registration failed:", error)
       throw error
     }
   }
@@ -128,7 +127,6 @@ export function PushNotificationsCard({ userId }: PushNotificationsCardProps) {
         description: "You will now receive push notifications",
       })
     } catch (error) {
-      console.error("Failed to subscribe:", error)
       toast({
         title: "Error",
         description: "Failed to enable push notifications",
@@ -161,7 +159,6 @@ export function PushNotificationsCard({ userId }: PushNotificationsCardProps) {
         description: "You will no longer receive push notifications on this device",
       })
     } catch (error) {
-      console.error("Failed to unsubscribe:", error)
       toast({
         title: "Error",
         description: "Failed to disable push notifications",

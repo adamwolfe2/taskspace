@@ -7,6 +7,16 @@ import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import type { ApiResponse, EODInsight } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { z } from "zod"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+
+const parseEodSchema = z.object({
+  eodReportId: z.string().min(1, "EOD Report ID is required"),
+})
+
+const batchParseEodSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional(),
+})
 
 // Rate limit: 20 EOD report parses per user per hour
 const MAX_PARSE_EOD_PER_HOUR = 20
@@ -55,15 +65,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       return creditCheck as NextResponse<ApiResponse<null>>
     }
 
-    const body = await request.json()
-    const { eodReportId } = body
-
-    if (!eodReportId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "EOD Report ID is required" },
-        { status: 400 }
-      )
-    }
+    const { eodReportId } = await validateBody(request, parseEodSchema)
 
     // Get the EOD report
     const eodReport = await db.eodReports.findById(eodReportId)
@@ -137,6 +139,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       message: "EOD report parsed successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Parse EOD error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to parse EOD report" },
@@ -215,8 +223,7 @@ export const PUT = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    const body = await request.json()
-    const { date } = body
+    const { date } = await validateBody(request, batchParseEodSchema)
 
     // Default to today
     const targetDate = date || new Date().toISOString().split("T")[0]
@@ -317,6 +324,12 @@ export const PUT = withAuth(async (request: NextRequest, auth) => {
       message: `Processed ${dateReports.length} EOD reports`,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Batch parse error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to batch parse EOD reports" },

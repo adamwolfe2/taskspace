@@ -204,11 +204,11 @@ export const PATCH = withAuth(async (request, auth, context?) => {
           message: "Todo completed successfully",
         })
       } else {
-        // Un-complete a todo
+        // Un-complete a todo (scoped to this meeting for workspace isolation)
         const { rows } = await (await import("@/lib/db/sql")).sql`
           UPDATE meeting_todos
           SET completed = FALSE, completed_at = NULL
-          WHERE id = ${todoId}
+          WHERE id = ${todoId} AND meeting_id = ${id}
           RETURNING *
         `
         if (rows.length === 0) {

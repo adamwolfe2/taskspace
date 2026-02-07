@@ -8,7 +8,7 @@
 
 CREATE TABLE IF NOT EXISTS ids_board_items (
   id TEXT PRIMARY KEY,
-  workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  workspace_id VARCHAR(255) NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
   column_name TEXT NOT NULL DEFAULT 'identify'
@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS ids_board_items (
   item_type TEXT NOT NULL DEFAULT 'custom'
     CHECK (item_type IN ('issue', 'rock', 'custom')),
   linked_id TEXT,
-  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_by VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
+  assigned_to VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -35,9 +35,9 @@ CREATE INDEX IF NOT EXISTS idx_ids_board_items_workspace_column
 
 CREATE TABLE IF NOT EXISTS workspace_notes (
   id TEXT PRIMARY KEY,
-  workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  workspace_id VARCHAR(255) NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
   content TEXT NOT NULL DEFAULT '',
-  last_edited_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  last_edited_by VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

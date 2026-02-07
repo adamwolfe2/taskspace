@@ -194,7 +194,6 @@ export function QuickCapture({
  setDueDate(null)
  setOpen(false)
  } catch (error) {
- console.error("Failed to create:", error)
  } finally {
  setIsSubmitting(false)
  }
@@ -432,7 +431,6 @@ export function FloatingQuickCapture({
  setInput("")
  setOpen(false)
  } catch (error) {
- console.error("Failed to create task:", error)
  } finally {
  setIsSubmitting(false)
  }
@@ -518,7 +516,6 @@ export function InlineQuickAdd({
  await onSubmit(value.trim())
  setValue("")
  } catch (error) {
- console.error("Failed to add:", error)
  } finally {
  setIsSubmitting(false)
  }

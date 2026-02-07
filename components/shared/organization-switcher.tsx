@@ -59,7 +59,6 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
           setOrganizations(data.data.organizations)
         }
       } catch (err) {
-        console.error("Failed to fetch organizations:", err)
       } finally {
         setIsLoading(false)
       }
@@ -92,7 +91,6 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
         setError(data.error || "Failed to switch organization")
       }
     } catch (err) {
-      console.error("Failed to switch organization:", err)
       setError("Failed to switch organization")
     } finally {
       setIsSwitching(false)
@@ -123,7 +121,6 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
         setError(data.error || "Failed to create organization")
       }
     } catch (err) {
-      console.error("Failed to create organization:", err)
       setError("Failed to create organization")
     } finally {
       setIsCreating(false)

@@ -92,7 +92,7 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
         }
       })
       .catch((err) => {
-        console.error("Failed to fetch workspace stats:", err)
+        // Error fetching workspace stats
       })
       .finally(() => {
         if (!cancelled) setStatsLoading(false)
@@ -149,7 +149,6 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
 
       await refresh()
     } catch (error) {
-      console.error("Failed to add member:", error)
       toast({
         title: "Failed to add member",
         description: error instanceof Error ? error.message : "An error occurred",
@@ -178,7 +177,6 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
       await refresh()
       setMemberToRemove(null)
     } catch (error) {
-      console.error("Failed to remove member:", error)
       toast({
         title: "Failed to remove member",
         description: error instanceof Error ? error.message : "An error occurred",
@@ -210,7 +208,6 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
       await refresh()
       setRoleChanges({})
     } catch (error) {
-      console.error("Failed to update role:", error)
       toast({
         title: "Failed to update role",
         description: error instanceof Error ? error.message : "An error occurred",
@@ -281,7 +278,6 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
       await refresh()
       await refreshWorkspaces()
     } catch (error) {
-      console.error("Failed to update workspace:", error)
       toast({
         title: "Failed to update workspace",
         description: error instanceof Error ? error.message : "An error occurred",
@@ -330,7 +326,6 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
       setShowDeleteDialog(false)
       setDeleteConfirmText("")
     } catch (error) {
-      console.error("Failed to delete workspace:", error)
       toast({
         title: "Failed to delete workspace",
         description: error instanceof Error ? error.message : "An error occurred",

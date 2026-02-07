@@ -269,50 +269,6 @@ export async function batchDelete(
 // ============================================
 
 /**
- * Build a dynamic WHERE clause from filters
- */
-export function buildWhereClause(
-  filters: Record<string, unknown>,
-  startIndex: number = 1
-): { clause: string; values: unknown[] } {
-  const conditions: string[] = []
-  const values: unknown[] = []
-  let paramIndex = startIndex
-
-  for (const [key, value] of Object.entries(filters)) {
-    if (value === undefined || value === null) continue
-
-    if (Array.isArray(value)) {
-      conditions.push(`${key} = ANY($${paramIndex++})`)
-      values.push(value)
-    } else if (typeof value === "object" && value !== null) {
-      // Handle range queries
-      const range = value as { min?: unknown; max?: unknown; like?: string }
-      if (range.min !== undefined) {
-        conditions.push(`${key} >= $${paramIndex++}`)
-        values.push(range.min)
-      }
-      if (range.max !== undefined) {
-        conditions.push(`${key} <= $${paramIndex++}`)
-        values.push(range.max)
-      }
-      if (range.like !== undefined) {
-        conditions.push(`${key} ILIKE $${paramIndex++}`)
-        values.push(`%${range.like}%`)
-      }
-    } else {
-      conditions.push(`${key} = $${paramIndex++}`)
-      values.push(value)
-    }
-  }
-
-  return {
-    clause: conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "",
-    values,
-  }
-}
-
-/**
  * Build ORDER BY clause from sort parameters
  */
 export function buildOrderByClause(

@@ -12,6 +12,11 @@ import type { ApiResponse } from "@/lib/types"
 import { logger } from "@/lib/logger"
 
 export const POST = withAdmin(async (request: NextRequest, auth) => {
+  // Block dangerous DDL operations in production unless explicitly allowed
+  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_ADMIN_DANGEROUS_OPS) {
+    return NextResponse.json({ success: false, error: "This operation is disabled in production" }, { status: 403 })
+  }
+
   try {
     logger.info("🚨 EMERGENCY SETUP STARTING")
 
@@ -291,7 +296,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: `Setup failed: ${errorMessage}`
+        error: "Operation failed"
       },
       { status: 500 }
     )

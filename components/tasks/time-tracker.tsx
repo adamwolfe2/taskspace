@@ -104,7 +104,6 @@ export function TimeTracker({
  try {
  await onStartTimer()
  } catch (error) {
- console.error("Failed to start timer:", error)
  } finally {
  setIsSubmitting(false)
  }
@@ -117,7 +116,6 @@ export function TimeTracker({
  await onStopTimer(description || undefined)
  setDescription("")
  } catch (error) {
- console.error("Failed to stop timer:", error)
  } finally {
  setIsSubmitting(false)
  }
@@ -403,7 +401,6 @@ function ManualTimeEntryDialog({
  billable,
  })
  } catch (error) {
- console.error("Failed to add entry:", error)
  } finally {
  setIsSubmitting(false)
  }

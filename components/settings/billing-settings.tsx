@@ -90,7 +90,7 @@ interface SubscriptionInfo {
 }
 
 export function BillingSettings() {
-  const { currentOrganization, refreshSession } = useApp()
+  const { currentOrganization, currentUser, refreshSession } = useApp()
   const { toast } = useToast()
 
   const [isLoading, setIsLoading] = useState(true)
@@ -101,6 +101,7 @@ export function BillingSettings() {
   const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   const currentPlan = subscription?.plan || "free"
+  const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
 
   // Fetch current subscription status
   useEffect(() => {
@@ -116,7 +117,7 @@ export function BillingSettings() {
           }
         }
       } catch (error) {
-        console.error("Failed to fetch subscription:", error)
+        // Error fetching subscription
       } finally {
         setIsLoading(false)
       }
@@ -183,7 +184,6 @@ export function BillingSettings() {
         window.location.href = paymentLink
         return
       }
-      console.error("Upgrade failed:", error)
       toast({
         title: "Upgrade failed",
         description: error instanceof Error ? error.message : "Please try again",
@@ -211,7 +211,6 @@ export function BillingSettings() {
         throw new Error(data.error || "Failed to open billing portal")
       }
     } catch (error) {
-      console.error("Portal failed:", error)
       toast({
         title: "Error",
         description: "Failed to open billing portal",
@@ -244,7 +243,6 @@ export function BillingSettings() {
         throw new Error(data.error || "Failed to cancel subscription")
       }
     } catch (error) {
-      console.error("Cancel failed:", error)
       toast({
         title: "Error",
         description: "Failed to cancel subscription",
@@ -276,7 +274,6 @@ export function BillingSettings() {
         throw new Error(data.error || "Failed to resume subscription")
       }
     } catch (error) {
-      console.error("Resume failed:", error)
       toast({
         title: "Error",
         description: "Failed to resume subscription",
@@ -339,7 +336,7 @@ export function BillingSettings() {
               )}
             </div>
 
-            {currentPlan !== "free" && (
+            {currentPlan !== "free" && isAdmin && (
               <div className="flex gap-2">
                 {subscription?.cancelAtPeriodEnd ? (
                   <Button
@@ -379,6 +376,12 @@ export function BillingSettings() {
               </div>
             )}
           </div>
+
+          {currentPlan !== "free" && !isAdmin && (
+            <p className="mt-2 text-sm text-slate-500">
+              Contact an admin to manage billing and subscriptions.
+            </p>
+          )}
 
           {subscription?.status === "past_due" && (
             <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
@@ -513,7 +516,7 @@ export function BillingSettings() {
                         : ""
                     )}
                     variant={isCurrentPlan ? "default" : key === "free" ? "outline" : "default"}
-                    disabled={isCurrentPlan || processingPlan !== null}
+                    disabled={isCurrentPlan || processingPlan !== null || !isAdmin}
                     onClick={() => handleUpgrade(key)}
                   >
                     {processingPlan === key ? (
@@ -523,6 +526,8 @@ export function BillingSettings() {
                       </>
                     ) : isCurrentPlan ? (
                       "Current Plan"
+                    ) : !isAdmin ? (
+                      "Admin Only"
                     ) : key === "free" ? (
                       "Downgrade"
                     ) : currentPlan === "free" ? (

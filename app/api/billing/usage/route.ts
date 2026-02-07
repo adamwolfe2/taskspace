@@ -57,7 +57,7 @@ export const GET = withAuth(async (request, auth) => {
           billingCycle: org.subscription.billingCycle || undefined,
           currentPeriodEnd: org.subscription.currentPeriodEnd || undefined,
         } : null,
-        stripeCustomerId: org.stripeCustomerId,
+        stripeCustomerId: auth.member.role === "admin" || auth.member.role === "owner" ? org.stripeCustomerId : undefined,
       },
     })
   } catch (error) {

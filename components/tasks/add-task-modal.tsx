@@ -72,7 +72,6 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
         }
       }
     } catch (error) {
-      console.error("Failed to load templates:", error)
     } finally {
       setIsLoadingTemplates(false)
     }

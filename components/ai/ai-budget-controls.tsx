@@ -79,7 +79,7 @@ export function AIBudgetControls({ organizationId }: AIBudgetControlsProps) {
           setSettings(settingsData.data)
         }
       } catch (error) {
-        console.error("Error fetching budget data:", error)
+        // Error fetching budget data
       } finally {
         setIsLoading(false)
       }
@@ -127,7 +127,6 @@ export function AIBudgetControls({ organizationId }: AIBudgetControlsProps) {
         throw new Error(data.error || "Failed to save settings")
       }
     } catch (error) {
-      console.error("Error saving settings:", error)
       toast({
         title: "Error",
         description: "Failed to save settings",

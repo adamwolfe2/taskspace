@@ -629,8 +629,10 @@ export const db = {
       `
       return rows[0] ? parseMember(rows[0]) : null
     },
-    async delete(id: string): Promise<boolean> {
-      const { rowCount } = await sql`DELETE FROM organization_members WHERE id = ${id}`
+    async delete(id: string, organizationId?: string): Promise<boolean> {
+      const { rowCount } = organizationId
+        ? await sql`DELETE FROM organization_members WHERE id = ${id} AND organization_id = ${organizationId}`
+        : await sql`DELETE FROM organization_members WHERE id = ${id}`
       return (rowCount ?? 0) > 0
     },
   },
@@ -862,8 +864,10 @@ export const db = {
       `
       return rows[0] ? parseRock(rows[0]) : null
     },
-    async delete(id: string): Promise<boolean> {
-      const { rowCount } = await sql`DELETE FROM rocks WHERE id = ${id}`
+    async delete(id: string, organizationId?: string): Promise<boolean> {
+      const { rowCount } = organizationId
+        ? await sql`DELETE FROM rocks WHERE id = ${id} AND organization_id = ${organizationId}`
+        : await sql`DELETE FROM rocks WHERE id = ${id}`
       return (rowCount ?? 0) > 0
     },
     // Optimized: fetch rocks for multiple users at once (reduces data transfer)
@@ -1169,8 +1173,10 @@ export const db = {
         )
       )
     },
-    async delete(id: string): Promise<boolean> {
-      const { rowCount } = await sql`DELETE FROM assigned_tasks WHERE id = ${id}`
+    async delete(id: string, organizationId?: string): Promise<boolean> {
+      const { rowCount } = organizationId
+        ? await sql`DELETE FROM assigned_tasks WHERE id = ${id} AND organization_id = ${organizationId}`
+        : await sql`DELETE FROM assigned_tasks WHERE id = ${id}`
       return (rowCount ?? 0) > 0
     },
     // Optimized: fetch tasks for multiple users at once (reduces data transfer)
@@ -1322,8 +1328,12 @@ export const db = {
                   ${sanitizedEscalationNote}, ${report.metricValueToday}, ${report.submittedAt}, ${report.createdAt})
         `
       } catch (err: unknown) {
-        // Fallback if metric_value_today column doesn't exist (migration not run)
         const errMessage = err instanceof Error ? err.message : String(err)
+        // Handle unique constraint violation (migration to remove it not yet applied)
+        if (errMessage.includes('unique') || errMessage.includes('duplicate key') || errMessage.includes('eod_reports_organization_id_user_id_date_key')) {
+          throw new Error(`An EOD report already exists for this date. The database unique constraint needs to be removed — please run migration 1738900000004_remove_eod_unique_constraint.sql`)
+        }
+        // Fallback if metric_value_today column doesn't exist (migration not run)
         if (errMessage.includes('metric_value_today') || errMessage.includes('column')) {
           await sql`
             INSERT INTO eod_reports (id, organization_id, workspace_id, user_id, date, tasks, challenges,
@@ -1379,8 +1389,10 @@ export const db = {
         throw err
       }
     },
-    async delete(id: string): Promise<boolean> {
-      const { rowCount } = await sql`DELETE FROM eod_reports WHERE id = ${id}`
+    async delete(id: string, organizationId?: string): Promise<boolean> {
+      const { rowCount } = organizationId
+        ? await sql`DELETE FROM eod_reports WHERE id = ${id} AND organization_id = ${organizationId}`
+        : await sql`DELETE FROM eod_reports WHERE id = ${id}`
       return (rowCount ?? 0) > 0
     },
     // Optimized: fetch EOD reports for multiple users with date range (reduces data transfer)
@@ -1492,11 +1504,14 @@ export const db = {
       return rows.map(row => ({
         id: row.id as string,
         organizationId: row.organization_id as string,
+        workspaceId: row.workspace_id as string | undefined,
         userId: row.user_id as string,
         type: row.type as Notification["type"],
         title: row.title as string,
         message: row.message as string || "",
+        link: row.link as string | undefined,
         read: row.read as boolean,
+        readAt: row.read_at ? (row.read_at as Date).toISOString() : undefined,
         createdAt: (row.created_at as Date)?.toISOString() || "",
         actionUrl: row.action_url as string | undefined,
         metadata: row.metadata as Record<string, unknown> | undefined,
@@ -1512,11 +1527,14 @@ export const db = {
       return rows.map(row => ({
         id: row.id as string,
         organizationId: row.organization_id as string,
+        workspaceId: row.workspace_id as string | undefined,
         userId: row.user_id as string,
         type: row.type as Notification["type"],
         title: row.title as string,
         message: row.message as string || "",
+        link: row.link as string | undefined,
         read: row.read as boolean,
+        readAt: row.read_at ? (row.read_at as Date).toISOString() : undefined,
         createdAt: (row.created_at as Date)?.toISOString() || "",
         actionUrl: row.action_url as string | undefined,
         metadata: row.metadata as Record<string, unknown> | undefined,
@@ -1550,11 +1568,11 @@ export const db = {
     async markAsRead(id: string, userId?: string): Promise<Notification | null> {
       const { rows } = userId
         ? await sql`
-            UPDATE notifications SET read = TRUE WHERE id = ${id} AND user_id = ${userId}
+            UPDATE notifications SET read = TRUE, read_at = NOW() WHERE id = ${id} AND user_id = ${userId}
             RETURNING *
           `
         : await sql`
-            UPDATE notifications SET read = TRUE WHERE id = ${id}
+            UPDATE notifications SET read = TRUE, read_at = NOW() WHERE id = ${id}
             RETURNING *
           `
       if (!rows[0]) return null
@@ -1562,11 +1580,14 @@ export const db = {
       return {
         id: row.id as string,
         organizationId: row.organization_id as string,
+        workspaceId: row.workspace_id as string | undefined,
         userId: row.user_id as string,
         type: row.type as Notification["type"],
         title: row.title as string,
         message: row.message as string || "",
+        link: row.link as string | undefined,
         read: row.read as boolean,
+        readAt: row.read_at ? (row.read_at as Date).toISOString() : undefined,
         createdAt: (row.created_at as Date)?.toISOString() || "",
         actionUrl: row.action_url as string | undefined,
         metadata: row.metadata as Record<string, unknown> | undefined,
@@ -1574,7 +1595,7 @@ export const db = {
     },
     async markAllAsRead(userId: string, orgId: string): Promise<number> {
       const { rowCount } = await sql`
-        UPDATE notifications SET read = TRUE
+        UPDATE notifications SET read = TRUE, read_at = NOW()
         WHERE user_id = ${userId} AND organization_id = ${orgId} AND read = FALSE
       `
       return rowCount ?? 0
@@ -1644,11 +1665,14 @@ export const db = {
       const notifications = dataResult.rows.map(row => ({
         id: row.id as string,
         organizationId: row.organization_id as string,
+        workspaceId: row.workspace_id as string | undefined,
         userId: row.user_id as string,
         type: row.type as Notification["type"],
         title: row.title as string,
         message: row.message as string || "",
+        link: row.link as string | undefined,
         read: row.read as boolean,
+        readAt: row.read_at ? (row.read_at as Date).toISOString() : undefined,
         createdAt: (row.created_at as Date)?.toISOString() || "",
         actionUrl: row.action_url as string | undefined,
         metadata: row.metadata as Record<string, unknown> | undefined,
@@ -2823,12 +2847,15 @@ export const db = {
       `
       return (rowCount ?? 0) > 0
     },
-    async hardDelete(id: string): Promise<boolean> {
-      const { rowCount } = await sql`DELETE FROM ma_employees WHERE id = ${id}`
+    async hardDelete(id: string, workspaceId?: string): Promise<boolean> {
+      const { rowCount } = workspaceId
+        ? await sql`DELETE FROM ma_employees WHERE id = ${id} AND workspace_id = ${workspaceId}`
+        : await sql`DELETE FROM ma_employees WHERE id = ${id}`
       return (rowCount ?? 0) > 0
     },
-    async deleteAll(): Promise<number> {
-      const { rowCount } = await sql`DELETE FROM ma_employees`
+    async deleteAll(workspaceId: string): Promise<number> {
+      if (!workspaceId) throw new Error("workspaceId is required for deleteAll to prevent cross-tenant data loss")
+      const { rowCount } = await sql`DELETE FROM ma_employees WHERE workspace_id = ${workspaceId}`
       return rowCount ?? 0
     },
     async count(): Promise<number> {

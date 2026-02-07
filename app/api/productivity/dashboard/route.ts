@@ -37,7 +37,8 @@ interface ProductivityDashboardResponse {
 export const GET = withAuth(async (request, auth) => {
   try {
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId") || auth.user.id
+    const userIdParam = searchParams.get("userId")
+    const userId = (userIdParam && userIdParam.trim()) ? userIdParam : auth.user.id
 
     // Get date ranges
     const today = new Date()

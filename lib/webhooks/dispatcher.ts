@@ -11,6 +11,7 @@
 import crypto from "crypto"
 import { sql } from "../db/sql"
 import { logger } from "@/lib/logger"
+import { validateWebhookUrl } from "@/lib/validation/url"
 
 // ============================================
 // TYPES
@@ -128,6 +129,21 @@ class WebhookDispatcher {
     payload: WebhookPayload,
     attempt = 1
   ): Promise<DeliveryResult> {
+    // Defense-in-depth: validate the URL at dispatch time to block SSRF
+    // against any URLs stored before validation was added.
+    if (!validateWebhookUrl(webhook.url)) {
+      logger.warn(
+        { webhookId: webhook.id, url: webhook.url },
+        "Webhook URL blocked by SSRF validation at dispatch time"
+      )
+      return {
+        webhookId: webhook.id,
+        success: false,
+        error: "Webhook URL is not allowed (private/internal target)",
+        duration: 0,
+      }
+    }
+
     const startTime = Date.now()
     const payloadString = JSON.stringify(payload)
     const signature = generateSignature(payloadString, webhook.secret)

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ExportButton } from "@/components/shared/export-button"
 import type { TeamMember, EODReport, Rock } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -106,9 +107,12 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   return (
     <div className="space-y-6">
       <NoWorkspaceAlert />
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">EOD History</h1>
-        <p className="text-slate-500 mt-1">View past end-of-day reports</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">EOD History</h1>
+          <p className="text-slate-500 mt-1">View past end-of-day reports</p>
+        </div>
+        <ExportButton type="eod-reports" />
       </div>
 
       <div className="bg-white rounded-xl shadow-card p-5">

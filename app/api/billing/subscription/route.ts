@@ -178,7 +178,7 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update subscription",
+        error: "Failed to update subscription",
       },
       { status: 500 }
     )

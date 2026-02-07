@@ -473,7 +473,7 @@ export const DELETE = withAuth(async (request: NextRequest, auth) => {
       }
     }
 
-    await db.assignedTasks.delete(id)
+    await db.assignedTasks.delete(id, auth.organization.id)
 
     return NextResponse.json<ApiResponse<null>>({
       success: true,

@@ -289,7 +289,7 @@ export const POST = withAuth(async (request, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: `Failed to create default workspace: ${errorMessage}`
+        error: "Operation failed"
       },
       { status: 500 }
     )

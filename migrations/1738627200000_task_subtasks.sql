@@ -29,9 +29,8 @@ CREATE INDEX IF NOT EXISTS idx_task_subtasks_order ON task_subtasks(task_id, ord
 -- Composite index for filtering completed/pending subtasks
 CREATE INDEX IF NOT EXISTS idx_task_subtasks_completed ON task_subtasks(task_id, completed);
 
--- @down
--- Rollback: Drop task_subtasks table and indexes
-DROP INDEX IF EXISTS idx_task_subtasks_completed;
-DROP INDEX IF EXISTS idx_task_subtasks_order;
-DROP INDEX IF EXISTS idx_task_subtasks_task_id;
-DROP TABLE IF EXISTS task_subtasks;
+-- @down (rollback - DO NOT RUN IN PRODUCTION)
+-- DROP INDEX IF EXISTS idx_task_subtasks_completed;
+-- DROP INDEX IF EXISTS idx_task_subtasks_order;
+-- DROP INDEX IF EXISTS idx_task_subtasks_task_id;
+-- DROP TABLE IF EXISTS task_subtasks;

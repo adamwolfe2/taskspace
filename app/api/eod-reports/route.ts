@@ -609,7 +609,7 @@ export const DELETE = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
-    await db.eodReports.delete(id)
+    await db.eodReports.delete(id, auth.organization.id)
 
     return NextResponse.json<ApiResponse<null>>({
       success: true,

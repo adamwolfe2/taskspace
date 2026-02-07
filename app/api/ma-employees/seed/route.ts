@@ -8,6 +8,11 @@ import { logger, logError } from "@/lib/logger"
 // This will clear existing employees and insert fresh data
 // ADMIN ONLY - requires authentication
 export const POST = withAdmin(async (request, auth) => {
+  // Block test data seeding in production unless explicitly allowed
+  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_ADMIN_DANGEROUS_OPS) {
+    return NextResponse.json({ success: false, error: "This operation is disabled in production" }, { status: 403 })
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const clearFirst = searchParams.get("clear") !== "false" // Default to clearing first

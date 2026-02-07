@@ -129,7 +129,7 @@ export function TaskDetailModal({
         setSubtasks(result.data)
       }
     } catch (error) {
-      console.error("Failed to load subtasks:", error)
+      // Error loading subtasks
     } finally {
       setIsLoadingSubtasks(false)
     }

@@ -52,7 +52,7 @@ export function DemoModeBanner() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch (error) {
-      console.error("Failed to export demo data:", error)
+      // Export failed
     }
   }
 

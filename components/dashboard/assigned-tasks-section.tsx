@@ -113,7 +113,7 @@ export function AssignedTasksSection({
           setAsanaConnected(data.data.connected)
         }
       } catch (err) {
-        console.error("Failed to check Asana connection:", err)
+        // Error checking Asana connection
       } finally {
         setIsCheckingConnection(false)
       }

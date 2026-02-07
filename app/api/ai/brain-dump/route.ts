@@ -172,7 +172,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
   } catch (error) {
     logError(logger, "Brain dump processing error", error)
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error instanceof Error ? error.message : "Failed to process brain dump" },
+      { success: false, error: "Failed to process brain dump" },
       { status: 500 }
     )
   }

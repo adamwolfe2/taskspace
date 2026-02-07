@@ -7,7 +7,7 @@
 
 import { sql } from "@/lib/db/sql"
 import { NextRequest, NextResponse } from "next/server"
-import { withOptionalAuth } from "@/lib/api/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 
 interface TableCount {
   table: string
@@ -33,7 +33,7 @@ interface DbStatus {
   }[]
 }
 
-export const GET = withOptionalAuth(async (request: NextRequest, auth) => {
+export const GET = withAdmin(async (request: NextRequest, auth) => {
   const status: DbStatus = {
     connected: false,
     tableCounts: [],
@@ -86,25 +86,23 @@ export const GET = withOptionalAuth(async (request: NextRequest, auth) => {
       createdAt: o.created_at?.toISOString() || "",
     }))
 
-    // Try to get current user's org data
-    if (auth) {
-      const orgId = auth.organization.id
+    // Get current user's org data
+    const orgId = auth.organization.id
 
-      const [members, rocks, tasks, eods] = await Promise.all([
-        sql`SELECT COUNT(*) as count FROM organization_members WHERE organization_id = ${orgId}`,
-        sql`SELECT COUNT(*) as count FROM rocks WHERE organization_id = ${orgId}`,
-        sql`SELECT COUNT(*) as count FROM assigned_tasks WHERE organization_id = ${orgId}`,
-        sql`SELECT COUNT(*) as count FROM eod_reports WHERE organization_id = ${orgId}`,
-      ])
+    const [members, rocks, tasks, eods] = await Promise.all([
+      sql`SELECT COUNT(*) as count FROM organization_members WHERE organization_id = ${orgId}`,
+      sql`SELECT COUNT(*) as count FROM rocks WHERE organization_id = ${orgId}`,
+      sql`SELECT COUNT(*) as count FROM assigned_tasks WHERE organization_id = ${orgId}`,
+      sql`SELECT COUNT(*) as count FROM eod_reports WHERE organization_id = ${orgId}`,
+    ])
 
-      status.currentOrg = {
-        id: auth.organization.id,
-        name: auth.organization.name,
-        memberCount: parseInt(members.rows[0]?.count || "0"),
-        rockCount: parseInt(rocks.rows[0]?.count || "0"),
-        taskCount: parseInt(tasks.rows[0]?.count || "0"),
-        eodCount: parseInt(eods.rows[0]?.count || "0"),
-      }
+    status.currentOrg = {
+      id: auth.organization.id,
+      name: auth.organization.name,
+      memberCount: parseInt(members.rows[0]?.count || "0"),
+      rockCount: parseInt(rocks.rows[0]?.count || "0"),
+      taskCount: parseInt(tasks.rows[0]?.count || "0"),
+      eodCount: parseInt(eods.rows[0]?.count || "0"),
     }
 
     return NextResponse.json({ success: true, data: status })

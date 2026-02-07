@@ -1,12 +1,27 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateNotificationSchema } from "@/lib/validation/schemas"
-import type { Notification, ApiResponse } from "@/lib/types"
+import type { Notification, NotificationType, ApiResponse } from "@/lib/types"
 import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
 import type { PaginatedResponse } from "@/lib/utils/pagination"
+import { sendNotification } from "@/lib/db/notifications"
 import { logger, logError } from "@/lib/logger"
+import { z } from "zod"
+
+const VALID_NOTIFICATION_TYPES: NotificationType[] = [
+  "task_assigned",
+  "task_completed",
+  "rock_updated",
+  "eod_reminder",
+  "escalation",
+  "invitation",
+  "mention",
+  "meeting_starting",
+  "issue_created",
+  "system",
+]
 
 // GET /api/notifications - Get user's notifications
 export const GET = withAuth(async (request: NextRequest, auth) => {
@@ -64,6 +79,54 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     logError(logger, "Get notifications error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to get notifications" },
+      { status: 500 }
+    )
+  }
+})
+
+const createNotificationSchema = z.object({
+  userId: z.string().min(1, "userId is required"),
+  type: z.enum([
+    "task_assigned", "task_completed", "rock_updated", "eod_reminder",
+    "escalation", "invitation", "mention", "meeting_starting", "issue_created", "system",
+  ] as const),
+  title: z.string().min(1, "title is required").max(255),
+  message: z.string().max(1000).optional(),
+  link: z.string().max(500).optional(),
+  workspaceId: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
+})
+
+// POST /api/notifications - Create a notification (admin only, for internal use)
+export const POST = withAdmin(async (request: NextRequest, auth) => {
+  try {
+    const { userId, type, title, message, link, workspaceId, metadata } = await validateBody(request, createNotificationSchema)
+
+    await sendNotification({
+      organizationId: auth.organization.id,
+      workspaceId: workspaceId || undefined,
+      userId,
+      type,
+      title,
+      message: message || undefined,
+      link: link || undefined,
+      metadata: metadata || undefined,
+    })
+
+    return NextResponse.json<ApiResponse<null>>({
+      success: true,
+      message: "Notification created",
+    })
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+    logError(logger, "Create notification error", error)
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: "Failed to create notification" },
       { status: 500 }
     )
   }

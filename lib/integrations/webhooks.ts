@@ -4,6 +4,7 @@
  */
 
 import { logger, logError } from "@/lib/logger"
+import { validateWebhookUrl } from "@/lib/validation/url"
 
 export interface WebhookPayload {
   event: string
@@ -67,6 +68,13 @@ export async function sendWebhook(
   // Check if this event is enabled for this webhook
   if (!config.events.includes(event)) {
     return { success: true } // Silently skip disabled events
+  }
+
+  // Defense-in-depth: re-validate the URL at dispatch time to catch any
+  // URLs that were stored before SSRF validation was added.
+  if (!isValidWebhookUrl(config.url)) {
+    logger.warn({ url: config.url }, "Webhook URL blocked by SSRF validation")
+    return { success: false, error: "Webhook URL is not allowed (private/internal target)" }
   }
 
   const payload: WebhookPayload = {
@@ -199,13 +207,11 @@ export function buildRockPayload(rock: {
 }
 
 /**
- * Validate webhook URL format
+ * Validate webhook URL format.
+ *
+ * Enforces HTTPS-only and blocks private/internal network targets to
+ * prevent SSRF attacks.
  */
 export function isValidWebhookUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url)
-    return parsed.protocol === "https:" || parsed.protocol === "http:"
-  } catch {
-    return false
-  }
+  return validateWebhookUrl(url) !== null
 }

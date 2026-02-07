@@ -45,7 +45,6 @@ export function TaskSubtasks({
  setNewTitle("")
  setIsAdding(false)
  } catch (error) {
- console.error("Failed to add subtask:", error)
  } finally {
  setIsSubmitting(false)
  }

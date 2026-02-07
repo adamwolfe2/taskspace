@@ -19,6 +19,7 @@ import { aiRateLimit, RATE_LIMITS } from "@/lib/api/rate-limit"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { firecrawlScrapeSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
+import { validateSafeUrl } from "@/lib/validation/url"
 import type { ApiResponse } from "@/lib/types"
 
 // ============================================
@@ -32,55 +33,14 @@ const SCRAPE_TIMEOUT_MS = 30_000
 // ============================================
 
 /**
- * Validate and normalize a URL string.
+ * Validate and normalize a URL string for Firecrawl scraping.
  * Returns the normalized URL or null if invalid.
+ *
+ * Uses the shared SSRF-safe URL validator. Allows HTTP since we are
+ * scraping user-provided websites (not sending secrets).
  */
 function validateUrl(input: string): string | null {
-  if (!input || typeof input !== "string") return null
-
-  let url = input.trim()
-
-  // Reject obviously invalid inputs
-  if (url.length < 4 || url.length > 2048) return null
-
-  // Add protocol if missing
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
-    url = `https://${url}`
-  }
-
-  try {
-    const parsed = new URL(url)
-
-    // Only allow http and https protocols
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return null
-    }
-
-    // Must have a valid hostname with at least one dot (no localhost, IPs, etc.)
-    if (!parsed.hostname.includes(".")) {
-      return null
-    }
-
-    // Block private/internal IPs and localhost
-    const hostname = parsed.hostname.toLowerCase()
-    if (
-      hostname === "localhost" ||
-      hostname.startsWith("127.") ||
-      hostname.startsWith("10.") ||
-      hostname.startsWith("192.168.") ||
-      hostname.startsWith("172.16.") ||
-      hostname.startsWith("0.") ||
-      hostname === "[::1]" ||
-      hostname.endsWith(".local") ||
-      hostname.endsWith(".internal")
-    ) {
-      return null
-    }
-
-    return parsed.href
-  } catch {
-    return null
-  }
+  return validateSafeUrl(input, { allowHttp: true })
 }
 
 // ============================================

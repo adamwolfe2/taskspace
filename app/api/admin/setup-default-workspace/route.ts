@@ -19,6 +19,11 @@ import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
 
 export const POST = withAdmin(async (request: NextRequest, auth) => {
+  // Warn when running in production (allowed since it's behind withAdmin and idempotent)
+  if (process.env.NODE_ENV === "production") {
+    logger.warn({ userId: auth.user.id, orgId: auth.organization.id }, "setup-default-workspace called in production environment")
+  }
+
   try {
     logger.info("🚨 Setting up default workspace")
 

@@ -135,7 +135,6 @@ export function InvitedUserWelcome() {
 
       handleNext()
     } catch (err) {
-      console.error("Failed to update profile:", err)
       // Still proceed even if save fails - user can update later
       handleNext()
     } finally {

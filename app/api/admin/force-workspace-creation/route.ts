@@ -12,6 +12,11 @@ import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 export const POST = withAdmin(async (request: NextRequest, auth) => {
+  // Warn when running in production (allowed since it's behind withAdmin)
+  if (process.env.NODE_ENV === "production") {
+    logger.warn({ userId: auth.user.id, orgId: auth.organization.id }, "force-workspace-creation called in production environment")
+  }
+
   try {
     logger.info("🚨 FORCE WORKSPACE CREATION CALLED")
 
@@ -192,7 +197,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: `Database error: ${errorMessage}`
+        error: "Operation failed"
       },
       { status: 500 }
     )

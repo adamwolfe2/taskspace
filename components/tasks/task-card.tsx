@@ -19,6 +19,9 @@ interface TaskCardProps {
   onUpdateTask?: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
   rocks: Rock[]
   currentUser?: TeamMember
+  isSelected?: boolean
+  onToggleSelection?: (taskId: string) => void
+  showSelectionCheckbox?: boolean
 }
 
 function getDueDateStatus(dueDate: string | null, isCompleted: boolean) {
@@ -63,7 +66,7 @@ function getDueDateStatus(dueDate: string | null, isCompleted: boolean) {
   return null
 }
 
-export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, rocks, currentUser }: TaskCardProps) {
+export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, rocks, currentUser, isSelected, onToggleSelection, showSelectionCheckbox }: TaskCardProps) {
   const [showDetail, setShowDetail] = useState(false)
   const [showFullDescription, setShowFullDescription] = useState(false)
   const isCompleted = task.status === "completed"
@@ -91,9 +94,18 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
         isCompleted && "opacity-60 bg-muted/50",
         !isCompleted && isPersonal && "border-l-4 border-l-primary",
         !isCompleted && !isPersonal && "border-l-4 border-l-blue-500",
+        isSelected && "ring-2 ring-blue-500 ring-offset-2",
       )}
     >
       <div className="flex items-start gap-2 sm:gap-3 min-w-0">
+        {showSelectionCheckbox && onToggleSelection && (
+          <Checkbox
+            checked={isSelected || false}
+            onCheckedChange={() => onToggleSelection(task.id)}
+            className="mt-1 flex-shrink-0"
+            aria-label={`Select task "${task.title}"`}
+          />
+        )}
         <Checkbox
           checked={isCompleted}
           onCheckedChange={() => !isCompleted && onComplete(task.id)}

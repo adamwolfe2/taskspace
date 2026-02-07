@@ -96,7 +96,6 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
           }
         }
       } catch (err) {
-        console.error("Failed to load API keys:", err)
       }
     }
 
@@ -111,7 +110,6 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
           }
         }
       } catch (err) {
-        console.error("Failed to load integration status:", err)
       }
     }
 
@@ -167,7 +165,6 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
         }
       }
     } catch (err) {
-      console.error("Failed to refresh email status:", err)
       toast({
         title: "Error",
         description: "Failed to check email configuration",

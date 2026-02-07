@@ -7,7 +7,7 @@
 
 import { NextResponse } from "next/server"
 import { isAdmin } from "@/lib/auth/middleware"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
 import { getMetricsByWorkspace, createMetric } from "@/lib/db/scorecard"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -23,6 +23,15 @@ export const GET = withAuth(async (request, auth) => {
       return NextResponse.json(
         { success: false, error: "Workspace ID is required" },
         { status: 400 }
+      )
+    }
+
+    // Verify workspace belongs to user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
       )
     }
 
@@ -63,6 +72,15 @@ export const POST = withAuth(async (request, auth) => {
   try {
     const { workspaceId, name, description, ownerId, targetValue, targetDirection, unit, frequency, displayOrder } =
       await validateBody(request, createScorecardMetricSchema)
+
+    // Verify workspace belongs to user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
 
     // Check workspace access and role (admin/owner or workspace admin/owner)
     const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)

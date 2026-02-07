@@ -220,7 +220,6 @@ export function WorkspaceBrandingSettings() {
         description: "Your logo has been uploaded successfully",
       })
     } catch (error) {
-      console.error("Logo upload failed:", error)
       toast({
         title: "Upload failed",
         description: "Failed to upload logo. Please try again.",
@@ -262,7 +261,6 @@ export function WorkspaceBrandingSettings() {
       setShowBeforeAfter(true)
       setTimeout(() => setShowBeforeAfter(false), 5000)
     } catch (error) {
-      console.error("Failed to extract colors:", error)
       toast({
         title: "Extraction failed",
         description: "Could not extract colors from the logo",
@@ -379,7 +377,6 @@ export function WorkspaceBrandingSettings() {
       setIsEditing(false)
       await refresh()
     } catch (error) {
-      console.error("Failed to save branding:", error)
       toast({
         title: "Failed to save",
         description: error instanceof Error ? error.message : "An error occurred",

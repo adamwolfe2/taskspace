@@ -85,6 +85,13 @@ interface McpBlocker {
   insightId?: string
 }
 
+interface McpWorkspace {
+  id: string
+  name: string
+  type: string
+  description?: string
+}
+
 async function callTaskspaceApi<T>(
   endpoint: string,
   method: string = "GET",
@@ -129,6 +136,14 @@ const server = new Server(
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
+      name: "get_workspaces",
+      description: "Get a list of all workspaces in the organization (required for workspace-scoped operations)",
+      inputSchema: {
+        type: "object",
+        properties: {},
+      },
+    },
+    {
       name: "get_team_members",
       description: "Get a list of all team members in the organization",
       inputSchema: {
@@ -160,6 +175,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       inputSchema: {
         type: "object",
         properties: {
+          workspaceId: {
+            type: "string",
+            description: "ID of the workspace the task belongs to (required for data isolation)",
+          },
           assigneeId: {
             type: "string",
             description: "ID of the team member to assign the task to",
@@ -186,7 +205,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             description: "ID of the rock this task is related to (optional)",
           },
         },
-        required: ["assigneeId", "title", "priority", "dueDate"],
+        required: ["workspaceId", "assigneeId", "title", "priority", "dueDate"],
       },
     },
     {
@@ -287,6 +306,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
+      case "get_workspaces": {
+        const result = await callTaskspaceApi<McpWorkspace[]>("/api/workspaces")
+        if (!result.success) {
+          return { content: [{ type: "text", text: `Error: ${result.error}` }] }
+        }
+
+        const workspaces = result.data || []
+        const summary = workspaces.map((w) =>
+          `- ${w.name} (${w.type}) - ID: ${w.id}`
+        ).join("\n")
+
+        return {
+          content: [{
+            type: "text",
+            text: `Workspaces (${workspaces.length}):\n${summary || "No workspaces found"}`,
+          }],
+        }
+      }
+
       case "get_team_members": {
         const result = await callTaskspaceApi<McpMember[]>("/api/members")
         if (!result.success) {
@@ -345,7 +383,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "assign_task": {
+        // SECURITY: Validate required workspaceId parameter
+        if (!args?.workspaceId) {
+          return {
+            content: [{
+              type: "text",
+              text: "Error: workspaceId is required for task assignment (workspace isolation)",
+            }],
+            isError: true,
+          }
+        }
+
+        // Create task with workspace validation
+        // The API endpoint will verify workspace belongs to organization
         const result = await callTaskspaceApi<McpTask>("/api/tasks", "POST", {
+          workspaceId: args.workspaceId,
           title: args?.title,
           description: args?.description || "",
           assigneeId: args?.assigneeId,
