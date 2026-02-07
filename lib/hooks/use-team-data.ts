@@ -163,6 +163,14 @@ export function useTeamData() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Ensure Zustand store is rehydrated — useWorkspaces() also does this,
+  // but useTeamData may be called without useWorkspaces in the same component
+  useEffect(() => {
+    if (!_hasHydrated) {
+      useWorkspaceStore.persist.rehydrate()
+    }
+  }, [_hasHydrated])
+
   // Track if initial load is complete to prevent saving defaults back to storage
   const initialLoadComplete = useRef(false)
 
