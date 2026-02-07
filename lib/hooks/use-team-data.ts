@@ -163,6 +163,9 @@ export function useTeamData() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Track fetch generation to prevent stale responses from overwriting fresh data
+  const fetchGeneration = useRef(0)
+
   // Ensure Zustand store is rehydrated — useWorkspaces() also does this,
   // but useTeamData may be called without useWorkspaces in the same component
   useEffect(() => {
@@ -207,24 +210,32 @@ export function useTeamData() {
       return
     }
 
+    // CRITICAL: Don't fetch workspace-scoped data until a workspace is selected.
+    // Keep isLoading=true so the dashboard shows a loading skeleton instead of empty state.
+    // The workspace will be auto-selected by useWorkspaces() shortly after mount.
+    if (!currentWorkspaceId) {
+      return
+    }
+
+    // Increment generation counter — any fetch that completes with a stale
+    // generation number will discard its results to prevent race conditions
+    const thisGeneration = ++fetchGeneration.current
+
     try {
       setIsLoading(true)
       setError(null)
 
-      // Workspace-scoped APIs require workspaceId - fetch members always, but only
-      // fetch workspace-scoped data when a workspace is selected
-      const membersData = await api.members.list()
+      // Fetch members and workspace-scoped data in parallel
+      const [membersData, rocksData, tasksData, reportsData] = await Promise.all([
+        api.members.list(),
+        api.rocks.list(undefined, currentWorkspaceId),
+        api.tasks.list(undefined, undefined, currentWorkspaceId),
+        api.eodReports.list({ workspaceId: currentWorkspaceId }),
+      ])
 
-      let rocksData: Rock[] = []
-      let tasksData: AssignedTask[] = []
-      let reportsData: EODReport[] = []
-
-      if (currentWorkspaceId) {
-        ;[rocksData, tasksData, reportsData] = await Promise.all([
-          api.rocks.list(undefined, currentWorkspaceId),
-          api.tasks.list(undefined, undefined, currentWorkspaceId),
-          api.eodReports.list({ workspaceId: currentWorkspaceId }),
-        ])
+      // Discard results if a newer fetch has started (prevents stale data overwrite)
+      if (thisGeneration !== fetchGeneration.current) {
+        return
       }
 
       setTeamMembers(membersData.map(m => ({
@@ -236,11 +247,17 @@ export function useTeamData() {
       setAssignedTasks(tasksData)
       setEODReports(reportsData)
     } catch (err: unknown) {
+      // Discard errors from stale fetches
+      if (thisGeneration !== fetchGeneration.current) {
+        return
+      }
       setError(getErrorMessage(err, "Failed to load data"))
       console.error("Failed to load team data:", err)
       Sentry.captureException(err)
     } finally {
-      setIsLoading(false)
+      if (thisGeneration === fetchGeneration.current) {
+        setIsLoading(false)
+      }
     }
   }, [isAuthenticated, currentOrganization, isDemoMode, currentWorkspaceId, _hasHydrated])
 

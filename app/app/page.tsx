@@ -3,6 +3,7 @@
 import type { PageType } from "@/lib/types"
 import { AppProvider, useApp } from "@/lib/contexts/app-context"
 import { useTeamData } from "@/lib/hooks/use-team-data"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { Header } from "@/components/layout/header"
 import { SidebarNav } from "@/components/layout/sidebar-nav"
 import { MobileNav } from "@/components/layout/mobile-nav"
@@ -52,6 +53,10 @@ function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [resetToken, setResetToken] = useState<string | null>(null)
+  // CRITICAL: Call useWorkspaces() at the top level to trigger workspace auto-selection
+  // BEFORE useTeamData tries to fetch. Without this, workspace selection only happens
+  // inside WorkspaceSwitcher (in Header), which may not run soon enough.
+  useWorkspaces()
   const teamData = useTeamData()
 
   // Initialize global error handler for unhandled promise rejections
