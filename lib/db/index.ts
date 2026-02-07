@@ -832,8 +832,8 @@ export const db = {
       const sanitizedDescription = rock.description ? sanitizeText(rock.description) : rock.description
       const sanitizedOutcome = rock.outcome ? sanitizeText(rock.outcome) : null
       await sql`
-        INSERT INTO rocks (id, organization_id, user_id, owner_email, title, description, progress, due_date, status, bucket, outcome, done_when, quarter, created_at, updated_at)
-        VALUES (${rock.id}, ${rock.organizationId}, ${rock.userId || null}, ${rock.ownerEmail || null}, ${sanitizeText(rock.title)}, ${sanitizedDescription},
+        INSERT INTO rocks (id, organization_id, workspace_id, user_id, owner_email, title, description, progress, due_date, status, bucket, outcome, done_when, quarter, created_at, updated_at)
+        VALUES (${rock.id}, ${rock.organizationId}, ${rock.workspaceId || null}, ${rock.userId || null}, ${rock.ownerEmail || null}, ${sanitizeText(rock.title)}, ${sanitizedDescription},
                 ${rock.progress}, ${rock.dueDate}, ${rock.status}, ${rock.bucket || null},
                 ${sanitizedOutcome}, ${JSON.stringify(rock.doneWhen || [])},
                 ${rock.quarter || null}, ${rock.createdAt}, ${rock.updatedAt})
@@ -1111,10 +1111,10 @@ export const db = {
     async create(task: AssignedTask): Promise<AssignedTask> {
       const sanitizedDescription = task.description ? sanitizeText(task.description) : null
       await sql`
-        INSERT INTO assigned_tasks (id, organization_id, title, description, assignee_id, assignee_name,
+        INSERT INTO assigned_tasks (id, organization_id, workspace_id, title, description, assignee_id, assignee_name,
           assigned_by_id, assigned_by_name, type, rock_id, rock_title, priority, due_date, status,
           completed_at, added_to_eod, eod_report_id, created_at, updated_at)
-        VALUES (${task.id}, ${task.organizationId}, ${sanitizeText(task.title)}, ${sanitizedDescription},
+        VALUES (${task.id}, ${task.organizationId}, ${task.workspaceId || null}, ${sanitizeText(task.title)}, ${sanitizedDescription},
                 ${task.assigneeId}, ${task.assigneeName}, ${task.assignedById}, ${task.assignedByName},
                 ${task.type}, ${task.rockId}, ${task.rockTitle}, ${task.priority}, ${task.dueDate},
                 ${task.status}, ${task.completedAt}, ${task.addedToEOD}, ${task.eodReportId},
@@ -1314,9 +1314,9 @@ export const db = {
       try {
         // Try with metric_value_today column (requires migration)
         await sql`
-          INSERT INTO eod_reports (id, organization_id, user_id, date, tasks, challenges,
+          INSERT INTO eod_reports (id, organization_id, workspace_id, user_id, date, tasks, challenges,
             tomorrow_priorities, needs_escalation, escalation_note, metric_value_today, submitted_at, created_at)
-          VALUES (${report.id}, ${report.organizationId}, ${report.userId}, ${report.date},
+          VALUES (${report.id}, ${report.organizationId}, ${report.workspaceId || null}, ${report.userId}, ${report.date},
                   ${JSON.stringify(report.tasks)}, ${sanitizedChallenges},
                   ${JSON.stringify(report.tomorrowPriorities)}, ${report.needsEscalation},
                   ${sanitizedEscalationNote}, ${report.metricValueToday}, ${report.submittedAt}, ${report.createdAt})
@@ -1326,9 +1326,9 @@ export const db = {
         const errMessage = err instanceof Error ? err.message : String(err)
         if (errMessage.includes('metric_value_today') || errMessage.includes('column')) {
           await sql`
-            INSERT INTO eod_reports (id, organization_id, user_id, date, tasks, challenges,
+            INSERT INTO eod_reports (id, organization_id, workspace_id, user_id, date, tasks, challenges,
               tomorrow_priorities, needs_escalation, escalation_note, submitted_at, created_at)
-            VALUES (${report.id}, ${report.organizationId}, ${report.userId}, ${report.date},
+            VALUES (${report.id}, ${report.organizationId}, ${report.workspaceId || null}, ${report.userId}, ${report.date},
                     ${JSON.stringify(report.tasks)}, ${sanitizedChallenges},
                     ${JSON.stringify(report.tomorrowPriorities)}, ${report.needsEscalation},
                     ${sanitizedEscalationNote}, ${report.submittedAt}, ${report.createdAt})
