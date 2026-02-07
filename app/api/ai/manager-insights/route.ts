@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { generateManagerInsights } from "@/lib/ai/claude-client"
+import { aiRateLimit } from "@/lib/api/rate-limit"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { aiManagerInsightsSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
@@ -9,6 +10,15 @@ import type { ApiResponse } from "@/lib/types"
 
 export const POST = withAuth(async (request, auth) => {
   try {
+    // Rate limit: 20 manager insights requests per user per hour
+    const rateCheck = aiRateLimit(auth.user.id, 'manager-insights')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Try again later." },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
+      )
+    }
+
     const validated = await validateBody(request, aiManagerInsightsSchema)
     const { workspaceId } = validated
     const directReports = validated.directReports as Array<{ name: string; tasksCompleted: number; rocksOnTrack: number; eodRate: number }> | undefined

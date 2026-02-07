@@ -6,6 +6,7 @@
 
 import { sql } from "./sql"
 import { generateId } from "@/lib/auth/password"
+import { sanitizeText } from "@/lib/utils/sanitize"
 import type { IdsBoardItem, IdsBoardColumn, IdsBoardItemType } from "@/lib/types"
 
 // ============================================
@@ -114,9 +115,12 @@ export async function createIdsBoardItem(params: CreateIdsBoardItemParams): Prom
   `
   const orderIndex = Number(maxRows[0]?.next_index) || 0
 
+  const sanitizedTitle = sanitizeText(title)
+  const sanitizedDescription = description ? sanitizeText(description) : null
+
   const { rows } = await sql`
     INSERT INTO ids_board_items (id, workspace_id, title, description, column_name, order_index, item_type, linked_id, created_by, assigned_to)
-    VALUES (${id}, ${workspaceId}, ${title}, ${description || null}, ${columnName}, ${orderIndex}, ${itemType}, ${linkedId || null}, ${createdBy || null}, ${assignedTo || null})
+    VALUES (${id}, ${workspaceId}, ${sanitizedTitle}, ${sanitizedDescription}, ${columnName}, ${orderIndex}, ${itemType}, ${linkedId || null}, ${createdBy || null}, ${assignedTo || null})
     RETURNING *
   `
 
@@ -138,11 +142,16 @@ export async function updateIdsBoardItem(
   const item = await getIdsBoardItemById(itemId)
   if (!item) return null
 
+  const sanitizedTitle = updates.title ? sanitizeText(updates.title) : item.title
+  const sanitizedDescription = updates.description !== undefined
+    ? (updates.description ? sanitizeText(updates.description) : updates.description)
+    : (item.description ?? null)
+
   const { rows } = await sql`
     UPDATE ids_board_items
     SET
-      title = ${updates.title ?? item.title},
-      description = ${updates.description !== undefined ? updates.description : item.description ?? null},
+      title = ${sanitizedTitle},
+      description = ${sanitizedDescription},
       assigned_to = ${updates.assignedTo !== undefined ? updates.assignedTo : item.assignedTo ?? null},
       item_type = ${updates.itemType ?? item.itemType},
       updated_at = NOW()

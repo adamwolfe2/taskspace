@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { prioritizeTasks } from "@/lib/ai/claude-client"
+import { aiRateLimit } from "@/lib/api/rate-limit"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { aiPrioritizeSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
@@ -9,6 +10,15 @@ import type { ApiResponse } from "@/lib/types"
 
 export const POST = withAuth(async (request, auth) => {
   try {
+    // Rate limit: 20 prioritize requests per user per hour
+    const rateCheck = aiRateLimit(auth.user.id, 'prioritize')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Try again later." },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
+      )
+    }
+
     const { workspaceId, tasks, rocks } = await validateBody(request, aiPrioritizeSchema)
 
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)

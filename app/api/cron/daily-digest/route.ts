@@ -108,6 +108,14 @@ export async function GET(request: NextRequest) {
 
     logger.info({ timestamp: new Date().toISOString() }, "Running daily digest check")
 
+    // Clean up expired and inactive sessions
+    try {
+      const cleanup = await db.sessions.cleanupExpiredSessions()
+      logger.info({ expired: cleanup.expired, inactive: cleanup.inactive }, "Session cleanup completed")
+    } catch (cleanupError) {
+      logError(logger, "Session cleanup failed", cleanupError)
+    }
+
     // Get all organizations
     const organizations = await db.organizations.findAll()
     const results: { orgId: string; orgName: string; success: boolean; skipped?: string; error?: string }[] = []

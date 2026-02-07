@@ -3,41 +3,22 @@ import { db } from "@/lib/db"
 import { withAdmin } from "@/lib/api/middleware"
 import { generateDailyDigest, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
-import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
+import { aiRateLimit } from "@/lib/api/rate-limit"
 import type { ApiResponse, DailyDigest, TeamMember, EODInsight } from "@/lib/types"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { aiDigestSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
-// Rate limit: 5 digest generations per user per hour (very expensive operation)
-const MAX_DIGESTS_PER_HOUR = 5
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
-
 // POST /api/ai/digest - Generate a daily digest from EOD reports
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    // Rate limit: 5 digest generations per user per hour
-    const rateLimitKey = `ai-digest:${auth.user.id}`
-    const rateLimitResult = await checkApiRateLimit(
-      request,
-      rateLimitKey,
-      MAX_DIGESTS_PER_HOUR,
-      RATE_LIMIT_WINDOW_MS
-    )
-
-    if (!rateLimitResult.success) {
-      const response = NextResponse.json<ApiResponse<null>>(
-        {
-          success: false,
-          error: "You have reached the maximum number of digest generations. Please try again later.",
-        },
-        { status: 429 }
+    // Rate limit: 20 digest generations per user per hour
+    const rateCheck = aiRateLimit(auth.user.id, 'digest')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Try again later." },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
       )
-      const headers = getRateLimitHeaders(rateLimitResult, MAX_DIGESTS_PER_HOUR)
-      for (const [key, value] of Object.entries(headers)) {
-        response.headers.set(key, value)
-      }
-      return response
     }
 
     if (!isClaudeConfigured()) {

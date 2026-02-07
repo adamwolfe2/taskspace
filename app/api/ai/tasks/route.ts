@@ -3,15 +3,11 @@ import { db } from "@/lib/db"
 import { withAdmin } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import { sendTaskAssignmentEmail, isEmailConfigured } from "@/lib/integrations/email"
-import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
+import { aiRateLimit } from "@/lib/api/rate-limit"
 import type { ApiResponse, AIGeneratedTask, AssignedTask, TeamMember } from "@/lib/types"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { aiTaskPatchSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
-
-// Rate limit: 30 AI task operations per user per hour
-const MAX_AI_TASK_OPS_PER_HOUR = 30
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
 // GET /api/ai/tasks - Get pending AI-generated tasks
 export const GET = withAdmin(async (request: NextRequest, auth) => {
@@ -42,28 +38,13 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
 // PATCH /api/ai/tasks - Approve, reject, or update AI-generated tasks
 export const PATCH = withAdmin(async (request: NextRequest, auth) => {
   try {
-    // Rate limit: 30 AI task operations per user per hour
-    const rateLimitKey = `ai-tasks-patch:${auth.user.id}`
-    const rateLimitResult = await checkApiRateLimit(
-      request,
-      rateLimitKey,
-      MAX_AI_TASK_OPS_PER_HOUR,
-      RATE_LIMIT_WINDOW_MS
-    )
-
-    if (!rateLimitResult.success) {
-      const response = NextResponse.json<ApiResponse<null>>(
-        {
-          success: false,
-          error: "You have reached the maximum number of AI task operations. Please try again later.",
-        },
-        { status: 429 }
+    // Rate limit: 20 AI task operations per user per hour
+    const rateCheck = aiRateLimit(auth.user.id, 'tasks')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Try again later." },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
       )
-      const headers = getRateLimitHeaders(rateLimitResult, MAX_AI_TASK_OPS_PER_HOUR)
-      for (const [key, value] of Object.entries(headers)) {
-        response.headers.set(key, value)
-      }
-      return response
     }
 
     const validated = await validateBody(request, aiTaskPatchSchema)

@@ -8,6 +8,40 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z, ZodError, ZodSchema } from "zod"
 import type { ApiResponse } from "@/lib/types"
+import { sanitizeText } from "@/lib/utils/sanitize"
+
+/** Common text field names that should be sanitized after validation */
+const TEXT_FIELDS_TO_SANITIZE = [
+  "title",
+  "description",
+  "challenges",
+  "escalationNote",
+  "notes",
+  "content",
+  "outcome",
+  "resolution",
+  "name",
+  "department",
+  "jobTitle",
+  "weeklyMeasurable",
+  "confidenceNotes",
+  "text",
+]
+
+/**
+ * Sanitizes common text fields in validated request data.
+ * Applied automatically after validateBody() succeeds.
+ */
+function sanitizeValidatedData<T>(data: T): T {
+  if (!data || typeof data !== "object") return data
+  const result = { ...data } as Record<string, unknown>
+  for (const field of TEXT_FIELDS_TO_SANITIZE) {
+    if (typeof result[field] === "string") {
+      result[field] = sanitizeText(result[field] as string)
+    }
+  }
+  return result as T
+}
 
 export interface ValidationOptions {
   /** Whether to strip unknown keys from the object */
@@ -71,7 +105,7 @@ export async function validateBody<T extends ZodSchema>(
       throw new ValidationError(errorMessage)
     }
 
-    return result.data
+    return sanitizeValidatedData(result.data)
   } catch (error) {
     if (error instanceof ValidationError) {
       throw error

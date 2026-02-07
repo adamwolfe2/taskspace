@@ -6,6 +6,7 @@
 
 import { sql } from "./sql"
 import { generateId } from "@/lib/auth/password"
+import { sanitizeHtml } from "@/lib/utils/sanitize"
 import type { WorkspaceNote } from "@/lib/types"
 
 // ============================================
@@ -49,10 +50,11 @@ export async function upsertNote(
   userId: string
 ): Promise<WorkspaceNote> {
   const id = "wn_" + generateId()
+  const sanitizedContent = sanitizeHtml(content)
 
   const { rows } = await sql`
     INSERT INTO workspace_notes (id, workspace_id, content, last_edited_by)
-    VALUES (${id}, ${workspaceId}, ${content}, ${userId})
+    VALUES (${id}, ${workspaceId}, ${sanitizedContent}, ${userId})
     ON CONFLICT (workspace_id)
     DO UPDATE SET
       content = EXCLUDED.content,

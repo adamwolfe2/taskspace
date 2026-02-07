@@ -7,6 +7,7 @@
 
 import { sql } from "./sql"
 import { generateId } from "@/lib/auth/password"
+import { sanitizeText } from "@/lib/utils/sanitize"
 
 // ============================================
 // TYPES
@@ -346,12 +347,13 @@ export async function updateRockConfidence(
   notes?: string,
   workspaceId?: string
 ): Promise<Rock | null> {
+  const sanitizedNotes = notes ? sanitizeText(notes) : null
   if (workspaceId) {
     const { rows } = await sql`
       UPDATE rocks
       SET
         confidence = ${confidence},
-        confidence_notes = ${notes || null},
+        confidence_notes = ${sanitizedNotes},
         confidence_updated_at = NOW(),
         updated_at = NOW()
       WHERE id = ${rockId} AND workspace_id = ${workspaceId}
@@ -364,7 +366,7 @@ export async function updateRockConfidence(
     UPDATE rocks
     SET
       confidence = ${confidence},
-      confidence_notes = ${notes || null},
+      confidence_notes = ${sanitizedNotes},
       confidence_updated_at = NOW(),
       updated_at = NOW()
     WHERE id = ${rockId}
@@ -545,6 +547,7 @@ export async function createRockCheckin(params: {
 }): Promise<RockCheckin> {
   const id = "rc_" + generateId()
   const weekStart = params.weekStart || getWeekStart()
+  const sanitizedNotes = params.notes ? sanitizeText(params.notes) : null
 
   // Get current progress
   const rock = await getRockById(params.rockId)
@@ -552,11 +555,11 @@ export async function createRockCheckin(params: {
 
   const { rows } = await sql`
     INSERT INTO rock_checkins (id, rock_id, user_id, confidence, notes, progress_at_checkin, week_start)
-    VALUES (${id}, ${params.rockId}, ${params.userId || null}, ${params.confidence}, ${params.notes || null}, ${progress}, ${weekStart}::date)
+    VALUES (${id}, ${params.rockId}, ${params.userId || null}, ${params.confidence}, ${sanitizedNotes}, ${progress}, ${weekStart}::date)
     ON CONFLICT (rock_id, week_start)
     DO UPDATE SET
       confidence = ${params.confidence},
-      notes = ${params.notes || null},
+      notes = ${sanitizedNotes},
       progress_at_checkin = ${progress},
       user_id = ${params.userId || null}
     RETURNING *

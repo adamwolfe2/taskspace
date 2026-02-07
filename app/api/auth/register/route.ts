@@ -161,6 +161,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Enforce concurrent session limit (max 5 active sessions per user)
+    await db.sessions.enforceSessionLimit(userId, 5)
+
     // Create session
     const sessionToken = generateToken()
     const session: Session = {

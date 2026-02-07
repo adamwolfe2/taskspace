@@ -6,6 +6,7 @@
 
 import { sql } from "./sql"
 import { generateId } from "@/lib/auth/password"
+import { sanitizeDeep } from "@/lib/utils/sanitize"
 
 // ============================================
 // TYPES
@@ -70,14 +71,14 @@ export async function upsertVTO(
 ): Promise<VTODocument> {
   const id = "vto_" + generateId()
 
-  const coreValues = JSON.stringify(data.coreValues || [])
-  const coreFocus = JSON.stringify(data.coreFocus || {})
-  const tenYearTarget = JSON.stringify(data.tenYearTarget || {})
-  const marketingStrategy = JSON.stringify(data.marketingStrategy || {})
-  const threeYearPicture = JSON.stringify(data.threeYearPicture || {})
-  const oneYearPlan = JSON.stringify(data.oneYearPlan || {})
-  const quarterlyRocks = JSON.stringify(data.quarterlyRocks || [])
-  const issuesList = JSON.stringify(data.issuesList || [])
+  const coreValues = JSON.stringify(sanitizeDeep(data.coreValues || []))
+  const coreFocus = JSON.stringify(sanitizeDeep(data.coreFocus || {}))
+  const tenYearTarget = JSON.stringify(sanitizeDeep(data.tenYearTarget || {}))
+  const marketingStrategy = JSON.stringify(sanitizeDeep(data.marketingStrategy || {}))
+  const threeYearPicture = JSON.stringify(sanitizeDeep(data.threeYearPicture || {}))
+  const oneYearPlan = JSON.stringify(sanitizeDeep(data.oneYearPlan || {}))
+  const quarterlyRocks = JSON.stringify(sanitizeDeep(data.quarterlyRocks || []))
+  const issuesList = JSON.stringify(sanitizeDeep(data.issuesList || []))
 
   const { rows } = await sql`
     INSERT INTO vto_documents (id, workspace_id, core_values, core_focus, ten_year_target, marketing_strategy, three_year_picture, one_year_plan, quarterly_rocks, issues_list, last_edited_by)

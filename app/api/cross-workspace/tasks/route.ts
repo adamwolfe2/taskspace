@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { logger, logError } from "@/lib/logger"
 import { withAuth } from "@/lib/api/middleware"
+import { aiRateLimit, RATE_LIMITS } from "@/lib/api/rate-limit"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { crossWorkspaceTaskCreateSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
@@ -31,6 +32,15 @@ export const GET = withAuth(async (request, auth) => {
 // POST /api/cross-workspace/tasks - Create a cross-workspace task
 export const POST = withAuth(async (request, auth) => {
   try {
+    // Rate limit: 30 cross-workspace task operations per user per hour
+    const rateCheck = aiRateLimit(auth.user.id, 'cross-workspace-tasks', RATE_LIMITS.crossWorkspace.maxRequests, RATE_LIMITS.crossWorkspace.windowMs)
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Try again later." },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
+      )
+    }
+
     const {
       targetOrganizationId,
       title,

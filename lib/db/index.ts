@@ -1,4 +1,5 @@
 import { sql } from "./sql"
+import { sanitizeText } from "@/lib/utils/sanitize"
 import type {
   User,
   Organization,
@@ -683,6 +684,29 @@ export const db = {
       `
       return (rowCount ?? 0) > 0
     },
+    async cleanupExpiredSessions(): Promise<{ expired: number; inactive: number }> {
+      const { rowCount: expired } = await sql`DELETE FROM sessions WHERE expires_at < NOW()`
+      const { rowCount: inactive } = await sql`DELETE FROM sessions WHERE last_active_at < NOW() - INTERVAL '30 days'`
+      return { expired: expired ?? 0, inactive: inactive ?? 0 }
+    },
+    async enforceSessionLimit(userId: string, maxSessions: number = 5): Promise<number> {
+      const { rows: countRows } = await sql`SELECT COUNT(*) as count FROM sessions WHERE user_id = ${userId}`
+      const count = parseInt(countRows[0]?.count as string, 10) || 0
+      if (count <= maxSessions) return 0
+      const excess = count - maxSessions
+      const { rowCount } = await sql`
+        DELETE FROM sessions WHERE id IN (
+          SELECT id FROM sessions WHERE user_id = ${userId}
+          ORDER BY last_active_at ASC
+          LIMIT ${excess}
+        )
+      `
+      return rowCount ?? 0
+    },
+    async deleteOthersByUserAndToken(userId: string, currentToken: string): Promise<number> {
+      const { rowCount } = await sql`DELETE FROM sessions WHERE user_id = ${userId} AND token != ${currentToken}`
+      return rowCount ?? 0
+    },
   },
 
   // Invitations
@@ -803,26 +827,31 @@ export const db = {
       return rows.map(parseRock)
     },
     async create(rock: Rock): Promise<Rock> {
+      const sanitizedDescription = rock.description ? sanitizeText(rock.description) : rock.description
+      const sanitizedOutcome = rock.outcome ? sanitizeText(rock.outcome) : null
       await sql`
         INSERT INTO rocks (id, organization_id, user_id, owner_email, title, description, progress, due_date, status, bucket, outcome, done_when, quarter, created_at, updated_at)
-        VALUES (${rock.id}, ${rock.organizationId}, ${rock.userId || null}, ${rock.ownerEmail || null}, ${rock.title}, ${rock.description},
+        VALUES (${rock.id}, ${rock.organizationId}, ${rock.userId || null}, ${rock.ownerEmail || null}, ${sanitizeText(rock.title)}, ${sanitizedDescription},
                 ${rock.progress}, ${rock.dueDate}, ${rock.status}, ${rock.bucket || null},
-                ${rock.outcome || null}, ${JSON.stringify(rock.doneWhen || [])},
+                ${sanitizedOutcome}, ${JSON.stringify(rock.doneWhen || [])},
                 ${rock.quarter || null}, ${rock.createdAt}, ${rock.updatedAt})
       `
       return rock
     },
     async update(id: string, updates: Partial<Rock>): Promise<Rock | null> {
       const now = new Date().toISOString()
+      const sanitizedTitle = updates.title ? sanitizeText(updates.title) : null
+      const sanitizedDescription = updates.description ? sanitizeText(updates.description) : null
+      const sanitizedOutcome = updates.outcome ? sanitizeText(updates.outcome) : null
       const { rows } = await sql`
         UPDATE rocks SET
-          title = COALESCE(${updates.title || null}, title),
-          description = COALESCE(${updates.description || null}, description),
+          title = COALESCE(${sanitizedTitle}, title),
+          description = COALESCE(${sanitizedDescription}, description),
           progress = COALESCE(${updates.progress ?? null}, progress),
           due_date = COALESCE(${updates.dueDate || null}, due_date),
           status = COALESCE(${updates.status || null}, status),
           bucket = COALESCE(${updates.bucket || null}, bucket),
-          outcome = COALESCE(${updates.outcome || null}, outcome),
+          outcome = COALESCE(${sanitizedOutcome}, outcome),
           done_when = COALESCE(${updates.doneWhen ? JSON.stringify(updates.doneWhen) : null}::jsonb, done_when),
           quarter = COALESCE(${updates.quarter || null}, quarter),
           updated_at = ${now}
@@ -1078,11 +1107,12 @@ export const db = {
       return rows.map(parseAssignedTask)
     },
     async create(task: AssignedTask): Promise<AssignedTask> {
+      const sanitizedDescription = task.description ? sanitizeText(task.description) : null
       await sql`
         INSERT INTO assigned_tasks (id, organization_id, title, description, assignee_id, assignee_name,
           assigned_by_id, assigned_by_name, type, rock_id, rock_title, priority, due_date, status,
           completed_at, added_to_eod, eod_report_id, created_at, updated_at)
-        VALUES (${task.id}, ${task.organizationId}, ${task.title}, ${task.description || null},
+        VALUES (${task.id}, ${task.organizationId}, ${sanitizeText(task.title)}, ${sanitizedDescription},
                 ${task.assigneeId}, ${task.assigneeName}, ${task.assignedById}, ${task.assignedByName},
                 ${task.type}, ${task.rockId}, ${task.rockTitle}, ${task.priority}, ${task.dueDate},
                 ${task.status}, ${task.completedAt}, ${task.addedToEOD}, ${task.eodReportId},
@@ -1092,10 +1122,12 @@ export const db = {
     },
     async update(id: string, updates: Partial<AssignedTask>): Promise<AssignedTask | null> {
       const now = new Date().toISOString()
+      const sanitizedTitle = updates.title ? sanitizeText(updates.title) : null
+      const sanitizedDescription = updates.description ? sanitizeText(updates.description) : null
       const { rows } = await sql`
         UPDATE assigned_tasks SET
-          title = COALESCE(${updates.title || null}, title),
-          description = COALESCE(${updates.description || null}, description),
+          title = COALESCE(${sanitizedTitle}, title),
+          description = COALESCE(${sanitizedDescription}, description),
           priority = COALESCE(${updates.priority || null}, priority),
           due_date = COALESCE(${updates.dueDate || null}, due_date),
           status = COALESCE(${updates.status || null}, status),
@@ -1275,15 +1307,17 @@ export const db = {
       return rows[0] ? parseEODReport(rows[0]) : null
     },
     async create(report: EODReport): Promise<EODReport> {
+      const sanitizedChallenges = report.challenges ? sanitizeText(report.challenges) : report.challenges
+      const sanitizedEscalationNote = report.escalationNote ? sanitizeText(report.escalationNote) : report.escalationNote
       try {
         // Try with metric_value_today column (requires migration)
         await sql`
           INSERT INTO eod_reports (id, organization_id, user_id, date, tasks, challenges,
             tomorrow_priorities, needs_escalation, escalation_note, metric_value_today, submitted_at, created_at)
           VALUES (${report.id}, ${report.organizationId}, ${report.userId}, ${report.date},
-                  ${JSON.stringify(report.tasks)}, ${report.challenges},
+                  ${JSON.stringify(report.tasks)}, ${sanitizedChallenges},
                   ${JSON.stringify(report.tomorrowPriorities)}, ${report.needsEscalation},
-                  ${report.escalationNote}, ${report.metricValueToday}, ${report.submittedAt}, ${report.createdAt})
+                  ${sanitizedEscalationNote}, ${report.metricValueToday}, ${report.submittedAt}, ${report.createdAt})
         `
       } catch (err: unknown) {
         // Fallback if metric_value_today column doesn't exist (migration not run)
@@ -1293,9 +1327,9 @@ export const db = {
             INSERT INTO eod_reports (id, organization_id, user_id, date, tasks, challenges,
               tomorrow_priorities, needs_escalation, escalation_note, submitted_at, created_at)
             VALUES (${report.id}, ${report.organizationId}, ${report.userId}, ${report.date},
-                    ${JSON.stringify(report.tasks)}, ${report.challenges},
+                    ${JSON.stringify(report.tasks)}, ${sanitizedChallenges},
                     ${JSON.stringify(report.tomorrowPriorities)}, ${report.needsEscalation},
-                    ${report.escalationNote}, ${report.submittedAt}, ${report.createdAt})
+                    ${sanitizedEscalationNote}, ${report.submittedAt}, ${report.createdAt})
           `
         } else {
           throw err
@@ -1304,15 +1338,17 @@ export const db = {
       return report
     },
     async update(id: string, updates: Partial<EODReport>): Promise<EODReport | null> {
+      const sanitizedChallenges = updates.challenges ? sanitizeText(updates.challenges) : (updates.challenges || null)
+      const sanitizedEscalationNote = updates.escalationNote ? sanitizeText(updates.escalationNote) : (updates.escalationNote || null)
       try {
         // Try with metric_value_today and date columns (supports date changes)
         const { rows } = await sql`
           UPDATE eod_reports SET
             tasks = COALESCE(${updates.tasks ? JSON.stringify(updates.tasks) : null}::jsonb, tasks),
-            challenges = COALESCE(${updates.challenges || null}, challenges),
+            challenges = COALESCE(${sanitizedChallenges}, challenges),
             tomorrow_priorities = COALESCE(${updates.tomorrowPriorities ? JSON.stringify(updates.tomorrowPriorities) : null}::jsonb, tomorrow_priorities),
             needs_escalation = COALESCE(${updates.needsEscalation ?? null}, needs_escalation),
-            escalation_note = COALESCE(${updates.escalationNote || null}, escalation_note),
+            escalation_note = COALESCE(${sanitizedEscalationNote}, escalation_note),
             metric_value_today = COALESCE(${updates.metricValueToday ?? null}, metric_value_today),
             date = COALESCE(${updates.date || null}, date),
             submitted_at = COALESCE(${updates.submittedAt || null}, submitted_at)
@@ -1327,10 +1363,10 @@ export const db = {
           const { rows } = await sql`
             UPDATE eod_reports SET
               tasks = COALESCE(${updates.tasks ? JSON.stringify(updates.tasks) : null}::jsonb, tasks),
-              challenges = COALESCE(${updates.challenges || null}, challenges),
+              challenges = COALESCE(${sanitizedChallenges}, challenges),
               tomorrow_priorities = COALESCE(${updates.tomorrowPriorities ? JSON.stringify(updates.tomorrowPriorities) : null}::jsonb, tomorrow_priorities),
               needs_escalation = COALESCE(${updates.needsEscalation ?? null}, needs_escalation),
-              escalation_note = COALESCE(${updates.escalationNote || null}, escalation_note),
+              escalation_note = COALESCE(${sanitizedEscalationNote}, escalation_note),
               date = COALESCE(${updates.date || null}, date),
               submitted_at = COALESCE(${updates.submittedAt || null}, submitted_at)
             WHERE id = ${id}

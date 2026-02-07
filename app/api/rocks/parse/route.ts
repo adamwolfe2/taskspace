@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
+import { aiRateLimit } from "@/lib/api/rate-limit"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { rockParseSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
@@ -34,6 +35,15 @@ const MODEL = "claude-sonnet-4-20250514"
  */
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
+    // Rate limit: 20 rock parse requests per user per hour
+    const rateCheck = aiRateLimit(auth.user.id, 'rocks-parse')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Try again later." },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
+      )
+    }
+
     const { text } = await validateBody(request, rockParseSchema)
 
     // Check for Anthropic API key

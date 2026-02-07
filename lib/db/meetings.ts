@@ -7,6 +7,7 @@
 
 import { sql } from "./sql"
 import { generateId } from "@/lib/auth/password"
+import { sanitizeText } from "@/lib/utils/sanitize"
 
 // ============================================
 // TYPES
@@ -381,11 +382,15 @@ export async function updateMeeting(
 
   if (updateParts.length === 0) return meeting
 
+  const sanitizedTitle = updates.title ? sanitizeText(updates.title as string) : meeting.title
+  const sanitizedNotes = updates.notes !== undefined
+    ? (updates.notes ? sanitizeText(updates.notes as string) : updates.notes as string | null)
+    : (meeting.notes ?? null)
   const { rows } = await sql`
     UPDATE meetings
     SET
-      title = ${(updates.title as string | undefined) ?? meeting.title},
-      notes = ${(updates.notes as string | undefined | null) ?? meeting.notes ?? null},
+      title = ${sanitizedTitle},
+      notes = ${sanitizedNotes},
       attendees = ${updates.attendees ? JSON.stringify(updates.attendees) : JSON.stringify(meeting.attendees)}::jsonb
     WHERE id = ${meetingId}
     RETURNING *
@@ -560,6 +565,7 @@ export async function endMeeting(
   rating?: number,
   notes?: string
 ): Promise<Meeting> {
+  const sanitizedNotes = notes ? sanitizeText(notes) : null
   const { rows } = await sql`
     UPDATE meetings
     SET
@@ -567,7 +573,7 @@ export async function endMeeting(
       ended_at = NOW(),
       duration_minutes = EXTRACT(EPOCH FROM (NOW() - started_at)) / 60,
       rating = ${rating || null},
-      notes = ${notes || null}
+      notes = ${sanitizedNotes}
     WHERE id = ${meetingId}
     RETURNING *
   `
@@ -687,9 +693,12 @@ export async function createIssue(params: CreateIssueParams): Promise<Issue> {
     createdBy,
   } = params
 
+  const sanitizedTitle = sanitizeText(title)
+  const sanitizedDescription = description ? sanitizeText(description) : null
+
   const { rows } = await sql`
     INSERT INTO issues (id, workspace_id, title, description, priority, source_type, source_id, owner_id, created_by)
-    VALUES (${id}, ${workspaceId}, ${title}, ${description || null}, ${priority}, ${sourceType || null}, ${sourceId || null}, ${ownerId || null}, ${createdBy || null})
+    VALUES (${id}, ${workspaceId}, ${sanitizedTitle}, ${sanitizedDescription}, ${priority}, ${sourceType || null}, ${sourceId || null}, ${ownerId || null}, ${createdBy || null})
     RETURNING *
   `
 
@@ -818,11 +827,15 @@ export async function updateIssue(
   const issue = await getIssueById(issueId)
   if (!issue) return null
 
+  const sanitizedTitle = updates.title ? sanitizeText(updates.title) : issue.title
+  const sanitizedDescription = updates.description !== undefined
+    ? (updates.description ? sanitizeText(updates.description) : null)
+    : (issue.description ?? null)
   const { rows } = await sql`
     UPDATE issues
     SET
-      title = ${updates.title ?? issue.title},
-      description = ${updates.description ?? issue.description ?? null},
+      title = ${sanitizedTitle},
+      description = ${sanitizedDescription},
       priority = ${updates.priority ?? issue.priority},
       status = ${updates.status ?? issue.status},
       owner_id = ${updates.ownerId ?? issue.ownerId ?? null}
@@ -841,9 +854,10 @@ export async function resolveIssue(
   issueId: string,
   resolution?: string
 ): Promise<Issue | null> {
+  const sanitizedResolution = resolution ? sanitizeText(resolution) : null
   const { rows } = await sql`
     UPDATE issues
-    SET status = 'resolved', resolved_at = NOW(), resolution = ${resolution || null}
+    SET status = 'resolved', resolved_at = NOW(), resolution = ${sanitizedResolution}
     WHERE id = ${issueId}
     RETURNING *
   `
@@ -962,7 +976,7 @@ export async function createMeetingTodo(params: CreateTodoParams): Promise<Meeti
 
   const { rows } = await sql`
     INSERT INTO meeting_todos (id, meeting_id, issue_id, title, assignee_id, due_date)
-    VALUES (${id}, ${meetingId}, ${issueId || null}, ${title}, ${assigneeId || null}, ${dueDate || null}::date)
+    VALUES (${id}, ${meetingId}, ${issueId || null}, ${sanitizeText(title)}, ${assigneeId || null}, ${dueDate || null}::date)
     RETURNING *
   `
 

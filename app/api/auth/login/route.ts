@@ -104,8 +104,17 @@ export async function POST(request: NextRequest) {
 
     const now = new Date().toISOString()
 
+    // Session rotation: delete old session if one exists from the current cookie
+    const existingToken = request.cookies.get("session_token")?.value
+    if (existingToken) {
+      await db.sessions.deleteByToken(existingToken)
+    }
+
     // Update user's last login
     await db.users.update(user.id, { lastLoginAt: now })
+
+    // Enforce concurrent session limit (max 5 active sessions per user)
+    await db.sessions.enforceSessionLimit(user.id, 5)
 
     // Create new session
     const sessionToken = generateToken()

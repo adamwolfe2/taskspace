@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { withAdmin } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
+import { aiRateLimit, RATE_LIMITS } from "@/lib/api/rate-limit"
 import type { Rock, ApiResponse } from "@/lib/types"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { bulkRockCreateSchema } from "@/lib/validation/schemas"
@@ -34,6 +35,15 @@ interface BulkCreateResponse {
  */
 export const POST = withAdmin(async (request, auth) => {
   try {
+    // Rate limit: 10 bulk rock operations per user per hour
+    const rateCheck = aiRateLimit(auth.user.id, 'rocks-bulk', RATE_LIMITS.bulk.maxRequests, RATE_LIMITS.bulk.windowMs)
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Try again later." },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
+      )
+    }
+
     const { rocks, userId, metrics, workspaceId } = await validateBody(request, bulkRockCreateSchema)
 
     // Validate workspace if provided
