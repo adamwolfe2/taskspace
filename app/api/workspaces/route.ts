@@ -24,6 +24,7 @@ import {
 } from "@/lib/db/workspaces"
 import { canCreateWorkspace, buildFeatureGateContext } from "@/lib/billing/feature-gates"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import { logger, logError } from "@/lib/logger"
 
 /**
@@ -34,6 +35,91 @@ import { logger, logError } from "@/lib/logger"
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
     const workspaces = await getUserWorkspaces(auth.user.id)
+
+    // Auto-heal: check for orphaned data with NULL workspace_id and migrate it
+    if (workspaces.length > 0) {
+      const defaultWorkspace = workspaces.find((w) => w.isDefault) || workspaces[0]
+
+      try {
+        // Quick check: are there any orphaned records for this org?
+        const orphanCheck = await sql`
+          SELECT EXISTS(
+            SELECT 1 FROM assigned_tasks
+            WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+            LIMIT 1
+          ) AS has_orphaned_tasks,
+          EXISTS(
+            SELECT 1 FROM rocks
+            WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+            LIMIT 1
+          ) AS has_orphaned_rocks,
+          EXISTS(
+            SELECT 1 FROM eod_reports
+            WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+            LIMIT 1
+          ) AS has_orphaned_eod
+        `
+
+        const row = orphanCheck.rows[0]
+        const hasOrphans = row?.has_orphaned_tasks || row?.has_orphaned_rocks || row?.has_orphaned_eod
+
+        if (hasOrphans) {
+          const targetId = defaultWorkspace.id
+
+          // Migrate all orphaned org-based records
+          await sql`
+            UPDATE assigned_tasks SET workspace_id = ${targetId}
+            WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+          `
+          await sql`
+            UPDATE rocks SET workspace_id = ${targetId}
+            WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+          `
+          await sql`
+            UPDATE eod_reports SET workspace_id = ${targetId}
+            WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+          `
+          await sql`
+            UPDATE meetings SET workspace_id = ${targetId}
+            WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+          `
+
+          // Migrate user-based records
+          await sql`
+            UPDATE focus_blocks SET workspace_id = ${targetId}
+            WHERE user_id IN (
+              SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+            ) AND workspace_id IS NULL
+          `
+          await sql`
+            UPDATE daily_energy SET workspace_id = ${targetId}
+            WHERE user_id IN (
+              SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+            ) AND workspace_id IS NULL
+          `
+          await sql`
+            UPDATE user_streaks SET workspace_id = ${targetId}
+            WHERE user_id IN (
+              SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+            ) AND workspace_id IS NULL
+          `
+          await sql`
+            UPDATE focus_score_history SET workspace_id = ${targetId}
+            WHERE user_id IN (
+              SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+            ) AND workspace_id IS NULL
+          `
+
+          logger.info({
+            organizationId: auth.organization.id,
+            workspaceId: targetId,
+          }, "Auto-healed orphaned data during workspace list fetch")
+        }
+      } catch (healError) {
+        // Non-fatal: log but don't fail the workspace list request
+        logError(logger, "Auto-heal check failed (non-fatal)", healError)
+      }
+    }
 
     return NextResponse.json<ApiResponse<WorkspaceWithMemberInfo[]>>({
       success: true,

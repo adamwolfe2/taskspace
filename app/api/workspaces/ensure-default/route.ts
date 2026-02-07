@@ -26,11 +26,96 @@ export const POST = withAuth(async (request, auth) => {
 
     if (existingWorkspaces.length > 0) {
       // Organization already has workspaces
-      const defaultWorkspace = existingWorkspaces.find(w => w.isDefault)
-      return NextResponse.json<ApiResponse<{ workspace: typeof defaultWorkspace }>>({
+      const defaultWorkspace = existingWorkspaces.find(w => w.isDefault) || existingWorkspaces[0]
+      const targetWorkspaceId = String(defaultWorkspace.id)
+
+      // Auto-heal: migrate any orphaned data with NULL workspace_id
+      let healedRecords = 0
+      try {
+        const tasksResult = await sql`
+          UPDATE assigned_tasks SET workspace_id = ${targetWorkspaceId}
+          WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+          RETURNING id
+        `
+        healedRecords += tasksResult.rows.length
+
+        const rocksResult = await sql`
+          UPDATE rocks SET workspace_id = ${targetWorkspaceId}
+          WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+          RETURNING id
+        `
+        healedRecords += rocksResult.rows.length
+
+        const eodResult = await sql`
+          UPDATE eod_reports SET workspace_id = ${targetWorkspaceId}
+          WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+          RETURNING id
+        `
+        healedRecords += eodResult.rows.length
+
+        const meetingsResult = await sql`
+          UPDATE meetings SET workspace_id = ${targetWorkspaceId}
+          WHERE organization_id = ${auth.organization.id} AND workspace_id IS NULL
+          RETURNING id
+        `
+        healedRecords += meetingsResult.rows.length
+
+        const focusBlocksResult = await sql`
+          UPDATE focus_blocks SET workspace_id = ${targetWorkspaceId}
+          WHERE user_id IN (
+            SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+          ) AND workspace_id IS NULL
+          RETURNING id
+        `
+        healedRecords += focusBlocksResult.rows.length
+
+        const energyResult = await sql`
+          UPDATE daily_energy SET workspace_id = ${targetWorkspaceId}
+          WHERE user_id IN (
+            SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+          ) AND workspace_id IS NULL
+          RETURNING id
+        `
+        healedRecords += energyResult.rows.length
+
+        const streaksResult = await sql`
+          UPDATE user_streaks SET workspace_id = ${targetWorkspaceId}
+          WHERE user_id IN (
+            SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+          ) AND workspace_id IS NULL
+          RETURNING id
+        `
+        healedRecords += streaksResult.rows.length
+
+        const focusScoreResult = await sql`
+          UPDATE focus_score_history SET workspace_id = ${targetWorkspaceId}
+          WHERE user_id IN (
+            SELECT user_id FROM organization_members WHERE organization_id = ${auth.organization.id}
+          ) AND workspace_id IS NULL
+          RETURNING id
+        `
+        healedRecords += focusScoreResult.rows.length
+
+        if (healedRecords > 0) {
+          logger.info({
+            organizationId: auth.organization.id,
+            workspaceId: targetWorkspaceId,
+            recordCount: healedRecords,
+          }, "Auto-healed orphaned data with NULL workspace_id")
+        }
+      } catch (healError) {
+        logger.error({
+          error: healError,
+          workspaceId: targetWorkspaceId,
+        }, "Auto-heal migration failed (non-fatal)")
+      }
+
+      return NextResponse.json<ApiResponse<{ workspace: typeof defaultWorkspace; dataHealed: number }>>({
         success: true,
-        data: { workspace: defaultWorkspace || existingWorkspaces[0] },
-        message: "Organization already has workspaces",
+        data: { workspace: defaultWorkspace, dataHealed: healedRecords },
+        message: healedRecords > 0
+          ? `Organization already has workspaces. Auto-healed ${healedRecords} orphaned records.`
+          : "Organization already has workspaces",
       })
     }
 
