@@ -7,6 +7,7 @@
  */
 
 import { sql } from "../db/sql"
+import { logger as appLogger } from "../logger"
 
 // ============================================
 // AUDIT LOG TYPES
@@ -170,7 +171,7 @@ class AuditLogger {
         timestamp: entry.timestamp || new Date().toISOString(),
       })
     } catch (error) {
-      console.error("Failed to write immediate audit log:", error)
+      appLogger.error({ error: String(error) }, "Failed to write immediate audit log")
       // Fall back to queue
       this.queue.push(entry)
     }
@@ -188,7 +189,7 @@ class AuditLogger {
     try {
       await Promise.all(entries.map((entry) => this.insertLog(entry)))
     } catch (error) {
-      console.error("Failed to flush audit logs:", error)
+      appLogger.error({ error: String(error) }, "Failed to flush audit logs")
       // Re-queue failed entries
       this.queue.unshift(...entries)
     }
@@ -225,8 +226,8 @@ class AuditLogger {
         )
       `
     } catch (error) {
-      // If table doesn't exist yet, log to console
-      console.error("Audit log entry:", JSON.stringify(entry))
+      // If table doesn't exist yet, log via logger
+      appLogger.error({ entry: JSON.stringify(entry) }, "Audit log insert failed")
     }
   }
 
@@ -323,7 +324,7 @@ class AuditLogger {
         timestamp: row.created_at,
       }))
     } catch (error) {
-      console.error("Failed to query audit logs:", error)
+      appLogger.error({ error: String(error) }, "Failed to query audit logs")
       return []
     }
   }
@@ -331,7 +332,7 @@ class AuditLogger {
   private startFlushInterval(): void {
     if (typeof setInterval !== "undefined") {
       this.flushInterval = setInterval(() => {
-        this.flush().catch(console.error)
+        this.flush().catch((err) => appLogger.error({ error: String(err) }, "Audit log flush failed"))
       }, this.flushIntervalMs)
     }
   }

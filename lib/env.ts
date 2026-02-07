@@ -268,14 +268,15 @@ export function assertEnv(): void {
       "Please add these to your .env or .env.local file.",
     ].join("\n")
 
-    console.error(errorMessage)
+    // Use stderr directly since logger may not be initialized yet
+    process.stderr?.write?.(errorMessage + "\n")
     throw new Error(`Environment validation failed: ${result.errors.join(", ")}`)
   }
 
   // Log warnings in development
   if (process.env.NODE_ENV === "development" && result.warnings.length > 0) {
-    console.warn("⚠️ Environment warnings:")
-    result.warnings.forEach((w) => console.warn(`  • ${w}`))
+    process.stderr?.write?.("Environment warnings:\n")
+    result.warnings.forEach((w) => process.stderr?.write?.(`  - ${w}\n`))
   }
 }
 
