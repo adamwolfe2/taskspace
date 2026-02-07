@@ -2,11 +2,11 @@
  * HTML Sanitization Utilities
  *
  * Defense-in-depth sanitization for user-provided content.
- * Uses DOMPurify (via isomorphic-dompurify) to strip dangerous HTML
+ * Uses sanitize-html (pure JS, no jsdom dependency) to strip dangerous HTML
  * tags and attributes before data reaches the database.
  */
 
-import DOMPurify from "isomorphic-dompurify"
+import sanitize from "sanitize-html"
 
 /**
  * Sanitizes HTML content, preserving safe formatting tags.
@@ -14,8 +14,8 @@ import DOMPurify from "isomorphic-dompurify"
  */
 export function sanitizeHtml(input: string): string {
   if (!input) return input
-  return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [
+  return sanitize(input, {
+    allowedTags: [
       "b", "i", "em", "strong", "p", "br",
       "ul", "ol", "li", "a",
       "h1", "h2", "h3", "h4", "h5", "h6",
@@ -23,20 +23,20 @@ export function sanitizeHtml(input: string): string {
       "table", "thead", "tbody", "tr", "th", "td",
       "hr", "sub", "sup", "s", "u",
     ],
-    ALLOWED_ATTR: ["href", "target", "rel", "class"],
-    ADD_ATTR: ["rel"],
-    FORCE_BODY: true,
-    // Force all links to have rel=noopener for security
-    WHOLE_DOCUMENT: false,
-  }).replace(
-    /<a\s([^>]*?)>/g,
-    (match, attrs: string) => {
-      if (!attrs.includes("rel=")) {
-        return `<a ${attrs} rel="noopener noreferrer">`
-      }
-      return match.replace(/rel="[^"]*"/, 'rel="noopener noreferrer"')
-    }
-  )
+    allowedAttributes: {
+      a: ["href", "target", "rel"],
+      "*": ["class"],
+    },
+    transformTags: {
+      a: (tagName, attribs) => ({
+        tagName,
+        attribs: {
+          ...attribs,
+          rel: "noopener noreferrer",
+        },
+      }),
+    },
+  })
 }
 
 /**
@@ -45,9 +45,9 @@ export function sanitizeHtml(input: string): string {
  */
 export function sanitizeText(input: string): string {
   if (!input) return input
-  return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
+  return sanitize(input, {
+    allowedTags: [],
+    allowedAttributes: {},
   })
 }
 
