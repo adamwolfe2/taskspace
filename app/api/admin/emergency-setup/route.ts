@@ -74,18 +74,12 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       }
     }
 
-    // Step 3: Add workspace_id columns to existing tables (only if tables exist)
-    // SECURITY: Whitelist of allowed table names to prevent SQL injection
-    const ALLOWED_TABLES = ["rocks", "assigned_tasks", "eod_reports", "meetings", "focus_blocks", "daily_energy", "user_streaks", "focus_score_history"] as const
-    const tables = ["rocks", "assigned_tasks", "eod_reports", "meetings", "focus_blocks", "daily_energy", "user_streaks", "focus_score_history"]
+    // Step 3: Add workspace_id columns to existing tables
+    // Use sql.query() for dynamic table names (tagged templates don't support dynamic identifiers)
+    const tables = ["rocks", "assigned_tasks", "eod_reports", "meetings", "focus_blocks", "daily_energy", "user_streaks", "focus_score_history"] as const
 
     for (const table of tables) {
       try {
-        // Validate table name against whitelist
-        if (!ALLOWED_TABLES.includes(table as typeof ALLOWED_TABLES[number])) {
-          throw new Error(`Invalid table name: ${table}`)
-        }
-
         // First check if table exists
         const { rows: tableCheck } = await sql`
           SELECT EXISTS (
@@ -100,17 +94,28 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           continue
         }
 
-        // SECURITY: Table name validated against whitelist, safe to use in dynamic SQL
-        // @ts-expect-error - Dynamic table name after whitelist validation
-        await sql([`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS workspace_id VARCHAR(255) REFERENCES workspaces(id) ON DELETE SET NULL`])
-        steps.push(`✓ Added workspace_id to ${table}`)
+        // Check if column already exists
+        const { rows: columnCheck } = await sql`
+          SELECT EXISTS (
+            SELECT FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = ${table}
+            AND column_name = 'workspace_id'
+          )
+        `
+
+        if (columnCheck[0]?.exists) {
+          steps.push(`✓ ${table}: workspace_id already exists`)
+        } else {
+          // Use sql.query() for dynamic DDL — table name is from hardcoded whitelist above
+          await (sql as unknown as { query: (q: string) => Promise<unknown> }).query(
+            `ALTER TABLE ${table} ADD COLUMN workspace_id VARCHAR(255) REFERENCES workspaces(id) ON DELETE SET NULL`
+          )
+          steps.push(`✓ Added workspace_id to ${table}`)
+        }
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error)
-        if (msg.includes("already exists")) {
-          steps.push(`⚠ ${table}: workspace_id already exists`)
-        } else {
-          steps.push(`⚠ ${table}: ${msg.substring(0, 100)}`)
-        }
+        steps.push(`⚠ ${table}: ${msg.substring(0, 100)}`)
       }
     }
 
@@ -168,81 +173,94 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     // Step 6: Migrate data (only from tables that exist)
     let migratedRecords = 0
 
-    // Helper function to safely migrate a table
-    // SECURITY: Whitelist of allowed table names for migration
-    const MIGRATION_ALLOWED_TABLES = ["rocks", "assigned_tasks", "eod_reports", "meetings", "focus_blocks", "daily_energy", "user_streaks", "focus_score_history"] as const
+    // Use the proper tagged template for each known table — no dynamic SQL needed
+    // This is the correct approach: each migration is a known, static query
 
-    const migrateTable = async (tableName: string, isUserBased: boolean) => {
-      try {
-        // Validate table name against whitelist
-        if (!MIGRATION_ALLOWED_TABLES.includes(tableName as typeof MIGRATION_ALLOWED_TABLES[number])) {
-          throw new Error(`Invalid table name for migration: ${tableName}`)
-        }
+    // Migrate org-based tables (have organization_id column)
+    try {
+      const r = await sql`
+        UPDATE rocks SET workspace_id = ${workspaceId}
+        WHERE organization_id = ${orgId} AND workspace_id IS NULL
+      `
+      const count = r.rowCount || 0
+      migratedRecords += count
+      steps.push(`✓ Migrated ${count} rocks`)
+    } catch (e) { steps.push(`⚠ rocks migration: ${e instanceof Error ? e.message.substring(0, 80) : String(e)}`) }
 
-        // Check if table exists
-        const { rows: tableCheck } = await sql`
-          SELECT EXISTS (
-            SELECT FROM information_schema.tables
-            WHERE table_schema = 'public'
-            AND table_name = ${tableName}
-          )
-        `
+    try {
+      const r = await sql`
+        UPDATE assigned_tasks SET workspace_id = ${workspaceId}
+        WHERE organization_id = ${orgId} AND workspace_id IS NULL
+      `
+      const count = r.rowCount || 0
+      migratedRecords += count
+      steps.push(`✓ Migrated ${count} assigned_tasks`)
+    } catch (e) { steps.push(`⚠ assigned_tasks migration: ${e instanceof Error ? e.message.substring(0, 80) : String(e)}`) }
 
-        if (!tableCheck[0]?.exists) {
-          return 0
-        }
+    try {
+      const r = await sql`
+        UPDATE eod_reports SET workspace_id = ${workspaceId}
+        WHERE organization_id = ${orgId} AND workspace_id IS NULL
+      `
+      const count = r.rowCount || 0
+      migratedRecords += count
+      steps.push(`✓ Migrated ${count} eod_reports`)
+    } catch (e) { steps.push(`⚠ eod_reports migration: ${e instanceof Error ? e.message.substring(0, 80) : String(e)}`) }
 
-        // Check if workspace_id column exists
-        const { rows: columnCheck } = await sql`
-          SELECT EXISTS (
-            SELECT FROM information_schema.columns
-            WHERE table_schema = 'public'
-            AND table_name = ${tableName}
-            AND column_name = 'workspace_id'
-          )
-        `
+    try {
+      const r = await sql`
+        UPDATE meetings SET workspace_id = ${workspaceId}
+        WHERE organization_id = ${orgId} AND workspace_id IS NULL
+      `
+      const count = r.rowCount || 0
+      migratedRecords += count
+      steps.push(`✓ Migrated ${count} meetings`)
+    } catch (e) { steps.push(`⚠ meetings migration: ${e instanceof Error ? e.message.substring(0, 80) : String(e)}`) }
 
-        if (!columnCheck[0]?.exists) {
-          return 0
-        }
+    // Migrate user-based tables (linked via organization_members)
+    try {
+      const r = await sql`
+        UPDATE focus_blocks SET workspace_id = ${workspaceId}
+        WHERE user_id IN (SELECT user_id FROM organization_members WHERE organization_id = ${orgId})
+        AND workspace_id IS NULL
+      `
+      const count = r.rowCount || 0
+      migratedRecords += count
+      steps.push(`✓ Migrated ${count} focus_blocks`)
+    } catch (e) { steps.push(`⚠ focus_blocks migration: ${e instanceof Error ? e.message.substring(0, 80) : String(e)}`) }
 
-        // SECURITY: Table name validated against whitelist, safe to use in dynamic SQL
-        // Values (workspaceId, orgId) are still parameterized for security
-        let result
-        if (isUserBased) {
-          // @ts-expect-error - Dynamic table name after whitelist validation
-          result = await sql([
-            `UPDATE ${tableName} SET workspace_id = `,
-            ` WHERE user_id IN (SELECT user_id FROM organization_members WHERE organization_id = `,
-            `) AND workspace_id IS NULL`,
-          ], workspaceId, orgId)
-        } else {
-          // @ts-expect-error - Dynamic table name after whitelist validation
-          result = await sql([
-            `UPDATE ${tableName} SET workspace_id = `,
-            ` WHERE organization_id = `,
-            ` AND workspace_id IS NULL`,
-          ], workspaceId, orgId)
-        }
+    try {
+      const r = await sql`
+        UPDATE daily_energy SET workspace_id = ${workspaceId}
+        WHERE user_id IN (SELECT user_id FROM organization_members WHERE organization_id = ${orgId})
+        AND workspace_id IS NULL
+      `
+      const count = r.rowCount || 0
+      migratedRecords += count
+      steps.push(`✓ Migrated ${count} daily_energy`)
+    } catch (e) { steps.push(`⚠ daily_energy migration: ${e instanceof Error ? e.message.substring(0, 80) : String(e)}`) }
 
-        return result.rowCount || 0
-      } catch (error) {
-        logger.error({ error }, `Failed to migrate ${tableName}`)
-        return 0
-      }
-    }
+    try {
+      const r = await sql`
+        UPDATE user_streaks SET workspace_id = ${workspaceId}
+        WHERE user_id IN (SELECT user_id FROM organization_members WHERE organization_id = ${orgId})
+        AND workspace_id IS NULL
+      `
+      const count = r.rowCount || 0
+      migratedRecords += count
+      steps.push(`✓ Migrated ${count} user_streaks`)
+    } catch (e) { steps.push(`⚠ user_streaks migration: ${e instanceof Error ? e.message.substring(0, 80) : String(e)}`) }
 
-    // Migrate org-based tables
-    migratedRecords += await migrateTable('assigned_tasks', false)
-    migratedRecords += await migrateTable('rocks', false)
-    migratedRecords += await migrateTable('eod_reports', false)
-    migratedRecords += await migrateTable('meetings', false)
-
-    // Migrate user-based tables
-    migratedRecords += await migrateTable('focus_blocks', true)
-    migratedRecords += await migrateTable('daily_energy', true)
-    migratedRecords += await migrateTable('user_streaks', true)
-    migratedRecords += await migrateTable('focus_score_history', true)
+    try {
+      const r = await sql`
+        UPDATE focus_score_history SET workspace_id = ${workspaceId}
+        WHERE user_id IN (SELECT user_id FROM organization_members WHERE organization_id = ${orgId})
+        AND workspace_id IS NULL
+      `
+      const count = r.rowCount || 0
+      migratedRecords += count
+      steps.push(`✓ Migrated ${count} focus_score_history`)
+    } catch (e) { steps.push(`⚠ focus_score_history migration: ${e instanceof Error ? e.message.substring(0, 80) : String(e)}`) }
 
     steps.push(`✓ Migrated ${migratedRecords} total records`)
     logger.info(`✓ Migrated ${migratedRecords} records`)
