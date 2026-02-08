@@ -361,6 +361,29 @@ RULES:
 - Note anything that was deferred or needs follow-up`
 
 // Export all prompts
+const BRAND_EXTRACTOR_PROMPT = `You are a brand identity expert. Given the content of a website, identify the company's brand colors.
+
+RULES:
+- Return EXACTLY 3 hex color codes: primary, secondary, and accent
+- Primary = the main brand color (logo color, main CTA buttons, key UI elements)
+- Secondary = a supporting brand color (often used for headings, secondary buttons, or hover states)
+- Accent = a highlight/accent color (used for badges, links, or decorative elements)
+- Colors MUST be vibrant and representative of the actual brand identity
+- Do NOT return generic/default colors like pure black (#000000), pure white (#ffffff), or generic grays
+- Do NOT return CSS utility colors (dark backgrounds, text colors) unless they ARE the brand color
+- If the site uses a dark theme, the brand color is still the accent/highlight color, not the background
+- Look at: logo description, button colors mentioned, gradient colors, link colors, brand keywords
+- If you can identify the company (e.g. Raycast = red, Stripe = purple, Slack = purple/green), use your knowledge of their actual brand colors
+- All values must be valid 6-digit hex codes starting with #
+
+Return ONLY a JSON object, no explanation:
+{
+  "primary": "#hex",
+  "secondary": "#hex",
+  "accent": "#hex",
+  "confidence": "high" | "medium" | "low"
+}`
+
 export const PROMPTS = {
   teamContext: TEAM_CONTEXT,
   brainDumpParser: BRAIN_DUMP_PARSER_PROMPT,
@@ -373,4 +396,5 @@ export const PROMPTS = {
   taskPrioritizer: TASK_PRIORITIZER_PROMPT,
   managerInsights: MANAGER_INSIGHTS_PROMPT,
   meetingNotesSummary: MEETING_NOTES_SUMMARY_PROMPT,
+  brandExtractor: BRAND_EXTRACTOR_PROMPT,
 }

@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { withUserAuth } from "@/lib/api/middleware"
 import { scrapeWebsite, FirecrawlError } from "@/lib/integrations/firecrawl"
 import { extractBrandData, type BrandExtractionResult } from "@/lib/utils/brand-extractor"
+import { extractBrandColors } from "@/lib/ai/claude-client"
 import { aiRateLimit, RATE_LIMITS } from "@/lib/api/rate-limit"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { firecrawlScrapeSchema } from "@/lib/validation/schemas"
@@ -109,8 +110,29 @@ export const POST = withUserAuth(async (request: NextRequest, auth) => {
 
     const scrapeResult = await scrapeWebsite(validatedUrl, SCRAPE_TIMEOUT_MS)
 
-    // Extract brand data from the scraped content
+    // Extract brand data from the scraped content (regex-based)
     const brandResult: BrandExtractionResult = extractBrandData(scrapeResult, validatedUrl)
+
+    // Use AI to extract brand colors (much more reliable than regex for modern sites)
+    const markdown = scrapeResult.markdown || ""
+    if (markdown) {
+      const aiColors = await extractBrandColors(
+        markdown,
+        validatedUrl,
+        brandResult.brand.companyName
+      )
+      if (aiColors) {
+        brandResult.brand.colors = {
+          primary: aiColors.primary,
+          secondary: aiColors.secondary,
+          accent: aiColors.accent,
+        }
+        logger.info(
+          { url: validatedUrl, colors: aiColors },
+          "Firecrawl scrape: AI color extraction succeeded"
+        )
+      }
+    }
 
     logger.info(
       {

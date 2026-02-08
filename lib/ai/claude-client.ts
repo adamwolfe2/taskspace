@@ -650,6 +650,62 @@ export async function generateMeetingNotesSummary(meetingData: {
 }
 
 /**
+ * Extract brand colors from website content using AI
+ * Much more reliable than regex-based CSS parsing for modern sites
+ */
+export async function extractBrandColors(
+  markdown: string,
+  url: string,
+  companyName?: string | null
+): Promise<{ primary: string; secondary: string; accent: string; confidence: string } | null> {
+  try {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return null
+    }
+
+    // Truncate markdown to save tokens (first 3000 chars is enough for brand signals)
+    const truncated = markdown.length > 3000 ? markdown.substring(0, 3000) + "\n...[truncated]" : markdown
+
+    const userMessage = `Website URL: ${url}
+${companyName ? `Company Name: ${companyName}` : ""}
+
+Website content:
+${truncated}
+
+Identify the brand colors for this company. Return JSON only.`
+
+    const { result } = await callClaudeJSONWithUsage<{
+      primary: string
+      secondary: string
+      accent: string
+      confidence: string
+    }>(PROMPTS.brandExtractor, userMessage, {
+      maxTokens: 200,
+      temperature: 0.2,
+    })
+
+    // Validate hex codes
+    const hexPattern = /^#[0-9a-fA-F]{6}$/
+    if (
+      hexPattern.test(result.primary) &&
+      hexPattern.test(result.secondary) &&
+      hexPattern.test(result.accent)
+    ) {
+      return result
+    }
+
+    logger.warn({ url, result }, "AI brand extraction returned invalid hex codes")
+    return null
+  } catch (error) {
+    logger.warn(
+      { url, error: error instanceof Error ? error.message : String(error) },
+      "AI brand extraction failed, falling back to regex"
+    )
+    return null
+  }
+}
+
+/**
  * Check if Claude API is configured
  */
 export function isClaudeConfigured(): boolean {
