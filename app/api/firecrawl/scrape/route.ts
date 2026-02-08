@@ -12,7 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { withAuth } from "@/lib/api/middleware"
+import { withUserAuth } from "@/lib/api/middleware"
 import { scrapeWebsite, FirecrawlError } from "@/lib/integrations/firecrawl"
 import { extractBrandData, type BrandExtractionResult } from "@/lib/utils/brand-extractor"
 import { aiRateLimit, RATE_LIMITS } from "@/lib/api/rate-limit"
@@ -47,9 +47,9 @@ function validateUrl(input: string): string | null {
 // ROUTE HANDLER
 // ============================================
 
-export const POST = withAuth(async (request: NextRequest, auth) => {
+export const POST = withUserAuth(async (request: NextRequest, auth) => {
   const userId = auth.user.id
-  const orgId = auth.organization.id
+  const orgId = "onboarding" // No org during onboarding
 
   // Rate limit: 5 scrapes per user per hour
   const rateCheck = aiRateLimit(userId, 'firecrawl-scrape', RATE_LIMITS.scrape.maxRequests, RATE_LIMITS.scrape.windowMs)

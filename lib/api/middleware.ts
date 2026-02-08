@@ -36,7 +36,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthContext, isAdmin, isOwner, type AuthContext } from "@/lib/auth/middleware"
+import { getAuthContext, getUserAuthContext, isAdmin, isOwner, type AuthContext, type UserAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { handleError } from "@/lib/api/errors"
 import type { ApiResponse } from "@/lib/types"
@@ -84,6 +84,43 @@ export function withAuth(
   return async (request: NextRequest, context?: RouteContext) => {
     try {
       const auth = await getAuthContext(request)
+
+      if (!auth) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        )
+      }
+
+      return await handler(request, auth, context)
+    } catch (error) {
+      return handleError(error)
+    }
+  }
+}
+
+/**
+ * User-only auth wrapper - requires authenticated user but NOT organization membership.
+ * Used during onboarding when the user has a session but hasn't created an org yet.
+ *
+ * @example
+ * export const POST = withUserAuth(async (request, auth) => {
+ *   // auth.user is guaranteed, but no organization or member
+ *   return NextResponse.json({ success: true })
+ * })
+ */
+export type UserAuthHandler<T = unknown> = (
+  request: NextRequest,
+  auth: UserAuthContext,
+  context?: RouteContext
+) => Promise<NextResponse<T>>
+
+export function withUserAuth(
+  handler: UserAuthHandler<ApiResponse<unknown>>
+): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
+  return async (request: NextRequest, context?: RouteContext) => {
+    try {
+      const auth = await getUserAuthContext(request)
 
       if (!auth) {
         return NextResponse.json<ApiResponse<null>>(

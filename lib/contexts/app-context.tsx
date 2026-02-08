@@ -125,6 +125,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCurrentUser(teamMember)
         setCurrentOrganization(data.organization)
         setCurrentPage("dashboard")
+      } else if (data.user && (data as unknown as Record<string, unknown>).needsOrganization) {
+        // User is authenticated but has no org - go to onboarding
+        const partialUser: TeamMember = {
+          id: data.user.id || "",
+          userId: data.user.id || "",
+          name: data.user.name || "",
+          email: data.user.email || "",
+          role: "owner",
+          department: "",
+          joinDate: new Date().toISOString(),
+          status: "active",
+        }
+        setCurrentUser(partialUser)
+        setCurrentOrganization(null)
+        setCurrentPage("setup-organization")
       } else {
         setCurrentUser(null)
         setCurrentOrganization(null)
@@ -148,7 +163,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const data = await api.auth.login(email, password)
 
       if (!data.organization || !data.member) {
-        // User needs to create an organization or accept an invitation
+        // User needs to create an organization - store user info for onboarding wizard
+        const partialUser: TeamMember = {
+          id: data.user?.id || "",
+          userId: data.user?.id || "",
+          name: data.user?.name || "",
+          email: data.user?.email || email,
+          role: "owner",
+          department: "",
+          joinDate: new Date().toISOString(),
+          status: "active",
+        }
+        setCurrentUser(partialUser)
         setCurrentPage("setup-organization")
         return
       }
@@ -183,7 +209,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
       setError(null)
 
-      await api.auth.register(email, password, name)
+      const data = await api.auth.register(email, password, name)
+
+      // Store user info for onboarding wizard
+      const partialUser: TeamMember = {
+        id: data.user?.id || "",
+        userId: data.user?.id || "",
+        name: data.user?.name || name,
+        email: data.user?.email || email,
+        role: "owner",
+        department: "",
+        joinDate: new Date().toISOString(),
+        status: "active",
+      }
+      setCurrentUser(partialUser)
 
       // Always go to onboarding wizard to set up organization with branding
       setCurrentPage("setup-organization")

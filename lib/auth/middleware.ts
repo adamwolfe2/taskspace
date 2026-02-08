@@ -121,6 +121,52 @@ export async function getAuthContext(request: NextRequest): Promise<AuthContext 
   return getSessionAuthContext(request)
 }
 
+/**
+ * Lightweight auth context for pre-onboarding users who have a valid session
+ * but no organization yet. Used by firecrawl scrape and org creation endpoints.
+ */
+export interface UserAuthContext {
+  user: User
+  sessionId: string
+}
+
+/**
+ * Get user-only auth context from session cookie.
+ * Unlike getAuthContext, this does NOT require organization membership.
+ * Used during onboarding when user has a session but no org yet.
+ */
+export async function getUserAuthContext(request: NextRequest): Promise<UserAuthContext | null> {
+  try {
+    const sessionToken = request.cookies.get("session_token")?.value
+    if (!sessionToken) {
+      return null
+    }
+
+    const session = await db.sessions.findByToken(sessionToken)
+    if (!session || isTokenExpired(session.expiresAt)) {
+      return null
+    }
+
+    const user = await db.users.findById(session.userId)
+    if (!user) {
+      return null
+    }
+
+    // Update session last active
+    await db.sessions.update(session.id, {
+      lastActiveAt: new Date().toISOString(),
+    })
+
+    return {
+      user,
+      sessionId: session.id,
+    }
+  } catch (error) {
+    logError(logger, "User auth error", error)
+    return null
+  }
+}
+
 export function isAdmin(context: AuthContext): boolean {
   return context.member.role === "owner" || context.member.role === "admin"
 }

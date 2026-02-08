@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, withUserAuth } from "@/lib/api/middleware"
 import { isOwner } from "@/lib/auth/middleware"
 import { generateId, slugify } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -32,7 +32,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 })
 
 // POST /api/organizations - Create a new organization
-export const POST = withAuth(async (request: NextRequest, auth) => {
+// Uses withUserAuth (not withAuth) because user may not have an org yet during onboarding
+export const POST = withUserAuth(async (request: NextRequest, auth) => {
   try {
     // Validate request body
     const { name, timezone } = await validateBody(request, createOrganizationSchema)
@@ -87,6 +88,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       joinedAt: now,
       status: "active",
     })
+
+    // Update the session's organizationId so subsequent API calls (workspace creation, etc.) work
+    const sessionToken = request.cookies.get("session_token")?.value
+    if (sessionToken) {
+      await db.sessions.updateOrganization(sessionToken, orgId)
+    }
 
     return NextResponse.json<ApiResponse<Organization>>({
       success: true,

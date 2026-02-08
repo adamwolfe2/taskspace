@@ -61,15 +61,54 @@ export async function POST(request: NextRequest) {
     const memberships = await db.members.findByUserId(user.id)
 
     if (memberships.length === 0) {
-      // User has no organizations - they may need to create one or accept an invitation
-      return NextResponse.json<ApiResponse<{ needsOrganization: true; userId: string }>>(
-        {
-          success: true,
-          data: { needsOrganization: true, userId: user.id },
-          message: "Login successful but no organization found"
+      // User has no organizations - create a session so they can use onboarding
+      const now = new Date().toISOString()
+
+      // Session rotation: delete old session if one exists
+      const existingToken = request.cookies.get("session_token")?.value
+      if (existingToken) {
+        await db.sessions.deleteByToken(existingToken)
+      }
+
+      await db.users.update(user.id, { lastLoginAt: now })
+      await db.sessions.enforceSessionLimit(user.id, 5)
+
+      const sessionToken = generateToken()
+      const session: Session = {
+        id: generateId(),
+        userId: user.id,
+        organizationId: "", // No org yet - will be updated after org creation
+        token: sessionToken,
+        expiresAt: getExpirationDate(24 * 7),
+        createdAt: now,
+        lastActiveAt: now,
+      }
+      await db.sessions.create(session)
+
+      resetLoginRateLimit(request)
+      logAuthEvent("login", user.id, true, { needsOrganization: true })
+
+      const { passwordHash: _passwordHash, ...safeUser } = user
+
+      const response = NextResponse.json<ApiResponse<AuthResponse>>({
+        success: true,
+        data: {
+          user: safeUser,
+          token: sessionToken,
+          expiresAt: session.expiresAt,
         },
-        { status: 200 }
-      )
+        message: "Login successful but no organization found",
+      })
+
+      response.cookies.set("session_token", sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        expires: new Date(session.expiresAt),
+        path: "/",
+      })
+
+      return response
     }
 
     // Determine which organization to use
