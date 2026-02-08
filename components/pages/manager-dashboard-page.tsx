@@ -81,9 +81,8 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
       } else {
         setError(data.error || "Failed to load dashboard")
       }
-    } catch (err) {
+    } catch {
       setError("Failed to load dashboard")
-      console.error("Manager dashboard error:", err)
     } finally {
       setIsLoading(false)
       setIsRefreshing(false)

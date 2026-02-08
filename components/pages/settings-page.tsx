@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { Building, Bell, Users, CreditCard, Key, Download, Sparkles, Briefcase, Sliders, User } from "lucide-react"
 import { api } from "@/lib/api/client"
 import type { TeamMember } from "@/lib/types"
+import { useToast } from "@/hooks/use-toast"
 import { WorkspaceSwitcher } from "@/components/workspace"
 import {
   OrganizationSettingsTab,
@@ -27,6 +28,7 @@ export function SettingsPage() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [activeTab, setActiveTab] = useState("profile")
 
+  const { toast } = useToast()
   const isOwner = currentUser?.role === "owner"
   const isAdmin = currentUser?.role === "admin" || isOwner
 
@@ -49,8 +51,8 @@ export function SettingsPage() {
           joinDate: m.joinedAt,
           userId: m.userId ?? undefined,
         })))
-      } catch (err) {
-        console.error("Failed to load team data:", err)
+      } catch {
+        toast({ title: "Failed to load team data", description: "Some settings may be incomplete. Try refreshing.", variant: "destructive" })
       }
     }
     loadTeamData()

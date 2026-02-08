@@ -49,8 +49,8 @@ export function AdminPage({
       try {
         const data = await api.ai.getInsights(7)
         setInsights(data)
-      } catch (err) {
-        console.error("Failed to fetch insights:", err)
+      } catch {
+        // AI insights are non-critical, fail silently
       }
     }
     fetchInsights()
@@ -75,13 +75,15 @@ export function AdminPage({
     ? Math.round((todayReports.length / activeMembers.length) * 100)
     : 0
 
-  // For stats, use members role (excludes owner for individual performance)
-  const teamStats = teamMembers.filter((m) => m.role === "member").map((member) => {
+  // Calculate stats for all active team members (all roles)
+  const teamStats = activeMembers.map((member) => {
     const stats = calculateUserStats(member.id, rocks, assignedTasks, eodReports)
     return { member, stats }
   })
 
-  const avgRockProgress = teamStats.reduce((sum, t) => sum + t.stats.averageRockProgress, 0) / teamStats.length
+  const avgRockProgress = teamStats.length > 0
+    ? teamStats.reduce((sum, t) => sum + t.stats.averageRockProgress, 0) / teamStats.length
+    : 0
 
   const totalRocksAtRisk = rocks.filter((r) => r.status === "at-risk").length
   const totalRocksBlocked = rocks.filter((r) => r.status === "blocked").length
