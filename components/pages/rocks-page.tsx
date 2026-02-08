@@ -37,9 +37,11 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
   const [quarterFilter, setQuarterFilter] = useState<string>("Q1 2025") // Default to current quarter
 
   const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
+  // Use users.id (not org_members.id) for filtering rocks
+  const effectiveUserId = currentUser.userId || currentUser.id
   // When navigating from manager drill-down with an owner filter, show all rocks so the filter works
   const hasManagerFilter = !!initialOwnerFilter
-  const baseRocks = (isAdmin || hasManagerFilter) ? rocks : rocks.filter((r) => r.userId === currentUser.id)
+  const baseRocks = (isAdmin || hasManagerFilter) ? rocks : rocks.filter((r) => r.userId === effectiveUserId)
 
   // Get unique quarters from rocks for filter options
   const availableQuarters = useMemo(() => {

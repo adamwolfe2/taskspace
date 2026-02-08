@@ -309,7 +309,7 @@ export function CommandPalette() {
         <QuickTaskDialog
           open={showQuickTask}
           onOpenChange={setShowQuickTask}
-          userId={currentUser.id}
+          userId={currentUser.userId || currentUser.id}
         />
       )}
     </>

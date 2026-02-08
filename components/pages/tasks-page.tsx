@@ -108,12 +108,14 @@ export function TasksPage({
     }
   }, [initialAssigneeFilter, filterUserName, onFilterConsumed])
 
+  // Use users.id (not org_members.id) for filtering rocks/tasks/EODs
+  const effectiveUserId = currentUser.userId || currentUser.id
   // viewingUserId is users.id; compare against both currentUser.id (org_members.id)
   // and currentUser.userId (users.id) to handle the self-view case
   const isViewingOtherUser = viewingUserId !== null
     && viewingUserId !== currentUser.id
     && viewingUserId !== currentUser.userId
-  const targetUserId = viewingUserId || currentUser.id
+  const targetUserId = viewingUserId || effectiveUserId
   const userTasks = assignedTasks.filter((t) => t.assigneeId === targetUserId)
 
   const filteredTasks = useMemo(() => {
@@ -137,7 +139,7 @@ export function TasksPage({
   const personalTasks = filteredTasks.filter((t) => t.type === "personal" && t.status !== "completed")
   const completedTasks = filteredTasks.filter((t) => t.status === "completed")
 
-  const userRocks = rocks.filter((r) => r.userId === currentUser.id)
+  const userRocks = rocks.filter((r) => r.userId === effectiveUserId)
 
   const calculateNextDueDate = (currentDueDate: string, recurrence: NonNullable<AssignedTask["recurrence"]>): Date => {
     const current = new Date(currentDueDate)
@@ -214,7 +216,7 @@ export function TasksPage({
       await createTask({
         title: taskData.title,
         description: taskData.description,
-        assigneeId: currentUser.id,
+        assigneeId: effectiveUserId,
         rockId: taskData.rockId,
         priority: taskData.priority,
         dueDate: taskData.dueDate,

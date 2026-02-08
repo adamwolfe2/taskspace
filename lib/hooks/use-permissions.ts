@@ -29,8 +29,9 @@ export function usePermissions() {
     // Utility function to check if user can perform action on a specific user
     canManageUser: (targetUserId: string) => {
       if (!currentUser) return false
-      // Users can manage themselves
-      if (targetUserId === currentUser.id) return true
+      // Users can manage themselves (check both org_members.id and users.id)
+      const effectiveUserId = currentUser.userId || currentUser.id
+      if (targetUserId === currentUser.id || targetUserId === effectiveUserId) return true
       // Admins/owners can manage others
       return currentUser.role === "admin" || currentUser.role === "owner"
     },
@@ -38,8 +39,9 @@ export function usePermissions() {
     // Check if current user can edit a rock
     canEditRock: (rockOwnerId: string) => {
       if (!currentUser) return false
-      // User owns the rock
-      if (rockOwnerId === currentUser.id) return true
+      // User owns the rock (rock.userId is users.id)
+      const effectiveUserId = currentUser.userId || currentUser.id
+      if (rockOwnerId === effectiveUserId || rockOwnerId === currentUser.id) return true
       // Admins/owners can edit any rock
       return currentUser.role === "admin" || currentUser.role === "owner"
     },
@@ -47,8 +49,9 @@ export function usePermissions() {
     // Check if current user can edit a task
     canEditTask: (taskAssigneeId: string) => {
       if (!currentUser) return false
-      // User is assigned to the task
-      if (taskAssigneeId === currentUser.id) return true
+      // User is assigned to the task (task.assigneeId is users.id)
+      const effectiveUserId = currentUser.userId || currentUser.id
+      if (taskAssigneeId === effectiveUserId || taskAssigneeId === currentUser.id) return true
       // Admins/owners can edit any task
       return currentUser.role === "admin" || currentUser.role === "owner"
     },

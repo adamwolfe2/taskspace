@@ -18,9 +18,11 @@ interface CalendarPageProps {
 }
 
 export function CalendarPage({ currentUser, assignedTasks, rocks, eodReports }: CalendarPageProps) {
-  const userTasks = assignedTasks.filter((t) => t.assigneeId === currentUser.id)
-  const userRocks = rocks.filter((r) => r.userId === currentUser.id)
-  const userEODReports = eodReports.filter((r) => r.userId === currentUser.id)
+  // Use users.id (not org_members.id) for filtering rocks/tasks/EODs
+  const effectiveUserId = currentUser.userId || currentUser.id
+  const userTasks = assignedTasks.filter((t) => t.assigneeId === effectiveUserId)
+  const userRocks = rocks.filter((r) => r.userId === effectiveUserId)
+  const userEODReports = eodReports.filter((r) => r.userId === effectiveUserId)
   const { currentWorkspaceId } = useWorkspaceStore()
   const { toast } = useToast()
 

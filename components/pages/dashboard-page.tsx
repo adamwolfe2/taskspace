@@ -71,11 +71,13 @@ export function DashboardPage({
  const hasFocusBlocksFeature = isFeatureEnabled("productivity.focusBlocks")
 
  const currentQuarter = getCurrentQuarter()
- const userRocks = rocks.filter((r) => r.userId === currentUser.id)
+ // Use users.id (not org_members.id) for filtering rocks/tasks/EODs
+ const effectiveUserId = currentUser.userId || currentUser.id
+ const userRocks = rocks.filter((r) => r.userId === effectiveUserId)
  // Filter to only current quarter rocks for EOD submission (less clutter)
  const currentQuarterRocks = userRocks.filter((r) => r.quarter === currentQuarter)
- const userTasks = assignedTasks.filter((t) => t.assigneeId === currentUser.id)
- const stats = calculateUserStats(currentUser.id, rocks, assignedTasks, eodReports)
+ const userTasks = assignedTasks.filter((t) => t.assigneeId === effectiveUserId)
+ const stats = calculateUserStats(effectiveUserId, rocks, assignedTasks, eodReports)
 
  // Get organization timezone for date calculations
  const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
@@ -83,7 +85,7 @@ export function DashboardPage({
  // Check if EOD submitted today (using organization timezone)
  const today = getTodayInTimezone(orgTimezone)
  const hasSubmittedEODToday = eodReports.some(
- (r) => r.userId === currentUser.id && r.date === today
+ (r) => r.userId === effectiveUserId && r.date === today
  )
 
  const handleSelectEodDate = (date: string) => {
@@ -147,7 +149,7 @@ export function DashboardPage({
  await createTask({
  title: taskData.title,
  description: taskData.description,
- assigneeId: currentUser.id,
+ assigneeId: effectiveUserId,
  rockId: taskData.rockId,
  priority: taskData.priority,
  dueDate: taskData.dueDate,
@@ -196,7 +198,7 @@ export function DashboardPage({
  <ErrorBoundary title="Calendar unavailable">
  <WeeklyEODCalendar
  eodReports={eodReports}
- userId={currentUser.id}
+ userId={effectiveUserId}
  selectedDate={selectedEodDate}
  onSelectDate={handleSelectEodDate}
  showMoodTrend
@@ -267,7 +269,7 @@ export function DashboardPage({
  rocks={currentQuarterRocks}
  allRocks={rocks}
  onSubmitEOD={handleSubmitEOD}
- userId={currentUser.id}
+ userId={effectiveUserId}
  currentUser={currentUser}
  />
  </TabsContent>
@@ -276,7 +278,7 @@ export function DashboardPage({
  rocks={currentQuarterRocks}
  allRocks={rocks}
  onSubmitEOD={handleSubmitEOD}
- userId={currentUser.id}
+ userId={effectiveUserId}
  currentUser={currentUser}
  assignedTasks={assignedTasks}
  selectedDate={selectedEodDate}
