@@ -244,6 +244,32 @@ async function handleSubscriptionUpdated(subscription: StripeWebhookObject) {
       WHERE id = ${orgId}
     `
 
+    // Upsert subscriptions table row for AI credit tracking
+    const creditsLimit = plan === "business" ? -1 : plan === "team" ? 200 : 50
+    const periodEnd = subscription.current_period_end
+      ? new Date((subscription.current_period_end as number) * 1000).toISOString()
+      : null
+
+    await client.sql`
+      INSERT INTO subscriptions (
+        id, organization_id, stripe_customer_id, stripe_subscription_id,
+        plan, seat_count, ai_credits_limit, status, current_period_end
+      ) VALUES (
+        gen_random_uuid()::text,
+        ${orgId}, ${subscription.customer}, ${subscription.id},
+        ${plan}, ${subscriptionData.maxUsers || 3}, ${creditsLimit},
+        ${subscription.status || 'active'}, ${periodEnd}
+      )
+      ON CONFLICT (organization_id) DO UPDATE SET
+        stripe_subscription_id = EXCLUDED.stripe_subscription_id,
+        plan = EXCLUDED.plan,
+        seat_count = EXCLUDED.seat_count,
+        ai_credits_limit = EXCLUDED.ai_credits_limit,
+        status = EXCLUDED.status,
+        current_period_end = EXCLUDED.current_period_end,
+        updated_at = NOW()
+    `
+
     logger.info({ orgId, plan, status: subscription.status }, "Subscription updated for org")
 
     // Log the event (outside transaction is fine for audit log)
@@ -309,6 +335,21 @@ async function handleSubscriptionDeleted(subscription: StripeWebhookObject) {
         subscription = ${JSON.stringify(freeSubscriptionData)},
         updated_at = NOW()
       WHERE id = ${orgId}
+    `
+
+    // Downgrade subscriptions table row for AI credit tracking
+    await client.sql`
+      UPDATE subscriptions
+      SET
+        stripe_subscription_id = NULL,
+        plan = 'free',
+        seat_count = ${freeSubscriptionData.maxUsers},
+        ai_credits_limit = 50,
+        ai_credits_used = 0,
+        status = 'canceled',
+        current_period_end = NULL,
+        updated_at = NOW()
+      WHERE organization_id = ${orgId}
     `
 
     logger.info({ orgId }, "Subscription canceled for org, downgraded to free")
