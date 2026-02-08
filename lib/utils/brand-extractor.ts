@@ -390,7 +390,57 @@ function normalizeColor(color: string): string | null {
     }
   }
 
+  // hsl(h, s%, l%) and hsla(h, s%, l%, a)
+  const hslMatch = trimmed.match(/^hsla?\s*\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*(?:,\s*([\d.]+))?\s*\)$/)
+  if (hslMatch) {
+    const alpha = hslMatch[4] ? parseFloat(hslMatch[4]) : 1
+    if (alpha >= 0.9) {
+      const h = parseFloat(hslMatch[1]) / 360
+      const s = parseFloat(hslMatch[2]) / 100
+      const l = parseFloat(hslMatch[3]) / 100
+      const rgb = hslToRgb(h, s, l)
+      return `#${rgb[0].toString(16).padStart(2, "0")}${rgb[1].toString(16).padStart(2, "0")}${rgb[2].toString(16).padStart(2, "0")}`
+    }
+  }
+
+  // Modern CSS hsl without commas: hsl(240 100% 50%)
+  const hslModernMatch = trimmed.match(/^hsla?\s*\(\s*([\d.]+)\s+([\d.]+)%\s+([\d.]+)%\s*(?:\/\s*([\d.]+%?))?\s*\)$/)
+  if (hslModernMatch) {
+    const alphaStr = hslModernMatch[4]
+    const alpha = alphaStr ? (alphaStr.endsWith("%") ? parseFloat(alphaStr) / 100 : parseFloat(alphaStr)) : 1
+    if (alpha >= 0.9) {
+      const h = parseFloat(hslModernMatch[1]) / 360
+      const s = parseFloat(hslModernMatch[2]) / 100
+      const l = parseFloat(hslModernMatch[3]) / 100
+      const rgb = hslToRgb(h, s, l)
+      return `#${rgb[0].toString(16).padStart(2, "0")}${rgb[1].toString(16).padStart(2, "0")}${rgb[2].toString(16).padStart(2, "0")}`
+    }
+  }
+
   return null
+}
+
+/** Convert HSL to RGB. h, s, l in [0,1]. Returns [r, g, b] in [0, 255]. */
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  let r: number, g: number, b: number
+  if (s === 0) {
+    r = g = b = l
+  } else {
+    const hue2rgb = (p: number, q: number, t: number) => {
+      if (t < 0) t += 1
+      if (t > 1) t -= 1
+      if (t < 1 / 6) return p + (q - p) * 6 * t
+      if (t < 1 / 2) return q
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+      return p
+    }
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+    const p = 2 * l - q
+    r = hue2rgb(p, q, h + 1 / 3)
+    g = hue2rgb(p, q, h)
+    b = hue2rgb(p, q, h - 1 / 3)
+  }
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)]
 }
 
 /** Check if a color is essentially white, black, or a neutral gray */
@@ -458,10 +508,11 @@ function extractColors(html: string): ExtractedColors {
   }
 
   // 3. CSS custom properties (--primary, --brand, --accent, etc.)
+  // Also check for Tailwind/framework-style color tokens
   const cssVarPatterns: Array<{ pattern: RegExp; role: keyof ExtractedColors }> = [
-    { pattern: /--(?:primary|brand|main)[-_]?(?:color)?:\s*([^;}\s]+)/gi, role: "primary" },
-    { pattern: /--(?:secondary|second)[-_]?(?:color)?:\s*([^;}\s]+)/gi, role: "secondary" },
-    { pattern: /--(?:accent|highlight|cta)[-_]?(?:color)?:\s*([^;}\s]+)/gi, role: "accent" },
+    { pattern: /--(?:primary|brand|main|color-primary|brand-primary)[-_]?(?:color)?:\s*([^;}\s]+)/gi, role: "primary" },
+    { pattern: /--(?:secondary|second|color-secondary|brand-secondary)[-_]?(?:color)?:\s*([^;}\s]+)/gi, role: "secondary" },
+    { pattern: /--(?:accent|highlight|cta|color-accent|brand-accent)[-_]?(?:color)?:\s*([^;}\s]+)/gi, role: "accent" },
   ]
 
   for (const { pattern, role } of cssVarPatterns) {
@@ -476,7 +527,33 @@ function extractColors(html: string): ExtractedColors {
     }
   }
 
-  // 4. Collect all color values from CSS to find the most prominent brand colors
+  // 4. Look for colors in button/CTA inline styles (strong brand signal)
+  if (!result.primary) {
+    const buttonStylePattern = /<(?:button|a)\s+[^>]*?style\s*=\s*["'][^"']*?(?:background(?:-color)?)\s*:\s*([^;}"']+)/gi
+    let btnMatch: RegExpExecArray | null
+    while ((btnMatch = buttonStylePattern.exec(html)) !== null) {
+      const normalized = normalizeColor(btnMatch[1].trim())
+      if (normalized && !isNeutralColor(normalized)) {
+        result.primary = normalized
+        break
+      }
+    }
+  }
+
+  // 5. Look for colors in CSS background-color rules targeting buttons/CTAs
+  if (!result.primary) {
+    const btnCssPattern = /(?:\.btn|\.button|\.cta|a\.primary|\.hero)[^{]*?\{[^}]*?background(?:-color)?:\s*([^;}\s]+)/gi
+    let btnCssMatch: RegExpExecArray | null
+    while ((btnCssMatch = btnCssPattern.exec(html)) !== null) {
+      const normalized = normalizeColor(btnCssMatch[1].trim())
+      if (normalized && !isNeutralColor(normalized)) {
+        result.primary = normalized
+        break
+      }
+    }
+  }
+
+  // 6. Collect all color values from CSS to find the most prominent brand colors
   if (!result.primary || !result.secondary || !result.accent) {
     const colorFrequency = new Map<string, number>()
 
@@ -500,9 +577,19 @@ function extractColors(html: string): ExtractedColors {
       }
     }
 
+    // Match hsl/hsla colors in CSS
+    const hslPattern = /hsla?\s*\(\s*[\d.]+\s*[,\s]\s*[\d.]+%\s*[,\s]\s*[\d.]+%\s*(?:[,/]\s*[\d.]+%?\s*)?\)/g
+    let hslMatch: RegExpExecArray | null
+    while ((hslMatch = hslPattern.exec(html)) !== null) {
+      const normalized = normalizeColor(hslMatch[0])
+      if (normalized && !isNeutralColor(normalized)) {
+        colorFrequency.set(normalized, (colorFrequency.get(normalized) || 0) + 1)
+      }
+    }
+
     // Sort by frequency, then by saturation (more colorful = more likely brand color)
     const sortedColors = Array.from(colorFrequency.entries())
-      .filter(([, count]) => count >= 2) // Must appear at least twice
+      .filter(([, count]) => count >= 1) // Include even single-occurrence colors
       .sort((a, b) => {
         const countDiff = b[1] - a[1]
         if (Math.abs(countDiff) > 2) return countDiff
@@ -782,7 +869,9 @@ export function extractBrandData(
   scrapeResult: FirecrawlScrapeResult,
   originalUrl: string
 ): BrandExtractionResult {
-  const html = scrapeResult.html || scrapeResult.rawHtml || ""
+  // Prefer rawHtml for extraction - it includes <style> tags and inline CSS
+  // that the cleaned "html" format may strip out
+  const html = scrapeResult.rawHtml || scrapeResult.html || ""
   const metadata = scrapeResult.metadata as Record<string, unknown> | undefined
 
   // Determine the base URL for resolving relative URLs

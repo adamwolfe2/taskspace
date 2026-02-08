@@ -99,9 +99,8 @@ export async function scrapeWebsite(
 
   const payload: FirecrawlScrapeRequest = {
     url,
-    formats: ["html", "markdown"],
+    formats: ["html", "markdown", "rawHtml"],
     onlyMainContent: false, // We need full page for meta tags, styles, etc.
-    includeTags: ["meta", "link", "style", "img", "title", "h1", "h2", "p"],
   }
 
   const controller = new AbortController()
