@@ -7,6 +7,7 @@ import type {
   Session,
   Invitation,
   PasswordResetToken,
+  EmailVerificationToken,
   Rock,
   Task,
   AssignedTask,
@@ -134,6 +135,18 @@ function parseInvitation(row: Record<string, unknown>): Invitation {
 }
 
 function parsePasswordResetToken(row: Record<string, unknown>): PasswordResetToken {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    email: row.email as string,
+    token: row.token as string,
+    expiresAt: (row.expires_at as Date)?.toISOString() || "",
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    usedAt: row.used_at ? (row.used_at as Date).toISOString() : undefined,
+  }
+}
+
+function parseEmailVerificationToken(row: Record<string, unknown>): EmailVerificationToken {
   return {
     id: row.id as string,
     userId: row.user_id as string,
@@ -794,6 +807,51 @@ export const db = {
     async deleteExpired(): Promise<number> {
       const { rowCount } = await sql`
         DELETE FROM password_reset_tokens WHERE expires_at < NOW() OR used_at IS NOT NULL
+      `
+      return rowCount ?? 0
+    },
+  },
+
+  // Email Verification Tokens
+  emailVerificationTokens: {
+    async findByToken(token: string): Promise<EmailVerificationToken | null> {
+      const { rows } = await sql`SELECT * FROM email_verification_tokens WHERE token = ${token}`
+      return rows[0] ? parseEmailVerificationToken(rows[0]) : null
+    },
+    async findByEmail(email: string): Promise<EmailVerificationToken[]> {
+      const { rows } = await sql`
+        SELECT * FROM email_verification_tokens
+        WHERE LOWER(email) = LOWER(${email}) AND used_at IS NULL
+        ORDER BY created_at DESC
+      `
+      return rows.map(parseEmailVerificationToken)
+    },
+    async create(token: EmailVerificationToken): Promise<EmailVerificationToken> {
+      await sql`
+        INSERT INTO email_verification_tokens (id, user_id, email, token, expires_at, created_at)
+        VALUES (${token.id}, ${token.userId}, ${token.email}, ${token.token},
+                ${token.expiresAt}, ${token.createdAt})
+      `
+      return token
+    },
+    async markAsUsed(id: string): Promise<EmailVerificationToken | null> {
+      const now = new Date().toISOString()
+      const { rows } = await sql`
+        UPDATE email_verification_tokens SET used_at = ${now}
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return rows[0] ? parseEmailVerificationToken(rows[0]) : null
+    },
+    async deleteByEmail(email: string): Promise<number> {
+      const { rowCount } = await sql`
+        DELETE FROM email_verification_tokens WHERE LOWER(email) = LOWER(${email})
+      `
+      return rowCount ?? 0
+    },
+    async deleteExpired(): Promise<number> {
+      const { rowCount } = await sql`
+        DELETE FROM email_verification_tokens WHERE expires_at < NOW() OR used_at IS NOT NULL
       `
       return rowCount ?? 0
     },

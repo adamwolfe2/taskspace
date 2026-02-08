@@ -39,6 +39,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { CommandPalette } from "@/components/shared/command-palette"
 import { initGlobalErrorHandler } from "@/lib/api/client"
 import { DemoModeBanner } from "@/components/shared/demo-mode-banner"
+import { EmailVerificationBanner } from "@/components/shared/email-verification-banner"
+import { TrialBanner } from "@/components/billing/trial-banner"
 import { Loader2 } from "lucide-react"
 import {
   DashboardSkeleton,
@@ -78,12 +80,13 @@ function AppContent() {
     return cleanup
   }, [])
 
-  // Check for invitation token, reset token, or page parameter in URL
+  // Check for invitation token, reset token, verify email token, or page parameter in URL
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
       const invite = params.get("invite")
       const reset = params.get("resetToken")
+      const verifyEmail = params.get("verifyEmail")
       const page = params.get("page")
 
       if (invite) {
@@ -92,6 +95,21 @@ function AppContent() {
       if (reset) {
         setResetToken(reset)
         setCurrentPage("reset-password")
+      }
+      if (verifyEmail) {
+        // Call verify-email API and show result
+        fetch(`/api/auth/verify-email?token=${encodeURIComponent(verifyEmail)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              // Clean URL and refresh to pick up verified state
+              window.history.replaceState({}, "", window.location.pathname)
+              window.location.reload()
+            }
+          })
+          .catch(() => {
+            // Silently fail - user can resend from banner
+          })
       }
       if (page && !isAuthenticated) {
         setCurrentPage(page as PageType)
@@ -305,6 +323,8 @@ function AppContent() {
 
       <Header onMenuClick={() => setSidebarOpen(true)} />
       <DemoModeBanner />
+      <EmailVerificationBanner />
+      <TrialBanner />
 
       <div className="flex">
         <aside

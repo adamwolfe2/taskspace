@@ -136,6 +136,17 @@ export interface Invitation {
   workspaceId?: string | null
 }
 
+// Email Verification Token
+export interface EmailVerificationToken {
+  id: string
+  userId: string
+  email: string
+  token: string
+  expiresAt: string
+  createdAt: string
+  usedAt?: string
+}
+
 // Password Reset Token
 export interface PasswordResetToken {
   id: string

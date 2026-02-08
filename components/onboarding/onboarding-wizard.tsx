@@ -253,8 +253,11 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
     }
   }
 
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
   const handleComplete = async () => {
     setIsSubmitting(true)
+    setSubmitError(null)
     try {
       await onComplete({
         organization: {
@@ -274,7 +277,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
         rocks,
       })
     } catch (error) {
-      // Onboarding failed
+      setSubmitError(error instanceof Error ? error.message : "Setup failed. Please try again.")
       setIsSubmitting(false)
     }
   }
@@ -298,6 +301,19 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex items-center justify-center p-4 sm:p-6">
+      {/* Submission overlay */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Loader2 className="w-10 h-10 text-black mx-auto animate-spin" />
+            <div>
+              <p className="text-lg font-semibold text-slate-900">Setting up your workspace...</p>
+              <p className="text-sm text-slate-500 mt-1">Creating organization, workspace, and sending invitations</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-2xl">
         {/* Logo */}
         <div className="flex justify-center mb-6 sm:mb-8">
@@ -917,6 +933,20 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Submit Error */}
+            {submitError && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-red-700 font-medium">Setup failed</p>
+                  <p className="text-xs text-red-600 mt-0.5">{submitError}</p>
+                </div>
+                <button onClick={() => setSubmitError(null)} className="text-red-400 hover:text-red-600 flex-shrink-0">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {/* Navigation */}
             <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-slate-200">

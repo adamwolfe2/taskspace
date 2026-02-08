@@ -14,7 +14,8 @@ import {
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { registerSchema } from "@/lib/validation/schemas"
 import { logger, logAuthEvent, formatError } from "@/lib/logger"
-import type { User, Organization, OrganizationMember, Session, ApiResponse, AuthResponse } from "@/lib/types"
+import { sendVerificationEmail } from "@/lib/email"
+import type { User, Organization, OrganizationMember, Session, EmailVerificationToken, ApiResponse, AuthResponse } from "@/lib/types"
 
 export async function POST(request: NextRequest) {
   try {
@@ -159,6 +160,24 @@ export async function POST(request: NextRequest) {
           orgId,
         }, "Failed to create default workspace during registration")
       }
+    }
+
+    // Send email verification (non-blocking - don't fail registration if email fails)
+    try {
+      const verificationToken: EmailVerificationToken = {
+        id: generateId(),
+        userId,
+        email: email.toLowerCase(),
+        token: generateToken(),
+        expiresAt: getExpirationDate(24), // 24 hours
+        createdAt: now,
+      }
+      await db.emailVerificationTokens.create(verificationToken)
+      await sendVerificationEmail(verificationToken, name)
+      logger.info({ userId, email }, "Verification email sent on registration")
+    } catch (emailError) {
+      // Don't block registration if verification email fails
+      logger.warn({ userId, error: formatError(emailError) }, "Failed to send verification email during registration")
     }
 
     // Enforce concurrent session limit (max 5 active sessions per user)

@@ -41,6 +41,9 @@ interface AppContextType {
   refreshSession: () => Promise<void>
   enterDemoMode: () => void
 
+  // Email verification
+  emailVerified: boolean
+
   // Error state
   error: string | null
   clearError: () => void
@@ -92,6 +95,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pageFilter, setPageFilter] = useState<PageFilter | null>(null)
   const [darkMode, setDarkMode] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [emailVerified, setEmailVerified] = useState(true) // Default true to avoid flash
 
   const isAuthenticated = !!currentUser && !!currentOrganization
 
@@ -124,6 +128,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         setCurrentUser(teamMember)
         setCurrentOrganization(data.organization)
+        setEmailVerified(data.user?.emailVerified ?? true)
         setCurrentPage("dashboard")
       } else if (data.user && (data as unknown as Record<string, unknown>).needsOrganization) {
         // User is authenticated but has no org - go to onboarding
@@ -195,6 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       setCurrentUser(teamMember)
       setCurrentOrganization(data.organization)
+      setEmailVerified(data.user?.emailVerified ?? true)
       setCurrentPage("dashboard")
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Login failed"))
@@ -301,6 +307,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         logout,
         refreshSession,
         enterDemoMode,
+        emailVerified,
         error,
         clearError,
       }}

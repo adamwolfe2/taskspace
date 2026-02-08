@@ -1,4 +1,4 @@
-import type { EODReport, TeamMember, Rock, Invitation, Organization, PasswordResetToken } from "./types"
+import type { EODReport, TeamMember, Rock, Invitation, Organization, PasswordResetToken, EmailVerificationToken } from "./types"
 import { withRetry, isTransientError } from "./utils"
 import { CONFIG } from "./config"
 import { logger, logError } from "@/lib/logger"
@@ -160,6 +160,70 @@ export async function sendInvitationEmail(
   return sendEmail(
     [invitation.email],
     `You're invited to join ${escapeHtml(organization.name)}`,
+    html
+  )
+}
+
+// Send email verification email
+export async function sendVerificationEmail(
+  verificationToken: EmailVerificationToken,
+  userName: string
+) {
+  const verifyLink = `${APP_URL}/app?verifyEmail=${verificationToken.token}`
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #000000, #1f2937); color: white; padding: 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 24px; }
+    .content { padding: 30px; }
+    .verify-box { background: #f9fafb; border: 2px dashed #000000; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+    .button { display: inline-block; background: #000000; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 10px 0; }
+    .button:hover { background: #1f2937; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+    .expires { color: #6b7280; font-size: 14px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <h1>Verify Your Email</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Welcome to Taskspace</p>
+      </div>
+
+      <div class="content">
+        <p>Hi ${escapeHtml(userName.split(" ")[0])},</p>
+        <p>Thanks for signing up for Taskspace! Please verify your email address to get started.</p>
+
+        <div class="verify-box">
+          <p style="margin: 0 0 15px 0;">Click the button below to verify your email:</p>
+          <a href="${verifyLink}" class="button">Verify Email Address</a>
+          <p class="expires">This link expires in 24 hours</p>
+        </div>
+
+        <p style="color: #6b7280; font-size: 14px;">If you didn't create an account on Taskspace, you can safely ignore this email.</p>
+      </div>
+
+      <div class="footer">
+        <p>Taskspace - Team Productivity Platform</p>
+        <p style="margin-top: 10px;">If the button doesn't work, copy and paste this link:<br/>
+        <a href="${verifyLink}" style="color: #000000; word-break: break-all;">${verifyLink}</a></p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+`
+
+  return sendEmail(
+    [verificationToken.email],
+    "Verify your email address - Taskspace",
     html
   )
 }
