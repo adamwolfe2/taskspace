@@ -70,10 +70,10 @@ interface ScrapedBrand {
 }
 
 const STEPS = [
-  { id: 1, name: "Your Website", optional: true },
-  { id: 2, name: "Your Organization", optional: false },
-  { id: 3, name: "Invite Your Team", optional: true },
-  { id: 4, name: "Set Your First Goal", optional: true },
+  { id: 1, name: "Website", optional: true },
+  { id: 2, name: "Organization", optional: false },
+  { id: 3, name: "Team", optional: true },
+  { id: 4, name: "Goals", optional: true },
 ]
 
 export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardProps) {
@@ -299,6 +299,15 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-2xl">
+        {/* Logo */}
+        <div className="flex justify-center mb-6 sm:mb-8">
+          <img
+            src="/taskspace-logo.png"
+            alt="Taskspace"
+            className="h-14 sm:h-16 w-auto"
+          />
+        </div>
+
         {/* Header with step indicator text */}
         <div className="text-center mb-6 sm:mb-8">
           <p className="text-sm font-medium text-slate-500 mb-1">
@@ -340,7 +349,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                     </div>
                     <span
                       className={cn(
-                        "text-xs mt-1 hidden sm:block font-medium",
+                        "text-xs mt-1 hidden sm:block font-medium whitespace-nowrap",
                         isActive && "text-black",
                         isCompleted && "text-emerald-600",
                         !isActive && !isCompleted && "text-slate-400"
