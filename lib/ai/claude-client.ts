@@ -657,7 +657,7 @@ export async function extractBrandColors(
   markdown: string,
   url: string,
   companyName?: string | null
-): Promise<{ primary: string; secondary: string; accent: string; confidence: string } | null> {
+): Promise<{ primary: string; secondary: string; accent: string; logoUrl?: string | null; confidence: string } | null> {
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
       return null
@@ -678,9 +678,10 @@ Identify the brand colors for this company. Return JSON only.`
       primary: string
       secondary: string
       accent: string
+      logoUrl?: string | null
       confidence: string
     }>(PROMPTS.brandExtractor, userMessage, {
-      maxTokens: 200,
+      maxTokens: 300,
       temperature: 0.2,
     })
 

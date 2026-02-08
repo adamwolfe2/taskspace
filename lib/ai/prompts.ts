@@ -376,11 +376,18 @@ RULES:
 - If you can identify the company (e.g. Raycast = red, Stripe = purple, Slack = purple/green), use your knowledge of their actual brand colors
 - All values must be valid 6-digit hex codes starting with #
 
+Also identify the company's logo URL if you can find it in the content.
+- Look for image URLs that contain "logo" in the path or filename
+- Look for SVG references or icon URLs
+- The logo should be a square-ish icon or wordmark, NOT a wide social media preview image
+- If you cannot confidently identify a logo URL, set it to null
+
 Return ONLY a JSON object, no explanation:
 {
   "primary": "#hex",
   "secondary": "#hex",
   "accent": "#hex",
+  "logoUrl": "https://..." | null,
   "confidence": "high" | "medium" | "low"
 }`
 

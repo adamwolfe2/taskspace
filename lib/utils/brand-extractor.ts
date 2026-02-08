@@ -302,18 +302,33 @@ function extractLogoUrl(html: string, baseUrl: string, metadata?: Record<string,
     }
   }
 
-  // 2. og:image as fallback (often a brand image/logo)
+  // 2. Apple touch icon (high-quality square icon, great as logo)
+  const appleTouchIcon = getLinkHref(html, "apple-touch-icon")
+  if (appleTouchIcon) {
+    const resolved = resolveUrl(appleTouchIcon, baseUrl)
+    if (resolved) return resolved
+  }
+
+  // 3. Large icon (192x192 or similar)
+  const iconPattern = /<link\s+[^>]*?rel\s*=\s*["']icon["'][^>]*?sizes\s*=\s*["'](?:192x192|180x180|152x152|144x144)["'][^>]*?href\s*=\s*["']([^"']+?)["'][^>]*?\/?>/gi
+  const iconMatch = iconPattern.exec(html)
+  if (iconMatch?.[1]) {
+    const resolved = resolveUrl(iconMatch[1], baseUrl)
+    if (resolved) return resolved
+  }
+
+  // 4. og:image as fallback (often a social preview, not ideal but better than nothing)
   const ogImage = getMetaContent(html, "og:image")
   if (ogImage) {
     return resolveUrl(ogImage, baseUrl)
   }
 
-  // 3. Firecrawl metadata ogImage
+  // 5. Firecrawl metadata ogImage
   if (metadata?.ogImage && typeof metadata.ogImage === "string") {
     return resolveUrl(metadata.ogImage, baseUrl)
   }
 
-  // 4. twitter:image
+  // 6. twitter:image
   const twitterImage = getMetaContent(html, "twitter:image")
   if (twitterImage) {
     return resolveUrl(twitterImage, baseUrl)
