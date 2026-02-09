@@ -153,7 +153,8 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       {
         activeUsers: activeMembers.filter(m => m.status === "active").length,
         workspaces: allWorkspaces.length,
-      }
+      },
+      auth.organization.isInternal
     )
 
     const workspaceCheck = canCreateWorkspace(featureContext)

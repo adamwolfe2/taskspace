@@ -275,7 +275,8 @@ export function isApproachingLimit(used: number, limit: number | null): boolean 
 /**
  * Check if trial has expired
  */
-export function isTrialExpired(subscription?: { plan: PlanTier; currentPeriodEnd?: string } | null): boolean {
+export function isTrialExpired(subscription?: { plan: PlanTier; currentPeriodEnd?: string } | null, isInternal?: boolean): boolean {
+  if (isInternal) return false
   if (!subscription || subscription.plan !== "free") return false
   if (!subscription.currentPeriodEnd) return false
 
@@ -309,13 +310,18 @@ export async function buildFeatureGateContext(
     managers?: number
     aiCreditsUsed?: number
     storageUsedGB?: number
-  }
+  },
+  isInternal?: boolean
 ): Promise<FeatureGateContext> {
-  const plan = getPlanById(subscription?.plan || "free")
+  // Internal orgs get treated as business tier with active subscription
+  const effectiveSubscription = isInternal
+    ? { plan: "business" as PlanTier, status: "active", currentPeriodEnd: null }
+    : subscription
+  const plan = getPlanById(effectiveSubscription?.plan || "free")
 
   return {
     organizationId,
-    subscription,
+    subscription: effectiveSubscription,
     usage: {
       activeUsers: stats?.activeUsers || 0,
       workspaces: stats?.workspaces || 0,

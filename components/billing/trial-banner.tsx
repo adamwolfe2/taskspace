@@ -13,6 +13,9 @@ export function TrialBanner() {
 
   if (isDemoMode || dismissed) return null
 
+  // Internal orgs bypass all billing UI
+  if (currentOrganization?.isInternal) return null
+
   const subscription = currentOrganization?.subscription
   if (!subscription) return null
 
@@ -20,7 +23,7 @@ export function TrialBanner() {
   if (subscription.plan !== "free") return null
 
   const daysRemaining = getTrialDaysRemaining(subscription as { plan: "free"; currentPeriodEnd?: string })
-  const expired = isTrialExpired(subscription as { plan: "free"; currentPeriodEnd?: string })
+  const expired = isTrialExpired(subscription as { plan: "free"; currentPeriodEnd?: string }, currentOrganization?.isInternal)
 
   // Don't show if trial hasn't started or has tons of time left
   if (!subscription.currentPeriodEnd) return null

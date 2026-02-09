@@ -52,7 +52,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
         activeUsers: members.filter(m => m.status === "active").length,
         workspaces: workspaces.length,
         aiCreditsUsed: aiUsage,
-      }
+      },
+      auth.organization.isInternal
     )
 
     const aiCheck = canUseAI(featureContext, "eodParsing")

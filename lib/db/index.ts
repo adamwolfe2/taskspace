@@ -78,6 +78,7 @@ function parseOrganization(row: Record<string, unknown>): Organization {
     // Stripe fields
     stripeCustomerId: row.stripe_customer_id as string | undefined,
     stripeSubscriptionId: row.stripe_subscription_id as string | null | undefined,
+    isInternal: row.is_internal as boolean | undefined,
   }
 }
 

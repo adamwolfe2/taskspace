@@ -133,7 +133,8 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           {
             activeUsers: totalUsers,
             workspaces: workspaces.length,
-          }
+          },
+          auth.organization.isInternal
         )
 
         const userCheck = canAddUser(featureContext)

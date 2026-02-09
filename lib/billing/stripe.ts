@@ -347,10 +347,11 @@ export async function isFeatureEnabled(
 ): Promise<boolean> {
   try {
     const { rows } = await sql`
-      SELECT subscription->>'plan' as plan
+      SELECT subscription->>'plan' as plan, is_internal
       FROM organizations
       WHERE id = ${organizationId}
     `
+    if (rows[0]?.is_internal) return true
     const plan = rows[0]?.plan || "free"
     const planConfig = PLANS[plan] || PLANS.free
     return planConfig.features.includes(feature)

@@ -44,6 +44,9 @@ export type FeatureKey = keyof typeof FEATURES
  * Check if a feature is enabled for an organization
  */
 export function isFeatureEnabled(organization: Organization, feature: FeatureKey): boolean {
+  // Internal orgs have all features enabled
+  if (organization.isInternal) return true
+
   const plan = organization.subscription?.plan || "free"
   const features = organization.subscription?.features || PLAN_FEATURES.free.features
 
@@ -168,6 +171,7 @@ export function getUpgradeFeatures(currentPlan: string, targetPlan: string): Fea
  * Check subscription status
  */
 export function isSubscriptionActive(organization: Organization): boolean {
+  if (organization.isInternal) return true
   const status = organization.subscription?.status
   return status === "active" || status === "trialing"
 }

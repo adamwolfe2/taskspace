@@ -18,6 +18,8 @@ export interface Organization {
   // Stripe integration
   stripeCustomerId?: string
   stripeSubscriptionId?: string | null
+  // Internal orgs bypass all billing/trial checks
+  isInternal?: boolean
 }
 
 export interface OrganizationSettings {
