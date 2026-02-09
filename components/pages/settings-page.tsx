@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Toaster } from "@/components/ui/toaster"
-import { Building, Bell, Users, CreditCard, Key, Download, Sparkles, Briefcase, Sliders, User } from "lucide-react"
+import { Building, Bell, Users, CreditCard, Key, Download, Sparkles, Briefcase, Sliders, User, Palette } from "lucide-react"
 import { api } from "@/lib/api/client"
 import type { TeamMember } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
@@ -19,6 +19,7 @@ import {
   BillingSettings,
 } from "@/components/settings"
 import { WorkspaceFeaturesTab } from "@/components/settings/workspace-features-tab"
+import { WorkspaceBrandingSettings } from "@/components/settings/workspace-branding-settings"
 import { ProfileSettingsTab } from "@/components/settings/profile-settings-tab"
 import { AIInbox } from "@/components/ai/ai-inbox"
 import { AIBudgetControls } from "@/components/ai/ai-budget-controls"
@@ -98,6 +99,13 @@ export function SettingsPage() {
             )}
 
             {isAdmin && (
+              <TabsTrigger value="branding" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap min-h-[40px] sm:min-h-[36px]">
+                <Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Branding
+              </TabsTrigger>
+            )}
+
+            {isAdmin && (
               <TabsTrigger value="team" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap min-h-[40px] sm:min-h-[36px]">
                 <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Team
@@ -164,6 +172,13 @@ export function SettingsPage() {
         {isAdmin && (
           <TabsContent value="features" className="space-y-6">
             <WorkspaceFeaturesTab />
+          </TabsContent>
+        )}
+
+        {/* Branding Tab - Workspace colors and logo */}
+        {isAdmin && (
+          <TabsContent value="branding" className="space-y-6">
+            <WorkspaceBrandingSettings />
           </TabsContent>
         )}
 
