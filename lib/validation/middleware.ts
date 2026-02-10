@@ -229,8 +229,13 @@ export function isValidUUID(value: string): boolean {
  * Removes potential SQL injection patterns and excessive whitespace
  */
 export function sanitizeString(value: string): string {
+  // Handle null/undefined
+  if (!value) return ""
+
   return value
     .trim()
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "") // Remove script tags
+    .replace(/javascript:/gi, "") // Remove javascript: protocol
     .replace(/\s+/g, " ") // Normalize whitespace
     .substring(0, 10000) // Limit length
 }
