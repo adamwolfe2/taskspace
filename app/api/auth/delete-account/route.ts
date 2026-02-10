@@ -21,17 +21,18 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     // Validate request body
     const { password, confirmationText } = await validateBody(request, deleteAccountSchema)
 
-    // Get the user with password hash
+    // Get the user with password hash from database
+    // Note: auth.user may not include passwordHash for security, so we query directly
     const user = await db.users.findById(auth.user.id)
-    if (!user || !user.password) {
+    if (!user) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "User not found or password not set" },
+        { success: false, error: "User not found" },
         { status: 404 }
       )
     }
 
-    // Verify password
-    const isValidPassword = await verifyPassword(password, user.password)
+    // Verify password using passwordHash from database
+    const isValidPassword = await verifyPassword(password, user.passwordHash)
     if (!isValidPassword) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Incorrect password" },
