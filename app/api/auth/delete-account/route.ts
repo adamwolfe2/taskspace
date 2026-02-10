@@ -56,11 +56,11 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     }
 
     // Log the deletion for audit purposes
-    logger.info("User account deletion initiated", {
+    logger.info({
       userId: auth.user.id,
       email: auth.user.email,
       organizationId: auth.organization.id,
-    })
+    }, "User account deletion initiated")
 
     // Delete the user account (this should cascade to delete related data)
     await db.users.delete(auth.user.id)
