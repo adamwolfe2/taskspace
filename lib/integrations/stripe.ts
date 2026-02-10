@@ -4,30 +4,30 @@
  */
 
 import { getStripeConfig, STRIPE_PRICE_IDS, PLAN_FEATURES } from "./stripe-config"
+import type Stripe from "stripe"
 
 // Dynamic import for Stripe to handle cases where it's not installed
- 
- 
-let Stripe: (new (key: string, options: Record<string, unknown>) => any) | null = null
+type StripeConstructor = new (key: string, options: Stripe.StripeConfig) => Stripe
 
-async function getStripeClient() {
+let StripeClient: StripeConstructor | null = null
+
+async function getStripeClient(): Promise<Stripe> {
   const config = getStripeConfig()
 
   if (!config.isConfigured) {
     throw new Error("Stripe is not configured. Please set STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY")
   }
 
-  if (!Stripe) {
+  if (!StripeClient) {
     try {
-      // @ts-ignore - dynamic import
       const stripeModule = await import("stripe")
-      Stripe = stripeModule.default
+      StripeClient = stripeModule.default as StripeConstructor
     } catch (error) {
       throw new Error("Stripe package not installed. Run: npm install stripe")
     }
   }
 
-  return new Stripe(config.secretKey!, {
+  return new StripeClient(config.secretKey!, {
     apiVersion: "2024-06-20",
     typescript: true,
   })
