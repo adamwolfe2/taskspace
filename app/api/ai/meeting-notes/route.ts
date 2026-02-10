@@ -31,7 +31,7 @@ export const POST = withAuth(async (request, auth) => {
 
     const validated = await validateBody(request, aiMeetingNotesSchema)
     const { workspaceId } = validated
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const meetingData = validated.meetingData as any
 
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)

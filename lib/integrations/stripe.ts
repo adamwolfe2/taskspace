@@ -6,8 +6,8 @@
 import { getStripeConfig, STRIPE_PRICE_IDS, PLAN_FEATURES } from "./stripe-config"
 
 // Dynamic import for Stripe to handle cases where it's not installed
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Stripe is dynamically imported
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
+ 
 let Stripe: (new (key: string, options: Record<string, unknown>) => any) | null = null
 
 async function getStripeClient() {

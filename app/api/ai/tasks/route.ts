@@ -49,7 +49,7 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
 
     const validated = await validateBody(request, aiTaskPatchSchema)
     const { taskId, action } = validated
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const updates = validated.updates as Record<string, any> | undefined
 
     // Get the existing task

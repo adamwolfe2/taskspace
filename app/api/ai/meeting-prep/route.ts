@@ -32,7 +32,7 @@ export const POST = withAuth(async (request, auth) => {
 
     const validated = await validateBody(request, aiMeetingPrepSchema)
     const { workspaceId } = validated
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const rocks = validated.rocks as any
     const tasks = validated.tasks as any
     const issues = validated.issues as any
