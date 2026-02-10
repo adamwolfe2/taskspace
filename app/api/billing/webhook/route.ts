@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify and construct event
-    let event: { id: string; type: string; data: { object: StripeWebhookObject } }
+    let event: { id: string; type: string; data: { object: any } }
     try {
-      event = await constructWebhookEvent(payload, signature)
+      event = await constructWebhookEvent(payload, signature) as any
     } catch (error) {
       logError(logger, "Webhook signature verification failed", error)
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
 /** Stripe webhook object with dynamic properties */
 interface StripeWebhookObject {
   id: string
-  customer: string
+  customer?: string
   metadata?: Record<string, string>
   subscription?: string
   status?: string
@@ -370,7 +370,7 @@ async function handleSubscriptionDeleted(subscription: StripeWebhookObject) {
  * Handle successful invoice payment
  */
 async function handleInvoicePaid(invoice: StripeWebhookObject) {
-  if (!invoice.subscription) return
+  if (!invoice.subscription || !invoice.customer) return
 
   const org = await db.organizations.findByStripeCustomerId(invoice.customer)
   if (!org) return

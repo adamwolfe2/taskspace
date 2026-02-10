@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import type { Rock } from "@/lib/types"
 import { formatDate } from "@/lib/utils/date-utils"
-import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight, RefreshCw } from "lucide-react"
+import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight, RefreshCw, ChevronDown, ChevronUp } from "lucide-react"
 import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
@@ -80,6 +80,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
   const [selectedRock, setSelectedRock] = useState<Rock | null>(null)
   const [selectedQuarter, setSelectedQuarter] = useState<string>("all")
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(true)
   const { toast } = useToast()
 
   // Get available quarters for filter
@@ -170,6 +171,17 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
       <div className="section-header flex-col items-start gap-3">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-1 hover:bg-slate-100 rounded transition-colors"
+              aria-label={isExpanded ? "Collapse section" : "Expand section"}
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4 text-slate-500" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-slate-500" />
+              )}
+            </button>
             <Target className="h-5 w-5 text-slate-500" />
             <h3 className="font-semibold text-slate-900">My Rocks</h3>
             <span className="text-sm text-slate-500">({filteredRocks.length})</span>
@@ -227,8 +239,9 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
         )}
       </div>
 
-      <div className="p-5">
-        {filteredRocks.length === 0 ? (
+      {isExpanded && (
+        <div className="p-5 max-h-[500px] overflow-y-auto">
+          {filteredRocks.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Target className="h-6 w-6 text-slate-400" />
@@ -339,7 +352,8 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
             })}
           </div>
         )}
-      </div>
+        </div>
+      )}
 
       {/* Rock Detail Modal */}
       {selectedRock && onUpdateRock && (

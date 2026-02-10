@@ -58,6 +58,10 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       customerId,
     })
 
+    if (!session.url) {
+      throw new Error("Stripe checkout session created but no URL returned")
+    }
+
     return NextResponse.json<ApiResponse<{ checkoutUrl: string; sessionId: string }>>({
       success: true,
       data: {

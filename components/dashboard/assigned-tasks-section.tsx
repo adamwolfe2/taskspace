@@ -5,7 +5,7 @@ import type { AssignedTask, Rock, TeamMember } from "@/lib/types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils/date-utils"
-import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, AlertCircle, Clock, Plus, Trash2, Loader2 } from "lucide-react"
+import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, ChevronUp, AlertCircle, Clock, Plus, Trash2, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useApp } from "@/lib/contexts/app-context"
 import { differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
@@ -85,6 +85,7 @@ export function AssignedTasksSection({
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState<AssignedTask | null>(null)
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null)
+  const [isExpanded, setIsExpanded] = useState(true)
 
   // Sort tasks: platform-assigned (manual) first, then Asana tasks
   const sortBySource = (a: AssignedTask, b: AssignedTask) => {
@@ -202,6 +203,17 @@ export function AssignedTasksSection({
       <div className="section-header">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-1 hover:bg-slate-100 rounded transition-colors"
+              aria-label={isExpanded ? "Collapse section" : "Expand section"}
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4 text-slate-500" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-slate-500" />
+              )}
+            </button>
             <CheckSquare className="h-5 w-5 text-slate-500" />
             <h3 className="font-semibold text-slate-900">My Tasks</h3>
             <span className="text-sm text-slate-500">({tasks.length})</span>
@@ -228,8 +240,9 @@ export function AssignedTasksSection({
         </div>
       </div>
 
-      <div className="p-5">
-        {tasks.length === 0 ? (
+      {isExpanded && (
+        <div className="p-5 max-h-[500px] overflow-y-auto">
+          {tasks.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckSquare className="h-6 w-6 text-slate-400" />
@@ -394,7 +407,8 @@ export function AssignedTasksSection({
             )}
           </div>
         )}
-      </div>
+        </div>
+      )}
 
       {/* Add Task Modal */}
       {onAddTask && (
