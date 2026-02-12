@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { withAuth, withAdmin } from "@/lib/api/middleware"
+import { withAuth, withAdmin, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -38,7 +38,6 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     }
 
     // SECURITY: Verify workspace belongs to user's organization
-    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
@@ -200,7 +199,6 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     }
 
     // SECURITY: Verify workspace belongs to user's organization
-    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(

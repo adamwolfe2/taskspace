@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -27,7 +27,6 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     }
 
     // SECURITY: Verify workspace belongs to user's organization
-    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(

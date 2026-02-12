@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import type { RouteContext } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
@@ -30,7 +30,6 @@ export const GET = withAuth(async (request, auth, context?) => {
     }
 
     // SECURITY: Verify workspace belongs to user's organization
-    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(meeting.workspaceId, auth.organization.id)
     if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
@@ -81,7 +80,6 @@ export const PATCH = withAuth(async (request, auth, context?) => {
     }
 
     // SECURITY: Verify workspace belongs to user's organization
-    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(meeting.workspaceId, auth.organization.id)
     if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
@@ -161,7 +159,6 @@ export const DELETE = withAuth(async (request, auth, context?) => {
     }
 
     // SECURITY: Verify workspace belongs to user's organization
-    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(meeting.workspaceId, auth.organization.id)
     if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(

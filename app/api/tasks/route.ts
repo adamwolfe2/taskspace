@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
 import { sendSlackMessage, buildTaskAssignmentMessage, isSlackConfigured } from "@/lib/integrations/slack"
@@ -30,7 +30,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     }
 
     // SECURITY: Verify workspace belongs to user's organization
-    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
@@ -122,7 +122,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     )
 
     // SECURITY: Verify workspace belongs to user's organization
-    const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
+
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(

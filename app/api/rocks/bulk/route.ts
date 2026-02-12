@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { withAdmin } from "@/lib/api/middleware"
+import { withAdmin, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
 import { aiRateLimit, RATE_LIMITS } from "@/lib/api/rate-limit"
@@ -48,7 +48,6 @@ export const POST = withAdmin(async (request, auth) => {
 
     // Validate workspace if provided
     if (workspaceId) {
-      const { verifyWorkspaceOrgBoundary } = await import("@/lib/api/middleware")
       const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
       if (!isValidWorkspace) {
         return NextResponse.json<ApiResponse<null>>(
