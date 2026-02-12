@@ -15,6 +15,7 @@ export interface CacheEntry<T> {
   value: T
   expiresAt: number
   createdAt: number
+  lastAccessedAt: number
   hitCount: number
 }
 
@@ -48,9 +49,12 @@ export class Cache<T = unknown> {
     this.maxSize = options.maxSize || 1000
     const cleanupInterval = options.cleanupIntervalMs || 60000 // Default 1 minute
 
-    // Start cleanup interval
+    // Start cleanup interval (unref prevents blocking process exit in serverless)
     if (typeof setInterval !== "undefined") {
       this.cleanupInterval = setInterval(() => this.cleanup(), cleanupInterval)
+      if (this.cleanupInterval?.unref) {
+        this.cleanupInterval.unref()
+      }
     }
   }
 
@@ -72,6 +76,7 @@ export class Cache<T = unknown> {
     }
 
     entry.hitCount++
+    entry.lastAccessedAt = Date.now()
     this.hits++
     return entry.value
   }
@@ -85,11 +90,13 @@ export class Cache<T = unknown> {
       this.evictLRU()
     }
 
+    const now = Date.now()
     const ttl = ttlSeconds ? ttlSeconds * 1000 : this.ttlMs
     this.cache.set(key, {
       value,
-      expiresAt: Date.now() + ttl,
-      createdAt: Date.now(),
+      expiresAt: now + ttl,
+      createdAt: now,
+      lastAccessedAt: now,
       hitCount: 0,
     })
   }
@@ -190,11 +197,14 @@ export class Cache<T = unknown> {
   private evictLRU(): void {
     let oldestKey: string | null = null
     let oldestTime = Infinity
+    let lowestHits = Infinity
 
     for (const [key, entry] of this.cache.entries()) {
-      const lastAccess = entry.createdAt + entry.hitCount // Simple LRU approximation
-      if (lastAccess < oldestTime) {
-        oldestTime = lastAccess
+      // Prefer evicting entries with older access time; break ties by hit count
+      if (entry.lastAccessedAt < oldestTime ||
+          (entry.lastAccessedAt === oldestTime && entry.hitCount < lowestHits)) {
+        oldestTime = entry.lastAccessedAt
+        lowestHits = entry.hitCount
         oldestKey = key
       }
     }

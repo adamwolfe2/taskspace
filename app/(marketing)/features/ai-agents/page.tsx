@@ -8,7 +8,6 @@ import {
   Brain,
   Sparkles,
   BarChart3,
-  Calendar,
   Users,
   Target,
   X,

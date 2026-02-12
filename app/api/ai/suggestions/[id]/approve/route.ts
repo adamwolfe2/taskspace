@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { withAdmin, type RouteContext } from "@/lib/api/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import {
   getSuggestionById,
@@ -9,7 +9,7 @@ import {
 import { generateId } from "@/lib/auth/password"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AISuggestion, AssignedTask } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { aiSuggestionApproveSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 

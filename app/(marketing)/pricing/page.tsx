@@ -241,7 +241,7 @@ export default function PricingPage() {
             </p>
 
             <dl className="mt-12 space-y-6">
-              {faqs.map((faq, index) => (
+              {faqs.map((faq, _index) => (
                 <div
                   key={faq.question}
                   className="rounded-2xl border border-gray-200 bg-white p-8 hover:shadow-sm transition-shadow"

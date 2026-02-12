@@ -5,7 +5,7 @@ import { generateId } from "@/lib/auth/password"
 import { sendTaskAssignmentEmail, isEmailConfigured } from "@/lib/integrations/email"
 import { aiRateLimit } from "@/lib/api/rate-limit"
 import type { ApiResponse, AIGeneratedTask, AssignedTask, TeamMember } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { aiTaskPatchSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
@@ -192,7 +192,7 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
 })
 
 // DELETE /api/ai/tasks - Delete an AI-generated task
-export const DELETE = withAdmin(async (request: NextRequest, auth) => {
+export const DELETE = withAdmin(async (request: NextRequest, _auth) => {
   try {
     const { searchParams } = new URL(request.url)
     const taskId = searchParams.get("taskId")

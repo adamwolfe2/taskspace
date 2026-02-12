@@ -1,4 +1,5 @@
 import { sql } from "./sql"
+import { withTransaction } from "./transactions"
 import { sanitizeText } from "@/lib/utils/sanitize"
 import type {
   User,
@@ -3724,30 +3725,32 @@ export const db = {
       metadata?: Record<string, unknown>
     }): Promise<void> {
       const { organizationId, userId, action, model, inputTokens, outputTokens, creditsUsed, metadata } = params
+      const metadataJson = JSON.stringify(metadata || {})
 
-      await sql`
-        INSERT INTO ai_usage (id, organization_id, user_id, action, model, input_tokens, output_tokens, credits_used, metadata, created_at)
-        VALUES (
-          gen_random_uuid()::text,
-          ${organizationId},
-          ${userId},
-          ${action},
-          ${model},
-          ${inputTokens},
-          ${outputTokens},
-          ${creditsUsed},
-          ${JSON.stringify(metadata || {})}::jsonb,
-          NOW()
-        )
-      `
+      // Wrap in transaction to ensure usage + credit deduction are atomic
+      await withTransaction(async (client) => {
+        await client.sql`
+          INSERT INTO ai_usage (id, organization_id, user_id, action, model, input_tokens, output_tokens, credits_used, metadata, created_at)
+          VALUES (
+            gen_random_uuid()::text,
+            ${organizationId},
+            ${userId},
+            ${action},
+            ${model},
+            ${inputTokens},
+            ${outputTokens},
+            ${metadataJson}::jsonb,
+            NOW()
+          )
+        `
 
-      // Update subscription credits used
-      await sql`
-        UPDATE subscriptions
-        SET ai_credits_used = ai_credits_used + ${creditsUsed},
-            updated_at = NOW()
-        WHERE organization_id = ${organizationId}
-      `
+        await client.sql`
+          UPDATE subscriptions
+          SET ai_credits_used = ai_credits_used + ${creditsUsed},
+              updated_at = NOW()
+          WHERE organization_id = ${organizationId}
+        `
+      })
     },
 
     async getMonthlyUsage(organizationId: string): Promise<number> {
@@ -3900,8 +3903,9 @@ export const db = {
           ON CONFLICT (email_type, organization_id, member_id, delivery_date) DO NOTHING
         `
       } catch (error) {
-        // Ignore unique constraint violations - already delivered
-        if (error instanceof Error && !error.message.includes("unique")) {
+        // Ignore unique constraint violations (23505) - already delivered
+        const pgError = error as { code?: string }
+        if (pgError.code !== "23505") {
           throw error
         }
       }

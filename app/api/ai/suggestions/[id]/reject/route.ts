@@ -3,7 +3,7 @@ import { withAdmin } from "@/lib/api/middleware"
 import { getSuggestionById, rejectSuggestion } from "@/lib/ai/suggestions"
 import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse, AISuggestion } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { aiSuggestionRejectSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 

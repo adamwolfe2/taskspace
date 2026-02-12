@@ -5,7 +5,7 @@ import { db } from "@/lib/db"
 import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
-import { subDays, subMonths, startOfDay, endOfDay, eachDayOfInterval, format } from "date-fns"
+import { subDays, subMonths, eachDayOfInterval, format } from "date-fns"
 
 /**
  * GET /api/analytics
@@ -89,7 +89,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 
     // Generate daily intervals
     const days = eachDayOfInterval({ start: startDate, end: now })
-    const dateLabels = days.map((day) => format(day, "MMM dd"))
+    const _dateLabels = days.map((day) => format(day, "MMM dd"))
 
     // 1. ROCK COMPLETION TREND
     const rockCompletionData = days.map((day) => {

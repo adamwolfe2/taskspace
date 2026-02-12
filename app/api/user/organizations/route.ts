@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
+import { withTransaction } from "@/lib/db/transactions"
 import { generateId, slugify } from "@/lib/auth/password"
 import type { ApiResponse, UserOrganizationItem } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { userCreateOrganizationSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
@@ -81,7 +82,57 @@ export const POST = withAuth(async (request, auth) => {
       counter++
     }
 
-    // Create organization
+    // Build organization data
+    const settingsJson = JSON.stringify({
+      timezone: "America/New_York",
+      weekStartDay: 1,
+      eodReminderTime: "17:00",
+      enableEmailNotifications: true,
+      enableSlackIntegration: false,
+    })
+    const subscriptionJson = JSON.stringify({
+      plan: "free",
+      status: "active",
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      maxUsers: 3,
+      features: ["basic_rocks", "basic_tasks", "eod_reports"],
+    })
+
+    const defaultWorkspaceId = generateId()
+    const memberId = generateId()
+    const workspaceMemberId = generateId()
+
+    // Wrap all 4 inserts in a transaction for atomicity
+    await withTransaction(async (client) => {
+      // 1. Create organization
+      await client.sql`
+        INSERT INTO organizations (id, name, slug, owner_id, settings, subscription, created_at, updated_at)
+        VALUES (${orgId}, ${name.trim()}, ${slug}, ${auth.user.id},
+                ${settingsJson}::jsonb, ${subscriptionJson}::jsonb, ${now}, ${now})
+      `
+
+      // 2. Create default workspace
+      await client.sql`
+        INSERT INTO workspaces (id, organization_id, name, slug, type, description, is_default, created_by, created_at, updated_at, settings)
+        VALUES (${defaultWorkspaceId}, ${orgId}, ${"Default"}, ${"default"}, ${"team"},
+                ${"Default workspace for all organization members"}, ${true}, ${auth.user.id},
+                ${now}, ${now}, ${JSON.stringify({})}::jsonb)
+      `
+
+      // 3. Create member record
+      await client.sql`
+        INSERT INTO organization_members (id, organization_id, user_id, email, name, role, department, joined_at, status)
+        VALUES (${memberId}, ${orgId}, ${auth.user.id}, ${auth.user.email},
+                ${auth.user.name}, ${"owner"}, ${"Leadership"}, ${now}, ${"active"})
+      `
+
+      // 4. Add to default workspace
+      await client.sql`
+        INSERT INTO workspace_members (id, workspace_id, user_id, role, joined_at)
+        VALUES (${workspaceMemberId}, ${defaultWorkspaceId}, ${auth.user.id}, ${"admin"}, ${now})
+      `
+    })
+
     const organization = {
       id: orgId,
       name: name.trim(),
@@ -104,52 +155,6 @@ export const POST = withAuth(async (request, auth) => {
         features: ["basic_rocks", "basic_tasks", "eod_reports"],
       },
     }
-
-    await db.organizations.create(organization)
-
-    // Create default workspace
-    const defaultWorkspaceId = generateId()
-    const defaultWorkspace = {
-      id: defaultWorkspaceId,
-      organizationId: orgId,
-      name: "Default",
-      slug: "default",
-      type: "team",
-      description: "Default workspace for all organization members",
-      isDefault: true,
-      createdBy: auth.user.id,
-      createdAt: now,
-      updatedAt: now,
-      settings: {},
-    }
-
-    await db.workspaces.create(defaultWorkspace)
-
-    // Create member record
-    const member = {
-      id: generateId(),
-      organizationId: orgId,
-      userId: auth.user.id,
-      email: auth.user.email,
-      name: auth.user.name,
-      role: "owner" as "owner" | "admin" | "member",
-      department: "Leadership",
-      joinedAt: now,
-      status: "active" as "active" | "invited" | "inactive",
-    }
-
-    await db.members.create(member)
-
-    // Add to default workspace
-    const workspaceMember = {
-      id: generateId(),
-      workspaceId: defaultWorkspaceId,
-      userId: auth.user.id,
-      role: "admin" as "admin" | "member" | "owner",
-      joinedAt: now,
-    }
-
-    await db.workspaceMembers.create(workspaceMember)
 
     return NextResponse.json<ApiResponse<{ organization: typeof organization }>>({
       success: true,

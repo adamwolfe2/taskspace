@@ -34,7 +34,7 @@ const staggerContainer = {
 }
 
 export default function Level10MeetingsPage() {
-  const [currentSection, setCurrentSection] = useState(2)
+  const [, setCurrentSection] = useState(2)
   const sections = [
     { name: "Segue", time: 5, status: "done" },
     { name: "Scorecard", time: 5, status: "done" },

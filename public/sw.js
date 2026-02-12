@@ -1,4 +1,4 @@
-/* eslint-env serviceworker */
+/* global self, clients, addEventListener */
 // Service Worker for Align Push Notifications
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

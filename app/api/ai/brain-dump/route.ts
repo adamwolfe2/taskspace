@@ -7,7 +7,7 @@ import { setTeamMemberMetric } from "@/lib/metrics"
 import { aiRateLimit } from "@/lib/api/rate-limit"
 import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import type { ApiResponse, AdminBrainDump, AIGeneratedTask, TeamMember, ParsedScorecardMetric } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { aiBrainDumpSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 

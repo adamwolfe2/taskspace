@@ -6,7 +6,7 @@ import { generateId } from "@/lib/auth/password"
 import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import { aiRateLimit } from "@/lib/api/rate-limit"
 import type { ApiResponse, AIQueryResponse, AIConversation, TeamMember } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { aiQueryRequestSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 

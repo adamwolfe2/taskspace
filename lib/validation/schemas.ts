@@ -71,14 +71,35 @@ export const apiKeyCreateSchema = z.object({
 // ============================================
 
 export const createOrganizationSchema = z.object({
-  name: z.string().min(2).max(100),
+  name: z.string().trim().min(2).max(100),
   timezone: z.string().default("America/New_York"),
 })
 
+const weekStartDaySchema = z.union([
+  z.literal(0), z.literal(1), z.literal(2), z.literal(3),
+  z.literal(4), z.literal(5), z.literal(6),
+])
+
 export const updateOrganizationSchema = z.object({
   name: z.string().min(2).max(100).optional(),
-  settings: z.record(z.unknown()).optional(),
-  subscription: z.record(z.unknown()).optional(),
+  settings: z.object({
+    timezone: z.string().optional(),
+    weekStartDay: weekStartDaySchema.optional(),
+    eodReminderTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    enableEmailNotifications: z.boolean().optional(),
+    enableSlackIntegration: z.boolean().optional(),
+    slackWebhookUrl: z.string().url().optional(),
+    teamToolsUrl: z.string().url().optional(),
+  }).passthrough().optional(),
+  subscription: z.object({
+    plan: z.enum(["free", "team", "business"]).optional(),
+    status: z.enum(["active", "trialing", "past_due", "canceled"]).optional(),
+    currentPeriodEnd: z.string().nullable().optional(),
+    maxUsers: z.number().int().min(1).optional(),
+    features: z.array(z.string()).optional(),
+    billingCycle: z.enum(["monthly", "yearly"]).nullable().optional(),
+    cancelAtPeriodEnd: z.boolean().optional(),
+  }).passthrough().optional(),
 })
 
 export const updateOrganizationSettingsSchema = z.object({
@@ -183,8 +204,8 @@ export const recurrenceSchema = z.object({
 })
 
 export const createTaskSchema = z.object({
-  title: z.string().min(1).max(500),
-  description: z.string().max(5000).optional(),
+  title: z.string().trim().min(1).max(500),
+  description: z.string().trim().max(5000).optional(),
   assigneeId: uuidSchema.optional(), // Optional - defaults to current user
   workspaceId: uuidSchema, // Required for data isolation
   priority: prioritySchema.default("normal"),
@@ -195,8 +216,8 @@ export const createTaskSchema = z.object({
 
 export const updateTaskSchema = z.object({
   id: uuidSchema, // Task ID to update
-  title: z.string().min(1).max(500).optional(),
-  description: z.string().max(5000).optional(),
+  title: z.string().trim().min(1).max(500).optional(),
+  description: z.string().trim().max(5000).optional(),
   priority: prioritySchema.optional(),
   dueDate: dateSchema.optional(),
   status: taskStatusSchema.optional(),
@@ -230,8 +251,8 @@ export const milestoneSchema = z.object({
 })
 
 export const createRockSchema = z.object({
-  title: z.string().min(1).max(500),
-  description: z.string().min(1).max(5000), // Required per route validation
+  title: z.string().trim().min(1).max(500),
+  description: z.string().trim().min(1).max(5000), // Required per route validation
   userId: uuidSchema.optional(), // Optional - defaults to current user
   workspaceId: uuidSchema, // Required for data isolation
   dueDate: dateSchema,
@@ -243,8 +264,8 @@ export const createRockSchema = z.object({
 
 export const updateRockSchema = z.object({
   id: uuidSchema, // Rock ID to update
-  title: z.string().min(1).max(500).optional(),
-  description: z.string().max(5000).optional(),
+  title: z.string().trim().min(1).max(500).optional(),
+  description: z.string().trim().max(5000).optional(),
   progress: z.number().int().min(0).max(100).optional(),
   dueDate: dateSchema.optional(),
   status: rockStatusSchema.optional(),
@@ -339,7 +360,7 @@ export const createNotificationSchema = z.object({
   title: z.string().min(1).max(200),
   message: z.string().max(1000),
   actionUrl: z.string().url().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
 })
 
 export const markNotificationsReadSchema = z.object({
@@ -1103,7 +1124,7 @@ export const maEmployeeUpdateSchema = z.object({
 })
 
 export const userCreateOrganizationSchema = z.object({
-  name: z.string().min(1, "Organization name is required").max(100),
+  name: z.string().trim().min(1, "Organization name is required").max(100),
 })
 
 export const streakUpdateSchema = z.object({

@@ -169,7 +169,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           VALUES (${workspaceId}, ${member.user_id}, ${memberRole})
           ON CONFLICT (workspace_id, user_id) DO NOTHING
         `
-      } catch (error) {
+      } catch (_error) {
         // Ignore conflicts
       }
     }

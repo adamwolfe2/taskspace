@@ -5,20 +5,13 @@ import {
   getSuggestions,
   bulkRejectSuggestions,
   approveSuggestion,
-  type ApprovalResult,
 } from "@/lib/ai/suggestions"
 import { generateId } from "@/lib/auth/password"
 import { aiRateLimit } from "@/lib/api/rate-limit"
 import type { ApiResponse, AISuggestion, AssignedTask } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { aiBulkSuggestionSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
-
-interface BulkActionRequest {
-  action: "approve" | "reject"
-  suggestionIds: string[]
-  reviewerNotes?: string
-}
 
 interface BulkActionResponse {
   processed: number

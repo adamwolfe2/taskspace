@@ -1,4 +1,4 @@
-/* eslint-env jest */
+/* global describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, jest */
 /**
  * Jest Setup File
  *

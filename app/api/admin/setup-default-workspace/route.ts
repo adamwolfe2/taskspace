@@ -16,7 +16,6 @@ import {
   type CreateWorkspaceParams,
 } from "@/lib/db/workspaces"
 import { db } from "@/lib/db"
-import { generateId } from "@/lib/auth/password"
 
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   // Warn when running in production (allowed since it's behind withAdmin and idempotent)

@@ -7,7 +7,7 @@ import { AI_OPERATION_COSTS } from "@/lib/billing/plans"
 import { getUserWorkspaces } from "@/lib/db/workspaces"
 import { aiRateLimit } from "@/lib/api/rate-limit"
 import type { ApiResponse } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { aiEodParseSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 

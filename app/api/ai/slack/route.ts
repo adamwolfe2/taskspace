@@ -10,7 +10,7 @@ import {
 } from "@/lib/integrations/slack"
 import { aiRateLimit } from "@/lib/api/rate-limit"
 import type { ApiResponse, DailyDigest } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { aiSlackNotificationSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 

@@ -98,7 +98,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 
     let migratedRecords = 0
 
-    const tables = [
+    const _tables = [
       'assigned_tasks',
       'rocks',
       'eod_reports',
