@@ -15,22 +15,13 @@ import { AcceptInvitationPage } from "@/components/auth/accept-invitation-page"
 import { DashboardPage } from "@/components/pages/dashboard-page"
 import { HistoryPage } from "@/components/pages/history-page"
 import { RocksPage } from "@/components/pages/rocks-page"
-import { AdminPage } from "@/components/pages/admin-page"
-import { AdminTeamPage } from "@/components/pages/admin-team-page"
-import { AdminDatabasePage } from "@/components/pages/admin-database-page"
 import { TasksPage } from "@/components/pages/tasks-page"
 import { SettingsPage } from "@/components/pages/settings-page"
-import { CommandCenterPage } from "@/components/pages/command-center-page"
-import { AnalyticsPage } from "@/components/pages/analytics-page"
 import { CalendarPage } from "@/components/pages/calendar-page"
-import { ManagerDashboardPage } from "@/components/pages/manager-dashboard-page"
 import { ScorecardPage } from "@/components/pages/scorecard-page"
-import { OrgChartPage } from "@/components/pages/org-chart-page"
 import { IdsBoardPage } from "@/components/pages/ids-board-page"
-import { NotesPage } from "@/components/pages/notes-page"
-import { VTOPage } from "@/components/pages/vto-page"
-import { PeopleAnalyzerPage } from "@/components/pages/people-analyzer-page"
 import { SetupOrganizationPage } from "@/components/pages/setup-organization-page"
+import dynamic from "next/dynamic"
 import { InvitedUserWelcome } from "@/components/onboarding/invited-user-welcome"
 import { BrandThemeProvider } from "@/lib/contexts/brand-theme-context"
 import { useState, useEffect } from "react"
@@ -41,13 +32,56 @@ import { initGlobalErrorHandler } from "@/lib/api/client"
 import { DemoModeBanner } from "@/components/shared/demo-mode-banner"
 import { EmailVerificationBanner } from "@/components/shared/email-verification-banner"
 import { TrialBanner } from "@/components/billing/trial-banner"
-import { Loader2 } from "lucide-react"
 import {
   DashboardSkeleton,
   HistoryPageSkeleton,
   TasksPageSkeleton,
   RocksPageSkeleton,
 } from "@/components/dashboard/skeletons"
+
+// Dynamic imports — heavy libs + admin-only + secondary pages
+const AnalyticsPage = dynamic(
+  () => import("@/components/pages/analytics-page").then(mod => ({ default: mod.AnalyticsPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const NotesPage = dynamic(
+  () => import("@/components/pages/notes-page").then(mod => ({ default: mod.NotesPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const OrgChartPage = dynamic(
+  () => import("@/components/pages/org-chart-page").then(mod => ({ default: mod.OrgChartPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const AdminPage = dynamic(
+  () => import("@/components/pages/admin-page").then(mod => ({ default: mod.AdminPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const AdminTeamPage = dynamic(
+  () => import("@/components/pages/admin-team-page").then(mod => ({ default: mod.AdminTeamPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const AdminDatabasePage = dynamic(
+  () => import("@/components/pages/admin-database-page").then(mod => ({ default: mod.AdminDatabasePage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const CommandCenterPage = dynamic(
+  () => import("@/components/pages/command-center-page").then(mod => ({ default: mod.CommandCenterPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const PeopleAnalyzerPage = dynamic(
+  () => import("@/components/pages/people-analyzer-page").then(mod => ({ default: mod.PeopleAnalyzerPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const VTOPage = dynamic(
+  () => import("@/components/pages/vto-page").then(mod => ({ default: mod.VTOPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const ManagerDashboardPage = dynamic(
+  () => import("@/components/pages/manager-dashboard-page").then(mod => ({ default: mod.ManagerDashboardPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+
+import { Loader2 } from "lucide-react"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { KeyboardShortcutsDialog, useKeyboardShortcuts } from "@/components/shared/keyboard-shortcuts-dialog"
 
