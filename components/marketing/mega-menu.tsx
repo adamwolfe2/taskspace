@@ -17,7 +17,11 @@ import {
   Users,
   TrendingUp,
   Grid,
-  Plug
+  Plug,
+  CheckSquare,
+  Lightbulb,
+  Bot,
+  MessageSquare
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -243,6 +247,38 @@ export function MegaMenu() {
                         Analytics
                       </Link>
                       <Link
+                        href="/features/tasks"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <CheckSquare className="w-4 h-4" />
+                        Tasks & To-Dos
+                      </Link>
+                      <Link
+                        href="/features/vto"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Lightbulb className="w-4 h-4" />
+                        Vision / Traction
+                      </Link>
+                      <Link
+                        href="/features/ai-agents"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Bot className="w-4 h-4" />
+                        AI Agents
+                      </Link>
+                      <Link
+                        href="/features/communication"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        Communication
+                      </Link>
+                      <Link
                         href="/features"
                         className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
@@ -456,6 +492,16 @@ export function MegaMenu() {
                         </div>
                         <div className="text-sm text-gray-600">Performance dashboards</div>
                       </Link>
+                      <Link
+                        href="/features/tasks"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <CheckSquare className="w-4 h-4" />
+                          Tasks & To-Dos
+                        </div>
+                        <div className="text-sm text-gray-600">Task assignment and tracking</div>
+                      </Link>
                     </div>
                   </div>
 
@@ -483,6 +529,36 @@ export function MegaMenu() {
                           Integrations
                         </div>
                         <div className="text-sm text-gray-600">Connect your tools</div>
+                      </Link>
+                      <Link
+                        href="/features/vto"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <Lightbulb className="w-4 h-4" />
+                          Vision / Traction
+                        </div>
+                        <div className="text-sm text-gray-600">VTO and strategic planning</div>
+                      </Link>
+                      <Link
+                        href="/features/ai-agents"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <Bot className="w-4 h-4" />
+                          AI Agents
+                        </div>
+                        <div className="text-sm text-gray-600">Intelligent automation</div>
+                      </Link>
+                      <Link
+                        href="/features/communication"
+                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2 font-medium text-black mb-1">
+                          <MessageSquare className="w-4 h-4" />
+                          Communication
+                        </div>
+                        <div className="text-sm text-gray-600">Team messaging and updates</div>
                       </Link>
                     </div>
                   </div>

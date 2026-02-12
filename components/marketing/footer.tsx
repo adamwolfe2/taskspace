@@ -123,10 +123,18 @@ export function MarketingFooter() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
+        <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-500">
             © {currentYear} Taskspace. All rights reserved.
           </p>
+          <div className="flex items-center gap-6">
+            <Link href="/terms" className="text-sm text-gray-500 hover:text-black transition-colors">
+              Terms of Service
+            </Link>
+            <Link href="/privacy" className="text-sm text-gray-500 hover:text-black transition-colors">
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
