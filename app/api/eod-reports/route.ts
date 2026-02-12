@@ -228,9 +228,6 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    // Multiple EOD reports per day are allowed - no duplicate check needed
-    // Users can submit as many reports as they want for any valid date
-
     const now = new Date().toISOString()
 
     // Parse metric value - ensure it's a valid number or null
@@ -241,24 +238,64 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       ? parsedMetricValue
       : null
 
-    const report: EODReport = {
-      id: generateId(),
-      organizationId: auth.organization.id,
-      workspaceId: workspaceId, // Required - validated above
-      userId: auth.user.id,
-      date: reportDate,
-      tasks,
-      challenges: challenges || "",
-      tomorrowPriorities,
-      needsEscalation: needsEscalation || false,
-      escalationNote: needsEscalation ? (escalationNote || null) : null,
-      metricValueToday: validMetricValue,
-      attachments: attachments && Array.isArray(attachments) && attachments.length > 0 ? attachments : undefined,
-      submittedAt: now,
-      createdAt: now,
-    }
+    // Check if user already has a report for this date — merge if so
+    const existingReport = await db.eodReports.findByUserAndDate(auth.user.id, auth.organization.id, reportDate)
 
-    await db.eodReports.create(report)
+    let report: EODReport
+    let isMerge = false
+
+    if (existingReport) {
+      isMerge = true
+      // Merge tasks: append new tasks, deduplicate by text
+      const existingTexts = new Set(existingReport.tasks.map(t => t.text))
+      const newTasks = tasks.filter(t => !existingTexts.has(t.text))
+      const mergedTasks = [...existingReport.tasks, ...newTasks]
+
+      // Merge challenges: join with separator if both non-empty
+      const newChallenges = challenges || ""
+      let mergedChallenges = existingReport.challenges || ""
+      if (newChallenges && mergedChallenges) {
+        mergedChallenges = mergedChallenges + "\n\n" + newChallenges
+      } else if (newChallenges) {
+        mergedChallenges = newChallenges
+      }
+
+      const mergedUpdates: Partial<EODReport> = {
+        tasks: mergedTasks,
+        challenges: mergedChallenges,
+        tomorrowPriorities, // Replace with latest
+        needsEscalation: needsEscalation || false,
+        escalationNote: needsEscalation ? (escalationNote || null) : null,
+        metricValueToday: validMetricValue,
+        submittedAt: now,
+      }
+
+      const updated = await db.eodReports.update(existingReport.id, mergedUpdates)
+      report = updated || { ...existingReport, ...mergedUpdates }
+
+      // Delete stale AI insight — it will be regenerated below
+      await db.eodInsights.deleteByReportId(existingReport.id)
+        .catch(err => logError(logger, "Failed to delete stale AI insight on merge", err, { reportId: existingReport.id }))
+    } else {
+      report = {
+        id: generateId(),
+        organizationId: auth.organization.id,
+        workspaceId: workspaceId, // Required - validated above
+        userId: auth.user.id,
+        date: reportDate,
+        tasks,
+        challenges: challenges || "",
+        tomorrowPriorities,
+        needsEscalation: needsEscalation || false,
+        escalationNote: needsEscalation ? (escalationNote || null) : null,
+        metricValueToday: validMetricValue,
+        attachments: attachments && Array.isArray(attachments) && attachments.length > 0 ? attachments : undefined,
+        submittedAt: now,
+        createdAt: now,
+      }
+
+      await db.eodReports.create(report)
+    }
 
     // Update weekly metric aggregation if user has a metric defined
     if (validMetricValue !== null) {
@@ -473,7 +510,9 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<EODReport>>({
       success: true,
       data: report,
-      message: "EOD report submitted successfully",
+      message: isMerge
+        ? "EOD report updated — new tasks merged with existing report"
+        : "EOD report submitted successfully",
     })
   } catch (error) {
     // Handle validation errors

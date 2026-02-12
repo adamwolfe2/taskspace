@@ -1915,6 +1915,9 @@ export const db = {
         processedAt: (row.processed_at as Date)?.toISOString() || "",
       }))
     },
+    async deleteByReportId(eodReportId: string): Promise<void> {
+      await sql`DELETE FROM eod_insights WHERE eod_report_id = ${eodReportId}`
+    },
   },
 
   // AI Generated Tasks

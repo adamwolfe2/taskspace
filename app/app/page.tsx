@@ -350,6 +350,7 @@ function AppContent() {
         >
           <div className="max-w-6xl mx-auto">
             <ErrorBoundary
+              key={currentPage}
               title="Something went wrong"
               description="An error occurred while loading this page. Please try refreshing."
               showRetry

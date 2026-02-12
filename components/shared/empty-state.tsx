@@ -70,6 +70,11 @@ export function EmptyState({
 
  const styles = sizeStyles[size]
 
+ // Detect if icon is a component type (function or forwardRef object) vs a rendered ReactNode
+ const IconComponent = IconProp && (typeof IconProp === "function" || (typeof IconProp === "object" && IconProp !== null && "render" in IconProp))
+   ? (IconProp as React.ElementType)
+   : null
+
  return (
  <div
  className={cn(
@@ -84,10 +89,10 @@ export function EmptyState({
  styles.iconWrapper
  )}
  >
- {IconProp && typeof IconProp === "function" ? (
- <IconProp className={cn("text-gray-400", styles.icon)} />
+ {IconComponent ? (
+ <IconComponent className={cn("text-gray-400", styles.icon)} />
  ) : (
- IconProp || <Inbox className={cn("text-gray-400", styles.icon)} />
+ (IconProp as React.ReactNode) || <Inbox className={cn("text-gray-400", styles.icon)} />
  )}
  </div>
  <h3 className={cn("text-gray-900 mb-1", styles.title)}>

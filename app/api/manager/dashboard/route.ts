@@ -59,8 +59,8 @@ export const GET = withAuth(async (request, auth) => {
       }
     }
 
-    // Use member ID (not user ID) since manager_id stores organization_members.id
-    const managerId = auth.member.id
+    // manager_id column references users(id), so use user ID
+    const managerId = auth.user.id
     const orgId = auth.organization.id
     const today = new Date()
 
@@ -226,8 +226,9 @@ export const GET = withAuth(async (request, auth) => {
     })
   } catch (error) {
     logError(logger, "Manager dashboard error", error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Failed to load manager dashboard" },
+      { success: false, error: `Failed to load manager dashboard: ${errorMessage}` },
       { status: 500 }
     )
   }
