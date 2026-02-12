@@ -1,9 +1,8 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Toaster } from "@/components/ui/toaster"
 import { Building, Bell, Users, CreditCard, Key, Download, Sparkles, Briefcase, Sliders, User, Palette } from "lucide-react"
 import { api } from "@/lib/api/client"
 import type { TeamMember } from "@/lib/types"
@@ -223,8 +222,6 @@ export function SettingsPage() {
           </TabsContent>
         )}
       </Tabs>
-
-      <Toaster />
     </div>
   )
 }

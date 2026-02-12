@@ -58,7 +58,6 @@ export function DashboardPage({
  onRefresh,
 }: DashboardPageProps) {
  const [selectedEodDate, setSelectedEodDate] = useState<string | null>(null)
- const [showAddTaskDialog, setShowAddTaskDialog] = useState(false)
  const eodCardRef = useRef<HTMLDivElement>(null)
  const tasksRef = useRef<HTMLDivElement>(null)
  const { currentOrganization } = useApp()
@@ -180,7 +179,7 @@ export function DashboardPage({
  {(hasEodFeature || hasTasksFeature) && (
  <QuickActionsBar
  onSubmitEOD={hasEodFeature ? handleScrollToEOD : undefined}
- onAddTask={hasTasksFeature ? () => setShowAddTaskDialog(true) : undefined}
+ onAddTask={hasTasksFeature ? () => tasksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }) : undefined}
  hasSubmittedEOD={hasSubmittedEODToday}
  />
  )}

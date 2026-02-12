@@ -3,7 +3,6 @@
 import { OnboardingWizard, type OnboardingData } from "@/components/onboarding/onboarding-wizard"
 import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
-import { logger } from "@/lib/logger"
 
 interface SetupOrganizationPageProps {
   mode?: "create" | "setup"

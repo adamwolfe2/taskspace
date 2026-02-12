@@ -95,8 +95,6 @@ function AppContent() {
   // inside WorkspaceSwitcher (in Header), which may not run soon enough.
   useWorkspaces()
   const teamData = useTeamData()
-  const [showQuickTask, setShowQuickTask] = useState(false)
-
   // Register global keyboard shortcuts
   useKeyboardShortcuts([
     { key: "d", meta: true, shift: true, handler: () => setCurrentPage("dashboard") },
