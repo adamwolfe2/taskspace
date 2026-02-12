@@ -255,14 +255,8 @@ This document provides a comprehensive, prioritized list of features, enhancemen
 ### 4.5 ~~Invitation Token Leakage~~ ✅ COMPLETED
 - **Status:** ✅ **COMPLETED** - Tokens stripped from GET /api/invitations and bulk invite responses. Added `SafeInvitation` type. Copy-link button only shown for freshly-created invitations where token is available.
 
-### 4.6 Mobile Navigation Z-Index
-- **Description:** Mobile bottom navigation can overlap with modals/dialogs.
-- **File:** `/components/layout/mobile-nav.tsx`
-- **Problem Solved:** UI elements hidden behind navigation.
-- **Benefit:** Better mobile user experience.
-- **Priority:** 🟢 LOW
-- **Scope:** Bug Fix
-- **Estimated Time:** 1-2 hours
+### 4.6 ~~Mobile Navigation Z-Index~~ ✅ COMPLETED
+- **Status:** ✅ **COMPLETED** - Lowered mobile nav from z-50 to z-40, matching header; modals at z-50 now render above nav
 
 ### 4.7 Form Validation Timing
 - **Description:** Some forms show validation errors before user finishes typing.
