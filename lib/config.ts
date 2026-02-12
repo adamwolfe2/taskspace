@@ -17,6 +17,7 @@ export const CONFIG = {
   // Authentication settings
   auth: {
     sessionDurationDays: 7,
+    maxSessionDurationDays: 30, // Hard cap — even with sliding window, sessions expire after 30 days
     inviteExpirationDays: 7,
     passwordResetExpirationHours: 1,
     passwordMinLength: 8,

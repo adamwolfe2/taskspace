@@ -7,6 +7,7 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createMemberSchema, updateMemberSchema } from "@/lib/validation/schemas"
 import type { TeamMember, OrganizationMember, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { audit } from "@/lib/audit"
 
 // POST /api/members - Create a draft team member (before invitation)
 export const POST = withAdmin(async (request: NextRequest, auth) => {
@@ -61,6 +62,12 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     }
 
     await db.members.create(member)
+
+    audit(auth, request, "member.created", {
+      resourceType: "member",
+      resourceId: memberId,
+      newValues: { email: member.email, role: member.role, department: member.department },
+    })
 
     const teamMember: TeamMember = {
       id: memberId,
@@ -175,6 +182,15 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
 
     await db.members.update(member.id, updates)
 
+    if (role && role !== member.role) {
+      audit(auth, request, "member.role_changed", {
+        resourceType: "member",
+        resourceId: member.id,
+        oldValues: { role: member.role },
+        newValues: { role },
+      })
+    }
+
     // Get updated member with user data - use member.userId if available
     const user = member.userId ? await db.users.findById(member.userId) : null
     const updatedMember = await db.members.findById(member.id)
@@ -273,6 +289,12 @@ export const DELETE = withAdmin(async (request: NextRequest, auth) => {
     if (member.userId) {
       await db.sessions.deleteByUserAndOrg(member.userId, auth.organization.id)
     }
+
+    audit(auth, request, "member.removed", {
+      resourceType: "member",
+      resourceId: member.id,
+      oldValues: { email: member.email, role: member.role, userId: member.userId },
+    })
 
     return NextResponse.json<ApiResponse<null>>({
       success: true,

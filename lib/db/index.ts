@@ -674,7 +674,8 @@ export const db = {
     async update(id: string, updates: Partial<Session>): Promise<Session | null> {
       const { rows } = await sql`
         UPDATE sessions SET
-          last_active_at = COALESCE(${updates.lastActiveAt || null}, last_active_at)
+          last_active_at = COALESCE(${updates.lastActiveAt || null}, last_active_at),
+          expires_at = COALESCE(${updates.expiresAt || null}, expires_at)
         WHERE id = ${id}
         RETURNING *
       `

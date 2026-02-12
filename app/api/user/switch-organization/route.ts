@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
+import { generateId, generateToken, getExpirationDate } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { switchOrganizationSchema } from "@/lib/validation/schemas"
-import type { ApiResponse } from "@/lib/types"
+import type { ApiResponse, Session } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { CONFIG } from "@/lib/config"
+import { audit } from "@/lib/audit"
 
 /**
  * POST /api/user/switch-organization
- * Switch the current user's session to a different organization
+ * Switch the current user's session to a different organization.
+ * Rotates the session token to prevent session fixation across orgs.
  */
 export const POST = withAuth(async (request, auth) => {
   try {
@@ -37,22 +41,52 @@ export const POST = withAuth(async (request, auth) => {
       )
     }
 
-    // Update the session to use the new organization
-    const sessionToken = request.cookies.get("session_token")?.value
-    if (!sessionToken) {
+    // Delete old session and create a new one with a fresh token (session rotation)
+    const oldToken = request.cookies.get("session_token")?.value
+    if (!oldToken) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Session not found" },
         { status: 401 }
       )
     }
 
-    // Update session organization_id
-    await db.sessions.updateOrganization(sessionToken, organizationId)
+    await db.sessions.deleteByToken(oldToken)
 
-    return NextResponse.json<ApiResponse<{ message: string }>>({
+    const now = new Date().toISOString()
+    const newToken = generateToken()
+    const session: Session = {
+      id: generateId(),
+      userId: auth.user.id,
+      organizationId,
+      token: newToken,
+      expiresAt: getExpirationDate(24 * CONFIG.auth.sessionDurationDays),
+      createdAt: now,
+      lastActiveAt: now,
+    }
+    await db.sessions.create(session)
+
+    audit(auth, request, "session.org_switched", {
+      resourceType: "organization",
+      resourceId: organizationId,
+      oldValues: { organizationId: auth.organization.id },
+      newValues: { organizationId },
+    })
+
+    const response = NextResponse.json<ApiResponse<{ message: string }>>({
       success: true,
       data: { message: "Organization switched successfully" },
     })
+
+    // Set the rotated session cookie
+    response.cookies.set("session_token", newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      expires: new Date(session.expiresAt),
+      path: "/",
+    })
+
+    return response
   } catch (error) {
     // Handle validation errors
     if (error instanceof ValidationError) {

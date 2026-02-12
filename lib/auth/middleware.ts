@@ -11,6 +11,7 @@ export interface AuthContext {
   member: OrganizationMember
   sessionId: string
   isApiKey?: boolean
+  apiKeyScopes?: string[]
 }
 
 // Authenticate via API key (for MCP server and external integrations)
@@ -58,6 +59,7 @@ async function getApiKeyAuthContext(request: NextRequest): Promise<AuthContext |
       member,
       sessionId: apiKey.id, // Use API key ID as session ID
       isApiKey: true,
+      apiKeyScopes: apiKey.scopes || ["read", "write"],
     }
   } catch (error) {
     logError(logger, "API key auth error", error)
@@ -94,12 +96,17 @@ async function getSessionAuthContext(request: NextRequest): Promise<AuthContext 
       return null
     }
 
-    // Only update lastActiveAt if enough time has elapsed to reduce write load
+    // Sliding window: update lastActiveAt + extend expiresAt (capped at 30 days from creation)
     const now = Date.now()
     const lastActive = session.lastActiveAt ? new Date(session.lastActiveAt).getTime() : 0
     if (now - lastActive >= CONFIG.session.activityUpdateIntervalMs) {
+      const slidingExpiry = now + CONFIG.auth.sessionDurationDays * 24 * 60 * 60 * 1000
+      const hardCap = new Date(session.createdAt).getTime() + CONFIG.auth.maxSessionDurationDays * 24 * 60 * 60 * 1000
+      const newExpiresAt = new Date(Math.min(slidingExpiry, hardCap)).toISOString()
+
       await db.sessions.update(session.id, {
         lastActiveAt: new Date().toISOString(),
+        expiresAt: newExpiresAt,
       })
     }
 
@@ -157,12 +164,17 @@ export async function getUserAuthContext(request: NextRequest): Promise<UserAuth
       return null
     }
 
-    // Only update lastActiveAt if enough time has elapsed to reduce write load
+    // Sliding window: update lastActiveAt + extend expiresAt (capped at 30 days from creation)
     const now = Date.now()
     const lastActive = session.lastActiveAt ? new Date(session.lastActiveAt).getTime() : 0
     if (now - lastActive >= CONFIG.session.activityUpdateIntervalMs) {
+      const slidingExpiry = now + CONFIG.auth.sessionDurationDays * 24 * 60 * 60 * 1000
+      const hardCap = new Date(session.createdAt).getTime() + CONFIG.auth.maxSessionDurationDays * 24 * 60 * 60 * 1000
+      const newExpiresAt = new Date(Math.min(slidingExpiry, hardCap)).toISOString()
+
       await db.sessions.update(session.id, {
         lastActiveAt: new Date().toISOString(),
+        expiresAt: newExpiresAt,
       })
     }
 

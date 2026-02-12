@@ -82,12 +82,15 @@ describe("Auth Session Validation", () => {
 
   it("should return auth context for valid session", async () => {
     const futureDate = new Date(Date.now() + 86400000).toISOString()
+    const now = new Date().toISOString()
     mockFindByToken.mockResolvedValueOnce({
       id: "session-1",
       userId: "user-1",
       organizationId: "org-1",
       token: "valid-token",
       expiresAt: futureDate,
+      createdAt: now,
+      lastActiveAt: now,
     })
     mockFindById.mockResolvedValueOnce({
       id: "user-1",

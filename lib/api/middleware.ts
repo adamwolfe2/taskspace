@@ -37,7 +37,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, getUserAuthContext, isAdmin, isOwner, type AuthContext, type UserAuthContext } from "@/lib/auth/middleware"
-import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
+import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
 import { handleError } from "@/lib/api/errors"
 import { checkOrgRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse } from "@/lib/types"
@@ -135,6 +135,9 @@ export function withAuth(
         )
       }
 
+      const scopeResponse = enforceApiKeyScopes(request, auth)
+      if (scopeResponse) return scopeResponse
+
       const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
       if (orgLimitResponse) return orgLimitResponse
 
@@ -227,6 +230,9 @@ export function withAdmin(
         )
       }
 
+      const scopeResponse = enforceApiKeyScopes(request, auth)
+      if (scopeResponse) return scopeResponse
+
       const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
       if (orgLimitResponse) return orgLimitResponse
 
@@ -275,6 +281,9 @@ export function withOwner(
         )
       }
 
+      const scopeResponse = enforceApiKeyScopes(request, auth)
+      if (scopeResponse) return scopeResponse
+
       const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
       if (orgLimitResponse) return orgLimitResponse
 
@@ -286,9 +295,40 @@ export function withOwner(
 }
 
 /**
+ * Check if request method is state-changing (not safe/read-only)
+ */
+function isWriteMethod(method: string): boolean {
+  return ["POST", "PUT", "PATCH", "DELETE"].includes(method)
+}
+
+/**
+ * Enforce API key scopes against the request method.
+ * Returns null if allowed, or a 403 response if the scope is insufficient.
+ *
+ * Scope mapping:
+ * - "read"  → GET, HEAD, OPTIONS
+ * - "write" → POST, PUT, PATCH, DELETE
+ */
+function enforceApiKeyScopes(request: NextRequest, auth: AuthContext): NextResponse<ApiResponse<null>> | null {
+  if (!auth.isApiKey || !auth.apiKeyScopes) return null
+
+  const requiredScope = isWriteMethod(request.method) ? "write" : "read"
+
+  if (!auth.apiKeyScopes.includes(requiredScope)) {
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: `Forbidden: API key lacks '${requiredScope}' scope` },
+      { status: 403 }
+    )
+  }
+
+  return null
+}
+
+/**
  * Workspace access wrapper - validates user has access to workspace from query param
  *
  * Extracts workspaceId from query parameters and validates user access.
+ * Viewers are blocked from state-changing requests (POST/PUT/PATCH/DELETE).
  * If validation passes, handler receives the validated workspaceId.
  *
  * @example
@@ -319,6 +359,9 @@ export function withWorkspaceAccess(
         )
       }
 
+      const scopeResponse = enforceApiKeyScopes(request, auth)
+      if (scopeResponse) return scopeResponse
+
       // Extract workspaceId from query params
       const { searchParams } = new URL(request.url)
       const workspaceId = searchParams.get("workspaceId")
@@ -337,6 +380,17 @@ export function withWorkspaceAccess(
           { success: false, error: "Forbidden: No access to this workspace" },
           { status: 403 }
         )
+      }
+
+      // RBAC: Viewers can only read, not write
+      if (isWriteMethod(request.method)) {
+        const role = await getUserWorkspaceRole(auth.user.id, workspaceId)
+        if (role === "viewer") {
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, error: "Forbidden: Viewer role cannot perform write operations" },
+            { status: 403 }
+          )
+        }
       }
 
       const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
@@ -388,6 +442,9 @@ export function withWorkspaceParam(
         )
       }
 
+      const scopeResponse = enforceApiKeyScopes(request, auth)
+      if (scopeResponse) return scopeResponse
+
       // Extract workspaceId from route params (async in Next.js 16+)
       const params = await context.params
       const workspaceId = params?.workspaceId || params?.id
@@ -406,6 +463,17 @@ export function withWorkspaceParam(
           { success: false, error: "Forbidden: No access to this workspace" },
           { status: 403 }
         )
+      }
+
+      // RBAC: Viewers can only read, not write
+      if (isWriteMethod(request.method)) {
+        const role = await getUserWorkspaceRole(auth.user.id, workspaceId)
+        if (role === "viewer") {
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, error: "Forbidden: Viewer role cannot perform write operations" },
+            { status: 403 }
+          )
+        }
       }
 
       const orgLimitResponse = checkOrgRateLimitOrRespond(auth)

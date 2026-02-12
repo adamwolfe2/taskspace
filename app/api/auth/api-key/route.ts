@@ -6,6 +6,7 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { apiKeyCreateSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { audit } from "@/lib/audit"
 
 // GET /api/auth/api-key - List API keys for the organization
 export const GET = withAdmin(async (request: NextRequest, auth) => {
@@ -54,6 +55,12 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 
     await db.apiKeys.create(apiKey)
 
+    audit(auth, request, "api_key.created", {
+      resourceType: "api_key",
+      resourceId: apiKey.id,
+      newValues: { name: apiKey.name, scopes: apiKey.scopes },
+    })
+
     // Return the full key only on creation (it won't be shown again)
     return NextResponse.json<ApiResponse<typeof apiKey>>({
       success: true,
@@ -100,6 +107,12 @@ export const DELETE = withAdmin(async (request: NextRequest, auth) => {
     }
 
     await db.apiKeys.delete(keyId)
+
+    audit(auth, request, "api_key.deleted", {
+      resourceType: "api_key",
+      resourceId: keyId,
+      oldValues: { name: existingKey.name },
+    })
 
     return NextResponse.json<ApiResponse<null>>({
       success: true,
