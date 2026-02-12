@@ -97,7 +97,7 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-sm text-gray-500 mb-12"
           >
-            Free forever plan -- No credit card required -- Setup in under 2 minutes
+            AI-Workspace Setup in Under Two Minutes.
           </motion.p>
         </div>
 

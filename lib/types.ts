@@ -226,6 +226,8 @@ export interface Rock {
   doneWhen?: string[] // Legacy field
   milestones?: RockMilestone[] // New structured milestones
   quarter?: string // e.g., "Q1 2025"
+  projectId?: string | null
+  projectName?: string | null
 }
 
 // Task Comment
@@ -290,6 +292,8 @@ export interface AssignedTask {
   comments?: TaskComment[]
   recurrence?: TaskRecurrence
   parentRecurringTaskId?: string // Links to the original recurring task template
+  projectId?: string | null
+  projectName?: string | null
 }
 
 // EOD Report Types
@@ -367,6 +371,8 @@ export type PageType =
   | "profile"
   | "org-chart"
   | "ids-board"
+  | "projects"
+  | "clients"
   | "notes"
   | "vto"
   | "people-analyzer"
@@ -403,6 +409,75 @@ export interface WorkspaceNote {
   lastEditedBy: string | null
   createdAt: string
   updatedAt: string
+}
+
+// ============================================
+// CLIENTS
+// ============================================
+
+export interface Client {
+  id: string
+  organizationId: string
+  workspaceId: string
+  name: string
+  description?: string
+  contactName?: string
+  contactEmail?: string
+  contactPhone?: string
+  website?: string
+  industry?: string
+  status: "active" | "inactive" | "prospect" | "archived"
+  notes?: string
+  tags: string[]
+  customFields: Record<string, unknown>
+  createdBy?: string
+  createdAt: string
+  updatedAt: string
+  // Computed (from JOINs, not stored)
+  projectCount?: number
+  activeProjectCount?: number
+}
+
+// ============================================
+// PROJECTS
+// ============================================
+
+export interface Project {
+  id: string
+  organizationId: string
+  workspaceId: string
+  clientId: string | null
+  clientName?: string  // JOIN-populated
+  name: string
+  description?: string
+  status: "planning" | "active" | "on-hold" | "completed" | "cancelled"
+  priority: "high" | "medium" | "normal" | "low"
+  startDate?: string | null
+  dueDate?: string | null
+  completedAt?: string | null
+  budgetCents?: number | null
+  progress: number
+  ownerId?: string | null
+  ownerName?: string  // JOIN-populated
+  tags: string[]
+  customFields: Record<string, unknown>
+  createdBy?: string
+  createdAt: string
+  updatedAt: string
+  // Computed
+  taskCount?: number
+  completedTaskCount?: number
+  memberCount?: number
+}
+
+export interface ProjectMember {
+  id: string
+  projectId: string
+  userId: string
+  userName?: string
+  userEmail?: string
+  role: "owner" | "lead" | "member" | "viewer"
+  addedAt: string
 }
 
 // API Response Types

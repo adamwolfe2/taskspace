@@ -21,6 +21,8 @@ export interface WorkspaceFeatureToggles {
     notes: boolean
     vto: boolean
     peopleAnalyzer: boolean
+    projects: boolean
+    clients: boolean
   }
   productivity: {
     focusBlocks: boolean
@@ -75,6 +77,8 @@ export const DEFAULT_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     notes: true,
     vto: true,
     peopleAnalyzer: true,
+    projects: true,
+    clients: true,
   },
   productivity: {
     focusBlocks: true,
@@ -193,6 +197,23 @@ export const WORKSPACE_FEATURE_METADATA: Record<WorkspaceFeatureKey, WorkspaceFe
     icon: "UserCheck",
     dependencies: ["core.orgChart"],
     impact: { navigation: true, dashboard: false, api: true },
+  },
+
+  "core.projects": {
+    name: "Projects",
+    description: "Track and manage projects with kanban boards, team members, and task attribution",
+    category: "core",
+    icon: "FolderKanban",
+    dependencies: ["core.tasks"],
+    impact: { navigation: true, dashboard: true, api: true },
+  },
+  "core.clients": {
+    name: "Clients",
+    description: "Manage client relationships, link projects to clients, and track client attribution",
+    category: "core",
+    icon: "Building2",
+    dependencies: ["core.projects"],
+    impact: { navigation: true, dashboard: true, api: true },
   },
 
   // Productivity Features

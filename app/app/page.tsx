@@ -80,6 +80,14 @@ const ManagerDashboardPage = dynamic(
   () => import("@/components/pages/manager-dashboard-page").then(mod => ({ default: mod.ManagerDashboardPage })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
+const ProjectsPage = dynamic(
+  () => import("@/components/pages/projects-page").then(mod => ({ default: mod.ProjectsPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const ClientsPage = dynamic(
+  () => import("@/components/pages/clients-page").then(mod => ({ default: mod.ClientsPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
 
 import { Loader2 } from "lucide-react"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
@@ -338,6 +346,31 @@ function AppContent() {
         return <VTOPage />
       case "people-analyzer":
         return <PeopleAnalyzerPage />
+      case "projects":
+        return (
+          <ProjectsPage
+            currentUser={currentUser!}
+            teamMembers={teamData.teamMembers}
+            projects={teamData.projects}
+            clients={teamData.clients}
+            rocks={teamData.rocks}
+            assignedTasks={teamData.assignedTasks}
+            createProject={teamData.createProject}
+            updateProject={teamData.updateProject}
+            deleteProject={teamData.deleteProject}
+          />
+        )
+      case "clients":
+        return (
+          <ClientsPage
+            currentUser={currentUser!}
+            clients={teamData.clients}
+            projects={teamData.projects}
+            createClient={teamData.createClient}
+            updateClient={teamData.updateClient}
+            deleteClient={teamData.deleteClient}
+          />
+        )
       default:
         return <DashboardPage {...dashboardProps} />
     }

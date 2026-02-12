@@ -410,7 +410,6 @@ export default function PublicEODWeeklyReportPage() {
       setError(null)
       setLastRefresh(new Date())
     } catch (err) {
-      console.error("Failed to fetch report:", err)
       Sentry.captureException(err, { tags: { page: "public-eod-weekly", slug, date } })
       setError(err instanceof Error ? err.message : "Failed to load report")
     } finally {

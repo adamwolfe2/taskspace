@@ -15,6 +15,9 @@ import type {
   UserOrganizationItem,
   SwitchOrganizationResponse,
   SubscriptionInfo,
+  Client,
+  Project,
+  ProjectMember,
 } from "@/lib/types"
 
 /** Branding settings for an organization */
@@ -738,6 +741,109 @@ export const api = {
         body: JSON.stringify({ action: "portal" }),
       })
       return handleResponse<{ url: string }>(response)
+    },
+  },
+
+  // Clients
+  clients: {
+    async list(workspaceId: string, status?: string) {
+      const params = new URLSearchParams({ workspaceId })
+      if (status) params.set("status", status)
+      const response = await fetchWithRetry(`${API_BASE}/clients?${params}`)
+      return handleResponse<Client[]>(response)
+    },
+
+    async create(data: { name: string; workspaceId: string; description?: string; contactName?: string; contactEmail?: string; contactPhone?: string; website?: string; industry?: string; status?: Client["status"]; notes?: string; tags?: string[] }) {
+      const response = await fetchWithRetry(`${API_BASE}/clients`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      return handleResponse<Client>(response)
+    },
+
+    async update(id: string, updates: Partial<Client>) {
+      const response = await fetchWithRetry(`${API_BASE}/clients`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...updates }),
+      })
+      return handleResponse<Client>(response)
+    },
+
+    async delete(id: string) {
+      const response = await fetchWithRetry(`${API_BASE}/clients?id=${id}`, {
+        method: "DELETE",
+      })
+      return handleResponse<null>(response)
+    },
+  },
+
+  // Projects
+  projects: {
+    async list(workspaceId: string, filters?: { status?: string; clientId?: string; ownerId?: string }) {
+      const params = new URLSearchParams({ workspaceId })
+      if (filters?.status) params.set("status", filters.status)
+      if (filters?.clientId) params.set("clientId", filters.clientId)
+      if (filters?.ownerId) params.set("ownerId", filters.ownerId)
+      const response = await fetchWithRetry(`${API_BASE}/projects?${params}`)
+      return handleResponse<Project[]>(response)
+    },
+
+    async create(data: { name: string; workspaceId: string; clientId?: string | null; description?: string; status?: Project["status"]; priority?: Project["priority"]; startDate?: string | null; dueDate?: string | null; ownerId?: string | null; tags?: string[] }) {
+      const response = await fetchWithRetry(`${API_BASE}/projects`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      return handleResponse<Project>(response)
+    },
+
+    async update(id: string, updates: Partial<Project>) {
+      const response = await fetchWithRetry(`${API_BASE}/projects`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...updates }),
+      })
+      return handleResponse<Project>(response)
+    },
+
+    async delete(id: string) {
+      const response = await fetchWithRetry(`${API_BASE}/projects?id=${id}`, {
+        method: "DELETE",
+      })
+      return handleResponse<null>(response)
+    },
+
+    // Project Members
+    async getMembers(projectId: string) {
+      const response = await fetchWithRetry(`${API_BASE}/projects/members?projectId=${projectId}`)
+      return handleResponse<ProjectMember[]>(response)
+    },
+
+    async addMember(projectId: string, userId: string, role?: string) {
+      const response = await fetchWithRetry(`${API_BASE}/projects/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, userId, role }),
+      })
+      return handleResponse<ProjectMember>(response)
+    },
+
+    async updateMemberRole(projectId: string, userId: string, role: string) {
+      const response = await fetchWithRetry(`${API_BASE}/projects/members`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, userId, role }),
+      })
+      return handleResponse<ProjectMember>(response)
+    },
+
+    async removeMember(projectId: string, userId: string) {
+      const response = await fetchWithRetry(`${API_BASE}/projects/members?projectId=${projectId}&userId=${userId}`, {
+        method: "DELETE",
+      })
+      return handleResponse<null>(response)
     },
   },
 }

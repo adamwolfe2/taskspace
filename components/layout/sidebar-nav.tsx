@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
-import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle, Search, FileText, BookOpen, UserCheck } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle, Search, FileText, BookOpen, UserCheck, FolderKanban, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
@@ -36,6 +36,8 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     { id: "history", label: "EOD History", icon: History, requiredFeature: "core.eodReports" },
     { id: "rocks", label: "Rock Progress", icon: Target, requiredFeature: "core.rocks" },
     { id: "tasks", label: "Tasks", icon: CheckSquare, requiredFeature: "core.tasks" },
+    { id: "projects", label: "Projects", icon: FolderKanban, requiredFeature: "core.projects" },
+    { id: "clients", label: "Clients", icon: Building2, requiredFeature: "core.clients" },
     { id: "manager", label: "My Team", icon: UsersRound, requiredFeature: "advanced.managerDashboard" },
     { id: "org-chart", label: "Org Chart", icon: Network, requiredFeature: "core.orgChart" },
     { id: "ids-board", label: "IDS Board", icon: Search, requiredFeature: "core.ids" },

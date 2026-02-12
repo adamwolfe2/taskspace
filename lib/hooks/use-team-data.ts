@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import useSWR from "swr"
 import * as Sentry from "@sentry/nextjs"
-import type { TeamMember, Rock, AssignedTask, EODReport } from "../types"
+import type { TeamMember, Rock, AssignedTask, EODReport, Client, Project } from "../types"
 import { api } from "../api/client"
 import { useApp } from "../contexts/app-context"
 import { useWorkspaceStore } from "./use-workspace"
@@ -30,6 +30,8 @@ const DEMO_STORAGE_KEYS = {
   rocks: "aims_demo_rocks",
   tasks: "aims_demo_tasks",
   eodReports: "aims_demo_eod_reports",
+  projects: "aims_demo_projects",
+  clients: "aims_demo_clients",
   lastSaved: "aims_demo_last_saved",
 }
 
@@ -164,14 +166,18 @@ interface TeamData {
   rocks: Rock[]
   tasks: AssignedTask[]
   eodReports: EODReport[]
+  projects: Project[]
+  clients: Client[]
 }
 
 async function teamDataFetcher([, workspaceId]: [string, string]): Promise<TeamData> {
-  const [membersData, rocksData, tasksData, reportsData] = await Promise.all([
+  const [membersData, rocksData, tasksData, reportsData, projectsData, clientsData] = await Promise.all([
     api.members.list(),
     api.rocks.list(undefined, workspaceId),
     api.tasks.list(undefined, undefined, workspaceId),
     api.eodReports.list({ workspaceId }),
+    api.projects.list(workspaceId).catch(() => [] as Project[]),
+    api.clients.list(workspaceId).catch(() => [] as Client[]),
   ])
 
   return {
@@ -183,7 +189,24 @@ async function teamDataFetcher([, workspaceId]: [string, string]): Promise<TeamD
     rocks: rocksData,
     tasks: tasksData,
     eodReports: reportsData,
+    projects: projectsData,
+    clients: clientsData,
   }
+}
+
+function getDemoClients(): Client[] {
+  return [
+    { id: "client-1", organizationId: "demo-org-1", workspaceId: "demo-ws-1", name: "Acme Properties", status: "active", contactName: "John Doe", contactEmail: "john@acme.com", industry: "Real Estate", tags: [], customFields: {}, createdAt: "2024-01-15", updatedAt: "2024-01-15" },
+    { id: "client-2", organizationId: "demo-org-1", workspaceId: "demo-ws-1", name: "Sunrise Development", status: "active", contactName: "Jane Smith", contactEmail: "jane@sunrise.com", industry: "Construction", tags: [], customFields: {}, createdAt: "2024-02-01", updatedAt: "2024-02-01" },
+  ]
+}
+
+function getDemoProjects(): Project[] {
+  return [
+    { id: "proj-1", organizationId: "demo-org-1", workspaceId: "demo-ws-1", clientId: "client-1", clientName: "Acme Properties", name: "Q1 Renovations", status: "active", priority: "high", progress: 45, tags: [], customFields: {}, createdAt: "2024-01-20", updatedAt: "2024-01-20" },
+    { id: "proj-2", organizationId: "demo-org-1", workspaceId: "demo-ws-1", clientId: "client-2", clientName: "Sunrise Development", name: "New Construction - Lot 14", status: "planning", priority: "medium", progress: 10, tags: [], customFields: {}, createdAt: "2024-02-10", updatedAt: "2024-02-10" },
+    { id: "proj-3", organizationId: "demo-org-1", workspaceId: "demo-ws-1", clientId: null, name: "Internal Process Improvement", status: "active", priority: "normal", progress: 70, tags: [], customFields: {}, createdAt: "2024-01-05", updatedAt: "2024-01-05" },
+  ]
 }
 
 // ============================================
@@ -209,6 +232,8 @@ export function useTeamData() {
   const [demoRocks, setDemoRocks] = useState<Rock[]>([])
   const [demoTasks, setDemoTasks] = useState<AssignedTask[]>([])
   const [demoReports, setDemoReports] = useState<EODReport[]>([])
+  const [demoProjects, setDemoProjects] = useState<Project[]>([])
+  const [demoClients, setDemoClients] = useState<Client[]>([])
   const [demoLoading, setDemoLoading] = useState(true)
   const initialLoadComplete = useRef(false)
 
@@ -219,6 +244,8 @@ export function useTeamData() {
     setDemoRocks(loadFromStorage(DEMO_STORAGE_KEYS.rocks, getDemoRocks()))
     setDemoTasks(loadFromStorage(DEMO_STORAGE_KEYS.tasks, getDemoTasks()))
     setDemoReports(loadFromStorage(DEMO_STORAGE_KEYS.eodReports, getDemoEODReports()))
+    setDemoProjects(loadFromStorage(DEMO_STORAGE_KEYS.projects, getDemoProjects()))
+    setDemoClients(loadFromStorage(DEMO_STORAGE_KEYS.clients, getDemoClients()))
     setDemoLoading(false)
     setTimeout(() => { initialLoadComplete.current = true }, 100)
   }, [isDemoMode])
@@ -243,6 +270,16 @@ export function useTeamData() {
     if (isDemoMode && initialLoadComplete.current)
       saveToStorage(DEMO_STORAGE_KEYS.eodReports, demoReports)
   }, [isDemoMode, demoReports])
+
+  useEffect(() => {
+    if (isDemoMode && initialLoadComplete.current)
+      saveToStorage(DEMO_STORAGE_KEYS.projects, demoProjects)
+  }, [isDemoMode, demoProjects])
+
+  useEffect(() => {
+    if (isDemoMode && initialLoadComplete.current)
+      saveToStorage(DEMO_STORAGE_KEYS.clients, demoClients)
+  }, [isDemoMode, demoClients])
 
   // ============================================
   // SWR DATA FETCHING (real mode)
@@ -274,6 +311,8 @@ export function useTeamData() {
   const rocks = isDemoMode ? demoRocks : (data?.rocks ?? [])
   const assignedTasks = isDemoMode ? demoTasks : (data?.tasks ?? [])
   const eodReports = isDemoMode ? demoReports : (data?.eodReports ?? [])
+  const projects = isDemoMode ? demoProjects : (data?.projects ?? [])
+  const clients = isDemoMode ? demoClients : (data?.clients ?? [])
 
   // Loading: SWR first load OR waiting for workspace to be ready
   const isWaitingForWorkspace = !isDemoMode && isAuthenticated && !!currentOrganization && (!currentWorkspaceId || !_hasHydrated)
@@ -317,6 +356,24 @@ export function useTeamData() {
       if (!prev) return prev
       const newReports = typeof action === 'function' ? action(prev.eodReports) : action
       return { ...prev, eodReports: newReports }
+    }, { revalidate: false })
+  }, [isDemoMode, mutate])
+
+  const setProjects: React.Dispatch<React.SetStateAction<Project[]>> = useCallback((action) => {
+    if (isDemoMode) { setDemoProjects(action); return }
+    mutate((prev) => {
+      if (!prev) return prev
+      const newProjects = typeof action === 'function' ? action(prev.projects) : action
+      return { ...prev, projects: newProjects }
+    }, { revalidate: false })
+  }, [isDemoMode, mutate])
+
+  const setClients: React.Dispatch<React.SetStateAction<Client[]>> = useCallback((action) => {
+    if (isDemoMode) { setDemoClients(action); return }
+    mutate((prev) => {
+      if (!prev) return prev
+      const newClients = typeof action === 'function' ? action(prev.clients) : action
+      return { ...prev, clients: newClients }
     }, { revalidate: false })
   }, [isDemoMode, mutate])
 
@@ -548,6 +605,130 @@ export function useTeamData() {
   }, [isDemoMode, mutate])
 
   // ============================================
+  // PROJECT OPERATIONS
+  // ============================================
+
+  const createProject = useCallback(async (project: Partial<Project>) => {
+    if (isDemoMode) {
+      const newProject = { ...project, id: `proj-${Date.now()}`, progress: project.progress ?? 0, tags: project.tags ?? [], customFields: project.customFields ?? {}, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Project
+      setDemoProjects((prev) => [...prev, newProject])
+      return newProject
+    }
+    if (!currentWorkspaceId) {
+      const err = new Error("No workspace selected.")
+      setCrudError(getErrorMessage(err))
+      throw err
+    }
+    try {
+      setCrudError(null)
+      const newProject = await api.projects.create({ ...project, workspaceId: currentWorkspaceId } as Parameters<typeof api.projects.create>[0])
+      mutate((prev) => prev ? { ...prev, projects: [...prev.projects, newProject] } : prev, { revalidate: false })
+      return newProject
+    } catch (err: unknown) {
+      setCrudError(getErrorMessage(err))
+      throw err
+    }
+  }, [isDemoMode, currentWorkspaceId, mutate])
+
+  const updateProject = useCallback(async (id: string, updates: Partial<Project>) => {
+    if (isDemoMode) {
+      const existing = projects.find(p => p.id === id)
+      if (existing) {
+        const updated = { ...existing, ...updates, updatedAt: new Date().toISOString() }
+        setDemoProjects((prev) => prev.map((p) => (p.id === id ? updated : p)))
+        return updated
+      }
+      throw new Error("Project not found")
+    }
+    try {
+      setCrudError(null)
+      const updatedProject = await api.projects.update(id, updates)
+      mutate((prev) => prev ? { ...prev, projects: prev.projects.map((p) => (p.id === id ? updatedProject : p)) } : prev, { revalidate: false })
+      return updatedProject
+    } catch (err: unknown) {
+      setCrudError(getErrorMessage(err))
+      throw err
+    }
+  }, [isDemoMode, projects, mutate])
+
+  const deleteProject = useCallback(async (id: string) => {
+    if (isDemoMode) {
+      setDemoProjects((prev) => prev.filter((p) => p.id !== id))
+      return
+    }
+    try {
+      setCrudError(null)
+      await api.projects.delete(id)
+      mutate((prev) => prev ? { ...prev, projects: prev.projects.filter((p) => p.id !== id) } : prev, { revalidate: false })
+    } catch (err: unknown) {
+      setCrudError(getErrorMessage(err))
+      throw err
+    }
+  }, [isDemoMode, mutate])
+
+  // ============================================
+  // CLIENT OPERATIONS
+  // ============================================
+
+  const createClient = useCallback(async (client: Partial<Client>) => {
+    if (isDemoMode) {
+      const newClient = { ...client, id: `cli-${Date.now()}`, tags: client.tags ?? [], customFields: client.customFields ?? {}, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Client
+      setDemoClients((prev) => [...prev, newClient])
+      return newClient
+    }
+    if (!currentWorkspaceId) {
+      const err = new Error("No workspace selected.")
+      setCrudError(getErrorMessage(err))
+      throw err
+    }
+    try {
+      setCrudError(null)
+      const newClient = await api.clients.create({ ...client, workspaceId: currentWorkspaceId } as Parameters<typeof api.clients.create>[0])
+      mutate((prev) => prev ? { ...prev, clients: [...prev.clients, newClient] } : prev, { revalidate: false })
+      return newClient
+    } catch (err: unknown) {
+      setCrudError(getErrorMessage(err))
+      throw err
+    }
+  }, [isDemoMode, currentWorkspaceId, mutate])
+
+  const updateClient = useCallback(async (id: string, updates: Partial<Client>) => {
+    if (isDemoMode) {
+      const existing = clients.find(c => c.id === id)
+      if (existing) {
+        const updated = { ...existing, ...updates, updatedAt: new Date().toISOString() }
+        setDemoClients((prev) => prev.map((c) => (c.id === id ? updated : c)))
+        return updated
+      }
+      throw new Error("Client not found")
+    }
+    try {
+      setCrudError(null)
+      const updatedClient = await api.clients.update(id, updates)
+      mutate((prev) => prev ? { ...prev, clients: prev.clients.map((c) => (c.id === id ? updatedClient : c)) } : prev, { revalidate: false })
+      return updatedClient
+    } catch (err: unknown) {
+      setCrudError(getErrorMessage(err))
+      throw err
+    }
+  }, [isDemoMode, clients, mutate])
+
+  const deleteClient = useCallback(async (id: string) => {
+    if (isDemoMode) {
+      setDemoClients((prev) => prev.filter((c) => c.id !== id))
+      return
+    }
+    try {
+      setCrudError(null)
+      await api.clients.delete(id)
+      mutate((prev) => prev ? { ...prev, clients: prev.clients.filter((c) => c.id !== id) } : prev, { revalidate: false })
+    } catch (err: unknown) {
+      setCrudError(getErrorMessage(err))
+      throw err
+    }
+  }, [isDemoMode, mutate])
+
+  // ============================================
   // UTILITY
   // ============================================
 
@@ -570,6 +751,8 @@ export function useTeamData() {
     setDemoRocks(getDemoRocks())
     setDemoTasks(getDemoTasks())
     setDemoReports(getDemoEODReports())
+    setDemoProjects(getDemoProjects())
+    setDemoClients(getDemoClients())
 
     // Reset the initialLoadComplete flag to prevent immediate re-saving
     initialLoadComplete.current = false
@@ -590,12 +773,16 @@ export function useTeamData() {
     rocks,
     assignedTasks,
     eodReports,
+    projects,
+    clients,
 
     // State setters (for compatibility with existing components)
     setTeamMembers,
     setRocks,
     setAssignedTasks,
     setEODReports,
+    setProjects,
+    setClients,
 
     // Loading/error state
     isLoading,
@@ -615,6 +802,16 @@ export function useTeamData() {
     submitEODReport,
     updateEODReport,
     deleteEODReport,
+
+    // Project operations
+    createProject,
+    updateProject,
+    deleteProject,
+
+    // Client operations
+    createClient,
+    updateClient,
+    deleteClient,
 
     // Member operations
     updateMember,

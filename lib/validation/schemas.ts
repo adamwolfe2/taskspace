@@ -1155,6 +1155,82 @@ export const crossWorkspaceTaskCreateSchema = z.object({
 })
 
 // ============================================
+// CLIENT SCHEMAS
+// ============================================
+
+export const clientStatusSchema = z.enum(["active", "inactive", "prospect", "archived"])
+
+export const createClientSchema = z.object({
+  name: z.string().min(1, "Client name is required").max(255).trim(),
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  description: z.string().max(2000).optional(),
+  contactName: z.string().max(255).optional(),
+  contactEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+  contactPhone: z.string().max(100).optional(),
+  website: z.string().url("Invalid URL").max(500).optional().or(z.literal("")),
+  industry: z.string().max(255).optional(),
+  status: clientStatusSchema.optional(),
+  notes: z.string().max(5000).optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+})
+
+export const updateClientSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1).max(255).trim().optional(),
+  description: z.string().max(2000).optional().nullable(),
+  contactName: z.string().max(255).optional().nullable(),
+  contactEmail: z.string().email().optional().nullable().or(z.literal("")),
+  contactPhone: z.string().max(100).optional().nullable(),
+  website: z.string().url().max(500).optional().nullable().or(z.literal("")),
+  industry: z.string().max(255).optional().nullable(),
+  status: clientStatusSchema.optional(),
+  notes: z.string().max(5000).optional().nullable(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+})
+
+// ============================================
+// PROJECT SCHEMAS
+// ============================================
+
+export const projectStatusSchema = z.enum(["planning", "active", "on-hold", "completed", "cancelled"])
+export const projectPrioritySchema = z.enum(["high", "medium", "normal", "low"])
+
+export const createProjectSchema = z.object({
+  name: z.string().min(1, "Project name is required").max(255).trim(),
+  workspaceId: z.string().min(1, "Workspace ID is required"),
+  clientId: z.string().optional().nullable(),
+  description: z.string().max(5000).optional(),
+  status: projectStatusSchema.optional(),
+  priority: projectPrioritySchema.optional(),
+  startDate: z.string().optional().nullable(),
+  dueDate: z.string().optional().nullable(),
+  ownerId: z.string().optional().nullable(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+})
+
+export const updateProjectSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1).max(255).trim().optional(),
+  clientId: z.string().optional().nullable(),
+  description: z.string().max(5000).optional().nullable(),
+  status: projectStatusSchema.optional(),
+  priority: projectPrioritySchema.optional(),
+  startDate: z.string().optional().nullable(),
+  dueDate: z.string().optional().nullable(),
+  completedAt: z.string().optional().nullable(),
+  ownerId: z.string().optional().nullable(),
+  progress: z.number().min(0).max(100).optional(),
+  budgetCents: z.number().int().min(0).optional().nullable(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+})
+
+export const projectMemberSchema = z.object({
+  projectId: z.string().min(1, "Project ID is required"),
+  userId: z.string().min(1, "User ID is required"),
+  role: z.enum(["owner", "lead", "member", "viewer"]).optional(),
+})
+
+// ============================================
 // TYPE EXPORTS - NEW SCHEMAS
 // ============================================
 
@@ -1191,3 +1267,8 @@ export type AuditSummaryInput = z.infer<typeof auditSummarySchema>
 export type FirecrawlScrapeInput = z.infer<typeof firecrawlScrapeSchema>
 export type OrgChartEmployeeRocksInput = z.infer<typeof orgChartEmployeeRocksSchema>
 export type CrossWorkspaceTaskCreateInput = z.infer<typeof crossWorkspaceTaskCreateSchema>
+export type CreateClientInput = z.infer<typeof createClientSchema>
+export type UpdateClientInput = z.infer<typeof updateClientSchema>
+export type CreateProjectInput = z.infer<typeof createProjectSchema>
+export type UpdateProjectInput = z.infer<typeof updateProjectSchema>
+export type ProjectMemberInput = z.infer<typeof projectMemberSchema>

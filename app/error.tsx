@@ -17,7 +17,6 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error("Root error boundary caught:", error)
     Sentry.captureException(error)
   }, [error])
 

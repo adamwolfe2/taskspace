@@ -2,812 +2,235 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
+import { ArrowRight, CheckCircle, Settings, BarChart3, Users, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
 import { PageTransition } from "@/components/marketing/page-transition"
-import {
-  ArrowRight,
-  CheckCircle,
-  Brain,
-  Target,
-  TrendingUp,
-  Users,
-  Settings,
-  FileText,
-  BarChart3,
-  Zap,
-  Shield,
-  Clock,
-  AlertCircle,
-  ChevronRight,
-  Gauge,
-  ClipboardCheck,
-} from "lucide-react"
-import { useState } from "react"
-
-const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 }
-}
-
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-}
 
 export default function OperationsPage() {
-  const [selectedMetric, setSelectedMetric] = useState<string>("delivery")
-
-  const metrics = {
-    delivery: {
-      name: "On-Time Delivery",
-      target: "95%",
-      current: "92%",
-      trend: "up",
-      status: "warning"
-    },
-    quality: {
-      name: "Quality Score",
-      target: "98%",
-      current: "99%",
-      trend: "up",
-      status: "success"
-    },
-    efficiency: {
-      name: "Process Efficiency",
-      target: "85%",
-      current: "88%",
-      trend: "up",
-      status: "success"
-    }
-  }
-
   return (
     <PageTransition>
-    <div className="min-h-screen bg-white">
-
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white py-20 lg:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left Column - Content */}
-            <motion.div {...fadeInUp} className="space-y-8">
-              <Badge className="bg-gray-100 text-gray-700 border-blue-200">
-                <Settings className="w-3 h-3 mr-1" />
-                Operations
-              </Badge>
-
-              <div className="space-y-6">
-                <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
-                  Run flawless operations
-                  <br />
-                  <span className="text-slate-400">with precision and clarity</span>
-                </h1>
-
-                <p className="text-xl text-slate-600 leading-relaxed">
-                  Document processes, track operational metrics, and optimize resource allocation. Give your operations team the tools to execute flawlessly every single day.
-                </p>
-
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-6 h-6 text-slate-900 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold text-slate-900">Standardize processes.</span>
-                      <span className="text-slate-600"> Document and track SOPs, checklists, and workflows in one place.</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-6 h-6 text-slate-900 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold text-slate-900">Track what matters.</span>
-                      <span className="text-slate-600"> Real-time operational metrics tied directly to your scorecard.</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-6 h-6 text-slate-900 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold text-slate-900">AI-powered insights.</span>
-                      <span className="text-slate-600"> Detect bottlenecks, predict issues, and optimize workflows automatically.</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Link href="/app?page=register">
-                  <Button size="lg" className="bg-slate-900 hover:bg-slate-800 text-white h-12 px-8">
-                    Get Started Free
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-                <Link href="/features">
-                  <Button size="lg" variant="outline" className="h-12 px-8">
-                    Explore Features
-                  </Button>
-                </Link>
-              </div>
-
-            </motion.div>
-
-            {/* Right Column - Layered Screenshots */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative"
-            >
-              <div className="relative">
-                {/* Back card */}
-                <div className="absolute top-8 -right-4 w-[85%] h-[400px] bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl shadow-xl rotate-3 opacity-80" />
-
-                {/* Middle card */}
-                <div className="absolute top-4 right-0 w-[85%] h-[400px] bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl shadow-xl -rotate-2 opacity-90" />
-
-                {/* Front card - Operational Metrics */}
-                <div className="relative bg-white rounded-2xl shadow-2xl p-8 border border-slate-200">
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-slate-900">Operational Metrics</h3>
-                        <p className="text-sm text-slate-500">Week of Feb 1-7</p>
-                      </div>
-                      <Badge className="bg-gray-100 text-gray-700">
-                        <TrendingUp className="w-3 h-3 mr-1" />
-                        98% on target
-                      </Badge>
-                    </div>
-
-                    {/* Metric Selector */}
-                    <div className="flex gap-2">
-                      {(["delivery", "quality", "efficiency"] as const).map((key) => (
-                        <button
-                          key={key}
-                          onClick={() => setSelectedMetric(key)}
-                          className={cn(
-                            "flex-1 px-4 py-2 rounded-lg border text-sm font-medium transition-all",
-                            selectedMetric === key
-                              ? "bg-blue-50 border-blue-200 text-gray-700"
-                              : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300"
-                          )}
-                        >
-                          {metrics[key].name}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Selected Metric Display */}
-                    <div className={cn(
-                      "p-6 rounded-xl",
-                      metrics[selectedMetric as keyof typeof metrics].status === "success"
-                        ? "bg-gray-50 border border-gray-200"
-                        : "bg-gray-50 border border-gray-200"
-                    )}>
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <div className="text-sm text-slate-600 mb-1">Current</div>
-                          <div className="text-3xl font-bold text-slate-900">
-                            {metrics[selectedMetric as keyof typeof metrics].current}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm text-slate-600 mb-1">Target</div>
-                          <div className="text-2xl font-semibold text-slate-700">
-                            {metrics[selectedMetric as keyof typeof metrics].target}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {metrics[selectedMetric as keyof typeof metrics].status === "success" ? (
-                          <>
-                            <TrendingUp className="w-5 h-5 text-black" />
-                            <span className="text-sm font-medium text-gray-700">Above target - great work!</span>
-                          </>
-                        ) : (
-                          <>
-                            <AlertCircle className="w-5 h-5 text-black" />
-                            <span className="text-sm font-medium text-gray-700">Below target - needs attention</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Process List */}
-                    <div className="space-y-2">
-                      {[
-                        { name: "Order Fulfillment", status: "on-track", completion: 95 },
-                        { name: "Quality Checks", status: "on-track", completion: 100 },
-                        { name: "Inventory Management", status: "at-risk", completion: 78 }
-                      ].map((process) => (
-                        <div key={process.name} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
-                          <div className={cn(
-                            "w-2 h-2 rounded-full",
-                            process.status === "on-track" ? "bg-gray-500" : "bg-orange-500"
-                          )} />
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-slate-900">{process.name}</div>
-                            <div className="text-xs text-slate-500">{process.completion}% complete</div>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-slate-400" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-
-      {/* AI Agents Section */}
-      <section className="py-20 lg:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="text-center mb-16"
-          >
-            <motion.div variants={fadeInUp}>
-              <Badge className="bg-gray-100 text-gray-700 border-purple-200 mb-4">
-                <Brain className="w-3 h-3 mr-1" />
-                AI-Powered Operations
-              </Badge>
-            </motion.div>
-            <motion.h2 variants={fadeInUp} className="text-4xl lg:text-5xl font-bold text-slate-900 mb-6">
-              AI agents that optimize
-              <br />
-              <span className="text-slate-400">every operational process</span>
-            </motion.h2>
-            <motion.p variants={fadeInUp} className="text-xl text-slate-600 max-w-3xl mx-auto">
-              Four specialized AI agents monitor your operations 24/7, detecting bottlenecks, predicting issues, and recommending optimizations before problems arise.
-            </motion.p>
-          </motion.div>
-
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
-          >
-            {[
-              {
-                name: "Process Agent",
-                description: "Monitors SOPs and workflows, alerts when deviations occur, suggests process improvements",
-                icon: Settings,
-                color: "from-gray-400 to-gray-600",
-                stats: "SOP compliance tracking"
-              },
-              {
-                name: "Resource Agent",
-                description: "Tracks capacity and utilization, predicts bottlenecks, optimizes allocation",
-                icon: Users,
-                color: "from-gray-400 to-gray-600",
-                stats: "Capacity planning"
-              },
-              {
-                name: "Quality Agent",
-                description: "Analyzes quality metrics, flags trends early, recommends corrective actions",
-                icon: Shield,
-                color: "from-gray-400 to-gray-600",
-                stats: "Quality monitoring"
-              },
-              {
-                name: "Efficiency Agent",
-                description: "Identifies waste and delays, suggests automation opportunities, tracks improvements",
-                icon: Zap,
-                color: "from-gray-400 to-gray-600",
-                stats: "Workflow optimization"
-              }
-            ].map((agent, _index) => (
+      <div className="min-h-screen bg-white">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden border-b border-gray-200 bg-gradient-to-b from-gray-50 to-white">
+          <div className="container mx-auto px-4 py-20 md:py-32">
+            <div className="mx-auto max-w-4xl text-center">
               <motion.div
-                key={agent.name}
-                variants={fadeInUp}
-                className="group relative bg-white rounded-2xl p-6 border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-300"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-8"
               >
+                <Badge variant="outline" className="border-black text-black">
+                  <Settings className="mr-2 h-3 w-3" />
+                  FOR OPERATIONS TEAMS
+                </Badge>
+
                 <div className="space-y-4">
-                  <div className={cn(
-                    "w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center",
-                    agent.color
-                  )}>
-                    <agent.icon className="w-7 h-7 text-white" />
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">{agent.name}</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed mb-3">
-                      {agent.description}
-                    </p>
-                    <Badge className="bg-slate-100 text-slate-700 text-xs">
-                      {agent.stats}
-                    </Badge>
-                  </div>
-
-                  <div className="pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-sm font-medium text-black hover:text-gray-700 flex items-center gap-1 cursor-pointer">
-                      Learn more
-                      <ChevronRight className="w-3 h-3" />
-                    </span>
-                  </div>
+                  <h1 className="text-4xl font-bold tracking-tight text-black sm:text-5xl md:text-6xl">
+                    Streamline Operations Across Every Team
+                  </h1>
+                  <p className="text-lg text-gray-600 md:text-xl max-w-3xl mx-auto">
+                    Drive process accountability, track daily operations with EODs,
+                    monitor efficiency metrics, and coordinate seamlessly across departments.
+                  </p>
                 </div>
 
-                {/* Animated border gradient on hover */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none" />
+                <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
+                  <Button asChild size="lg" className="bg-black text-white hover:bg-gray-800">
+                    <Link href="/register">
+                      Start Free Trial
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg" className="border-gray-300">
+                    <Link href="/features">View All Features</Link>
+                  </Button>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-black" />
+                    <span>Process accountability</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-black" />
+                    <span>Daily operations reports</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-black" />
+                    <span>Team coordination</span>
+                  </div>
+                </div>
               </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+            </div>
+          </div>
+        </section>
 
-      {/* Problem Section */}
-      <section className="py-20 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+        {/* Problem/Solution Section */}
+        <section className="py-20 md:py-32">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-3xl text-center mb-16">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
+                className="space-y-6"
+              >
+                <h2 className="text-3xl font-bold tracking-tight text-black sm:text-4xl">
+                  Operations that run like clockwork
+                </h2>
+                <p className="text-lg text-gray-600">
+                  Stop firefighting. Taskspace gives you the visibility and accountability
+                  to turn chaos into consistent, efficient operations.
+                </p>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="border-t border-gray-200 bg-gray-50 py-20 md:py-32">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-3xl text-center mb-16">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
+              >
+                <h2 className="text-3xl font-bold tracking-tight text-black sm:text-4xl">
+                  Built for operational excellence
+                </h2>
+                <p className="mt-4 text-lg text-gray-600">
+                  Everything you need to keep the business running smoothly
+                </p>
+              </motion.div>
+            </div>
+
+            <div className="grid gap-12 md:grid-cols-2 lg:gap-16">
+              {/* Feature 1 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
+                className="space-y-4"
+              >
+                <div className="inline-flex rounded-lg bg-white p-3 shadow-sm">
+                  <CheckCircle className="h-6 w-6 text-black" />
+                </div>
+                <h3 className="text-xl font-semibold text-black">
+                  Process Accountability
+                </h3>
+                <p className="text-gray-600">
+                  Track recurring processes and one-time initiatives as rocks and to-dos.
+                  Ensure SOPs are followed, handoffs happen smoothly, and nothing gets lost
+                  between departments. Every process has an owner and a deadline.
+                </p>
+              </motion.div>
+
+              {/* Feature 2 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                viewport={{ once: true }}
+                className="space-y-4"
+              >
+                <div className="inline-flex rounded-lg bg-white p-3 shadow-sm">
+                  <Settings className="h-6 w-6 text-black" />
+                </div>
+                <h3 className="text-xl font-semibold text-black">
+                  Daily Operations Reports
+                </h3>
+                <p className="text-gray-600">
+                  End-of-day reports capture what got done, what's blocked, and what's next.
+                  See operational velocity across teams. Identify bottlenecks before they become
+                  problems. Keep everyone aligned on daily priorities.
+                </p>
+              </motion.div>
+
+              {/* Feature 3 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                viewport={{ once: true }}
+                className="space-y-4"
+              >
+                <div className="inline-flex rounded-lg bg-white p-3 shadow-sm">
+                  <BarChart3 className="h-6 w-6 text-black" />
+                </div>
+                <h3 className="text-xl font-semibold text-black">
+                  Efficiency Metrics Dashboards
+                </h3>
+                <p className="text-gray-600">
+                  Track the KPIs that matter: cycle time, error rates, customer response time,
+                  delivery performance. Weekly scorecard updates show trends at a glance.
+                  Red/yellow/green indicators make it obvious where to focus improvement efforts.
+                </p>
+              </motion.div>
+
+              {/* Feature 4 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                viewport={{ once: true }}
+                className="space-y-4"
+              >
+                <div className="inline-flex rounded-lg bg-white p-3 shadow-sm">
+                  <Users className="h-6 w-6 text-black" />
+                </div>
+                <h3 className="text-xl font-semibold text-black">
+                  Cross-Team Coordination
+                </h3>
+                <p className="text-gray-600">
+                  Operations touches every department. Coordinate with sales, marketing, product,
+                  and support seamlessly. Track dependencies, assign cross-functional to-dos, and
+                  keep everyone in sync through weekly Level 10 meetings.
+                </p>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="border-t border-gray-200 bg-white py-20 md:py-32">
+          <div className="container mx-auto px-4">
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-            >
-              <Badge className="bg-gray-100 text-gray-700 border-red-200 mb-4">
-                <AlertCircle className="w-3 h-3 mr-1" />
-                The Problem
-              </Badge>
-              <h2 className="text-4xl font-bold text-slate-900 mb-6">
-                Operations teams are drowning in chaos
-              </h2>
-              <div className="space-y-4">
-                {[
-                  "Processes documented in 12 different places (or not at all)",
-                  "No visibility into what's actually happening day-to-day",
-                  "Issues discovered too late to prevent major problems",
-                  "Everyone executing differently with no standardization",
-                  "Metrics tracked in spreadsheets that no one looks at"
-                ].map((problem, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <AlertCircle className="w-4 h-4 text-black" />
-                    </div>
-                    <p className="text-slate-700">{problem}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
+              className="mx-auto max-w-3xl text-center"
             >
-              <Badge className="bg-gray-100 text-gray-700 border-emerald-200 mb-4">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                The Solution
-              </Badge>
-              <h2 className="text-4xl font-bold text-slate-900 mb-6">
-                One platform for flawless execution
+              <h2 className="text-3xl font-bold tracking-tight text-black sm:text-4xl">
+                Build operations that scale
               </h2>
-              <div className="space-y-4">
-                {[
-                  "All processes, SOPs, and checklists in one searchable system",
-                  "Real-time operational metrics visible to the entire team",
-                  "AI detects patterns and predicts issues before they escalate",
-                  "Standardized workflows ensure consistency across the board",
-                  "Scorecard integration ties daily work to company goals"
-                ].map((solution, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <CheckCircle className="w-4 h-4 text-black" />
-                    </div>
-                    <p className="text-slate-700">{solution}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Deep-Dive 1: Process Documentation */}
-      <section className="py-20 lg:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="space-y-6"
-            >
-              <Badge className="bg-gray-100 text-gray-700">
-                <FileText className="w-3 h-3 mr-1" />
-                Process Documentation
-              </Badge>
-
-              <h2 className="text-4xl lg:text-5xl font-bold text-slate-900">
-                Document processes
-                <br />
-                <span className="text-slate-400">everyone actually follows</span>
-              </h2>
-
-              <p className="text-xl text-slate-600 leading-relaxed">
-                Create living SOPs with checklists, templates, and workflows. Track completion in real-time and ensure every team member executes consistently.
+              <p className="mt-4 text-lg text-gray-600">
+                Start your free trial today. No credit card required.
               </p>
-
-              <div className="space-y-4 pt-4">
-                {[
-                  {
-                    icon: ClipboardCheck,
-                    title: "Interactive Checklists",
-                    description: "Step-by-step processes with required approvals and sign-offs"
-                  },
-                  {
-                    icon: FileText,
-                    title: "SOP Library",
-                    description: "Searchable knowledge base with version history and updates"
-                  },
-                  {
-                    icon: BarChart3,
-                    title: "Completion Tracking",
-                    description: "See who's following processes and where breakdowns occur"
-                  }
-                ].map((feature) => (
-                  <div key={feature.title} className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                      <feature.icon className="w-5 h-5 text-black" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">{feature.title}</h3>
-                      <p className="text-slate-600 text-sm">{feature.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Link href="/app?page=register">
-                <Button className="bg-slate-900 hover:bg-slate-800 mt-6">
-                  Explore Process Docs
-                  <ArrowRight className="w-4 h-4 ml-2" />
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
+                <Button asChild size="lg" className="bg-black text-white hover:bg-gray-800">
+                  <Link href="/register">
+                    Start Free Trial
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </Button>
-              </Link>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="bg-white rounded-2xl shadow-2xl p-8 border border-slate-200"
-            >
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-slate-900">Order Fulfillment SOP</h3>
-                  <Badge className="bg-gray-100 text-gray-700">v2.1</Badge>
-                </div>
-
-                <div className="space-y-3">
-                  {[
-                    { step: "1. Verify order details", status: "complete", user: "Sarah M." },
-                    { step: "2. Check inventory availability", status: "complete", user: "Mike R." },
-                    { step: "3. Pick items from warehouse", status: "in-progress", user: "James K." },
-                    { step: "4. Quality inspection", status: "pending", user: "" },
-                    { step: "5. Package and label", status: "pending", user: "" },
-                    { step: "6. Schedule shipment", status: "pending", user: "" }
-                  ].map((item, index) => (
-                    <div
-                      key={index}
-                      className={cn(
-                        "flex items-center gap-3 p-3 rounded-lg border",
-                        item.status === "complete" && "bg-emerald-50 border-emerald-200",
-                        item.status === "in-progress" && "bg-blue-50 border-blue-200",
-                        item.status === "pending" && "bg-slate-50 border-slate-200"
-                      )}
-                    >
-                      <div className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0",
-                        item.status === "complete" && "bg-gray-500",
-                        item.status === "in-progress" && "bg-gray-500",
-                        item.status === "pending" && "bg-slate-300"
-                      )}>
-                        {item.status === "complete" && <CheckCircle className="w-4 h-4 text-white" />}
-                        {item.status === "in-progress" && <Clock className="w-4 h-4 text-white" />}
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-slate-900">{item.step}</div>
-                        {item.user && (
-                          <div className="text-xs text-slate-500">Completed by {item.user}</div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-4 border-t border-slate-200">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600">Overall Progress</span>
-                    <span className="font-semibold text-slate-900">50% complete</span>
-                  </div>
-                  <div className="mt-2 h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full w-1/2 bg-gray-600" />
-                  </div>
-                </div>
+                <Button asChild variant="outline" size="lg" className="border-gray-300">
+                  <Link href="/features">Explore All Features</Link>
+                </Button>
               </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Deep-Dive 2: Resource Management */}
-      <section className="py-20 lg:py-32 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="bg-white rounded-2xl shadow-2xl p-8 border border-slate-200 order-2 lg:order-1"
-            >
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-slate-900">Team Capacity</h3>
-
-                {[
-                  { team: "Warehouse", capacity: 85, available: 15, color: "emerald" },
-                  { team: "Quality Assurance", capacity: 92, available: 8, color: "orange" },
-                  { team: "Shipping", capacity: 78, available: 22, color: "emerald" },
-                  { team: "Customer Service", capacity: 95, available: 5, color: "red" }
-                ].map((dept) => (
-                  <div key={dept.team} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-900">{dept.team}</span>
-                      <div className="flex items-center gap-2">
-                        <Badge className={cn(
-                          "text-xs",
-                          dept.color === "emerald" && "bg-gray-100 text-gray-700",
-                          dept.color === "orange" && "bg-gray-100 text-gray-700",
-                          dept.color === "red" && "bg-gray-100 text-gray-700"
-                        )}>
-                          {dept.available}% available
-                        </Badge>
-                        <span className="text-sm text-slate-600">{dept.capacity}%</span>
-                      </div>
-                    </div>
-                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full",
-                          dept.color === "emerald" && "bg-gray-600",
-                          dept.color === "orange" && "bg-gray-600",
-                          dept.color === "red" && "bg-gray-600"
-                        )}
-                        style={{ width: `${dept.capacity}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-
-                <div className="pt-4 border-t border-slate-200">
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                    <AlertCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
-                    <div className="text-sm">
-                      <div className="font-medium text-orange-900 mb-1">Capacity Alert</div>
-                      <div className="text-gray-700">Customer Service team at 95% capacity. Consider reallocating resources or hiring.</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-900">32</div>
-                    <div className="text-xs text-slate-500">Team Members</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-900">87%</div>
-                    <div className="text-xs text-slate-500">Avg Utilization</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-black">+12%</div>
-                    <div className="text-xs text-slate-500">Efficiency</div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="space-y-6 order-1 lg:order-2"
-            >
-              <Badge className="bg-gray-100 text-gray-700">
-                <Users className="w-3 h-3 mr-1" />
-                Resource Management
-              </Badge>
-
-              <h2 className="text-4xl lg:text-5xl font-bold text-slate-900">
-                Optimize every
-                <br />
-                <span className="text-slate-400">resource and person</span>
-              </h2>
-
-              <p className="text-xl text-slate-600 leading-relaxed">
-                See real-time capacity across teams, predict bottlenecks before they happen, and optimize allocation to keep operations running smoothly.
+              <p className="mt-6 text-sm text-gray-500">
+                Join operations teams running on EOS with Taskspace
               </p>
-
-              <div className="space-y-4 pt-4">
-                {[
-                  {
-                    icon: Gauge,
-                    title: "Capacity Planning",
-                    description: "Real-time view of team utilization and availability"
-                  },
-                  {
-                    icon: AlertCircle,
-                    title: "Bottleneck Detection",
-                    description: "AI predicts capacity issues and suggests reallocation"
-                  },
-                  {
-                    icon: TrendingUp,
-                    title: "Efficiency Tracking",
-                    description: "Monitor productivity trends and identify improvements"
-                  }
-                ].map((feature) => (
-                  <div key={feature.title} className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                      <feature.icon className="w-5 h-5 text-black" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">{feature.title}</h3>
-                      <p className="text-slate-600 text-sm">{feature.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Link href="/app?page=register">
-                <Button className="bg-slate-900 hover:bg-slate-800 mt-6">
-                  Manage Resources
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
             </motion.div>
           </div>
-        </div>
-      </section>
-
-      {/* Feature Deep-Dive 3: Operational Metrics */}
-      <section className="py-20 lg:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="space-y-6"
-            >
-              <Badge className="bg-gray-100 text-gray-700">
-                <BarChart3 className="w-3 h-3 mr-1" />
-                Operational Metrics
-              </Badge>
-
-              <h2 className="text-4xl lg:text-5xl font-bold text-slate-900">
-                Track metrics that
-                <br />
-                <span className="text-slate-400">actually drive results</span>
-              </h2>
-
-              <p className="text-xl text-slate-600 leading-relaxed">
-                Connect daily operational metrics directly to your company scorecard. See trends, get AI-powered alerts, and keep your team aligned on what matters most.
-              </p>
-
-              <div className="space-y-4 pt-4">
-                {[
-                  {
-                    icon: Target,
-                    title: "Scorecard Integration",
-                    description: "Metrics flow automatically into your weekly Level 10 meetings"
-                  },
-                  {
-                    icon: Brain,
-                    title: "Trend Analysis",
-                    description: "AI detects patterns and predicts when you'll miss targets"
-                  },
-                  {
-                    icon: Zap,
-                    title: "Real-Time Alerts",
-                    description: "Get notified the moment a metric goes off track"
-                  }
-                ].map((feature) => (
-                  <div key={feature.title} className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                      <feature.icon className="w-5 h-5 text-black" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">{feature.title}</h3>
-                      <p className="text-slate-600 text-sm">{feature.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Link href="/app?page=register">
-                <Button className="bg-slate-900 hover:bg-slate-800 mt-6">
-                  View Metrics
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="bg-white rounded-2xl shadow-2xl p-8 border border-slate-200"
-            >
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-slate-900">This Week's Metrics</h3>
-                  <Badge className="bg-gray-100 text-gray-700">
-                    5/6 on track
-                  </Badge>
-                </div>
-
-                {[
-                  { metric: "On-Time Delivery", target: "95%", current: "97%", status: "success" },
-                  { metric: "Quality Score", target: "98%", current: "99%", status: "success" },
-                  { metric: "Cycle Time", target: "< 2 days", current: "1.8 days", status: "success" },
-                  { metric: "Inventory Accuracy", target: "99%", current: "98.5%", status: "warning" },
-                  { metric: "Customer Satisfaction", target: "4.8/5", current: "4.9/5", status: "success" },
-                  { metric: "Cost per Unit", target: "< $45", current: "$42", status: "success" }
-                ].map((item, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      "p-4 rounded-lg border",
-                      item.status === "success" && "bg-emerald-50 border-emerald-200",
-                      item.status === "warning" && "bg-orange-50 border-orange-200"
-                    )}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-slate-900">{item.metric}</span>
-                      {item.status === "success" ? (
-                        <CheckCircle className="w-5 h-5 text-black" />
-                      ) : (
-                        <AlertCircle className="w-5 h-5 text-black" />
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-600">Target: {item.target}</span>
-                      <span className="text-sm font-semibold text-slate-900">{item.current}</span>
-                    </div>
-                  </div>
-                ))}
-
-                <div className="pt-4 border-t border-slate-200">
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                    <Brain className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
-                    <div className="text-sm">
-                      <div className="font-medium text-blue-900 mb-1">AI Insight</div>
-                      <div className="text-gray-700">Inventory Accuracy trending down. Review receiving process before next week.</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-
-    </div>
+        </section>
+      </div>
     </PageTransition>
   )
 }

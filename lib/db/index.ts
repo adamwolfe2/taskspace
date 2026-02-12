@@ -30,6 +30,9 @@ import type {
   EnergyLevel,
   MoodEmoji,
   EnergyFactor,
+  Client,
+  Project,
+  ProjectMember,
 } from "../types"
 import type { PaginationParams } from "../utils/pagination"
 
@@ -176,6 +179,8 @@ function parseRock(row: Record<string, unknown>): Rock {
     doneWhen: row.done_when as string[] | undefined,
     milestones: row.milestones as Rock["milestones"] | undefined,
     quarter: row.quarter as string | undefined,
+    projectId: (row.project_id as string) || null,
+    projectName: (row.project_name as string) || undefined,
     createdAt: (row.created_at as Date)?.toISOString() || "",
     updatedAt: (row.updated_at as Date)?.toISOString() || "",
   }
@@ -208,6 +213,8 @@ function parseAssignedTask(row: Record<string, unknown>): AssignedTask {
     comments: row.comments as AssignedTask["comments"] | undefined,
     recurrence: row.recurrence as AssignedTask["recurrence"] | undefined,
     parentRecurringTaskId: row.parent_recurring_task_id as string | undefined,
+    projectId: (row.project_id as string) || null,
+    projectName: (row.project_name as string) || undefined,
   }
 }
 
@@ -254,6 +261,71 @@ function parseApiKey(row: Record<string, unknown>): ApiKey {
     scopes: row.scopes as string[],
     createdAt: (row.created_at as Date)?.toISOString() || "",
     lastUsedAt: row.last_used_at ? (row.last_used_at as Date).toISOString() : null,
+  }
+}
+
+function parseClient(row: Record<string, unknown>): Client {
+  return {
+    id: row.id as string,
+    organizationId: row.organization_id as string,
+    workspaceId: row.workspace_id as string,
+    name: row.name as string,
+    description: (row.description as string) || undefined,
+    contactName: (row.contact_name as string) || undefined,
+    contactEmail: (row.contact_email as string) || undefined,
+    contactPhone: (row.contact_phone as string) || undefined,
+    website: (row.website as string) || undefined,
+    industry: (row.industry as string) || undefined,
+    status: row.status as Client["status"],
+    notes: (row.notes as string) || undefined,
+    tags: (row.tags as string[]) || [],
+    customFields: (row.custom_fields as Record<string, unknown>) || {},
+    createdBy: (row.created_by as string) || undefined,
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    updatedAt: (row.updated_at as Date)?.toISOString() || "",
+    projectCount: row.project_count !== undefined ? Number(row.project_count) : undefined,
+    activeProjectCount: row.active_project_count !== undefined ? Number(row.active_project_count) : undefined,
+  }
+}
+
+function parseProject(row: Record<string, unknown>): Project {
+  return {
+    id: row.id as string,
+    organizationId: row.organization_id as string,
+    workspaceId: row.workspace_id as string,
+    clientId: (row.client_id as string) || null,
+    clientName: (row.client_name as string) || undefined,
+    name: row.name as string,
+    description: (row.description as string) || undefined,
+    status: row.status as Project["status"],
+    priority: row.priority as Project["priority"],
+    startDate: row.start_date ? String(row.start_date) : null,
+    dueDate: row.due_date ? String(row.due_date) : null,
+    completedAt: row.completed_at ? (row.completed_at as Date).toISOString() : null,
+    budgetCents: row.budget_cents != null ? Number(row.budget_cents) : null,
+    progress: Number(row.progress || 0),
+    ownerId: (row.owner_id as string) || null,
+    ownerName: (row.owner_name as string) || undefined,
+    tags: (row.tags as string[]) || [],
+    customFields: (row.custom_fields as Record<string, unknown>) || {},
+    createdBy: (row.created_by as string) || undefined,
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    updatedAt: (row.updated_at as Date)?.toISOString() || "",
+    taskCount: row.task_count !== undefined ? Number(row.task_count) : undefined,
+    completedTaskCount: row.completed_task_count !== undefined ? Number(row.completed_task_count) : undefined,
+    memberCount: row.member_count !== undefined ? Number(row.member_count) : undefined,
+  }
+}
+
+function parseProjectMember(row: Record<string, unknown>): ProjectMember {
+  return {
+    id: row.id as string,
+    projectId: row.project_id as string,
+    userId: row.user_id as string,
+    userName: (row.user_name as string) || (row.name as string) || undefined,
+    userEmail: (row.user_email as string) || (row.email as string) || undefined,
+    role: row.role as ProjectMember["role"],
+    addedAt: (row.added_at as Date)?.toISOString() || "",
   }
 }
 
@@ -3968,6 +4040,271 @@ export const db = {
         LIMIT 1
       `
       return rows.length > 0
+    },
+  },
+
+  // ============================================
+  // CLIENTS
+  // ============================================
+  clients: {
+    async findByWorkspace(orgId: string, workspaceId: string, status?: string): Promise<Client[]> {
+      if (status) {
+        const { rows } = await sql`
+          SELECT c.*,
+            COUNT(p.id)::int as project_count,
+            COUNT(p.id) FILTER (WHERE p.status IN ('planning', 'active', 'on-hold'))::int as active_project_count
+          FROM clients c
+          LEFT JOIN projects p ON p.client_id = c.id
+          WHERE c.organization_id = ${orgId} AND c.workspace_id = ${workspaceId} AND c.status = ${status}
+          GROUP BY c.id
+          ORDER BY c.created_at DESC
+        `
+        return rows.map(parseClient)
+      }
+      const { rows } = await sql`
+        SELECT c.*,
+          COUNT(p.id)::int as project_count,
+          COUNT(p.id) FILTER (WHERE p.status IN ('planning', 'active', 'on-hold'))::int as active_project_count
+        FROM clients c
+        LEFT JOIN projects p ON p.client_id = c.id
+        WHERE c.organization_id = ${orgId} AND c.workspace_id = ${workspaceId}
+        GROUP BY c.id
+        ORDER BY c.created_at DESC
+      `
+      return rows.map(parseClient)
+    },
+
+    async findById(orgId: string, id: string): Promise<Client | null> {
+      const { rows } = await sql`
+        SELECT c.*,
+          COUNT(p.id)::int as project_count,
+          COUNT(p.id) FILTER (WHERE p.status IN ('planning', 'active', 'on-hold'))::int as active_project_count
+        FROM clients c
+        LEFT JOIN projects p ON p.client_id = c.id
+        WHERE c.id = ${id} AND c.organization_id = ${orgId}
+        GROUP BY c.id
+      `
+      return rows[0] ? parseClient(rows[0]) : null
+    },
+
+    async create(orgId: string, workspaceId: string, data: {
+      name: string
+      description?: string
+      contactName?: string
+      contactEmail?: string
+      contactPhone?: string
+      website?: string
+      industry?: string
+      status?: Client["status"]
+      notes?: string
+      tags?: string[]
+      createdBy: string
+    }): Promise<Client> {
+      const id = "cli_" + require("crypto").randomBytes(12).toString("hex")
+      const now = new Date().toISOString()
+      const { rows } = await sql`
+        INSERT INTO clients (id, organization_id, workspace_id, name, description, contact_name, contact_email, contact_phone, website, industry, status, notes, tags, created_by, created_at, updated_at)
+        VALUES (${id}, ${orgId}, ${workspaceId}, ${sanitizeText(data.name)}, ${data.description ? sanitizeText(data.description) : null}, ${data.contactName || null}, ${data.contactEmail || null}, ${data.contactPhone || null}, ${data.website || null}, ${data.industry || null}, ${data.status || "active"}, ${data.notes ? sanitizeText(data.notes) : null}, ${JSON.stringify(data.tags || [])}::jsonb, ${data.createdBy}, ${now}, ${now})
+        RETURNING *
+      `
+      return parseClient(rows[0])
+    },
+
+    async update(orgId: string, id: string, updates: Partial<{
+      name: string
+      description: string | null
+      contactName: string | null
+      contactEmail: string | null
+      contactPhone: string | null
+      website: string | null
+      industry: string | null
+      status: Client["status"]
+      notes: string | null
+      tags: string[]
+    }>): Promise<Client | null> {
+      const now = new Date().toISOString()
+      const { rows } = await sql`
+        UPDATE clients SET
+          name = COALESCE(${updates.name ? sanitizeText(updates.name) : null}, name),
+          description = COALESCE(${updates.description !== undefined ? (updates.description ? sanitizeText(updates.description) : updates.description) : null}, description),
+          contact_name = COALESCE(${updates.contactName !== undefined ? updates.contactName : null}, contact_name),
+          contact_email = COALESCE(${updates.contactEmail !== undefined ? updates.contactEmail : null}, contact_email),
+          contact_phone = COALESCE(${updates.contactPhone !== undefined ? updates.contactPhone : null}, contact_phone),
+          website = COALESCE(${updates.website !== undefined ? updates.website : null}, website),
+          industry = COALESCE(${updates.industry !== undefined ? updates.industry : null}, industry),
+          status = COALESCE(${updates.status || null}, status),
+          notes = COALESCE(${updates.notes !== undefined ? (updates.notes ? sanitizeText(updates.notes) : updates.notes) : null}, notes),
+          tags = COALESCE(${updates.tags ? JSON.stringify(updates.tags) : null}::jsonb, tags),
+          updated_at = ${now}
+        WHERE id = ${id} AND organization_id = ${orgId}
+        RETURNING *
+      `
+      return rows[0] ? parseClient(rows[0]) : null
+    },
+
+    async delete(orgId: string, id: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM clients WHERE id = ${id} AND organization_id = ${orgId}`
+      return (rowCount ?? 0) > 0
+    },
+  },
+
+  // ============================================
+  // PROJECTS
+  // ============================================
+  projects: {
+    async findByWorkspace(orgId: string, workspaceId: string, filters?: { status?: string; clientId?: string; ownerId?: string }): Promise<Project[]> {
+      const status = filters?.status || null
+      const clientId = filters?.clientId || null
+      const ownerId = filters?.ownerId || null
+      const { rows } = await sql`
+        SELECT p.*,
+          cl.name as client_name,
+          u.name as owner_name,
+          COUNT(at.id)::int as task_count,
+          COUNT(at.id) FILTER (WHERE at.status = 'completed')::int as completed_task_count,
+          (SELECT COUNT(*)::int FROM project_members pm WHERE pm.project_id = p.id) as member_count
+        FROM projects p
+        LEFT JOIN clients cl ON cl.id = p.client_id
+        LEFT JOIN users u ON u.id = p.owner_id
+        LEFT JOIN assigned_tasks at ON at.project_id = p.id
+        WHERE p.organization_id = ${orgId}
+          AND p.workspace_id = ${workspaceId}
+          AND (${status}::text IS NULL OR p.status = ${status})
+          AND (${clientId}::text IS NULL OR p.client_id = ${clientId})
+          AND (${ownerId}::text IS NULL OR p.owner_id = ${ownerId})
+        GROUP BY p.id, cl.name, u.name
+        ORDER BY p.created_at DESC
+      `
+      return rows.map(parseProject)
+    },
+
+    async findById(orgId: string, id: string): Promise<Project | null> {
+      const { rows } = await sql`
+        SELECT p.*,
+          cl.name as client_name,
+          u.name as owner_name,
+          COUNT(at.id)::int as task_count,
+          COUNT(at.id) FILTER (WHERE at.status = 'completed')::int as completed_task_count,
+          (SELECT COUNT(*)::int FROM project_members pm WHERE pm.project_id = p.id) as member_count
+        FROM projects p
+        LEFT JOIN clients cl ON cl.id = p.client_id
+        LEFT JOIN users u ON u.id = p.owner_id
+        LEFT JOIN assigned_tasks at ON at.project_id = p.id
+        WHERE p.id = ${id} AND p.organization_id = ${orgId}
+        GROUP BY p.id, cl.name, u.name
+      `
+      return rows[0] ? parseProject(rows[0]) : null
+    },
+
+    async create(orgId: string, workspaceId: string, data: {
+      name: string
+      clientId?: string | null
+      description?: string
+      status?: Project["status"]
+      priority?: Project["priority"]
+      startDate?: string | null
+      dueDate?: string | null
+      ownerId?: string | null
+      tags?: string[]
+      createdBy: string
+    }): Promise<Project> {
+      const id = "prj_" + require("crypto").randomBytes(12).toString("hex")
+      const now = new Date().toISOString()
+      const { rows } = await sql`
+        INSERT INTO projects (id, organization_id, workspace_id, client_id, name, description, status, priority, start_date, due_date, owner_id, tags, created_by, created_at, updated_at)
+        VALUES (${id}, ${orgId}, ${workspaceId}, ${data.clientId || null}, ${sanitizeText(data.name)}, ${data.description ? sanitizeText(data.description) : null}, ${data.status || "active"}, ${data.priority || "normal"}, ${data.startDate || null}, ${data.dueDate || null}, ${data.ownerId || null}, ${JSON.stringify(data.tags || [])}::jsonb, ${data.createdBy}, ${now}, ${now})
+        RETURNING *
+      `
+      // Re-fetch with JOINs for computed fields
+      const project = await this.findById(orgId, id)
+      return project || parseProject(rows[0])
+    },
+
+    async update(orgId: string, id: string, updates: Partial<{
+      name: string
+      clientId: string | null
+      description: string | null
+      status: Project["status"]
+      priority: Project["priority"]
+      startDate: string | null
+      dueDate: string | null
+      completedAt: string | null
+      ownerId: string | null
+      progress: number
+      budgetCents: number | null
+      tags: string[]
+    }>): Promise<Project | null> {
+      const now = new Date().toISOString()
+      // Auto-set completedAt when status changes to completed
+      const completedAt = updates.status === "completed" && updates.completedAt === undefined ? now : (updates.completedAt !== undefined ? updates.completedAt : null)
+      const { rows } = await sql`
+        UPDATE projects SET
+          name = COALESCE(${updates.name ? sanitizeText(updates.name) : null}, name),
+          client_id = COALESCE(${updates.clientId !== undefined ? updates.clientId : null}, client_id),
+          description = COALESCE(${updates.description !== undefined ? (updates.description ? sanitizeText(updates.description) : updates.description) : null}, description),
+          status = COALESCE(${updates.status || null}, status),
+          priority = COALESCE(${updates.priority || null}, priority),
+          start_date = COALESCE(${updates.startDate !== undefined ? updates.startDate : null}, start_date),
+          due_date = COALESCE(${updates.dueDate !== undefined ? updates.dueDate : null}, due_date),
+          completed_at = COALESCE(${completedAt}, completed_at),
+          owner_id = COALESCE(${updates.ownerId !== undefined ? updates.ownerId : null}, owner_id),
+          progress = COALESCE(${updates.progress ?? null}, progress),
+          budget_cents = COALESCE(${updates.budgetCents !== undefined ? updates.budgetCents : null}, budget_cents),
+          tags = COALESCE(${updates.tags ? JSON.stringify(updates.tags) : null}::jsonb, tags),
+          updated_at = ${now}
+        WHERE id = ${id} AND organization_id = ${orgId}
+        RETURNING id
+      `
+      if (!rows[0]) return null
+      return this.findById(orgId, id)
+    },
+
+    async delete(orgId: string, id: string): Promise<boolean> {
+      // Nullify project_id on linked tasks and rocks first (cascade would delete them)
+      await sql`UPDATE assigned_tasks SET project_id = NULL WHERE project_id = ${id}`
+      await sql`UPDATE rocks SET project_id = NULL WHERE project_id = ${id}`
+      const { rowCount } = await sql`DELETE FROM projects WHERE id = ${id} AND organization_id = ${orgId}`
+      return (rowCount ?? 0) > 0
+    },
+
+    // Project Members
+    async getMembers(projectId: string): Promise<ProjectMember[]> {
+      const { rows } = await sql`
+        SELECT pm.*, u.name as user_name, u.email as user_email
+        FROM project_members pm
+        JOIN users u ON u.id = pm.user_id
+        WHERE pm.project_id = ${projectId}
+        ORDER BY pm.added_at ASC
+      `
+      return rows.map(parseProjectMember)
+    },
+
+    async addMember(projectId: string, userId: string, role: ProjectMember["role"] = "member"): Promise<ProjectMember> {
+      const id = "pm_" + require("crypto").randomBytes(12).toString("hex")
+      const { rows } = await sql`
+        INSERT INTO project_members (id, project_id, user_id, role)
+        VALUES (${id}, ${projectId}, ${userId}, ${role})
+        ON CONFLICT (project_id, user_id) DO UPDATE SET role = ${role}
+        RETURNING *
+      `
+      return parseProjectMember(rows[0])
+    },
+
+    async updateMemberRole(projectId: string, userId: string, role: ProjectMember["role"]): Promise<ProjectMember | null> {
+      const { rows } = await sql`
+        UPDATE project_members SET role = ${role}
+        WHERE project_id = ${projectId} AND user_id = ${userId}
+        RETURNING *
+      `
+      return rows[0] ? parseProjectMember(rows[0]) : null
+    },
+
+    async removeMember(projectId: string, userId: string): Promise<boolean> {
+      const { rowCount } = await sql`
+        DELETE FROM project_members
+        WHERE project_id = ${projectId} AND user_id = ${userId}
+      `
+      return (rowCount ?? 0) > 0
     },
   },
 }
