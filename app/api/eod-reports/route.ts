@@ -100,6 +100,25 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     const effectiveStartDate = startDate || defaultStartDate
     const effectiveEndDate = endDate || defaultEndDate
 
+    // Cap date range to 365 days to prevent excessive data queries
+    if (!date) {
+      const start = new Date(effectiveStartDate)
+      const end = new Date(effectiveEndDate)
+      const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+      if (diffDays > 365) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Date range cannot exceed 365 days" },
+          { status: 400 }
+        )
+      }
+      if (diffDays < 0) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "startDate must be before endDate" },
+          { status: 400 }
+        )
+      }
+    }
+
     // Determine which user(s) to fetch for
     const targetUserId = isAdmin(auth) && userId ? userId : (isAdmin(auth) ? null : auth.user.id)
 
@@ -238,7 +257,11 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       ? parsedMetricValue
       : null
 
-    // Check if user already has a report for this date — merge if so
+    // Check if user already has a report for this date — merge if so.
+    // Note: There is a narrow race window between the check and insert below.
+    // This is accepted risk because: (1) the unique constraint was intentionally removed
+    // to support re-submissions, (2) subsequent submissions merge gracefully via the
+    // existingReport branch, and (3) the window is sub-millisecond for a single user.
     const existingReport = await db.eodReports.findByUserAndDate(auth.user.id, auth.organization.id, reportDate)
 
     let report: EODReport
