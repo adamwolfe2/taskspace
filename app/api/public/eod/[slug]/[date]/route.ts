@@ -198,56 +198,86 @@ export async function GET(
     // Build the public report data
     const memberMap = new Map(members.map(m => [m.user_id as string, m]))
 
+    // Deduplicate reports by user_id: merge multiple same-day reports into one
+    const reportsByUser = new Map<string, typeof reports>()
+    for (const report of reports) {
+      const userId = report.user_id as string
+      if (!reportsByUser.has(userId)) {
+        reportsByUser.set(userId, [])
+      }
+      reportsByUser.get(userId)!.push(report)
+    }
+
     const publicReports: PublicEODReport[] = []
 
-    // First add reports from owners/admins, then members
-    const sortedReports = reports.sort((a, b) => {
-      const memberA = memberMap.get(a.user_id as string)
-      const memberB = memberMap.get(b.user_id as string)
-
-      const roleOrder = { owner: 1, admin: 2, member: 3 }
-      const roleA = roleOrder[(memberA?.role as keyof typeof roleOrder) || "member"]
-      const roleB = roleOrder[(memberB?.role as keyof typeof roleOrder) || "member"]
-
-      if (roleA !== roleB) return roleA - roleB
-
-      // Within same role, sort by name
-      const nameA = (memberA?.name as string) || ""
-      const nameB = (memberB?.name as string) || ""
-      return nameA.localeCompare(nameB)
-    })
-
-    for (const report of sortedReports) {
-      const member = memberMap.get(report.user_id as string)
+    for (const [userId, userReports] of reportsByUser) {
+      const member = memberMap.get(userId)
       if (!member) continue // Skip if member not found
 
-      // EOD tasks use 'text' field, priorities use 'text' field as well
-      const tasks = (report.tasks as Array<{ text: string; rockId?: string; completedAt?: string }>) || []
-      const priorities = (report.tomorrow_priorities as Array<{ text: string; rockId?: string }>) || []
+      // Merge all reports for this user: combine tasks, use latest for other fields
+      const allTasks: PublicEODTask[] = []
+      const seenTaskTexts = new Set<string>()
+      let mergedChallenges = ""
+      let latestReport = userReports[0]
 
-      const userId = report.user_id as string
+      for (const report of userReports) {
+        // Track latest by submitted_at
+        if ((report.submitted_at as string) > (latestReport.submitted_at as string)) {
+          latestReport = report
+        }
+
+        // Merge tasks (deduplicate by text)
+        const tasks = (report.tasks as Array<{ text: string; rockId?: string; completedAt?: string }>) || []
+        for (const t of tasks) {
+          if (!seenTaskTexts.has(t.text)) {
+            seenTaskTexts.add(t.text)
+            allTasks.push({
+              description: t.text || "",
+              rockTitle: t.rockId ? rockMap.get(t.rockId) : undefined,
+              completedAt: t.completedAt,
+            })
+          }
+        }
+
+        // Merge challenges
+        const challenges = (report.challenges as string) || ""
+        if (challenges) {
+          mergedChallenges = mergedChallenges
+            ? mergedChallenges + "\n\n" + challenges
+            : challenges
+        }
+      }
+
+      // Use latest report for priorities, escalation, and submittedAt
+      const priorities = (latestReport.tomorrow_priorities as Array<{ text: string; rockId?: string }>) || []
+
       publicReports.push({
         userName: (member.name as string) || "Unknown",
         userRole: member.role as "owner" | "admin" | "member",
         department: (member.department as string) || "General",
         jobTitle: member.job_title as string || undefined,
-        date: report.date as string,
-        submittedAt: report.submitted_at as string,
-        tasks: tasks.map(t => ({
-          description: t.text || "",
-          rockTitle: t.rockId ? rockMap.get(t.rockId) : undefined,
-          completedAt: t.completedAt,
-        })),
-        challenges: (report.challenges as string) || "",
+        date: latestReport.date as string,
+        submittedAt: latestReport.submitted_at as string,
+        tasks: allTasks,
+        challenges: mergedChallenges,
         tomorrowPriorities: priorities.map(p => ({
           description: p.text || "",
           rockTitle: p.rockId ? rockMap.get(p.rockId) : undefined,
         })),
-        needsEscalation: report.needs_escalation as boolean || false,
-        escalationNote: report.escalation_note as string | null,
+        needsEscalation: latestReport.needs_escalation as boolean || false,
+        escalationNote: latestReport.escalation_note as string | null,
         rocks: rocksByUser.get(userId) || [],
       })
     }
+
+    // Sort by role priority then name
+    publicReports.sort((a, b) => {
+      const roleOrder = { owner: 1, admin: 2, member: 3 }
+      const roleA = roleOrder[a.userRole] || 3
+      const roleB = roleOrder[b.userRole] || 3
+      if (roleA !== roleB) return roleA - roleB
+      return a.userName.localeCompare(b.userName)
+    })
 
     // Calculate submission stats
     // Count unique users who have submitted (a user might submit multiple reports per day)
