@@ -79,7 +79,7 @@ describe("withDangerousAdmin", () => {
     jest.clearAllMocks()
     process.env = { ...originalEnv }
     delete process.env.ADMIN_OPS_SECRET
-    process.env.NODE_ENV = "test"
+    ;(process.env as Record<string, string | undefined>).NODE_ENV = "test"
   })
 
   afterAll(() => {
@@ -132,7 +132,7 @@ describe("withDangerousAdmin", () => {
 
   describe("production environment", () => {
     beforeEach(() => {
-      process.env.NODE_ENV = "production"
+      ;(process.env as Record<string, string | undefined>).NODE_ENV = "production"
     })
 
     it("should block when ADMIN_OPS_SECRET is not configured", async () => {
