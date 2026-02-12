@@ -23,6 +23,8 @@ import {
 import { UserBentoCard, UserBentoGrid, type UserBentoData } from "@/components/public/user-bento-card"
 import { ExportDropdown } from "@/components/public/export-dropdown"
 import { generateDailyMarkdown } from "@/lib/utils/report-export"
+import { CONFIG } from "@/lib/config"
+import * as Sentry from "@sentry/nextjs"
 
 interface PublicEODTask {
   description: string
@@ -298,6 +300,7 @@ export default function PublicEODDailyReportPage() {
       setLastRefresh(new Date())
     } catch (err) {
       console.error("Failed to fetch report:", err)
+      Sentry.captureException(err, { tags: { page: "public-eod-daily", slug, date } })
       setError(err instanceof Error ? err.message : "Failed to load report")
     } finally {
       setLoading(false)
@@ -310,11 +313,11 @@ export default function PublicEODDailyReportPage() {
     fetchReport()
   }, [fetchReport])
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh periodically
   useEffect(() => {
     const interval = setInterval(() => {
       fetchReport()
-    }, 30000)
+    }, CONFIG.polling.fast)
 
     return () => clearInterval(interval)
   }, [fetchReport])

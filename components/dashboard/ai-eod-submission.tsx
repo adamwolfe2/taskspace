@@ -19,6 +19,7 @@ import { sendEODNotification } from "@/lib/email"
 import { updateStreak } from "@/lib/hooks/use-productivity"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
+import { CONFIG } from "@/lib/config"
 
 interface OrgDateInfo {
   date: string
@@ -145,7 +146,7 @@ export function AIEODSubmission({
     }
     fetchOrgDate()
     // Refresh every minute to keep time current
-    const interval = setInterval(fetchOrgDate, 60000)
+    const interval = setInterval(fetchOrgDate, CONFIG.polling.standard)
     return () => clearInterval(interval)
   }, [])
 

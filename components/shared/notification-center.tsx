@@ -28,6 +28,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { Notification } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
+import { CONFIG } from "@/lib/config"
 
 export function NotificationCenter() {
   const router = useRouter()
@@ -75,7 +76,7 @@ export function NotificationCenter() {
 
     const startPolling = () => {
       if (!interval) {
-        interval = setInterval(fetchUnreadCount, 300000) // Check every 5 minutes
+        interval = setInterval(fetchUnreadCount, CONFIG.polling.slow)
       }
     }
 

@@ -75,6 +75,18 @@ export const CONFIG = {
     // Only update lastActiveAt every 5 minutes to reduce write load
     activityUpdateIntervalMs: 5 * 60 * 1000,
   },
+
+  // Polling intervals (in milliseconds)
+  polling: {
+    /** Status checks, org date refresh, productivity data (1 min) */
+    standard: 60_000,
+    /** Public EOD page auto-refresh, org chart employees, workspace notes (30s) */
+    fast: 30_000,
+    /** Notification center unread count check (5 min) */
+    slow: 300_000,
+    /** Org chart progress indicator (10s) */
+    realtime: 10_000,
+  },
 } as const
 
 // Environment-specific configuration

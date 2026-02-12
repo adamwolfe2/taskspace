@@ -28,6 +28,7 @@ import {
 import { UserBentoCard, UserBentoGrid, type UserBentoData } from "@/components/public/user-bento-card"
 import { ExportDropdown } from "@/components/public/export-dropdown"
 import { generateWeeklyMarkdown } from "@/lib/utils/report-export"
+import * as Sentry from "@sentry/nextjs"
 
 interface WeeklyTask {
   description: string
@@ -410,6 +411,7 @@ export default function PublicEODWeeklyReportPage() {
       setLastRefresh(new Date())
     } catch (err) {
       console.error("Failed to fetch report:", err)
+      Sentry.captureException(err, { tags: { page: "public-eod-weekly", slug, date } })
       setError(err instanceof Error ? err.message : "Failed to load report")
     } finally {
       setLoading(false)

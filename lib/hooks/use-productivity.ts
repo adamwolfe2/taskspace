@@ -1,6 +1,7 @@
 "use client"
 
 import useSWR from "swr"
+import { CONFIG } from "@/lib/config"
 import type {
   FocusScore,
   UserStreak,
@@ -59,7 +60,7 @@ export function useProductivityDashboard(userId?: string) {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      refreshInterval: 60000, // Refresh every minute
+      refreshInterval: CONFIG.polling.standard,
     }
   )
 

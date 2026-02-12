@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
+import { CONFIG } from "@/lib/config"
 import { Database, Wifi, WifiOff, RefreshCw } from "lucide-react"
 
 interface StatusIndicatorProps {
@@ -44,7 +45,7 @@ export function StatusIndicator({ className }: StatusIndicatorProps) {
 
   useEffect(() => {
     checkStatus()
-    const interval = setInterval(checkStatus, 60000) // Check every minute
+    const interval = setInterval(checkStatus, CONFIG.polling.standard)
     return () => clearInterval(interval)
   }, [])
 

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { useApp } from "@/lib/contexts/app-context"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useToast } from "@/hooks/use-toast"
+import { CONFIG } from "@/lib/config"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -43,14 +44,14 @@ export function OrgChartPage() {
   } = useSWR<{ success: boolean; employees: OrgChartEmployee[] }>(
     currentWorkspace ? `/api/org-chart/employees?workspaceId=${currentWorkspace.id}` : null,
     fetcher,
-    { refreshInterval: 30000 } // Refresh every 30 seconds
+    { refreshInterval: CONFIG.polling.fast }
   )
 
   // Fetch progress data
   const { data: progressResponse, mutate: refreshProgress } = useSWR(
     "/api/org-chart/progress",
     fetcher,
-    { refreshInterval: 10000 } // Refresh every 10 seconds
+    { refreshInterval: CONFIG.polling.realtime }
   )
 
   // Update progress map when data changes
