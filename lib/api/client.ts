@@ -492,7 +492,7 @@ export const api = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emails, role, department }),
       })
-      return handleResponse<{ sent: number; failed: string[] }>(response)
+      return handleResponse<{ successful: SafeInvitation[]; failed: { email: string; error: string }[] }>(response)
     },
 
     async cancel(id: string) {

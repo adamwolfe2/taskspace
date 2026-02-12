@@ -15,6 +15,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/features/accountability-chart",
     "/features/team-management",
     "/features/analytics",
+    "/features/tasks",
+    "/features/communication",
+    "/features/ai-agents",
+    "/features/vto",
     "/solutions/leadership",
     "/solutions/sales",
     "/solutions/marketing",
@@ -24,6 +28,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/about",
     "/contact",
     "/help",
+    "/terms",
+    "/privacy",
   ]
 
   const staticSitemap: MetadataRoute.Sitemap = staticPages.map((route) => ({
