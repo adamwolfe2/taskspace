@@ -3739,6 +3739,7 @@ export const db = {
             ${model},
             ${inputTokens},
             ${outputTokens},
+            ${creditsUsed},
             ${metadataJson}::jsonb,
             NOW()
           )
