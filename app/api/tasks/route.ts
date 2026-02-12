@@ -166,6 +166,15 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
         )
       }
 
+      // Verify assignee has access to the target workspace
+      const assigneeHasAccess = await userHasWorkspaceAccess(assigneeId, workspaceId)
+      if (!assigneeHasAccess) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Assignee does not have access to this workspace" },
+          { status: 403 }
+        )
+      }
+
       const assigneeUser = await db.users.findById(assigneeId)
       if (!assigneeUser) {
         return NextResponse.json<ApiResponse<null>>(

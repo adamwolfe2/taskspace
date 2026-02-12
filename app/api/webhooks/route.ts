@@ -125,6 +125,7 @@ export const GET = withAdmin(async (request, auth) => {
 
     let deliveryStats: Record<string, unknown>[] = []
     if (webhookIds.length > 0) {
+      const idArray = webhookIds.map(String)
       const { rows } = await sql`
         SELECT
           webhook_id,
@@ -133,7 +134,7 @@ export const GET = withAdmin(async (request, auth) => {
           COUNT(*) FILTER (WHERE status = 'failed') as failed,
           COUNT(*) FILTER (WHERE status = 'pending') as pending
         FROM webhook_deliveries
-        WHERE webhook_id = ANY(string_to_array(${webhookIds.map(String).join(',')}, ','))
+        WHERE webhook_id = ANY(${idArray}::text[])
           AND created_at > NOW() - INTERVAL '7 days'
         GROUP BY webhook_id
       `
