@@ -138,6 +138,9 @@ export interface Invitation {
   workspaceId?: string | null
 }
 
+/** Invitation type without token - safe for list/admin API responses */
+export type SafeInvitation = Omit<Invitation, "token">
+
 // Email Verification Token
 export interface EmailVerificationToken {
   id: string

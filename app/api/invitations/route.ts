@@ -7,7 +7,7 @@ import { inviteMemberSchema } from "@/lib/validation/schemas"
 import { sendInvitationEmail } from "@/lib/email"
 import { canAddUser, buildFeatureGateContext } from "@/lib/billing/feature-gates"
 import { getUserWorkspaces } from "@/lib/db/workspaces"
-import type { Invitation, ApiResponse, Organization, OrganizationSettings, SubscriptionInfo } from "@/lib/types"
+import type { Invitation, SafeInvitation, ApiResponse, Organization, OrganizationSettings, SubscriptionInfo } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { withTransaction } from "@/lib/db/transactions"
 
@@ -17,9 +17,12 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
     const invitations = await db.invitations.findByOrganizationId(auth.organization.id)
     const pendingInvitations = invitations.filter(i => i.status === "pending")
 
-    return NextResponse.json<ApiResponse<Invitation[]>>({
+    // Strip tokens from list responses - tokens should only be used via email invite links
+    const safeInvitations: SafeInvitation[] = pendingInvitations.map(({ token: _token, ...rest }) => rest)
+
+    return NextResponse.json<ApiResponse<SafeInvitation[]>>({
       success: true,
-      data: pendingInvitations,
+      data: safeInvitations,
     })
   } catch (error) {
     logError(logger, "Get invitations error", error)

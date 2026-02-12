@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { TeamMember, Rock, Invitation } from "@/lib/types"
+import type { TeamMember, Rock, Invitation, SafeInvitation } from "@/lib/types"
 import { api } from "@/lib/api/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -41,7 +41,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false)
   const [rocksDialogOpen, setRocksDialogOpen] = useState(false)
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
-  const [invitations, setInvitations] = useState<Invitation[]>([])
+  const [invitations, setInvitations] = useState<(SafeInvitation | Invitation)[]>([])
   const [isLoadingInvites, setIsLoadingInvites] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
@@ -69,7 +69,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     role: "member" as "admin" | "member",
   })
   const [bulkInviteResult, setBulkInviteResult] = useState<{
-    successful: Invitation[]
+    successful: SafeInvitation[]
     failed: Array<{ email: string; error: string }>
   } | null>(null)
   const [metricData, setMetricData] = useState({ metricName: "", weeklyGoal: "" })
@@ -979,13 +979,15 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                           {formatDate(invitation.createdAt)}
                         </TableCell>
                         <TableCell className="text-right space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyInviteLink(invitation.token)}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
+                          {"token" in invitation && invitation.token && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyInviteLink(invitation.token)}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"

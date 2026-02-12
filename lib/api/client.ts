@@ -5,6 +5,7 @@ import type {
   OrganizationSettings,
   OrganizationMember,
   Invitation,
+  SafeInvitation,
   Rock,
   AssignedTask,
   EODReport,
@@ -460,7 +461,7 @@ export const api = {
   invitations: {
     async list() {
       const response = await fetchWithRetry(`${API_BASE}/invitations`)
-      return handleResponse<Invitation[]>(response)
+      return handleResponse<SafeInvitation[]>(response)
     },
 
     async create(data: { email: string; role: string; department: string; workspaceId?: string }) {
@@ -478,7 +479,7 @@ export const api = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      return handleResponse<{ successful: Invitation[]; failed: { email: string; error: string }[] }>(response)
+      return handleResponse<{ successful: SafeInvitation[]; failed: { email: string; error: string }[] }>(response)
     },
 
     // Simplified bulk create for onboarding (defaults to member role)

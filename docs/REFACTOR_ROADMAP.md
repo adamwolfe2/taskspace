@@ -182,14 +182,8 @@ This document provides a comprehensive, prioritized list of features, enhancemen
   const limit = parseInt(searchParams.get("limit") || "20")
   ```
 
-### 3.2 API Response Caching
-- **Description:** Implement React Query or SWR for client-side caching with automatic revalidation.
-- **File:** `/lib/hooks/use-team-data.ts`
-- **Problem Solved:** Every page navigation triggers fresh API calls.
-- **Benefit:** Faster perceived performance, reduced server load.
-- **Priority:** 🟠 HIGH
-- **Scope:** Enhancement
-- **Estimated Time:** 8-10 hours
+### 3.2 ~~API Response Caching~~ ✅ COMPLETED
+- **Status:** ✅ **COMPLETED** - Migrated `use-team-data.ts` to SWR with 60s background polling, optimistic cache updates via `mutate()`, deduplication, and stale-while-revalidate. Demo mode preserved with localStorage.
 
 ### 3.3 Email Template System
 - **Description:** Create reusable email templates with better styling and personalization.
@@ -258,13 +252,8 @@ This document provides a comprehensive, prioritized list of features, enhancemen
 ### 4.4 ~~Expired Session Cleanup~~ ✅ COMPLETED
 - **Status:** ✅ **COMPLETED** - Runs in daily-digest cron job
 
-### 4.5 Invitation Token Leakage
-- **Description:** Invitation tokens visible in URL and potentially logged.
-- **Problem Solved:** Tokens could be stolen from URL history or logs.
-- **Benefit:** Improved security for invitation flow.
-- **Priority:** 🟡 MEDIUM
-- **Scope:** Bug Fix
-- **Estimated Time:** 3-4 hours
+### 4.5 ~~Invitation Token Leakage~~ ✅ COMPLETED
+- **Status:** ✅ **COMPLETED** - Tokens stripped from GET /api/invitations and bulk invite responses. Added `SafeInvitation` type. Copy-link button only shown for freshly-created invitations where token is available.
 
 ### 4.6 Mobile Navigation Z-Index
 - **Description:** Mobile bottom navigation can overlap with modals/dialogs.
@@ -493,17 +482,11 @@ This document provides a comprehensive, prioritized list of features, enhancemen
 ### 9.4 ~~Type Safety Improvements~~ ✅ COMPLETED
 - **Status:** ✅ **COMPLETED** - Removed `as any` casts from meeting-prep, meeting-notes, billing webhook using `Parameters<>` and `Awaited<ReturnType<>>` patterns
 
-### 9.5 Remove Deprecated Task Type
-- **Description:** Clean up unused Task interface (only AssignedTask used).
-- **File:** `/lib/types.ts` (Lines 117-127 vs 129-149)
-- **Problem Solved:** Two conflicting task types cause confusion.
-- **Benefit:** Cleaner codebase, reduced confusion.
-- **Priority:** 🟢 LOW
-- **Scope:** Refactor
-- **Estimated Time:** 2-3 hours
+### 9.5 ~~Remove Deprecated Task Type~~ ✅ COMPLETED
+- **Status:** ✅ **COMPLETED** - Removed deprecated `Task` interface, deleted unused `TasksSection` component, simplified `db.tasks` stubs
 
 ### 9.6 ~~Add Unit Tests~~ ✅ COMPLETED
-- **Status:** ✅ **COMPLETED** - 23 test suites with 342 tests covering auth, middleware, validation, pagination, rate limiting, workspace RBAC, dangerous-admin, and more
+- **Status:** ✅ **COMPLETED** - 22 test suites with 334 tests covering auth, middleware, validation, pagination, rate limiting, workspace RBAC, dangerous-admin, integration tests for productivity/templates/webhooks/integrations, and more
 
 ### 9.7 API Documentation
 - **Description:** Generate OpenAPI/Swagger documentation.
@@ -525,21 +508,8 @@ This document provides a comprehensive, prioritized list of features, enhancemen
 
 ## 10. Database & API Improvements
 
-### 10.1 Add Database Indexes
-- **Description:** Create indexes for frequently queried columns.
-- **File:** `/app/api/db/migrate/route.ts`
-- **Problem Solved:** Full table scans on large datasets.
-- **Benefit:** Faster query performance.
-- **Priority:** 🟠 HIGH
-- **Scope:** Enhancement
-- **Estimated Time:** 2-3 hours
-- **Indexes Needed:**
-  ```sql
-  CREATE INDEX idx_rocks_org_user ON rocks(organization_id, user_id);
-  CREATE INDEX idx_tasks_org_status ON assigned_tasks(organization_id, status);
-  CREATE INDEX idx_eod_org_user_date ON eod_reports(organization_id, user_id, date);
-  CREATE INDEX idx_sessions_expires ON sessions(expires_at);
-  ```
+### 10.1 ~~Add Database Indexes~~ ✅ COMPLETED
+- **Status:** ✅ **COMPLETED** - 32+ indexes in `migrations/1738900000001_performance_indexes.sql` covering rocks, tasks, EOD reports, sessions, members, workspaces, and more
 
 ### 10.2 Implement Soft Deletes
 - **Description:** Add deleted_at column instead of hard deletes.

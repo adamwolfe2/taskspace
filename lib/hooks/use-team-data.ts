@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import useSWR from "swr"
 import * as Sentry from "@sentry/nextjs"
 import type { TeamMember, Rock, AssignedTask, EODReport } from "../types"
 import { api } from "../api/client"
 import { useApp } from "../contexts/app-context"
 import { useWorkspaceStore } from "./use-workspace"
 import { getErrorMessage } from "../utils"
+import { CONFIG } from "../config"
 
 // Demo data for the demo mode
 // Use local timezone for date strings to match EOD report format
@@ -153,366 +155,406 @@ function getDemoEODReports(): EODReport[] {
   ]
 }
 
+// ============================================
+// SWR DATA TYPES AND FETCHER
+// ============================================
+
+interface TeamData {
+  members: TeamMember[]
+  rocks: Rock[]
+  tasks: AssignedTask[]
+  eodReports: EODReport[]
+}
+
+async function teamDataFetcher([, workspaceId]: [string, string]): Promise<TeamData> {
+  const [membersData, rocksData, tasksData, reportsData] = await Promise.all([
+    api.members.list(),
+    api.rocks.list(undefined, workspaceId),
+    api.tasks.list(undefined, undefined, workspaceId),
+    api.eodReports.list({ workspaceId }),
+  ])
+
+  return {
+    members: membersData.map(m => ({
+      ...m,
+      joinDate: m.joinedAt,
+      userId: m.userId ?? undefined,
+    })),
+    rocks: rocksData,
+    tasks: tasksData,
+    eodReports: reportsData,
+  }
+}
+
+// ============================================
+// MAIN HOOK
+// ============================================
+
 export function useTeamData() {
   const { isAuthenticated, currentOrganization, isDemoMode } = useApp()
   const { currentWorkspaceId, _hasHydrated } = useWorkspaceStore()
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
-  const [rocks, setRocks] = useState<Rock[]>([])
-  const [assignedTasks, setAssignedTasks] = useState<AssignedTask[]>([])
-  const [eodReports, setEODReports] = useState<EODReport[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  // Track fetch generation to prevent stale responses from overwriting fresh data
-  const fetchGeneration = useRef(0)
-
-  // Ensure Zustand store is rehydrated — useWorkspaces() also does this,
-  // but useTeamData may be called without useWorkspaces in the same component
+  // Ensure Zustand store is rehydrated
   useEffect(() => {
     if (!_hasHydrated) {
       useWorkspaceStore.persist.rehydrate()
     }
   }, [_hasHydrated])
 
-  // Track if initial load is complete to prevent saving defaults back to storage
+  // ============================================
+  // DEMO MODE STATE
+  // ============================================
+
+  const [demoMembers, setDemoMembers] = useState<TeamMember[]>([])
+  const [demoRocks, setDemoRocks] = useState<Rock[]>([])
+  const [demoTasks, setDemoTasks] = useState<AssignedTask[]>([])
+  const [demoReports, setDemoReports] = useState<EODReport[]>([])
+  const [demoLoading, setDemoLoading] = useState(true)
   const initialLoadComplete = useRef(false)
 
-  // Fetch all data
-  const fetchData = useCallback(async () => {
-    // Wait for Zustand store to rehydrate from localStorage before fetching
-    // This prevents a race condition where we fetch with null workspaceId
-    if (!_hasHydrated && !isDemoMode) {
-      return
-    }
+  // Initialize demo data from localStorage or defaults
+  useEffect(() => {
+    if (!isDemoMode) return
+    setDemoMembers(loadFromStorage(DEMO_STORAGE_KEYS.teamMembers, getDemoTeamMembers()))
+    setDemoRocks(loadFromStorage(DEMO_STORAGE_KEYS.rocks, getDemoRocks()))
+    setDemoTasks(loadFromStorage(DEMO_STORAGE_KEYS.tasks, getDemoTasks()))
+    setDemoReports(loadFromStorage(DEMO_STORAGE_KEYS.eodReports, getDemoEODReports()))
+    setDemoLoading(false)
+    setTimeout(() => { initialLoadComplete.current = true }, 100)
+  }, [isDemoMode])
 
-    if (!isAuthenticated || !currentOrganization) {
-      setIsLoading(false)
-      return
-    }
-
-    // Use demo data in demo mode - load from localStorage if available, fallback to defaults
-    if (isDemoMode) {
-      const savedMembers = loadFromStorage<TeamMember[]>(DEMO_STORAGE_KEYS.teamMembers, getDemoTeamMembers())
-      const savedRocks = loadFromStorage<Rock[]>(DEMO_STORAGE_KEYS.rocks, getDemoRocks())
-      const savedTasks = loadFromStorage<AssignedTask[]>(DEMO_STORAGE_KEYS.tasks, getDemoTasks())
-      const savedReports = loadFromStorage<EODReport[]>(DEMO_STORAGE_KEYS.eodReports, getDemoEODReports())
-
-      setTeamMembers(savedMembers)
-      setRocks(savedRocks)
-      setAssignedTasks(savedTasks)
-      setEODReports(savedReports)
-      setIsLoading(false)
-
-      // Mark initial load as complete after a small delay to allow state to settle
-      setTimeout(() => {
-        initialLoadComplete.current = true
-      }, 100)
-      return
-    }
-
-    // CRITICAL: Don't fetch workspace-scoped data until a workspace is selected.
-    // Keep isLoading=true so the dashboard shows a loading skeleton instead of empty state.
-    // The workspace will be auto-selected by useWorkspaces() shortly after mount.
-    if (!currentWorkspaceId) {
-      return
-    }
-
-    // Increment generation counter — any fetch that completes with a stale
-    // generation number will discard its results to prevent race conditions
-    const thisGeneration = ++fetchGeneration.current
-
-    try {
-      setIsLoading(true)
-      setError(null)
-
-      // Fetch members and workspace-scoped data in parallel
-      const [membersData, rocksData, tasksData, reportsData] = await Promise.all([
-        api.members.list(),
-        api.rocks.list(undefined, currentWorkspaceId),
-        api.tasks.list(undefined, undefined, currentWorkspaceId),
-        api.eodReports.list({ workspaceId: currentWorkspaceId }),
-      ])
-
-      // Discard results if a newer fetch has started (prevents stale data overwrite)
-      if (thisGeneration !== fetchGeneration.current) {
-        return
-      }
-
-      setTeamMembers(membersData.map(m => ({
-        ...m,
-        joinDate: m.joinedAt,
-        userId: m.userId ?? undefined,
-      })))
-      setRocks(rocksData)
-      setAssignedTasks(tasksData)
-      setEODReports(reportsData)
-    } catch (err: unknown) {
-      // Discard errors from stale fetches
-      if (thisGeneration !== fetchGeneration.current) {
-        return
-      }
-      setError(getErrorMessage(err, "Failed to load data"))
-      console.error("Failed to load team data:", err)
-      Sentry.captureException(err)
-    } finally {
-      if (thisGeneration === fetchGeneration.current) {
-        setIsLoading(false)
-      }
-    }
-  }, [isAuthenticated, currentOrganization, isDemoMode, currentWorkspaceId, _hasHydrated])
+  // Auto-save demo data to localStorage
+  useEffect(() => {
+    if (isDemoMode && initialLoadComplete.current && demoMembers.length > 0)
+      saveToStorage(DEMO_STORAGE_KEYS.teamMembers, demoMembers)
+  }, [isDemoMode, demoMembers])
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  // Auto-save demo mode data to localStorage whenever it changes
-  useEffect(() => {
-    if (isDemoMode && initialLoadComplete.current && teamMembers.length > 0) {
-      saveToStorage(DEMO_STORAGE_KEYS.teamMembers, teamMembers)
-    }
-  }, [isDemoMode, teamMembers])
+    if (isDemoMode && initialLoadComplete.current)
+      saveToStorage(DEMO_STORAGE_KEYS.rocks, demoRocks)
+  }, [isDemoMode, demoRocks])
 
   useEffect(() => {
-    if (isDemoMode && initialLoadComplete.current) {
-      saveToStorage(DEMO_STORAGE_KEYS.rocks, rocks)
-    }
-  }, [isDemoMode, rocks])
+    if (isDemoMode && initialLoadComplete.current)
+      saveToStorage(DEMO_STORAGE_KEYS.tasks, demoTasks)
+  }, [isDemoMode, demoTasks])
 
   useEffect(() => {
-    if (isDemoMode && initialLoadComplete.current) {
-      saveToStorage(DEMO_STORAGE_KEYS.tasks, assignedTasks)
-    }
-  }, [isDemoMode, assignedTasks])
+    if (isDemoMode && initialLoadComplete.current)
+      saveToStorage(DEMO_STORAGE_KEYS.eodReports, demoReports)
+  }, [isDemoMode, demoReports])
 
-  useEffect(() => {
-    if (isDemoMode && initialLoadComplete.current) {
-      saveToStorage(DEMO_STORAGE_KEYS.eodReports, eodReports)
-    }
-  }, [isDemoMode, eodReports])
+  // ============================================
+  // SWR DATA FETCHING (real mode)
+  // ============================================
 
-  // Rock operations
+  const shouldFetch = !isDemoMode && isAuthenticated && !!currentOrganization && !!currentWorkspaceId && _hasHydrated
+  const [crudError, setCrudError] = useState<string | null>(null)
+
+  const { data, error: swrError, isLoading: swrIsLoading, mutate } = useSWR<TeamData>(
+    shouldFetch ? ["team-data", currentWorkspaceId] : null,
+    teamDataFetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      refreshInterval: CONFIG.polling.standard, // 60s background polling
+      dedupingInterval: 5000,
+      onError: (err) => {
+        console.error("Failed to load team data:", err)
+        Sentry.captureException(err)
+      },
+    }
+  )
+
+  // ============================================
+  // DERIVED VALUES
+  // ============================================
+
+  const teamMembers = isDemoMode ? demoMembers : (data?.members ?? [])
+  const rocks = isDemoMode ? demoRocks : (data?.rocks ?? [])
+  const assignedTasks = isDemoMode ? demoTasks : (data?.tasks ?? [])
+  const eodReports = isDemoMode ? demoReports : (data?.eodReports ?? [])
+
+  // Loading: SWR first load OR waiting for workspace to be ready
+  const isWaitingForWorkspace = !isDemoMode && isAuthenticated && !!currentOrganization && (!currentWorkspaceId || !_hasHydrated)
+  const isLoading = isDemoMode ? demoLoading : (swrIsLoading || isWaitingForWorkspace)
+  const error = isDemoMode ? null : (crudError || (swrError ? getErrorMessage(swrError, "Failed to load data") : null))
+
+  // ============================================
+  // STATE SETTERS (for consuming component compatibility)
+  // ============================================
+
+  const setTeamMembers: React.Dispatch<React.SetStateAction<TeamMember[]>> = useCallback((action) => {
+    if (isDemoMode) { setDemoMembers(action); return }
+    mutate((prev) => {
+      if (!prev) return prev
+      const newMembers = typeof action === 'function' ? action(prev.members) : action
+      return { ...prev, members: newMembers }
+    }, { revalidate: false })
+  }, [isDemoMode, mutate])
+
+  const setRocks: React.Dispatch<React.SetStateAction<Rock[]>> = useCallback((action) => {
+    if (isDemoMode) { setDemoRocks(action); return }
+    mutate((prev) => {
+      if (!prev) return prev
+      const newRocks = typeof action === 'function' ? action(prev.rocks) : action
+      return { ...prev, rocks: newRocks }
+    }, { revalidate: false })
+  }, [isDemoMode, mutate])
+
+  const setAssignedTasks: React.Dispatch<React.SetStateAction<AssignedTask[]>> = useCallback((action) => {
+    if (isDemoMode) { setDemoTasks(action); return }
+    mutate((prev) => {
+      if (!prev) return prev
+      const newTasks = typeof action === 'function' ? action(prev.tasks) : action
+      return { ...prev, tasks: newTasks }
+    }, { revalidate: false })
+  }, [isDemoMode, mutate])
+
+  const setEODReports: React.Dispatch<React.SetStateAction<EODReport[]>> = useCallback((action) => {
+    if (isDemoMode) { setDemoReports(action); return }
+    mutate((prev) => {
+      if (!prev) return prev
+      const newReports = typeof action === 'function' ? action(prev.eodReports) : action
+      return { ...prev, eodReports: newReports }
+    }, { revalidate: false })
+  }, [isDemoMode, mutate])
+
+  // ============================================
+  // ROCK OPERATIONS
+  // ============================================
+
   const createRock = useCallback(async (rock: Partial<Rock>) => {
     if (isDemoMode) {
       const newRock = { ...rock, id: `rock-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Rock
-      setRocks((prev) => [...prev, newRock])
+      setDemoRocks((prev) => [...prev, newRock])
       return newRock
     }
-    // CRITICAL: Workspace is required for data isolation
     if (!currentWorkspaceId) {
-      const error = new Error("No workspace selected. Please select a workspace to create rock.")
-      setError(getErrorMessage(error))
-      throw error
-    }
-    try {
-      const rockWithWorkspace = {
-        ...rock,
-        workspaceId: currentWorkspaceId,
-      }
-      const newRock = await api.rocks.create(rockWithWorkspace as Parameters<typeof api.rocks.create>[0])
-      setRocks((prev) => [...prev, newRock])
-      return newRock
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      const err = new Error("No workspace selected. Please select a workspace to create rock.")
+      setCrudError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode, currentWorkspaceId])
+    try {
+      setCrudError(null)
+      const newRock = await api.rocks.create({ ...rock, workspaceId: currentWorkspaceId } as Parameters<typeof api.rocks.create>[0])
+      mutate((prev) => prev ? { ...prev, rocks: [...prev.rocks, newRock] } : prev, { revalidate: false })
+      return newRock
+    } catch (err: unknown) {
+      setCrudError(getErrorMessage(err))
+      throw err
+    }
+  }, [isDemoMode, currentWorkspaceId, mutate])
 
   const updateRock = useCallback(async (id: string, updates: Partial<Rock>) => {
     if (isDemoMode) {
       const updatedRock = rocks.find(r => r.id === id)
       if (updatedRock) {
         const updated = { ...updatedRock, ...updates, updatedAt: new Date().toISOString() }
-        setRocks((prev) => prev.map((r) => (r.id === id ? updated : r)))
+        setDemoRocks((prev) => prev.map((r) => (r.id === id ? updated : r)))
         return updated
       }
       throw new Error("Rock not found")
     }
     try {
+      setCrudError(null)
       const updatedRock = await api.rocks.update(id, updates)
-      setRocks((prev) => prev.map((r) => (r.id === id ? updatedRock : r)))
+      mutate((prev) => prev ? { ...prev, rocks: prev.rocks.map((r) => (r.id === id ? updatedRock : r)) } : prev, { revalidate: false })
       return updatedRock
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      setCrudError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode, rocks])
+  }, [isDemoMode, rocks, mutate])
 
   const deleteRock = useCallback(async (id: string) => {
     if (isDemoMode) {
-      setRocks((prev) => prev.filter((r) => r.id !== id))
+      setDemoRocks((prev) => prev.filter((r) => r.id !== id))
       return
     }
     try {
+      setCrudError(null)
       await api.rocks.delete(id)
-      setRocks((prev) => prev.filter((r) => r.id !== id))
+      mutate((prev) => prev ? { ...prev, rocks: prev.rocks.filter((r) => r.id !== id) } : prev, { revalidate: false })
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      setCrudError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode])
+  }, [isDemoMode, mutate])
 
-  // Task operations
+  // ============================================
+  // TASK OPERATIONS
+  // ============================================
+
   const createTask = useCallback(async (task: Partial<AssignedTask>) => {
     if (isDemoMode) {
       const newTask = { ...task, id: `task-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as AssignedTask
-      setAssignedTasks((prev) => [...prev, newTask])
+      setDemoTasks((prev) => [...prev, newTask])
       return newTask
     }
-    // CRITICAL: Workspace is required for data isolation
     if (!currentWorkspaceId) {
-      const error = new Error("No workspace selected. Please select a workspace to create task.")
-      setError(getErrorMessage(error))
-      throw error
-    }
-    try {
-      const taskWithWorkspace = {
-        ...task,
-        workspaceId: currentWorkspaceId,
-      }
-      const newTask = await api.tasks.create(taskWithWorkspace as Parameters<typeof api.tasks.create>[0])
-      setAssignedTasks((prev) => [...prev, newTask])
-      return newTask
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      const err = new Error("No workspace selected. Please select a workspace to create task.")
+      setCrudError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode, currentWorkspaceId])
+    try {
+      setCrudError(null)
+      const newTask = await api.tasks.create({ ...task, workspaceId: currentWorkspaceId } as Parameters<typeof api.tasks.create>[0])
+      mutate((prev) => prev ? { ...prev, tasks: [...prev.tasks, newTask] } : prev, { revalidate: false })
+      return newTask
+    } catch (err: unknown) {
+      setCrudError(getErrorMessage(err))
+      throw err
+    }
+  }, [isDemoMode, currentWorkspaceId, mutate])
 
   const updateTask = useCallback(async (id: string, updates: Partial<AssignedTask>) => {
     if (isDemoMode) {
       const existingTask = assignedTasks.find(t => t.id === id)
       if (existingTask) {
         const updated = { ...existingTask, ...updates, updatedAt: new Date().toISOString() }
-        setAssignedTasks((prev) => prev.map((t) => (t.id === id ? updated : t)))
+        setDemoTasks((prev) => prev.map((t) => (t.id === id ? updated : t)))
         return updated
       }
       throw new Error("Task not found")
     }
     try {
+      setCrudError(null)
       const updatedTask = await api.tasks.update(id, updates)
-      setAssignedTasks((prev) => prev.map((t) => (t.id === id ? updatedTask : t)))
+      mutate((prev) => prev ? { ...prev, tasks: prev.tasks.map((t) => (t.id === id ? updatedTask : t)) } : prev, { revalidate: false })
       return updatedTask
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      setCrudError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode, assignedTasks])
+  }, [isDemoMode, assignedTasks, mutate])
 
   const deleteTask = useCallback(async (id: string) => {
     if (isDemoMode) {
-      setAssignedTasks((prev) => prev.filter((t) => t.id !== id))
+      setDemoTasks((prev) => prev.filter((t) => t.id !== id))
       return
     }
     try {
+      setCrudError(null)
       await api.tasks.delete(id)
-      setAssignedTasks((prev) => prev.filter((t) => t.id !== id))
+      mutate((prev) => prev ? { ...prev, tasks: prev.tasks.filter((t) => t.id !== id) } : prev, { revalidate: false })
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      setCrudError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode])
+  }, [isDemoMode, mutate])
 
-  // EOD Report operations
+  // ============================================
+  // EOD REPORT OPERATIONS
+  // ============================================
+
   const submitEODReport = useCallback(async (report: Partial<EODReport>) => {
     if (isDemoMode) {
       const newReport = { ...report, id: `eod-${Date.now()}`, createdAt: new Date().toISOString() } as EODReport
-      setEODReports((prev) => [newReport, ...prev])
+      setDemoReports((prev) => [newReport, ...prev])
       return newReport
     }
-    // CRITICAL: Workspace is required for data isolation
     if (!currentWorkspaceId) {
-      const error = new Error("No workspace selected. Please select a workspace to submit EOD report.")
-      setError(getErrorMessage(error))
-      throw error
-    }
-    try {
-      const reportWithWorkspace = {
-        ...report,
-        workspaceId: currentWorkspaceId,
-      }
-      const newReport = await api.eodReports.create(reportWithWorkspace as Parameters<typeof api.eodReports.create>[0])
-      setEODReports((prev) => [newReport, ...prev])
-      return newReport
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      const err = new Error("No workspace selected. Please select a workspace to submit EOD report.")
+      setCrudError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode, currentWorkspaceId])
+    try {
+      setCrudError(null)
+      const newReport = await api.eodReports.create({ ...report, workspaceId: currentWorkspaceId } as Parameters<typeof api.eodReports.create>[0])
+      mutate((prev) => prev ? { ...prev, eodReports: [newReport, ...prev.eodReports] } : prev, { revalidate: false })
+      return newReport
+    } catch (err: unknown) {
+      setCrudError(getErrorMessage(err))
+      throw err
+    }
+  }, [isDemoMode, currentWorkspaceId, mutate])
 
   const updateEODReport = useCallback(async (id: string, updates: Partial<EODReport>) => {
     if (isDemoMode) {
       const existingReport = eodReports.find(r => r.id === id)
       if (existingReport) {
         const updated = { ...existingReport, ...updates }
-        setEODReports((prev) => prev.map((r) => (r.id === id ? updated : r)))
+        setDemoReports((prev) => prev.map((r) => (r.id === id ? updated : r)))
         return updated
       }
       throw new Error("Report not found")
     }
     try {
+      setCrudError(null)
       const updatedReport = await api.eodReports.update(id, updates)
-      setEODReports((prev) => prev.map((r) => (r.id === id ? updatedReport : r)))
+      mutate((prev) => prev ? { ...prev, eodReports: prev.eodReports.map((r) => (r.id === id ? updatedReport : r)) } : prev, { revalidate: false })
       return updatedReport
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      setCrudError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode, eodReports])
+  }, [isDemoMode, eodReports, mutate])
 
   const deleteEODReport = useCallback(async (id: string) => {
     if (isDemoMode) {
-      setEODReports((prev) => prev.filter((r) => r.id !== id))
+      setDemoReports((prev) => prev.filter((r) => r.id !== id))
       return
     }
     try {
+      setCrudError(null)
       await api.eodReports.delete(id)
-      setEODReports((prev) => prev.filter((r) => r.id !== id))
+      mutate((prev) => prev ? { ...prev, eodReports: prev.eodReports.filter((r) => r.id !== id) } : prev, { revalidate: false })
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      setCrudError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode])
+  }, [isDemoMode, mutate])
 
-  // Member operations
+  // ============================================
+  // MEMBER OPERATIONS
+  // ============================================
+
   const updateMember = useCallback(async (memberId: string, updates: Partial<TeamMember>) => {
     if (isDemoMode) {
       const existingMember = teamMembers.find(m => m.id === memberId)
       if (existingMember) {
         const updated = { ...existingMember, ...updates }
-        setTeamMembers((prev) => prev.map((m) => (m.id === memberId ? updated : m)))
+        setDemoMembers((prev) => prev.map((m) => (m.id === memberId ? updated : m)))
         return updated
       }
       throw new Error("Member not found")
     }
     try {
+      setCrudError(null)
       const updatedMember = await api.members.update(memberId, updates)
       const mapped = { ...updatedMember, joinDate: updatedMember.joinedAt, userId: updatedMember.userId ?? undefined } as TeamMember
-      setTeamMembers((prev) => prev.map((m) => (m.id === memberId ? mapped : m)))
+      mutate((prev) => prev ? { ...prev, members: prev.members.map((m) => (m.id === memberId ? mapped : m)) } : prev, { revalidate: false })
       return mapped
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      setCrudError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode, teamMembers])
+  }, [isDemoMode, teamMembers, mutate])
 
   const removeMember = useCallback(async (memberId: string) => {
     if (isDemoMode) {
-      setTeamMembers((prev) => prev.filter((m) => m.id !== memberId))
+      setDemoMembers((prev) => prev.filter((m) => m.id !== memberId))
       return
     }
     try {
+      setCrudError(null)
       await api.members.remove(memberId)
-      setTeamMembers((prev) => prev.filter((m) => m.id !== memberId))
+      mutate((prev) => prev ? { ...prev, members: prev.members.filter((m) => m.id !== memberId) } : prev, { revalidate: false })
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      setCrudError(getErrorMessage(err))
       throw err
     }
-  }, [isDemoMode])
+  }, [isDemoMode, mutate])
 
-  // Refresh data
-  const refresh = useCallback(() => {
-    return fetchData()
-  }, [fetchData])
+  // ============================================
+  // UTILITY
+  // ============================================
+
+  const refresh = useCallback(async () => {
+    if (isDemoMode) return
+    await mutate()
+  }, [isDemoMode, mutate])
 
   // Reset demo data to defaults (clears localStorage)
   const resetDemoData = useCallback(() => {
@@ -524,10 +566,10 @@ export function useTeamData() {
     })
 
     // Reset to default demo data
-    setTeamMembers(getDemoTeamMembers())
-    setRocks(getDemoRocks())
-    setAssignedTasks(getDemoTasks())
-    setEODReports(getDemoEODReports())
+    setDemoMembers(getDemoTeamMembers())
+    setDemoRocks(getDemoRocks())
+    setDemoTasks(getDemoTasks())
+    setDemoReports(getDemoEODReports())
 
     // Reset the initialLoadComplete flag to prevent immediate re-saving
     initialLoadComplete.current = false

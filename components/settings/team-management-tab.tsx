@@ -24,7 +24,7 @@ import { Loader2, Mail, UserPlus, Copy, Trash2, AlertTriangle } from "lucide-rea
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import { api } from "@/lib/api/client"
-import type { TeamMember, Invitation } from "@/lib/types"
+import type { TeamMember, Invitation, SafeInvitation } from "@/lib/types"
 
 interface IntegrationStatus {
   email: {
@@ -49,7 +49,7 @@ export function TeamManagementTab() {
   const { workspaces, currentWorkspace } = useWorkspaces()
   const { toast } = useToast()
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
-  const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>([])
+  const [pendingInvitations, setPendingInvitations] = useState<(SafeInvitation | Invitation)[]>([])
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteRole, setInviteRole] = useState<"member" | "admin">("member")
   const [inviteDepartment, setInviteDepartment] = useState("General")
@@ -57,7 +57,7 @@ export function TeamManagementTab() {
   const [isInviting, setIsInviting] = useState(false)
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
-  const [invitationToCancel, setInvitationToCancel] = useState<Invitation | null>(null)
+  const [invitationToCancel, setInvitationToCancel] = useState<SafeInvitation | Invitation | null>(null)
   const [isCancellingInvitation, setIsCancellingInvitation] = useState(false)
 
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
@@ -342,14 +342,16 @@ export function TeamManagementTab() {
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyInviteLink(inv.token)}
-                        title="Copy invite link"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
+                      {"token" in inv && inv.token && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyInviteLink(inv.token)}
+                          title="Copy invite link"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"

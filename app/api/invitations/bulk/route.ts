@@ -5,11 +5,11 @@ import { generateId, generateInviteToken, getExpirationDate } from "@/lib/auth/p
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { bulkInviteSchema } from "@/lib/validation/schemas"
 import { sendInvitationEmail } from "@/lib/email"
-import type { Invitation, ApiResponse } from "@/lib/types"
+import type { Invitation, SafeInvitation, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 interface BulkInviteResult {
-  successful: Invitation[]
+  successful: SafeInvitation[]
   failed: Array<{ email: string; error: string }>
 }
 
@@ -38,7 +38,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
-    const result: BulkInviteResult = {
+    const result: { successful: Invitation[]; failed: Array<{ email: string; error: string }> } = {
       successful: [],
       failed: [],
     }
@@ -111,9 +111,15 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       }
     }
 
+    // Strip tokens from response - tokens should only be used via email invite links
+    const safeResult: BulkInviteResult = {
+      successful: result.successful.map(({ token: _token, ...rest }) => rest),
+      failed: result.failed,
+    }
+
     return NextResponse.json<ApiResponse<BulkInviteResult>>({
       success: true,
-      data: result,
+      data: safeResult,
       message: `Successfully sent ${result.successful.length} invitation(s)${result.failed.length > 0 ? `, ${result.failed.length} failed` : ""}`,
     })
   } catch (error) {
