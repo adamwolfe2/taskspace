@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { db } from "@/lib/db"
 import { isTokenExpired } from "@/lib/auth/password"
 import { logger, logError } from "@/lib/logger"
+import { CONFIG } from "@/lib/config"
 import type { User, Organization, OrganizationMember } from "@/lib/types"
 
 export interface AuthContext {
@@ -93,10 +94,14 @@ async function getSessionAuthContext(request: NextRequest): Promise<AuthContext 
       return null
     }
 
-    // Update session last active
-    await db.sessions.update(session.id, {
-      lastActiveAt: new Date().toISOString(),
-    })
+    // Only update lastActiveAt if enough time has elapsed to reduce write load
+    const now = Date.now()
+    const lastActive = session.lastActiveAt ? new Date(session.lastActiveAt).getTime() : 0
+    if (now - lastActive >= CONFIG.session.activityUpdateIntervalMs) {
+      await db.sessions.update(session.id, {
+        lastActiveAt: new Date().toISOString(),
+      })
+    }
 
     return {
       user,
@@ -152,10 +157,14 @@ export async function getUserAuthContext(request: NextRequest): Promise<UserAuth
       return null
     }
 
-    // Update session last active
-    await db.sessions.update(session.id, {
-      lastActiveAt: new Date().toISOString(),
-    })
+    // Only update lastActiveAt if enough time has elapsed to reduce write load
+    const now = Date.now()
+    const lastActive = session.lastActiveAt ? new Date(session.lastActiveAt).getTime() : 0
+    if (now - lastActive >= CONFIG.session.activityUpdateIntervalMs) {
+      await db.sessions.update(session.id, {
+        lastActiveAt: new Date().toISOString(),
+      })
+    }
 
     return {
       user,

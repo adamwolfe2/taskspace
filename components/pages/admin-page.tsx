@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { TeamMember, EODReport, Rock, AssignedTask, EODInsight, Organization } from "@/lib/types"
+import type { TeamMember, EODReport, Rock, AssignedTask, Organization } from "@/lib/types"
 import { api } from "@/lib/api/client"
 import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -17,6 +17,7 @@ import { EODInsightsCard } from "@/components/ai/eod-insights-card"
 import { DailyReportShare } from "@/components/admin/daily-report-share"
 import { WeeklyReportShare } from "@/components/admin/weekly-report-share"
 import { useToast } from "@/hooks/use-toast"
+import { useAdminAiInsights } from "@/lib/hooks/use-ai-insights"
 
 interface AdminPageProps {
   teamMembers: TeamMember[]
@@ -39,22 +40,14 @@ export function AdminPage({
 }: AdminPageProps) {
   const [showAssignTaskModal, setShowAssignTaskModal] = useState(false)
   const [showPendingTasks, setShowPendingTasks] = useState(false)
-  const [insights, setInsights] = useState<EODInsight[]>([])
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
+  const { data: insights, fetchInsights } = useAdminAiInsights()
 
-  // Fetch AI insights
+  // Fetch AI insights on mount
   useEffect(() => {
-    const fetchInsights = async () => {
-      try {
-        const data = await api.ai.getInsights(7)
-        setInsights(data)
-      } catch {
-        // AI insights are non-critical, fail silently
-      }
-    }
     fetchInsights()
-  }, [])
+  }, [fetchInsights])
 
   // Get all active team members (all roles count for reporting)
   const activeMembers = teamMembers.filter((m) => m.status === "active")

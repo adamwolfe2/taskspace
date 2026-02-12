@@ -19,6 +19,7 @@ import { DirectReportDetailSheet } from "@/components/manager/direct-report-deta
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useApp } from "@/lib/contexts/app-context"
 import { cn } from "@/lib/utils"
+import { useManagerAiInsights } from "@/lib/hooks/use-ai-insights"
 import type { TeamMember, ManagerDashboard, DirectReport, ManagerAlert } from "@/lib/types"
 import {
   Users,
@@ -55,13 +56,7 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [filterStatus, setFilterStatus] = useState<"all" | "needs_attention" | "on_track">("all")
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [aiInsights, setAiInsights] = useState<{
-    summary: string
-    teamHealth: "good" | "warning" | "critical"
-    insights: Array<{ title: string; description: string; type: "positive" | "warning" | "action" }>
-    suggestedActions: string[]
-  } | null>(null)
-  const [aiInsightsLoading, setAiInsightsLoading] = useState(false)
+  const { data: aiInsights, isLoading: aiInsightsLoading, fetchInsights: fetchAiInsights } = useManagerAiInsights()
 
   // Fetch dashboard data
   const fetchDashboard = async () => {
@@ -97,31 +92,15 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
 
   const handleAiInsights = async () => {
     if (!currentWorkspace || !dashboard) return
-    setAiInsightsLoading(true)
-    try {
-      const response = await fetch("/api/ai/manager-insights", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          workspaceId: currentWorkspace.id,
-          directReports: dashboard.directReports.map((r) => ({
-            name: r.name,
-            tasksCompleted: r.metrics.completedTasks,
-            rocksOnTrack: r.rocks.filter((rock) => rock.status === "on-track").length,
-            eodRate: r.eodStatus.submittedToday ? 100 : 0,
-          })),
-        }),
-      })
-      const result = await response.json()
-      if (result.success) {
-        setAiInsights(result.data)
-      }
-    } catch {
-      // Silently fail
-    } finally {
-      setAiInsightsLoading(false)
-    }
+    fetchAiInsights(
+      currentWorkspace.id,
+      dashboard.directReports.map((r) => ({
+        name: r.name,
+        tasksCompleted: r.metrics.completedTasks,
+        rocksOnTrack: r.rocks.filter((rock) => rock.status === "on-track").length,
+        eodRate: r.eodStatus.submittedToday ? 100 : 0,
+      }))
+    )
   }
 
   // Filter direct reports
