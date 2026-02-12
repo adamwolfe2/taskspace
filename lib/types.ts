@@ -261,19 +261,6 @@ export interface TaskTemplate {
 }
 
 // Task Types
-export interface Task {
-  id: string
-  organizationId: string
-  workspaceId?: string | null // Multi-workspace support
-  userId: string
-  title: string
-  category: "urgent" | "today" | "upcoming"
-  completed: boolean
-  dueDate?: string
-  createdAt: string
-  updatedAt: string
-}
-
 export interface AssignedTask {
   id: string
   organizationId: string

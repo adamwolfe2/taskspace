@@ -98,17 +98,13 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
           { status: 403 }
         )
       }
-      rocks = await db.rocks.findByUserId(userId, auth.organization.id)
-      // Filter by workspace since findByUserId doesn't support workspaceId
-      rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
+      rocks = await db.rocks.findByUserId(userId, auth.organization.id, workspaceId)
     } else if (isAdmin(auth)) {
-      // Admins can see all rocks in the workspace - workspace-scoped at SQL level
+      // Admins can see all rocks in the workspace
       rocks = await db.rocks.findByOrganizationId(auth.organization.id, workspaceId)
     } else {
-      // Regular members see only their rocks
-      rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
-      // Filter by workspace since findByUserId doesn't support workspaceId
-      rocks = rocks.filter((rock) => rock.workspaceId === workspaceId)
+      // Regular members see only their rocks in this workspace
+      rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id, workspaceId)
     }
 
     // Filter by quarter if specified

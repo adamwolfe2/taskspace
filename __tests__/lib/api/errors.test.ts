@@ -4,6 +4,9 @@
  * Tests for standardized API error responses
  */
 
+// Unmock so we test the actual implementation (jest.setup.js mocks it globally)
+jest.unmock("@/lib/api/errors")
+
 import {
   ApiError,
   ErrorCodes,

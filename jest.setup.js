@@ -85,6 +85,38 @@ global.testUtils = {
   }),
 }
 
+// Mock middleware dependencies (used by withAuth, withAdmin, etc.)
+jest.mock('@/lib/auth/rate-limit', () => ({
+  checkOrgRateLimit: jest.fn().mockReturnValue({ success: true, remaining: 999, resetAt: Date.now() + 3600000 }),
+  getRateLimitHeaders: jest.fn().mockReturnValue({}),
+  checkLoginRateLimit: jest.fn().mockReturnValue({ success: true, remaining: 5, resetAt: Date.now() + 3600000 }),
+  checkRegisterRateLimit: jest.fn().mockReturnValue({ success: true, remaining: 3, resetAt: Date.now() + 3600000 }),
+  checkPasswordResetRateLimit: jest.fn().mockReturnValue({ success: true, remaining: 3, resetAt: Date.now() + 3600000 }),
+  getClientIP: jest.fn().mockReturnValue('127.0.0.1'),
+}))
+
+jest.mock('@/lib/api/errors', () => ({
+  handleError: jest.fn().mockImplementation(() => {
+    const { NextResponse } = require('next/server')
+    return NextResponse.json({ success: false, error: 'Internal error' }, { status: 500 })
+  }),
+  Errors: {
+    unauthorized: jest.fn().mockReturnValue({ toResponse: () => {
+      const { NextResponse } = require('next/server')
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }}),
+    forbidden: jest.fn().mockReturnValue({ toResponse: () => {
+      const { NextResponse } = require('next/server')
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
+    }}),
+  },
+}))
+
+jest.mock('@/lib/logger', () => ({
+  logger: { debug: jest.fn(), warn: jest.fn(), info: jest.fn(), error: jest.fn() },
+  logError: jest.fn(),
+}))
+
 // Mock database module
 jest.mock('@/lib/db', () => ({
   db: {

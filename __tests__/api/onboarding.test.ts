@@ -40,12 +40,20 @@ import { isAdmin } from "@/lib/auth/middleware"
 
 function createRequest(method: string, body?: unknown): NextRequest {
   const url = "http://localhost:3000/api/onboarding"
-  const options: { method: string; body?: string; headers?: Record<string, string> } = { method }
-  if (body) {
-    options.body = JSON.stringify(body)
-    options.headers = { "Content-Type": "application/json" }
+  const headers: Record<string, string> = {}
+  // State-changing methods need the CSRF header for withAuth middleware
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    headers["x-requested-with"] = "XMLHttpRequest"
   }
-  return new NextRequest(url, options)
+  if (body) {
+    headers["Content-Type"] = "application/json"
+    return new NextRequest(url, {
+      method,
+      body: JSON.stringify(body),
+      headers,
+    })
+  }
+  return new NextRequest(url, { method, headers })
 }
 
 describe("GET /api/onboarding", () => {

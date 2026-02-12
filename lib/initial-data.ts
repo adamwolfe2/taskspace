@@ -1,4 +1,4 @@
-import type { TeamMember, Rock, Task, EODReport } from "./types"
+import type { TeamMember, Rock, EODReport } from "./types"
 
 // Legacy seed data - NOT CURRENTLY USED (multi-tenant uses database)
 // This is example/test data only - actual organizations create their own data

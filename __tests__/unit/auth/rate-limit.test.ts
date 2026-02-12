@@ -7,6 +7,9 @@
  * - checkLoginRateLimit / checkRegisterRateLimit — sync rate limit behavior
  */
 
+// Unmock rate-limit so we test the actual implementation (jest.setup.js mocks it globally)
+jest.unmock("@/lib/auth/rate-limit")
+
 // Mock the sql module before importing rate-limit
 jest.mock("@/lib/db/sql", () => ({
   sql: jest.fn(() => Promise.resolve({ rows: [{ attempt_count: "0", count: "0" }] })),

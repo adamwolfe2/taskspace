@@ -10,7 +10,6 @@ import type {
   PasswordResetToken,
   EmailVerificationToken,
   Rock,
-  Task,
   AssignedTask,
   EODReport,
   Notification,
@@ -889,7 +888,13 @@ export const db = {
       const { rows } = await sql`SELECT * FROM rocks WHERE organization_id = ${orgId} ORDER BY created_at DESC LIMIT 500`
       return rows.map(parseRock)
     },
-    async findByUserId(userId: string, orgId: string): Promise<Rock[]> {
+    async findByUserId(userId: string, orgId: string, workspaceId?: string): Promise<Rock[]> {
+      if (workspaceId) {
+        const { rows } = await sql`
+          SELECT * FROM rocks WHERE user_id = ${userId} AND organization_id = ${orgId} AND workspace_id = ${workspaceId} ORDER BY created_at DESC LIMIT 100
+        `
+        return rows.map(parseRock)
+      }
       const { rows } = await sql`
         SELECT * FROM rocks WHERE user_id = ${userId} AND organization_id = ${orgId} ORDER BY created_at DESC LIMIT 100
       `
@@ -1112,22 +1117,15 @@ export const db = {
     },
   },
 
-  // Tasks (simple tasks - keeping for compatibility)
+  // Tasks (deprecated stubs - assigned_tasks is used instead)
   tasks: {
-    async findByOrganizationId(orgId: string): Promise<Task[]> {
-      return [] // Not used currently, assigned_tasks is used instead
-    },
-    async findByUserId(userId: string, orgId: string): Promise<Task[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async findByOrganizationId(orgId: string): Promise<any[]> {
       return []
     },
-    async create(task: Task): Promise<Task> {
-      return task
-    },
-    async update(id: string, updates: Partial<Task>): Promise<Task | null> {
-      return null
-    },
-    async delete(id: string): Promise<boolean> {
-      return false
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async findByUserId(userId: string, orgId: string): Promise<any[]> {
+      return []
     },
   },
 
