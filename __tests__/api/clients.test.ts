@@ -106,7 +106,7 @@ describe("Clients API", () => {
         "http://localhost:3000/api/clients?workspaceId=workspace-1"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -129,7 +129,7 @@ describe("Clients API", () => {
         "http://localhost:3000/api/clients?workspaceId=workspace-1&status=active"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -144,7 +144,7 @@ describe("Clients API", () => {
     it("should return 400 when workspaceId is missing", async () => {
       const request = new NextRequest("http://localhost:3000/api/clients")
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -159,7 +159,7 @@ describe("Clients API", () => {
         "http://localhost:3000/api/clients?workspaceId=invalid-workspace"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -175,7 +175,7 @@ describe("Clients API", () => {
         "http://localhost:3000/api/clients?workspaceId=workspace-1"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(403)
@@ -193,7 +193,7 @@ describe("Clients API", () => {
         "http://localhost:3000/api/clients?workspaceId=workspace-1"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(403)
@@ -221,7 +221,7 @@ describe("Clients API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -249,7 +249,7 @@ describe("Clients API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -267,7 +267,7 @@ describe("Clients API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -283,7 +283,7 @@ describe("Clients API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -300,7 +300,7 @@ describe("Clients API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(403)
@@ -326,7 +326,7 @@ describe("Clients API", () => {
         method: "PATCH",
       })
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -350,7 +350,7 @@ describe("Clients API", () => {
         method: "PATCH",
       })
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -368,7 +368,7 @@ describe("Clients API", () => {
         method: "PATCH",
       })
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(403)
@@ -387,7 +387,7 @@ describe("Clients API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -401,7 +401,7 @@ describe("Clients API", () => {
         method: "DELETE",
       })
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -417,7 +417,7 @@ describe("Clients API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -434,7 +434,7 @@ describe("Clients API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(500)

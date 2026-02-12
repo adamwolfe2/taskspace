@@ -108,7 +108,7 @@ describe("POST /api/billing/checkout", () => {
       billingCycle: "monthly",
     })
 
-    const response = await POST(request, mockAuth)
+    const response = await POST(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -155,7 +155,7 @@ describe("POST /api/billing/checkout", () => {
       billingCycle: "yearly",
     })
 
-    await POST(request, authWithBillingEmail)
+    await POST(request, authWithBillingEmail as any)
 
     expect(mockGetOrCreateCustomer).toHaveBeenCalledWith(
       "org-1",
@@ -188,7 +188,7 @@ describe("POST /api/billing/checkout", () => {
       billingCycle: "monthly",
     })
 
-    await POST(request, authWithCustomerId)
+    await POST(request, authWithCustomerId as any)
 
     expect(mockGetOrCreateCustomer).not.toHaveBeenCalled()
     expect(mockOrgUpdate).not.toHaveBeenCalled()
@@ -207,7 +207,7 @@ describe("POST /api/billing/checkout", () => {
       billingCycle: "monthly",
     })
 
-    const response = await POST(request, mockAuth)
+    const response = await POST(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(503)
@@ -226,7 +226,7 @@ describe("POST /api/billing/checkout", () => {
       billingCycle: "monthly",
     })
 
-    const response = await POST(request, mockAuth)
+    const response = await POST(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -244,7 +244,7 @@ describe("POST /api/billing/checkout", () => {
       plan: "team",
     })
 
-    const response = await POST(request, mockAuth)
+    const response = await POST(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -270,7 +270,7 @@ describe("POST /api/billing/checkout", () => {
       billingCycle: "monthly",
     })
 
-    const response = await POST(request, mockAuth)
+    const response = await POST(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(500)
@@ -298,7 +298,7 @@ describe("POST /api/billing/checkout", () => {
       billingCycle: "monthly",
     })
 
-    const response = await POST(request, mockAuth)
+    const response = await POST(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(500)
@@ -326,7 +326,7 @@ describe("POST /api/billing/checkout", () => {
       billingCycle: "monthly",
     })
 
-    await POST(request, mockAuth)
+    await POST(request, mockAuth as any)
 
     expect(mockCreateCheckoutSession).toHaveBeenCalledWith({
       organizationId: "org-1",

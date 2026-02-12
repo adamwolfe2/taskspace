@@ -90,7 +90,7 @@ describe("Project Members API", () => {
         "http://localhost:3000/api/projects/members?projectId=project-1"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -104,7 +104,7 @@ describe("Project Members API", () => {
         "http://localhost:3000/api/projects/members"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -119,7 +119,7 @@ describe("Project Members API", () => {
         "http://localhost:3000/api/projects/members?projectId=invalid-project"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -135,7 +135,7 @@ describe("Project Members API", () => {
         "http://localhost:3000/api/projects/members?projectId=project-1"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -151,7 +151,7 @@ describe("Project Members API", () => {
         "http://localhost:3000/api/projects/members?projectId=project-1"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(500)
@@ -177,7 +177,7 @@ describe("Project Members API", () => {
         { method: "POST" }
       )
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -205,7 +205,7 @@ describe("Project Members API", () => {
         { method: "POST" }
       )
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -227,7 +227,7 @@ describe("Project Members API", () => {
         { method: "POST" }
       )
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -244,7 +244,7 @@ describe("Project Members API", () => {
         { method: "POST" }
       )
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -262,7 +262,7 @@ describe("Project Members API", () => {
         { method: "POST" }
       )
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -290,7 +290,7 @@ describe("Project Members API", () => {
         { method: "PATCH" }
       )
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -318,7 +318,7 @@ describe("Project Members API", () => {
         { method: "PATCH" }
       )
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
 
       expect(response.status).toBe(200)
       expect(mockProjectsUpdateMemberRole).toHaveBeenCalledWith(
@@ -337,7 +337,7 @@ describe("Project Members API", () => {
         { method: "PATCH" }
       )
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -355,7 +355,7 @@ describe("Project Members API", () => {
         { method: "PATCH" }
       )
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -374,7 +374,7 @@ describe("Project Members API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -389,7 +389,7 @@ describe("Project Members API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -403,7 +403,7 @@ describe("Project Members API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -419,7 +419,7 @@ describe("Project Members API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -436,7 +436,7 @@ describe("Project Members API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -453,7 +453,7 @@ describe("Project Members API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)

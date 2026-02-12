@@ -121,7 +121,7 @@ describe("GET /api/billing/subscription", () => {
     mockGetStripeConfig.mockReturnValue({ isConfigured: true })
 
     const request = createRequest()
-    const response = await GET(request, mockAuth)
+    const response = await GET(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -154,7 +154,7 @@ describe("GET /api/billing/subscription", () => {
     mockGetStripeConfig.mockReturnValue({ isConfigured: true })
 
     const request = createRequest()
-    const response = await GET(request, freeAuth)
+    const response = await GET(request, freeAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -177,7 +177,7 @@ describe("GET /api/billing/subscription", () => {
     mockGetStripeConfig.mockReturnValue({ isConfigured: true })
 
     const request = createRequest()
-    const response = await GET(request, mockAuth)
+    const response = await GET(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(500)
@@ -245,7 +245,7 @@ describe("PATCH /api/billing/subscription", () => {
       billingCycle: "yearly",
     })
 
-    const response = await PATCH(request, mockAuth)
+    const response = await PATCH(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -285,7 +285,7 @@ describe("PATCH /api/billing/subscription", () => {
       billingCycle: "monthly",
     })
 
-    const response = await PATCH(request, mockAuth)
+    const response = await PATCH(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -306,7 +306,7 @@ describe("PATCH /api/billing/subscription", () => {
       action: "cancel",
     })
 
-    const response = await PATCH(request, mockAuth)
+    const response = await PATCH(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -326,7 +326,7 @@ describe("PATCH /api/billing/subscription", () => {
       action: "resume",
     })
 
-    const response = await PATCH(request, mockAuth)
+    const response = await PATCH(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -348,7 +348,7 @@ describe("PATCH /api/billing/subscription", () => {
       action: "portal",
     })
 
-    const response = await PATCH(request, mockAuth)
+    const response = await PATCH(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -367,7 +367,7 @@ describe("PATCH /api/billing/subscription", () => {
       action: "cancel",
     })
 
-    const response = await PATCH(request, mockAuth)
+    const response = await PATCH(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(503)
@@ -393,7 +393,7 @@ describe("PATCH /api/billing/subscription", () => {
       action: "cancel",
     })
 
-    const response = await PATCH(request, noSubAuth)
+    const response = await PATCH(request, noSubAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -419,7 +419,7 @@ describe("PATCH /api/billing/subscription", () => {
       action: "portal",
     })
 
-    const response = await PATCH(request, noCustomerAuth)
+    const response = await PATCH(request, noCustomerAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -437,7 +437,7 @@ describe("PATCH /api/billing/subscription", () => {
       action: "invalid",
     })
 
-    const response = await PATCH(request, mockAuth)
+    const response = await PATCH(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -457,7 +457,7 @@ describe("PATCH /api/billing/subscription", () => {
       action: "change_plan",
     })
 
-    const response = await PATCH(request, mockAuth)
+    const response = await PATCH(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -475,7 +475,7 @@ describe("PATCH /api/billing/subscription", () => {
       action: "unknown",
     })
 
-    const response = await PATCH(request, mockAuth)
+    const response = await PATCH(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -494,7 +494,7 @@ describe("PATCH /api/billing/subscription", () => {
       action: "cancel",
     })
 
-    const response = await PATCH(request, mockAuth)
+    const response = await PATCH(request, mockAuth as any)
     const data = await response.json()
 
     expect(response.status).toBe(500)

@@ -32,8 +32,8 @@ export function RegisterPage() {
       return
     }
 
-    if (password.length < 8) {
-      setLocalError("Password must be at least 8 characters")
+    if (!allRequirementsMet) {
+      setLocalError("Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, and a number")
       return
     }
 
@@ -176,7 +176,7 @@ export function RegisterPage() {
             <Button
               type="submit"
               className="w-full h-11 bg-black hover:bg-gray-800 text-white font-medium transition-colors"
-              disabled={isLoading}
+              disabled={isLoading || !allRequirementsMet || !name || !email || password !== confirmPassword}
             >
               {isLoading ? (
                 <>
@@ -192,7 +192,14 @@ export function RegisterPage() {
             </Button>
 
             <p className="text-xs text-center text-gray-500 leading-relaxed">
-              By creating an account, you agree to our Terms of Service and Privacy Policy
+              By creating an account, you agree to our{" "}
+              <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-black transition-colors">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-black transition-colors">
+                Privacy Policy
+              </a>
             </p>
           </form>
 

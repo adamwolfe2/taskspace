@@ -120,7 +120,7 @@ describe("Projects API", () => {
         "http://localhost:3000/api/projects?workspaceId=workspace-1"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -147,7 +147,7 @@ describe("Projects API", () => {
         "http://localhost:3000/api/projects?workspaceId=workspace-1&clientId=client-1"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -171,7 +171,7 @@ describe("Projects API", () => {
         "http://localhost:3000/api/projects?workspaceId=workspace-1&status=active"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -195,7 +195,7 @@ describe("Projects API", () => {
         "http://localhost:3000/api/projects?workspaceId=workspace-1&ownerId=user-1"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -212,7 +212,7 @@ describe("Projects API", () => {
     it("should return 400 when workspaceId is missing", async () => {
       const request = new NextRequest("http://localhost:3000/api/projects")
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -227,7 +227,7 @@ describe("Projects API", () => {
         "http://localhost:3000/api/projects?workspaceId=invalid-workspace"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -243,7 +243,7 @@ describe("Projects API", () => {
         "http://localhost:3000/api/projects?workspaceId=workspace-1"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(403)
@@ -261,7 +261,7 @@ describe("Projects API", () => {
         "http://localhost:3000/api/projects?workspaceId=workspace-1"
       )
 
-      const response = await GET(request, mockAuth)
+      const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(403)
@@ -291,7 +291,7 @@ describe("Projects API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -325,7 +325,7 @@ describe("Projects API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -350,7 +350,7 @@ describe("Projects API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -373,7 +373,7 @@ describe("Projects API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -399,7 +399,7 @@ describe("Projects API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -415,7 +415,7 @@ describe("Projects API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -432,7 +432,7 @@ describe("Projects API", () => {
         method: "POST",
       })
 
-      const response = await POST(request, mockAuth)
+      const response = await POST(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(403)
@@ -458,7 +458,7 @@ describe("Projects API", () => {
         method: "PATCH",
       })
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -482,7 +482,7 @@ describe("Projects API", () => {
         method: "PATCH",
       })
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -505,7 +505,7 @@ describe("Projects API", () => {
         method: "PATCH",
       })
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -529,7 +529,7 @@ describe("Projects API", () => {
         method: "PATCH",
       })
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -547,7 +547,7 @@ describe("Projects API", () => {
         method: "PATCH",
       })
 
-      const response = await PATCH(request, mockAuth)
+      const response = await PATCH(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(403)
@@ -566,7 +566,7 @@ describe("Projects API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -580,7 +580,7 @@ describe("Projects API", () => {
         method: "DELETE",
       })
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -596,7 +596,7 @@ describe("Projects API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -613,7 +613,7 @@ describe("Projects API", () => {
         { method: "DELETE" }
       )
 
-      const response = await DELETE(request, mockAuth)
+      const response = await DELETE(request, mockAuth as any)
       const data = await response.json()
 
       expect(response.status).toBe(500)
