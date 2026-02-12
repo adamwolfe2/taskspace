@@ -55,7 +55,15 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
-    const { reviewerNotes } = await validateBody(request, aiSuggestionRejectSchema).catch(() => ({ reviewerNotes: undefined }))
+    // reviewerNotes is optional — allow rejection even with empty/missing body
+    let reviewerNotes: string | undefined
+    try {
+      const body = await validateBody(request, aiSuggestionRejectSchema)
+      reviewerNotes = body.reviewerNotes
+    } catch {
+      // Body is missing or malformed — proceed without notes
+      reviewerNotes = undefined
+    }
 
     // Verify suggestion exists and belongs to this org
     const suggestion = await getSuggestionById(id)

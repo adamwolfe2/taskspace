@@ -32,10 +32,11 @@ export const POST = withAuth(async (request, auth) => {
 
     const validated = await validateBody(request, aiMeetingPrepSchema)
     const { workspaceId } = validated
-     
-    const rocks = validated.rocks as any
-    const tasks = validated.tasks as any
-    const issues = validated.issues as any
+    // Client-provided data for AI prompt context — types are loosely validated by Zod schema
+    type MeetingPrepContext = Parameters<typeof generateMeetingPrep>[0]
+    const rocks = validated.rocks as MeetingPrepContext["rocks"]
+    const tasks = validated.tasks as MeetingPrepContext["tasks"]
+    const issues = validated.issues as MeetingPrepContext["issues"]
 
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {

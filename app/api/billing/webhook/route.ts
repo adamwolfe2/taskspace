@@ -23,10 +23,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing signature" }, { status: 400 })
     }
 
-    // Verify and construct event
-    let event: { id: string; type: string; data: { object: any } }
+    // Verify and construct event — cast to local StripeWebhookObject at handler call sites
+    let event: { id: string; type: string; data: { object: StripeWebhookObject } }
     try {
-      event = await constructWebhookEvent(payload, signature) as any
+      event = await constructWebhookEvent(payload, signature) as unknown as typeof event
     } catch (error) {
       logError(logger, "Webhook signature verification failed", error)
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 })

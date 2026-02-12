@@ -32,7 +32,7 @@ export const POST = withAuth(async (request, auth) => {
     const validated = await validateBody(request, aiMeetingNotesSchema)
     const { workspaceId } = validated
      
-    const meetingData = validated.meetingData as any
+    const meetingData = validated.meetingData as Parameters<typeof generateMeetingNotesSummary>[0]
 
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {
