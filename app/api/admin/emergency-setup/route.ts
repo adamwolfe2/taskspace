@@ -6,16 +6,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { withAdmin } from "@/lib/api/middleware"
+import { withDangerousAdmin } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse } from "@/lib/types"
 import { logger } from "@/lib/logger"
 
-export const POST = withAdmin(async (request: NextRequest, auth) => {
-  // Block dangerous DDL operations in production unless explicitly allowed
-  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_ADMIN_DANGEROUS_OPS) {
-    return NextResponse.json({ success: false, error: "This operation is disabled in production" }, { status: 403 })
-  }
+export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
 
   try {
     logger.info("🚨 EMERGENCY SETUP STARTING")

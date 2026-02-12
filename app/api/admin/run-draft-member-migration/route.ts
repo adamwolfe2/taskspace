@@ -6,16 +6,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { withAdmin } from "@/lib/api/middleware"
+import { withDangerousAdmin } from "@/lib/api/middleware"
 import type { ApiResponse } from "@/lib/types"
 import { logger } from "@/lib/logger"
 import { db as vercelDb } from "@vercel/postgres"
 
-export const POST = withAdmin(async (request: NextRequest, auth) => {
-  // Warn when running in production (allowed since it's behind withAdmin and idempotent)
-  if (process.env.NODE_ENV === "production") {
-    logger.warn({ userId: auth.user.id, orgId: auth.organization.id }, "run-draft-member-migration called in production environment")
-  }
+export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
 
   try {
     logger.info("🚨 RUNNING DRAFT MEMBER ROCKS MIGRATION")

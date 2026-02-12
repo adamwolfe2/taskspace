@@ -6,18 +6,14 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { withAdmin } from "@/lib/api/middleware"
+import { withDangerousAdmin } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse } from "@/lib/types"
 import { logger } from "@/lib/logger"
 import { readFileSync, readdirSync } from "fs"
 import { join } from "path"
 
-export const POST = withAdmin(async (_request: NextRequest, _auth) => {
-  // Block dangerous filesystem + SQL execution in production unless explicitly allowed
-  if (process.env.NODE_ENV === "production" && !process.env.ALLOW_ADMIN_DANGEROUS_OPS) {
-    return NextResponse.json({ success: false, error: "This operation is disabled in production" }, { status: 403 })
-  }
+export const POST = withDangerousAdmin(async (_request: NextRequest, _auth) => {
 
   try {
     logger.info("🚨 RUNNING DATABASE MIGRATIONS")

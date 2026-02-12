@@ -295,6 +295,72 @@ export function withOwner(
 }
 
 /**
+ * Owner-only wrapper for dangerous admin operations (migrations, DDL, force-updates).
+ * Requires owner role + ADMIN_OPS_SECRET env var in production.
+ * Blocks API key access entirely.
+ */
+export function withDangerousAdmin(
+  handler: AuthenticatedHandler<ApiResponse<unknown>>
+): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
+  return async (request: NextRequest, context?: RouteContext) => {
+    try {
+      if (!verifyCsrfHeader(request)) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: Missing CSRF header" },
+          { status: 403 }
+        )
+      }
+
+      const auth = await getAuthContext(request)
+
+      if (!auth) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        )
+      }
+
+      // Block API key access — dangerous ops require a real session
+      if (auth.isApiKey) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: API keys cannot access admin operations" },
+          { status: 403 }
+        )
+      }
+
+      if (!isOwner(auth)) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: Owner access required" },
+          { status: 403 }
+        )
+      }
+
+      // In production, require ADMIN_OPS_SECRET env var to be set
+      if (process.env.NODE_ENV === "production") {
+        const secret = process.env.ADMIN_OPS_SECRET
+        if (!secret) {
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, error: "Admin operations are disabled in production (ADMIN_OPS_SECRET not configured)" },
+            { status: 403 }
+          )
+        }
+        const headerSecret = request.headers.get("x-admin-secret")
+        if (headerSecret !== secret) {
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, error: "Forbidden: Invalid or missing admin secret" },
+            { status: 403 }
+          )
+        }
+      }
+
+      return await handler(request, auth, context)
+    } catch (error) {
+      return handleError(error)
+    }
+  }
+}
+
+/**
  * Check if request method is state-changing (not safe/read-only)
  */
 function isWriteMethod(method: string): boolean {

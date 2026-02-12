@@ -5,12 +5,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { withAdmin } from "@/lib/api/middleware"
+import { withDangerousAdmin } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse } from "@/lib/types"
 import { logger } from "@/lib/logger"
 
-export const POST = withAdmin(async (request: NextRequest, auth) => {
+export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
   const orgId = auth.organization.id
 
   // Get or create default workspace

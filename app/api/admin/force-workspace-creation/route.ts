@@ -6,16 +6,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { withAdmin } from "@/lib/api/middleware"
+import { withDangerousAdmin } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
-export const POST = withAdmin(async (request: NextRequest, auth) => {
-  // Warn when running in production (allowed since it's behind withAdmin)
-  if (process.env.NODE_ENV === "production") {
-    logger.warn({ userId: auth.user.id, orgId: auth.organization.id }, "force-workspace-creation called in production environment")
-  }
+export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
 
   try {
     logger.info("🚨 FORCE WORKSPACE CREATION CALLED")
