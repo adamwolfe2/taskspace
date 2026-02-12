@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { MegaMenu } from "@/components/marketing/mega-menu"
 import { MarketingFooter } from "@/components/marketing/footer"
+import { CookieConsent } from "@/components/marketing/cookie-consent"
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"
 
@@ -59,6 +60,7 @@ export default function MarketingLayout({
       <MegaMenu />
       <main className="flex-1">{children}</main>
       <MarketingFooter />
+      <CookieConsent />
     </div>
   )
 }
