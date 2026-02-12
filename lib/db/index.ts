@@ -726,6 +726,10 @@ export const db = {
       const { rowCount } = await sql`DELETE FROM sessions WHERE user_id = ${userId} AND token != ${currentToken}`
       return rowCount ?? 0
     },
+    async deleteByUserAndOrg(userId: string, organizationId: string): Promise<number> {
+      const { rowCount } = await sql`DELETE FROM sessions WHERE user_id = ${userId} AND organization_id = ${organizationId}`
+      return rowCount ?? 0
+    },
   },
 
   // Invitations
@@ -1142,8 +1146,17 @@ export const db = {
       const { rows } = await sql`SELECT * FROM assigned_tasks WHERE organization_id = ${orgId} ORDER BY created_at DESC LIMIT 1000`
       return rows.map(parseAssignedTask)
     },
-    async findByAssigneeId(assigneeId: string, orgId: string): Promise<AssignedTask[]> {
+    async findByAssigneeId(assigneeId: string, orgId: string, workspaceId?: string): Promise<AssignedTask[]> {
       // OPTIMIZED: Added LIMIT to prevent unbounded queries
+      // Added optional workspace filter to push filtering to SQL layer
+      if (workspaceId) {
+        const { rows } = await sql`
+          SELECT * FROM assigned_tasks
+          WHERE assignee_id = ${assigneeId} AND organization_id = ${orgId} AND workspace_id = ${workspaceId}
+          ORDER BY created_at DESC LIMIT 200
+        `
+        return rows.map(parseAssignedTask)
+      }
       const { rows } = await sql`
         SELECT * FROM assigned_tasks
         WHERE assignee_id = ${assigneeId} AND organization_id = ${orgId}

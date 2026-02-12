@@ -269,6 +269,11 @@ export const DELETE = withAdmin(async (request: NextRequest, auth) => {
 
     await db.members.delete(member.id, auth.organization.id)
 
+    // Invalidate all sessions for the removed member in this organization
+    if (member.userId) {
+      await db.sessions.deleteByUserAndOrg(member.userId, auth.organization.id)
+    }
+
     return NextResponse.json<ApiResponse<null>>({
       success: true,
       message: "Member removed successfully",

@@ -109,6 +109,7 @@ export const updateOrganizationSettingsSchema = z.object({
   enableEmailNotifications: z.boolean().optional(),
   enableSlackIntegration: z.boolean().optional(),
   slackWebhookUrl: z.string().url().nullable().optional(),
+  publicEodToken: z.string().min(16).max(128).nullable().optional(),
   asanaIntegration: z
     .object({
       enabled: z.boolean(),

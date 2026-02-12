@@ -347,6 +347,39 @@ export function getRateLimitHeaders(result: RateLimitResult, maxAttempts?: numbe
   return headers
 }
 
+// ============================================
+// ORGANIZATION-LEVEL RATE LIMITS
+// ============================================
+
+// Org rate limits by subscription tier (requests per hour)
+const ORG_RATE_LIMITS: Record<string, number> = {
+  free: 1000,
+  team: 10000,
+  business: 50000,
+}
+const ORG_RATE_WINDOW_MS = 60 * 60 * 1000 // 1 hour
+
+/**
+ * Check org-level API rate limit (sync, in-memory).
+ * Returns a result immediately from cache; fires async DB update in background.
+ * Fails open if no cache entry exists (first request always allowed).
+ */
+export function checkOrgRateLimit(
+  organizationId: string,
+  plan: string = "free"
+): RateLimitResult {
+  const maxRequests = ORG_RATE_LIMITS[plan] ?? ORG_RATE_LIMITS.free
+  const key = `org:${organizationId}`
+  const result = checkRateLimitSync(key, maxRequests)
+
+  // Fire-and-forget DB update for persistence across instances
+  checkRateLimitDb(key, maxRequests).catch(err =>
+    logger.debug({ error: err?.message, organizationId }, "Org rate limit DB update failed (non-critical)")
+  )
+
+  return result
+}
+
 /**
  * General purpose rate limiter for any endpoint
  */

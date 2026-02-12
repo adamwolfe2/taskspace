@@ -188,11 +188,18 @@ async function fetchWithRetry(
   options?: RequestInit,
   retryConfig: RetryConfig = DEFAULT_RETRY_CONFIG
 ): Promise<Response> {
+  // Inject CSRF header for all API requests (prevents cross-origin forgery)
+  const headers = new Headers(options?.headers)
+  if (!headers.has("x-requested-with")) {
+    headers.set("X-Requested-With", "XMLHttpRequest")
+  }
+  const mergedOptions = { ...options, headers }
+
   let lastError: Error | null = null
 
   for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
     try {
-      const response = await fetch(url, options)
+      const response = await fetch(url, mergedOptions)
 
       // If the response is retryable and we haven't exhausted retries, wait and retry
       if (

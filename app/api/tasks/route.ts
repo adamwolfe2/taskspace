@@ -91,9 +91,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       }
     } else {
       // Regular members see only their tasks - workspace-scoped at SQL level
-      tasks = await db.assignedTasks.findByAssigneeId(auth.user.id, auth.organization.id)
-      // Filter by workspace at application level since findByAssigneeId doesn't support workspaceId
-      tasks = tasks.filter(t => t.workspaceId === workspaceId)
+      tasks = await db.assignedTasks.findByAssigneeId(auth.user.id, auth.organization.id, workspaceId)
     }
 
     // Filter by status if specified

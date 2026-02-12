@@ -39,8 +39,44 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, getUserAuthContext, isAdmin, isOwner, type AuthContext, type UserAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { handleError } from "@/lib/api/errors"
+import { checkOrgRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+
+/**
+ * Check org-level rate limit and return 429 response if exceeded.
+ * Returns null if within limits, or a NextResponse to return immediately.
+ */
+function checkOrgRateLimitOrRespond(auth: AuthContext): NextResponse<ApiResponse<null>> | null {
+  const plan = auth.organization.subscription?.plan || "free"
+  const result = checkOrgRateLimit(auth.organization.id, plan)
+  if (!result.success) {
+    const headers = getRateLimitHeaders(result)
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: "Organization rate limit exceeded. Please try again later." },
+      { status: 429, headers }
+    )
+  }
+  return null
+}
+
+/**
+ * CSRF protection via custom header check.
+ *
+ * For state-changing requests (POST/PUT/PATCH/DELETE) using cookie auth,
+ * require the X-Requested-With header. Cross-origin requests cannot set
+ * custom headers without a CORS preflight, and our server does not include
+ * CORS headers allowing other origins — so this blocks cross-site request forgery.
+ *
+ * Safe methods (GET/HEAD/OPTIONS) and API key requests are exempt.
+ */
+function verifyCsrfHeader(request: NextRequest): boolean {
+  const safeMethod = ["GET", "HEAD", "OPTIONS"].includes(request.method)
+  if (safeMethod) return true
+  // API key requests use Authorization header, not cookies — CSRF not applicable
+  if (request.headers.get("authorization")?.startsWith("Bearer ")) return true
+  return request.headers.get("x-requested-with") === "XMLHttpRequest"
+}
 
 /**
  * Type for authenticated API route handler
@@ -83,6 +119,13 @@ export function withAuth(
 ): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
     try {
+      if (!verifyCsrfHeader(request)) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: Missing CSRF header" },
+          { status: 403 }
+        )
+      }
+
       const auth = await getAuthContext(request)
 
       if (!auth) {
@@ -91,6 +134,9 @@ export function withAuth(
           { status: 401 }
         )
       }
+
+      const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
+      if (orgLimitResponse) return orgLimitResponse
 
       return await handler(request, auth, context)
     } catch (error) {
@@ -120,6 +166,13 @@ export function withUserAuth(
 ): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
     try {
+      if (!verifyCsrfHeader(request)) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: Missing CSRF header" },
+          { status: 403 }
+        )
+      }
+
       const auth = await getUserAuthContext(request)
 
       if (!auth) {
@@ -151,6 +204,13 @@ export function withAdmin(
 ): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
     try {
+      if (!verifyCsrfHeader(request)) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: Missing CSRF header" },
+          { status: 403 }
+        )
+      }
+
       const auth = await getAuthContext(request)
 
       if (!auth) {
@@ -166,6 +226,9 @@ export function withAdmin(
           { status: 403 }
         )
       }
+
+      const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
+      if (orgLimitResponse) return orgLimitResponse
 
       return await handler(request, auth, context)
     } catch (error) {
@@ -189,6 +252,13 @@ export function withOwner(
 ): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
     try {
+      if (!verifyCsrfHeader(request)) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: Missing CSRF header" },
+          { status: 403 }
+        )
+      }
+
       const auth = await getAuthContext(request)
 
       if (!auth) {
@@ -204,6 +274,9 @@ export function withOwner(
           { status: 403 }
         )
       }
+
+      const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
+      if (orgLimitResponse) return orgLimitResponse
 
       return await handler(request, auth, context)
     } catch (error) {
@@ -230,6 +303,13 @@ export function withWorkspaceAccess(
 ): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
     try {
+      if (!verifyCsrfHeader(request)) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: Missing CSRF header" },
+          { status: 403 }
+        )
+      }
+
       const auth = await getAuthContext(request)
 
       if (!auth) {
@@ -258,6 +338,9 @@ export function withWorkspaceAccess(
           { status: 403 }
         )
       }
+
+      const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
+      if (orgLimitResponse) return orgLimitResponse
 
       return await handler(request, auth, workspaceId)
     } catch (error) {
@@ -289,6 +372,13 @@ export function withWorkspaceParam(
 ): (request: NextRequest, context: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context: RouteContext) => {
     try {
+      if (!verifyCsrfHeader(request)) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: Missing CSRF header" },
+          { status: 403 }
+        )
+      }
+
       const auth = await getAuthContext(request)
 
       if (!auth) {
@@ -317,6 +407,9 @@ export function withWorkspaceParam(
           { status: 403 }
         )
       }
+
+      const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
+      if (orgLimitResponse) return orgLimitResponse
 
       return await handler(request, auth, workspaceId, context)
     } catch (error) {

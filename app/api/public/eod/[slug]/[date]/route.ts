@@ -123,9 +123,21 @@ export async function GET(
     const org = orgs[0]
     const orgId = org.id as string
     const orgName = org.name as string
-    const settings = org.settings as { timezone?: string; customBranding?: { logo?: string } } | null
+    const settings = org.settings as { timezone?: string; customBranding?: { logo?: string }; publicEodToken?: string } | null
     const timezone = settings?.timezone || "America/Los_Angeles"
     const orgLogo = settings?.customBranding?.logo
+
+    // If the org has a publicEodToken configured, require it as a query param
+    if (settings?.publicEodToken) {
+      const { searchParams } = new URL(request.url)
+      const providedToken = searchParams.get("token")
+      if (providedToken !== settings.publicEodToken) {
+        return NextResponse.json(
+          { success: false, error: "Invalid or missing access token" },
+          { status: 403 }
+        )
+      }
+    }
 
     // Get all active members (join with users to get name if missing in members)
     const { rows: members } = await sql`
