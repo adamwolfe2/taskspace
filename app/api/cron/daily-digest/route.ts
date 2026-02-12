@@ -248,7 +248,7 @@ export async function GET(request: NextRequest) {
               const adminEmails = admins.map(a => a.email)
 
               await resend.emails.send({
-                from: process.env.EMAIL_FROM || "Taskspace <noreply@trytaskspace.com>",
+                from: process.env.EMAIL_FROM || "Taskspace <team@collectivecapital.com>",
                 to: adminEmails,
                 subject: `📊 Daily Rock Progress Summary - ${consolidatedDigest.formattedDate}`,
                 html: formatConsolidatedDigestHTML(consolidatedDigest),

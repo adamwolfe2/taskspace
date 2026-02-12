@@ -5,11 +5,11 @@ import { logger, logError } from "@/lib/logger"
 
 // Use environment variables for sensitive data
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@trytaskspace.com"
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "team@collectivecapital.com"
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
 // Default to Taskspace domain - make sure this domain is verified in Resend
 // For testing without domain, use "Taskspace <onboarding@resend.dev>"
-const EMAIL_FROM = process.env.EMAIL_FROM || "Taskspace <noreply@trytaskspace.com>"
+const EMAIL_FROM = process.env.EMAIL_FROM || "Taskspace <team@collectivecapital.com>"
 
 // Check if email is configured
 function isEmailConfigured(): boolean {

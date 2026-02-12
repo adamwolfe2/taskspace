@@ -91,7 +91,7 @@ export class ErrorBoundary extends Component<Props, State> {
  )
 
  // Open mailto link for bug reporting
- window.open(`mailto:support@trytaskspace.com?subject=${subject}&body=${body}`, "_blank")
+ window.open(`mailto:team@collectivecapital.com?subject=${subject}&body=${body}`, "_blank")
  }
 
  public render() {

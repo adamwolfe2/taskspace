@@ -20,7 +20,7 @@ export function isEmailConfigured(): boolean {
   return !!process.env.RESEND_API_KEY
 }
 
-const FROM_EMAIL = process.env.EMAIL_FROM || "Taskspace <noreply@trytaskspace.com>"
+const FROM_EMAIL = process.env.EMAIL_FROM || "Taskspace <team@collectivecapital.com>"
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"
 
 interface EmailResult {

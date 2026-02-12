@@ -476,7 +476,7 @@ export function InvitedUserWelcome() {
         {/* Bottom helper text */}
         <p className="text-center text-xs text-slate-400 mt-4">
           You can always update your profile and preferences in Settings.{" "}
-          <a href="mailto:support@trytaskspace.com" className="underline hover:text-slate-600">
+          <a href="mailto:team@collectivecapital.com" className="underline hover:text-slate-600">
             Need help?
           </a>
         </p>

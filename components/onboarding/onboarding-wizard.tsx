@@ -1031,7 +1031,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
         {/* Bottom helper text */}
         <p className="text-center text-xs text-slate-400 mt-4">
           All settings can be changed later. Need help?{" "}
-          <a href="mailto:support@trytaskspace.com" className="underline hover:text-slate-600">
+          <a href="mailto:team@collectivecapital.com" className="underline hover:text-slate-600">
             Contact support
           </a>
         </p>

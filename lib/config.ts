@@ -9,7 +9,7 @@ export const PRODUCT_CONFIG = {
   tagline: "Team Productivity Platform",
   description: "Transform how your team tracks progress and achieves goals with AI-powered accountability tools",
   domain: "trytaskspace.com",
-  supportEmail: "support@trytaskspace.com",
+  supportEmail: "team@collectivecapital.com",
   company: "Taskspace",
 } as const
 
