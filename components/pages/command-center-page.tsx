@@ -10,6 +10,7 @@ import { DailyDigestCard } from "@/components/ai/daily-digest-card"
 import { BulkRockImport } from "@/components/ai/bulk-rock-import"
 import { api } from "@/lib/api/client"
 import { useToast } from "@/hooks/use-toast"
+import { useApp } from "@/lib/contexts/app-context"
 import { getErrorMessage } from "@/lib/utils"
 import { Brain, Sparkles, MessageSquare, Calendar, AlertCircle, Zap, Mountain } from "lucide-react"
 import type {
@@ -19,6 +20,7 @@ import type {
   AIConversation,
   AIQueryResponse,
 } from "@/lib/types"
+import { DEMO_COMMAND_CENTER, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 
 interface CommandCenterPageProps {
   teamMembers: TeamMember[]
@@ -26,6 +28,7 @@ interface CommandCenterPageProps {
 }
 
 export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPageProps) {
+  const { isDemoMode } = useApp()
   const [activeTab, setActiveTab] = useState("brain-dump")
   const [pendingTasks, setPendingTasks] = useState<AIGeneratedTask[]>([])
   const [digest, setDigest] = useState<DailyDigest | null>(null)
@@ -44,6 +47,10 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
 
   // Load pending AI tasks
   const loadPendingTasks = useCallback(async () => {
+    if (isDemoMode) {
+      setPendingTasks(DEMO_COMMAND_CENTER.aiTasks as unknown as AIGeneratedTask[])
+      return
+    }
     try {
       setIsLoadingTasks(true)
       const response = await fetch("/api/ai/tasks?status=pending")
@@ -56,10 +63,14 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
     } finally {
       setIsLoadingTasks(false)
     }
-  }, [])
+  }, [isDemoMode])
 
   // Load today's digest
   const loadDigest = useCallback(async () => {
+    if (isDemoMode) {
+      setDigest(DEMO_COMMAND_CENTER.dailyDigest as unknown as DailyDigest)
+      return
+    }
     try {
       const response = await fetch(`/api/ai/digest?date=${selectedDate}`)
       const data = await response.json()
@@ -72,10 +83,11 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
       console.error("Failed to load digest:", err)
       setDigest(null)
     }
-  }, [selectedDate])
+  }, [isDemoMode, selectedDate])
 
   // Load conversation history
   const loadConversations = useCallback(async () => {
+    if (isDemoMode) return
     try {
       const response = await fetch("/api/ai/query?limit=20")
       const data = await response.json()
@@ -85,7 +97,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
     } catch (err) {
       console.error("Failed to load conversations:", err)
     }
-  }, [])
+  }, [isDemoMode])
 
   useEffect(() => {
     loadPendingTasks()
@@ -95,6 +107,10 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
 
   // Process brain dump
   const handleBrainDump = async (content: string) => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return
+    }
     setIsProcessingDump(true)
     setError(null)
     try {
@@ -135,6 +151,10 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
 
   // Approve task
   const handleApproveTask = async (taskId: string, updates?: Partial<AIGeneratedTask>) => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return
+    }
     try {
       const response = await fetch("/api/ai/tasks", {
         method: "PATCH",
@@ -165,6 +185,10 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
 
   // Reject task
   const handleRejectTask = async (taskId: string) => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return
+    }
     try {
       const response = await fetch("/api/ai/tasks", {
         method: "PATCH",
@@ -202,6 +226,10 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
 
   // Generate digest
   const handleGenerateDigest = async () => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return
+    }
     setIsGeneratingDigest(true)
     try {
       const response = await fetch("/api/ai/digest", {
@@ -234,6 +262,10 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
 
   // Handle AI query
   const handleQuery = async (query: string): Promise<AIQueryResponse & { conversationId: string }> => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return { response: "AI features are not available in demo mode. Sign up to use the AI copilot!", conversationId: "demo", suggestedFollowUps: [] }
+    }
     setIsQuerying(true)
     try {
       const response = await fetch("/api/ai/query", {

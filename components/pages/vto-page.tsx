@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
+import { useApp } from "@/lib/contexts/app-context"
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher"
 import { useToast } from "@/hooks/use-toast"
 import { BookOpen, ChevronDown, ChevronRight, Save, Loader2, Plus, X } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
+import { DEMO_VTO, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 
 interface VTOData {
   coreValues: string[]
@@ -67,6 +69,7 @@ function CollapsibleSection({ title, isOpen, onToggle, children }: CollapsibleSe
 
 export function VTOPage() {
   const { currentWorkspaceId } = useWorkspaces()
+  const { isDemoMode } = useApp()
   const { toast } = useToast()
   const [vtoData, setVtoData] = useState<VTOData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -92,6 +95,11 @@ export function VTOPage() {
 
   // Fetch VTO data
   const fetchVTO = useCallback(async () => {
+    if (isDemoMode) {
+      setVtoData(DEMO_VTO as unknown as VTOData)
+      setIsLoading(false)
+      return
+    }
     if (!currentWorkspaceId) return
 
     try {
@@ -117,7 +125,7 @@ export function VTOPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [currentWorkspaceId, toast])
+  }, [isDemoMode, currentWorkspaceId, toast])
 
   useEffect(() => {
     fetchVTO()
@@ -125,6 +133,10 @@ export function VTOPage() {
 
   // Auto-save with debounce
   const saveVTO = useCallback(async (data: VTOData) => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return
+    }
     if (!currentWorkspaceId) return
 
     try {

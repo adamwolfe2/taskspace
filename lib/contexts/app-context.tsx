@@ -54,23 +54,27 @@ const AppContext = createContext<AppContextType | undefined>(undefined)
 // Demo data
 const DEMO_USER: TeamMember = {
   id: "demo-user-1",
+  userId: "demo-user-1",
   name: "Adam Wolfe",
-  email: "adam@demo.com",
+  email: "adam@apple.com",
   role: "admin",
-  department: "Operations",
-  joinDate: "2024-01-15",
+  department: "Product Engineering",
+  jobTitle: "VP Product Engineering",
+  joinDate: "2023-06-15",
   status: "active",
+  managerId: null,
 }
 
 const DEMO_ORG: Organization = {
   id: "demo-org-1",
-  name: "Modern Amenities Group",
-  slug: "mag-demo",
-  createdAt: "2024-01-01",
-  updatedAt: "2024-01-01",
+  name: "Apple",
+  slug: "apple-demo",
+  createdAt: "2023-01-01",
+  updatedAt: "2023-01-01",
   ownerId: "demo-user-1",
+  logoUrl: "/integrations/apple logo.png",
   settings: {
-    timezone: "America/New_York",
+    timezone: "America/Los_Angeles",
     weekStartDay: 1,
     eodReminderTime: "17:00",
     enableEmailNotifications: true,

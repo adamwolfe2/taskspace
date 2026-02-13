@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Sparkles, Loader2 } from "lucide-react"
 import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
+import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
+import { DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 
 interface CalendarPageProps {
   currentUser: TeamMember
@@ -24,6 +26,7 @@ export function CalendarPage({ currentUser, assignedTasks, rocks, eodReports }: 
   const userRocks = rocks.filter((r) => r.userId === effectiveUserId)
   const userEODReports = eodReports.filter((r) => r.userId === effectiveUserId)
   const { currentWorkspaceId } = useWorkspaceStore()
+  const { isDemoMode } = useApp()
   const { toast } = useToast()
 
   const [prepLoading, setPrepLoading] = useState(false)
@@ -37,6 +40,10 @@ export function CalendarPage({ currentUser, assignedTasks, rocks, eodReports }: 
   } | null>(null)
 
   const handleMeetingPrep = async () => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return
+    }
     if (!currentWorkspaceId) return
     setPrepLoading(true)
     try {

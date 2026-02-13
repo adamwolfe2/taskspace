@@ -4,7 +4,10 @@ import useSWR from "swr"
 import { useCallback, useRef } from "react"
 import { useDebouncedCallback } from "use-debounce"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
+import { useApp } from "@/lib/contexts/app-context"
 import type { WorkspaceNote, ApiResponse } from "@/lib/types"
+import { DEMO_NOTES, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
+import { toast } from "@/hooks/use-toast"
 
 const fetcher = async (url: string) => {
   const res = await fetch(url)
@@ -13,6 +16,7 @@ const fetcher = async (url: string) => {
 }
 
 export function useWorkspaceNotes() {
+  const { isDemoMode } = useApp()
   const { currentWorkspace } = useWorkspaces()
   const workspaceId = currentWorkspace?.id
   const savingRef = useRef(false)
@@ -23,18 +27,22 @@ export function useWorkspaceNotes() {
     isLoading,
     mutate,
   } = useSWR<ApiResponse<WorkspaceNote | null>>(
-    workspaceId ? `/api/workspace-notes?workspaceId=${workspaceId}` : null,
+    !isDemoMode && workspaceId ? `/api/workspace-notes?workspaceId=${workspaceId}` : null,
     fetcher,
     {
-      refreshInterval: 30000, // Poll every 30s for collaboration
-      revalidateOnFocus: false, // Avoid overwriting local edits on tab focus
+      refreshInterval: 30000,
+      revalidateOnFocus: false,
     }
   )
 
-  const note = data?.data || null
+  const note = isDemoMode ? DEMO_NOTES : (data?.data || null)
 
   const saveNote = useDebouncedCallback(
     async (content: string) => {
+      if (isDemoMode) {
+        toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+        return
+      }
       if (!workspaceId || savingRef.current) return
       savingRef.current = true
 
@@ -47,22 +55,21 @@ export function useWorkspaceNotes() {
 
         if (res.ok) {
           const result = await res.json()
-          // Update cache without revalidating (to avoid content flicker)
           mutate({ success: true, data: result.data }, { revalidate: false })
         }
       } finally {
         savingRef.current = false
       }
     },
-    2000 // 2 second debounce
+    2000
   )
 
   const isSaving = savingRef.current || saveNote.isPending()
 
   return {
     note,
-    isLoading,
-    error,
+    isLoading: isDemoMode ? false : isLoading,
+    error: isDemoMode ? null : error,
     isSaving,
     saveNote: saveNote as unknown as (content: string) => void,
     refresh: useCallback(() => mutate(), [mutate]),

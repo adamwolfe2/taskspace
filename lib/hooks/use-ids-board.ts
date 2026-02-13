@@ -3,7 +3,10 @@
 import useSWR from "swr"
 import { useCallback } from "react"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
+import { useApp } from "@/lib/contexts/app-context"
 import type { IdsBoardItem, IdsBoardColumn, IdsBoardItemType, ApiResponse } from "@/lib/types"
+import { toast } from "@/hooks/use-toast"
+import { DEMO_IDS_ITEMS, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 
 const fetcher = async (url: string) => {
   const res = await fetch(url)
@@ -11,7 +14,12 @@ const fetcher = async (url: string) => {
   return res.json()
 }
 
+function showDemoToast() {
+  toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+}
+
 export function useIdsBoard() {
+  const { isDemoMode } = useApp()
   const { currentWorkspace } = useWorkspaces()
   const workspaceId = currentWorkspace?.id
 
@@ -21,12 +29,12 @@ export function useIdsBoard() {
     isLoading,
     mutate,
   } = useSWR<ApiResponse<IdsBoardItem[]>>(
-    workspaceId ? `/api/ids-board?workspaceId=${workspaceId}` : null,
+    !isDemoMode && workspaceId ? `/api/ids-board?workspaceId=${workspaceId}` : null,
     fetcher,
-    { refreshInterval: 3000 } // Poll every 3 seconds for collaboration
+    { refreshInterval: 3000 }
   )
 
-  const items = data?.data || []
+  const items = isDemoMode ? DEMO_IDS_ITEMS : (data?.data || [])
 
   // Group items by column
   const columns: Record<IdsBoardColumn, IdsBoardItem[]> = {
@@ -43,6 +51,7 @@ export function useIdsBoard() {
       itemType?: IdsBoardItemType
       assignedTo?: string
     }) => {
+      if (isDemoMode) { showDemoToast(); return null }
       if (!workspaceId) return null
 
       // Optimistic update
@@ -75,7 +84,7 @@ export function useIdsBoard() {
       mutate() // Revalidate
       return result.data as IdsBoardItem
     },
-    [workspaceId, items, columns, mutate]
+    [isDemoMode, workspaceId, items, columns, mutate]
   )
 
   const updateItem = useCallback(
@@ -83,6 +92,8 @@ export function useIdsBoard() {
       itemId: string,
       updates: { title?: string; description?: string | null; assignedTo?: string | null; itemType?: IdsBoardItemType }
     ) => {
+      if (isDemoMode) { showDemoToast(); return null as unknown as IdsBoardItem }
+
       // Optimistic update - coerce nulls to undefined for type compat
       const safeUpdates: Partial<IdsBoardItem> = {}
       if (updates.title !== undefined) safeUpdates.title = updates.title
@@ -108,11 +119,13 @@ export function useIdsBoard() {
       mutate()
       return result.data as IdsBoardItem
     },
-    [items, mutate]
+    [isDemoMode, items, mutate]
   )
 
   const moveItem = useCallback(
     async (itemId: string, columnName: IdsBoardColumn, orderIndex: number) => {
+      if (isDemoMode) { showDemoToast(); return null as unknown as IdsBoardItem }
+
       // Optimistic update
       const updatedItems = items.map((i) =>
         i.id === itemId
@@ -134,11 +147,13 @@ export function useIdsBoard() {
       mutate()
       return result.data as IdsBoardItem
     },
-    [items, mutate]
+    [isDemoMode, items, mutate]
   )
 
   const deleteItem = useCallback(
     async (itemId: string) => {
+      if (isDemoMode) { showDemoToast(); return }
+
       // Optimistic update
       const updatedItems = items.filter((i) => i.id !== itemId)
       mutate(
@@ -149,14 +164,14 @@ export function useIdsBoard() {
       await fetch(`/api/ids-board/${itemId}`, { method: "DELETE" })
       mutate()
     },
-    [items, mutate]
+    [isDemoMode, items, mutate]
   )
 
   return {
     items,
     columns,
-    isLoading,
-    error,
+    isLoading: isDemoMode ? false : isLoading,
+    error: isDemoMode ? null : error,
     createItem,
     updateItem,
     moveItem,

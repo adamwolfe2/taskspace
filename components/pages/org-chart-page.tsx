@@ -18,11 +18,38 @@ import { useApp } from "@/lib/contexts/app-context"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useToast } from "@/hooks/use-toast"
 import { CONFIG } from "@/lib/config"
+import { DEMO_ORG_CHART, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
+function mapDemoOrgChart(): OrgChartEmployee[] {
+  const nameById = new Map(DEMO_ORG_CHART.map((e) => [e.id, e.name]))
+  return DEMO_ORG_CHART.map((e) => {
+    const nameParts = e.name.split(" ")
+    const firstName = nameParts[0]
+    const lastName = nameParts.slice(1).join(" ")
+    const rocks = e.seats
+      .map((seat, i) => {
+        const bullets = seat.bullets.map((b) => `* ${b}`).join("\n")
+        return `Rock ${i + 1}: ${seat.name}\n${bullets}`
+      })
+      .join("\n")
+    return {
+      id: e.id,
+      firstName,
+      lastName,
+      fullName: e.name,
+      supervisor: e.managerId ? nameById.get(e.managerId) || null : null,
+      department: e.department,
+      jobTitle: e.title,
+      notes: "",
+      rocks,
+    }
+  })
+}
+
 export function OrgChartPage() {
-  const { currentUser } = useApp()
+  const { currentUser, isDemoMode } = useApp()
   const { currentWorkspace } = useWorkspaces()
   const { toast } = useToast()
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
@@ -42,14 +69,14 @@ export function OrgChartPage() {
     isLoading: employeesLoading,
     mutate: refreshEmployees,
   } = useSWR<{ success: boolean; employees: OrgChartEmployee[] }>(
-    currentWorkspace ? `/api/org-chart/employees?workspaceId=${currentWorkspace.id}` : null,
+    !isDemoMode && currentWorkspace ? `/api/org-chart/employees?workspaceId=${currentWorkspace.id}` : null,
     fetcher,
     { refreshInterval: CONFIG.polling.fast }
   )
 
   // Fetch progress data
   const { data: progressResponse, mutate: refreshProgress } = useSWR(
-    "/api/org-chart/progress",
+    !isDemoMode ? "/api/org-chart/progress" : null,
     fetcher,
     { refreshInterval: CONFIG.polling.realtime }
   )
@@ -66,11 +93,11 @@ export function OrgChartPage() {
     }
   }, [progressResponse])
 
-  const employees = employeeData?.employees || []
+  const employees = isDemoMode ? mapDemoOrgChart() : (employeeData?.employees || [])
   const orgTree = buildOrgTree(employees)
 
   // Show upload wizard if no employees and user is admin
-  if (isAdmin && employees.length === 0 && !employeesLoading && !showUploadWizard) {
+  if (!isDemoMode && isAdmin && employees.length === 0 && !employeesLoading && !showUploadWizard) {
     return (
       <div className="p-4 md:p-6">
         <OrgChartUploadWizard
@@ -143,6 +170,10 @@ export function OrgChartPage() {
     bulletIndex: number,
     completed: boolean
   ) => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return
+    }
     // Optimistic update
     const key = `${employeeName}-${rockIndex}-${bulletIndex}`
     setProgressData((prev) => {
@@ -189,6 +220,10 @@ export function OrgChartPage() {
 
   // Sync rocks from workspace to org chart
   const handleSyncRocks = async () => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return
+    }
     if (!currentWorkspace) return
     setIsSyncing(true)
     try {
@@ -239,7 +274,7 @@ export function OrgChartPage() {
     )
   }
 
-  if (employeeError || !employeeData?.success) {
+  if (!isDemoMode && (employeeError || !employeeData?.success)) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
         <div className="flex flex-col items-center gap-4 text-center">

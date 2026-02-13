@@ -52,6 +52,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
+import { useApp } from "@/lib/contexts/app-context"
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher"
 import { MetricCard } from "./metric-card"
 import { AddMetricDialog } from "./add-metric-dialog"
@@ -59,6 +60,7 @@ import { ScorecardTrendChart } from "./scorecard-trend-chart"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import type { ScorecardSummary } from "@/lib/db/scorecard"
+import { getDemoScorecardData, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 
 interface ScorecardData {
   summary: ScorecardSummary[]
@@ -79,6 +81,7 @@ const statusConfig = {
 
 export function WorkspaceScorecardPage() {
   const { currentWorkspace, currentWorkspaceId, isLoading: workspaceLoading } = useWorkspaces()
+  const { isDemoMode } = useApp()
   const { toast } = useToast()
 
   const [data, setData] = useState<ScorecardData | null>(null)
@@ -116,6 +119,12 @@ export function WorkspaceScorecardPage() {
   }, [])
 
   const fetchScorecard = useCallback(async () => {
+    if (isDemoMode) {
+      const demoData = getDemoScorecardData()
+      setData(demoData as unknown as ScorecardData)
+      setLoading(false)
+      return
+    }
     if (!currentWorkspaceId) {
       setLoading(false)
       return
@@ -146,13 +155,18 @@ export function WorkspaceScorecardPage() {
     } finally {
       setLoading(false)
     }
-  }, [currentWorkspaceId, weekOffset, getWeekStartDate])
+  }, [isDemoMode, currentWorkspaceId, weekOffset, getWeekStartDate])
 
   useEffect(() => {
     fetchScorecard()
   }, [fetchScorecard])
 
   const fetchTrends = useCallback(async () => {
+    if (isDemoMode) {
+      const demoData = getDemoScorecardData()
+      setTrendsData(demoData.trends)
+      return
+    }
     if (!currentWorkspaceId) return
     setTrendsLoading(true)
     try {
@@ -169,7 +183,7 @@ export function WorkspaceScorecardPage() {
     } finally {
       setTrendsLoading(false)
     }
-  }, [currentWorkspaceId])
+  }, [isDemoMode, currentWorkspaceId])
 
   useEffect(() => {
     if (activeTab === "trends") {
@@ -178,6 +192,10 @@ export function WorkspaceScorecardPage() {
   }, [activeTab, fetchTrends])
 
   const fetchAiInsights = async () => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return
+    }
     if (!currentWorkspaceId) return
     setAiInsightsLoading(true)
     try {
@@ -201,6 +219,10 @@ export function WorkspaceScorecardPage() {
   }
 
   const handleUpdateEntry = async (metricId: string, value: number, notes?: string) => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return
+    }
     try {
       const weekStart = getWeekStartDate(weekOffset)
       const response = await fetch("/api/scorecards/entries", {
@@ -232,6 +254,11 @@ export function WorkspaceScorecardPage() {
   }
 
   const handleDeleteMetric = async () => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      setDeleteMetricId(null)
+      return
+    }
     if (!deleteMetricId) return
 
     try {

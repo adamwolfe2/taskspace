@@ -18,6 +18,8 @@ import { DirectReportCard, DirectReportCardCompact } from "@/components/manager/
 import { DirectReportDetailSheet } from "@/components/manager/direct-report-detail-sheet"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useApp } from "@/lib/contexts/app-context"
+import { useToast } from "@/hooks/use-toast"
+import { getDemoManagerDashboard, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 import { cn } from "@/lib/utils"
 import { useManagerAiInsights } from "@/lib/hooks/use-ai-insights"
 import type { TeamMember, ManagerDashboard, DirectReport, ManagerAlert } from "@/lib/types"
@@ -47,7 +49,8 @@ interface ManagerDashboardPageProps {
 
 export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps) {
   const { currentWorkspace } = useWorkspaces()
-  const { navigateWithFilter } = useApp()
+  const { navigateWithFilter, isDemoMode } = useApp()
+  const { toast } = useToast()
   const [dashboard, setDashboard] = useState<ManagerDashboard | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -60,6 +63,12 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
 
   // Fetch dashboard data
   const fetchDashboard = async () => {
+    if (isDemoMode) {
+      setDashboard(getDemoManagerDashboard())
+      setIsLoading(false)
+      setIsRefreshing(false)
+      return
+    }
     try {
       setIsRefreshing(true)
       // Include workspaceId if available (optional for backward compatibility)
@@ -91,6 +100,10 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
   }, [currentWorkspace?.id])
 
   const handleAiInsights = async () => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      return
+    }
     if (!currentWorkspace || !dashboard) return
     fetchAiInsights(
       currentWorkspace.id,

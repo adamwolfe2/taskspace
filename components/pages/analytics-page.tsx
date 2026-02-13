@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useWorkspaces, useWorkspaceStore } from "@/lib/hooks/use-workspace"
+import { useApp } from "@/lib/contexts/app-context"
+import { getDemoAnalyticsData } from "@/lib/demo-data"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -56,6 +58,7 @@ interface AnalyticsData {
 export function AnalyticsPage() {
   const { currentWorkspace, workspaces } = useWorkspaces()
   const { currentWorkspaceId } = useWorkspaceStore()
+  const { isDemoMode } = useApp()
   const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "1y">("30d")
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null)
   const [data, setData] = useState<AnalyticsData | null>(null)
@@ -107,9 +110,16 @@ export function AnalyticsPage() {
     if (selectedWorkspaceId) {
       fetchAnalytics()
     }
-  }, [dateRange, selectedWorkspaceId])
+  }, [dateRange, selectedWorkspaceId, isDemoMode])
 
   const fetchAnalytics = async () => {
+    if (isDemoMode) {
+      const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : dateRange === "90d" ? 90 : 365
+      setData(getDemoAnalyticsData(days))
+      setLoading(false)
+      return
+    }
+
     // CRITICAL: Workspace is required for data isolation
     if (!selectedWorkspaceId) {
       setError("No workspace selected")

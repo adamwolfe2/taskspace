@@ -32,6 +32,8 @@ import { Input } from "@/components/ui/input";
 import { useWorkspaces } from "@/lib/hooks/use-workspace";
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 import { useToast } from "@/hooks/use-toast";
+import { useApp } from "@/lib/contexts/app-context";
+import { DEMO_PEOPLE_ASSESSMENTS, DEMO_READONLY_MESSAGE } from "@/lib/demo-data";
 import { Users, Plus, Check, X, UserCheck, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +71,7 @@ interface TeamMember {
 export function PeopleAnalyzerPage() {
   const { currentWorkspace } = useWorkspaces();
   const { toast } = useToast();
+  const { isDemoMode } = useApp();
 
   const [assessments, setAssessments] = useState<PeopleAnalyzerSummary[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -98,6 +101,12 @@ export function PeopleAnalyzerPage() {
 
   const loadAssessments = async () => {
     if (!currentWorkspace?.id) return;
+
+    if (isDemoMode) {
+      setAssessments(DEMO_PEOPLE_ASSESSMENTS);
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -175,6 +184,10 @@ export function PeopleAnalyzerPage() {
   };
 
   const handleSaveAssessment = async () => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE });
+      return;
+    }
     if (!currentWorkspace?.id) return;
     if (!formData.employeeName.trim()) {
       toast({
@@ -236,6 +249,10 @@ export function PeopleAnalyzerPage() {
   };
 
   const handleDeleteAssessment = async (assessmentId: string) => {
+    if (isDemoMode) {
+      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE });
+      return;
+    }
     if (!confirm("Are you sure you want to delete this assessment?")) {
       return;
     }
