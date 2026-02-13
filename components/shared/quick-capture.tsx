@@ -193,7 +193,8 @@ export function QuickCapture({
  setPriority("normal")
  setDueDate(null)
  setOpen(false)
- } catch (error) {
+ } catch (_error) {
+   /* silently ignore */
  } finally {
  setIsSubmitting(false)
  }
@@ -430,7 +431,8 @@ export function FloatingQuickCapture({
  await onCreateTask({ title: input.trim() })
  setInput("")
  setOpen(false)
- } catch (error) {
+ } catch (_error) {
+   /* silently ignore */
  } finally {
  setIsSubmitting(false)
  }
@@ -515,7 +517,8 @@ export function InlineQuickAdd({
  try {
  await onSubmit(value.trim())
  setValue("")
- } catch (error) {
+ } catch (_error) {
+   /* silently ignore */
  } finally {
  setIsSubmitting(false)
  }

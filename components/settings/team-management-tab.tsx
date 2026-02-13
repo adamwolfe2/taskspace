@@ -83,7 +83,8 @@ export function TeamManagementTab() {
           userId: m.userId ?? undefined,
         })))
         setPendingInvitations(invitations)
-      } catch (err) {
+      } catch (_err) {
+        /* silently ignore */
       }
     }
     loadTeamData()
@@ -101,7 +102,8 @@ export function TeamManagementTab() {
             setIntegrationStatus(data.data)
           }
         }
-      } catch (err) {
+      } catch (_err) {
+        /* silently ignore */
       }
     }
     loadIntegrationStatus()

@@ -103,7 +103,8 @@ export function TimeTracker({
  setIsSubmitting(true)
  try {
  await onStartTimer()
- } catch (error) {
+ } catch (_error) {
+   /* silently ignore */
  } finally {
  setIsSubmitting(false)
  }
@@ -115,7 +116,8 @@ export function TimeTracker({
  try {
  await onStopTimer(description || undefined)
  setDescription("")
- } catch (error) {
+ } catch (_error) {
+   /* silently ignore */
  } finally {
  setIsSubmitting(false)
  }
@@ -400,7 +402,8 @@ function ManualTimeEntryDialog({
  description: description || undefined,
  billable,
  })
- } catch (error) {
+ } catch (_error) {
+   /* silently ignore */
  } finally {
  setIsSubmitting(false)
  }

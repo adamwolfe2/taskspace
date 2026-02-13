@@ -111,7 +111,8 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
       const response = await fetch(`/api/asana/projects?workspace=${workspaceGid}`)
       const data = await response.json()
       setProjects(data.projects || [])
-    } catch (error) {
+    } catch (_error) {
+      /* silently ignore */
     }
   }
 
@@ -120,7 +121,8 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
       const response = await fetch(`/api/asana/users?workspace=${workspaceGid}`)
       const data = await response.json()
       setAsanaUsers(data.users || [])
-    } catch (error) {
+    } catch (_error) {
+      /* silently ignore */
     }
   }
 

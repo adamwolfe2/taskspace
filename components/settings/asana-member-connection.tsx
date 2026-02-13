@@ -56,7 +56,8 @@ export function AsanaMemberConnection() {
       if (data.success) {
         setStatus(data.data)
       }
-    } catch (err) {
+    } catch (_err) {
+      /* silently ignore */
     } finally {
       setIsLoading(false)
     }

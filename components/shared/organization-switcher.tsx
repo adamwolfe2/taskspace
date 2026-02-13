@@ -58,7 +58,8 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
         if (data.success && data.data?.organizations) {
           setOrganizations(data.data.organizations)
         }
-      } catch (err) {
+      } catch (_err) {
+        /* silently ignore */
       } finally {
         setIsLoading(false)
       }

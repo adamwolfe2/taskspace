@@ -71,7 +71,8 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
           setStatus(data.data)
         }
       }
-    } catch (error) {
+    } catch (_error) {
+      /* silently ignore */
     } finally {
       setIsLoading(false)
     }

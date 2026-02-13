@@ -53,13 +53,9 @@ export function PushNotificationsCard({ userId }: PushNotificationsCardProps) {
   }
 
   const registerServiceWorker = async () => {
-    try {
-      const registration = await navigator.serviceWorker.register("/sw.js")
-      await navigator.serviceWorker.ready
-      return registration
-    } catch (error) {
-      throw error
-    }
+    const registration = await navigator.serviceWorker.register("/sw.js")
+    await navigator.serviceWorker.ready
+    return registration
   }
 
   const subscribe = async () => {

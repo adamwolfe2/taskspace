@@ -95,7 +95,8 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
             setApiKeys(data.data || [])
           }
         }
-      } catch (err) {
+      } catch (_err) {
+        /* silently ignore */
       }
     }
 
@@ -109,7 +110,8 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
             setIntegrationStatus(data.data)
           }
         }
-      } catch (err) {
+      } catch (_err) {
+        /* silently ignore */
       }
     }
 

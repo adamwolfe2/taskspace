@@ -44,7 +44,8 @@ export function TaskSubtasks({
  await onAdd(newTitle.trim())
  setNewTitle("")
  setIsAdding(false)
- } catch (error) {
+ } catch (_error) {
+   /* silently ignore */
  } finally {
  setIsSubmitting(false)
  }

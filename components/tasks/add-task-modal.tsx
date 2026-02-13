@@ -71,7 +71,8 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
           setTemplates(data.data || [])
         }
       }
-    } catch (error) {
+    } catch (_error) {
+      /* silently ignore */
     } finally {
       setIsLoadingTemplates(false)
     }
