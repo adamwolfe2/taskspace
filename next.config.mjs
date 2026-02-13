@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Remove console.logs in production for security and performance
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'], // Keep error and warn logs
+    } : false,
+  },
+
   images: {
     // Enable image optimization in production
     unoptimized: process.env.NODE_ENV === 'development',

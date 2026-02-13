@@ -92,6 +92,7 @@ const ClientsPage = dynamic(
 import { Loader2 } from "lucide-react"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { KeyboardShortcutsDialog, useKeyboardShortcuts } from "@/components/shared/keyboard-shortcuts-dialog"
+import { OfflineIndicator } from "@/components/shared/offline-indicator"
 
 function AppContent() {
   const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization, pageFilter, clearPageFilter } = useApp()
@@ -391,6 +392,7 @@ function AppContent() {
       <DemoModeBanner />
       <EmailVerificationBanner />
       <TrialBanner />
+      <OfflineIndicator />
 
       <div className="flex">
         <aside
