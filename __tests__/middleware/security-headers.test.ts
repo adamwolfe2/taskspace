@@ -1,11 +1,14 @@
 /**
- * Security Headers Middleware Tests
+ * Security Headers Proxy Tests (formerly middleware)
  *
  * Tests to verify security headers are correctly applied
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { middleware } from "@/middleware"
+import { proxy } from "@/proxy"
+
+// Alias for backward compatibility with existing test code
+const middleware = proxy
 
 // Mock environment
 const originalEnv = process.env.NODE_ENV

@@ -1,11 +1,13 @@
 /**
- * Next.js Middleware for Rate Limiting and Security Headers
+ * Next.js Proxy (formerly middleware in Next.js <16)
+ *
+ * Rate Limiting and Security Headers for Edge Runtime
  *
  * Features:
  * 1. Rate Limiting: Edge-compatible rate limiting for API endpoints
  *    - Uses in-memory storage (resets on cold start, which is OK for basic protection)
  *    - Primary rate limiting is database-backed in lib/auth/rate-limit.ts
- *    - This middleware provides additional edge protection
+ *    - This proxy provides additional edge protection
  *
  * 2. Security Headers: Applied to all routes (API and frontend)
  *    - Content-Security-Policy (CSP)
@@ -124,9 +126,9 @@ function checkRateLimit(
 }
 
 /**
- * Main middleware function
+ * Main proxy function (Next.js 16+ renamed from middleware)
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Only apply rate limiting to API routes
@@ -237,7 +239,7 @@ function addSecurityHeaders(response: NextResponse) {
 }
 
 /**
- * Configure which paths the middleware runs on
+ * Configure which paths the proxy runs on
  */
 export const config = {
   matcher: [
