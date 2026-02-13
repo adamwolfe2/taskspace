@@ -57,6 +57,8 @@ interface AssignedTasksSectionProps {
     description: string
     rockId: string | null
     rockTitle: string | null
+    projectId: string | null
+    projectName: string | null
     priority: "high" | "medium" | "normal"
     dueDate: string
     recurrence?: AssignedTask["recurrence"]

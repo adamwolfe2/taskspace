@@ -116,7 +116,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
     // Validate request body
-    const { title, description, assigneeId, rockId, priority, dueDate, workspaceId } = await validateBody(
+    const { title, description, assigneeId, rockId, projectId, priority, dueDate, workspaceId } = await validateBody(
       request,
       createTaskSchema
     )
@@ -199,6 +199,15 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       }
     }
 
+    // Get project name if linked to a project
+    let projectName: string | null = null
+    if (projectId) {
+      const project = await db.projects.findById(auth.organization.id, projectId)
+      if (project) {
+        projectName = project.name
+      }
+    }
+
     const now = new Date().toISOString()
     const taskId = generateId()
 
@@ -245,6 +254,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       type: taskType,
       rockId: rockId || null,
       rockTitle,
+      projectId: projectId || null,
+      projectName,
       priority,
       dueDate: dueDate || new Date().toISOString().split("T")[0],
       createdAt: now,
@@ -366,6 +377,16 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     if (updates.status !== undefined) updateData.status = updates.status
     if (updates.completedAt !== undefined) updateData.completedAt = updates.completedAt
     if (updates.rockId !== undefined) updateData.rockId = updates.rockId
+    if (updates.projectId !== undefined) {
+      updateData.projectId = updates.projectId
+      // Look up project name
+      if (updates.projectId) {
+        const project = await db.projects.findById(auth.organization.id, updates.projectId)
+        updateData.projectName = project?.name || null
+      } else {
+        updateData.projectName = null
+      }
+    }
     if (updates.recurrence !== undefined) {
       updateData.recurrence = updates.recurrence === null ? undefined : updates.recurrence
     }

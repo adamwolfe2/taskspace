@@ -258,6 +258,7 @@ function AppContent() {
             assignedTasks={teamData.assignedTasks}
             setAssignedTasks={teamData.setAssignedTasks}
             rocks={teamData.rocks}
+            projects={teamData.projects}
             createTask={teamData.createTask}
             updateTask={teamData.updateTask}
             deleteTask={teamData.deleteTask}

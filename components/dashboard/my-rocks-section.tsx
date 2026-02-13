@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import type { Rock } from "@/lib/types"
+import type { Rock, Project } from "@/lib/types"
 import { formatDate } from "@/lib/utils/date-utils"
 import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight, RefreshCw, ChevronDown, ChevronUp } from "lucide-react"
 import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
@@ -14,6 +14,7 @@ interface MyRocksSectionProps {
   onUpdateProgress: (rockId: string, progress: number) => void
   onUpdateRock?: (id: string, updates: Partial<Rock>) => Promise<Rock>
   onRefresh?: () => Promise<void>
+  projects?: Project[]
 }
 
 // Calculate quarter from a date string (YYYY-MM-DD or ISO format)
@@ -75,7 +76,7 @@ function getAvailableQuarters(rocks: Rock[]): string[] {
   })
 }
 
-export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefresh }: MyRocksSectionProps) {
+export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefresh, projects }: MyRocksSectionProps) {
   const [draggedRock, setDraggedRock] = useState<string | null>(null)
   const [selectedRock, setSelectedRock] = useState<Rock | null>(null)
   const [selectedQuarter, setSelectedQuarter] = useState<string>("all")
@@ -362,6 +363,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
           onOpenChange={(open) => !open && setSelectedRock(null)}
           rock={selectedRock}
           onUpdateRock={onUpdateRock}
+          projects={projects}
         />
       )}
     </div>

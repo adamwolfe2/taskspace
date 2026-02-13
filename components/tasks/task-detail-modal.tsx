@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { TaskComments } from "./task-comments"
 import { TaskSubtasks } from "./task-subtasks"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
-import { Calendar, User, Target, AlertCircle, Clock, CheckCircle2 } from "lucide-react"
+import { Calendar, User, Target, AlertCircle, Clock, CheckCircle2, FolderKanban } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
@@ -322,6 +322,15 @@ export function TaskDetailModal({
               <Target className="h-4 w-4 text-blue-500" />
               <span className="text-slate-600">Related to:</span>
               <span className="font-medium text-slate-900">{task.rockTitle}</span>
+            </div>
+          )}
+
+          {/* Related Project */}
+          {task.projectName && (
+            <div className="flex items-center gap-2 text-sm">
+              <FolderKanban className="h-4 w-4 text-purple-500" />
+              <span className="text-slate-600">Project:</span>
+              <span className="font-medium text-slate-900">{task.projectName}</span>
             </div>
           )}
 

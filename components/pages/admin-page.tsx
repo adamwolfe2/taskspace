@@ -90,6 +90,8 @@ export function AdminPage({
     description: string
     rockId: string | null
     rockTitle: string | null
+    projectId: string | null
+    projectName: string | null
     priority: "high" | "medium" | "normal"
     dueDate: string
     sendEmail: boolean
@@ -100,6 +102,7 @@ export function AdminPage({
         description: taskData.description,
         assigneeId: taskData.assigneeId,
         rockId: taskData.rockId,
+        projectId: taskData.projectId,
         priority: taskData.priority,
         dueDate: taskData.dueDate,
         workspaceId: currentWorkspaceId || undefined,

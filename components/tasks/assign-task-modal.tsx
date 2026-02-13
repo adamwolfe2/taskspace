@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { Rock, TeamMember } from "@/lib/types"
+import type { Rock, TeamMember, Project } from "@/lib/types"
 import {
   Dialog,
   DialogContent,
@@ -27,6 +27,8 @@ interface AssignTaskModalProps {
     description: string
     rockId: string | null
     rockTitle: string | null
+    projectId: string | null
+    projectName: string | null
     priority: "high" | "medium" | "normal"
     dueDate: string
     sendEmail: boolean
@@ -34,6 +36,7 @@ interface AssignTaskModalProps {
   teamMembers: TeamMember[]
   allRocks: Rock[]
   currentUserId: string
+  projects?: Project[]
 }
 
 export function AssignTaskModal({
@@ -43,11 +46,13 @@ export function AssignTaskModal({
   teamMembers,
   allRocks,
   currentUserId,
+  projects = [],
 }: AssignTaskModalProps) {
   const [assigneeId, setAssigneeId] = useState("")
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [rockId, setRockId] = useState<string | null>(null)
+  const [projectId, setProjectId] = useState<string | null>(null)
   const [priority, setPriority] = useState<"high" | "medium" | "normal">("medium")
   const [dueDate, setDueDate] = useState("")
   const [sendEmail, setSendEmail] = useState(false)
@@ -66,6 +71,7 @@ export function AssignTaskModal({
     if (!assigneeId || !title.trim() || !dueDate) return
 
     const selectedRock = rockId ? allRocks.find((r) => r.id === rockId) : null
+    const selectedProject = projectId ? projects.find((p) => p.id === projectId) : null
 
     onSubmit({
       assigneeId,
@@ -74,6 +80,8 @@ export function AssignTaskModal({
       description: description.trim(),
       rockId: rockId,
       rockTitle: selectedRock?.title || null,
+      projectId: projectId,
+      projectName: selectedProject?.name || null,
       priority,
       dueDate,
       sendEmail,
@@ -83,6 +91,7 @@ export function AssignTaskModal({
     setTitle("")
     setDescription("")
     setRockId(null)
+    setProjectId(null)
     setPriority("medium")
     setDueDate("")
     setSendEmail(false)
@@ -154,6 +163,23 @@ export function AssignTaskModal({
               <p className="text-xs text-muted-foreground mt-1">Showing rocks for {selectedAssignee?.name}</p>
             </div>
           )}
+
+          <div>
+            <Label htmlFor="project">Project</Label>
+            <Select value={projectId || "none"} onValueChange={(v) => setProjectId(v === "none" ? null : v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a project (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No project</SelectItem>
+                {projects.filter(p => p.status === "active" || p.status === "planning").map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>

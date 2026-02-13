@@ -1,8 +1,8 @@
 "use client"
 
 import { FeatureGate } from "@/components/shared/feature-gate"
-import { useState, useMemo } from "react"
-import type { Project, Client, TeamMember, Rock, AssignedTask } from "@/lib/types"
+import { useState, useMemo, useEffect, useCallback } from "react"
+import type { Project, Client, TeamMember, Rock, AssignedTask, ProjectMember } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Search, FolderKanban, MoreHorizontal, Pencil, Trash2, Calendar, Users, CheckCircle2 } from "lucide-react"
+import { Plus, Search, FolderKanban, MoreHorizontal, Pencil, Trash2, Calendar, Users, CheckCircle2, X, ArrowUpDown, RefreshCw, UserPlus } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
@@ -66,10 +66,16 @@ export function ProjectsPage({
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [clientFilter, setClientFilter] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("name-asc")
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [detailProject, setDetailProject] = useState<Project | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Project members state
+  const [projectMembers, setProjectMembers] = useState<ProjectMember[]>([])
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false)
+  const [addMemberUserId, setAddMemberUserId] = useState<string>("")
 
   // Form state
   const [formName, setFormName] = useState("")
@@ -81,9 +87,9 @@ export function ProjectsPage({
   const [formDueDate, setFormDueDate] = useState("")
   const [formOwnerId, setFormOwnerId] = useState<string>("")
 
-  // Filtered projects
+  // Filtered + sorted projects
   const filteredProjects = useMemo(() => {
-    return projects.filter(p => {
+    const filtered = projects.filter(p => {
       const matchesSearch = !searchQuery ||
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -91,7 +97,38 @@ export function ProjectsPage({
       const matchesClient = clientFilter === "all" || p.clientId === clientFilter
       return matchesSearch && matchesStatus && matchesClient
     })
-  }, [projects, searchQuery, statusFilter, clientFilter])
+
+    const sorted = [...filtered]
+    const [sortField, sortDir] = sortBy.split("-")
+    const dir = sortDir === "desc" ? -1 : 1
+
+    const statusOrder: Record<string, number> = { active: 0, planning: 1, "on-hold": 2, completed: 3, cancelled: 4 }
+    const priorityOrder: Record<string, number> = { high: 0, medium: 1, normal: 2, low: 3 }
+
+    sorted.sort((a, b) => {
+      switch (sortField) {
+        case "name":
+          return dir * a.name.localeCompare(b.name)
+        case "status":
+          return dir * ((statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99))
+        case "priority":
+          return dir * ((priorityOrder[a.priority] ?? 99) - (priorityOrder[b.priority] ?? 99))
+        case "dueDate": {
+          const aDate = a.dueDate ? new Date(a.dueDate).getTime() : Infinity
+          const bDate = b.dueDate ? new Date(b.dueDate).getTime() : Infinity
+          return dir * (aDate - bDate)
+        }
+        case "progress":
+          return dir * ((a.progress ?? 0) - (b.progress ?? 0))
+        case "createdAt":
+          return dir * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        default:
+          return 0
+      }
+    })
+
+    return sorted
+  }, [projects, searchQuery, statusFilter, clientFilter, sortBy])
 
   // Stats
   const activeCount = projects.filter(p => p.status === "active").length
@@ -186,9 +223,99 @@ export function ProjectsPage({
     }
   }
 
+  // Project member management
+  const loadProjectMembers = useCallback(async (projectId: string) => {
+    setIsLoadingMembers(true)
+    try {
+      const res = await fetch(`/api/projects/members?projectId=${projectId}`)
+      const data = await res.json()
+      if (data.success) setProjectMembers(data.data || [])
+      else setProjectMembers([])
+    } catch {
+      setProjectMembers([])
+    } finally {
+      setIsLoadingMembers(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (detailProject) {
+      loadProjectMembers(detailProject.id)
+    } else {
+      setProjectMembers([])
+      setAddMemberUserId("")
+    }
+  }, [detailProject?.id, loadProjectMembers])
+
+  const addProjectMember = async (projectId: string, userId: string, role: string = "member") => {
+    try {
+      const res = await fetch("/api/projects/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, userId, role }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        await loadProjectMembers(projectId)
+        setAddMemberUserId("")
+        toast({ title: "Member added" })
+      } else {
+        toast({ title: "Error", description: data.error || "Failed to add member", variant: "destructive" })
+      }
+    } catch (err) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" })
+    }
+  }
+
+  const updateMemberRole = async (projectId: string, userId: string, role: string) => {
+    try {
+      const res = await fetch("/api/projects/members", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, userId, role }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        await loadProjectMembers(projectId)
+        toast({ title: "Role updated" })
+      } else {
+        toast({ title: "Error", description: data.error || "Failed to update role", variant: "destructive" })
+      }
+    } catch (err) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" })
+    }
+  }
+
+  const removeProjectMember = async (projectId: string, userId: string) => {
+    try {
+      const res = await fetch(`/api/projects/members?projectId=${projectId}&userId=${userId}`, {
+        method: "DELETE",
+      })
+      const data = await res.json()
+      if (data.success) {
+        await loadProjectMembers(projectId)
+        toast({ title: "Member removed" })
+      } else {
+        toast({ title: "Error", description: data.error || "Failed to remove member", variant: "destructive" })
+      }
+    } catch (err) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" })
+    }
+  }
+
   // Get project tasks/rocks for detail view
   const projectTasks = detailProject ? assignedTasks.filter(t => t.projectId === detailProject.id) : []
   const projectRocks = detailProject ? rocks.filter(r => r.projectId === detailProject.id) : []
+
+  // Auto-progress calculation from linked tasks
+  const autoProgress = projectTasks.length > 0
+    ? Math.round((projectTasks.filter(t => t.status === "completed").length / projectTasks.length) * 100)
+    : 0
+
+  // Team members not already in the project (for add member dropdown)
+  const availableMembers = teamMembers.filter(
+    m => m.userId && m.status === "active" && !projectMembers.some(pm => pm.userId === m.userId)
+  )
 
   return (
     <FeatureGate feature="core.projects">
@@ -242,6 +369,22 @@ export function ProjectsPage({
               {clients.map(c => (
                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[180px]">
+              <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name-asc">Name A-Z</SelectItem>
+              <SelectItem value="name-desc">Name Z-A</SelectItem>
+              <SelectItem value="dueDate-asc">Due Date (Earliest)</SelectItem>
+              <SelectItem value="dueDate-desc">Due Date (Latest)</SelectItem>
+              <SelectItem value="progress-asc">Progress (Low-High)</SelectItem>
+              <SelectItem value="progress-desc">Progress (High-Low)</SelectItem>
+              <SelectItem value="priority-desc">Priority (High-Low)</SelectItem>
+              <SelectItem value="createdAt-desc">Newest First</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -448,9 +591,29 @@ export function ProjectsPage({
                     <p className="text-sm text-muted-foreground">{detailProject.description}</p>
                   )}
                   <div>
-                    <h4 className="text-sm font-medium mb-1">Progress</h4>
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-sm font-medium">Progress</h4>
+                      {projectTasks.length > 0 && autoProgress !== detailProject.progress && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => updateProject(detailProject.id, { progress: autoProgress })}
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          Sync from Tasks
+                        </Button>
+                      )}
+                    </div>
                     <Progress value={detailProject.progress} className="h-2" />
-                    <p className="text-xs text-muted-foreground mt-0.5">{detailProject.progress}%</p>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <p className="text-xs text-muted-foreground">Manual: {detailProject.progress}%</p>
+                      {projectTasks.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Task-based: {autoProgress}% ({projectTasks.filter(t => t.status === "completed").length}/{projectTasks.length})
+                        </p>
+                      )}
+                    </div>
                   </div>
                   {detailProject.clientName && (
                     <div>
@@ -480,6 +643,78 @@ export function ProjectsPage({
                       )}
                     </div>
                   )}
+
+                  {/* Members Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium">Team Members ({projectMembers.length})</h4>
+                    </div>
+                    {isLoadingMembers ? (
+                      <p className="text-xs text-muted-foreground">Loading members...</p>
+                    ) : (
+                      <>
+                        {projectMembers.length > 0 ? (
+                          <div className="space-y-1">
+                            {projectMembers.map(member => (
+                              <div key={member.id} className="flex items-center justify-between py-1.5">
+                                <span className="text-sm">{member.userName || member.userEmail || member.userId}</span>
+                                <div className="flex items-center gap-2">
+                                  <Select
+                                    value={member.role}
+                                    onValueChange={(newRole) => updateMemberRole(detailProject.id, member.userId, newRole)}
+                                  >
+                                    <SelectTrigger className="h-6 w-[90px] text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="owner">Owner</SelectItem>
+                                      <SelectItem value="lead">Lead</SelectItem>
+                                      <SelectItem value="member">Member</SelectItem>
+                                      <SelectItem value="viewer">Viewer</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => removeProjectMember(detailProject.id, member.userId)}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground mb-2">No members assigned yet.</p>
+                        )}
+                        {/* Add member */}
+                        {availableMembers.length > 0 && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <Select value={addMemberUserId} onValueChange={setAddMemberUserId}>
+                              <SelectTrigger className="h-8 flex-1 text-xs">
+                                <SelectValue placeholder="Add a member..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableMembers.map(m => (
+                                  <SelectItem key={m.userId!} value={m.userId!}>{m.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8"
+                              disabled={!addMemberUserId}
+                              onClick={() => addMemberUserId && addProjectMember(detailProject.id, addMemberUserId)}
+                            >
+                              <UserPlus className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
 
                   {/* Linked Tasks */}
                   <div>

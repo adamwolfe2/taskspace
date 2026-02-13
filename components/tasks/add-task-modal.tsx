@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { Rock, TaskRecurrence, TaskTemplate } from "@/lib/types"
+import type { Rock, TaskRecurrence, TaskTemplate, Project } from "@/lib/types"
 import {
   Dialog,
   DialogContent,
@@ -28,17 +28,21 @@ interface AddTaskModalProps {
     description: string
     rockId: string | null
     rockTitle: string | null
+    projectId: string | null
+    projectName: string | null
     priority: "high" | "medium" | "normal"
     dueDate: string
     recurrence?: TaskRecurrence
   }) => void
   userRocks: Rock[]
+  projects?: Project[]
 }
 
-export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTaskModalProps) {
+export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects = [] }: AddTaskModalProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [rockId, setRockId] = useState<string | null>(null)
+  const [projectId, setProjectId] = useState<string | null>(null)
   const [priority, setPriority] = useState<"high" | "medium" | "normal">("normal")
   const [dueDate, setDueDate] = useState("")
   const [isRecurring, setIsRecurring] = useState(false)
@@ -147,6 +151,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
     if (!title.trim() || !dueDate) return
 
     const selectedRock = rockId ? userRocks.find((r) => r.id === rockId) : null
+    const selectedProject = projectId ? projects.find((p) => p.id === projectId) : null
 
     const recurrence: TaskRecurrence | undefined = isRecurring
       ? {
@@ -162,6 +167,8 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
         description: description.trim(),
         rockId: rockId,
         rockTitle: selectedRock?.title || null,
+        projectId: projectId,
+        projectName: selectedProject?.name || null,
         priority,
         dueDate,
         recurrence,
@@ -170,6 +177,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
       setTitle("")
       setDescription("")
       setRockId(null)
+      setProjectId(null)
       setPriority("normal")
       setDueDate("")
       setIsRecurring(false)
@@ -252,6 +260,23 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks }: AddTas
                 {userRocks.map((rock) => (
                   <SelectItem key={rock.id} value={rock.id}>
                     {rock.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="project">Project</Label>
+            <Select value={projectId || "none"} onValueChange={(v) => setProjectId(v === "none" ? null : v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a project (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No project</SelectItem>
+                {projects.filter(p => p.status === "active" || p.status === "planning").map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
                   </SelectItem>
                 ))}
               </SelectContent>

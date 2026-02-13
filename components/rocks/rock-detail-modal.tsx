@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { Rock, RockMilestone } from "@/lib/types"
+import type { Rock, RockMilestone, Project } from "@/lib/types"
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RockMilestoneManager } from "./rock-milestone-manager"
 import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
-import { Target, Calendar, AlertCircle, CheckCircle2, Clock, Pencil, Save, X } from "lucide-react"
+import { Target, Calendar, AlertCircle, CheckCircle2, Clock, Pencil, Save, X, FolderKanban } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 
@@ -44,13 +44,15 @@ interface RockDetailModalProps {
   onOpenChange: (open: boolean) => void
   rock: Rock
   onUpdateRock: (id: string, updates: Partial<Rock>) => Promise<Rock>
+  projects?: Project[]
 }
 
-export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock }: RockDetailModalProps) {
+export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projects }: RockDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(rock.title)
   const [description, setDescription] = useState(rock.description)
   const [status, setStatus] = useState(rock.status)
+  const [projectId, setProjectId] = useState<string | null>(rock.projectId || null)
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
 
@@ -77,7 +79,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock }: Rock
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      await onUpdateRock(rock.id, { title, description, status })
+      await onUpdateRock(rock.id, { title, description, status, projectId })
       setIsEditing(false)
       toast({
         title: "Rock updated",
@@ -115,6 +117,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock }: Rock
     setTitle(rock.title)
     setDescription(rock.description)
     setStatus(rock.status)
+    setProjectId(rock.projectId || null)
     setIsEditing(false)
   }
 
@@ -232,6 +235,26 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock }: Rock
             </div>
           )}
 
+          {/* Project (edit mode) */}
+          {isEditing && projects && projects.length > 0 && (
+            <div className="space-y-2">
+              <Label className="font-medium text-slate-700">Project</Label>
+              <Select value={projectId || "none"} onValueChange={(v) => setProjectId(v === "none" ? null : v)}>
+                <SelectTrigger className="bg-slate-50">
+                  <SelectValue placeholder="No project" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No project</SelectItem>
+                  {projects.filter(p => p.status === "active" || p.status === "planning").map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {isEditing && (
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
@@ -245,6 +268,15 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock }: Rock
           <div className="border-t pt-6">
             <RockMilestoneManager rock={rock} onUpdateMilestones={handleUpdateMilestones} />
           </div>
+
+          {/* Related Project */}
+          {!isEditing && rock.projectName && (
+            <div className="flex items-center gap-2 text-sm">
+              <FolderKanban className="h-4 w-4 text-purple-500" />
+              <span className="text-slate-600">Project:</span>
+              <span className="font-medium text-slate-900">{rock.projectName}</span>
+            </div>
+          )}
 
           {/* Metadata */}
           <div className="border-t pt-4 text-sm text-slate-500 space-y-1">

@@ -140,6 +140,8 @@ export function DashboardPage({
  description: string
  rockId: string | null
  rockTitle: string | null
+ projectId: string | null
+ projectName: string | null
  priority: "high" | "medium" | "normal"
  dueDate: string
  recurrence?: AssignedTask["recurrence"]
@@ -150,6 +152,7 @@ export function DashboardPage({
  description: taskData.description,
  assigneeId: effectiveUserId,
  rockId: taskData.rockId,
+ projectId: taskData.projectId,
  priority: taskData.priority,
  dueDate: taskData.dueDate,
  recurrence: taskData.recurrence,

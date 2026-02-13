@@ -212,6 +212,7 @@ export const createTaskSchema = z.object({
   priority: prioritySchema.default("normal"),
   dueDate: dateSchema.optional(), // Optional - defaults to today
   rockId: uuidSchema.nullable().optional(),
+  projectId: uuidSchema.nullable().optional(),
   recurrence: recurrenceSchema.optional(),
 })
 
@@ -224,6 +225,7 @@ export const updateTaskSchema = z.object({
   status: taskStatusSchema.optional(),
   completedAt: isoDateSchema.nullable().optional(),
   rockId: uuidSchema.nullable().optional(),
+  projectId: uuidSchema.nullable().optional(),
   recurrence: recurrenceSchema.nullable().optional(),
 })
 
@@ -261,6 +263,7 @@ export const createRockSchema = z.object({
   bucket: z.string().max(100).optional(),
   outcome: z.string().max(1000).optional(),
   doneWhen: z.array(z.string()).optional(), // Array of completion criteria
+  projectId: uuidSchema.nullable().optional(),
 })
 
 export const updateRockSchema = z.object({
@@ -274,6 +277,7 @@ export const updateRockSchema = z.object({
   bucket: z.string().max(100).optional(),
   outcome: z.string().max(1000).optional(),
   doneWhen: z.array(z.string()).optional(),
+  projectId: uuidSchema.nullable().optional(),
 })
 
 export const bulkRockSchema = z.object({

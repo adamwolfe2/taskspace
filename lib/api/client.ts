@@ -63,6 +63,7 @@ interface TaskCreateInput {
   assigneeId: string
   assigneeName?: string
   rockId?: string | null
+  projectId?: string | null
   priority?: AssignedTask["priority"]
   dueDate?: string | null
   workspaceId?: string

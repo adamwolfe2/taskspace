@@ -3,7 +3,7 @@
 import { FeatureGate } from "@/components/shared/feature-gate"
 import { ExportButton } from "@/components/shared/export-button"
 import { useState, useMemo, useEffect } from "react"
-import type { AssignedTask, Rock, TeamMember } from "@/lib/types"
+import type { AssignedTask, Rock, TeamMember, Project } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +27,7 @@ interface TasksPageProps {
   assignedTasks: AssignedTask[]
   setAssignedTasks: (tasks: AssignedTask[]) => void
   rocks: Rock[]
+  projects: Project[]
   createTask: (task: Partial<AssignedTask>) => Promise<AssignedTask>
   updateTask: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
   deleteTask: (id: string) => Promise<void>
@@ -41,6 +42,7 @@ export function TasksPage({
   assignedTasks,
   setAssignedTasks,
   rocks,
+  projects,
   createTask,
   updateTask,
   deleteTask,
@@ -208,6 +210,8 @@ export function TasksPage({
     description: string
     rockId: string | null
     rockTitle: string | null
+    projectId: string | null
+    projectName: string | null
     priority: "high" | "medium" | "normal"
     dueDate: string
     recurrence?: AssignedTask["recurrence"]
@@ -218,6 +222,7 @@ export function TasksPage({
         description: taskData.description,
         assigneeId: effectiveUserId,
         rockId: taskData.rockId,
+        projectId: taskData.projectId,
         priority: taskData.priority,
         dueDate: taskData.dueDate,
         recurrence: taskData.recurrence,
@@ -691,6 +696,7 @@ export function TasksPage({
         onOpenChange={setShowAddTaskModal}
         onSubmit={handleAddTask}
         userRocks={userRocks}
+        projects={projects}
       />
 
       {/* Bulk Action Bar */}

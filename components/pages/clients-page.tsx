@@ -48,6 +48,7 @@ export function ClientsPage({
   // State
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("name-asc")
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [detailClient, setDetailClient] = useState<Client | null>(null)
@@ -64,9 +65,9 @@ export function ClientsPage({
   const [formStatus, setFormStatus] = useState<Client["status"]>("active")
   const [formNotes, setFormNotes] = useState("")
 
-  // Filtered clients
+  // Filtered and sorted clients
   const filteredClients = useMemo(() => {
-    return clients.filter(c => {
+    const filtered = clients.filter(c => {
       const matchesSearch = !searchQuery ||
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.contactName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -74,7 +75,32 @@ export function ClientsPage({
       const matchesStatus = statusFilter === "all" || c.status === statusFilter
       return matchesSearch && matchesStatus
     })
-  }, [clients, searchQuery, statusFilter])
+
+    const sorted = [...filtered]
+    const [sortField, sortDir] = sortBy.split("-") as [string, string]
+    sorted.sort((a, b) => {
+      let comparison = 0
+      switch (sortField) {
+        case "name":
+          comparison = a.name.localeCompare(b.name)
+          break
+        case "status":
+          comparison = (a.status || "").localeCompare(b.status || "")
+          break
+        case "industry":
+          comparison = (a.industry || "").localeCompare(b.industry || "")
+          break
+        case "createdAt":
+          comparison = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+          break
+        case "projects":
+          comparison = (a.projectCount ?? 0) - (b.projectCount ?? 0)
+          break
+      }
+      return sortDir === "desc" ? -comparison : comparison
+    })
+    return sorted
+  }, [clients, searchQuery, statusFilter, sortBy])
 
   // Stats
   const activeCount = clients.filter(c => c.status === "active").length
@@ -210,6 +236,21 @@ export function ClientsPage({
               <SelectItem value="prospect">Prospect</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
               <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name-asc">Name A-Z</SelectItem>
+              <SelectItem value="name-desc">Name Z-A</SelectItem>
+              <SelectItem value="status-asc">Status</SelectItem>
+              <SelectItem value="industry-asc">Industry</SelectItem>
+              <SelectItem value="createdAt-desc">Newest First</SelectItem>
+              <SelectItem value="createdAt-asc">Oldest First</SelectItem>
+              <SelectItem value="projects-desc">Most Projects</SelectItem>
+              <SelectItem value="projects-asc">Fewest Projects</SelectItem>
             </SelectContent>
           </Select>
         </div>

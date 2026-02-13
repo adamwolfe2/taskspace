@@ -129,7 +129,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
     // Validate request body
-    const { title, description, dueDate, bucket, outcome, doneWhen, userId, quarter, workspaceId } =
+    const { title, description, dueDate, bucket, outcome, doneWhen, userId, quarter, workspaceId, projectId } =
       await validateBody(request, createRockSchema)
 
     // SECURITY: Verify workspace belongs to user's organization
@@ -192,6 +192,15 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       }
     }
 
+    // Get project name if linked to a project
+    let projectName: string | null = null
+    if (projectId) {
+      const project = await db.projects.findById(auth.organization.id, projectId)
+      if (project) {
+        projectName = project.name
+      }
+    }
+
     const now = new Date().toISOString()
     const rock: Rock = {
       id: generateId(),
@@ -210,6 +219,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       outcome,
       doneWhen: doneWhen || [],
       quarter,
+      projectId: projectId || null,
+      projectName,
     }
 
     await db.rocks.create(rock)
@@ -272,6 +283,18 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
         updates.status = "completed"
       } else if (rock.status === "completed" && updates.progress < 100) {
         updates.status = "on-track"
+      }
+    }
+
+    // Look up project name if setting a project
+    if (updates.projectId !== undefined) {
+      if (updates.projectId) {
+        const project = await db.projects.findById(auth.organization.id, updates.projectId)
+        if (project) {
+          (updates as Record<string, unknown>).projectName = project.name
+        }
+      } else {
+        (updates as Record<string, unknown>).projectName = null
       }
     }
 
