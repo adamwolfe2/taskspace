@@ -154,4 +154,34 @@ describe("Security Headers Middleware", () => {
       expect(response.headers.get("X-RateLimit-Reset")).toBeNull()
     })
   })
+
+  describe("Request ID Tracing", () => {
+    it("should add X-Request-ID header to all requests", () => {
+      const request = new NextRequest(new URL("http://localhost:3000/"))
+      const response = middleware(request)
+
+      expect(response.headers.get("X-Request-ID")).toBeTruthy()
+      expect(response.headers.get("X-Request-ID")).toMatch(/^\d+-[a-z0-9]+$/)
+    })
+
+    it("should add X-Request-ID header to API requests", () => {
+      const request = new NextRequest(new URL("http://localhost:3000/api/tasks"))
+      const response = middleware(request)
+
+      expect(response.headers.get("X-Request-ID")).toBeTruthy()
+    })
+
+    it("should reuse client-provided request ID if present", () => {
+      const clientRequestId = "client-12345-abcde"
+      const headers = new Headers()
+      headers.set("x-request-id", clientRequestId)
+
+      const request = new NextRequest(new URL("http://localhost:3000/api/tasks"), {
+        headers,
+      })
+      const response = middleware(request)
+
+      expect(response.headers.get("X-Request-ID")).toBe(clientRequestId)
+    })
+  })
 })

@@ -4,12 +4,16 @@
  * Rate Limiting and Security Headers for Edge Runtime
  *
  * Features:
- * 1. Rate Limiting: Edge-compatible rate limiting for API endpoints
+ * 1. Request ID Tracing: Unique identifier for each request to aid debugging
+ *    - Generates X-Request-ID header for all requests
+ *    - Enables request tracking across distributed systems
+ *
+ * 2. Rate Limiting: Edge-compatible rate limiting for API endpoints
  *    - Uses in-memory storage (resets on cold start, which is OK for basic protection)
  *    - Primary rate limiting is database-backed in lib/auth/rate-limit.ts
  *    - This proxy provides additional edge protection
  *
- * 2. Security Headers: Applied to all routes (API and frontend)
+ * 3. Security Headers: Applied to all routes (API and frontend)
  *    - Content-Security-Policy (CSP)
  *    - X-Frame-Options
  *    - X-Content-Type-Options
@@ -21,6 +25,20 @@
 
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+
+// ============================================
+// REQUEST ID GENERATION
+// ============================================
+
+/**
+ * Generate a unique request ID for tracing
+ * Format: timestamp-random (e.g., 1707789012345-a1b2c3d4)
+ */
+function generateRequestId(): string {
+  const timestamp = Date.now()
+  const random = Math.random().toString(36).substring(2, 10)
+  return `${timestamp}-${random}`
+}
 
 // ============================================
 // IN-MEMORY RATE LIMIT STORE (Edge Runtime)
@@ -131,6 +149,9 @@ function checkRateLimit(
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Generate unique request ID for tracing (reuse if client provided one)
+  const requestId = request.headers.get("x-request-id") || generateRequestId()
+
   // Only apply rate limiting to API routes
   if (pathname.startsWith("/api/")) {
     const ip = getClientIP(request)
@@ -147,8 +168,9 @@ export function proxy(request: NextRequest) {
     // Check rate limit
     const result = checkRateLimit(key, config)
 
-    // Add rate limit headers to all responses
+    // Add rate limit headers and request ID to all responses
     const headers = {
+      "X-Request-ID": requestId,
       "X-RateLimit-Limit": config.maxRequests.toString(),
       "X-RateLimit-Remaining": result.remaining.toString(),
       "X-RateLimit-Reset": new Date(result.resetAt).toISOString(),
@@ -160,6 +182,7 @@ export function proxy(request: NextRequest) {
         JSON.stringify({
           success: false,
           error: `Too many requests. Please try again in ${result.retryAfter} seconds.`,
+          requestId, // Include request ID for debugging
         }),
         {
           status: 429,
@@ -184,8 +207,9 @@ export function proxy(request: NextRequest) {
     return response
   }
 
-  // For non-API routes, just add security headers
+  // For non-API routes, add request ID and security headers
   const response = NextResponse.next()
+  response.headers.set("X-Request-ID", requestId)
   addSecurityHeaders(response)
   return response
 }
