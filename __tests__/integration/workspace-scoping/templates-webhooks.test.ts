@@ -428,7 +428,8 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
           rows: [{ id: "wh-1", secret: "sec-1", workspace_id: WORKSPACE_1 }],
         })
 
-        // Override isAdmin to false for this test to trigger workspace access check
+        // Test behavior when user is not an admin
+        // Note: withAdmin() checks admin status before workspace validation
         ;(isAdmin as jest.Mock).mockReturnValue(false)
 
         const request = req("http://localhost/api/webhooks?id=wh-1", {
@@ -441,8 +442,9 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         const response = await webhooksPATCH(request)
         const data = await response.json()
 
-        // NOTE: Webhooks endpoint still returns 403 (not yet updated to 404 pattern)
+        // withAdmin() returns 403 for non-admins (workspace check never runs)
         expect(response.status).toBe(403)
+        expect(data.error).toContain("Admin access required")
       })
 
       it("should allow updating org-wide webhooks without workspace validation", async () => {
@@ -472,7 +474,8 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
           rows: [{ id: "wh-1", name: "Webhook", workspace_id: WORKSPACE_1 }],
         })
 
-        // Override isAdmin to false for this test to trigger workspace access check
+        // Test behavior when user is not an admin
+        // Note: withAdmin() checks admin status before workspace validation
         ;(isAdmin as jest.Mock).mockReturnValue(false)
 
         const request = req("http://localhost/api/webhooks?id=wh-1", {
@@ -482,8 +485,9 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         const response = await webhooksDELETE(request)
         const data = await response.json()
 
-        // NOTE: Webhooks endpoint still returns 403 (not yet updated to 404 pattern)
+        // withAdmin() returns 403 for non-admins (workspace check never runs)
         expect(response.status).toBe(403)
+        expect(data.error).toContain("Admin access required")
       })
     })
   })

@@ -330,19 +330,28 @@ export async function POST(request: NextRequest) {
     // Handle business logic errors from transaction
     if (error instanceof Error) {
       if (error.message.startsWith("NEEDS_REGISTRATION:")) {
-        const data = JSON.parse(error.message.substring("NEEDS_REGISTRATION:".length))
-        return NextResponse.json<ApiResponse<{ needsRegistration: true; email: string; organizationName: string }>>(
-          {
-            success: true,
-            data: {
-              needsRegistration: true,
-              email: data.email,
-              organizationName: data.organizationName,
+        // BUG FIX: Wrap JSON.parse in try-catch to prevent crashes from malformed data
+        try {
+          const data = JSON.parse(error.message.substring("NEEDS_REGISTRATION:".length))
+          return NextResponse.json<ApiResponse<{ needsRegistration: true; email: string; organizationName: string }>>(
+            {
+              success: true,
+              data: {
+                needsRegistration: true,
+                email: data.email,
+                organizationName: data.organizationName,
+              },
+              message: "Please complete your registration",
             },
-            message: "Please complete your registration",
-          },
-          { status: 200 }
-        )
+            { status: 200 }
+          )
+        } catch (parseError) {
+          logError(logger, "Failed to parse NEEDS_REGISTRATION data", parseError)
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, error: "Invalid invitation data format" },
+            { status: 500 }
+          )
+        }
       }
       if (error.message.includes("already been used or expired")) {
         return NextResponse.json<ApiResponse<null>>(

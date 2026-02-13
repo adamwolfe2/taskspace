@@ -303,12 +303,15 @@ export const PATCH = withAdmin(async (request, auth) => {
     }
 
     // If webhook is workspace-specific, validate access
+    // Note: Org-level admins/owners can manage all webhooks (org-wide and workspace-specific)
+    // Other admins need workspace access to manage workspace-specific webhooks
     const webhook = existing[0]
-    if (webhook.workspace_id) {
+    if (webhook.workspace_id && auth.member.role !== "admin" && auth.member.role !== "owner") {
       const { userHasWorkspaceAccess } = await import("@/lib/db/workspaces")
       const hasAccess = await userHasWorkspaceAccess(auth.user.id, webhook.workspace_id)
-      if (!hasAccess && auth.member.role !== "admin" && auth.member.role !== "owner") {
-        return Errors.insufficientPermissions("access this workspace webhook").toResponse()
+      if (!hasAccess) {
+        // SECURITY: Return 404 instead of 403 to prevent information leakage about workspace existence
+        return Errors.notFound("Webhook").toResponse()
       }
     }
 
@@ -378,12 +381,15 @@ export const DELETE = withAdmin(async (request, auth) => {
     }
 
     // If webhook is workspace-specific, validate access
+    // Note: Org-level admins/owners can manage all webhooks (org-wide and workspace-specific)
+    // Other admins need workspace access to manage workspace-specific webhooks
     const webhook = existingWebhook[0]
-    if (webhook.workspace_id) {
+    if (webhook.workspace_id && auth.member.role !== "admin" && auth.member.role !== "owner") {
       const { userHasWorkspaceAccess } = await import("@/lib/db/workspaces")
       const hasAccess = await userHasWorkspaceAccess(auth.user.id, webhook.workspace_id)
-      if (!hasAccess && auth.member.role !== "admin" && auth.member.role !== "owner") {
-        return Errors.insufficientPermissions("access this workspace webhook").toResponse()
+      if (!hasAccess) {
+        // SECURITY: Return 404 instead of 403 to prevent information leakage about workspace existence
+        return Errors.notFound("Webhook").toResponse()
       }
     }
 
