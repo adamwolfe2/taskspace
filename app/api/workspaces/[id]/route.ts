@@ -68,8 +68,8 @@ export const GET = withAuth(async (request, auth, context?) => {
     const hasAccess = isAdmin(auth) || await userHasWorkspaceAccess(auth.user.id, id)
     if (!hasAccess) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "You don't have access to this workspace" },
-        { status: 403 }
+        { success: false, error: "Workspace not found" },
+          { status: 404 }
       )
     }
 

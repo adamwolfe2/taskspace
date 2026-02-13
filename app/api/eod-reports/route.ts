@@ -51,8 +51,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
       if (!hasAccess) {
         return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "You don't have access to this workspace" },
-          { status: 403 }
+          { success: false, error: "Workspace not found" },
+          { status: 404 }
         )
       }
     }
@@ -212,8 +212,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
       if (!hasAccess) {
         return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "You don't have access to this workspace" },
-          { status: 403 }
+          { success: false, error: "Workspace not found" },
+          { status: 404 }
         )
       }
     }

@@ -20,56 +20,7 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const { token, name, password } = await validateBody(request, acceptInvitationSchema)
 
-    // Pre-flight checks outside transaction (for early validation)
-    const preflightInvitation = await db.invitations.findByToken(token)
-    if (!preflightInvitation) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid invitation" },
-        { status: 404 }
-      )
-    }
-
-    if (preflightInvitation.status !== "pending") {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "This invitation has already been used or expired" },
-        { status: 400 }
-      )
-    }
-
-    if (isTokenExpired(preflightInvitation.expiresAt)) {
-      await db.invitations.update(preflightInvitation.id, { status: "expired" })
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "This invitation has expired" },
-        { status: 400 }
-      )
-    }
-
-    // Get organization (can do outside transaction for early validation)
-    const organization = await db.organizations.findById(preflightInvitation.organizationId)
-    if (!organization) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Organization not found" },
-        { status: 404 }
-      )
-    }
-
-    // Check if user needs to complete registration
-    const existingUserCheck = await db.users.findByEmail(preflightInvitation.email)
-    if (!existingUserCheck && (!name || !password)) {
-      return NextResponse.json<ApiResponse<{ needsRegistration: true; email: string; organizationName: string }>>(
-        {
-          success: true,
-          data: {
-            needsRegistration: true,
-            email: preflightInvitation.email,
-            organizationName: organization.name,
-          },
-          message: "Please complete your registration",
-        },
-        { status: 200 }
-      )
-    }
-
+    // SECURITY FIX: No preflight checks - all validation inside transaction to prevent TOCTOU race
     // Execute the critical section in a transaction with row-level locking
     const result = await withTransaction(async (client) => {
       const now = new Date().toISOString()
@@ -95,9 +46,36 @@ export async function POST(request: NextRequest) {
 
       const lockedInvitation = invitationRows[0]
 
-      // Re-check status after acquiring lock (another request may have changed it)
+      // Check status after acquiring lock (another request may have changed it)
       if (lockedInvitation.status !== "pending") {
         throw new Error("This invitation has already been used or expired")
+      }
+
+      // Check expiration inside transaction
+      if (isTokenExpired(lockedInvitation.expires_at)) {
+        await client.sql`UPDATE invitations SET status = ${"expired"} WHERE id = ${lockedInvitation.id}`
+        throw new Error("This invitation has expired")
+      }
+
+      // Get organization ID for later use (fetch full org outside transaction)
+      const organizationId = lockedInvitation.organization_id
+
+      // Check if user needs to complete registration (inside transaction)
+      const { rows: regCheckRows } = await client.sql<{
+        id: string
+        email: string
+      }>`SELECT id, email FROM users WHERE LOWER(email) = LOWER(${lockedInvitation.email})`
+
+      if (regCheckRows.length === 0 && (!name || !password)) {
+        // User needs to register - fetch org name for response
+        const { rows: orgRows } = await client.sql<{ name: string }>`SELECT name FROM organizations WHERE id = ${organizationId}`
+        const orgName = orgRows[0]?.name || "Unknown"
+
+        // Throw error to signal this (will be caught and handled)
+        throw new Error("NEEDS_REGISTRATION:" + JSON.stringify({
+          email: lockedInvitation.email,
+          organizationName: orgName,
+        }))
       }
 
       // Check if user exists or create new user
@@ -274,8 +252,19 @@ export async function POST(request: NextRequest) {
         isNewUser,
         invitationEmail: lockedInvitation.email,
         workspaceId: lockedInvitation.workspace_id,
+        organizationId,
       }
     })
+
+    // Fetch organization outside transaction (complex object with settings)
+    const organization = await db.organizations.findById(result.organizationId)
+    if (!organization) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Organization not found" },
+        { status: 404 }
+      )
+    }
+
 
     // Post-transaction operations (non-critical, can fail without rolling back)
     try {
@@ -340,6 +329,21 @@ export async function POST(request: NextRequest) {
 
     // Handle business logic errors from transaction
     if (error instanceof Error) {
+      if (error.message.startsWith("NEEDS_REGISTRATION:")) {
+        const data = JSON.parse(error.message.substring("NEEDS_REGISTRATION:".length))
+        return NextResponse.json<ApiResponse<{ needsRegistration: true; email: string; organizationName: string }>>(
+          {
+            success: true,
+            data: {
+              needsRegistration: true,
+              email: data.email,
+              organizationName: data.organizationName,
+            },
+            message: "Please complete your registration",
+          },
+          { status: 200 }
+        )
+      }
       if (error.message.includes("already been used or expired")) {
         return NextResponse.json<ApiResponse<null>>(
           { success: false, error: error.message },
