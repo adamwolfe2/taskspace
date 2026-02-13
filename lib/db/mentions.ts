@@ -85,10 +85,12 @@ export async function getMentionsForUser(
   unreadOnly = false
 ): Promise<Mention[]> {
   if (unreadOnly) {
+    // SECURITY: Limit query to prevent DoS from excessive unread mentions
     const { rows } = await sql`
       SELECT * FROM mentions
       WHERE mentioned_user_id = ${userId} AND workspace_id = ${workspaceId} AND read = false
       ORDER BY created_at DESC
+      LIMIT 100
     `
     return rows.map(parseMention)
   }
