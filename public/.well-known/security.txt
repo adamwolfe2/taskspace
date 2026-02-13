@@ -1,0 +1,30 @@
+Contact: mailto:security@collectivecapital.com
+Expires: 2027-02-12T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://trytaskspace.com/.well-known/security.txt
+Policy: https://trytaskspace.com/security-policy
+Acknowledgments: https://trytaskspace.com/security-acknowledgments
+
+# Security Policy
+
+We take security seriously at TaskSpace. If you discover a security vulnerability, please report it responsibly.
+
+## Reporting
+
+Please email security@collectivecapital.com with:
+- Description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- Any proof-of-concept code (optional)
+
+We will respond within 48 hours and work with you to resolve the issue.
+
+## Safe Harbor
+
+We support safe harbor for security researchers who:
+- Make a good faith effort to avoid privacy violations and service disruption
+- Only interact with accounts you own or have explicit permission to test
+- Report vulnerabilities promptly
+- Do not publicly disclose vulnerabilities before giving us time to patch
+
+Thank you for helping keep TaskSpace secure!
