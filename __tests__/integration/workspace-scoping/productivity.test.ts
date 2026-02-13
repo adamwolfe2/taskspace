@@ -104,7 +104,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         const response = await focusBlocksGET(request)
         const data = await response.json()
 
-        expect(response.status).toBe(403)
+        expect(response.status).toBe(404) // SECURITY: 404 prevents workspace leakage
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
       })
 
@@ -181,7 +181,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         const response = await focusBlocksPOST(request)
         const data = await response.json()
 
-        expect(response.status).toBe(403)
+        expect(response.status).toBe(404) // SECURITY: 404 prevents workspace leakage
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
         expect(db.focusBlocks.create).not.toHaveBeenCalled()
       })
@@ -262,7 +262,7 @@ describe("Productivity Features - Workspace Scoping", () => {
       const response = await energyPOST(request)
       const data = await response.json()
 
-      expect(response.status).toBe(403)
+      expect(response.status).toBe(404) // SECURITY: 404 prevents workspace leakage
       expect(db.dailyEnergy.upsert).not.toHaveBeenCalled()
     })
   })
@@ -360,7 +360,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         `http://localhost/api/productivity/focus-blocks?workspaceId=${WORKSPACE_1}`
       )
       const response1 = await focusBlocksGET(request1)
-      expect(response1.status).toBe(403)
+      expect(response1.status).toBe(404) // SECURITY: 404 prevents workspace leakage
 
       // Access workspace-2 (should succeed but only show workspace-2 data)
       const request2 = req(

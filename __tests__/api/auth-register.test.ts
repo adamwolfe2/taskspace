@@ -48,6 +48,7 @@ jest.mock("@/lib/db", () => ({
 
 jest.mock("@/lib/auth/password", () => ({
   hashPassword: jest.fn().mockResolvedValue("hashed_password"),
+  validatePasswordStrength: jest.fn().mockReturnValue({ valid: true }),
   generateId: jest.fn(() => "gen-id-" + Math.random().toString(36).slice(2, 8)),
   generateToken: jest.fn(() => "gen-token-" + Math.random().toString(36).slice(2, 8)),
   getExpirationDate: jest.fn(() => new Date(Date.now() + 86400000).toISOString()),

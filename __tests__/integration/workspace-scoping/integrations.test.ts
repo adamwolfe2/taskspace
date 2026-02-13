@@ -115,7 +115,8 @@ describe("Integrations - Workspace Scoping", () => {
         const response = await googleCalendarGET(request)
         const data = await response.json()
 
-        expect(response.status).toBe(403)
+        // SECURITY: Returns 404 instead of 403 to prevent workspace existence leakage
+        expect(response.status).toBe(404)
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
       })
 

@@ -157,7 +157,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         const response = await templatesGET(request)
         const data = await response.json()
 
-        expect(response.status).toBe(403)
+        expect(response.status).toBe(404) // SECURITY: 404 prevents workspace leakage
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
       })
 
@@ -248,7 +248,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         const response = await templatesPOST(request)
         const data = await response.json()
 
-        expect(response.status).toBe(403)
+        expect(response.status).toBe(404) // SECURITY: 404 prevents workspace leakage
         expect(db.taskTemplates.create).not.toHaveBeenCalled()
       })
     })
@@ -271,7 +271,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         const response = await templatesDELETE(request)
         const data = await response.json()
 
-        expect(response.status).toBe(403)
+        expect(response.status).toBe(404) // SECURITY: 404 prevents workspace leakage
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
         expect(db.taskTemplates.delete).not.toHaveBeenCalled()
       })
@@ -441,6 +441,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         const response = await webhooksPATCH(request)
         const data = await response.json()
 
+        // NOTE: Webhooks endpoint still returns 403 (not yet updated to 404 pattern)
         expect(response.status).toBe(403)
       })
 
@@ -481,6 +482,7 @@ describe("Templates and Webhooks - Dual Scope Pattern", () => {
         const response = await webhooksDELETE(request)
         const data = await response.json()
 
+        // NOTE: Webhooks endpoint still returns 403 (not yet updated to 404 pattern)
         expect(response.status).toBe(403)
       })
     })
