@@ -11,6 +11,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --maxWorkers=2",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:all": "npm test && npm run test:e2e",
     "migrate": "node-pg-migrate up -m migrations",
     "migrate:down": "node-pg-migrate down -m migrations",
     "migrate:create": "node-pg-migrate create -m migrations",
@@ -100,6 +104,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.1.9",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.1.0",
