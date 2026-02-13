@@ -12,6 +12,7 @@ export interface Organization {
   logoUrl?: string
   primaryColor?: string
   secondaryColor?: string
+  accentColor?: string
   customDomain?: string
   faviconUrl?: string
   billingEmail?: string

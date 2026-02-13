@@ -15,6 +15,7 @@ export const GET = withAuth(async (request, auth) => {
       logoUrl: string | null
       primaryColor: string | null
       secondaryColor: string | null
+      accentColor: string | null
       faviconUrl: string | null
       customDomain: string | null
     }>>({
@@ -23,6 +24,7 @@ export const GET = withAuth(async (request, auth) => {
         logoUrl: org.logoUrl || null,
         primaryColor: org.primaryColor || null,
         secondaryColor: org.secondaryColor || null,
+        accentColor: org.accentColor || null,
         faviconUrl: org.faviconUrl || null,
         customDomain: org.customDomain || null,
       },
@@ -55,6 +57,7 @@ export const PATCH = withAdmin(async (request, auth) => {
     if (logoUrl !== undefined) updates.logoUrl = logoUrl || undefined
     if (primaryColor !== undefined) updates.primaryColor = primaryColor || undefined
     if (secondaryColor !== undefined) updates.secondaryColor = secondaryColor || undefined
+    if (accentColor !== undefined) updates.accentColor = accentColor || undefined
     if (faviconUrl !== undefined) updates.faviconUrl = faviconUrl || undefined
     if (customDomain !== undefined) updates.customDomain = customDomain || undefined
 
@@ -81,6 +84,7 @@ export const PATCH = withAdmin(async (request, auth) => {
       logoUrl: string | null
       primaryColor: string | null
       secondaryColor: string | null
+      accentColor: string | null
       faviconUrl: string | null
       customDomain: string | null
     }>>({
@@ -89,6 +93,7 @@ export const PATCH = withAdmin(async (request, auth) => {
         logoUrl: updatedOrg?.logoUrl || null,
         primaryColor: updatedOrg?.primaryColor || null,
         secondaryColor: updatedOrg?.secondaryColor || null,
+        accentColor: updatedOrg?.accentColor || null,
         faviconUrl: updatedOrg?.faviconUrl || null,
         customDomain: updatedOrg?.customDomain || null,
       },

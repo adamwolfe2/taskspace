@@ -27,6 +27,7 @@ import {
   Globe,
 } from "lucide-react"
 import { useWorkspaces, useUpdateWorkspace } from "@/lib/hooks/use-workspace"
+import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import {
@@ -108,6 +109,7 @@ const INDUSTRY_PRESETS: ColorPreset[] = [
 ]
 
 export function WorkspaceBrandingSettings() {
+  const { currentOrganization } = useApp()
   const { currentWorkspace, refresh } = useWorkspaces()
   const { updateWorkspace } = useUpdateWorkspace()
   const { toast } = useToast()
@@ -120,10 +122,16 @@ export function WorkspaceBrandingSettings() {
   // File input ref
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Color state
-  const [primaryColor, setPrimaryColor] = useState(currentWorkspace?.primaryColor || "#3b82f6")
-  const [secondaryColor, setSecondaryColor] = useState(currentWorkspace?.secondaryColor || "#60a5fa")
-  const [accentColor, setAccentColor] = useState(currentWorkspace?.accentColor || "#8b5cf6")
+  // Color state - inherit from organization as defaults
+  const [primaryColor, setPrimaryColor] = useState(
+    currentWorkspace?.primaryColor || currentOrganization?.primaryColor || "#3b82f6"
+  )
+  const [secondaryColor, setSecondaryColor] = useState(
+    currentWorkspace?.secondaryColor || currentOrganization?.secondaryColor || "#60a5fa"
+  )
+  const [accentColor, setAccentColor] = useState(
+    currentWorkspace?.accentColor || currentOrganization?.accentColor || "#8b5cf6"
+  )
 
   // Logo upload
   const [logoUrl, setLogoUrl] = useState(currentWorkspace?.logoUrl || "")
@@ -141,15 +149,21 @@ export function WorkspaceBrandingSettings() {
   const [showBeforeAfter, setShowBeforeAfter] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<ColorPreset | null>(null)
 
-  // Update local state when workspace changes
+  // Update local state when workspace or organization changes
   useEffect(() => {
     if (currentWorkspace) {
-      setPrimaryColor(currentWorkspace.primaryColor || "#3b82f6")
-      setSecondaryColor(currentWorkspace.secondaryColor || "#60a5fa")
-      setAccentColor(currentWorkspace.accentColor || "#8b5cf6")
+      setPrimaryColor(
+        currentWorkspace.primaryColor || currentOrganization?.primaryColor || "#3b82f6"
+      )
+      setSecondaryColor(
+        currentWorkspace.secondaryColor || currentOrganization?.secondaryColor || "#60a5fa"
+      )
+      setAccentColor(
+        currentWorkspace.accentColor || currentOrganization?.accentColor || "#8b5cf6"
+      )
       setLogoUrl(currentWorkspace.logoUrl || "")
     }
-  }, [currentWorkspace])
+  }, [currentWorkspace, currentOrganization])
 
   // Analyze colors whenever they change
   useEffect(() => {

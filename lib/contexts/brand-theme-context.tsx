@@ -118,8 +118,15 @@ export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
       currentOrganization?.primaryColor ||
       null
 
-    const secondaryColor = currentWorkspace?.secondaryColor || null
-    const accentColor = currentWorkspace?.accentColor || null
+    const secondaryColor =
+      currentWorkspace?.secondaryColor ||
+      currentOrganization?.secondaryColor ||
+      null
+
+    const accentColor =
+      currentWorkspace?.accentColor ||
+      currentOrganization?.accentColor ||
+      null
 
     // Detect workspace change for transition animation
     const workspaceChanged =
