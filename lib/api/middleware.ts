@@ -376,7 +376,16 @@ function isWriteMethod(method: string): boolean {
  * - "write" → POST, PUT, PATCH, DELETE
  */
 function enforceApiKeyScopes(request: NextRequest, auth: AuthContext): NextResponse<ApiResponse<null>> | null {
-  if (!auth.isApiKey || !auth.apiKeyScopes) return null
+  // SECURITY: If not an API key request, skip scope checking
+  if (!auth.isApiKey) return null
+
+  // SECURITY: API keys MUST have explicit scopes - no null defaults
+  if (!auth.apiKeyScopes || auth.apiKeyScopes.length === 0) {
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: "Forbidden: API key has no scopes defined" },
+      { status: 403 }
+    )
+  }
 
   const requiredScope = isWriteMethod(request.method) ? "write" : "read"
 
