@@ -104,7 +104,8 @@ export function ActivityFeed({ workspaceId }: ActivityFeedProps) {
     fetchActivities()
   }, [effectiveWorkspaceId])
 
-  if (!effectiveWorkspaceId) {
+  // Silently hide if no workspace or if there's an error
+  if (!effectiveWorkspaceId || error) {
     return null
   }
 
@@ -125,10 +126,6 @@ export function ActivityFeed({ workspaceId }: ActivityFeedProps) {
                 </div>
               </div>
             ))}
-          </div>
-        ) : error ? (
-          <div className="text-center py-8 text-sm text-slate-500">
-            {error}
           </div>
         ) : activities.length === 0 ? (
           <div className="text-center py-8">

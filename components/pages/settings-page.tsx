@@ -69,9 +69,9 @@ export function SettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-        {/* Scrollable tabs container for mobile */}
-        <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-          <TabsList className="inline-flex min-w-max bg-gray-100/80">
+        {/* Tabs container - wraps into rows */}
+        <div className="w-full">
+          <TabsList className="flex flex-wrap gap-2 h-auto bg-gray-100/80 p-2">
             <TabsTrigger value="profile" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap min-h-[40px] sm:min-h-[36px]">
               <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Profile

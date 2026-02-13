@@ -293,9 +293,7 @@ export function DashboardPage({
  )}
 
  {/* Recent Activity Feed */}
- <ErrorBoundary title="Activity feed unavailable">
  <ActivityFeed />
- </ErrorBoundary>
 
  {/* Empty Dashboard State */}
  {!hasTasksFeature && !hasRocksFeature && !hasEodFeature && !hasFocusBlocksFeature && (

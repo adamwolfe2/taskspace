@@ -12,7 +12,6 @@ import { Check, Loader2, Upload, ImageIcon, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import { api } from "@/lib/api/client"
-import { BrandingSettings } from "./branding-settings"
 
 const timezones = [
   { value: "America/New_York", label: "Eastern Time (ET)" },
@@ -279,9 +278,6 @@ export function OrganizationSettingsTab() {
           )}
         </CardContent>
       </Card>
-
-      {/* Branding Settings - Admin only */}
-      {(currentUser?.role === "admin" || isOwner) && <BrandingSettings />}
     </div>
   )
 }
