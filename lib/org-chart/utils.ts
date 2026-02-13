@@ -151,8 +151,13 @@ export function parseRocks(rocksString: string | undefined): ParsedRock[] {
  */
 export function formatRocks(rocks: ParsedRock[]): string {
   return rocks.map((rock, idx) => {
-    const bullets = rock.bullets.map(b => `* ${b}`).join("\n")
-    return `Rock ${idx + 1}: ${rock.title}${bullets ? "\n" + bullets : ""}`
+    // SECURITY: Null checks to prevent undefined/null in output
+    const bullets = rock.bullets
+      .filter(b => b) // Filter out null/undefined/empty bullets
+      .map(b => `* ${b}`)
+      .join("\n")
+    const rockTitle = rock.title || "Untitled Rock" // Fallback for null title
+    return `Rock ${idx + 1}: ${rockTitle}${bullets ? "\n" + bullets : ""}`
   }).join("\n\n")
 }
 

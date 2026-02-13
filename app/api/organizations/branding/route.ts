@@ -51,6 +51,27 @@ export const PATCH = withAdmin(async (request, auth) => {
       customDomain,
     } = await validateBody(request, updateBrandingSchema)
 
+    // SECURITY: Validate hex color format before updating
+    const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/
+    if (primaryColor && !hexColorRegex.test(primaryColor)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "primaryColor must be a valid hex color (e.g., #FF5733)" },
+        { status: 400 }
+      )
+    }
+    if (secondaryColor && !hexColorRegex.test(secondaryColor)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "secondaryColor must be a valid hex color (e.g., #FF5733)" },
+        { status: 400 }
+      )
+    }
+    if (accentColor && !hexColorRegex.test(accentColor)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "accentColor must be a valid hex color (e.g., #FF5733)" },
+        { status: 400 }
+      )
+    }
+
     // Build updates object
     const updates: Partial<Organization> = {}
 

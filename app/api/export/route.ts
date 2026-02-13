@@ -20,7 +20,15 @@ const advancedExportSchema = z.object({
   dateRange: z.object({
     start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  }).optional(),
+  }).refine(
+    (data) => {
+      // SECURITY: Validate that start date is before or equal to end date
+      const start = new Date(data.start)
+      const end = new Date(data.end)
+      return start <= end
+    },
+    { message: "Start date must be before or equal to end date" }
+  ).optional(),
   filters: z.object({
     memberId: z.string().optional(),
     status: z.string().optional(),
@@ -63,6 +71,18 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
     const userId = searchParams.get("userId")
+
+    // SECURITY: Validate date range if both dates are provided
+    if (startDate && endDate) {
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      if (start > end) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Start date must be before or equal to end date" },
+          { status: 400 }
+        )
+      }
+    }
 
     let data: Record<string, unknown>[] = []
     let filename = ""

@@ -14,9 +14,14 @@ function formatRocksForOrgChart(rocks: Rock[], milestonesByRockId: Map<string, R
   if (rocks.length === 0) return ""
 
   return rocks.map((rock, index) => {
+    // SECURITY: Null checks to prevent undefined/null in output
     const milestones = milestonesByRockId.get(rock.id) || []
-    const bulletPoints = milestones.map(m => `* ${m.text}`).join("\n")
-    const rockLine = `Rock ${index + 1}: ${rock.title}`
+    const bulletPoints = milestones
+      .filter(m => m.text) // Filter out null/undefined milestone text
+      .map(m => `* ${m.text}`)
+      .join("\n")
+    const rockTitle = rock.title || "Untitled Rock" // Fallback for null title
+    const rockLine = `Rock ${index + 1}: ${rockTitle}`
     return bulletPoints ? `${rockLine}\n${bulletPoints}` : rockLine
   }).join("\n\n")
 }
