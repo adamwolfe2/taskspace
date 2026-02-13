@@ -1,4 +1,4 @@
-# Align - Team Productivity Platform
+# Taskspace - Team Productivity Platform
 
 A multi-tenant SaaS application for team accountability and productivity management.
 
