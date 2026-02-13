@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import {
   hashPassword,
   isTokenExpired,
+  validatePasswordStrength,
 } from "@/lib/auth/password"
 import {
   checkPasswordResetRateLimit,
@@ -35,6 +36,15 @@ export async function POST(request: NextRequest) {
 
     // Validate request body
     const { token, password } = await validateBody(request, resetPasswordSchema)
+
+    // SECURITY: Validate password strength
+    const passwordValidation = validatePasswordStrength(password)
+    if (!passwordValidation.valid) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: passwordValidation.message || "Password does not meet strength requirements" },
+        { status: 400 }
+      )
+    }
 
     // SECURITY FIX: No preflight checks - all validation inside transaction to prevent TOCTOU race
     // Execute in transaction with row-level locking to ensure idempotency

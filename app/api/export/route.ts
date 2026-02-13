@@ -38,6 +38,16 @@ const advancedExportSchema = z.object({
   includeMetadata: z.boolean().default(false),
 })
 
+// SECURITY: Sanitize value to prevent CSV injection attacks
+// Excel/Sheets interpret cells starting with =, +, -, @, \t, \r as formulas
+function sanitizeCSVValue(value: string): string {
+  const dangerousChars = ['=', '+', '-', '@', '\t', '\r']
+  if (dangerousChars.some(char => value.startsWith(char))) {
+    return `'${value}` // Prepend single quote to prevent formula interpretation
+  }
+  return value
+}
+
 // Helper to convert array of objects to CSV string
 function arrayToCSV(data: Record<string, unknown>[], headers?: string[]): string {
   if (data.length === 0) return ""
@@ -53,8 +63,12 @@ function arrayToCSV(data: Record<string, unknown>[], headers?: string[]): string
       .map((key) => {
         const value = row[key]
         if (value === null || value === undefined) return ""
-        if (typeof value === "object") return `"${JSON.stringify(value).replace(/"/g, '""')}"`
-        return `"${String(value).replace(/"/g, '""')}"`
+        if (typeof value === "object") {
+          const jsonStr = JSON.stringify(value).replace(/"/g, '""')
+          return `"${sanitizeCSVValue(jsonStr)}"`
+        }
+        const strValue = String(value)
+        return `"${sanitizeCSVValue(strValue).replace(/"/g, '""')}"`
       })
       .join(",")
   })

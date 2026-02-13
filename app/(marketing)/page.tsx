@@ -431,8 +431,12 @@ function IntegrationsSection() {
                       target.style.display = 'none'
                       const parent = target.parentElement
                       if (parent) {
+                        // SECURITY: XSS safe - use textContent instead of innerHTML
                         const initials = integration.name.substring(0, 2).toUpperCase()
-                        parent.innerHTML = `<div class="text-xs font-semibold text-gray-600">${initials}</div>`
+                        const div = document.createElement('div')
+                        div.className = 'text-xs font-semibold text-gray-600'
+                        div.textContent = initials // XSS safe - no HTML interpretation
+                        parent.appendChild(div)
                       }
                     }}
                   />

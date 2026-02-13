@@ -73,13 +73,16 @@ export default function IntegrationsPage() {
                       height={40}
                       className="object-contain"
                       onError={(e) => {
-                        // Fallback to initials if image fails to load
+                        // SECURITY: Fallback to initials if image fails to load (XSS safe)
                         const target = e.target as HTMLImageElement
                         target.style.display = 'none'
                         const parent = target.parentElement
                         if (parent) {
                           const initials = integration.name.substring(0, 2).toUpperCase()
-                          parent.innerHTML = `<div class="text-xs font-semibold text-gray-600">${initials}</div>`
+                          const div = document.createElement('div')
+                          div.className = 'text-xs font-semibold text-gray-600'
+                          div.textContent = initials // XSS safe - no HTML interpretation
+                          parent.appendChild(div)
                         }
                       }}
                     />

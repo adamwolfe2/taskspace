@@ -6,6 +6,7 @@ import {
   generateToken,
   getExpirationDate,
   slugify,
+  validatePasswordStrength,
 } from "@/lib/auth/password"
 import {
   checkRegisterRateLimit,
@@ -38,6 +39,15 @@ export async function POST(request: NextRequest) {
 
     // Validate request body
     const { email, password, name, organizationName } = await validateBody(request, registerSchema)
+
+    // SECURITY: Validate password strength
+    const passwordValidation = validatePasswordStrength(password)
+    if (!passwordValidation.valid) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: passwordValidation.message || "Password does not meet strength requirements" },
+        { status: 400 }
+      )
+    }
 
     // Check if user already exists
     const existingUser = await db.users.findByEmail(email)
