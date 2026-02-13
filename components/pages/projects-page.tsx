@@ -348,7 +348,7 @@ export function ProjectsPage({
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -361,7 +361,7 @@ export function ProjectsPage({
             </SelectContent>
           </Select>
           <Select value={clientFilter} onValueChange={setClientFilter}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Client" />
             </SelectTrigger>
             <SelectContent>
@@ -372,7 +372,7 @@ export function ProjectsPage({
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>

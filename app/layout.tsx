@@ -9,6 +9,25 @@ export const metadata: Metadata = {
     template: "%s | Taskspace",
   },
   description: "The all-in-one AI-powered EOS management platform for multi-company founders and leadership teams. EOD reports, quarterly rocks, scorecards, Level 10 meetings, and accountability charts.",
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+    viewportFit: 'cover',
+  },
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#3b82f6' },
+    { media: '(prefers-color-scheme: dark)', color: '#1e40af' },
+  ],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'TaskSpace',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   keywords: [
     "EOS",
     "Entrepreneurial Operating System",

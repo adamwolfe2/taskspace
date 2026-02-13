@@ -258,7 +258,7 @@ export function AnalyticsPage() {
             value={selectedWorkspaceId || "all"}
             onValueChange={(value) => setSelectedWorkspaceId(value === "all" ? null : value)}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="All Workspaces" />
             </SelectTrigger>
             <SelectContent>
