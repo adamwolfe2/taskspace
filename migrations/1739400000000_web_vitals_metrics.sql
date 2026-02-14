@@ -11,14 +11,14 @@ CREATE TABLE IF NOT EXISTS web_vitals_metrics (
   url TEXT NOT NULL,
   user_agent TEXT,
   timestamp TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW(),
-
-  -- Indexes for performance analysis queries
-  INDEX idx_web_vitals_metric_name (metric_name),
-  INDEX idx_web_vitals_timestamp (timestamp),
-  INDEX idx_web_vitals_rating (rating),
-  INDEX idx_web_vitals_url (url)
+  created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Indexes for performance analysis queries
+CREATE INDEX IF NOT EXISTS idx_web_vitals_metric_name ON web_vitals_metrics (metric_name);
+CREATE INDEX IF NOT EXISTS idx_web_vitals_timestamp ON web_vitals_metrics (timestamp);
+CREATE INDEX IF NOT EXISTS idx_web_vitals_rating ON web_vitals_metrics (rating);
+CREATE INDEX IF NOT EXISTS idx_web_vitals_url ON web_vitals_metrics (url);
 
 -- Add comment for documentation
 COMMENT ON TABLE web_vitals_metrics IS 'Stores Core Web Vitals metrics for real user monitoring and performance analysis';
