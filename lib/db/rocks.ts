@@ -14,7 +14,7 @@ import { sanitizeText } from "@/lib/utils/sanitize"
 // ============================================
 
 export type RockConfidence = "on_track" | "at_risk" | "off_track"
-export type RockStatus = "on-track" | "at-risk" | "off-track" | "completed"
+export type RockStatus = "on-track" | "at-risk" | "blocked" | "completed"
 
 export interface Rock {
   id: string

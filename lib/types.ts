@@ -84,6 +84,9 @@ export interface User {
   updatedAt: string
   emailVerified: boolean
   lastLoginAt?: string
+  failedLoginAttempts?: number
+  lockedAt?: string | null
+  lockReason?: string | null
 }
 
 /** User type without password hash - safe for API responses */

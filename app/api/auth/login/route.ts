@@ -66,13 +66,76 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // SECURITY: Check account lockout status
+    const ACCOUNT_LOCKOUT_DURATION_MS = 30 * 60 * 1000 // 30 minutes
+    const MAX_FAILED_ATTEMPTS = 10
+
+    if (user.lockedAt) {
+      const lockDuration = Date.now() - new Date(user.lockedAt).getTime()
+
+      // Auto-unlock after 30 minutes
+      if (lockDuration >= ACCOUNT_LOCKOUT_DURATION_MS) {
+        await db.users.update(user.id, {
+          lockedAt: null,
+          lockReason: null,
+          failedLoginAttempts: 0,
+        })
+      } else {
+        // Account is still locked
+        const remainingMinutes = Math.ceil((ACCOUNT_LOCKOUT_DURATION_MS - lockDuration) / 60000)
+        return NextResponse.json<ApiResponse<null>>(
+          {
+            success: false,
+            error: `Account locked due to too many failed login attempts. Please try again in ${remainingMinutes} minute${remainingMinutes === 1 ? "" : "s"} or contact support.`,
+          },
+          { status: 423 } // 423 Locked
+        )
+      }
+    }
+
     // Verify password
     const isValidPassword = await verifyPassword(password, user.passwordHash)
     if (!isValidPassword) {
+      // Increment failed login attempts
+      const newFailedAttempts = (user.failedLoginAttempts || 0) + 1
+
+      if (newFailedAttempts >= MAX_FAILED_ATTEMPTS) {
+        // Lock the account
+        await db.users.update(user.id, {
+          failedLoginAttempts: newFailedAttempts,
+          lockedAt: new Date().toISOString(),
+          lockReason: "Too many failed login attempts",
+        })
+
+        logger.warn({ userId: user.id, email: user.email }, "Account locked due to failed login attempts")
+
+        return NextResponse.json<ApiResponse<null>>(
+          {
+            success: false,
+            error: "Account locked due to too many failed login attempts. Please wait 30 minutes or contact support.",
+          },
+          { status: 423 } // 423 Locked
+        )
+      } else {
+        // Update failed attempts counter
+        await db.users.update(user.id, {
+          failedLoginAttempts: newFailedAttempts,
+        })
+      }
+
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Invalid email or password" },
         { status: 401 }
       )
+    }
+
+    // SECURITY: Reset failed login attempts on successful login
+    if (user.failedLoginAttempts && user.failedLoginAttempts > 0) {
+      await db.users.update(user.id, {
+        failedLoginAttempts: 0,
+        lockedAt: null,
+        lockReason: null,
+      })
     }
 
     // Get user's organizations
