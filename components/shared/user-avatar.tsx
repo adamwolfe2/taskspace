@@ -13,7 +13,7 @@ export function UserAvatar({ user, size = "md" }: UserAvatarProps) {
     lg: "h-16 w-16",
   }
 
-  const initials = user.name
+  const initials = (user.name || "U")
     .split(" ")
     .map((n) => n[0])
     .join("")

@@ -16,7 +16,7 @@ interface Activity {
 }
 
 function getInitials(name: string): string {
-  return name
+  return (name || "U")
     .split(" ")
     .map((n) => n[0])
     .join("")

@@ -11,7 +11,7 @@ export function UserInitials({ name, size = "md", className = "" }: UserInitials
     lg: "w-16 h-16 text-xl",
   }
 
-  const initials = name
+  const initials = (name || "U")
     .split(" ")
     .map((n) => n[0])
     .join("")
