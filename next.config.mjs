@@ -18,6 +18,26 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Prevent aggressive caching of JS bundles
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // HTML pages should not be cached aggressively
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
+      {
         // Apply security headers to all routes
         source: '/:path*',
         headers: [

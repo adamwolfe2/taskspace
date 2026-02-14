@@ -127,6 +127,11 @@ const USER_FRIENDLY_MESSAGES: Record<number, string> = {
  * otherwise falls back to a generic message for the status code.
  */
 function getUserFriendlyMessage(status: number, serverMessage?: string): string {
+  // Special handling for CSRF errors - indicates stale browser cache
+  if (serverMessage?.includes("Missing CSRF header")) {
+    return "Your browser is using an outdated version. Please press Cmd+Shift+R (Mac) or Ctrl+Shift+R (Windows) to reload, or clear your browser cache."
+  }
+
   // If the server provided a message and it doesn't look like a raw error/stack trace, use it
   if (
     serverMessage &&
