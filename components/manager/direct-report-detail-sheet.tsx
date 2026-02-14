@@ -58,10 +58,11 @@ export function DirectReportDetailSheet({
   if (!report) return null
 
   const initials = useMemo(() => {
-    const names = report.name.split(" ")
+    const name = report.name || "?"
+    const names = name.split(" ").filter(n => n.length > 0)
     return names.length >= 2
       ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
-      : report.name.slice(0, 2).toUpperCase()
+      : name.slice(0, 2).toUpperCase()
   }, [report.name])
 
   // Determine health score (0-100)

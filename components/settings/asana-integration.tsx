@@ -166,7 +166,10 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
 
       const response = await fetch("/api/organizations/settings", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
         body: JSON.stringify({
           asanaIntegration: {
             enabled: isEnabled,
@@ -207,7 +210,10 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
     try {
       const response = await fetch("/api/asana/sync", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
         body: JSON.stringify({ direction }),
       })
 

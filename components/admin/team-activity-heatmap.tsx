@@ -126,7 +126,7 @@ export function TeamActivityHeatmap({
  {/* Member Name */}
  <div className="w-28 shrink-0 truncate">
  <span className="text-sm font-medium text-slate-700 ">
- {member.name.split("")[0]}
+ {member.name?.[0] || "?"}
  </span>
  </div>
 

@@ -189,7 +189,10 @@ export function WorkspaceFeaturesTab() {
 
       const response = await fetch(`/api/workspaces/${currentWorkspace.id}/features`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
         body: JSON.stringify({ features: currentFeatures }),
       })
 

@@ -186,7 +186,10 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
     try {
       const response = await fetch("/api/test-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
         body: JSON.stringify({ testEmail: currentUser.email }),
       })
       const data = await response.json()
@@ -240,7 +243,10 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
       setIsCreatingKey(true)
       const response = await fetch("/api/auth/api-key", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
         body: JSON.stringify({ name: newApiKeyName.trim() }),
       })
 
@@ -274,6 +280,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
     try {
       const response = await fetch(`/api/auth/api-key?id=${keyId}`, {
         method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" }
       })
 
       const data = await response.json()
