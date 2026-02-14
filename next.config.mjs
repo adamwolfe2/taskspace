@@ -71,21 +71,29 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains; preload',
           },
-          // Content Security Policy
+          // Content Security Policy (strict in production, relaxed in development)
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com",
-              "style-src 'self' 'unsafe-inline'",
+              // Script sources: strict in production, relaxed in development for hot reload
+              process.env.NODE_ENV === 'production'
+                ? "script-src 'self' https://va.vercel-scripts.com"
+                : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com",
+              // Style sources: allow inline for Tailwind and styled-components
+              // Using strict-dynamic would break Tailwind, so we allow 'unsafe-inline' for styles
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
-              "font-src 'self' data:",
-              "connect-src 'self' https://api.resend.com https://*.vercel.com https://*.anthropic.com wss://*.vercel.com",
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "connect-src 'self' https://api.resend.com https://*.vercel.com https://*.anthropic.com wss://*.vercel.com https://api.anthropic.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              "upgrade-insecure-requests",
-            ].join('; '),
+              "object-src 'none'",
+              "media-src 'self' blob:",
+              "worker-src 'self' blob:",
+              process.env.NODE_ENV === 'production' ? "upgrade-insecure-requests" : "",
+            ].filter(Boolean).join('; '),
           },
         ],
       },
