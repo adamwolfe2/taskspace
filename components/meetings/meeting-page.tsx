@@ -307,7 +307,10 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
   // Drop issue
   const handleDropIssue = async (issueId: string) => {
     try {
-      await fetch(`/api/issues/${issueId}`, { method: "DELETE" })
+      await fetch(`/api/issues/${issueId}`, {
+        method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
       setIssues((prev) =>
         prev.map((i) => (i.id === issueId ? { ...i, status: "dropped" } : i))
       )

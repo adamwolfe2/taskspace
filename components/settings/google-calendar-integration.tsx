@@ -87,7 +87,10 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
   const handleDisconnect = async () => {
     setIsDisconnecting(true)
     try {
-      const response = await fetch("/api/google-calendar", { method: "DELETE" })
+      const response = await fetch("/api/google-calendar", {
+        method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
       if (response.ok) {
         toast({
           title: "Disconnected",

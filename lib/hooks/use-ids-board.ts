@@ -161,7 +161,10 @@ export function useIdsBoard() {
         { revalidate: false }
       )
 
-      await fetch(`/api/ids-board/${itemId}`, { method: "DELETE" })
+      await fetch(`/api/ids-board/${itemId}`, {
+        method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
       mutate()
     },
     [isDemoMode, items, mutate]
