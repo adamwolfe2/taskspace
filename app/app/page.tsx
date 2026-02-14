@@ -94,6 +94,7 @@ import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { KeyboardShortcutsDialog, useKeyboardShortcuts } from "@/components/shared/keyboard-shortcuts-dialog"
 import { OfflineIndicator } from "@/components/shared/offline-indicator"
 import { SessionTimeoutWarning } from "@/components/shared/session-timeout-warning"
+import { BugReporter } from "@/components/shared/bug-reporter"
 
 function AppContent() {
   const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization, pageFilter, clearPageFilter } = useApp()
@@ -435,6 +436,7 @@ function AppContent() {
       <Toaster />
       <CommandPalette />
       <KeyboardShortcutsDialog />
+      <BugReporter />
     </div>
   )
 }
