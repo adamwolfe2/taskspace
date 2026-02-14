@@ -183,13 +183,22 @@ export async function GET(
     `
 
     // Get rocks for context (with progress and status for bento cards)
-    // Filter by current quarter based on report date
-    const currentQuarter = getQuarterFromDate(date)
+    // ALWAYS show rocks from the most recent quarter (not the report date's quarter)
+    const { rows: quarterRows } = await sql`
+      SELECT quarter
+      FROM rocks
+      WHERE organization_id = ${orgId}
+        AND quarter IS NOT NULL
+      ORDER BY quarter DESC
+      LIMIT 1
+    `
+    const mostRecentQuarter = quarterRows.length > 0 ? quarterRows[0].quarter as string : getQuarterFromDate(date)
+
     const { rows: rocks } = await sql`
       SELECT id, title, user_id, progress, status
       FROM rocks
       WHERE organization_id = ${orgId}
-        AND quarter = ${currentQuarter}
+        AND quarter = ${mostRecentQuarter}
     `
     const rockMap = new Map(rocks.map(r => [r.id as string, r.title as string]))
 
