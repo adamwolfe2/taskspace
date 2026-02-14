@@ -25,6 +25,7 @@ export function SessionTimeoutWarning() {
   const [showWarning, setShowWarning] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
   const [dismissed, setDismissed] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
 
   const refreshSession = useCallback(async () => {
     try {
@@ -37,19 +38,24 @@ export function SessionTimeoutWarning() {
       // Reset warning state
       setShowWarning(false)
       setDismissed(false)
-      localStorage.setItem('lastActivity', Date.now().toString())
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lastActivity', Date.now().toString())
+      }
     } catch (error) {
       console.error('[Session] Failed to refresh session:', error)
     }
   }, [])
 
   const updateLastActivity = useCallback(() => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || typeof window === 'undefined') return
     localStorage.setItem('lastActivity', Date.now().toString())
   }, [isAuthenticated])
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Prevent SSR issues
+    setIsMounted(true)
+
+    if (!isAuthenticated || typeof window === 'undefined') {
       setShowWarning(false)
       return
     }
@@ -107,7 +113,8 @@ export function SessionTimeoutWarning() {
     await refreshSession()
   }
 
-  if (!showWarning || !timeRemaining) return null
+  // Don't render during SSR or before mount
+  if (!isMounted || !showWarning || !timeRemaining) return null
 
   return (
     <div className="fixed bottom-20 md:bottom-6 right-4 z-50 max-w-md animate-in slide-in-from-bottom duration-300">

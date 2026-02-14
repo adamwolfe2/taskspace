@@ -11,13 +11,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
  * and automatically hides when connection is restored.
  */
 export function OfflineIndicator() {
-  const [isOnline, setIsOnline] = useState(true)
+  // Use null for SSR, then hydrate with actual value
+  const [isOnline, setIsOnline] = useState<boolean | null>(null)
   const [wasOffline, setWasOffline] = useState(false)
   const [showReconnected, setShowReconnected] = useState(false)
 
   useEffect(() => {
-    // Set initial state
-    setIsOnline(navigator.onLine)
+    // Set initial state on client only
+    setIsOnline(typeof window !== 'undefined' ? navigator.onLine : true)
 
     const handleOnline = () => {
       setIsOnline(true)
@@ -43,6 +44,9 @@ export function OfflineIndicator() {
       window.removeEventListener('offline', handleOffline)
     }
   }, [wasOffline])
+
+  // Don't render anything during SSR
+  if (isOnline === null) return null
 
   // Show reconnected message
   if (showReconnected) {
@@ -85,6 +89,7 @@ export function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(true)
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
     setIsOnline(navigator.onLine)
 
     const handleOnline = () => setIsOnline(true)
