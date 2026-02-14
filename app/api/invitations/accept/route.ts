@@ -78,10 +78,11 @@ export async function POST(request: NextRequest) {
         }))
       }
 
-      // Check if user exists or create new user
+      // Check if user exists (by primary email OR org-specific email) or create new user
       let user: User
       let isNewUser = false
 
+      // First check by primary email
       const { rows: userRows } = await client.sql<{
         id: string
         email: string
@@ -94,8 +95,34 @@ export async function POST(request: NextRequest) {
         last_login_at: string | null
       }>`SELECT * FROM users WHERE LOWER(email) = LOWER(${lockedInvitation.email})`
 
-      if (userRows.length > 0) {
-        const row = userRows[0]
+      // If not found by primary email, check org-specific emails
+      let userByOrgEmail: typeof userRows | null = null
+      if (userRows.length === 0) {
+        const { rows: orgEmailRows } = await client.sql<{ user_id: string }>`
+          SELECT user_id
+          FROM organization_members
+          WHERE LOWER(email) = LOWER(${lockedInvitation.email})
+            AND user_id IS NOT NULL
+          LIMIT 1
+        `
+
+        if (orgEmailRows.length > 0) {
+          userByOrgEmail = await client.sql<{
+            id: string
+            email: string
+            password_hash: string
+            name: string
+            avatar: string | null
+            created_at: string
+            updated_at: string
+            email_verified: boolean
+            last_login_at: string | null
+          }>`SELECT * FROM users WHERE id = ${orgEmailRows[0].user_id}`
+        }
+      }
+
+      if (userRows.length > 0 || (userByOrgEmail && userByOrgEmail.length > 0)) {
+        const row = (userRows.length > 0 ? userRows : userByOrgEmail!)[0]
         user = {
           id: row.id,
           email: row.email,
@@ -204,7 +231,7 @@ export async function POST(request: NextRequest) {
 
         await client.sql`
           INSERT INTO organization_members (id, organization_id, user_id, email, name, role, department, weekly_measurable, joined_at, invited_by, status)
-          VALUES (${memberId}, ${lockedInvitation.organization_id}, ${user.id}, ${user.email}, ${user.name},
+          VALUES (${memberId}, ${lockedInvitation.organization_id}, ${user.id}, ${lockedInvitation.email}, ${user.name},
                   ${lockedInvitation.role}, ${lockedInvitation.department}, ${null}, ${now}, ${lockedInvitation.invited_by}, ${"active"})
         `
 

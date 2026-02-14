@@ -39,8 +39,26 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const { email, password, organizationId } = await validateBody(request, loginSchema)
 
-    // Find user
-    const user = await db.users.findByEmail(email)
+    // Find user by primary email OR org-specific email
+    let user = await db.users.findByEmail(email)
+
+    // If not found by primary email, check organization_members for org-specific emails
+    if (!user) {
+      const { sql } = await import("@/lib/db/sql")
+      const { rows } = await sql`
+        SELECT user_id
+        FROM organization_members
+        WHERE LOWER(email) = LOWER(${email})
+          AND user_id IS NOT NULL
+        LIMIT 1
+      `
+
+      if (rows.length > 0) {
+        const userId = rows[0].user_id as string
+        user = await db.users.findById(userId)
+      }
+    }
+
     if (!user) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Invalid email or password" },
