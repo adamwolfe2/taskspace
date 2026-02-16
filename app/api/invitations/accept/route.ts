@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         `
 
         if (orgEmailRows.length > 0) {
-          userByOrgEmail = await client.sql<{
+          const { rows: userByOrgEmailRows } = await client.sql<{
             id: string
             email: string
             password_hash: string
@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
             email_verified: boolean
             last_login_at: string | null
           }>`SELECT * FROM users WHERE id = ${orgEmailRows[0].user_id}`
+          userByOrgEmail = userByOrgEmailRows
         }
       }
 
