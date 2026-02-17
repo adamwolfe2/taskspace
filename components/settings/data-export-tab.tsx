@@ -1,25 +1,43 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Download, FileSpreadsheet, FileJson, Users } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Download, FileSpreadsheet, FileJson, Users, Upload } from "lucide-react"
+import { ImportWizard } from "@/components/migrations/import-wizard"
 
 export function DataExportTab() {
+  const [activeSubTab, setActiveSubTab] = useState("export")
+
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Download className="h-5 w-5 text-primary" />
-            <CardTitle>Export Data</CardTitle>
-          </div>
-          <CardDescription>
-            Download your organization's data in CSV or JSON format. Exports include all historical data for the current workspace. Use CSV for spreadsheet applications or JSON for data migration and programmatic access.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="export" className="gap-2">
+            <Download className="h-4 w-4" />
+            Export
+          </TabsTrigger>
+          <TabsTrigger value="import" className="gap-2">
+            <Upload className="h-4 w-4" />
+            Import
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Export Tab */}
+        <TabsContent value="export">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Download className="h-5 w-5 text-primary" />
+                <CardTitle>Export Data</CardTitle>
+              </div>
+              <CardDescription>
+                Download your organization's data in CSV or JSON format. Exports include all historical data for the current workspace. Use CSV for spreadsheet applications or JSON for data migration and programmatic access.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             {/* Rocks Export */}
             <div className="border rounded-lg p-4">
@@ -203,8 +221,28 @@ export function DataExportTab() {
               <li>Exports include all historical data - use date filters in API for specific ranges</li>
             </ul>
           </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Import Tab */}
+        <TabsContent value="import">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Upload className="h-5 w-5 text-primary" />
+                <CardTitle>Import Data</CardTitle>
+              </div>
+              <CardDescription>
+                Import your data from other project management tools like Trello, Asana, or CSV files. This will create tasks, projects, and workspaces in TaskSpace while preserving your existing data structure.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ImportWizard />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

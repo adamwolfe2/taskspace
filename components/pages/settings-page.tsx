@@ -136,8 +136,8 @@ export function SettingsPage() {
             {isAdmin && (
               <TabsTrigger value="data" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap min-h-[40px] sm:min-h-[36px]">
                 <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Data & Export</span>
-                <span className="sm:hidden">Export</span>
+                <span className="hidden sm:inline">Import & Export</span>
+                <span className="sm:hidden">Import</span>
               </TabsTrigger>
             )}
 
