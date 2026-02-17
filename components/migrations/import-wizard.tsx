@@ -140,8 +140,8 @@ export function ImportWizard() {
           throw new Error(job.errors[0]?.message || "Import failed")
         }
 
-        // Continue polling if still processing
-        if (job.status === "validating" || job.status === "mapping") {
+        // Continue polling if still validating
+        if (job.status === "validating") {
           attempts++
           if (attempts < maxAttempts) {
             setTimeout(poll, 5000) // Poll every 5 seconds
@@ -154,6 +154,18 @@ export function ImportWizard() {
         // If status is mapping, start processing chunks
         if (job.status === "mapping") {
           await processChunks(jobId)
+          return
+        }
+
+        // If status is importing, chunks are being processed
+        if (job.status === "importing") {
+          attempts++
+          if (attempts < maxAttempts) {
+            setTimeout(poll, 5000)
+          } else {
+            throw new Error("Import timed out")
+          }
+          return
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Polling failed")
