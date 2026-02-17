@@ -85,14 +85,14 @@ export const POST = withAuth(
 
       // Create logger function for pipeline
       const logFn = async (
-        level: 'debug' | 'info' | 'warn' | 'error',
+        level: string,
         stage: string,
         message: string,
         metadata?: any
       ) => {
         await db.migrations.importLogs.create({
           importJobId: jobId,
-          level,
+          level: level as any,
           stage: stage as any,
           message,
           metadata,
