@@ -41,6 +41,7 @@ import { getErrorMessage } from "@/lib/utils"
 import type { TeamMember, ApiKey } from "@/lib/types"
 import { AsanaIntegration } from "./asana-integration"
 import { GoogleCalendarIntegration } from "./google-calendar-integration"
+import { WebhookManagement } from "./webhook-management"
 
 interface IntegrationStatus {
   email: {
@@ -675,6 +676,9 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
           </div>
         </CardContent>
       </Card>
+
+      {/* Webhook Management */}
+      <WebhookManagement />
 
       {/* Asana Integration */}
       <AsanaIntegration teamMembers={teamMembers} />
