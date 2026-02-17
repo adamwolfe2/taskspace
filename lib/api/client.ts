@@ -133,11 +133,13 @@ function getUserFriendlyMessage(status: number, serverMessage?: string): string 
   }
 
   // If the server provided a message and it doesn't look like a raw error/stack trace, use it
+  // Note: avoid "at " substring check — too broad, catches "at least", "at risk", etc.
+  // Instead use a regex that matches actual JS stack trace lines ("  at Object.foo")
   if (
     serverMessage &&
     serverMessage.length < 200 &&
     !serverMessage.includes("Error:") &&
-    !serverMessage.includes("at ") &&
+    !/\s+at\s+\S/.test(serverMessage) &&
     !serverMessage.includes("node_modules") &&
     !serverMessage.includes("ECONNREFUSED") &&
     !serverMessage.includes("relation") &&

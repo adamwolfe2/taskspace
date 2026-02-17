@@ -144,6 +144,33 @@ export function isValidEODDate(dateString: string, timezone: string = "America/L
 }
 
 /**
+ * Get the quarter string ("Q1 2026") for a given YYYY-MM-DD date string.
+ */
+export function getQuarterFromDate(dateStr: string): string {
+  const date = new Date(dateStr + "T12:00:00Z")
+  const month = date.getMonth() // 0-11
+  const year = date.getFullYear()
+  const quarter = Math.floor(month / 3) + 1
+  return `Q${quarter} ${year}`
+}
+
+/**
+ * Compare two quarter strings ("Q1 2026") chronologically.
+ * Returns positive if a is later than b, negative if earlier, 0 if equal.
+ * Use with Array.sort() to order quarters from oldest to newest.
+ */
+export function compareQuarters(a: string, b: string): number {
+  const parse = (q: string) => {
+    const [qPart, yearStr] = q.split(" ")
+    return { year: parseInt(yearStr, 10), quarter: parseInt(qPart.slice(1), 10) }
+  }
+  const pa = parse(a)
+  const pb = parse(b)
+  if (pa.year !== pb.year) return pa.year - pb.year
+  return pa.quarter - pb.quarter
+}
+
+/**
  * Format a date string for display with timezone awareness
  */
 export function formatDateForDisplay(dateString: string): string {
