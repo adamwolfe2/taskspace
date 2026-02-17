@@ -6,13 +6,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import db from '@/lib/db'
 import { withAuth } from '@/lib/api/middleware'
+import type { RouteContext } from '@/lib/api/middleware'
 import { isAdmin } from '@/lib/auth/middleware'
 import type { ApiResponse } from '@/lib/types'
 import type { GetImportJobResponse } from '@/lib/migrations/types'
 import { logger } from '@/lib/logger'
 
 export const GET = withAuth(
-  async (request: NextRequest, auth, { params }: { params: { jobId: string } }) => {
+  async (request: NextRequest, auth, context?: RouteContext) => {
     try {
       // SECURITY: Only admins can view import jobs
       if (!isAdmin(auth)) {
@@ -22,7 +23,14 @@ export const GET = withAuth(
         )
       }
 
-      const { jobId } = params
+      if (!context?.params) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: 'Missing route parameters' },
+          { status: 400 }
+        )
+      }
+
+      const { jobId } = await context.params
 
       // Find import job
       const job = await db.migrations.importJobs.findById(jobId)
@@ -57,7 +65,7 @@ export const GET = withAuth(
         },
       })
     } catch (error) {
-      logger.error('Failed to get import job', { error, jobId: params.jobId })
+      logger.error('Failed to get import job', { error })
       return NextResponse.json<ApiResponse<null>>(
         {
           success: false,

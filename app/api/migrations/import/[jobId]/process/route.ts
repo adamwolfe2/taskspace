@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import db from '@/lib/db'
 import { withAuth } from '@/lib/api/middleware'
+import type { RouteContext } from '@/lib/api/middleware'
 import { isAdmin } from '@/lib/auth/middleware'
 import type { ApiResponse } from '@/lib/types'
 import type {
@@ -17,7 +18,7 @@ import { extract, normalize, map, load, calculateProgress } from '@/lib/migratio
 import { logger } from '@/lib/logger'
 
 export const POST = withAuth(
-  async (request: NextRequest, auth, { params }: { params: { jobId: string } }) => {
+  async (request: NextRequest, auth, context?: RouteContext) => {
     try {
       // SECURITY: Only admins can process imports
       if (!isAdmin(auth)) {
@@ -27,7 +28,14 @@ export const POST = withAuth(
         )
       }
 
-      const { jobId } = params
+      if (!context?.params) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: 'Missing route parameters' },
+          { status: 400 }
+        )
+      }
+
+      const { jobId } = await context.params
       const body: ProcessChunkRequest = await request.json()
       const { offset, limit } = body
 
@@ -139,12 +147,13 @@ export const POST = withAuth(
         },
       })
     } catch (error) {
-      logger.error('Import chunk processing failed', { error, jobId: params.jobId })
+      logger.error('Import chunk processing failed', { error })
 
       // Log error to import logs
+      const jobId = context?.params ? (await context.params).jobId : 'unknown'
       try {
         await db.migrations.importLogs.create({
-          importJobId: params.jobId,
+          importJobId: jobId,
           level: 'error',
           stage: 'task_import',
           message: `Chunk processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,

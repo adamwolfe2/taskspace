@@ -6,13 +6,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import db from '@/lib/db'
 import { withAuth } from '@/lib/api/middleware'
+import type { RouteContext } from '@/lib/api/middleware'
 import { isAdmin } from '@/lib/auth/middleware'
 import type { ApiResponse } from '@/lib/types'
 import type { FinalizeImportResponse } from '@/lib/migrations/types'
 import { logger } from '@/lib/logger'
 
 export const POST = withAuth(
-  async (request: NextRequest, auth, { params }: { params: { jobId: string } }) => {
+  async (request: NextRequest, auth, context?: RouteContext) => {
     try {
       // SECURITY: Only admins can finalize imports
       if (!isAdmin(auth)) {
@@ -22,7 +23,14 @@ export const POST = withAuth(
         )
       }
 
-      const { jobId } = params
+      if (!context?.params) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: 'Missing route parameters' },
+          { status: 400 }
+        )
+      }
+
+      const { jobId } = await context.params
 
       // Find import job
       const job = await db.migrations.importJobs.findById(jobId)
@@ -93,11 +101,12 @@ export const POST = withAuth(
         },
       })
     } catch (error) {
-      logger.error('Import finalization failed', { error, jobId: params.jobId })
+      logger.error('Import finalization failed', { error })
 
       // Try to mark job as failed
+      const jobId = context?.params ? (await context.params).jobId : 'unknown'
       try {
-        await db.migrations.importJobs.update(params.jobId, {
+        await db.migrations.importJobs.update(jobId, {
           status: 'failed',
           errors: [
             {
