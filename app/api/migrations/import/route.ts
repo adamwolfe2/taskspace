@@ -172,7 +172,7 @@ async function validateImportJob(
       warnings: validationResult.warnings,
       estimatedDuration: validationResult.metadata?.estimatedItems
         ? Math.ceil((validationResult.metadata.estimatedItems * 100) / 1000)
-        : null,
+        : undefined,
     })
 
     await db.migrations.importLogs.create({
