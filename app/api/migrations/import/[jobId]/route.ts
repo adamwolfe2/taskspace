@@ -65,7 +65,7 @@ export const GET = withAuth(
         },
       })
     } catch (error) {
-      logger.error('Failed to get import job', { error })
+      logger.error({ error }, 'Failed to get import job')
       return NextResponse.json<ApiResponse<null>>(
         {
           success: false,

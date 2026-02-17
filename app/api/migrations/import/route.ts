@@ -69,12 +69,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       addRandomSuffix: true,
     })
 
-    logger.info('Import file uploaded to Vercel Blob', {
+    logger.info({
       organizationId: auth.organization.id,
       fileName: file.name,
       fileSize: file.size,
       blobUrl: blob.url,
-    })
+    }, 'Import file uploaded to Vercel Blob')
 
     // Create import job
     const importJob = await db.migrations.importJobs.create({
@@ -89,10 +89,10 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     // Start async validation (background)
     validateImportJob(importJob.id, blob.url, detectedProvider).catch((error) => {
-      logger.error('Import validation failed', {
+      logger.error({
         importJobId: importJob.id,
         error: error.message,
-      })
+      }, 'Import validation failed')
     })
 
     return NextResponse.json<ApiResponse<CreateImportJobResponse>>(
@@ -106,7 +106,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       { status: 201 }
     )
   } catch (error) {
-    logger.error('Import job creation failed', { error })
+    logger.error({ error }, 'Import job creation failed')
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,

@@ -85,11 +85,11 @@ export const POST = withAuth(
         },
       })
 
-      logger.info('Import job completed', {
+      logger.info({
         jobId,
         organizationId: auth.organization.id,
         stats: completedJob.stats,
-      })
+      }, 'Import job completed')
 
       return NextResponse.json<ApiResponse<FinalizeImportResponse>>({
         success: true,
@@ -101,7 +101,7 @@ export const POST = withAuth(
         },
       })
     } catch (error) {
-      logger.error('Import finalization failed', { error })
+      logger.error({ error }, 'Import finalization failed')
 
       // Try to mark job as failed
       const jobId = context?.params ? (await context.params).jobId : 'unknown'
@@ -116,7 +116,7 @@ export const POST = withAuth(
           ],
         })
       } catch (updateError) {
-        logger.error('Failed to update job status', { updateError })
+        logger.error({ updateError }, 'Failed to update job status')
       }
 
       return NextResponse.json<ApiResponse<null>>(

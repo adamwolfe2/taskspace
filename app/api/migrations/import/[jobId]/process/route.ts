@@ -147,7 +147,7 @@ export const POST = withAuth(
         },
       })
     } catch (error) {
-      logger.error('Import chunk processing failed', { error })
+      logger.error({ error }, 'Import chunk processing failed')
 
       // Log error to import logs
       const jobId = context?.params ? (await context.params).jobId : 'unknown'
@@ -159,7 +159,7 @@ export const POST = withAuth(
           message: `Chunk processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         })
       } catch (logError) {
-        logger.error('Failed to log import error', { logError })
+        logger.error({ logError }, 'Failed to log import error')
       }
 
       return NextResponse.json<ApiResponse<null>>(
