@@ -328,7 +328,7 @@ export const createEODReportSchema = z.object({
   date: dateSchema.optional(), // Optional - defaults to today in org timezone
   tasks: z.array(eodTaskSchema).min(1).max(100),
   challenges: z.string().max(5000).default(""),
-  tomorrowPriorities: z.array(eodPrioritySchema).min(1).max(100),
+  tomorrowPriorities: z.array(eodPrioritySchema).max(100),
   needsEscalation: z.boolean().default(false),
   escalationNote: z.string().max(2000).nullable().optional(),
   metricValueToday: z.union([z.number(), z.string(), z.null()]).optional(),
