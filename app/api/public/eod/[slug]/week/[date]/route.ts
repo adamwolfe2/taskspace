@@ -204,7 +204,9 @@ export async function GET(
       FROM rocks
       WHERE organization_id = ${orgId}
         AND quarter IS NOT NULL
-      ORDER BY quarter DESC
+      ORDER BY
+        SPLIT_PART(quarter, ' ', 2)::int DESC,
+        SUBSTRING(quarter, 2, 1)::int DESC
       LIMIT 1
     `
     const mostRecentQuarter = quarterRows.length > 0 ? quarterRows[0].quarter as string : getQuarterFromDate(endDateStr)
