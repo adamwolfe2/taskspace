@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { useDropzone } from "react-dropzone"
+import Image from "next/image"
 import {
   ArrowUpTrayIcon,
   CheckCircleIcon,
@@ -23,6 +24,7 @@ const PROVIDERS: Array<{
   description: string
   formats: string
   available: boolean
+  icon: string
 }> = [
   {
     id: "trello",
@@ -30,6 +32,7 @@ const PROVIDERS: Array<{
     description: "Import boards, lists, and cards from Trello JSON exports",
     formats: ".json",
     available: true,
+    icon: "/integrations/trello.svg",
   },
   {
     id: "asana",
@@ -37,6 +40,7 @@ const PROVIDERS: Array<{
     description: "Import projects and tasks from Asana CSV exports",
     formats: ".csv",
     available: false,
+    icon: "/integrations/asana.svg",
   },
   {
     id: "generic_csv",
@@ -44,6 +48,7 @@ const PROVIDERS: Array<{
     description: "Import from any tool using a CSV file",
     formats: ".csv",
     available: false,
+    icon: "/integrations/icons8-microsoft-outlook-2019.svg", // Placeholder for CSV
   },
 ]
 
@@ -272,9 +277,22 @@ export function ImportWizard() {
                     : "border-gray-100 bg-gray-50 cursor-not-allowed opacity-60"
                 }`}
               >
-                <h3 className="font-medium text-gray-900">{provider.name}</h3>
-                <p className="mt-2 text-sm text-gray-500">{provider.description}</p>
-                <p className="mt-2 text-xs text-gray-400">Supports: {provider.formats}</p>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <Image
+                      src={provider.icon}
+                      alt={`${provider.name} logo`}
+                      width={48}
+                      height={48}
+                      className="rounded-lg"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900">{provider.name}</h3>
+                    <p className="mt-1 text-sm text-gray-500">{provider.description}</p>
+                    <p className="mt-2 text-xs text-gray-400">Supports: {provider.formats}</p>
+                  </div>
+                </div>
                 {!provider.available && (
                   <span className="absolute top-4 right-4 rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700">
                     Coming Soon
