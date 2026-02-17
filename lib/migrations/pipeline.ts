@@ -132,7 +132,7 @@ export function map(
     )
 
     mapped.workspaces = mapped.workspaces
-      .map((ws) => {
+      .map((ws): NormalizedWorkspace | null => {
         const mapping = workspaceMap.get(ws.externalId)
         if (!mapping) return null // Skip unmapped workspaces
 

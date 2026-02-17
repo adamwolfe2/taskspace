@@ -177,56 +177,40 @@ export const importJobs = {
       estimatedDuration?: number
     }
   ): Promise<ImportJob | null> {
-    const updates: string[] = []
-    const values: unknown[] = []
-    let paramIndex = 1
+    // Get current job first
+    const current = await this.findById(id)
+    if (!current) return null
 
-    if (data.status !== undefined) {
-      updates.push(`status = $${paramIndex++}`)
-      values.push(data.status)
-    }
-    if (data.progress !== undefined) {
-      updates.push(`progress = $${paramIndex++}`)
-      values.push(data.progress)
-    }
-    if (data.config !== undefined) {
-      updates.push(`config = config || $${paramIndex++}::jsonb`)
-      values.push(JSON.stringify(data.config))
-    }
-    if (data.stats !== undefined) {
-      updates.push(`stats = stats || $${paramIndex++}::jsonb`)
-      values.push(JSON.stringify(data.stats))
-    }
-    if (data.errors !== undefined) {
-      updates.push(`errors = $${paramIndex++}::jsonb[]`)
-      values.push(data.errors.map((e) => JSON.stringify(e)))
-    }
-    if (data.warnings !== undefined) {
-      updates.push(`warnings = $${paramIndex++}::jsonb[]`)
-      values.push(data.warnings.map((w) => JSON.stringify(w)))
-    }
-    if (data.completedAt !== undefined) {
-      updates.push(`completed_at = $${paramIndex++}`)
-      values.push(data.completedAt)
-    }
-    if (data.estimatedDuration !== undefined) {
-      updates.push(`estimated_duration = $${paramIndex++}`)
-      values.push(data.estimatedDuration)
-    }
+    // Merge updates with current values
+    const status = data.status ?? current.status
+    const progress = data.progress ?? current.progress
+    const config = data.config
+      ? { ...current.config, ...data.config }
+      : current.config
+    const stats = data.stats
+      ? { ...current.stats, ...data.stats }
+      : current.stats
+    const errors = data.errors ?? current.errors
+    const warnings = data.warnings ?? current.warnings
+    const completedAt = data.completedAt !== undefined ? data.completedAt : current.completedAt
+    const estimatedDuration = data.estimatedDuration ?? current.estimatedDuration
 
-    if (updates.length === 0) return this.findById(id)
-
-    updates.push(`updated_at = NOW()`)
-    values.push(id)
-
-    const query = `
+    // Update all fields using tagged template
+    const { rows } = await sql`
       UPDATE import_jobs
-      SET ${updates.join(', ')}
-      WHERE id = $${paramIndex}
+      SET
+        status = ${status},
+        progress = ${progress},
+        config = ${JSON.stringify(config)}::jsonb,
+        stats = ${JSON.stringify(stats)}::jsonb,
+        errors = ${JSON.stringify(errors)}::jsonb,
+        warnings = ${JSON.stringify(warnings)}::jsonb,
+        completed_at = ${completedAt},
+        estimated_duration = ${estimatedDuration},
+        updated_at = NOW()
+      WHERE id = ${id}
       RETURNING *
     `
-
-    const { rows } = await sql(query, values)
     return rows[0] ? parseImportJob(rows[0]) : null
   },
 
@@ -411,16 +395,21 @@ export const importLogs = {
     options?: { level?: LogLevel; limit?: number }
   ): Promise<ImportLog[]> {
     const limit = options?.limit || 100
-    const levelFilter = options?.level
-      ? sql`AND level = ${options.level}`
-      : sql``
 
-    const { rows } = await sql`
-      SELECT * FROM import_logs
-      WHERE import_job_id = ${importJobId} ${levelFilter}
-      ORDER BY timestamp DESC
-      LIMIT ${limit}
-    `
+    const { rows } = options?.level
+      ? await sql`
+          SELECT * FROM import_logs
+          WHERE import_job_id = ${importJobId} AND level = ${options.level}
+          ORDER BY timestamp DESC
+          LIMIT ${limit}
+        `
+      : await sql`
+          SELECT * FROM import_logs
+          WHERE import_job_id = ${importJobId}
+          ORDER BY timestamp DESC
+          LIMIT ${limit}
+        `
+
     return rows.map(parseImportLog)
   },
 
