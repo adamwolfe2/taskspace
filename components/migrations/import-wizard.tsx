@@ -32,7 +32,7 @@ const PROVIDERS: Array<{
     description: "Import boards, lists, and cards from Trello JSON exports",
     formats: ".json",
     available: true,
-    icon: "/integrations/trello.svg",
+    icon: "/integrations/trello_logo_icon_167765.png",
   },
   {
     id: "asana",
