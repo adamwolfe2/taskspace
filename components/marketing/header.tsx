@@ -43,7 +43,7 @@ export function MarketingHeader() {
             </Link>
             <div className="flex items-center gap-3">
               <Button variant="ghost" asChild>
-                <Link href="/login">Sign in</Link>
+                <Link href="/app?page=login">Sign in</Link>
               </Button>
               <Button asChild>
                 <Link href="/app?page=register">Get started</Link>
@@ -87,7 +87,7 @@ export function MarketingHeader() {
             </Link>
             <div className="flex flex-col gap-3 pt-2">
               <Button variant="ghost" asChild className="w-full">
-                <Link href="/login">Sign in</Link>
+                <Link href="/app?page=login">Sign in</Link>
               </Button>
               <Button asChild className="w-full">
                 <Link href="/app?page=register">Get started</Link>

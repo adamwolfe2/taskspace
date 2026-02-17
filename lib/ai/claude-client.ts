@@ -273,7 +273,8 @@ export async function generateDailyDigest(
   rocks: Rock[],
   previousDigest?: DailyDigest
 ): Promise<AIResultWithUsage<Omit<DailyDigest, "id" | "organizationId" | "digestDate" | "generatedAt">>> {
-  const memberMap = new Map(teamMembers.map(m => [m.id, m]))
+  // Map by userId (users.id) which is what eodReport.userId references
+  const memberMap = new Map(teamMembers.filter(m => m.userId).map(m => [m.userId!, m]))
 
   const reportsWithNames = eodReports.map(report => {
     const member = memberMap.get(report.userId)

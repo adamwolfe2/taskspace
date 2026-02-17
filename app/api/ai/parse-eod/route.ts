@@ -248,7 +248,7 @@ export const PUT = withAuth(async (request: NextRequest, auth) => {
       db.rocks.findByUserIds(uniqueUserIds, auth.organization.id),
     ])
 
-    const memberMap = new Map(teamMembersData.map(m => [m.id, m]))
+    const memberMap = new Map(teamMembersData.filter(m => m.userId).map(m => [m.userId!, m]))
     const existingInsightMap = new Map(existingInsights.map(i => [i.eodReportId, i]))
 
     const insights: EODInsight[] = []

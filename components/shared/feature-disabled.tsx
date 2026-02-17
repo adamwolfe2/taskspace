@@ -56,7 +56,7 @@ export function FeatureDisabled({
                   </Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href="/dashboard">Back to Dashboard</Link>
+                  <Link href="/app?page=dashboard">Back to Dashboard</Link>
                 </Button>
               </>
             ) : (
@@ -65,7 +65,7 @@ export function FeatureDisabled({
                   Contact your workspace admin to enable this feature.
                 </p>
                 <Button variant="outline" asChild>
-                  <Link href="/dashboard">Back to Dashboard</Link>
+                  <Link href="/app?page=dashboard">Back to Dashboard</Link>
                 </Button>
               </>
             )}

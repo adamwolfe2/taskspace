@@ -105,8 +105,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       case "rocks": {
         const rocks = await db.rocks.findByOrganizationId(auth.organization.id)
         const members = await db.members.findWithUsersByOrganizationId(auth.organization.id)
-        // Map by user id (which is what rock.userId references)
-        const memberMap = new Map(members.map((m) => [m.id, m]))
+        // Map by userId (users.id) which is what rock.userId references
+        const memberMap = new Map(members.filter(m => m.userId).map((m) => [m.userId!, m]))
 
         data = rocks.map((rock) => ({
           Title: rock.title,
@@ -165,7 +165,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 
         let reports = await db.eodReports.findByOrganizationId(auth.organization.id)
         const members = await db.members.findWithUsersByOrganizationId(auth.organization.id)
-        const memberMap = new Map(members.map((m) => [m.id, m]))
+        // Map by userId (users.id) which is what eodReport.userId references
+        const memberMap = new Map(members.filter(m => m.userId).map((m) => [m.userId!, m]))
 
         // Filter by user if specified
         if (userId) {
@@ -468,7 +469,8 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       case "eod_reports": {
         let reports = await db.eodReports.findByOrganizationId(auth.organization.id)
         const members = await db.members.findWithUsersByOrganizationId(auth.organization.id)
-        const memberMap = new Map(members.map((m) => [m.id, m]))
+        // Map by userId (users.id) which is what eodReport.userId references
+        const memberMap = new Map(members.filter(m => m.userId).map((m) => [m.userId!, m]))
         if (body.filters?.memberId) {
           reports = reports.filter((r) => r.userId === body.filters?.memberId)
         }
