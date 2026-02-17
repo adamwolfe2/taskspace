@@ -10,6 +10,7 @@ import { AIEODSubmission } from "@/components/dashboard/ai-eod-submission"
 import { WeeklyEODCalendar } from "@/components/dashboard/weekly-eod-calendar"
 import { QuickActionsBar } from "@/components/dashboard/quick-actions-bar"
 import { FocusOfTheDay } from "@/components/dashboard/focus-of-the-day"
+import { ProductivityBar } from "@/components/dashboard/productivity-bar"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -68,6 +69,9 @@ export function DashboardPage({
  const hasRocksFeature = isFeatureEnabled("core.rocks")
  const hasEodFeature = isFeatureEnabled("core.eodReports")
  const hasFocusBlocksFeature = isFeatureEnabled("productivity.focusBlocks")
+ const hasStreaksFeature = isFeatureEnabled("productivity.streakTracking")
+ const hasAchievementsFeature = isFeatureEnabled("productivity.achievements")
+ const hasWeeklyReviewsFeature = isFeatureEnabled("productivity.weeklyReviews")
 
  const currentQuarter = getCurrentQuarter()
  // Use users.id (not org_members.id) for filtering rocks/tasks/EODs
@@ -192,6 +196,21 @@ export function DashboardPage({
  {(hasTasksFeature || hasRocksFeature) && (
  <ErrorBoundary title="Stats unavailable">
  <StatsCards stats={stats} />
+ </ErrorBoundary>
+ )}
+
+ {/* Productivity Bar (Streaks, Achievements, Weekly Review) */}
+ {(hasStreaksFeature || hasAchievementsFeature || hasWeeklyReviewsFeature) && (
+ <ErrorBoundary title="Productivity bar unavailable">
+ <ProductivityBar
+ userId={effectiveUserId}
+ eodReports={eodReports}
+ tasks={assignedTasks}
+ rocks={rocks}
+ showStreaks={hasStreaksFeature}
+ showAchievements={hasAchievementsFeature}
+ showWeeklyReview={hasWeeklyReviewsFeature}
+ />
  </ErrorBoundary>
  )}
 
