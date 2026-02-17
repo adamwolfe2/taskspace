@@ -8,6 +8,7 @@ import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, DailyDigest, TeamMember, EODInsight, Organization } from "@/lib/types"
 import { Resend } from "resend"
 import { logger, logError } from "@/lib/logger"
+import * as Sentry from "@sentry/nextjs"
 
 // This endpoint is designed to be called by Vercel Cron
 // Runs every hour to check which organizations are at 6 PM in their timezone
@@ -317,6 +318,10 @@ export async function GET(request: NextRequest) {
         results.push({ orgId: org.id, orgName: org.name, success: true })
       } catch (error) {
         logError(logger, `Failed for org ${org.name}`, error)
+        Sentry.captureMessage("Cron daily-digest partially failed", {
+          level: "warning",
+          extra: { orgId: org.id, orgName: org.name, error: error instanceof Error ? error.message : "Unknown error" },
+        })
         results.push({
           orgId: org.id,
           orgName: org.name,
@@ -329,6 +334,15 @@ export async function GET(request: NextRequest) {
     const processedCount = results.filter(r => !r.skipped || r.skipped === "Already exists").length
     const failCount = results.filter(r => !r.success).length
 
+    // Alert if any orgs failed
+    if (failCount > 0) {
+      const failedOrgs = results.filter(r => !r.success)
+      Sentry.captureMessage(`Cron daily-digest: ${failCount} org(s) failed`, {
+        level: "warning",
+        extra: { failedOrgs: failedOrgs.map(o => ({ orgId: o.orgId, orgName: o.orgName, error: o.error })) },
+      })
+    }
+
     return NextResponse.json<ApiResponse<{ results: typeof results }>>({
       success: true,
       data: { results },
@@ -336,6 +350,7 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logError(logger, "Daily digest error", error)
+    Sentry.captureException(error, { extra: { job: "daily-digest" } })
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to generate digests" },
       { status: 500 }

@@ -28,6 +28,7 @@ import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
 import { CommandPalette } from "@/components/shared/command-palette"
+import { QuickTaskDialog } from "@/components/shared/quick-task-dialog"
 import { initGlobalErrorHandler } from "@/lib/api/client"
 import { DemoModeBanner } from "@/components/shared/demo-mode-banner"
 import { EmailVerificationBanner } from "@/components/shared/email-verification-banner"
@@ -89,7 +90,7 @@ const ClientsPage = dynamic(
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 
-import { Loader2 } from "lucide-react"
+import { Loader2, Plus } from "lucide-react"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { KeyboardShortcutsDialog, useKeyboardShortcuts } from "@/components/shared/keyboard-shortcuts-dialog"
 import { OfflineIndicator } from "@/components/shared/offline-indicator"
@@ -101,6 +102,7 @@ function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [resetToken, setResetToken] = useState<string | null>(null)
+  const [showMobileQuickTask, setShowMobileQuickTask] = useState(false)
   // CRITICAL: Call useWorkspaces() at the top level to trigger workspace auto-selection
   // BEFORE useTeamData tries to fetch. Without this, workspace selection only happens
   // inside WorkspaceSwitcher (in Header), which may not run soon enough.
@@ -115,6 +117,14 @@ function AppContent() {
     { key: "s", meta: true, shift: true, handler: () => setCurrentPage("settings") },
     { key: "m", meta: true, shift: true, handler: () => setCurrentPage("calendar") },
     { key: "i", meta: true, shift: true, handler: () => setCurrentPage("ids-board") },
+    { key: "n", meta: true, handler: () => setShowMobileQuickTask(true) },
+    { key: "e", meta: true, handler: () => {
+      // Scroll to EOD section on dashboard
+      setCurrentPage("dashboard")
+      setTimeout(() => {
+        document.querySelector("[data-eod-section]")?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }, 100)
+    }},
   ])
 
   // Initialize global error handler for unhandled promise rejections
@@ -433,6 +443,23 @@ function AppContent() {
       </div>
 
       <MobileNav />
+      {/* Mobile floating quick task button */}
+      {currentUser && (
+        <>
+          <button
+            onClick={() => setShowMobileQuickTask(true)}
+            className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-40 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center md:hidden"
+            aria-label="Add new task"
+          >
+            <Plus className="h-6 w-6" />
+          </button>
+          <QuickTaskDialog
+            open={showMobileQuickTask}
+            onOpenChange={setShowMobileQuickTask}
+            userId={currentUser.userId || currentUser.id}
+          />
+        </>
+      )}
       <Toaster />
       <CommandPalette />
       <KeyboardShortcutsDialog />

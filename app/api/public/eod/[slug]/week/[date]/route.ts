@@ -148,9 +148,28 @@ export async function GET(
     const org = orgs[0]
     const orgId = org.id as string
     const orgName = org.name as string
-    const settings = org.settings as { timezone?: string; customBranding?: { logo?: string } } | null
+    const settings = org.settings as { timezone?: string; customBranding?: { logo?: string }; publicEodToken?: string } | null
     const timezone = settings?.timezone || "America/Los_Angeles"
     const orgLogo = settings?.customBranding?.logo
+
+    // Require access token for public EOD endpoints
+    const { searchParams } = new URL(request.url)
+    const providedToken = searchParams.get("token")
+    if (settings?.publicEodToken) {
+      if (providedToken !== settings.publicEodToken) {
+        return NextResponse.json(
+          { success: false, error: "Invalid or missing access token" },
+          { status: 403 }
+        )
+      }
+    } else {
+      return NextResponse.json(
+        { success: false, error: "Public EOD sharing requires a token. Configure one in Settings > Organization." },
+        { status: 403 }
+      )
+    }
+
+    logger.info({ orgSlug: slug, date }, "Public weekly EOD accessed")
 
     // Get all active members (join with users to get name if missing in members)
     const { rows: members } = await sql`

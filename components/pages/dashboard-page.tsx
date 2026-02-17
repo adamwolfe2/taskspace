@@ -23,6 +23,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
+import { SmartSuggestions } from "@/components/dashboard/smart-suggestions"
+import { FocusTimer } from "@/components/shared/focus-timer"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 
 // Get current quarter string (e.g., "Q1 2026")
 function getCurrentQuarter(): string {
@@ -61,8 +64,10 @@ export function DashboardPage({
  const [selectedEodDate, setSelectedEodDate] = useState<string | null>(null)
  const eodCardRef = useRef<HTMLDivElement>(null)
  const tasksRef = useRef<HTMLDivElement>(null)
+ const rocksRef = useRef<HTMLDivElement>(null)
  const { currentOrganization } = useApp()
  const { isFeatureEnabled } = useWorkspaceFeatures()
+ const { currentWorkspaceId } = useWorkspaces()
 
  // Check which features are enabled
  const hasTasksFeature = isFeatureEnabled("core.tasks")
@@ -167,6 +172,35 @@ export function DashboardPage({
  }
  }
 
+ const handleFocusSessionComplete = async (session: {
+ taskId?: string
+ rockId?: string
+ durationMinutes: number
+ sessionType: "pomodoro" | "custom" | "deep_work"
+ }) => {
+ try {
+ const endTime = new Date().toISOString()
+ const startTime = new Date(Date.now() - session.durationMinutes * 60 * 1000).toISOString()
+ const response = await fetch("/api/productivity/focus-blocks", {
+ method: "POST",
+ headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+ body: JSON.stringify({
+ startTime,
+ endTime,
+ category: "deep_work",
+ workspaceId: currentWorkspaceId,
+ taskId: session.taskId,
+ rockId: session.rockId,
+ }),
+ })
+ if (!response.ok) {
+ console.error("Failed to save focus block:", await response.text())
+ }
+ } catch (err) {
+ console.error("Failed to save focus block:", err)
+ }
+ }
+
  return (
  <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
  {/* No workspace selected alert */}
@@ -214,6 +248,23 @@ export function DashboardPage({
  </ErrorBoundary>
  )}
 
+ {/* Smart Suggestions - AI-powered task and rock insights */}
+ {(hasTasksFeature || hasRocksFeature) && (
+ <ErrorBoundary title="Suggestions unavailable">
+ <SmartSuggestions
+ tasks={userTasks}
+ rocks={userRocks}
+ eodReports={eodReports}
+ onTaskClick={() => {
+ tasksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+ }}
+ onRockClick={() => {
+ rocksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+ }}
+ />
+ </ErrorBoundary>
+ )}
+
  {/* Weekly EOD Calendar with Hover Preview */}
  {hasEodFeature && (
  <ErrorBoundary title="Calendar unavailable">
@@ -239,10 +290,22 @@ export function DashboardPage({
  </ErrorBoundary>
  )}
 
+ {/* Focus Timer - Pomodoro and deep work sessions */}
+ {hasFocusBlocksFeature && (
+ <ErrorBoundary title="Focus timer unavailable">
+ <FocusTimer
+ tasks={userTasks}
+ rocks={userRocks}
+ onSessionComplete={handleFocusSessionComplete}
+ />
+ </ErrorBoundary>
+ )}
+
  {/* Rocks and Tasks Grid - Only show if at least one is enabled */}
  {(hasRocksFeature || hasTasksFeature) && (
  <div className={`grid grid-cols-1 ${hasRocksFeature && hasTasksFeature ? 'lg:grid-cols-2' : ''} gap-4 sm:gap-6`}>
  {hasRocksFeature && (
+ <div ref={rocksRef}>
  <ErrorBoundary title="Rocks section unavailable">
  <MyRocksSection
  rocks={userRocks}
@@ -251,6 +314,7 @@ export function DashboardPage({
  onRefresh={onRefresh}
  />
  </ErrorBoundary>
+ </div>
  )}
  {hasTasksFeature && (
  <div ref={tasksRef}>
@@ -273,7 +337,7 @@ export function DashboardPage({
 
  {/* EOD Submission Card */}
  {hasEodFeature && (
- <div ref={eodCardRef}>
+ <div ref={eodCardRef} data-eod-section>
  <ErrorBoundary title="EOD submission unavailable">
  {/* All team members get tabs to switch between AI and Manual EOD submission */}
  <Tabs defaultValue="ai" className="w-full">

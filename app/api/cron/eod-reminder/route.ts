@@ -4,6 +4,7 @@ import { sendMissingEODReminder, isEmailConfigured } from "@/lib/integrations/em
 import { sendSlackMessage, buildEODReminderMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import type { ApiResponse, TeamMember, Organization } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import * as Sentry from "@sentry/nextjs"
 
 // This endpoint is designed to be called by Vercel Cron
 // Runs every hour to check which organizations are at 5 PM in their timezone
@@ -274,6 +275,10 @@ export async function GET(request: NextRequest) {
         })
       } catch (error) {
         logError(logger, `Failed for org ${org.id}`, error)
+        Sentry.captureMessage("Cron eod-reminder partially failed", {
+          level: "warning",
+          extra: { orgId: org.id, orgName: org.name, error: error instanceof Error ? error.message : "Unknown error" },
+        })
         results.push({
           orgId: org.id,
           orgName: org.name,
@@ -283,6 +288,15 @@ export async function GET(request: NextRequest) {
           errors: [error instanceof Error ? error.message : "Unknown error"],
         })
       }
+    }
+
+    // Alert if any orgs failed
+    const failedOrgs = results.filter(r => r.errors.length > 0)
+    if (failedOrgs.length > 0) {
+      Sentry.captureMessage(`Cron eod-reminder: ${failedOrgs.length} org(s) had errors`, {
+        level: "warning",
+        extra: { failedOrgs: failedOrgs.map(o => ({ orgId: o.orgId, orgName: o.orgName, errors: o.errors })) },
+      })
     }
 
     const totalReminders = results.reduce((sum, r) => sum + r.reminders, 0)
@@ -295,6 +309,7 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logError(logger, "EOD reminder error", error)
+    Sentry.captureException(error, { extra: { job: "eod-reminder" } })
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to send reminders" },
       { status: 500 }

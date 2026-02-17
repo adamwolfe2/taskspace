@@ -28,6 +28,7 @@ import {
   Sun,
   Bell,
   Zap,
+  Calendar,
 } from "lucide-react"
 import type { PageType } from "@/lib/types"
 import { QuickTaskDialog } from "./quick-task-dialog"
@@ -45,6 +46,7 @@ interface CommandItem {
 export function CommandPalette() {
   const [open, setOpen] = useState(false)
   const [showQuickTask, setShowQuickTask] = useState(false)
+  const [search, setSearch] = useState("")
   const { setCurrentPage, currentUser, logout, darkMode, setDarkMode } = useApp()
 
   // Listen for keyboard shortcut (Cmd+K or Ctrl+K)
@@ -79,7 +81,15 @@ export function CommandPalette() {
     setOpen(false)
   }, [darkMode, setDarkMode])
 
+  const handleQuickCreate = useCallback(() => {
+    setOpen(false)
+    setTimeout(() => setShowQuickTask(true), 100)
+  }, [])
+
   const isAdmin = currentUser?.role === "owner" || currentUser?.role === "admin"
+
+  // Show "Create task" option when search text doesn't look like a command
+  const showCreateOption = search.length >= 3
 
   // Define all available commands
   const commands: CommandItem[] = [
@@ -237,10 +247,34 @@ export function CommandPalette() {
         aria-label="Open command palette"
       />
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Type a command or search..." />
+      <CommandDialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setSearch("") }}>
+        <CommandInput placeholder="Type a command or search..." value={search} onValueChange={setSearch} />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>
+            {search.length >= 3 ? (
+              <button
+                className="flex items-center gap-2 w-full px-2 py-3 text-sm text-left hover:bg-accent rounded-md cursor-pointer"
+                onClick={handleQuickCreate}
+              >
+                <Plus className="h-4 w-4 text-muted-foreground" />
+                <span>Create task: <strong>{search}</strong></span>
+              </button>
+            ) : (
+              "No results found."
+            )}
+          </CommandEmpty>
+
+          {showCreateOption && (
+            <CommandGroup heading="Quick Create">
+              <CommandItem onSelect={handleQuickCreate}>
+                <Plus className="mr-2 h-4 w-4" />
+                <div className="flex flex-col">
+                  <span>Create task: {search}</span>
+                  <span className="text-xs text-muted-foreground">Open quick task dialog</span>
+                </div>
+              </CommandItem>
+            </CommandGroup>
+          )}
 
           <CommandGroup heading="Navigation">
             {navigationCommands.map((cmd) => (

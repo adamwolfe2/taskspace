@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { sendDailyEODLinkEmail, isEmailConfigured } from "@/lib/integrations/email"
 import type { ApiResponse, TeamMember, Organization } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import * as Sentry from "@sentry/nextjs"
 
 // This endpoint is designed to be called by Vercel Cron
 // Runs every hour to check which organizations are at 7 PM in their timezone
@@ -233,6 +234,10 @@ export async function GET(request: NextRequest) {
         })
       } catch (error) {
         logError(logger, `Failed for org ${org.id}`, error)
+        Sentry.captureMessage("Cron daily-eod-email partially failed", {
+          level: "warning",
+          extra: { orgId: org.id, orgName: org.name, error: error instanceof Error ? error.message : "Unknown error" },
+        })
         results.push({
           orgId: org.id,
           orgName: org.name,
@@ -242,6 +247,15 @@ export async function GET(request: NextRequest) {
           errors: [error instanceof Error ? error.message : "Unknown error"],
         })
       }
+    }
+
+    // Alert if any orgs failed
+    const failedOrgs = results.filter(r => r.errors.length > 0)
+    if (failedOrgs.length > 0) {
+      Sentry.captureMessage(`Cron daily-eod-email: ${failedOrgs.length} org(s) had errors`, {
+        level: "warning",
+        extra: { failedOrgs: failedOrgs.map(o => ({ orgId: o.orgId, orgName: o.orgName, errors: o.errors })) },
+      })
     }
 
     const totalEmails = results.reduce((sum, r) => sum + r.emailsSent, 0)
@@ -254,6 +268,7 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logError(logger, "Daily EOD email error", error)
+    Sentry.captureException(error, { extra: { job: "daily-eod-email" } })
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: error instanceof Error ? error.message : "Failed to send daily EOD emails" },
       { status: 500 }
