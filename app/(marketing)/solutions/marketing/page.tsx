@@ -38,7 +38,7 @@ export default function MarketingPage() {
 
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
                   <Button asChild size="lg" className="bg-black text-white hover:bg-gray-800">
-                    <Link href="/register">
+                    <Link href="/app?page=register">
                       Start Free Trial
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
@@ -215,7 +215,7 @@ export default function MarketingPage() {
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
                 <Button asChild size="lg" className="bg-black text-white hover:bg-gray-800">
-                  <Link href="/register">
+                  <Link href="/app?page=register">
                     Start Free Trial
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
