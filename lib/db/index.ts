@@ -35,6 +35,9 @@ import type {
   Project,
   ProjectMember,
   NotificationPreferences,
+  WeeklyReview,
+  Achievement,
+  UserAchievement,
 } from "../types"
 import type { PaginationParams } from "../utils/pagination"
 
@@ -329,6 +332,41 @@ function parseProjectMember(row: Record<string, unknown>): ProjectMember {
     userEmail: (row.user_email as string) || (row.email as string) || undefined,
     role: row.role as ProjectMember["role"],
     addedAt: (row.added_at as Date)?.toISOString() || "",
+  }
+}
+
+function parseWeeklyReview(row: Record<string, unknown>): WeeklyReview {
+  return {
+    id: row.id as string,
+    organizationId: row.organization_id as string,
+    userId: row.user_id as string,
+    weekStart: row.week_start ? (row.week_start as Date).toISOString().split("T")[0] : "",
+    weekEnd: row.week_end ? (row.week_end as Date).toISOString().split("T")[0] : "",
+    accomplishments: (row.accomplishments as WeeklyReview["accomplishments"]) || [],
+    wentWell: (row.went_well as string) || undefined,
+    couldImprove: (row.could_improve as string) || undefined,
+    nextWeekGoals: (row.next_week_goals as WeeklyReview["nextWeekGoals"]) || [],
+    notes: (row.notes as string) || undefined,
+    mood: (row.mood as WeeklyReview["mood"]) || undefined,
+    energyLevel: (row.energy_level as number) || undefined,
+    productivityRating: (row.productivity_rating as number) || undefined,
+    createdAt: (row.created_at as Date)?.toISOString() || "",
+    updatedAt: (row.updated_at as Date)?.toISOString() || "",
+  }
+}
+
+function parseAchievement(row: Record<string, unknown>): Achievement {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    description: (row.description as string) || undefined,
+    category: row.category as Achievement["category"],
+    icon: (row.icon as string) || "",
+    badgeColor: (row.badge_color as string) || "",
+    criteria: (row.criteria as Achievement["criteria"]) || { type: "", threshold: 0 },
+    points: (row.points as number) || 0,
+    isActive: (row.is_active as boolean) ?? true,
+    createdAt: (row.created_at as Date)?.toISOString() || "",
   }
 }
 
@@ -4312,6 +4350,107 @@ export const db = {
         WHERE project_id = ${projectId} AND user_id = ${userId}
       `
       return (rowCount ?? 0) > 0
+    },
+  },
+
+  // Weekly Reviews
+  weeklyReviews: {
+    async findByUserAndWeek(userId: string, organizationId: string, weekStart: string): Promise<WeeklyReview | null> {
+      const { rows } = await sql`
+        SELECT * FROM weekly_reviews
+        WHERE user_id = ${userId} AND organization_id = ${organizationId} AND week_start = ${weekStart}::date
+      `
+      if (!rows[0]) return null
+      return parseWeeklyReview(rows[0])
+    },
+    async findByUser(userId: string, organizationId: string, limit = 12): Promise<WeeklyReview[]> {
+      const { rows } = await sql`
+        SELECT * FROM weekly_reviews
+        WHERE user_id = ${userId} AND organization_id = ${organizationId}
+        ORDER BY week_start DESC
+        LIMIT ${limit}
+      `
+      return rows.map(parseWeeklyReview)
+    },
+    async upsert(review: Omit<WeeklyReview, "id" | "createdAt" | "updatedAt">): Promise<{ id: string }> {
+      const { rows } = await sql`
+        INSERT INTO weekly_reviews (organization_id, user_id, week_start, week_end, accomplishments, went_well, could_improve, next_week_goals, notes, mood, energy_level, productivity_rating)
+        VALUES (${review.organizationId}, ${review.userId}, ${review.weekStart}::date, ${review.weekEnd}::date,
+                ${JSON.stringify(review.accomplishments)}::jsonb, ${review.wentWell || null}, ${review.couldImprove || null},
+                ${JSON.stringify(review.nextWeekGoals)}::jsonb, ${review.notes || null}, ${review.mood || null},
+                ${review.energyLevel || null}, ${review.productivityRating || null})
+        ON CONFLICT (organization_id, user_id, week_start)
+        DO UPDATE SET
+          accomplishments = EXCLUDED.accomplishments,
+          went_well = EXCLUDED.went_well,
+          could_improve = EXCLUDED.could_improve,
+          next_week_goals = EXCLUDED.next_week_goals,
+          notes = EXCLUDED.notes,
+          mood = EXCLUDED.mood,
+          energy_level = EXCLUDED.energy_level,
+          productivity_rating = EXCLUDED.productivity_rating,
+          updated_at = NOW()
+        RETURNING id
+      `
+      return { id: rows[0].id as string }
+    },
+  },
+
+  // Achievements
+  achievements: {
+    async findAll(): Promise<Achievement[]> {
+      const { rows } = await sql`
+        SELECT * FROM achievements WHERE is_active = true ORDER BY category, points ASC
+      `
+      return rows.map(parseAchievement)
+    },
+    async findById(id: string): Promise<Achievement | null> {
+      const { rows } = await sql`SELECT * FROM achievements WHERE id = ${id}`
+      if (!rows[0]) return null
+      return parseAchievement(rows[0])
+    },
+  },
+
+  userAchievements: {
+    async findByUser(userId: string, organizationId: string): Promise<(UserAchievement & { achievement: Achievement })[]> {
+      const { rows } = await sql`
+        SELECT ua.*, a.name, a.description, a.category, a.icon, a.badge_color, a.criteria, a.points, a.is_active
+        FROM user_achievements ua
+        JOIN achievements a ON a.id = ua.achievement_id
+        WHERE ua.user_id = ${userId} AND ua.organization_id = ${organizationId}
+        ORDER BY ua.earned_at DESC
+      `
+      return rows.map(row => ({
+        id: row.id as string,
+        organizationId: row.organization_id as string,
+        userId: row.user_id as string,
+        achievementId: row.achievement_id as string,
+        earnedAt: (row.earned_at as Date)?.toISOString() || "",
+        progress: (row.progress as number) || 0,
+        notified: (row.notified as boolean) || false,
+        achievement: parseAchievement(row),
+      }))
+    },
+    async upsertProgress(organizationId: string, userId: string, achievementId: string, progress: number): Promise<{ id: string; earned: boolean }> {
+      const { rows } = await sql`
+        INSERT INTO user_achievements (organization_id, user_id, achievement_id, progress, earned_at)
+        VALUES (${organizationId}, ${userId}, ${achievementId}, ${progress},
+                CASE WHEN ${progress} >= 100 THEN NOW() ELSE NULL END)
+        ON CONFLICT (user_id, achievement_id)
+        DO UPDATE SET
+          progress = GREATEST(user_achievements.progress, EXCLUDED.progress),
+          earned_at = CASE WHEN user_achievements.earned_at IS NOT NULL THEN user_achievements.earned_at
+                           WHEN EXCLUDED.progress >= 100 THEN NOW()
+                           ELSE NULL END
+        RETURNING id, earned_at
+      `
+      return { id: rows[0].id as string, earned: rows[0].earned_at !== null }
+    },
+    async markNotified(userId: string, achievementId: string): Promise<void> {
+      await sql`
+        UPDATE user_achievements SET notified = true
+        WHERE user_id = ${userId} AND achievement_id = ${achievementId}
+      `
     },
   },
 
