@@ -34,6 +34,7 @@ import type {
   Client,
   Project,
   ProjectMember,
+  NotificationPreferences,
 } from "../types"
 import type { PaginationParams } from "../utils/pagination"
 
@@ -558,6 +559,7 @@ export const db = {
       eodReminderTime?: string
       managerId?: string | null
       jobTitle?: string
+      notificationPreferences?: NotificationPreferences
     }>> {
       const { rows } = await sql`
         SELECT
@@ -574,7 +576,8 @@ export const db = {
           om.timezone,
           om.eod_reminder_time,
           om.manager_id,
-          om.job_title
+          om.job_title,
+          om.notification_preferences
         FROM organization_members om
         LEFT JOIN users u ON u.id = om.user_id
         WHERE om.organization_id = ${orgId}
@@ -595,6 +598,7 @@ export const db = {
         eodReminderTime: row.eod_reminder_time as string | undefined,
         managerId: (row.manager_id as string) || null,
         jobTitle: row.job_title as string | undefined,
+        notificationPreferences: row.notification_preferences as NotificationPreferences | undefined,
       }))
     },
     async findByUserId(userId: string): Promise<OrganizationMember[]> {

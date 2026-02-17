@@ -10,6 +10,7 @@ import type { Rock, ApiResponse } from "@/lib/types"
 import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
 import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { logger, logError } from "@/lib/logger"
+import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
 
 // GET /api/rocks - Get rocks
 export const GET = withAuth(async (request: NextRequest, auth) => {
@@ -227,6 +228,15 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     await db.rocks.create(rock)
 
+    // Fire webhook (best-effort, non-blocking)
+    dispatchWebhook(auth.organization.id, "rock.created", {
+      rockId: rock.id,
+      title: rock.title,
+      userId: rock.userId,
+      quarter: rock.quarter,
+      workspaceId: rock.workspaceId,
+    }).catch(err => logError(logger, "Rock creation webhook failed", err))
+
     return NextResponse.json<ApiResponse<Rock>>({
       success: true,
       data: rock,
@@ -301,6 +311,15 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     }
 
     const updatedRock = await db.rocks.update(id, updates)
+
+    // Fire webhook (best-effort, non-blocking)
+    dispatchWebhook(auth.organization.id, "rock.updated", {
+      rockId: id,
+      title: updatedRock?.title || rock.title,
+      status: updatedRock?.status || rock.status,
+      progress: updatedRock?.progress ?? rock.progress,
+      workspaceId: rock.workspaceId,
+    }).catch(err => logError(logger, "Rock update webhook failed", err))
 
     return NextResponse.json<ApiResponse<Rock | null>>({
       success: true,

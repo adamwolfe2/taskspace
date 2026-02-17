@@ -109,6 +109,7 @@ export const POST = withAuth(
         mapped,
         jobId,
         auth.organization.id,
+        job.provider,
         offset,
         limit,
         db,

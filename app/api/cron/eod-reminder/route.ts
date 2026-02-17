@@ -221,6 +221,12 @@ export async function GET(request: NextRequest) {
             continue
           }
 
+          // Respect notification preferences — skip if email disabled for eod_reminder
+          if (member.notificationPreferences?.eod_reminder?.email === false) {
+            logger.info({ memberName: member.name, orgName: org.name }, "Skipping member - email notifications disabled")
+            continue
+          }
+
           const memberInfo: TeamMember = {
             id: member.id,
             name: member.name,

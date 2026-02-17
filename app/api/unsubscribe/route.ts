@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import type { ApiResponse } from '@/lib/types'
+import type { ApiResponse, NotificationPreferences } from '@/lib/types'
 
-// GET /api/unsubscribe?email=user@example.com&token=verify-token
+// GET /api/unsubscribe?email=user@example.com
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const email = searchParams.get('email')
-  const token = searchParams.get('token')
 
   if (!email) {
     return NextResponse.json<ApiResponse<null>>(
@@ -20,18 +19,41 @@ export async function GET(request: NextRequest) {
     const user = await db.users.findByEmail(email)
 
     if (!user) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: 'User not found' },
-        { status: 404 }
-      )
+      // Show success page anyway to prevent email enumeration
+      return renderUnsubscribePage()
     }
 
-    // TODO: Update user email preferences in database when preference system is implemented
-    // For now, just show the unsubscribe confirmation page
+    // Find all org memberships for this user and disable email notifications
+    const memberships = await db.members.findByUserId(user.id)
 
-    // Return success HTML page
-    return new NextResponse(
-      `
+    for (const membership of memberships) {
+      const currentPrefs = membership.notificationPreferences
+      if (!currentPrefs) continue
+
+      const updatedPrefs: NotificationPreferences = {
+        task_assigned: { ...currentPrefs.task_assigned, email: false },
+        eod_reminder: { ...currentPrefs.eod_reminder, email: false },
+        escalation: { ...currentPrefs.escalation, email: false },
+        rock_updated: { ...currentPrefs.rock_updated, email: false },
+        digest: { ...currentPrefs.digest, email: false },
+      }
+
+      await db.members.update(membership.id, {
+        notificationPreferences: updatedPrefs,
+      })
+    }
+
+    return renderUnsubscribePage()
+  } catch (error) {
+    // Still show success to prevent info leakage
+    return renderUnsubscribePage()
+  }
+}
+
+function renderUnsubscribePage() {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trytaskspace.com'
+  return new NextResponse(
+    `
 <!DOCTYPE html>
 <html>
 <head>
@@ -84,25 +106,19 @@ export async function GET(request: NextRequest) {
 </head>
 <body>
   <div class="container">
-    <h1>✅ You've been unsubscribed</h1>
+    <h1>You've been unsubscribed</h1>
     <p>You will no longer receive email notifications from TaskSpace.</p>
     <p>You can re-enable notifications anytime from your account settings.</p>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://trytaskspace.com'}/settings" class="button">Go to Settings</a>
+    <a href="${appUrl}/settings" class="button">Go to Settings</a>
   </div>
 </body>
 </html>
-      `,
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/html',
-        },
-      }
-    )
-  } catch (error) {
-    return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: 'Failed to update preferences' },
-      { status: 500 }
-    )
-  }
+    `,
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html',
+      },
+    }
+  )
 }

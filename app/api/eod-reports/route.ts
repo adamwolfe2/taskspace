@@ -18,6 +18,7 @@ import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagin
 import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { format, subDays } from "date-fns"
 import { logger, logError } from "@/lib/logger"
+import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
 
 // GET /api/eod-reports - Get EOD reports
 export const GET = withAuth(async (request: NextRequest, auth) => {
@@ -316,6 +317,16 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       }
 
       await db.eodReports.create(report)
+
+      // Fire webhook for new submission (best-effort, non-blocking)
+      dispatchWebhook(auth.organization.id, "eod.submitted", {
+        reportId: report.id,
+        userId: auth.user.id,
+        date: report.date,
+        tasksCount: tasks.length,
+        needsEscalation: report.needsEscalation,
+        workspaceId: report.workspaceId,
+      }).catch(err => logError(logger, "EOD submission webhook failed", err))
     }
 
     // Update weekly metric aggregation if user has a metric defined

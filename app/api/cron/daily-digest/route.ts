@@ -245,7 +245,9 @@ export async function GET(request: NextRequest) {
 
               // Send Rock-organized HTML digest to all admins
               const resend = new Resend(process.env.RESEND_API_KEY)
-              const adminEmails = admins.map(a => a.email)
+              const adminEmails = admins
+                .filter(a => a.notificationPreferences?.digest?.email !== false)
+                .map(a => a.email)
 
               await resend.emails.send({
                 from: process.env.EMAIL_FROM || "Taskspace <team@collectivecapital.com>",

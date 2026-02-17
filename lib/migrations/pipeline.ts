@@ -209,6 +209,7 @@ export async function load(
   mapped: NormalizedData,
   importJobId: string,
   organizationId: string,
+  provider: ImportProvider,
   offset: number,
   limit: number,
   db: any, // Database interface (will be typed properly in db layer)
@@ -228,7 +229,7 @@ export async function load(
       // 1. Check if already imported (idempotency)
       const existing = await db.migrations.findExternalIdMap({
         organizationId,
-        provider: 'trello', // TODO: Get from import job
+        provider,
         externalId: task.externalId,
         entityType: 'task',
       })
@@ -251,7 +252,7 @@ export async function load(
         // Multi-workspace import - lookup from external_id_map
         const wsMapping = await db.migrations.findExternalIdMap({
           organizationId,
-          provider: 'trello', // TODO: Get from import job
+          provider,
           externalId: task.workspaceExternalId,
           entityType: 'workspace',
         })
@@ -263,7 +264,7 @@ export async function load(
       if (task.projectExternalId) {
         const projectMapping = await db.migrations.findExternalIdMap({
           organizationId,
-          provider: 'trello',
+          provider,
           externalId: task.projectExternalId,
           entityType: 'project',
         })
@@ -288,7 +289,7 @@ export async function load(
       await db.migrations.createExternalIdMap({
         organizationId,
         importJobId,
-        provider: 'trello',
+        provider,
         externalId: task.externalId,
         entityType: 'task',
         internalId: createdTask.id,

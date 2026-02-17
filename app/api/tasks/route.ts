@@ -12,6 +12,7 @@ import type { AssignedTask, ApiResponse, Notification } from "@/lib/types"
 import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
 import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { logger, logError } from "@/lib/logger"
+import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
 
 // GET /api/tasks - Get tasks
 export const GET = withAuth(async (request: NextRequest, auth) => {
@@ -270,6 +271,16 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     await db.assignedTasks.create(task)
 
+    // Fire webhook (best-effort, non-blocking)
+    dispatchWebhook(auth.organization.id, "task.created", {
+      taskId: task.id,
+      title: task.title,
+      assigneeId: task.assigneeId,
+      priority: task.priority,
+      dueDate: task.dueDate,
+      workspaceId: task.workspaceId,
+    }).catch(err => logError(logger, "Task creation webhook failed", err))
+
     // Send notifications for assigned tasks (not personal tasks)
     if (taskType === "assigned" && assigneeId !== auth.user.id) {
       // Create in-app notification
@@ -393,6 +404,16 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     updateData.updatedAt = new Date().toISOString()
 
     const updatedTask = await db.assignedTasks.update(id, updateData)
+
+    // Fire webhook (best-effort, non-blocking)
+    const webhookEvent = updates.status === "completed" ? "task.completed" as const : "task.updated" as const
+    dispatchWebhook(auth.organization.id, webhookEvent, {
+      taskId: id,
+      title: updatedTask?.title || task.title,
+      status: updates.status || task.status,
+      assigneeId: task.assigneeId,
+      workspaceId: task.workspaceId,
+    }).catch(err => logError(logger, "Task update webhook failed", err))
 
     // Sync to Asana if task has an asanaGid
     if (task.asanaGid && asanaClient.isConfigured()) {

@@ -58,6 +58,10 @@ jest.mock("@/lib/validation/middleware", () => ({
   },
 }))
 
+jest.mock("@/lib/db/sql", () => ({
+  sql: jest.fn(() => Promise.resolve({ rows: [] })),
+}))
+
 jest.mock("@/lib/logger", () => ({
   logger: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
   logAuthEvent: jest.fn(),

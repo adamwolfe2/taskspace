@@ -211,8 +211,9 @@ export function ImportSummary({ job, onReset }: ImportSummaryProps) {
         </button>
         <button
           onClick={() => {
-            // TODO: Navigate to imported data
-            window.location.href = "/app"
+            window.location.href = job.workspaceId
+              ? `/app?workspace=${job.workspaceId}&tab=tasks`
+              : "/app"
           }}
           className="rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
