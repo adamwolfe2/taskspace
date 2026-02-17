@@ -1,6 +1,7 @@
 import { sql } from "./sql"
 import { withTransaction } from "./transactions"
 import { sanitizeText } from "@/lib/utils/sanitize"
+import { importJobs, externalIdMap, importConflicts, importLogs } from "./migrations"
 import type {
   User,
   Organization,
@@ -4308,6 +4309,14 @@ export const db = {
       `
       return (rowCount ?? 0) > 0
     },
+  },
+
+  // Migration Center
+  migrations: {
+    importJobs,
+    externalIdMap,
+    importConflicts,
+    importLogs,
   },
 }
 
