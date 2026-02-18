@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select"
 import { TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 
 interface ScorecardTrendChartProps {
   trends: {
@@ -33,6 +34,7 @@ interface ScorecardTrendChartProps {
 }
 
 export function ScorecardTrendChart({ trends, loading }: ScorecardTrendChartProps) {
+  const { getStatusStyle } = useBrandStatusStyles()
   const [selectedMetricId, setSelectedMetricId] = useState<string | null>(null)
 
   const selectedMetric = useMemo(() => {
@@ -168,16 +170,9 @@ export function ScorecardTrendChart({ trends, loading }: ScorecardTrendChartProp
 
   // Status color mapping
   const getStatusColor = (status: string | null) => {
-    switch (status) {
-      case "on-track":
-        return "#22c55e" // green-500
-      case "at-risk":
-        return "#eab308" // yellow-500
-      case "off-track":
-        return "#ef4444" // red-500
-      default:
-        return "#cbd5e1" // slate-300
-    }
+    if (!status) return "#cbd5e1"
+    const style = getStatusStyle(status)
+    return style.color
   }
 
   return (
@@ -323,15 +318,15 @@ export function ScorecardTrendChart({ trends, loading }: ScorecardTrendChartProp
           {/* Legend */}
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getStatusStyle("on-track").color }} />
               <span>On Track</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-yellow-500" />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getStatusStyle("at-risk").color }} />
               <span>At Risk</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-500" />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getStatusStyle("blocked").color }} />
               <span>Off Track</span>
             </div>
             {targetValue !== undefined && (

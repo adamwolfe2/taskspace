@@ -13,6 +13,7 @@ import {
   Clock,
   Flame,
 } from "lucide-react"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 
 // Rock progress data for display
 interface RockProgress {
@@ -58,20 +59,8 @@ function RockProgressBar({
   status: RockProgress["status"]
   size?: "sm" | "md"
 }) {
-  const getStatusColor = () => {
-    switch (status) {
-      case "completed":
-        return "from-emerald-400 to-emerald-500"
-      case "on-track":
-        return "from-blue-400 to-blue-500"
-      case "at-risk":
-        return "from-amber-400 to-amber-500"
-      case "blocked":
-        return "from-red-400 to-red-500"
-      default:
-        return "from-slate-300 to-slate-400"
-    }
-  }
+  const { getStatusStyle } = useBrandStatusStyles()
+  const statusStyle = getStatusStyle(status)
 
   return (
     <div
@@ -81,11 +70,8 @@ function RockProgressBar({
       )}
     >
       <div
-        className={cn(
-          "h-full rounded-full bg-gradient-to-r transition-all duration-500",
-          getStatusColor()
-        )}
-        style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+        className="h-full rounded-full transition-all duration-500"
+        style={{ width: `${Math.min(100, Math.max(0, progress))}%`, backgroundColor: statusStyle.color }}
       />
     </div>
   )

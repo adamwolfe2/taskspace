@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils"
 import type { Rock, RockDependency } from "@/lib/types"
 import { Plus, X, ArrowRight, Link2, Unlink, AlertTriangle, Target } from "lucide-react"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 
 interface RockDependenciesProps {
  rock: Rock
@@ -94,20 +95,7 @@ export function RockDependencies({
  }
  }
 
- const getRockStatusColor = (status: Rock["status"]) => {
- switch (status) {
- case "on-track":
- return "bg-emerald-100 text-emerald-700  "
- case "at-risk":
- return "bg-amber-100 text-amber-700  "
- case "blocked":
- return "bg-red-100 text-red-700  "
- case "completed":
- return "bg-slate-100 text-slate-700  "
- default:
- return "bg-slate-100 text-slate-700"
- }
- }
+ const { getStatusStyle } = useBrandStatusStyles()
 
  return (
  <div className={cn("space-y-4", className)}>
@@ -148,7 +136,8 @@ export function RockDependencies({
  </span>
  <Badge
  variant="outline"
- className={cn("shrink-0 text-xs", getRockStatusColor(dependsOnRock.status))}
+ className="shrink-0 text-xs"
+ style={getStatusStyle(dependsOnRock.status)}
  >
  {dependsOnRock.status.replace("-", "")}
  </Badge>
@@ -207,7 +196,8 @@ export function RockDependencies({
  <span>{r.title}</span>
  <Badge
  variant="outline"
- className={cn("text-xs", getRockStatusColor(r.status))}
+ className="text-xs"
+ style={getStatusStyle(r.status)}
  >
  {r.progress}%
  </Badge>

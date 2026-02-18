@@ -25,6 +25,7 @@ import {
  Brain,
 } from "lucide-react"
 import { format, parseISO, differenceInDays, isToday, isTomorrow, startOfDay } from "date-fns"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 
 interface SmartSuggestionsProps {
  tasks: AssignedTask[]
@@ -56,6 +57,7 @@ export function SmartSuggestions({
  onRockClick,
  className,
 }: SmartSuggestionsProps) {
+ const { getPriorityStyle: getBrandPriorityStyle, getStatusStyle } = useBrandStatusStyles()
  const suggestions = useMemo(() => {
  const result: Suggestion[] = []
  const today = startOfDay(new Date())
@@ -270,17 +272,9 @@ export function SmartSuggestions({
  return streak
  }
 
- const getPriorityStyles = (priority: Suggestion["priority"]) => {
- switch (priority) {
- case "critical":
- return "bg-red-50  border-red-200 "
- case "high":
- return "bg-amber-50  border-amber-200 "
- case "medium":
- return "bg-blue-50  border-blue-200 "
- case "low":
- return "bg-slate-50  border-slate-200 "
- }
+ const getPriorityInlineStyle = (priority: Suggestion["priority"]) => {
+ const style = getBrandPriorityStyle(priority)
+ return { backgroundColor: style.backgroundColor, borderColor: style.borderColor }
  }
 
  if (suggestions.length === 0) {
@@ -303,11 +297,8 @@ export function SmartSuggestions({
  <Tooltip>
  <TooltipTrigger asChild>
  <div
- className={cn(
- "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:shadow-sm animate-fade-in-up opacity-0",
- getPriorityStyles(suggestion.priority)
- )}
- style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'forwards' }}
+ className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:shadow-sm animate-fade-in-up opacity-0"
+ style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'forwards', ...getPriorityInlineStyle(suggestion.priority) }}
  onClick={() => {
  if (suggestion.taskId) onTaskClick?.(suggestion.taskId)
  if (suggestion.rockId) onRockClick?.(suggestion.rockId)
@@ -407,6 +398,7 @@ export function NextActionSuggestion({
  rocks: Rock[]
  className?: string
 }) {
+ const { getPriorityStyle: getBrandPriorityStyle2 } = useBrandStatusStyles()
  const nextAction = useMemo(() => {
  const today = startOfDay(new Date())
 
@@ -492,20 +484,15 @@ export function NextActionSuggestion({
  )
  }
 
- const urgencyStyles = {
- critical: "bg-red-50 border-red-200 text-red-700  ",
- high: "bg-amber-50 border-amber-200 text-amber-700  ",
- medium: "bg-blue-50 border-blue-200 text-blue-700  ",
- low: "bg-slate-50 border-slate-200 text-slate-700  ",
- }
+ const urgencyInlineStyle = getBrandPriorityStyle2(nextAction.urgency)
 
  return (
  <div
  className={cn(
  "flex items-center gap-3 p-3 rounded-lg border",
- urgencyStyles[nextAction.urgency],
  className
  )}
+ style={{ backgroundColor: urgencyInlineStyle.backgroundColor, borderColor: urgencyInlineStyle.borderColor, color: urgencyInlineStyle.color }}
  >
  <Sparkles className="h-5 w-5 shrink-0" />
  <div className="flex-1 min-w-0">

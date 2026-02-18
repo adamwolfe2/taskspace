@@ -19,6 +19,7 @@ import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { Target, Calendar, AlertCircle, CheckCircle2, Clock, Pencil, Save, X, FolderKanban } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 
 // Calculate quarter from a date string (YYYY-MM-DD or ISO format)
 function getQuarterFromDate(dateStr: string): string {
@@ -55,26 +56,28 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
   const [projectId, setProjectId] = useState<string | null>(rock.projectId || null)
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
+  const { getStatusStyle } = useBrandStatusStyles()
 
   const daysLeft = getDaysUntil(rock.dueDate)
 
   const getStatusConfig = (status: Rock["status"]) => {
     switch (status) {
       case "on-track":
-        return { icon: CheckCircle2, label: "On Track", color: "text-emerald-600", bgColor: "bg-emerald-50" }
+        return { icon: CheckCircle2, label: "On Track" }
       case "at-risk":
-        return { icon: Clock, label: "At Risk", color: "text-amber-600", bgColor: "bg-amber-50" }
+        return { icon: Clock, label: "At Risk" }
       case "blocked":
-        return { icon: AlertCircle, label: "Blocked", color: "text-red-600", bgColor: "bg-red-50" }
+        return { icon: AlertCircle, label: "Blocked" }
       case "completed":
-        return { icon: CheckCircle2, label: "Completed", color: "text-slate-600", bgColor: "bg-slate-100" }
+        return { icon: CheckCircle2, label: "Completed" }
       default:
-        return { icon: Target, label: "Unknown", color: "text-slate-600", bgColor: "bg-slate-100" }
+        return { icon: Target, label: "Unknown" }
     }
   }
 
   const statusConfig = getStatusConfig(rock.status)
   const StatusIcon = statusConfig.icon
+  const statusStyle = getStatusStyle(rock.status)
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -127,8 +130,8 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
         <DialogHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${statusConfig.bgColor}`}>
-                <Target className={`h-5 w-5 ${statusConfig.color}`} />
+              <div className="p-2 rounded-lg" style={{ backgroundColor: statusStyle.backgroundColor }}>
+                <Target className="h-5 w-5" style={{ color: statusStyle.color }} />
               </div>
               <div>
                 <DialogTitle className="text-xl">
@@ -143,8 +146,8 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
                   )}
                 </DialogTitle>
                 <DialogDescription className="flex items-center gap-2 mt-1">
-                  <StatusIcon className={`h-4 w-4 ${statusConfig.color}`} />
-                  <span className={statusConfig.color}>{statusConfig.label}</span>
+                  <StatusIcon className="h-4 w-4" style={{ color: statusStyle.color }} />
+                  <span style={{ color: statusStyle.color }}>{statusConfig.label}</span>
                   <span className="text-slate-300">•</span>
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
@@ -188,16 +191,8 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
             </div>
             <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-300 ${
-                  rock.progress >= 100
-                    ? "bg-emerald-500"
-                    : rock.progress >= 70
-                      ? "bg-blue-500"
-                      : rock.progress >= 40
-                        ? "bg-amber-500"
-                        : "bg-slate-400"
-                }`}
-                style={{ width: `${rock.progress}%` }}
+                className="h-full rounded-full transition-all duration-300"
+                style={{ width: `${rock.progress}%`, backgroundColor: statusStyle.color }}
               />
             </div>
           </div>
