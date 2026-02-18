@@ -1,23 +1,44 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react"
-import ReactGridLayout, { Layout } from "react-grid-layout"
+import dynamic from "next/dynamic"
+import "react-grid-layout/css/styles.css"
 
-// Cast to any to avoid type definition mismatches with react-grid-layout v2.x
-const GridLayout = ReactGridLayout as unknown as React.ComponentType<{
+// react-grid-layout references `Element` at module level which breaks SSR.
+// Use next/dynamic with ssr:false so the JS only loads on the client.
+interface RGLLayout {
+  i: string
+  x: number
+  y: number
+  w: number
+  h: number
+  minW?: number
+  maxW?: number
+  minH?: number
+  maxH?: number
+  static?: boolean
+}
+
+type GridLayoutProps = {
   className?: string
-  layout: Layout[]
+  layout: RGLLayout[]
   cols: number
   rowHeight: number
   width: number
-  onLayoutChange?: (layout: Layout[]) => void
+  onLayoutChange?: (layout: RGLLayout[]) => void
   isDraggable?: boolean
   isResizable?: boolean
   draggableHandle?: string
   margin?: [number, number]
   containerPadding?: [number, number]
   children?: React.ReactNode
-}>
+}
+
+const GridLayout = dynamic(
+  () => import("react-grid-layout"),
+  { ssr: false }
+) as unknown as React.ComponentType<GridLayoutProps>
+
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -199,7 +220,7 @@ export function CustomizableLayout({
   enabledWidgets.some((w) => w.id === l.i)
  )
 
- const handleLayoutChange = useCallback((newLayout: Layout[]) => {
+ const handleLayoutChange = useCallback((newLayout: RGLLayout[]) => {
   if (isEditing) {
    onLayoutChange(newLayout as unknown as LayoutItem[])
   }
@@ -271,7 +292,7 @@ export function CustomizableLayout({
    {/* Grid Layout */}
    <GridLayout
     className="layout"
-    layout={enabledLayout as unknown as Layout[]}
+    layout={enabledLayout as unknown as RGLLayout[]}
     cols={4}
     rowHeight={100}
     width={containerWidth}
