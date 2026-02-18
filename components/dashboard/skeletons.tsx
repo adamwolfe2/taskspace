@@ -4,8 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function StatsCardsSkeleton() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {[1, 2, 3, 4].map((i) => (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {[1, 2, 3].map((i) => (
         <div key={i} className="bg-white rounded-xl shadow-card p-4">
           <div className="flex items-center justify-between mb-2">
             <Skeleton className="h-4 w-20" />
@@ -121,20 +121,65 @@ export function EODFormSkeleton() {
   )
 }
 
+export function EODStatusBarSkeleton() {
+  return (
+    <div className="flex items-center justify-between px-4 py-2.5 rounded-lg border border-slate-200">
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-4 w-4 rounded" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+      <Skeleton className="h-7 w-24 rounded" />
+    </div>
+  )
+}
+
+export function ActionHubSkeleton() {
+  return (
+    <div className="bg-white rounded-xl shadow-card p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <Skeleton className="h-5 w-5 rounded" />
+        <Skeleton className="h-5 w-24" />
+      </div>
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg">
+            <Skeleton className="h-4 w-4 rounded mt-0.5" />
+            <div className="flex-1">
+              <Skeleton className="h-4 w-48 mb-1" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <Skeleton className="h-5 w-12 rounded-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function DashboardSkeleton() {
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <Skeleton className="h-8 w-64 mb-2" />
         <Skeleton className="h-5 w-48" />
       </div>
-      <StatsCardsSkeleton />
-      <WeeklyCalendarSkeleton />
+      {/* EOD Status Bar */}
+      <EODStatusBarSkeleton />
+      {/* Action Hub */}
+      <ActionHubSkeleton />
+      {/* Rocks + Tasks Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RocksSkeleton />
         <TasksSkeleton />
       </div>
-      <EODFormSkeleton />
+      {/* Stats */}
+      <StatsCardsSkeleton />
+      {/* EOD Calendar + Submission side-by-side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <WeeklyCalendarSkeleton />
+        <EODFormSkeleton />
+      </div>
     </div>
   )
 }

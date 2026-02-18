@@ -13,6 +13,7 @@ import type { EODReport } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface WeeklyEODCalendarProps {
  eodReports: EODReport[]
@@ -117,6 +118,7 @@ export function WeeklyEODCalendar({
  showMoodTrend = true
 }: WeeklyEODCalendarProps) {
  const { currentOrganization } = useApp()
+ const themedColors = useThemedIconColors()
  // Use organization timezone for date calculations
  const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
  const todayString = getTodayInTimezone(orgTimezone)
@@ -157,7 +159,7 @@ export function WeeklyEODCalendar({
 
  const getMoodIcon = (mood: string) => {
  switch (mood) {
- case 'positive': return <Smile className="h-3 w-3 text-green-500" />
+ case 'positive': return <Smile className="h-3 w-3" style={{ color: themedColors.primary }} />
  case 'stressed':
  case 'negative': return <Frown className="h-3 w-3 text-red-500" />
  default: return <Meh className="h-3 w-3 text-slate-400" />
@@ -180,7 +182,10 @@ export function WeeklyEODCalendar({
  </div>
  </div>
  {submittedCount === expectedCount && expectedCount > 0 && (
- <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium text-emerald-600 bg-emerald-50   px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+ <span
+  className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full"
+  style={{ color: themedColors.primary, backgroundColor: themedColors.primaryAlpha10 }}
+ >
  <CheckCircle2 className="h-3 w-3" />
  <span className="hidden sm:inline">On track</span>
  <span className="sm:hidden">OK</span>
@@ -215,16 +220,20 @@ export function WeeklyEODCalendar({
  : day.isFuture
  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
  : day.hasSubmission
- ? "bg-emerald-50 hover:bg-emerald-100 cursor-pointer"
+ ? "cursor-pointer border border-transparent"
  : "bg-red-50 hover:bg-red-100 cursor-pointer"
  )}
+ style={!showAsSelected && !day.isFuture && day.hasSubmission ? { backgroundColor: themedColors.primaryAlpha10 } : undefined}
  >
  {/* Badge for multiple reports */}
  {hasMultipleReports && (
- <span className={cn(
- "absolute -top-1 -right-1 text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center",
- showAsSelected ? "bg-white text-slate-600" : "bg-emerald-600 text-white"
- )}>
+ <span
+  className={cn(
+  "absolute -top-1 -right-1 text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center",
+  showAsSelected ? "bg-white text-slate-600" : "text-white"
+  )}
+  style={showAsSelected ? undefined : { backgroundColor: themedColors.primary }}
+ >
  {reportCount}
  </span>
  )}
@@ -247,10 +256,11 @@ export function WeeklyEODCalendar({
  ? "text-white"
  : day.isFuture
  ? "text-slate-400"
- : day.hasSubmission
- ? "text-emerald-700"
- : "text-red-700"
+ : !day.hasSubmission
+ ? "text-red-700"
+ : ""
  )}
+ style={!showAsSelected && !day.isFuture && day.hasSubmission ? { color: themedColors.primary } : undefined}
  >
  {day.dayNumber}
  </span>
@@ -258,7 +268,7 @@ export function WeeklyEODCalendar({
  {day.isFuture ? (
  <Circle className="h-4 w-4 sm:h-5 sm:w-5 text-slate-300 " />
  ) : day.hasSubmission ? (
- <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500" />
+ <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: themedColors.primary }} />
  ) : showAsSelected ? (
  <Circle className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400" />
  ) : (
@@ -345,7 +355,7 @@ export function WeeklyEODCalendar({
 
  <div className="flex items-center justify-center gap-3 sm:gap-6 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-100 flex-wrap">
  <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-slate-500 ">
- <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500 flex-shrink-0" />
+ <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" style={{ color: themedColors.primary }} />
  <span>Submitted</span>
  </div>
  <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-slate-500 ">

@@ -9,7 +9,8 @@ import { EODSubmissionCard } from "@/components/dashboard/eod-submission-card"
 import { AIEODSubmission } from "@/components/dashboard/ai-eod-submission"
 import { WeeklyEODCalendar } from "@/components/dashboard/weekly-eod-calendar"
 import { QuickActionsBar } from "@/components/dashboard/quick-actions-bar"
-import { FocusOfTheDay } from "@/components/dashboard/focus-of-the-day"
+import { ActionHub } from "@/components/dashboard/action-hub"
+import { EODStatusBar } from "@/components/dashboard/eod-status-bar"
 import { ProductivityBar } from "@/components/dashboard/productivity-bar"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-dialog"
@@ -23,7 +24,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
-import { SmartSuggestions } from "@/components/dashboard/smart-suggestions"
 import { FocusTimer } from "@/components/shared/focus-timer"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 
@@ -68,7 +68,6 @@ export function DashboardPage({
  const { currentOrganization } = useApp()
  const { isFeatureEnabled } = useWorkspaceFeatures()
  const { currentWorkspaceId } = useWorkspaces()
-
  // Check which features are enabled
  const hasTasksFeature = isFeatureEnabled("core.tasks")
  const hasRocksFeature = isFeatureEnabled("core.rocks")
@@ -203,58 +202,42 @@ export function DashboardPage({
 
  return (
  <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
- {/* No workspace selected alert */}
+ {/* 1. Alerts & Dialog */}
  <NoWorkspaceAlert />
-
- {/* Keyboard Shortcuts Dialog */}
  <KeyboardShortcutsDialog />
 
- {/* Header with Quick Actions */}
+ {/* 2. Welcome Header + QuickActionsBar (no EOD button — moved to EODStatusBar) */}
  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
  <div className="min-w-0">
- <h1 className="text-xl sm:text-2xl font-bold text-slate-900 ">
- Welcome back, {currentUser.name?.split(" ")[0] || "there"}
+ <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+ Welcome back, {(currentUser.name || "there").split(" ")[0]}
  </h1>
- <p className="text-sm sm:text-base text-slate-500 mt-1">Here's your overview for today</p>
+ <p className="text-sm sm:text-base text-slate-500 mt-1">Here&apos;s your overview for today</p>
  </div>
- {(hasEodFeature || hasTasksFeature) && (
+ {hasTasksFeature && (
  <QuickActionsBar
- onSubmitEOD={hasEodFeature ? handleScrollToEOD : undefined}
- onAddTask={hasTasksFeature ? () => tasksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }) : undefined}
- hasSubmittedEOD={hasSubmittedEODToday}
+ onAddTask={() => tasksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
  />
  )}
  </div>
 
- {/* Stats Cards - Only show if tasks or rocks enabled */}
- {(hasTasksFeature || hasRocksFeature) && (
- <ErrorBoundary title="Stats unavailable">
- <StatsCards stats={stats} />
- </ErrorBoundary>
- )}
-
- {/* Productivity Bar (Streaks, Achievements, Weekly Review) */}
- {(hasStreaksFeature || hasAchievementsFeature || hasWeeklyReviewsFeature) && (
- <ErrorBoundary title="Productivity bar unavailable">
- <ProductivityBar
- userId={effectiveUserId}
- eodReports={eodReports}
- tasks={assignedTasks}
- rocks={rocks}
- showStreaks={hasStreaksFeature}
- showAchievements={hasAchievementsFeature}
- showWeeklyReview={hasWeeklyReviewsFeature}
+ {/* 3. EOD Status Bar — prominent CTA */}
+ {hasEodFeature && (
+ <EODStatusBar
+ hasSubmittedToday={hasSubmittedEODToday}
+ onSubmitEOD={handleScrollToEOD}
  />
- </ErrorBoundary>
  )}
 
- {/* Smart Suggestions - AI-powered task and rock insights */}
+ {/* 4. Action Hub — unified AI suggestions (replaces SmartSuggestions + FocusOfTheDay) */}
  {(hasTasksFeature || hasRocksFeature) && (
  <ErrorBoundary title="Suggestions unavailable">
- <SmartSuggestions
+ <ActionHub
  tasks={userTasks}
  rocks={userRocks}
  eodReports={eodReports}
+ onToggleTask={handleToggleTask}
+ onViewTask={handleViewTask}
  onTaskClick={() => {
  tasksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
  }}
@@ -265,43 +248,7 @@ export function DashboardPage({
  </ErrorBoundary>
  )}
 
- {/* Weekly EOD Calendar with Hover Preview */}
- {hasEodFeature && (
- <ErrorBoundary title="Calendar unavailable">
- <WeeklyEODCalendar
- eodReports={eodReports}
- userId={effectiveUserId}
- selectedDate={selectedEodDate}
- onSelectDate={handleSelectEodDate}
- showMoodTrend
- />
- </ErrorBoundary>
- )}
-
- {/* Focus of the Day - AI Suggested Priorities */}
- {hasFocusBlocksFeature && (hasTasksFeature || hasRocksFeature) && (
- <ErrorBoundary title="Suggestions unavailable">
- <FocusOfTheDay
- tasks={userTasks}
- rocks={userRocks}
- onToggleTask={handleToggleTask}
- onViewTask={handleViewTask}
- />
- </ErrorBoundary>
- )}
-
- {/* Focus Timer - Pomodoro and deep work sessions */}
- {hasFocusBlocksFeature && (
- <ErrorBoundary title="Focus timer unavailable">
- <FocusTimer
- tasks={userTasks}
- rocks={userRocks}
- onSessionComplete={handleFocusSessionComplete}
- />
- </ErrorBoundary>
- )}
-
- {/* Rocks and Tasks Grid - Only show if at least one is enabled */}
+ {/* 5. Rocks + Tasks Grid — PROMOTED (was position 10) */}
  {(hasRocksFeature || hasTasksFeature) && (
  <div className={`grid grid-cols-1 ${hasRocksFeature && hasTasksFeature ? 'lg:grid-cols-2' : ''} gap-4 sm:gap-6`}>
  {hasRocksFeature && (
@@ -335,14 +282,49 @@ export function DashboardPage({
  </div>
  )}
 
- {/* EOD Submission Card */}
+ {/* 6. Stats + Productivity Group — DEMOTED, grouped together */}
+ {(hasTasksFeature || hasRocksFeature || hasStreaksFeature || hasAchievementsFeature || hasWeeklyReviewsFeature) && (
+ <div className="space-y-4 sm:space-y-6">
+ {(hasTasksFeature || hasRocksFeature) && (
+ <ErrorBoundary title="Stats unavailable">
+ <StatsCards stats={stats} />
+ </ErrorBoundary>
+ )}
+
+ {(hasStreaksFeature || hasAchievementsFeature || hasWeeklyReviewsFeature) && (
+ <ErrorBoundary title="Productivity bar unavailable">
+ <ProductivityBar
+ userId={effectiveUserId}
+ eodReports={eodReports}
+ tasks={assignedTasks}
+ rocks={rocks}
+ showStreaks={hasStreaksFeature}
+ showAchievements={hasAchievementsFeature}
+ showWeeklyReview={hasWeeklyReviewsFeature}
+ />
+ </ErrorBoundary>
+ )}
+ </div>
+ )}
+
+ {/* 7. Weekly EOD Calendar + EOD Submission — side-by-side on desktop */}
  {hasEodFeature && (
+ <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+ <ErrorBoundary title="Calendar unavailable">
+ <WeeklyEODCalendar
+ eodReports={eodReports}
+ userId={effectiveUserId}
+ selectedDate={selectedEodDate}
+ onSelectDate={handleSelectEodDate}
+ showMoodTrend
+ />
+ </ErrorBoundary>
+
  <div ref={eodCardRef} data-eod-section>
  <ErrorBoundary title="EOD submission unavailable">
- {/* All team members get tabs to switch between AI and Manual EOD submission */}
  <Tabs defaultValue="ai" className="w-full">
  <TabsList className="grid w-full grid-cols-2 mb-3 sm:mb-4">
- <TabsTrigger value="ai" className="data-[state=active]:bg-purple-100 text-xs sm:text-sm min-h-[44px]">
+ <TabsTrigger value="ai" className="text-xs sm:text-sm min-h-[44px]">
  ✨ AI Text Dump
  </TabsTrigger>
  <TabsTrigger value="manual" className="text-xs sm:text-sm min-h-[44px]">
@@ -373,12 +355,24 @@ export function DashboardPage({
  </Tabs>
  </ErrorBoundary>
  </div>
+ </div>
  )}
 
- {/* Recent Activity Feed */}
+ {/* 8. Focus Timer — demoted */}
+ {hasFocusBlocksFeature && (
+ <ErrorBoundary title="Focus timer unavailable">
+ <FocusTimer
+ tasks={userTasks}
+ rocks={userRocks}
+ onSessionComplete={handleFocusSessionComplete}
+ />
+ </ErrorBoundary>
+ )}
+
+ {/* 9. Recent Activity Feed */}
  <ActivityFeed />
 
- {/* Empty Dashboard State */}
+ {/* 10. Empty Dashboard State */}
  {!hasTasksFeature && !hasRocksFeature && !hasEodFeature && !hasFocusBlocksFeature && (
  <Card>
  <CardContent className="flex flex-col items-center justify-center py-10 sm:py-16 px-4">

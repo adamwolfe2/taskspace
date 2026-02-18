@@ -46,25 +46,14 @@ export function QuickActionsBar({
  const themedColors = useThemedIconColors()
 
  const actions: QuickAction[] = [
- ...(onSubmitEOD ? [{
- id: "eod",
- label: hasSubmittedEOD ? "EOD Submitted" : "Submit EOD",
- shortLabel: "EOD",
- icon: ClipboardEdit,
- color: hasSubmittedEOD ? "text-green-600" : "",
- bgColor: hasSubmittedEOD ? "bg-green-50 " : "",
- hoverColor: hasSubmittedEOD ? "hover:bg-green-100 " : "",
- onClick: onSubmitEOD,
- badge: hasSubmittedEOD ? "✓" : undefined,
- }] : []),
  ...(onAddTask ? [{
  id: "task",
  label: "Add Task",
  shortLabel: "Task",
  icon: Plus,
- color: "text-emerald-600",
- bgColor: "bg-emerald-50 ",
- hoverColor: "hover:bg-emerald-100 ",
+ color: "",
+ bgColor: "",
+ hoverColor: "",
  onClick: onAddTask,
  }] : []),
  ...(onUpdateRock
@@ -103,7 +92,7 @@ export function QuickActionsBar({
  {actions.map((action) => {
   // Apply themed colors for specific actions
   let buttonStyle: React.CSSProperties = {}
-  if (action.id === "eod" && !hasSubmittedEOD) {
+  if (action.id === "task") {
    buttonStyle = {
     backgroundColor: themedColors.primaryAlpha10,
     color: themedColors.primary,

@@ -1,7 +1,6 @@
 "use client"
 
-import { CheckCircle2, Target, TrendingUp, Calendar, Flame } from "lucide-react"
-import { getStreakMilestone } from "@/lib/utils/stats-calculator"
+import { CheckCircle2, Target, TrendingUp } from "lucide-react"
 import { EnhancedStatCard } from "./enhanced-stat-card"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
@@ -33,8 +32,10 @@ export function StatsCards({ stats }: StatsCardsProps) {
       } : undefined,
       subtitle: `${Math.round(safeCompletionRate)}% completion rate`,
       icon: CheckCircle2,
-      iconBg: "bg-emerald-50",
-      iconColor: "text-emerald-600",
+      iconBg: "",
+      iconBgStyle: { backgroundColor: themedColors.primaryAlpha10 },
+      iconColor: "",
+      iconColorStyle: { color: themedColors.primary },
     },
     {
       title: "Active Rocks",
@@ -46,9 +47,9 @@ export function StatsCards({ stats }: StatsCardsProps) {
       subtitle: "quarterly goals",
       icon: Target,
       iconBg: "",
-      iconBgStyle: { backgroundColor: themedColors.primaryAlpha10 },
+      iconBgStyle: { backgroundColor: themedColors.secondaryAlpha10 },
       iconColor: "",
-      iconColorStyle: { color: themedColors.primary },
+      iconColorStyle: { color: themedColors.secondary },
     },
     {
       title: "Rock Progress",
@@ -60,26 +61,14 @@ export function StatsCards({ stats }: StatsCardsProps) {
       subtitle: "average completion",
       icon: TrendingUp,
       iconBg: "",
-      iconBgStyle: { backgroundColor: themedColors.secondaryAlpha10 },
+      iconBgStyle: { backgroundColor: themedColors.accentAlpha10 },
       iconColor: "",
-      iconColorStyle: { color: themedColors.secondary },
-    },
-    {
-      title: "EOD Streak",
-      value: stats.eodStreak > 0 ? `${stats.eodStreak}` : "0",
-      subtitle: stats.eodStreak === 1 ? "consecutive day" : "consecutive days",
-      icon: stats.eodStreak >= 5 ? Flame : Calendar,
-      iconBg: stats.eodStreak >= 5 ? "bg-orange-100" : "bg-slate-100",
-      iconColor: stats.eodStreak >= 5 ? "text-orange-600" : "text-slate-600",
-      badge: stats.eodStreak > 0 ? {
-        label: getStreakMilestone(stats.eodStreak)?.label || "",
-        color: (getStreakMilestone(stats.eodStreak)?.color || "text-orange-600") + " bg-orange-50",
-      } : undefined,
+      iconColorStyle: { color: themedColors.accent },
     },
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
       {cards.map((card, index) => (
         <EnhancedStatCard
           key={index}
@@ -89,8 +78,9 @@ export function StatsCards({ stats }: StatsCardsProps) {
           icon={card.icon}
           iconBg={card.iconBg}
           iconColor={card.iconColor}
+          iconBgStyle={card.iconBgStyle}
+          iconColorStyle={card.iconColorStyle}
           trend={card.trend}
-          badge={card.badge}
         />
       ))}
     </div>
