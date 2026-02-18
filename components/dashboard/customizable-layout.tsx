@@ -78,7 +78,7 @@ import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 // Bump this whenever DEFAULT_LAYOUT or rowHeight changes.
 // Stale localStorage with a different version is discarded on load.
-const LAYOUT_VERSION = 2
+const LAYOUT_VERSION = 3
 
 export interface DashboardWidget {
  id: string
@@ -200,22 +200,20 @@ export function CustomizableLayout({
 }: CustomizableLayoutProps) {
  const [showSettings, setShowSettings] = useState(false)
  const containerRef = useRef<HTMLDivElement>(null)
- const [containerWidth, setContainerWidth] = useState(1200)
+ const [containerWidth, setContainerWidth] = useState(0)
  const themedColors = useThemedIconColors()
 
- // Measure container width with ResizeObserver
+ // Measure container width — only needed for edit mode (react-grid-layout)
  useEffect(() => {
   const el = containerRef.current
   if (!el) return
-
   const observer = new ResizeObserver((entries) => {
    for (const entry of entries) {
     setContainerWidth(entry.contentRect.width)
    }
   })
   observer.observe(el)
-  // Set initial width
-  setContainerWidth(el.clientWidth || 1200)
+  setContainerWidth(el.clientWidth)
   return () => observer.disconnect()
  }, [])
 
@@ -224,6 +222,18 @@ export function CustomizableLayout({
  const enabledLayout = layout.filter((l) =>
   enabledWidgets.some((w) => w.id === l.i)
  )
+
+ // Sort widgets by layout position (y then x) for CSS Grid flow order
+ const sortedWidgets = useMemo(() => {
+  const layoutMap = new Map(enabledLayout.map((l) => [l.i, l]))
+  return [...enabledWidgets].sort((a, b) => {
+   const la = layoutMap.get(a.id)
+   const lb = layoutMap.get(b.id)
+   if (!la || !lb) return 0
+   if (la.y !== lb.y) return la.y - lb.y
+   return la.x - lb.x
+  })
+ }, [enabledWidgets, enabledLayout])
 
  const handleLayoutChange = useCallback((newLayout: RGLLayout[]) => {
   if (isEditing) {
@@ -294,63 +304,82 @@ export function CustomizableLayout({
     </div>
    </div>
 
-   {/* Grid Layout */}
-   <GridLayout
-    className="layout"
-    layout={enabledLayout as unknown as RGLLayout[]}
-    cols={4}
-    rowHeight={40}
-    width={containerWidth}
-    onLayoutChange={handleLayoutChange}
-    isDraggable={isEditing}
-    isResizable={isEditing}
-    draggableHandle=".widget-drag-handle"
-    margin={[16, 16]}
-    containerPadding={[0, 0]}
-   >
-    {enabledWidgets.map((widget) => (
-     <div
-      key={widget.id}
-      className={cn(
-       "bg-white rounded-lg border shadow-sm overflow-hidden",
-      )}
-      style={isEditing ? {
-       outline: `2px solid ${themedColors.primaryAlpha20}`,
-       outlineOffset: "-1px",
-      } : undefined}
+   {isEditing ? (
+    /* ── Edit Mode: react-grid-layout for drag-and-drop ── */
+    containerWidth > 0 ? (
+     <GridLayout
+      className="layout"
+      layout={enabledLayout as unknown as RGLLayout[]}
+      cols={4}
+      rowHeight={40}
+      width={containerWidth}
+      onLayoutChange={handleLayoutChange}
+      isDraggable
+      isResizable
+      draggableHandle=".widget-drag-handle"
+      margin={[16, 16]}
+      containerPadding={[0, 0]}
      >
-      {isEditing && (
+      {enabledWidgets.map((widget) => (
        <div
-        className="widget-drag-handle flex items-center justify-between px-3 py-1.5 border-b cursor-move"
+        key={widget.id}
+        className="bg-white rounded-lg border shadow-sm overflow-hidden"
         style={{
-         backgroundColor: themedColors.primaryAlpha10,
+         outline: `2px solid ${themedColors.primaryAlpha20}`,
+         outlineOffset: "-1px",
         }}
        >
-        <div className="flex items-center gap-2 text-sm" style={{ color: themedColors.primary }}>
-         <GripVertical className="h-4 w-4" />
-         {widget.title}
+        <div
+         className="widget-drag-handle flex items-center justify-between px-3 py-1.5 border-b cursor-move"
+         style={{ backgroundColor: themedColors.primaryAlpha10 }}
+        >
+         <div className="flex items-center gap-2 text-sm" style={{ color: themedColors.primary }}>
+          <GripVertical className="h-4 w-4" />
+          {widget.title}
+         </div>
+         <div className="flex items-center gap-1">
+          <Button
+           variant="ghost"
+           size="icon"
+           className="h-6 w-6"
+           onClick={() => onWidgetToggle(widget.id, false)}
+          >
+           <X className="h-3.5 w-3.5" />
+          </Button>
+         </div>
         </div>
-        <div className="flex items-center gap-1">
-         <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          onClick={() => onWidgetToggle(widget.id, false)}
-         >
-          <X className="h-3.5 w-3.5" />
-         </Button>
+        <div className="h-full overflow-auto pointer-events-none opacity-75">
+         {renderWidget(widget)}
         </div>
        </div>
-      )}
-      <div className={cn(
-       "h-full overflow-auto",
-       isEditing ? "pointer-events-none opacity-75" : ""
-      )}>
-       {renderWidget(widget)}
-      </div>
-     </div>
-    ))}
-   </GridLayout>
+      ))}
+     </GridLayout>
+    ) : null
+   ) : (
+    /* ── Default Mode: Native CSS Grid — always reliable, no JS width measurement ── */
+    <div
+     className="grid grid-cols-4 gap-4"
+     style={{ gridAutoRows: '40px' }}
+    >
+     {sortedWidgets.map((widget) => {
+      const item = enabledLayout.find((l) => l.i === widget.id)
+      return (
+       <div
+        key={widget.id}
+        className="bg-white rounded-lg border shadow-sm overflow-hidden min-h-0"
+        style={{
+         gridColumn: `span ${item?.w || 4}`,
+         gridRow: `span ${item?.h || 3}`,
+        }}
+       >
+        <div className="h-full overflow-auto">
+         {renderWidget(widget)}
+        </div>
+       </div>
+      )
+     })}
+    </div>
+   )}
 
    {/* Empty state when no widgets */}
    {enabledWidgets.length === 0 && (
