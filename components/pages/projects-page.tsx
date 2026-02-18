@@ -251,7 +251,7 @@ export function ProjectsPage({
     try {
       const res = await fetch("/api/projects/members", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ projectId, userId, role }),
       })
       const data = await res.json()
@@ -271,7 +271,7 @@ export function ProjectsPage({
     try {
       const res = await fetch("/api/projects/members", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ projectId, userId, role }),
       })
       const data = await res.json()
@@ -290,6 +290,7 @@ export function ProjectsPage({
     try {
       const res = await fetch(`/api/projects/members?projectId=${projectId}&userId=${userId}`, {
         method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
       const data = await res.json()
       if (data.success) {
@@ -504,10 +505,10 @@ export function ProjectsPage({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Client</Label>
-                  <Select value={formClientId} onValueChange={setFormClientId}>
+                  <Select value={formClientId || "none"} onValueChange={(v) => setFormClientId(v === "none" ? "" : v)}>
                     <SelectTrigger><SelectValue placeholder="No client" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {clients.filter(c => c.status === "active").map(c => (
                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                       ))}
@@ -516,10 +517,10 @@ export function ProjectsPage({
                 </div>
                 <div>
                   <Label>Owner</Label>
-                  <Select value={formOwnerId} onValueChange={setFormOwnerId}>
+                  <Select value={formOwnerId || "none"} onValueChange={(v) => setFormOwnerId(v === "none" ? "" : v)}>
                     <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Unassigned</SelectItem>
+                      <SelectItem value="none">Unassigned</SelectItem>
                       {teamMembers.filter(m => m.status === "active" && m.userId).map(m => (
                         <SelectItem key={m.userId!} value={m.userId!}>{m.name}</SelectItem>
                       ))}

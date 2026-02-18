@@ -315,12 +315,12 @@ export function FocusTimer({
 
  {/* Task/Rock Selection */}
  <div className="space-y-2">
- <Select value={selectedTaskId} onValueChange={setSelectedTaskId}>
+ <Select value={selectedTaskId || "none"} onValueChange={(v) => setSelectedTaskId(v === "none" ? "" : v)}>
  <SelectTrigger className="h-9">
  <SelectValue placeholder="Link to task (optional)" />
  </SelectTrigger>
  <SelectContent>
- <SelectItem value="">No task</SelectItem>
+ <SelectItem value="none">No task</SelectItem>
  {pendingTasks.map((task) => (
  <SelectItem key={task.id} value={task.id}>
  {task.title}
@@ -329,12 +329,12 @@ export function FocusTimer({
  </SelectContent>
  </Select>
 
- <Select value={selectedRockId} onValueChange={setSelectedRockId}>
+ <Select value={selectedRockId || "none"} onValueChange={(v) => setSelectedRockId(v === "none" ? "" : v)}>
  <SelectTrigger className="h-9">
  <SelectValue placeholder="Link to rock (optional)" />
  </SelectTrigger>
  <SelectContent>
- <SelectItem value="">No rock</SelectItem>
+ <SelectItem value="none">No rock</SelectItem>
  {rocks
  .filter((r) => r.status !== "completed")
  .map((rock) => (

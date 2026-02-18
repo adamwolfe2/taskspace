@@ -194,15 +194,15 @@ export function AddMetricDialog({
             <div className="space-y-2">
               <Label htmlFor="owner">Owner</Label>
               <Select
-                value={formData.ownerId}
-                onValueChange={(value) => setFormData({ ...formData, ownerId: value })}
+                value={formData.ownerId || "none"}
+                onValueChange={(value) => setFormData({ ...formData, ownerId: value === "none" ? "" : value })}
                 disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select owner (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No owner</SelectItem>
+                  <SelectItem value="none">No owner</SelectItem>
                   {members.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
                       {member.name}

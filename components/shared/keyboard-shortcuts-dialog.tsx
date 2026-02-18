@@ -136,7 +136,7 @@ export function KeyboardShortcutsDialog({
  <div className="flex items-center justify-between text-sm text-slate-500">
  <span>Press <kbd className="px-1.5 py-0.5 bg-slate-100  rounded text-xs">?</kbd> anytime to show this dialog</span>
  <Badge variant="secondary" className="text-xs">
- {navigator.platform.includes("Mac") ? "⌘ = Command" : "⌘ = Ctrl"}
+ {typeof navigator !== "undefined" && navigator.platform?.includes("Mac") ? "⌘ = Command" : "⌘ = Ctrl"}
  </Badge>
  </div>
  </DialogContent>

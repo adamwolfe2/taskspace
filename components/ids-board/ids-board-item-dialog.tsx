@@ -148,12 +148,12 @@ export function IdsBoardItemDialog({
           {teamMembers.length > 0 && (
             <div className="space-y-2">
               <Label>Assigned To</Label>
-              <Select value={assignedTo} onValueChange={setAssignedTo}>
+              <Select value={assignedTo || "none"} onValueChange={(v) => setAssignedTo(v === "none" ? "" : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Unassigned" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="none">Unassigned</SelectItem>
                   {teamMembers
                     .filter((m) => m.userId && m.status === "active")
                     .map((m) => (
