@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/utils/date-utils"
 import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, ChevronUp, AlertCircle, Clock, Plus, Trash2, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useApp } from "@/lib/contexts/app-context"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { TaskDetailModal } from "@/components/tasks/task-detail-modal"
@@ -79,6 +80,7 @@ export function AssignedTasksSection({
 }: AssignedTasksSectionProps) {
   const { toast } = useToast()
   const { setCurrentPage } = useApp()
+  const { getPriorityStyle, getStatusStyle } = useBrandStatusStyles()
   const [asanaConnected, setAsanaConnected] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [isCheckingConnection, setIsCheckingConnection] = useState(true)
@@ -165,16 +167,6 @@ export function AssignedTasksSection({
     }
   }
 
-  const getPriorityConfig = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return { bgColor: "bg-red-50", textColor: "text-red-700" }
-      case "medium":
-        return { bgColor: "bg-amber-50", textColor: "text-amber-700" }
-      default:
-        return { bgColor: "bg-slate-100", textColor: "text-slate-700" }
-    }
-  }
 
   const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -288,7 +280,7 @@ export function AssignedTasksSection({
                 </div>
                 <div className="space-y-2">
                   {visiblePendingTasks.map((task) => {
-                    const priorityConfig = getPriorityConfig(task.priority)
+                    const priorityStyle = getPriorityStyle(task.priority)
                     const dueDateStatus = task.dueDate ? getDueDateStatus(task.dueDate) : null
                     const isPersonal = task.type === "personal"
                     return (
@@ -310,7 +302,14 @@ export function AssignedTasksSection({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-medium text-slate-900">{task.title}</p>
-                            <span className={`status-pill ${priorityConfig.bgColor} ${priorityConfig.textColor}`}>
+                            <span
+                              className="status-pill"
+                              style={{
+                                backgroundColor: priorityStyle.backgroundColor,
+                                color: priorityStyle.color,
+                                borderColor: priorityStyle.borderColor,
+                              }}
+                            >
                               {task.priority}
                             </span>
                             {dueDateStatus && (
@@ -372,7 +371,7 @@ export function AssignedTasksSection({
             {completedTasks.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <Circle className="h-2 w-2 fill-emerald-400 text-emerald-400" />
+                  <Circle className="h-2 w-2" style={{ fill: getStatusStyle("completed").color, color: getStatusStyle("completed").color }} />
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     Completed ({completedTasks.length})
                   </span>

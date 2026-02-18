@@ -23,6 +23,7 @@ import { CSS } from "@dnd-kit/utilities"
 import type { AssignedTask } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { CheckCircle2, Circle, PlayCircle } from "lucide-react"
 import { EnhancedKanbanCard } from "./enhanced-kanban-card"
 
@@ -38,8 +39,6 @@ interface ColumnConfig {
   id: KanbanColumn
   title: string
   icon: typeof Circle
-  color: string
-  bgColor: string
 }
 
 const columns: ColumnConfig[] = [
@@ -47,22 +46,16 @@ const columns: ColumnConfig[] = [
     id: "pending",
     title: "To Do",
     icon: Circle,
-    color: "text-slate-500",
-    bgColor: "bg-slate-50 border-slate-200",
   },
   {
     id: "in-progress",
     title: "In Progress",
     icon: PlayCircle,
-    color: "text-blue-500",
-    bgColor: "bg-blue-50 border-blue-200",
   },
   {
     id: "completed",
     title: "Completed",
     icon: CheckCircle2,
-    color: "text-green-500",
-    bgColor: "bg-green-50 border-green-200",
   },
 ]
 
@@ -120,14 +113,19 @@ function Column({
   tasks: AssignedTask[]
   onTaskClick?: (task: AssignedTask) => void
 }) {
+  const { getStatusStyle } = useBrandStatusStyles()
   const taskIds = tasks.map((t) => t.id)
+  const statusStyle = getStatusStyle(config.id)
 
   return (
     <div className="flex flex-col h-full">
-      <div className={cn("rounded-xl border p-4 bg-muted/30 flex flex-col flex-1", config.bgColor)}>
+      <div
+        className="rounded-xl border p-4 bg-muted/30 flex flex-col flex-1"
+        style={{ backgroundColor: statusStyle.backgroundColor, borderColor: statusStyle.borderColor }}
+      >
         <div className="flex items-center gap-3 mb-4">
           <div className="p-1.5 rounded-lg bg-background border border-border">
-            <config.icon className={cn("h-4 w-4", config.color)} />
+            <config.icon className="h-4 w-4" style={{ color: statusStyle.color }} />
           </div>
           <h3 className="font-semibold text-sm">{config.title}</h3>
           <Badge variant="secondary" className="ml-auto text-xs">
@@ -139,7 +137,7 @@ function Column({
           <div className="space-y-3 flex-1 overflow-y-auto min-h-[200px] sm:min-h-[300px] max-h-[calc(100vh-300px)]">
             {tasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-[200px] text-sm text-muted-foreground border-2 border-dashed rounded-xl bg-background/50">
-                <config.icon className={cn("h-8 w-8 mb-2 opacity-30", config.color)} />
+                <config.icon className="h-8 w-8 mb-2 opacity-30" style={{ color: statusStyle.color }} />
                 <span>No tasks</span>
               </div>
             ) : (

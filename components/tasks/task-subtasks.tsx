@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
 import { Plus, GripVertical, Trash2, Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import type { TaskSubtask } from "@/lib/types"
 
 interface TaskSubtasksProps {
@@ -28,9 +29,11 @@ export function TaskSubtasks({
  disabled = false,
  className,
 }: TaskSubtasksProps) {
+ const { getStatusStyle } = useBrandStatusStyles()
  const [isAdding, setIsAdding] = useState(false)
  const [newTitle, setNewTitle] = useState("")
  const [isSubmitting, setIsSubmitting] = useState(false)
+ const completedStyle = getStatusStyle("completed")
 
  const completedCount = subtasks.filter((s) => s.completed).length
  const totalCount = subtasks.length
@@ -90,7 +93,7 @@ export function TaskSubtasks({
  checked={subtask.completed}
  onCheckedChange={() => onToggle(subtask.id)}
  disabled={disabled}
- className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+ style={subtask.completed ? { backgroundColor: completedStyle.color, borderColor: completedStyle.color } : undefined}
  />
  <span
  className={cn(
@@ -171,6 +174,7 @@ export function SubtaskProgress({
  subtasks: TaskSubtask[]
  className?: string
 }) {
+ const { getStatusStyle } = useBrandStatusStyles()
  const completedCount = subtasks.filter((s) => s.completed).length
  const totalCount = subtasks.length
 
@@ -178,19 +182,18 @@ export function SubtaskProgress({
 
  const progressPercent = (completedCount / totalCount) * 100
 
+ const progressBarColor = progressPercent === 100
+   ? getStatusStyle("completed").color
+   : progressPercent > 50
+   ? getStatusStyle("in-progress").color
+   : getStatusStyle("at-risk").color
+
  return (
  <div className={cn("flex items-center gap-2", className)}>
  <div className="flex-1 h-1.5 bg-slate-100  rounded-full overflow-hidden">
  <div
- className={cn(
- "h-full rounded-full transition-all",
- progressPercent === 100
- ? "bg-green-500"
- : progressPercent > 50
- ? "bg-blue-500"
- : "bg-amber-500"
- )}
- style={{ width: `${progressPercent}%` }}
+ className="h-full rounded-full transition-all"
+ style={{ width: `${progressPercent}%`, backgroundColor: progressBarColor }}
  />
  </div>
  <span className="text-xs text-slate-500  whitespace-nowrap">

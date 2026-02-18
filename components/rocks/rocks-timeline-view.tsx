@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import type { Rock } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import {
   Target,
   Calendar,
@@ -29,6 +30,8 @@ interface RocksTimelineViewProps {
 }
 
 export function RocksTimelineView({ rocks, quarter }: RocksTimelineViewProps) {
+  const { getStatusStyle } = useBrandStatusStyles()
+
   // Calculate quarter date range
   const { quarterStart, quarterEnd, weeks } = useMemo(() => {
     const now = new Date()
@@ -56,16 +59,6 @@ export function RocksTimelineView({ rocks, quarter }: RocksTimelineViewProps) {
       completed: CheckCircle2,
     }
     return icons[status]
-  }
-
-  const getStatusColor = (status: Rock["status"]) => {
-    const colors = {
-      "on-track": "text-emerald-600 bg-emerald-50 border-emerald-200",
-      "at-risk": "text-amber-600 bg-amber-50 border-amber-200",
-      blocked: "text-red-600 bg-red-50 border-red-200",
-      completed: "text-slate-600 bg-slate-100 border-slate-200",
-    }
-    return colors[status]
   }
 
   // Calculate timeline position for a rock
@@ -145,12 +138,10 @@ export function RocksTimelineView({ rocks, quarter }: RocksTimelineViewProps) {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div
-                      className={cn(
-                        "p-1.5 rounded-lg border flex-shrink-0",
-                        getStatusColor(rock.status)
-                      )}
+                      className="p-1.5 rounded-lg border flex-shrink-0"
+                      style={getStatusStyle(rock.status)}
                     >
-                      <StatusIcon className="h-4 w-4" />
+                      <StatusIcon className="h-4 w-4" style={{ color: getStatusStyle(rock.status).color }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-foreground line-clamp-1">
@@ -167,7 +158,7 @@ export function RocksTimelineView({ rocks, quarter }: RocksTimelineViewProps) {
                     <Badge variant="secondary" className="text-xs">
                       {rock.quarter || "No Quarter"}
                     </Badge>
-                    <Badge className={cn("text-xs border", getStatusColor(rock.status))}>
+                    <Badge className="text-xs border" style={getStatusStyle(rock.status)}>
                       {rock.status}
                     </Badge>
                   </div>
@@ -205,19 +196,11 @@ export function RocksTimelineView({ rocks, quarter }: RocksTimelineViewProps) {
                   {/* Rock timeline bar */}
                   {rock.dueDate && (
                     <div
-                      className={cn(
-                        "absolute inset-y-1 rounded flex items-center justify-center text-xs font-medium transition-all",
-                        rock.status === "completed"
-                          ? "bg-slate-400 text-white"
-                          : rock.status === "on-track"
-                            ? "bg-emerald-500 text-white"
-                            : rock.status === "at-risk"
-                              ? "bg-amber-500 text-white"
-                              : "bg-red-500 text-white"
-                      )}
+                      className="absolute inset-y-1 rounded flex items-center justify-center text-xs font-medium transition-all text-white"
                       style={{
                         left: `${position.left}%`,
                         width: `${position.width}%`,
+                        backgroundColor: getStatusStyle(rock.status).color,
                       }}
                     >
                       {rock.dueDate && (

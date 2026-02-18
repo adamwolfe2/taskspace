@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, User, Pencil, Trash2, AlertCircle, Clock, MessageSquare, Repeat } from "lucide-react"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
 import { cn } from "@/lib/utils"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { TaskDetailModal } from "./task-detail-modal"
 
 interface TaskCardProps {
@@ -34,32 +35,28 @@ function getDueDateStatus(dueDate: string | null, isCompleted: boolean) {
   if (isPast(due) && !isToday(due)) {
     return {
       label: `${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) > 1 ? "s" : ""} overdue`,
-      color: "text-red-600",
-      bgColor: "bg-red-50",
+      semanticStatus: "blocked" as const,
       icon: AlertCircle,
     }
   }
   if (isToday(due)) {
     return {
       label: "Due today",
-      color: "text-amber-600",
-      bgColor: "bg-amber-50",
+      semanticStatus: "at-risk" as const,
       icon: Clock,
     }
   }
   if (isTomorrow(due)) {
     return {
       label: "Due tomorrow",
-      color: "text-amber-500",
-      bgColor: "bg-amber-50/50",
+      semanticStatus: "at-risk" as const,
       icon: Clock,
     }
   }
   if (daysUntilDue <= 3) {
     return {
       label: `Due in ${daysUntilDue} days`,
-      color: "text-slate-600",
-      bgColor: "bg-slate-50",
+      semanticStatus: "pending" as const,
       icon: Calendar,
     }
   }
@@ -69,6 +66,7 @@ function getDueDateStatus(dueDate: string | null, isCompleted: boolean) {
 export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, rocks, currentUser, isSelected, onToggleSelection, showSelectionCheckbox }: TaskCardProps) {
   const [showDetail, setShowDetail] = useState(false)
   const [showFullDescription, setShowFullDescription] = useState(false)
+  const { getStatusStyle, getPriorityStyle } = useBrandStatusStyles()
   const isCompleted = task.status === "completed"
   const isPersonal = task.type === "personal"
   const dueDateStatus = getDueDateStatus(task.dueDate, isCompleted)
@@ -78,10 +76,10 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
   const isLongDescription = task.description && task.description.length > 100
 
   const priorityConfig = {
-    high: { emoji: "🔴", label: "High", variant: "high" as const },
-    medium: { emoji: "🟡", label: "Medium", variant: "medium" as const },
-    normal: { emoji: "🟢", label: "Normal", variant: "low" as const },
-    low: { emoji: "🔵", label: "Low", variant: "low" as const },
+    high: { emoji: "🔴", label: "High" },
+    medium: { emoji: "🟡", label: "Medium" },
+    normal: { emoji: "🟢", label: "Normal" },
+    low: { emoji: "🔵", label: "Low" },
   }
 
   const priority = priorityConfig[task.priority]
@@ -166,11 +164,14 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
           )}
 
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <Badge variant={priority.variant}>
+            <Badge variant="outline" style={getPriorityStyle(task.priority)}>
               {priority.emoji} {priority.label}
             </Badge>
             {dueDateStatus ? (
-              <div className={cn("flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium", dueDateStatus.bgColor, dueDateStatus.color)}>
+              <div
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium"
+                style={getStatusStyle(dueDateStatus.semanticStatus)}
+              >
                 <dueDateStatus.icon className="h-3 w-3" />
                 <span>{dueDateStatus.label}</span>
               </div>
@@ -187,7 +188,10 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
               </div>
             )}
             {task.recurrence && (
-              <div className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs font-medium">
+              <div
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium"
+                style={getStatusStyle("in-progress")}
+              >
                 <Repeat className="h-3 w-3" />
                 <span>
                   {task.recurrence.interval === 1

@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
@@ -34,20 +35,6 @@ interface ProjectsPageProps {
   deleteProject: (id: string) => Promise<void>
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  planning: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  active: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  "on-hold": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  completed: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-  cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-}
-
-const PRIORITY_COLORS: Record<string, string> = {
-  high: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-  medium: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  normal: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-  low: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
-}
 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return ""
@@ -72,6 +59,7 @@ export function ProjectsPage({
 }: ProjectsPageProps) {
   const { currentWorkspaceId } = useWorkspaceStore()
   const { toast } = useToast()
+  const { getStatusStyle, getPriorityStyle } = useBrandStatusStyles()
 
   // State
   const [searchQuery, setSearchQuery] = useState("")
@@ -425,10 +413,10 @@ export function ProjectsPage({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold truncate">{project.name}</h3>
-                          <Badge variant="outline" className={STATUS_COLORS[project.status]}>
+                          <Badge variant="outline" style={getStatusStyle(project.status)}>
                             {project.status}
                           </Badge>
-                          <Badge variant="outline" className={PRIORITY_COLORS[project.priority]}>
+                          <Badge variant="outline" style={getPriorityStyle(project.priority)}>
                             {project.priority}
                           </Badge>
                         </div>
@@ -596,8 +584,8 @@ export function ProjectsPage({
                 </SheetHeader>
                 <div className="mt-4 space-y-4">
                   <div className="flex gap-2">
-                    <Badge className={STATUS_COLORS[detailProject.status]}>{detailProject.status}</Badge>
-                    <Badge className={PRIORITY_COLORS[detailProject.priority]}>{detailProject.priority}</Badge>
+                    <Badge variant="outline" style={getStatusStyle(detailProject.status)}>{detailProject.status}</Badge>
+                    <Badge variant="outline" style={getPriorityStyle(detailProject.priority)}>{detailProject.priority}</Badge>
                   </div>
                   {detailProject.description && (
                     <p className="text-sm text-muted-foreground">{detailProject.description}</p>

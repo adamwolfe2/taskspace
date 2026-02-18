@@ -8,6 +8,7 @@ import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 
 interface MyRocksSectionProps {
   rocks: Rock[]
@@ -83,6 +84,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isExpanded, setIsExpanded] = useState(true)
   const { toast } = useToast()
+  const { getStatusStyle } = useBrandStatusStyles()
 
   // Get available quarters for filter
   const availableQuarters = useMemo(() => getAvailableQuarters(rocks), [rocks])
@@ -93,48 +95,18 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
     return rocks.filter(rock => getRockQuarter(rock) === selectedQuarter)
   }, [rocks, selectedQuarter])
 
-  const getStatusConfig = (status: Rock["status"]) => {
+  const getStatusIcon = (status: Rock["status"]) => {
     switch (status) {
       case "on-track":
-        return {
-          icon: CheckCircle2,
-          label: "On Track",
-          bgColor: "bg-emerald-50",
-          textColor: "text-emerald-700",
-          iconColor: "text-emerald-500",
-        }
+        return { icon: CheckCircle2, label: "On Track" }
       case "at-risk":
-        return {
-          icon: Clock,
-          label: "At Risk",
-          bgColor: "bg-amber-50",
-          textColor: "text-amber-700",
-          iconColor: "text-amber-500",
-        }
+        return { icon: Clock, label: "At Risk" }
       case "blocked":
-        return {
-          icon: AlertCircle,
-          label: "Blocked",
-          bgColor: "bg-red-50",
-          textColor: "text-red-700",
-          iconColor: "text-red-500",
-        }
+        return { icon: AlertCircle, label: "Blocked" }
       case "completed":
-        return {
-          icon: CheckCircle2,
-          label: "Completed",
-          bgColor: "bg-slate-100",
-          textColor: "text-slate-700",
-          iconColor: "text-slate-500",
-        }
+        return { icon: CheckCircle2, label: "Completed" }
       default:
-        return {
-          icon: Target,
-          label: "Unknown",
-          bgColor: "bg-slate-100",
-          textColor: "text-slate-700",
-          iconColor: "text-slate-500",
-        }
+        return { icon: Target, label: "Unknown" }
     }
   }
 
@@ -261,8 +233,8 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
         ) : (
           <div className="space-y-4">
             {filteredRocks.map((rock) => {
-              const statusConfig = getStatusConfig(rock.status)
-              const StatusIcon = statusConfig.icon
+              const { icon: StatusIcon, label: statusLabel } = getStatusIcon(rock.status)
+              const statusStyle = getStatusStyle(rock.status)
               return (
                 <div
                   key={rock.id}
@@ -271,13 +243,20 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <StatusIcon className={`h-4 w-4 ${statusConfig.iconColor} flex-shrink-0`} />
+                        <StatusIcon className="h-4 w-4 flex-shrink-0" style={{ color: statusStyle.color }} />
                         <h4 className="font-medium text-slate-900 truncate">{rock.title}</h4>
                       </div>
                       <p className="text-sm text-slate-500 line-clamp-2">{rock.description}</p>
                     </div>
-                    <span className={`status-pill ${statusConfig.bgColor} ${statusConfig.textColor} flex-shrink-0`}>
-                      {statusConfig.label}
+                    <span
+                      className="status-pill flex-shrink-0"
+                      style={{
+                        backgroundColor: statusStyle.backgroundColor,
+                        color: statusStyle.color,
+                        borderColor: statusStyle.borderColor,
+                      }}
+                    >
+                      {statusLabel}
                     </span>
                   </div>
 

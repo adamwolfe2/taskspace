@@ -34,6 +34,7 @@ import {
 } from "lucide-react"
 import { ProgressBar } from "@/components/shared/progress-bar"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 
 type RockStatus = "on-track" | "at-risk" | "blocked" | "completed"
 
@@ -47,39 +48,13 @@ interface ColumnConfig {
   id: RockStatus
   title: string
   icon: typeof Target
-  color: string
-  bgColor: string
 }
 
 const columns: ColumnConfig[] = [
-  {
-    id: "on-track",
-    title: "On Track",
-    icon: TrendingUp,
-    color: "text-emerald-500",
-    bgColor: "bg-emerald-50 border-emerald-200",
-  },
-  {
-    id: "at-risk",
-    title: "At Risk",
-    icon: AlertTriangle,
-    color: "text-amber-500",
-    bgColor: "bg-amber-50 border-amber-200",
-  },
-  {
-    id: "blocked",
-    title: "Blocked",
-    icon: Ban,
-    color: "text-red-500",
-    bgColor: "bg-red-50 border-red-200",
-  },
-  {
-    id: "completed",
-    title: "Completed",
-    icon: CheckCircle2,
-    color: "text-slate-500",
-    bgColor: "bg-slate-100 border-slate-200",
-  },
+  { id: "on-track", title: "On Track", icon: TrendingUp },
+  { id: "at-risk", title: "At Risk", icon: AlertTriangle },
+  { id: "blocked", title: "Blocked", icon: Ban },
+  { id: "completed", title: "Completed", icon: CheckCircle2 },
 ]
 
 // Rock Card Component
@@ -92,6 +67,7 @@ function RockCard({
   isDragging?: boolean
   onClick?: () => void
 }) {
+  const { getStatusStyle } = useBrandStatusStyles()
   const dueDate = rock.dueDate ? new Date(rock.dueDate) : null
   const isOverdue = dueDate && dueDate < new Date() && rock.status !== "completed"
 
@@ -165,9 +141,15 @@ function RockCard({
 
               {/* Completion Badge */}
               {rock.status === "completed" && (
-                <div className="flex items-center gap-1.5 border border-emerald-300 bg-emerald-50 rounded-sm py-0.5 px-1.5">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                  <span className="text-[10px] font-medium text-emerald-700">
+                <div
+                  className="flex items-center gap-1.5 border rounded-sm py-0.5 px-1.5"
+                  style={{
+                    backgroundColor: getStatusStyle("completed").backgroundColor,
+                    borderColor: getStatusStyle("completed").borderColor,
+                  }}
+                >
+                  <CheckCircle2 className="h-3 w-3" style={{ color: getStatusStyle("completed").color }} />
+                  <span className="text-[10px] font-medium" style={{ color: getStatusStyle("completed").color }}>
                     Done
                   </span>
                 </div>
@@ -232,14 +214,22 @@ function Column({
   rocks: Rock[]
   onRockClick?: (rock: Rock) => void
 }) {
+  const { getStatusStyle } = useBrandStatusStyles()
   const rockIds = rocks.map((r) => r.id)
+  const statusStyle = getStatusStyle(config.id)
 
   return (
     <div className="flex flex-col h-full">
-      <div className={cn("rounded-xl border p-4 bg-muted/30 flex flex-col flex-1", config.bgColor)}>
+      <div
+        className="rounded-xl border p-4 flex flex-col flex-1"
+        style={{
+          backgroundColor: statusStyle.backgroundColor,
+          borderColor: statusStyle.borderColor,
+        }}
+      >
         <div className="flex items-center gap-3 mb-4">
           <div className="p-1.5 rounded-lg bg-background border border-border">
-            <config.icon className={cn("h-4 w-4", config.color)} />
+            <config.icon className="h-4 w-4" style={{ color: statusStyle.color }} />
           </div>
           <h3 className="font-semibold text-sm">{config.title}</h3>
           <Badge variant="secondary" className="ml-auto text-xs">
@@ -251,7 +241,7 @@ function Column({
           <div className="space-y-3 flex-1 overflow-y-auto min-h-[300px] max-h-[calc(100vh-300px)]">
             {rocks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-[200px] text-sm text-muted-foreground border-2 border-dashed rounded-xl bg-background/50">
-                <config.icon className={cn("h-8 w-8 mb-2 opacity-30", config.color)} />
+                <config.icon className="h-8 w-8 mb-2 opacity-30" style={{ color: statusStyle.color }} />
                 <span>No rocks</span>
               </div>
             ) : (

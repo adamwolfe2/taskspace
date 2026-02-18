@@ -33,6 +33,7 @@ import {
 import { RockCheckinDialog } from "./rock-checkin-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import type {
   Rock,
   RockTask,
@@ -49,32 +50,30 @@ interface RockDetailViewProps {
 const confidenceConfig = {
   on_track: {
     icon: CheckCircle2,
-    color: "text-green-600",
-    bgColor: "bg-green-100",
     label: "On Track",
+    statusKey: "on-track" as const,
   },
   at_risk: {
     icon: AlertTriangle,
-    color: "text-yellow-600",
-    bgColor: "bg-yellow-100",
     label: "At Risk",
+    statusKey: "at-risk" as const,
   },
   off_track: {
     icon: XCircle,
-    color: "text-red-600",
-    bgColor: "bg-red-100",
     label: "Off Track",
+    statusKey: "blocked" as const,
   },
 }
 
 const taskStatusConfig = {
-  pending: { icon: Circle, color: "text-slate-400", label: "Pending" },
-  "in-progress": { icon: Clock, color: "text-blue-500", label: "In Progress" },
-  completed: { icon: CheckCircle, color: "text-green-500", label: "Completed" },
+  pending: { icon: Circle, label: "Pending", statusKey: "pending" as const },
+  "in-progress": { icon: Clock, label: "In Progress", statusKey: "in-progress" as const },
+  completed: { icon: CheckCircle, label: "Completed", statusKey: "completed" as const },
 }
 
 export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
   const { toast } = useToast()
+  const { getStatusStyle } = useBrandStatusStyles()
   const [loading, setLoading] = useState(true)
   const [rock, setRock] = useState<Rock | null>(null)
   const [tasks, setTasks] = useState<RockTask[]>([])
@@ -270,13 +269,13 @@ export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
         </Card>
 
         {/* Confidence */}
-        <Card className={cn(confConfig.bgColor.replace("100", "50"))}>
+        <Card style={{ backgroundColor: getStatusStyle(confConfig.statusKey).backgroundColor }}>
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-slate-600">Confidence</span>
-              <ConfidenceIcon className={cn("h-6 w-6", confConfig.color)} />
+              <ConfidenceIcon className="h-6 w-6" style={{ color: getStatusStyle(confConfig.statusKey).color }} />
             </div>
-            <div className={cn("text-xl font-bold mt-1", confConfig.color)}>
+            <div className="text-xl font-bold mt-1" style={{ color: getStatusStyle(confConfig.statusKey).color }}>
               {confConfig.label}
             </div>
           </CardContent>
@@ -366,13 +365,14 @@ export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
                     taskStatusConfig[task.status as keyof typeof taskStatusConfig] ||
                     taskStatusConfig.pending
                   const StatusIcon = statusConf.icon
+                  const taskStyle = getStatusStyle(statusConf.statusKey)
                   return (
                     <TableRow key={task.id}>
                       <TableCell className="font-medium">{task.title}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <StatusIcon className={cn("h-4 w-4", statusConf.color)} />
-                          <span className={statusConf.color}>{statusConf.label}</span>
+                          <StatusIcon className="h-4 w-4" style={{ color: taskStyle.color }} />
+                          <span style={{ color: taskStyle.color }}>{statusConf.label}</span>
                         </div>
                       </TableCell>
                       <TableCell>{task.assigneeName || "-"}</TableCell>
@@ -407,17 +407,18 @@ export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
               {checkins.map((checkin) => {
                 const conf = confidenceConfig[checkin.confidence]
                 const Icon = conf.icon
+                const checkinStyle = getStatusStyle(conf.statusKey)
                 return (
                   <div
                     key={checkin.id}
                     className="flex items-start gap-3 p-3 rounded-lg bg-slate-50"
                   >
-                    <div className={cn("p-1.5 rounded-full", conf.bgColor)}>
-                      <Icon className={cn("h-4 w-4", conf.color)} />
+                    <div className="p-1.5 rounded-full" style={{ backgroundColor: checkinStyle.backgroundColor }}>
+                      <Icon className="h-4 w-4" style={{ color: checkinStyle.color }} />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className={cn("font-medium", conf.color)}>
+                        <span className="font-medium" style={{ color: checkinStyle.color }}>
                           {conf.label}
                         </span>
                         <span className="text-xs text-slate-500">

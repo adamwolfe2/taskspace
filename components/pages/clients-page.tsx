@@ -15,6 +15,7 @@ import { Plus, Search, Building2, MoreHorizontal, Pencil, Trash2, Mail, Phone, G
 import { EmptyState } from "@/components/shared/empty-state"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -28,12 +29,6 @@ interface ClientsPageProps {
   deleteClient: (id: string) => Promise<void>
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  active: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  inactive: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-  prospect: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  archived: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-}
 
 export function ClientsPage({
   currentUser,
@@ -44,6 +39,7 @@ export function ClientsPage({
   deleteClient,
 }: ClientsPageProps) {
   const { toast } = useToast()
+  const { getStatusStyle } = useBrandStatusStyles()
 
   // State
   const [searchQuery, setSearchQuery] = useState("")
@@ -276,7 +272,7 @@ export function ClientsPage({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold truncate">{client.name}</h3>
-                        <Badge variant="outline" className={STATUS_COLORS[client.status]}>
+                        <Badge variant="outline" style={getStatusStyle(client.status)}>
                           {client.status}
                         </Badge>
                       </div>
@@ -403,7 +399,7 @@ export function ClientsPage({
                 </SheetHeader>
                 <div className="mt-4 space-y-4">
                   <div className="flex gap-2">
-                    <Badge className={STATUS_COLORS[detailClient.status]}>{detailClient.status}</Badge>
+                    <Badge variant="outline" style={getStatusStyle(detailClient.status)}>{detailClient.status}</Badge>
                     {detailClient.industry && <Badge variant="outline">{detailClient.industry}</Badge>}
                   </div>
                   {detailClient.description && (

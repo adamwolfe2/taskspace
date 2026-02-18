@@ -18,6 +18,7 @@ import {
  TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import type { Rock, RockDependency, TeamMember } from "@/lib/types"
 import {
  Target,
@@ -65,6 +66,7 @@ export function RockRoadmap({
  onRockClick,
  className,
 }: RockRoadmapProps) {
+ const { getStatusStyle } = useBrandStatusStyles()
  const [viewMode, setViewMode] = useState<ViewMode>("quarter")
  const [currentDate, setCurrentDate] = useState(new Date())
  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
@@ -140,42 +142,16 @@ export function RockRoadmap({
  }
 
  const getStatusConfig = (status: Rock["status"]) => {
- switch (status) {
- case "on-track":
- return {
- icon: CheckCircle2,
- color: "bg-emerald-500",
- textColor: "text-emerald-700",
- bgColor: "bg-emerald-50 "
+ const style = getStatusStyle(status)
+ const icons: Record<string, typeof CheckCircle2> = {
+ "on-track": CheckCircle2,
+ "at-risk": Clock,
+ blocked: AlertCircle,
+ completed: CheckCircle2,
  }
- case "at-risk":
  return {
- icon: Clock,
- color: "bg-amber-500",
- textColor: "text-amber-700",
- bgColor: "bg-amber-50 "
- }
- case "blocked":
- return {
- icon: AlertCircle,
- color: "bg-red-500",
- textColor: "text-red-700",
- bgColor: "bg-red-50 "
- }
- case "completed":
- return {
- icon: CheckCircle2,
- color: "bg-slate-400",
- textColor: "text-slate-600",
- bgColor: "bg-slate-100 "
- }
- default:
- return {
- icon: Target,
- color: "bg-slate-400",
- textColor: "text-slate-600",
- bgColor: "bg-slate-100"
- }
+ icon: icons[status] || Target,
+ style,
  }
  }
 
@@ -341,19 +317,19 @@ export function RockRoadmap({
  {/* Legend */}
  <div className="border-t px-4 py-2 flex items-center gap-4 text-xs text-slate-500  bg-slate-50 ">
  <div className="flex items-center gap-1.5">
- <div className="w-3 h-3 rounded-full bg-emerald-500" />
+ <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getStatusStyle("on-track").color }} />
  <span>On Track</span>
  </div>
  <div className="flex items-center gap-1.5">
- <div className="w-3 h-3 rounded-full bg-amber-500" />
+ <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getStatusStyle("at-risk").color }} />
  <span>At Risk</span>
  </div>
  <div className="flex items-center gap-1.5">
- <div className="w-3 h-3 rounded-full bg-red-500" />
+ <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getStatusStyle("blocked").color }} />
  <span>Blocked</span>
  </div>
  <div className="flex items-center gap-1.5">
- <div className="w-3 h-3 rounded-full bg-slate-400" />
+ <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getStatusStyle("completed").color }} />
  <span>Completed</span>
  </div>
  <div className="flex items-center gap-1.5 ml-auto">
@@ -378,7 +354,7 @@ function RoadmapRow({
 }: {
  rock: Rock
  position: number
- statusConfig: ReturnType<typeof getStatusConfigType>
+ statusConfig: { icon: typeof CheckCircle2; style: { backgroundColor: string; color: string; borderColor: string } }
  dependencies: RockDependency[]
  dependentRocks: Rock[]
  allRocks: Rock[]
@@ -396,7 +372,7 @@ function RoadmapRow({
  className="flex items-center gap-2"
  onClick={onClick}
  >
- <StatusIcon className={cn("h-4 w-4 shrink-0", statusConfig.textColor)} />
+ <StatusIcon className="h-4 w-4 shrink-0" style={{ color: statusConfig.style.color }} />
  <span className="text-sm font-medium text-slate-700  truncate group-hover:text-blue-600">
  {rock.title}
  </span>
@@ -421,10 +397,8 @@ function RoadmapRow({
  onClick={onClick}
  >
  <div
- className={cn(
- "w-6 h-6 rounded-full flex items-center justify-center transition-transform group-hover:scale-110",
- statusConfig.color
- )}
+ className="w-6 h-6 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
+ style={{ backgroundColor: statusConfig.style.color }}
  >
  <span className="text-white text-xs font-bold">
  {rock.progress >= 100 ? "✓" : `${Math.round(rock.progress / 10)}`}
@@ -472,58 +446,13 @@ function RoadmapRow({
  style={{
  left: 0,
  width: `${position}%`,
- background: `linear-gradient(to right, transparent 80%, ${
- rock.status === "completed" ? "#94a3b8" :
- rock.status === "on-track" ? "#10b981" :
- rock.status === "at-risk" ? "#f59e0b" : "#ef4444"
- })`,
+ background: `linear-gradient(to right, transparent 80%, ${statusConfig.style.color})`,
  }}
  />
  </div>
  </div>
  </TooltipProvider>
  )
-}
-
-// Helper type for getStatusConfig return type
-function getStatusConfigType(status: Rock["status"]) {
- switch (status) {
- case "on-track":
- return {
- icon: CheckCircle2,
- color: "bg-emerald-500",
- textColor: "text-emerald-700",
- bgColor: "bg-emerald-50 "
- }
- case "at-risk":
- return {
- icon: Clock,
- color: "bg-amber-500",
- textColor: "text-amber-700",
- bgColor: "bg-amber-50 "
- }
- case "blocked":
- return {
- icon: AlertCircle,
- color: "bg-red-500",
- textColor: "text-red-700",
- bgColor: "bg-red-50 "
- }
- case "completed":
- return {
- icon: CheckCircle2,
- color: "bg-slate-400",
- textColor: "text-slate-600",
- bgColor: "bg-slate-100 "
- }
- default:
- return {
- icon: Target,
- color: "bg-slate-400",
- textColor: "text-slate-600",
- bgColor: "bg-slate-100"
- }
- }
 }
 
 // Compact roadmap for dashboard
@@ -538,6 +467,7 @@ export function MiniRoadmap({
  className?: string
  onViewAll?: () => void
 }) {
+ const { getStatusStyle } = useBrandStatusStyles()
  const upcomingRocks = rocks
  .filter((r) => r.status !== "completed")
  .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
@@ -559,12 +489,8 @@ export function MiniRoadmap({
  className="flex items-center gap-3 p-2 rounded-lg bg-slate-50 "
  >
  <div
- className={cn(
- "w-2 h-2 rounded-full shrink-0",
- rock.status === "on-track" && "bg-emerald-500",
- rock.status === "at-risk" && "bg-amber-500",
- rock.status === "blocked" && "bg-red-500"
- )}
+ className="w-2 h-2 rounded-full shrink-0"
+ style={{ backgroundColor: getStatusStyle(rock.status).color }}
  />
  <span className="flex-1 text-sm text-slate-700  truncate">
  {rock.title}
