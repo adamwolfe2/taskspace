@@ -259,10 +259,10 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
               id="rock-text"
               placeholder={`Paste your rocks here. Example format:
 
-Rock 1: Deploy AI Voice Dialers
-- Connect Med Pros account to GHL
-- Configure AI voice dialer settings
-- QA test deployments
+Rock 1: Launch Marketing Campaign
+- Finalize landing page copy
+- Configure ad tracking pixels
+- QA test lead forms
 
 Rock 2: Launch New Product
 - Design MVP features

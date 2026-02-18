@@ -54,12 +54,12 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       WHERE om.organization_id = ${orgId}
     `
 
-    // Map the current user to adam-wolfe
-    userIdMapping["adam-wolfe"] = auth.user.id
+    // Map the current user to the admin seed member
+    userIdMapping["example-admin"] = auth.user.id
 
     // For other initial team members, create draft members if they don't exist
     for (const member of initialTeamMembers) {
-      if (member.id === "adam-wolfe") {
+      if (member.id === "example-admin") {
         // Already mapped to current user
         continue
       }

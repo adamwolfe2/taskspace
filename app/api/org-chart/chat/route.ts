@@ -26,7 +26,7 @@ When answering:
 5. Do NOT use markdown formatting other than bold for names
 6. Keep responses short - 2-3 sentences maximum
 
-You are representing Modern Amenities Group. Be professional and friendly.`
+Be professional and friendly when representing the organization.`
 
 async function callClaudeChat(context: string, userMessage: string): Promise<{
   text: string

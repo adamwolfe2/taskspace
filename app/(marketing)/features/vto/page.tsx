@@ -88,7 +88,7 @@ export default function VtoPage() {
                   {/* Product UI Mockup */}
                   <div className="p-6 space-y-4">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-bold text-slate-900">V/TO - Acme Corp</h3>
+                      <h3 className="text-lg font-bold text-slate-900">V/TO - Your Company</h3>
                       <Badge className="bg-gray-100 text-gray-700 border-0">Complete</Badge>
                     </div>
 

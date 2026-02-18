@@ -25,7 +25,7 @@ interface SyncStatusData {
 
 /**
  * POST /api/asana/sync
- * Trigger a two-way sync between AIMS and Asana
+ * Trigger a two-way sync between TaskSpace and Asana
  */
 export const POST = withAdmin(async (request, auth) => {
   try {
@@ -55,7 +55,7 @@ export const POST = withAdmin(async (request, auth) => {
       errors: [],
     }
 
-    // Get AIMS tasks for mapped users
+    // Get TaskSpace tasks for mapped users
     const aimsTasks = await db.assignedTasks.findByOrganizationId(auth.organization.id)
 
     // Get Asana tasks from the configured project (including completed tasks from last 365 days)
@@ -77,7 +77,7 @@ export const POST = withAdmin(async (request, auth) => {
       asanaUserToAims.set(mapping.asanaUserGid, mapping)
     }
 
-    // Sync AIMS → Asana (if direction is "to_asana" or "both")
+    // Sync TaskSpace → Asana (if direction is "to_asana" or "both")
     if (direction === "to_asana" || direction === "both") {
       for (const aimsTask of aimsTasks) {
         const mapping = aimsUserToAsana.get(aimsTask.assigneeId)
@@ -104,7 +104,7 @@ export const POST = withAdmin(async (request, auth) => {
 
           // Check if task already exists in Asana (by matching name pattern)
           const existingAsanaTask = asanaTasks.find(
-            (at) => at.name === aimsTask.title || at.notes?.includes(`AIMS-${aimsTask.id}`)
+            (at) => at.name === aimsTask.title || at.notes?.includes(`TS-${aimsTask.id}`)
           )
 
           if (existingAsanaTask) {
@@ -123,23 +123,23 @@ export const POST = withAdmin(async (request, auth) => {
             // Create new task in Asana
             const newAsanaTask = await asanaClient.createTask({
               name: aimsTask.title,
-              notes: `${aimsTask.description || ""}\n\n---\nAIMS Task ID: AIMS-${aimsTask.id}`,
+              notes: `${aimsTask.description || ""}\n\n---\nTaskSpace ID: TS-${aimsTask.id}`,
               projects: [asanaConfig.projectGid],
               assignee: mapping.asanaUserGid,
               due_on: aimsTask.dueDate ? aimsTask.dueDate.split("T")[0] : undefined,
               completed: aimsTask.status === "completed",
             })
-            // Store the asanaGid back in the AIMS task for future syncs
+            // Store the asanaGid back in the TaskSpace task for future syncs
             await db.assignedTasks.update(aimsTask.id, { asanaGid: newAsanaTask.gid })
             result.tasksCreatedInAsana++
           }
         } catch (error) {
-          result.errors.push(`Failed to sync AIMS task ${aimsTask.id}: ${error}`)
+          result.errors.push(`Failed to sync TaskSpace task ${aimsTask.id}: ${error}`)
         }
       }
     }
 
-    // Sync Asana → AIMS (if direction is "from_asana" or "both")
+    // Sync Asana → TaskSpace (if direction is "from_asana" or "both")
     if (direction === "from_asana" || direction === "both") {
       for (const asanaTask of asanaTasks) {
         if (!asanaTask.assignee) continue
@@ -153,9 +153,9 @@ export const POST = withAdmin(async (request, auth) => {
             (t) => t.asanaGid === asanaTask.gid
           )
 
-          // Fall back to checking by AIMS ID in notes or matching name
+          // Fall back to checking by TaskSpace ID in notes or matching name
           if (!existingAimsTask) {
-            const aimsIdMatch = asanaTask.notes?.match(/AIMS-([a-zA-Z0-9-]+)/)
+            const aimsIdMatch = asanaTask.notes?.match(/TS-([a-zA-Z0-9-]+)/)
             if (aimsIdMatch) {
               existingAimsTask = aimsTasks.find((t) => t.id === aimsIdMatch[1])
             } else {
@@ -166,7 +166,7 @@ export const POST = withAdmin(async (request, auth) => {
           }
 
           if (existingAimsTask) {
-            // Update existing AIMS task if completion status differs
+            // Update existing TaskSpace task if completion status differs
             const newStatus = asanaTask.completed ? "completed" : "pending"
             const updates: Partial<AssignedTask> = {}
 
@@ -185,14 +185,14 @@ export const POST = withAdmin(async (request, auth) => {
               if (updates.status) result.tasksUpdatedInAims++
             }
           } else {
-            // Create new task in AIMS
+            // Create new task in TaskSpace
             const now = new Date().toISOString()
             const taskId = generateId()
             await db.assignedTasks.create({
               id: taskId,
               organizationId: auth.organization.id,
               title: asanaTask.name,
-              description: asanaTask.notes?.replace(/\n---\nAIMS Task ID:.*$/, "").trim() || "",
+              description: asanaTask.notes?.replace(/\n---\n(?:AIMS Task ID|TaskSpace ID):.*$/, "").trim() || "",
               assigneeId: mapping.aimsUserId,
               assigneeName: mapping.aimsUserName,
               assignedById: auth.user.id,

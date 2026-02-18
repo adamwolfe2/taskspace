@@ -74,10 +74,10 @@ export default function CommunicationPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-semibold">
-                            JD
+                            TM
                           </div>
                           <div>
-                            <div className="font-semibold text-gray-900">John Doe</div>
+                            <div className="font-semibold text-gray-900">Team Member</div>
                             <div className="text-sm text-gray-500">Product Manager</div>
                           </div>
                         </div>

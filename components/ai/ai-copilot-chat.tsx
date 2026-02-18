@@ -23,7 +23,7 @@ interface Message {
 }
 
 const SUGGESTED_QUERIES = [
-  "What did Kumar work on this week?",
+  "What did the team work on this week?",
   "Who's blocked and needs help?",
   "Which rocks are at risk?",
   "Summarize yesterday's team updates",

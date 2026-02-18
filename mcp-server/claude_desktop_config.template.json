@@ -1,11 +1,11 @@
 {
   "mcpServers": {
-    "aims-eod-tracker": {
+    "taskspace": {
       "command": "node",
       "args": ["__MCP_SERVER_PATH__/dist/index.js"],
       "env": {
-        "AIMS_API_URL": "https://eod.aimanagingservices.com",
-        "AIMS_API_KEY": "__YOUR_API_KEY__"
+        "TASKSPACE_API_URL": "https://trytaskspace.com",
+        "TASKSPACE_API_KEY": "__YOUR_API_KEY__"
       }
     }
   }

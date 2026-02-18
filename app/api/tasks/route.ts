@@ -228,13 +228,13 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
           // Create task in Asana
           const asanaTask = await asanaClient.createTask({
             name: title.trim(),
-            notes: `${description?.trim() || ""}\n\n---\nAIMS Task ID: AIMS-${taskId}`,
+            notes: `${description?.trim() || ""}\n\n---\nTaskSpace ID: TS-${taskId}`,
             projects: [asanaConfig.projectGid],
             assignee: userMapping.asanaUserGid,
             due_on: dueDate ? dueDate.split("T")[0] : undefined,
           })
           asanaGid = asanaTask.gid
-          logger.info({ asanaGid, taskId }, "Created Asana task for AIMS task")
+          logger.info({ asanaGid, taskId }, "Created Asana task for TaskSpace task")
         } catch (asanaErr) {
           // Log but don't fail - Asana sync is best-effort
           logError(logger, "Failed to create Asana task", asanaErr, { taskId })

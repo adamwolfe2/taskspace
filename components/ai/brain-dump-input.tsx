@@ -23,11 +23,11 @@ export function BrainDumpInput({ onSubmit, isProcessing }: BrainDumpInputProps) 
   const placeholderText = `Just dump your thoughts here...
 
 Examples:
-- "Kumar needs to finish the API integration by Friday, it's blocking Marco"
-- "Sabbir should review the design mockups Sheenam sent"
-- "Need someone to handle the client presentation prep - probably Ailyn"
-- "Ivan's been stuck on that bug for 2 days, have him pair with Saad"
-- "Lujan mentioned wanting more frontend work, assign him the dashboard redesign"`
+- "Alex needs to finish the API integration by Friday, it's blocking the launch"
+- "Have someone review the design mockups before the client call"
+- "Need the marketing team to handle the presentation prep"
+- "The onboarding bug has been open for 2 days, pair up to fix it"
+- "Assign the dashboard redesign to whoever has the most capacity"`
 
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
