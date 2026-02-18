@@ -76,6 +76,10 @@ import {
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 // Grid CSS is loaded globally via app/globals.css for reliability with dynamic imports
 
+// Bump this whenever DEFAULT_LAYOUT or rowHeight changes.
+// Stale localStorage with a different version is discarded on load.
+const LAYOUT_VERSION = 2
+
 export interface DashboardWidget {
  id: string
  type: "welcome" | "eod_status" | "action_hub" | "rocks" | "tasks" | "stats" | "productivity" | "eod_calendar" | "eod_submission" | "focus" | "activity"
@@ -475,43 +479,42 @@ export function useDashboardLayout(
 ) {
  const storageKey = workspaceId ? `dashboard-layout-${workspaceId}` : null
 
+ // Load saved data from localStorage (if version matches)
+ const savedData = useMemo(() => {
+  if (!storageKey || typeof window === "undefined") return null
+  try {
+   const raw = localStorage.getItem(storageKey)
+   if (!raw) return null
+   const parsed = JSON.parse(raw)
+   // Discard stale data when layout version changes (e.g. rowHeight or grid schema change)
+   if (parsed.version !== LAYOUT_VERSION) {
+    localStorage.removeItem(storageKey)
+    return null
+   }
+   return parsed
+  } catch {
+   return null
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [storageKey])
+
  // State always holds ALL widgets (not filtered by features).
  // Feature filtering happens at display time via useMemo.
  const [widgets, setWidgets] = useState<DashboardWidget[]>(() => {
-  if (storageKey && typeof window !== "undefined") {
-   try {
-    const saved = localStorage.getItem(storageKey)
-    if (saved) {
-     const parsed = JSON.parse(saved)
-     if (parsed.widgets && Array.isArray(parsed.widgets)) {
-      // Merge saved enabled/disabled with current defaults (handles new widget types)
-      const savedMap = new Map<string, DashboardWidget>(parsed.widgets.map((w: DashboardWidget) => [w.id, w]))
-      return initialWidgets.map((def) => {
-       const savedWidget = savedMap.get(def.id)
-       return savedWidget ? { ...def, enabled: savedWidget.enabled } : def
-      })
-     }
-    }
-   } catch {
-    // Invalid saved data, use defaults
-   }
+  if (savedData?.widgets && Array.isArray(savedData.widgets)) {
+   // Merge saved enabled/disabled with current defaults (handles new widget types)
+   const savedMap = new Map<string, DashboardWidget>(savedData.widgets.map((w: DashboardWidget) => [w.id, w]))
+   return initialWidgets.map((def) => {
+    const savedWidget = savedMap.get(def.id)
+    return savedWidget ? { ...def, enabled: savedWidget.enabled } : def
+   })
   }
   return initialWidgets
  })
 
  const [layout, setLayout] = useState<LayoutItem[]>(() => {
-  if (storageKey && typeof window !== "undefined") {
-   try {
-    const saved = localStorage.getItem(storageKey)
-    if (saved) {
-     const parsed = JSON.parse(saved)
-     if (parsed.layout && Array.isArray(parsed.layout)) {
-      return parsed.layout
-     }
-    }
-   } catch {
-    // Invalid saved data, use defaults
-   }
+  if (savedData?.layout && Array.isArray(savedData.layout)) {
+   return savedData.layout
   }
   return initialLayout
  })
@@ -561,7 +564,7 @@ export function useDashboardLayout(
 
  const handleSave = useCallback(() => {
   if (storageKey && typeof window !== "undefined") {
-   localStorage.setItem(storageKey, JSON.stringify({ widgets, layout }))
+   localStorage.setItem(storageKey, JSON.stringify({ version: LAYOUT_VERSION, widgets, layout }))
   }
  }, [storageKey, widgets, layout])
 
