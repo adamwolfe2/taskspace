@@ -91,7 +91,7 @@ export function QuickActions({
 
     setInviteLoading(true)
     try {
-      const res = await fetch(`/api/team/invite`, {
+      const res = await fetch(`/api/super-admin/orgs/${orgId}/invite`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

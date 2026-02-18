@@ -5,7 +5,9 @@ import { useApp } from "@/lib/contexts/app-context"
 import { OrgCard } from "@/components/portfolio/org-card"
 import { PortfolioTrends } from "@/components/portfolio/portfolio-trends"
 import { CreateOrgDialog } from "@/components/portfolio/create-org-dialog"
-import { Loader2, LayoutGrid, TrendingUp, Plus } from "lucide-react"
+import { ExecutiveSummary } from "@/components/portfolio/executive-summary"
+import { CrossOrgTaskDialog } from "@/components/portfolio/cross-org-task-dialog"
+import { Loader2, LayoutGrid, TrendingUp, Plus, ArrowRightLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface PortfolioOrg {
@@ -31,6 +33,7 @@ export function PortfolioPage() {
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [showCreateOrg, setShowCreateOrg] = useState(false)
+  const [showCrossOrgTask, setShowCrossOrgTask] = useState(false)
 
   const fetchPortfolio = useCallback(async () => {
     try {
@@ -115,6 +118,10 @@ export function PortfolioPage() {
             <TrendingUp className="h-4 w-4 mr-1" />
             Trends
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowCrossOrgTask(true)}>
+            <ArrowRightLeft className="h-4 w-4 mr-1" />
+            Cross-Org Task
+          </Button>
           <Button size="sm" onClick={() => setShowCreateOrg(true)}>
             <Plus className="h-4 w-4 mr-1" />
             New Org
@@ -162,9 +169,19 @@ export function PortfolioPage() {
         <PortfolioTrends />
       )}
 
+      {/* AI Executive Briefing */}
+      <ExecutiveSummary />
+
       <CreateOrgDialog
         open={showCreateOrg}
         onOpenChange={setShowCreateOrg}
+        onCreated={fetchPortfolio}
+      />
+
+      <CrossOrgTaskDialog
+        open={showCrossOrgTask}
+        onOpenChange={setShowCrossOrgTask}
+        orgs={orgs.map(o => ({ id: o.id, name: o.name }))}
         onCreated={fetchPortfolio}
       />
     </div>

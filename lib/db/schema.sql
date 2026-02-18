@@ -491,3 +491,32 @@ ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS onboarding_dismissed B
 -- ============================================
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN DEFAULT FALSE;
+
+-- ============================================
+-- PORTFOLIO SNAPSHOTS (Phase 5a)
+-- ============================================
+-- Nightly materialized snapshots of org health for fast historical queries
+
+CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+  id VARCHAR(255) PRIMARY KEY,
+  organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  snapshot_date DATE NOT NULL,
+  member_count INTEGER NOT NULL DEFAULT 0,
+  eod_submission_count INTEGER NOT NULL DEFAULT 0,
+  eod_submission_rate NUMERIC(5,2) NOT NULL DEFAULT 0,
+  active_task_count INTEGER NOT NULL DEFAULT 0,
+  completed_task_count INTEGER NOT NULL DEFAULT 0,
+  open_escalation_count INTEGER NOT NULL DEFAULT 0,
+  avg_rock_progress NUMERIC(5,2) NOT NULL DEFAULT 0,
+  rocks_on_track INTEGER NOT NULL DEFAULT 0,
+  rocks_at_risk INTEGER NOT NULL DEFAULT 0,
+  rocks_blocked INTEGER NOT NULL DEFAULT 0,
+  rocks_completed INTEGER NOT NULL DEFAULT 0,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_portfolio_snapshots_org_date
+  ON portfolio_snapshots(organization_id, snapshot_date);
+CREATE INDEX IF NOT EXISTS idx_portfolio_snapshots_date
+  ON portfolio_snapshots(snapshot_date);
