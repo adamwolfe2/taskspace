@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, FolderKanban, MoreHorizontal, Pencil, Trash2, Calendar, Users, CheckCircle2, X, ArrowUpDown, RefreshCw, UserPlus } from "lucide-react"
+import { format, parseISO } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
@@ -46,6 +47,16 @@ const PRIORITY_COLORS: Record<string, string> = {
   medium: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   normal: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
   low: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+}
+
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return ""
+  try {
+    const d = parseISO(dateStr)
+    return format(d, "MMM d, yyyy")
+  } catch {
+    return dateStr
+  }
 }
 
 export function ProjectsPage({
@@ -437,7 +448,7 @@ export function ProjectsPage({
                           )}
                           {project.dueDate && (
                             <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" /> {project.dueDate}
+                              <Calendar className="h-3 w-3" /> {formatDate(project.dueDate)}
                             </span>
                           )}
                           {project.taskCount !== undefined && (
@@ -633,13 +644,13 @@ export function ProjectsPage({
                       {detailProject.startDate && (
                         <div>
                           <h4 className="text-sm font-medium">Start</h4>
-                          <p className="text-sm text-muted-foreground">{detailProject.startDate}</p>
+                          <p className="text-sm text-muted-foreground">{formatDate(detailProject.startDate)}</p>
                         </div>
                       )}
                       {detailProject.dueDate && (
                         <div>
                           <h4 className="text-sm font-medium">Due</h4>
-                          <p className="text-sm text-muted-foreground">{detailProject.dueDate}</p>
+                          <p className="text-sm text-muted-foreground">{formatDate(detailProject.dueDate)}</p>
                         </div>
                       )}
                     </div>
