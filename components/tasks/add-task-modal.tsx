@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Repeat, FileText, Bookmark, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface AddTaskModalProps {
   open: boolean
@@ -57,6 +58,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
   const [isSavingTemplate, setIsSavingTemplate] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+  const themedColors = useThemedIconColors()
 
   // Load templates when modal opens
   useEffect(() => {
@@ -308,7 +310,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
           <div className="space-y-3 pt-2 border-t">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Repeat className="h-4 w-4 text-slate-500" />
+                <Repeat className="h-4 w-4" style={{ color: themedColors.secondary }} />
                 <Label htmlFor="recurring" className="cursor-pointer">Recurring task</Label>
               </div>
               <Switch
@@ -347,7 +349,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
           <div className="space-y-3 pt-2 border-t">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Bookmark className="h-4 w-4 text-slate-500" />
+                <Bookmark className="h-4 w-4" style={{ color: themedColors.secondary }} />
                 <Label htmlFor="save-template" className="cursor-pointer">Save as template</Label>
               </div>
               <Switch

@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 type Confidence = "on_track" | "at_risk" | "off_track"
 
@@ -78,6 +79,7 @@ export function RockCheckinDialog({
   onCheckinComplete,
 }: RockCheckinDialogProps) {
   const { toast } = useToast()
+  const themedColors = useThemedIconColors()
   const [confidence, setConfidence] = useState<Confidence>(currentConfidence)
   const [notes, setNotes] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -165,8 +167,9 @@ export function RockCheckinDialog({
                     <Icon
                       className={cn(
                         "h-5 w-5 mt-0.5 flex-shrink-0",
-                        isSelected ? option.color : "text-slate-400"
+                        isSelected ? option.color : ""
                       )}
+                      style={!isSelected ? { color: themedColors.secondary } : undefined}
                     />
                     <div className="flex-1">
                       <div

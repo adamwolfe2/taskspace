@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useApp } from "@/lib/contexts/app-context"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -67,6 +68,7 @@ interface IntegrationsApiTabProps {
 
 export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
   const { currentUser } = useApp()
+  const { currentWorkspaceId } = useWorkspaces()
   const { toast } = useToast()
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false)
@@ -248,7 +250,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest"
         },
-        body: JSON.stringify({ name: newApiKeyName.trim() }),
+        body: JSON.stringify({ name: newApiKeyName.trim(), workspaceId: currentWorkspaceId || undefined }),
       })
 
       const data = await response.json()

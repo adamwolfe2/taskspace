@@ -16,6 +16,7 @@ import { TaskSubtasks } from "./task-subtasks"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
 import { Calendar, User, Target, AlertCircle, Clock, CheckCircle2, FolderKanban } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 import { cn } from "@/lib/utils"
 
 interface TaskDetailModalProps {
@@ -71,6 +72,7 @@ export function TaskDetailModal({
   const [subtasks, setSubtasks] = useState<TaskSubtask[]>([])
   const [isLoadingSubtasks, setIsLoadingSubtasks] = useState(false)
   const { toast } = useToast()
+  const themedColors = useThemedIconColors()
 
   const isCompleted = task.status === "completed"
   const dueDateStatus = getDueDateStatus(task.dueDate, isCompleted)
@@ -272,7 +274,7 @@ export function TaskDetailModal({
               {isCompleted ? (
                 <CheckCircle2 className="h-5 w-5 text-emerald-600" />
               ) : (
-                <Target className="h-5 w-5 text-slate-500" />
+                <Target className="h-5 w-5" style={{ color: themedColors.secondary }} />
               )}
             </div>
             <div className="flex-1 min-w-0">
@@ -298,7 +300,7 @@ export function TaskDetailModal({
                     {dueDateStatus.label}
                   </span>
                 ) : task.dueDate ? (
-                  <span className="flex items-center gap-1 text-xs text-slate-500">
+                  <span className="flex items-center gap-1 text-xs" style={{ color: themedColors.secondary }}>
                     <Calendar className="h-3 w-3" />
                     Due: {format(new Date(task.dueDate), "MMM d, yyyy")}
                   </span>
@@ -320,7 +322,7 @@ export function TaskDetailModal({
           {/* Related Rock */}
           {task.rockTitle && (
             <div className="flex items-center gap-2 text-sm">
-              <Target className="h-4 w-4 text-blue-500" />
+              <Target className="h-4 w-4" style={{ color: themedColors.primary }} />
               <span className="text-slate-600">Related to:</span>
               <span className="font-medium text-slate-900">{task.rockTitle}</span>
             </div>
@@ -329,7 +331,7 @@ export function TaskDetailModal({
           {/* Related Project */}
           {task.projectName && (
             <div className="flex items-center gap-2 text-sm">
-              <FolderKanban className="h-4 w-4 text-purple-500" />
+              <FolderKanban className="h-4 w-4" style={{ color: themedColors.primary }} />
               <span className="text-slate-600">Project:</span>
               <span className="font-medium text-slate-900">{task.projectName}</span>
             </div>
@@ -338,7 +340,7 @@ export function TaskDetailModal({
           {/* Assigned by */}
           {task.assignedByName && task.type === "assigned" && (
             <div className="flex items-center gap-2 text-sm">
-              <User className="h-4 w-4 text-slate-400" />
+              <User className="h-4 w-4" style={{ color: themedColors.secondary }} />
               <span className="text-slate-600">Assigned by:</span>
               <span className="font-medium text-slate-900">{task.assignedByName}</span>
             </div>

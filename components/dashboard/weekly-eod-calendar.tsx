@@ -162,7 +162,7 @@ export function WeeklyEODCalendar({
  case 'positive': return <Smile className="h-3 w-3" style={{ color: themedColors.primary }} />
  case 'stressed':
  case 'negative': return <Frown className="h-3 w-3 text-red-500" />
- default: return <Meh className="h-3 w-3 text-slate-400" />
+ default: return <Meh className="h-3 w-3" style={{ color: themedColors.secondary }} />
  }
  }
 
@@ -172,7 +172,7 @@ export function WeeklyEODCalendar({
  <div className="flex items-center justify-between mb-3 sm:mb-4">
  <div className="flex items-center gap-2">
  <div className="p-1.5 sm:p-2 rounded-lg bg-slate-100 ">
- <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 " />
+ <Calendar className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: themedColors.secondary }} />
  </div>
  <div>
  <h3 className="text-sm sm:text-base font-semibold text-slate-900 ">Weekly EOD Status</h3>
@@ -266,7 +266,7 @@ export function WeeklyEODCalendar({
  </span>
  <div className="mt-1 sm:mt-2">
  {day.isFuture ? (
- <Circle className="h-4 w-4 sm:h-5 sm:w-5 text-slate-300 " />
+ <Circle className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: themedColors.secondaryLight }} />
  ) : day.hasSubmission ? (
  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: themedColors.primary }} />
  ) : showAsSelected ? (

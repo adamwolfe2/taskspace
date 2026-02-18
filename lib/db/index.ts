@@ -261,6 +261,7 @@ function parseApiKey(row: Record<string, unknown>): ApiKey {
   return {
     id: row.id as string,
     organizationId: row.organization_id as string,
+    workspaceId: (row.workspace_id as string) || null,
     createdBy: row.created_by as string,
     name: row.name as string,
     key: row.key as string,
@@ -2309,8 +2310,8 @@ export const db = {
     },
     async create(apiKey: ApiKey): Promise<ApiKey> {
       await sql`
-        INSERT INTO api_keys (id, organization_id, created_by, name, key, scopes, created_at, last_used_at)
-        VALUES (${apiKey.id}, ${apiKey.organizationId}, ${apiKey.createdBy}, ${apiKey.name},
+        INSERT INTO api_keys (id, organization_id, workspace_id, created_by, name, key, scopes, created_at, last_used_at)
+        VALUES (${apiKey.id}, ${apiKey.organizationId}, ${apiKey.workspaceId}, ${apiKey.createdBy}, ${apiKey.name},
                 ${apiKey.key}, ${JSON.stringify(apiKey.scopes)}, ${apiKey.createdAt}, ${apiKey.lastUsedAt})
       `
       return apiKey

@@ -36,7 +36,7 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
     // Validate request body
-    const { name, scopes } = await validateBody(request, apiKeyCreateSchema)
+    const { name, scopes, workspaceId } = await validateBody(request, apiKeyCreateSchema)
 
     // Generate a secure API key
     const keyValue = `aims_${generateId()}_${generateId()}`
@@ -45,6 +45,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     const apiKey = {
       id: generateId(),
       organizationId: auth.organization.id,
+      workspaceId: workspaceId || null,
       createdBy: auth.user.id,
       name,
       key: keyValue,

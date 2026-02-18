@@ -107,6 +107,7 @@ function ActivityItem({ activity }: { activity: Activity }) {
 
 export function ActivityFeed({ workspaceId }: ActivityFeedProps) {
   const { currentWorkspace } = useWorkspaces()
+  const themedColors = useThemedIconColors()
   const [activities, setActivities] = useState<Activity[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -155,7 +156,7 @@ export function ActivityFeed({ workspaceId }: ActivityFeedProps) {
       <CardContent>
         {error ? (
           <div className="text-center py-8">
-            <ActivityIcon className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+            <ActivityIcon className="h-12 w-12 mx-auto mb-3" style={{ color: themedColors.secondary }} />
             <p className="text-sm text-slate-500">Couldn&apos;t load activity</p>
             <Button
               variant="ghost"
@@ -194,7 +195,7 @@ export function ActivityFeed({ workspaceId }: ActivityFeedProps) {
           </div>
         ) : activities.length === 0 ? (
           <div className="text-center py-8">
-            <ActivityIcon className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+            <ActivityIcon className="h-12 w-12 mx-auto mb-3" style={{ color: themedColors.secondary }} />
             <p className="text-sm text-slate-500">No recent activity</p>
             <p className="text-xs text-slate-400 mt-1">Activity from the last 7 days will appear here</p>
           </div>

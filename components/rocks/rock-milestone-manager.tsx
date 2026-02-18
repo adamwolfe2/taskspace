@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Plus, X, GripVertical, Calendar } from "lucide-react"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface RockMilestoneManagerProps {
   rock: Rock
@@ -14,6 +15,7 @@ interface RockMilestoneManagerProps {
 }
 
 export function RockMilestoneManager({ rock, onUpdateMilestones, compact = false }: RockMilestoneManagerProps) {
+  const themedColors = useThemedIconColors()
   const [milestones, setMilestones] = useState<RockMilestone[]>(rock.milestones || [])
   const [newMilestoneText, setNewMilestoneText] = useState("")
   const [isAdding, setIsAdding] = useState(false)
@@ -185,7 +187,7 @@ export function RockMilestoneManager({ rock, onUpdateMilestones, compact = false
                 : "bg-white border-slate-200 hover:border-slate-300"
             }`}
           >
-            <GripVertical className="h-4 w-4 text-slate-300 cursor-grab" />
+            <GripVertical className="h-4 w-4 cursor-grab" style={{ color: themedColors.secondary }} />
             <Checkbox
               checked={milestone.completed}
               onCheckedChange={() => handleToggleMilestone(milestone.id)}

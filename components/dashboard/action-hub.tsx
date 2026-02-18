@@ -398,10 +398,9 @@ export function ActionHub({
                   <Pin
                     className={cn(
                       "h-3.5 w-3.5",
-                      pinnedIds.has(item.id)
-                        ? "text-amber-600 fill-amber-600"
-                        : "text-slate-400"
+                      pinnedIds.has(item.id) && "text-amber-600 fill-amber-600"
                     )}
+                    style={pinnedIds.has(item.id) ? undefined : { color: themedColors.secondary }}
                   />
                 </Button>
                 <Button
@@ -414,7 +413,7 @@ export function ActionHub({
                   }}
                   title="Dismiss"
                 >
-                  <X className="h-3.5 w-3.5 text-slate-400" />
+                  <X className="h-3.5 w-3.5" style={{ color: themedColors.secondary }} />
                 </Button>
               </div>
             </div>

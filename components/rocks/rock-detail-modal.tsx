@@ -20,6 +20,7 @@ import { Target, Calendar, AlertCircle, CheckCircle2, Clock, Pencil, Save, X, Fo
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 // Calculate quarter from a date string (YYYY-MM-DD or ISO format)
 function getQuarterFromDate(dateStr: string): string {
@@ -49,6 +50,7 @@ interface RockDetailModalProps {
 }
 
 export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projects }: RockDetailModalProps) {
+  const themedColors = useThemedIconColors()
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(rock.title)
   const [description, setDescription] = useState(rock.description)
@@ -267,7 +269,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
           {/* Related Project */}
           {!isEditing && rock.projectName && (
             <div className="flex items-center gap-2 text-sm">
-              <FolderKanban className="h-4 w-4 text-purple-500" />
+              <FolderKanban className="h-4 w-4" style={{ color: themedColors.primary }} />
               <span className="text-slate-600">Project:</span>
               <span className="font-medium text-slate-900">{rock.projectName}</span>
             </div>

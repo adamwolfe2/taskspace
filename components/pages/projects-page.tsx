@@ -582,7 +582,7 @@ export function ProjectsPage({
                 <SheetHeader>
                   <SheetTitle>{detailProject.name}</SheetTitle>
                 </SheetHeader>
-                <div className="mt-4 space-y-4">
+                <div className="mt-4 space-y-4 px-4 pb-4">
                   <div className="flex gap-2">
                     <Badge variant="outline" style={getStatusStyle(detailProject.status)}>{detailProject.status}</Badge>
                     <Badge variant="outline" style={getPriorityStyle(detailProject.priority)}>{detailProject.priority}</Badge>

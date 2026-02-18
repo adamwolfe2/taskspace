@@ -13,6 +13,7 @@ import { FileTray } from "@/components/ui/file-tray"
 import type { TeamMemberMetric } from "@/lib/metrics"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 // Check if a date is Thursday (day 4)
 function isThursday(dateStr: string): boolean {
@@ -91,6 +92,7 @@ export function EODSubmissionCard({
   onDateReset,
 }: EODSubmissionCardProps) {
   const { currentOrganization } = useApp()
+  const themedColors = useThemedIconColors()
   // Use organization timezone for date calculations
   const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
   const todayInOrgTz = getTodayInTimezone(orgTimezone)
@@ -408,7 +410,7 @@ export function EODSubmissionCard({
       {/* Date Selection */}
       <div className="px-5 pt-4">
         <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <Calendar className="h-5 w-5 text-slate-500" />
+          <Calendar className="h-5 w-5" style={{ color: themedColors.secondary }} />
           <div className="flex-1">
             <Label className="text-xs font-medium text-slate-600">Report Date</Label>
             <Select
@@ -528,7 +530,7 @@ export function EODSubmissionCard({
         {/* Attachments (Optional) */}
         <div className="space-y-2">
           <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-            <Paperclip className="h-4 w-4 text-slate-500" />
+            <Paperclip className="h-4 w-4" style={{ color: themedColors.secondary }} />
             Attachments
             <span className="text-xs font-normal text-slate-400">(optional)</span>
           </Label>

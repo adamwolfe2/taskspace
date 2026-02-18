@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 import {
   GripVertical,
   Target,
@@ -32,6 +33,7 @@ export function EnhancedKanbanCard({
   onClick,
 }: EnhancedKanbanCardProps) {
   const { getStatusStyle, getPriorityStyle } = useBrandStatusStyles()
+  const themedColors = useThemedIconColors()
 
   const isOverdue =
     task.dueDate &&
@@ -58,7 +60,7 @@ export function EnhancedKanbanCard({
       case "medium":
         return <InfoIcon className="h-4 w-4" style={{ color: getPriorityStyle("medium").color }} />
       default:
-        return <Circle className="h-4 w-4 text-slate-400" />
+        return <Circle className="h-4 w-4" style={{ color: themedColors.secondary }} />
     }
   }
 

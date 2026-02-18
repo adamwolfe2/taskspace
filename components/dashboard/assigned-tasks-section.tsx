@@ -9,6 +9,7 @@ import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, ChevronUp, Ale
 import { useToast } from "@/hooks/use-toast"
 import { useApp } from "@/lib/contexts/app-context"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 import { differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { TaskDetailModal } from "@/components/tasks/task-detail-modal"
@@ -81,6 +82,7 @@ export function AssignedTasksSection({
   const { toast } = useToast()
   const { setCurrentPage } = useApp()
   const { getPriorityStyle, getStatusStyle } = useBrandStatusStyles()
+  const themedColors = useThemedIconColors()
   const [asanaConnected, setAsanaConnected] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [isCheckingConnection, setIsCheckingConnection] = useState(true)
@@ -203,12 +205,12 @@ export function AssignedTasksSection({
               aria-label={isExpanded ? "Collapse section" : "Expand section"}
             >
               {isExpanded ? (
-                <ChevronUp className="h-4 w-4 text-slate-500" />
+                <ChevronUp className="h-4 w-4" style={{ color: themedColors.secondary }} />
               ) : (
-                <ChevronDown className="h-4 w-4 text-slate-500" />
+                <ChevronDown className="h-4 w-4" style={{ color: themedColors.secondary }} />
               )}
             </button>
-            <CheckSquare className="h-5 w-5 text-slate-500" />
+            <CheckSquare className="h-5 w-5" style={{ color: themedColors.secondary }} />
             <h3 className="font-semibold text-slate-900">My Tasks</h3>
             <span className="text-sm text-slate-500">({tasks.length})</span>
           </div>
@@ -239,7 +241,7 @@ export function AssignedTasksSection({
           {tasks.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckSquare className="h-6 w-6 text-slate-400" />
+              <CheckSquare className="h-6 w-6" style={{ color: themedColors.secondary }} />
             </div>
             <p className="text-slate-600 font-medium">No tasks assigned yet</p>
             <p className="text-sm text-slate-400 mt-1">Tasks assigned to you will appear here</p>

@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils"
 import type { Rock, RockDependency } from "@/lib/types"
 import { Plus, X, ArrowRight, Link2, Unlink, AlertTriangle, Target } from "lucide-react"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface RockDependenciesProps {
  rock: Rock
@@ -40,6 +41,7 @@ export function RockDependencies({
  disabled = false,
  className,
 }: RockDependenciesProps) {
+ const themedColors = useThemedIconColors()
  const [isAdding, setIsAdding] = useState(false)
  const [selectedRockId, setSelectedRockId] = useState<string>("")
  const [dependencyType, setDependencyType] = useState<"blocks" | "soft_dependency">("blocks")
@@ -130,7 +132,7 @@ export function RockDependencies({
  className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 "
  >
  <div className="flex-1 flex items-center gap-2 min-w-0">
- <Target className="h-4 w-4 text-slate-400 shrink-0" />
+ <Target className="h-4 w-4 shrink-0" style={{ color: themedColors.secondary }} />
  <span className="truncate text-sm text-slate-700 ">
  {dependsOnRock.title}
  </span>

@@ -862,6 +862,7 @@ export interface GoogleCalendarEventMapping {
 export interface ApiKey {
   id: string
   organizationId: string
+  workspaceId: string | null
   createdBy: string
   name: string
   key: string

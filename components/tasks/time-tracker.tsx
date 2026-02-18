@@ -36,6 +36,7 @@ import {
  X,
 } from "lucide-react"
 import { format, differenceInMinutes, differenceInSeconds, parseISO } from "date-fns"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface TimeTrackerProps {
  taskId: string
@@ -258,6 +259,7 @@ function TimeEntryRow({
 }) {
  const [isEditing, setIsEditing] = useState(false)
  const [editDescription, setEditDescription] = useState(entry.description || "")
+ const themedColors = useThemedIconColors()
 
  const duration = entry.durationMinutes ||
  (entry.endedAt
@@ -280,7 +282,7 @@ function TimeEntryRow({
 
  return (
  <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50  group">
- <Clock className="h-4 w-4 text-slate-400 shrink-0" />
+ <Clock className="h-4 w-4 shrink-0" style={{ color: themedColors.secondary }} />
  <div className="flex-1 min-w-0">
  {isEditing ? (
  <div className="flex items-center gap-1">

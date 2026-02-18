@@ -91,8 +91,13 @@ interface EscalationEntry {
   note: string
 }
 
-// Get organization from API key in Authorization header
-async function getOrgIdFromAuth(): Promise<string | null> {
+interface AuthContext {
+  organizationId: string
+  workspaceId: string | null
+}
+
+// Get organization + workspace from API key in Authorization header
+async function getAuthContext(): Promise<AuthContext | null> {
   try {
     const headersList = await headers()
     const authHeader = headersList.get("authorization")
@@ -104,14 +109,20 @@ async function getOrgIdFromAuth(): Promise<string | null> {
         const key = await db.apiKeys.findByKey(apiKey)
         if (key) {
           await db.apiKeys.updateLastUsed(key.id)
-          return key.organizationId
+          return {
+            organizationId: key.organizationId,
+            workspaceId: key.workspaceId,
+          }
         }
       }
     }
 
     // Fall back to environment variable for demo/development
     if (process.env.MCP_DEFAULT_ORG_ID) {
-      return process.env.MCP_DEFAULT_ORG_ID
+      return {
+        organizationId: process.env.MCP_DEFAULT_ORG_ID,
+        workspaceId: process.env.MCP_DEFAULT_WORKSPACE_ID || null,
+      }
     }
 
     return null
@@ -122,7 +133,19 @@ async function getOrgIdFromAuth(): Promise<string | null> {
 }
 
 // Database query helpers
-async function queryMembers(orgId: string): Promise<MemberRow[]> {
+async function queryMembers(orgId: string, workspaceId?: string | null): Promise<MemberRow[]> {
+  if (workspaceId) {
+    const result = await sql`
+      SELECT om.*, u.name, u.email
+      FROM organization_members om
+      JOIN users u ON om.user_id = u.id
+      JOIN workspace_members wm ON wm.user_id = om.user_id
+      WHERE om.organization_id = ${orgId}
+      AND wm.workspace_id = ${workspaceId}
+      AND om.status = 'active'
+    `
+    return result.rows as unknown as MemberRow[]
+  }
   const result = await sql`
     SELECT om.*, u.name, u.email
     FROM organization_members om
@@ -133,7 +156,18 @@ async function queryMembers(orgId: string): Promise<MemberRow[]> {
   return result.rows as unknown as MemberRow[]
 }
 
-async function queryEodReports(orgId: string, date: string): Promise<EodReportRow[]> {
+async function queryEodReports(orgId: string, date: string, workspaceId?: string | null): Promise<EodReportRow[]> {
+  if (workspaceId) {
+    const result = await sql`
+      SELECT er.*, u.name as user_name
+      FROM eod_reports er
+      JOIN users u ON er.user_id = u.id
+      JOIN organization_members om ON er.user_id = om.user_id AND om.organization_id = ${orgId}
+      WHERE er.workspace_id = ${workspaceId}
+      AND er.report_date = ${date}
+    `
+    return result.rows as unknown as EodReportRow[]
+  }
   const result = await sql`
     SELECT er.*, u.name as user_name
     FROM eod_reports er
@@ -145,7 +179,30 @@ async function queryEodReports(orgId: string, date: string): Promise<EodReportRo
   return result.rows as unknown as EodReportRow[]
 }
 
-async function queryRocks(orgId: string, userId?: string): Promise<RockRow[]> {
+async function queryRocks(orgId: string, workspaceId?: string | null, userId?: string): Promise<RockRow[]> {
+  if (workspaceId && userId) {
+    const result = await sql`
+      SELECT r.*, u.name as owner_name
+      FROM rocks r
+      JOIN users u ON r.owner_id = u.id
+      WHERE r.organization_id = ${orgId}
+      AND r.workspace_id = ${workspaceId}
+      AND r.owner_id = ${userId}
+      ORDER BY r.created_at DESC
+    `
+    return result.rows as unknown as RockRow[]
+  }
+  if (workspaceId) {
+    const result = await sql`
+      SELECT r.*, u.name as owner_name
+      FROM rocks r
+      JOIN users u ON r.owner_id = u.id
+      WHERE r.organization_id = ${orgId}
+      AND r.workspace_id = ${workspaceId}
+      ORDER BY r.created_at DESC
+    `
+    return result.rows as unknown as RockRow[]
+  }
   if (userId) {
     const result = await sql`
       SELECT r.*, u.name as owner_name
@@ -157,7 +214,6 @@ async function queryRocks(orgId: string, userId?: string): Promise<RockRow[]> {
     `
     return result.rows as unknown as RockRow[]
   }
-
   const result = await sql`
     SELECT r.*, u.name as owner_name
     FROM rocks r
@@ -168,18 +224,71 @@ async function queryRocks(orgId: string, userId?: string): Promise<RockRow[]> {
   return result.rows as unknown as RockRow[]
 }
 
-async function queryTasks(orgId: string, userId?: string, status?: string): Promise<TaskRow[]> {
+async function queryTasks(orgId: string, workspaceId?: string | null, userId?: string, status?: string): Promise<TaskRow[]> {
   // Build query with Vercel postgres template literals
+  // When workspace is set, filter assigned_tasks by workspace_id
   let result
-  if (userId && status) {
+  if (workspaceId && userId && status) {
     result = await sql`
       SELECT t.*,
              assignee.name as assignee_name,
              assigner.name as assigned_by_name
-      FROM tasks t
+      FROM assigned_tasks t
+      JOIN users assignee ON t.assignee_id = assignee.id
+      LEFT JOIN users assigner ON t.assigned_by_id = assigner.id
+      WHERE t.organization_id = ${orgId}
+        AND t.workspace_id = ${workspaceId}
+        AND t.assignee_id = ${userId}
+        AND t.status = ${status}
+      ORDER BY t.due_date ASC
+    `
+  } else if (workspaceId && userId) {
+    result = await sql`
+      SELECT t.*,
+             assignee.name as assignee_name,
+             assigner.name as assigned_by_name
+      FROM assigned_tasks t
+      JOIN users assignee ON t.assignee_id = assignee.id
+      LEFT JOIN users assigner ON t.assigned_by_id = assigner.id
+      WHERE t.organization_id = ${orgId}
+        AND t.workspace_id = ${workspaceId}
+        AND t.assignee_id = ${userId}
+      ORDER BY t.due_date ASC
+    `
+  } else if (workspaceId && status) {
+    result = await sql`
+      SELECT t.*,
+             assignee.name as assignee_name,
+             assigner.name as assigned_by_name
+      FROM assigned_tasks t
+      JOIN users assignee ON t.assignee_id = assignee.id
+      LEFT JOIN users assigner ON t.assigned_by_id = assigner.id
+      WHERE t.organization_id = ${orgId}
+        AND t.workspace_id = ${workspaceId}
+        AND t.status = ${status}
+      ORDER BY t.due_date ASC
+    `
+  } else if (workspaceId) {
+    result = await sql`
+      SELECT t.*,
+             assignee.name as assignee_name,
+             assigner.name as assigned_by_name
+      FROM assigned_tasks t
+      JOIN users assignee ON t.assignee_id = assignee.id
+      LEFT JOIN users assigner ON t.assigned_by_id = assigner.id
+      WHERE t.organization_id = ${orgId}
+        AND t.workspace_id = ${workspaceId}
+      ORDER BY t.due_date ASC
+    `
+  } else if (userId && status) {
+    result = await sql`
+      SELECT t.*,
+             assignee.name as assignee_name,
+             assigner.name as assigned_by_name
+      FROM assigned_tasks t
       JOIN organization_members om ON t.assignee_id = om.user_id
       JOIN users assignee ON t.assignee_id = assignee.id
-      LEFT JOIN users assigner ON t.assigned_by = assigner.id
+      LEFT JOIN users assigner ON t.assigned_by_id = assigner.id
       WHERE om.organization_id = ${orgId}
         AND t.assignee_id = ${userId}
         AND t.status = ${status}
@@ -190,10 +299,10 @@ async function queryTasks(orgId: string, userId?: string, status?: string): Prom
       SELECT t.*,
              assignee.name as assignee_name,
              assigner.name as assigned_by_name
-      FROM tasks t
+      FROM assigned_tasks t
       JOIN organization_members om ON t.assignee_id = om.user_id
       JOIN users assignee ON t.assignee_id = assignee.id
-      LEFT JOIN users assigner ON t.assigned_by = assigner.id
+      LEFT JOIN users assigner ON t.assigned_by_id = assigner.id
       WHERE om.organization_id = ${orgId}
         AND t.assignee_id = ${userId}
       ORDER BY t.due_date ASC
@@ -203,10 +312,10 @@ async function queryTasks(orgId: string, userId?: string, status?: string): Prom
       SELECT t.*,
              assignee.name as assignee_name,
              assigner.name as assigned_by_name
-      FROM tasks t
+      FROM assigned_tasks t
       JOIN organization_members om ON t.assignee_id = om.user_id
       JOIN users assignee ON t.assignee_id = assignee.id
-      LEFT JOIN users assigner ON t.assigned_by = assigner.id
+      LEFT JOIN users assigner ON t.assigned_by_id = assigner.id
       WHERE om.organization_id = ${orgId}
         AND t.status = ${status}
       ORDER BY t.due_date ASC
@@ -216,10 +325,10 @@ async function queryTasks(orgId: string, userId?: string, status?: string): Prom
       SELECT t.*,
              assignee.name as assignee_name,
              assigner.name as assigned_by_name
-      FROM tasks t
+      FROM assigned_tasks t
       JOIN organization_members om ON t.assignee_id = om.user_id
       JOIN users assignee ON t.assignee_id = assignee.id
-      LEFT JOIN users assigner ON t.assigned_by = assigner.id
+      LEFT JOIN users assigner ON t.assigned_by_id = assigner.id
       WHERE om.organization_id = ${orgId}
       ORDER BY t.due_date ASC
     `
@@ -237,14 +346,14 @@ const handler = createMcpHandler(
         department: z.string().optional().describe("Filter by department"),
       },
       async ({ department }) => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return {
             content: [{ type: "text", text: "Authentication required. Add your Taskspace API key (aims_...) to the connector's OAuth Client Secret field." }],
           }
         }
 
-        let members = await queryMembers(orgId)
+        let members = await queryMembers(auth.organizationId, auth.workspaceId)
 
         if (department) {
           members = members.filter((m) =>
@@ -273,16 +382,16 @@ const handler = createMcpHandler(
         date: z.string().optional().describe("Date (YYYY-MM-DD), defaults to today"),
       },
       async ({ date }) => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
         const checkDate = date || new Date().toISOString().split("T")[0]
 
         const [members, reports] = await Promise.all([
-          queryMembers(orgId),
-          queryEodReports(orgId, checkDate),
+          queryMembers(auth.organizationId, auth.workspaceId),
+          queryEodReports(auth.organizationId, checkDate, auth.workspaceId),
         ])
 
         const submittedIds = new Set(reports.map((r) => r.user_id))
@@ -308,12 +417,12 @@ const handler = createMcpHandler(
         status: z.enum(["on-track", "at-risk", "blocked", "completed"]).optional(),
       },
       async ({ status }) => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
-        let rocks = await queryRocks(orgId)
+        let rocks = await queryRocks(auth.organizationId, auth.workspaceId)
 
         if (status) {
           rocks = rocks.filter((r) => r.status === status)
@@ -339,12 +448,12 @@ const handler = createMcpHandler(
       "Get pending tasks for the team",
       {},
       async () => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
-        const tasks = await queryTasks(orgId, undefined, "pending")
+        const tasks = await queryTasks(auth.organizationId, auth.workspaceId, undefined, "pending")
 
         const emoji: Record<string, string> = { high: "🔴", medium: "🟡", normal: "🟢" }
 
@@ -365,18 +474,18 @@ const handler = createMcpHandler(
       "Get a quick overview of team status, EOD submissions, and key metrics",
       {},
       async () => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
         const today = new Date().toISOString().split("T")[0]
 
         const [members, reports, rocks, tasks] = await Promise.all([
-          queryMembers(orgId),
-          queryEodReports(orgId, today),
-          queryRocks(orgId),
-          queryTasks(orgId),
+          queryMembers(auth.organizationId, auth.workspaceId),
+          queryEodReports(auth.organizationId, today, auth.workspaceId),
+          queryRocks(auth.organizationId, auth.workspaceId),
+          queryTasks(auth.organizationId, auth.workspaceId),
         ])
 
         const activeMembers = members.filter((m) => m.role === "member")
@@ -414,21 +523,31 @@ const handler = createMcpHandler(
       "Get current blockers and escalations from team",
       {},
       async () => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
-        const result = await sql`
-          SELECT er.*, u.name as user_name
-          FROM eod_reports er
-          JOIN users u ON er.user_id = u.id
-          JOIN organization_members om ON er.user_id = om.user_id
-          WHERE om.organization_id = ${orgId}
-          AND er.needs_escalation = true
-          AND er.report_date >= CURRENT_DATE - INTERVAL '7 days'
-          ORDER BY er.report_date DESC
-        `
+        const result = auth.workspaceId
+          ? await sql`
+            SELECT er.*, u.name as user_name
+            FROM eod_reports er
+            JOIN users u ON er.user_id = u.id
+            WHERE er.workspace_id = ${auth.workspaceId}
+            AND er.needs_escalation = true
+            AND er.report_date >= CURRENT_DATE - INTERVAL '7 days'
+            ORDER BY er.report_date DESC
+          `
+          : await sql`
+            SELECT er.*, u.name as user_name
+            FROM eod_reports er
+            JOIN users u ON er.user_id = u.id
+            JOIN organization_members om ON er.user_id = om.user_id
+            WHERE om.organization_id = ${auth.organizationId}
+            AND er.needs_escalation = true
+            AND er.report_date >= CURRENT_DATE - INTERVAL '7 days'
+            ORDER BY er.report_date DESC
+          `
 
         if (result.rows.length === 0) {
           return { content: [{ type: "text", text: "No blockers reported in the last 7 days" }] }
@@ -457,13 +576,13 @@ const handler = createMcpHandler(
         days: z.number().optional().describe("Number of days of history to analyze (default 30)"),
       },
       async ({ memberName, days = 30 }) => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
         // Find the member
-        const members = await queryMembers(orgId)
+        const members = await queryMembers(auth.organizationId, auth.workspaceId)
         const member = members.find((m) =>
           m.name.toLowerCase().includes(memberName.toLowerCase())
         )
@@ -472,27 +591,53 @@ const handler = createMcpHandler(
           return { content: [{ type: "text", text: `No member found matching "${memberName}"` }] }
         }
 
-        // Get comprehensive data for this member
+        // Get comprehensive data for this member (workspace-scoped when available)
+        const wsId = auth.workspaceId
         const [eodReports, tasks, rocks] = await Promise.all([
-          sql`
-            SELECT er.*
-            FROM eod_reports er
-            WHERE er.user_id = ${member.user_id}
-            AND er.report_date >= CURRENT_DATE - INTERVAL '${days} days'
-            ORDER BY er.report_date DESC
-          `,
-          sql`
-            SELECT t.*
-            FROM tasks t
-            WHERE t.assignee_id = ${member.user_id}
-            ORDER BY t.created_at DESC
-          `,
-          sql`
-            SELECT r.*
-            FROM rocks r
-            WHERE r.owner_id = ${member.user_id}
-            ORDER BY r.created_at DESC
-          `,
+          wsId
+            ? sql`
+              SELECT er.*
+              FROM eod_reports er
+              WHERE er.user_id = ${member.user_id}
+              AND er.workspace_id = ${wsId}
+              AND er.report_date >= CURRENT_DATE - INTERVAL '${days} days'
+              ORDER BY er.report_date DESC
+            `
+            : sql`
+              SELECT er.*
+              FROM eod_reports er
+              WHERE er.user_id = ${member.user_id}
+              AND er.report_date >= CURRENT_DATE - INTERVAL '${days} days'
+              ORDER BY er.report_date DESC
+            `,
+          wsId
+            ? sql`
+              SELECT t.*
+              FROM assigned_tasks t
+              WHERE t.assignee_id = ${member.user_id}
+              AND t.workspace_id = ${wsId}
+              ORDER BY t.created_at DESC
+            `
+            : sql`
+              SELECT t.*
+              FROM assigned_tasks t
+              WHERE t.assignee_id = ${member.user_id}
+              ORDER BY t.created_at DESC
+            `,
+          wsId
+            ? sql`
+              SELECT r.*
+              FROM rocks r
+              WHERE r.owner_id = ${member.user_id}
+              AND r.workspace_id = ${wsId}
+              ORDER BY r.created_at DESC
+            `
+            : sql`
+              SELECT r.*
+              FROM rocks r
+              WHERE r.owner_id = ${member.user_id}
+              ORDER BY r.created_at DESC
+            `,
         ])
 
         const eods = eodReports.rows as unknown as EodReportRow[]
@@ -584,15 +729,15 @@ ${overdueTasks.length > 2 ? "⚠️ HIGH - Multiple overdue tasks" :
         date: z.string().optional().describe("Date (YYYY-MM-DD), defaults to today"),
       },
       async ({ memberName, date }) => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
         const reportDate = date || new Date().toISOString().split("T")[0]
 
         // Find the member
-        const members = await queryMembers(orgId)
+        const members = await queryMembers(auth.organizationId, auth.workspaceId)
         const member = members.find((m) =>
           m.name.toLowerCase().includes(memberName.toLowerCase())
         )
@@ -601,13 +746,21 @@ ${overdueTasks.length > 2 ? "⚠️ HIGH - Multiple overdue tasks" :
           return { content: [{ type: "text", text: `No member found matching "${memberName}"` }] }
         }
 
-        // Get the EOD report
-        const reportResult = await sql`
-          SELECT er.*
-          FROM eod_reports er
-          WHERE er.user_id = ${member.user_id}
-          AND er.report_date = ${reportDate}
-        `
+        // Get the EOD report (workspace-scoped when available)
+        const reportResult = auth.workspaceId
+          ? await sql`
+            SELECT er.*
+            FROM eod_reports er
+            WHERE er.user_id = ${member.user_id}
+            AND er.workspace_id = ${auth.workspaceId}
+            AND er.report_date = ${reportDate}
+          `
+          : await sql`
+            SELECT er.*
+            FROM eod_reports er
+            WHERE er.user_id = ${member.user_id}
+            AND er.report_date = ${reportDate}
+          `
 
         if (reportResult.rows.length === 0) {
           return { content: [{ type: "text", text: `No EOD report found for ${member.name} on ${reportDate}` }] }
@@ -616,13 +769,22 @@ ${overdueTasks.length > 2 ? "⚠️ HIGH - Multiple overdue tasks" :
         const report = reportResult.rows[0] as unknown as EodReportRow
 
         // Get tasks completed that day
-        const tasksResult = await sql`
-          SELECT t.*
-          FROM tasks t
-          WHERE t.assignee_id = ${member.user_id}
-          AND t.status = 'completed'
-          AND DATE(t.completed_at) = ${reportDate}
-        `
+        const tasksResult = auth.workspaceId
+          ? await sql`
+            SELECT t.*
+            FROM assigned_tasks t
+            WHERE t.assignee_id = ${member.user_id}
+            AND t.workspace_id = ${auth.workspaceId}
+            AND t.status = 'completed'
+            AND DATE(t.completed_at) = ${reportDate}
+          `
+          : await sql`
+            SELECT t.*
+            FROM assigned_tasks t
+            WHERE t.assignee_id = ${member.user_id}
+            AND t.status = 'completed'
+            AND DATE(t.completed_at) = ${reportDate}
+          `
 
         const completedTasks = tasksResult.rows as unknown as TaskRow[]
 
@@ -696,25 +858,34 @@ ${eodData.tomorrowFocus || "Not specified"}
         date: z.string().optional().describe("Date (YYYY-MM-DD), defaults to today"),
       },
       async ({ date }) => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
         const reportDate = date || new Date().toISOString().split("T")[0]
 
-        // Get all members and their EOD reports
+        // Get all members and their EOD reports (workspace-scoped when available)
         const [members, reportsResult] = await Promise.all([
-          queryMembers(orgId),
-          sql`
-            SELECT er.*, u.name as user_name, u.email
-            FROM eod_reports er
-            JOIN users u ON er.user_id = u.id
-            JOIN organization_members om ON er.user_id = om.user_id
-            WHERE om.organization_id = ${orgId}
-            AND er.report_date = ${reportDate}
-            ORDER BY u.name
-          `,
+          queryMembers(auth.organizationId, auth.workspaceId),
+          auth.workspaceId
+            ? sql`
+              SELECT er.*, u.name as user_name, u.email
+              FROM eod_reports er
+              JOIN users u ON er.user_id = u.id
+              WHERE er.workspace_id = ${auth.workspaceId}
+              AND er.report_date = ${reportDate}
+              ORDER BY u.name
+            `
+            : sql`
+              SELECT er.*, u.name as user_name, u.email
+              FROM eod_reports er
+              JOIN users u ON er.user_id = u.id
+              JOIN organization_members om ON er.user_id = om.user_id
+              WHERE om.organization_id = ${auth.organizationId}
+              AND er.report_date = ${reportDate}
+              ORDER BY u.name
+            `,
         ])
 
         const reports = reportsResult.rows as unknown as EodReportRow[]
@@ -786,13 +957,13 @@ ${missingMembers.map((m) => `   - ${m.name} (${m.email})`).join("\n")}
         rockTitle: z.string().optional().describe("Optional: Link to a rock by title"),
       },
       async ({ assigneeName, title, description, priority = "normal", dueDate, rockTitle }) => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
         // Find the assignee
-        const members = await queryMembers(orgId)
+        const members = await queryMembers(auth.organizationId, auth.workspaceId)
         const assignee = members.find((m) =>
           m.name.toLowerCase().includes(assigneeName.toLowerCase())
         )
@@ -804,7 +975,7 @@ ${missingMembers.map((m) => `   - ${m.name} (${m.email})`).join("\n")}
         // Find rock if specified
         let rockId = null
         if (rockTitle) {
-          const rocks = await queryRocks(orgId)
+          const rocks = await queryRocks(auth.organizationId, auth.workspaceId)
           const rock = rocks.find((r) =>
             r.title.toLowerCase().includes(rockTitle.toLowerCase())
           )
@@ -816,11 +987,11 @@ ${missingMembers.map((m) => `   - ${m.name} (${m.email})`).join("\n")}
         // Generate task ID
         const taskId = `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-        // Create the task
+        // Create the task (workspace-scoped when available)
         await sql`
-          INSERT INTO tasks (
+          INSERT INTO assigned_tasks (
             id, title, description, priority, status, due_date,
-            assignee_id, rock_id, organization_id, created_at, type
+            assignee_id, rock_id, organization_id, workspace_id, created_at, type
           ) VALUES (
             ${taskId},
             ${title},
@@ -830,7 +1001,8 @@ ${missingMembers.map((m) => `   - ${m.name} (${m.email})`).join("\n")}
             ${dueDate},
             ${assignee.user_id},
             ${rockId},
-            ${orgId},
+            ${auth.organizationId},
+            ${auth.workspaceId},
             NOW(),
             'assigned'
           )
@@ -864,12 +1036,12 @@ Task ID: ${taskId}`,
         taskType: z.string().optional().describe("Optional: Type of task to find best assignee for"),
       },
       async ({ taskType }) => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
-        const members = await queryMembers(orgId)
+        const members = await queryMembers(auth.organizationId, auth.workspaceId)
         const activeMembers = members.filter((m) => m.role === "member")
 
         // OPTIMIZED: Single query with CTEs instead of 3*N queries (one per member)
@@ -878,60 +1050,119 @@ Task ID: ${taskId}`,
           .map((m) => m.user_id)
         const userIdArray = memberUserIds.length > 0 ? `{${memberUserIds.join(',')}}` : '{}'
 
-        const { rows: workloadRows } = await sql`
-          WITH member_tasks AS (
+        const wId = auth.workspaceId
+        const oId = auth.organizationId
+
+        const { rows: workloadRows } = wId
+          ? await sql`
+            WITH member_tasks AS (
+              SELECT
+                assignee_id,
+                COUNT(*) as pending_count,
+                COUNT(*) FILTER (WHERE due_date < CURRENT_DATE) as overdue_count,
+                COUNT(*) FILTER (WHERE priority = 'high') as high_priority_count
+              FROM assigned_tasks
+              WHERE assignee_id = ANY(${userIdArray}::text[])
+                AND workspace_id = ${wId}
+                AND status = 'pending'
+              GROUP BY assignee_id
+            ),
+            member_rocks AS (
+              SELECT
+                user_id,
+                COUNT(*) as active_count,
+                COUNT(*) FILTER (WHERE status = 'blocked') as blocked_count
+              FROM rocks
+              WHERE user_id = ANY(${userIdArray}::text[])
+                AND workspace_id = ${wId}
+                AND status IN ('on-track', 'at-risk', 'blocked')
+              GROUP BY user_id
+            ),
+            member_escalations AS (
+              SELECT
+                user_id,
+                COUNT(*) as escalation_count
+              FROM eod_reports
+              WHERE user_id = ANY(${userIdArray}::text[])
+                AND workspace_id = ${wId}
+                AND needs_escalation = true
+                AND date >= CURRENT_DATE - INTERVAL '7 days'
+              GROUP BY user_id
+            )
             SELECT
-              assignee_id,
-              COUNT(*) as pending_count,
-              COUNT(*) FILTER (WHERE due_date < CURRENT_DATE) as overdue_count,
-              COUNT(*) FILTER (WHERE priority = 'high') as high_priority_count
-            FROM assigned_tasks
-            WHERE assignee_id = ANY(${userIdArray}::text[])
-              AND organization_id = ${orgId}
-              AND status = 'pending'
-            GROUP BY assignee_id
-          ),
-          member_rocks AS (
+              om.user_id,
+              om.name,
+              om.department,
+              om.email,
+              COALESCE(mt.pending_count, 0)::int as pending_tasks,
+              COALESCE(mt.overdue_count, 0)::int as overdue_tasks,
+              COALESCE(mt.high_priority_count, 0)::int as high_priority_tasks,
+              COALESCE(mr.active_count, 0)::int as active_rocks,
+              COALESCE(mr.blocked_count, 0)::int as blocked_rocks,
+              COALESCE(me.escalation_count, 0)::int as recent_escalations
+            FROM organization_members om
+            JOIN workspace_members wm ON wm.user_id = om.user_id AND wm.workspace_id = ${wId}
+            LEFT JOIN member_tasks mt ON mt.assignee_id = om.user_id
+            LEFT JOIN member_rocks mr ON mr.user_id = om.user_id
+            LEFT JOIN member_escalations me ON me.user_id = om.user_id
+            WHERE om.organization_id = ${oId}
+              AND om.role = 'member'
+              AND om.user_id IS NOT NULL
+          `
+          : await sql`
+            WITH member_tasks AS (
+              SELECT
+                assignee_id,
+                COUNT(*) as pending_count,
+                COUNT(*) FILTER (WHERE due_date < CURRENT_DATE) as overdue_count,
+                COUNT(*) FILTER (WHERE priority = 'high') as high_priority_count
+              FROM assigned_tasks
+              WHERE assignee_id = ANY(${userIdArray}::text[])
+                AND organization_id = ${oId}
+                AND status = 'pending'
+              GROUP BY assignee_id
+            ),
+            member_rocks AS (
+              SELECT
+                user_id,
+                COUNT(*) as active_count,
+                COUNT(*) FILTER (WHERE status = 'blocked') as blocked_count
+              FROM rocks
+              WHERE user_id = ANY(${userIdArray}::text[])
+                AND organization_id = ${oId}
+                AND status IN ('on-track', 'at-risk', 'blocked')
+              GROUP BY user_id
+            ),
+            member_escalations AS (
+              SELECT
+                user_id,
+                COUNT(*) as escalation_count
+              FROM eod_reports
+              WHERE user_id = ANY(${userIdArray}::text[])
+                AND organization_id = ${oId}
+                AND needs_escalation = true
+                AND date >= CURRENT_DATE - INTERVAL '7 days'
+              GROUP BY user_id
+            )
             SELECT
-              user_id,
-              COUNT(*) as active_count,
-              COUNT(*) FILTER (WHERE status = 'blocked') as blocked_count
-            FROM rocks
-            WHERE user_id = ANY(${userIdArray}::text[])
-              AND organization_id = ${orgId}
-              AND status IN ('on-track', 'at-risk', 'blocked')
-            GROUP BY user_id
-          ),
-          member_escalations AS (
-            SELECT
-              user_id,
-              COUNT(*) as escalation_count
-            FROM eod_reports
-            WHERE user_id = ANY(${userIdArray}::text[])
-              AND organization_id = ${orgId}
-              AND needs_escalation = true
-              AND date >= CURRENT_DATE - INTERVAL '7 days'
-            GROUP BY user_id
-          )
-          SELECT
-            om.user_id,
-            om.name,
-            om.department,
-            om.email,
-            COALESCE(mt.pending_count, 0)::int as pending_tasks,
-            COALESCE(mt.overdue_count, 0)::int as overdue_tasks,
-            COALESCE(mt.high_priority_count, 0)::int as high_priority_tasks,
-            COALESCE(mr.active_count, 0)::int as active_rocks,
-            COALESCE(mr.blocked_count, 0)::int as blocked_rocks,
-            COALESCE(me.escalation_count, 0)::int as recent_escalations
-          FROM organization_members om
-          LEFT JOIN member_tasks mt ON mt.assignee_id = om.user_id
-          LEFT JOIN member_rocks mr ON mr.user_id = om.user_id
-          LEFT JOIN member_escalations me ON me.user_id = om.user_id
-          WHERE om.organization_id = ${orgId}
-            AND om.role = 'member'
-            AND om.user_id IS NOT NULL
-        `
+              om.user_id,
+              om.name,
+              om.department,
+              om.email,
+              COALESCE(mt.pending_count, 0)::int as pending_tasks,
+              COALESCE(mt.overdue_count, 0)::int as overdue_tasks,
+              COALESCE(mt.high_priority_count, 0)::int as high_priority_tasks,
+              COALESCE(mr.active_count, 0)::int as active_rocks,
+              COALESCE(mr.blocked_count, 0)::int as blocked_rocks,
+              COALESCE(me.escalation_count, 0)::int as recent_escalations
+            FROM organization_members om
+            LEFT JOIN member_tasks mt ON mt.assignee_id = om.user_id
+            LEFT JOIN member_rocks mr ON mr.user_id = om.user_id
+            LEFT JOIN member_escalations me ON me.user_id = om.user_id
+            WHERE om.organization_id = ${oId}
+              AND om.role = 'member'
+              AND om.user_id IS NOT NULL
+          `
 
         const typedWorkloadRows = workloadRows as unknown as WorkloadRow[]
         const workloadData = typedWorkloadRows.map((row) => {
@@ -1023,34 +1254,51 @@ ${highCapacity.slice(0, 3).map((w, i) => `  ${i + 1}. ${w.name} - ${w.pendingTas
         format: z.enum(["summary", "detailed", "executive"]).optional().describe("Format: summary (default), detailed, or executive"),
       },
       async ({ date, format = "summary" }) => {
-        const orgId = await getOrgIdFromAuth()
-        if (!orgId) {
+        const auth = await getAuthContext()
+        if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
         const reportDate = date || new Date().toISOString().split("T")[0]
 
-        // Get all data
+        // Get all data (workspace-scoped when available)
         const [members, reportsResult, tasksResult, rocksResult] = await Promise.all([
-          queryMembers(orgId),
-          sql`
-            SELECT er.*, u.name as user_name
-            FROM eod_reports er
-            JOIN users u ON er.user_id = u.id
-            JOIN organization_members om ON er.user_id = om.user_id
-            WHERE om.organization_id = ${orgId}
-            AND er.report_date = ${reportDate}
-          `,
-          sql`
-            SELECT t.*, u.name as assignee_name
-            FROM tasks t
-            JOIN users u ON t.assignee_id = u.id
-            JOIN organization_members om ON t.assignee_id = om.user_id
-            WHERE om.organization_id = ${orgId}
-            AND t.status = 'completed'
-            AND DATE(t.completed_at) = ${reportDate}
-          `,
-          queryRocks(orgId),
+          queryMembers(auth.organizationId, auth.workspaceId),
+          auth.workspaceId
+            ? sql`
+              SELECT er.*, u.name as user_name
+              FROM eod_reports er
+              JOIN users u ON er.user_id = u.id
+              WHERE er.workspace_id = ${auth.workspaceId}
+              AND er.report_date = ${reportDate}
+            `
+            : sql`
+              SELECT er.*, u.name as user_name
+              FROM eod_reports er
+              JOIN users u ON er.user_id = u.id
+              JOIN organization_members om ON er.user_id = om.user_id
+              WHERE om.organization_id = ${auth.organizationId}
+              AND er.report_date = ${reportDate}
+            `,
+          auth.workspaceId
+            ? sql`
+              SELECT t.*, u.name as assignee_name
+              FROM assigned_tasks t
+              JOIN users u ON t.assignee_id = u.id
+              WHERE t.workspace_id = ${auth.workspaceId}
+              AND t.status = 'completed'
+              AND DATE(t.completed_at) = ${reportDate}
+            `
+            : sql`
+              SELECT t.*, u.name as assignee_name
+              FROM assigned_tasks t
+              JOIN users u ON t.assignee_id = u.id
+              JOIN organization_members om ON t.assignee_id = om.user_id
+              WHERE om.organization_id = ${auth.organizationId}
+              AND t.status = 'completed'
+              AND DATE(t.completed_at) = ${reportDate}
+            `,
+          queryRocks(auth.organizationId, auth.workspaceId),
         ])
 
         const reports = reportsResult.rows as unknown as EodReportRow[]

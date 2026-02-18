@@ -20,6 +20,7 @@ import { formatDate, getTodayInTimezone } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
 import { FileTray } from "@/components/ui/file-tray"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface EditEODModalProps {
   open: boolean
@@ -57,6 +58,7 @@ function getValidDateOptions(todayInOrgTz: string): { value: string; label: stri
 
 export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: EditEODModalProps) {
   const { currentOrganization } = useApp()
+  const themedColors = useThemedIconColors()
   const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
   const todayInOrgTz = getTodayInTimezone(orgTimezone)
   const dateOptions = getValidDateOptions(todayInOrgTz)
@@ -225,7 +227,7 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
           {/* Report Date Selection */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-slate-500" />
+              <Calendar className="h-4 w-4" style={{ color: themedColors.secondary }} />
               Report Date
             </Label>
             <Select value={reportDate} onValueChange={setReportDate}>
@@ -327,7 +329,7 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
           {/* Attachments */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-              <Paperclip className="h-4 w-4 text-slate-500" />
+              <Paperclip className="h-4 w-4" style={{ color: themedColors.secondary }} />
               Attachments
               <span className="text-xs font-normal text-slate-400">(optional)</span>
             </Label>

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 import type { Rock, RockDependency, TeamMember } from "@/lib/types"
 import {
  Target,
@@ -67,6 +68,7 @@ export function RockRoadmap({
  className,
 }: RockRoadmapProps) {
  const { getStatusStyle } = useBrandStatusStyles()
+ const themedColors = useThemedIconColors()
  const [viewMode, setViewMode] = useState<ViewMode>("quarter")
  const [currentDate, setCurrentDate] = useState(new Date())
  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
@@ -175,7 +177,7 @@ export function RockRoadmap({
  <CardHeader className="pb-3">
  <div className="flex items-center justify-between gap-4">
  <CardTitle className="flex items-center gap-2">
- <Calendar className="h-5 w-5 text-blue-600" />
+ <Calendar className="h-5 w-5" style={{ color: themedColors.primary }} />
  Rock Roadmap
  </CardTitle>
 
@@ -360,6 +362,7 @@ function RoadmapRow({
  allRocks: Rock[]
  onClick?: () => void
 }) {
+ const themedColors = useThemedIconColors()
  const StatusIcon = statusConfig.icon
  const hasDependencies = dependencies.length > 0
 
@@ -377,7 +380,7 @@ function RoadmapRow({
  {rock.title}
  </span>
  {hasDependencies && (
- <Link2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+ <Link2 className="h-3.5 w-3.5 shrink-0" style={{ color: themedColors.secondary }} />
  )}
  </div>
  </div>

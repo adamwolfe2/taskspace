@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { UserInitials } from "@/components/shared/user-initials"
 import { formatDistanceToNow } from "date-fns"
 import { MessageSquare, Send, X } from "lucide-react"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface TaskCommentsProps {
   comments: TaskComment[]
@@ -19,6 +20,7 @@ export function TaskComments({ comments, currentUser, onAddComment, compact = fa
   const [isExpanded, setIsExpanded] = useState(false)
   const [newComment, setNewComment] = useState("")
   const [isSending, setIsSending] = useState(false)
+  const themedColors = useThemedIconColors()
 
   const handleSubmit = async () => {
     if (!newComment.trim()) return
@@ -43,7 +45,8 @@ export function TaskComments({ comments, currentUser, onAddComment, compact = fa
     return (
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700"
+        className="flex items-center gap-1 text-xs hover:opacity-80"
+        style={{ color: themedColors.secondary }}
       >
         <MessageSquare className="h-3.5 w-3.5" />
         {comments.length > 0 ? `${comments.length} comment${comments.length > 1 ? "s" : ""}` : "Add note"}
@@ -55,10 +58,10 @@ export function TaskComments({ comments, currentUser, onAddComment, compact = fa
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
-          <MessageSquare className="h-4 w-4" />
+          <MessageSquare className="h-4 w-4" style={{ color: themedColors.secondary }} />
           Notes & Comments
           {comments.length > 0 && (
-            <span className="text-xs text-slate-400">({comments.length})</span>
+            <span className="text-xs" style={{ color: themedColors.secondary }}>({comments.length})</span>
           )}
         </h4>
       </div>
@@ -123,13 +126,15 @@ interface TaskCommentButtonProps {
 }
 
 export function TaskCommentButton({ commentCount, onClick }: TaskCommentButtonProps) {
+  const themedColors = useThemedIconColors()
   return (
     <button
       onClick={(e) => {
         e.stopPropagation()
         onClick()
       }}
-      className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors"
+      className="flex items-center gap-1 text-xs hover:opacity-80 transition-colors"
+      style={{ color: themedColors.secondary }}
     >
       <MessageSquare className="h-3.5 w-3.5" />
       {commentCount > 0 && <span>{commentCount}</span>}

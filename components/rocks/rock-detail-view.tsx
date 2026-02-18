@@ -34,6 +34,7 @@ import { RockCheckinDialog } from "./rock-checkin-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 import type {
   Rock,
   RockTask,
@@ -74,6 +75,7 @@ const taskStatusConfig = {
 export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
   const { toast } = useToast()
   const { getStatusStyle } = useBrandStatusStyles()
+  const themedColors = useThemedIconColors()
   const [loading, setLoading] = useState(true)
   const [rock, setRock] = useState<Rock | null>(null)
   const [tasks, setTasks] = useState<RockTask[]>([])
@@ -185,7 +187,7 @@ export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
   if (!rock) {
     return (
       <div className="text-center py-12">
-        <Target className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+        <Target className="h-12 w-12 mx-auto mb-4" style={{ color: themedColors.secondary }} />
         <h3 className="text-lg font-medium text-slate-900">Rock not found</h3>
         {onBack && (
           <Button variant="outline" onClick={onBack} className="mt-4">
@@ -286,7 +288,7 @@ export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-slate-600">Tasks</span>
-              <ListTodo className="h-5 w-5 text-slate-400" />
+              <ListTodo className="h-5 w-5" style={{ color: themedColors.secondary }} />
             </div>
             <div className="text-xl font-bold mt-1">
               {completedTasks} / {tasks.length}
@@ -300,7 +302,7 @@ export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-slate-600">Time Left</span>
-              <Clock className="h-5 w-5 text-slate-400" />
+              <Clock className="h-5 w-5" style={{ color: themedColors.secondary }} />
             </div>
             <div
               className={cn(

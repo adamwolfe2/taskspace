@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface MyRocksSectionProps {
   rocks: Rock[]
@@ -85,6 +86,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
   const [isExpanded, setIsExpanded] = useState(true)
   const { toast } = useToast()
   const { getStatusStyle } = useBrandStatusStyles()
+  const themedColors = useThemedIconColors()
 
   // Get available quarters for filter
   const availableQuarters = useMemo(() => getAvailableQuarters(rocks), [rocks])
@@ -150,12 +152,12 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
               aria-label={isExpanded ? "Collapse section" : "Expand section"}
             >
               {isExpanded ? (
-                <ChevronUp className="h-4 w-4 text-slate-500" />
+                <ChevronUp className="h-4 w-4" style={{ color: themedColors.secondary }} />
               ) : (
-                <ChevronDown className="h-4 w-4 text-slate-500" />
+                <ChevronDown className="h-4 w-4" style={{ color: themedColors.secondary }} />
               )}
             </button>
-            <Target className="h-5 w-5 text-slate-500" />
+            <Target className="h-5 w-5" style={{ color: themedColors.secondary }} />
             <h3 className="font-semibold text-slate-900">My Rocks</h3>
             <span className="text-sm text-slate-500">({filteredRocks.length})</span>
           </div>
@@ -217,7 +219,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
           {filteredRocks.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Target className="h-6 w-6 text-slate-400" />
+              <Target className="h-6 w-6" style={{ color: themedColors.secondary }} />
             </div>
             <p className="text-slate-600 font-medium">
               {rocks.length === 0
