@@ -49,7 +49,7 @@ export function useWorkspaceNotes() {
       try {
         const res = await fetch("/api/workspace-notes", {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
           body: JSON.stringify({ workspaceId, content }),
         })
 

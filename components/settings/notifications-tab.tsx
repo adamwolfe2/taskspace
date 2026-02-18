@@ -79,7 +79,7 @@ export function NotificationsTab({ teamMembers, setTeamMembers }: NotificationsT
       setIsSavingPersonal(true)
       const response = await fetch("/api/members", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           memberId: currentUser.id,
           timezone: personalTimezone || null,

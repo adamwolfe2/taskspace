@@ -71,7 +71,7 @@ export function TasksPage({
       const pendingTasks = userTasks.filter((t) => t.status !== "completed")
       const response = await fetch("/api/ai/prioritize", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         credentials: "include",
         body: JSON.stringify({
           workspaceId: currentWorkspaceId,

@@ -103,7 +103,7 @@ export function UpgradeDialog({
     try {
       const response = await fetch("/api/billing/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ plan, billingCycle }),
       })
 

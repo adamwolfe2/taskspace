@@ -186,7 +186,7 @@ export function ImportWizard() {
       try {
         const response = await fetch(`/api/migrations/import/${jobId}/process`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
           body: JSON.stringify({ offset, limit }),
         })
 

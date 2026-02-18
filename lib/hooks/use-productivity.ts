@@ -121,7 +121,7 @@ export function useStreak(userId?: string) {
 export async function saveEnergy(input: DailyEnergyInput): Promise<DailyEnergy> {
   const res = await fetch("/api/productivity/energy", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
     credentials: "include",
     body: JSON.stringify(input),
   })
@@ -139,7 +139,7 @@ export async function saveEnergy(input: DailyEnergyInput): Promise<DailyEnergy> 
 export async function saveFocusBlock(input: FocusBlockInput): Promise<FocusBlock> {
   const res = await fetch("/api/productivity/focus-blocks", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
     credentials: "include",
     body: JSON.stringify(input),
   })
@@ -220,7 +220,7 @@ export async function updateStreak(date?: string): Promise<{
 }> {
   const res = await fetch("/api/productivity/streak/update", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
     credentials: "include",
     body: JSON.stringify({ date }),
   })

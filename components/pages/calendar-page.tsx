@@ -49,7 +49,7 @@ export function CalendarPage({ currentUser, assignedTasks, rocks, eodReports }: 
     try {
       const response = await fetch("/api/ai/meeting-prep", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         credentials: "include",
         body: JSON.stringify({
           workspaceId: currentWorkspaceId,

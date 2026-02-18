@@ -135,7 +135,7 @@ export function GettingStartedChecklist({ onNavigate }: GettingStartedChecklistP
         try {
           await fetch("/api/onboarding", {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
             body: JSON.stringify({ completed: true }),
           })
         } catch {
@@ -152,7 +152,7 @@ export function GettingStartedChecklist({ onNavigate }: GettingStartedChecklistP
     try {
       await fetch("/api/onboarding", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ dismissed: true }),
       })
     } catch {

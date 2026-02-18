@@ -72,7 +72,7 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
     try {
       const response = await fetch("/api/rocks/parse", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ text: rawText }),
       })
 
@@ -124,7 +124,7 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
     try {
       const response = await fetch("/api/rocks/bulk", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           userId: selectedUserId,
           workspaceId: currentWorkspaceId,

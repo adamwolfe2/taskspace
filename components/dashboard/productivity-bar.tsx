@@ -93,7 +93,7 @@ export function ProductivityBar({
   const handleSaveReview = async (review: Partial<WeeklyReview>) => {
     const res = await fetch("/api/productivity/weekly-reviews", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
       body: JSON.stringify(review),
     })
     if (!res.ok) throw new Error("Failed to save review")

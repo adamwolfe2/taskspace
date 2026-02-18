@@ -153,7 +153,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       if (formData.managerId !== editingMember.managerId) {
         await fetch("/api/manager/direct-reports", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
           body: JSON.stringify({
             memberId: editingMember.id,
             managerId: formData.managerId,
@@ -167,7 +167,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         if (!isNaN(goalNumber) && goalNumber >= 0) {
           const metricResponse = await fetch("/api/metrics", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
             body: JSON.stringify({
               memberId: editingMember.id,
               metricName: metricData.metricName.trim(),
@@ -335,7 +335,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       setIsSubmitting(true)
       const response = await fetch("/api/members", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify(newMemberData),
       })
       const data = await response.json()
@@ -400,6 +400,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     try {
       const response = await fetch(`/api/members?memberId=${memberId}`, {
         method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
       const data = await response.json()
 
@@ -427,7 +428,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       setIsSubmitting(true)
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ email: member.email }),
       })
       const data = await response.json()

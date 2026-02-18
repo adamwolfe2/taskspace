@@ -116,7 +116,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
     try {
       const response = await fetch("/api/ai/brain-dump", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ content }),
       })
       const data = await response.json()
@@ -158,7 +158,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
     try {
       const response = await fetch("/api/ai/tasks", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ taskId, action: "approve", updates }),
       })
       const data = await response.json()
@@ -192,7 +192,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
     try {
       const response = await fetch("/api/ai/tasks", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ taskId, action: "reject" }),
       })
       const data = await response.json()
@@ -234,7 +234,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
     try {
       const response = await fetch("/api/ai/digest", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ date: selectedDate }),
       })
       const data = await response.json()
@@ -270,7 +270,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
     try {
       const response = await fetch("/api/ai/query", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ query }),
       })
       const data = await response.json()

@@ -111,7 +111,7 @@ export function AIBudgetControls({ organizationId }: AIBudgetControlsProps) {
     try {
       const response = await fetch("/api/ai/budget-settings", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify(settings),
       })
 

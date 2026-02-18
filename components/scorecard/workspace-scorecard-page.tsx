@@ -201,7 +201,7 @@ export function WorkspaceScorecardPage() {
     try {
       const response = await fetch("/api/ai/scorecard-insights", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         credentials: "include",
         body: JSON.stringify({ workspaceId: currentWorkspaceId }),
       })
@@ -227,7 +227,7 @@ export function WorkspaceScorecardPage() {
       const weekStart = getWeekStartDate(weekOffset)
       const response = await fetch("/api/scorecards/entries", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         credentials: "include",
         body: JSON.stringify({ metricId, value, weekStart, notes }),
       })
@@ -264,6 +264,7 @@ export function WorkspaceScorecardPage() {
     try {
       const response = await fetch(`/api/scorecards/metrics/${deleteMetricId}`, {
         method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
         credentials: "include",
       })
 

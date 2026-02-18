@@ -124,7 +124,7 @@ export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
     try {
       const response = await fetch(`/api/rocks/${rockId}/complete`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         credentials: "include",
         body: JSON.stringify({ reopen: rock.status === "completed" }),
       })

@@ -186,7 +186,7 @@ export function OrgChartPage() {
     try {
       await fetch("/api/org-chart/progress", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           employeeName,
           rockIndex,
@@ -230,6 +230,7 @@ export function OrgChartPage() {
       const response = await fetch("/api/org-chart/sync-rocks", {
         method: "POST",
         headers: {
+          "X-Requested-With": "XMLHttpRequest",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

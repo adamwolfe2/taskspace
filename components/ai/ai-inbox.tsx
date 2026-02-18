@@ -95,7 +95,7 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
     try {
       const response = await fetch(`/api/ai/suggestions/${id}/approve`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ updates }),
       })
 
@@ -132,7 +132,7 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
     try {
       const response = await fetch(`/api/ai/suggestions/${id}/reject`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ reason }),
       })
 
@@ -169,7 +169,7 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
     try {
       const response = await fetch("/api/ai/suggestions/bulk", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           action: "approve",
           suggestionIds: Array.from(selectedIds),
@@ -208,7 +208,7 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
     try {
       const response = await fetch("/api/ai/suggestions/bulk", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           action: "reject",
           suggestionIds: Array.from(selectedIds),

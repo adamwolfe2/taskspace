@@ -133,7 +133,7 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
     try {
       const response = await fetch(`/api/workspaces/${currentWorkspace.id}/members`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ userId, role }),
       })
 
@@ -162,6 +162,7 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
     try {
       const response = await fetch(`/api/workspaces/${currentWorkspace.id}/members/${userId}`, {
         method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
 
       const data = await response.json()
@@ -191,7 +192,7 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
     try {
       const response = await fetch(`/api/workspaces/${currentWorkspace.id}/members/${userId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ role: newRole }),
       })
 

@@ -203,7 +203,7 @@ export function ScorecardTable() {
     try {
       const response = await fetch("/api/scorecard", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ memberId, weekEnding, value }),
       })
 

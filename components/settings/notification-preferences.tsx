@@ -64,7 +64,7 @@ export function NotificationPreferencesCard({ memberId, initialPreferences }: No
     try {
       const response = await fetch("/api/members", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ memberId, notificationPreferences: preferences }),
       })
 

@@ -212,14 +212,14 @@ export function PeopleAnalyzerPage() {
           `/api/people-assessments/${editingAssessment.latestAssessmentId}`,
           {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
             body: JSON.stringify(payload),
           }
         );
       } else {
         response = await fetch("/api/people-assessments", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
           body: JSON.stringify(payload),
         });
       }
@@ -260,6 +260,7 @@ export function PeopleAnalyzerPage() {
     try {
       const response = await fetch(`/api/people-assessments/${assessmentId}`, {
         method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       });
 
       if (!response.ok) {

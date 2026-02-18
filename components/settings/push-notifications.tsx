@@ -103,7 +103,7 @@ export function PushNotificationsCard({ userId }: PushNotificationsCardProps) {
       // Send subscription to server
       const response = await fetch("/api/push-subscriptions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           subscription: {
             endpoint: subscription.endpoint,
@@ -146,6 +146,7 @@ export function PushNotificationsCard({ userId }: PushNotificationsCardProps) {
         // Remove from server
         await fetch(`/api/push-subscriptions?endpoint=${encodeURIComponent(subscription.endpoint)}`, {
           method: "DELETE",
+          headers: { "X-Requested-With": "XMLHttpRequest" },
         })
       }
 

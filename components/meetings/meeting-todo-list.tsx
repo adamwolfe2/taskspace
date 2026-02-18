@@ -82,7 +82,7 @@ export function MeetingTodoList({ meetingId, workspaceId }: MeetingTodoListProps
     try {
       const res = await fetch(`/api/meetings/${meetingId}/todos?todoId=${todo.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ completed: true }),
       })
 
@@ -122,7 +122,7 @@ export function MeetingTodoList({ meetingId, workspaceId }: MeetingTodoListProps
     try {
       const res = await fetch(`/api/meetings/${meetingId}/todos/${selectedTodo.id}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ taskId: selectedTaskId }),
       })
 

@@ -87,7 +87,7 @@ export function RockCheckinDialog({
     try {
       const response = await fetch(`/api/rocks/${rockId}/checkin`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         credentials: "include",
         body: JSON.stringify({
           confidence,

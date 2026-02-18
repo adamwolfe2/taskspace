@@ -139,7 +139,7 @@ export function TaskDetailModal({
     try {
       const response = await fetch(`/api/tasks/${task.id}/subtasks`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ title }),
       })
 
@@ -170,7 +170,7 @@ export function TaskDetailModal({
 
       const response = await fetch(`/api/tasks/${task.id}/subtasks/${subtaskId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ completed: !subtask.completed }),
       })
 
@@ -193,6 +193,7 @@ export function TaskDetailModal({
     try {
       const response = await fetch(`/api/tasks/${task.id}/subtasks/${subtaskId}`, {
         method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
 
       const result = await response.json()
@@ -218,7 +219,7 @@ export function TaskDetailModal({
     try {
       const response = await fetch(`/api/tasks/${task.id}/subtasks/reorder`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ subtaskIds }),
       })
 

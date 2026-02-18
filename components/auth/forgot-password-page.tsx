@@ -29,7 +29,7 @@ export function ForgotPasswordPage() {
     try {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ email }),
       })
 

@@ -77,7 +77,7 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
     try {
       const response = await fetch("/api/user/switch-organization", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ organizationId: orgId }),
       })
 
@@ -107,7 +107,7 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
     try {
       const response = await fetch("/api/user/organizations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ name: newOrgName.trim() }),
       })
 

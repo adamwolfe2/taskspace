@@ -67,7 +67,7 @@ export function QuickTaskDialog({ open, onOpenChange, userId }: QuickTaskDialogP
     try {
       const response = await fetch("/api/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           title: title.trim(),
           assigneeId: userId,

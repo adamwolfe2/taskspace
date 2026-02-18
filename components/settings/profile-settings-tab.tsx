@@ -122,7 +122,7 @@ export function ProfileSettingsTab() {
     try {
       const response = await fetch("/api/members", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           memberId: currentUser?.id,
           name: name.trim(),
@@ -199,7 +199,7 @@ export function ProfileSettingsTab() {
     try {
       const response = await fetch("/api/auth/change-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           currentPassword,
           newPassword,
@@ -260,7 +260,7 @@ export function ProfileSettingsTab() {
     try {
       const response = await fetch("/api/auth/delete-account", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           password: deletePassword,
           confirmationText: deleteConfirmText,

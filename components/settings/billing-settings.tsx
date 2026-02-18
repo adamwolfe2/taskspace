@@ -135,7 +135,7 @@ export function BillingSettings() {
       if (currentPlan === "free") {
         const response = await fetch("/api/billing/checkout", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
           body: JSON.stringify({ plan, billingCycle }),
         })
 
@@ -156,7 +156,7 @@ export function BillingSettings() {
         // Already subscribed - upgrade/downgrade
         const response = await fetch("/api/billing/subscription", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
           body: JSON.stringify({
             action: "change_plan",
             plan,
@@ -199,7 +199,7 @@ export function BillingSettings() {
     try {
       const response = await fetch("/api/billing/subscription", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ action: "portal" }),
       })
 
@@ -226,7 +226,7 @@ export function BillingSettings() {
     try {
       const response = await fetch("/api/billing/subscription", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ action: "cancel" }),
       })
 
@@ -258,7 +258,7 @@ export function BillingSettings() {
     try {
       const response = await fetch("/api/billing/subscription", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ action: "resume" }),
       })
 

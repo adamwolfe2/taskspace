@@ -89,6 +89,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
     try {
       const response = await fetch(`/api/rocks?id=${rockId}`, {
         method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
 
       const data = await response.json()
@@ -141,7 +142,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
         // Update existing rock via API
         const response = await fetch("/api/rocks", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
           body: JSON.stringify({
             id: editingRock.id,
             title: formData.title,
@@ -174,7 +175,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
         // Create new rock via API
         const response = await fetch("/api/rocks", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
           body: JSON.stringify({
             title: formData.title,
             description: formData.description,

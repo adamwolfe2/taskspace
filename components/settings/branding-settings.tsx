@@ -141,7 +141,7 @@ export function BrandingSettings() {
       // Update workspace branding via API
       const response = await fetch(`/api/workspaces/${currentWorkspace.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           logoUrl: logoPreview,
           primaryColor: pendingColors.primary,

@@ -152,7 +152,7 @@ export async function GET(
     const timezone = settings?.timezone || "America/Los_Angeles"
     const orgLogo = settings?.customBranding?.logo
 
-    // Require access token for public EOD endpoints
+    // Optional access token protection for public EOD endpoints
     const { searchParams } = new URL(request.url)
     const providedToken = searchParams.get("token")
     if (settings?.publicEodToken) {
@@ -162,12 +162,8 @@ export async function GET(
           { status: 403 }
         )
       }
-    } else {
-      return NextResponse.json(
-        { success: false, error: "Public EOD sharing requires a token. Configure one in Settings > Organization." },
-        { status: 403 }
-      )
     }
+    // If no token configured, allow open access (original behavior)
 
     logger.info({ orgSlug: slug, date }, "Public weekly EOD accessed")
 

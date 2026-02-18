@@ -127,7 +127,7 @@ export function WebhookManagement() {
     try {
       const res = await fetch("/api/webhooks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           name: formName.trim(),
           url: formUrl.trim(),
@@ -159,7 +159,7 @@ export function WebhookManagement() {
     try {
       const res = await fetch(`/api/webhooks?id=${webhook.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ enabled: !webhook.enabled }),
       })
       if (!res.ok) throw new Error("Failed to update webhook")
@@ -179,7 +179,10 @@ export function WebhookManagement() {
     if (!webhookToDelete) return
     setIsSubmitting(true)
     try {
-      const res = await fetch(`/api/webhooks?id=${webhookToDelete.id}`, { method: "DELETE" })
+      const res = await fetch(`/api/webhooks?id=${webhookToDelete.id}`, {
+        method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      })
       if (!res.ok) throw new Error("Failed to delete webhook")
       setWebhooks((prev) => prev.filter((w) => w.id !== webhookToDelete.id))
       toast({ title: "Webhook deleted" })
@@ -199,7 +202,7 @@ export function WebhookManagement() {
     try {
       const res = await fetch(`/api/webhooks?id=${webhook.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ regenerateSecret: true }),
       })
       if (!res.ok) throw new Error("Failed to regenerate secret")

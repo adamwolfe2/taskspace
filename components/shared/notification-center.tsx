@@ -128,7 +128,7 @@ export function NotificationCenter() {
     try {
       const response = await fetch("/api/notifications", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ id }),
       })
       if (response.ok) {
@@ -153,7 +153,7 @@ export function NotificationCenter() {
     try {
       const response = await fetch("/api/notifications", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ markAllRead: true }),
       })
       if (response.ok) {
@@ -172,6 +172,7 @@ export function NotificationCenter() {
     try {
       const response = await fetch(`/api/notifications?id=${id}`, {
         method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
       if (response.ok) {
         const notification = notifications.find(n => n.id === id)

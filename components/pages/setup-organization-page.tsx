@@ -16,7 +16,7 @@ export function SetupOrganizationPage({ mode = "create" }: SetupOrganizationPage
     // Step 1: Create organization
     const orgResponse = await fetch("/api/organizations", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
       credentials: "include",
       body: JSON.stringify({
         name: data.organization.name,
@@ -35,7 +35,7 @@ export function SetupOrganizationPage({ mode = "create" }: SetupOrganizationPage
     // Step 2: Create default workspace with branding
     const workspaceResponse = await fetch("/api/workspaces", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
       credentials: "include",
       body: JSON.stringify({
         organizationId: organization.id,
@@ -73,7 +73,7 @@ export function SetupOrganizationPage({ mode = "create" }: SetupOrganizationPage
         data.teamInvites.map((invite) =>
           fetch("/api/invitations", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
             credentials: "include",
             body: JSON.stringify({
               email: invite.email,
@@ -125,7 +125,7 @@ export function SetupOrganizationPage({ mode = "create" }: SetupOrganizationPage
           data.rocks.map((rock) =>
             fetch("/api/rocks", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
               credentials: "include",
               body: JSON.stringify({
                 title: rock.title,

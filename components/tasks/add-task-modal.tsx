@@ -113,7 +113,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
 
       const response = await fetch("/api/task-templates", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           name: templateName.trim(),
           title: title.trim(),

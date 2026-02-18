@@ -143,7 +143,7 @@ export function VTOPage() {
       setIsSaving(true)
       const res = await fetch("/api/vto", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           workspaceId: currentWorkspaceId,
           ...data,

@@ -77,7 +77,7 @@ export function AsanaMemberConnection() {
     try {
       const response = await fetch("/api/asana/me/connect", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ personalAccessToken: pat.trim() }),
       })
 
@@ -114,6 +114,7 @@ export function AsanaMemberConnection() {
     try {
       const response = await fetch("/api/asana/me/connect", {
         method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
 
       const data = await response.json()

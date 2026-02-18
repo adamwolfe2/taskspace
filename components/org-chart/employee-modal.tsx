@@ -110,7 +110,7 @@ export function EmployeeModal({
     try {
       const response = await fetch(`/api/org-chart/employees/${employee.id}/rocks`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ rocks: rocksText }),
       })
 

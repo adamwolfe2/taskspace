@@ -186,6 +186,7 @@ export function TeamManagementTab() {
     try {
       const response = await fetch(`/api/invitations?id=${invitationId}`, {
         method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
       const data = await response.json()
 

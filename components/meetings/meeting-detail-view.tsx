@@ -110,6 +110,7 @@ export function MeetingDetailView({
       const response = await fetch("/api/ai/meeting-notes", {
         method: "POST",
         headers: {
+          "X-Requested-With": "XMLHttpRequest",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

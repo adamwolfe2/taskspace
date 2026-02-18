@@ -299,7 +299,7 @@ export function useCreateWorkspace() {
   const createWorkspace = async (params: CreateWorkspaceParams): Promise<Workspace> => {
     const res = await fetch("/api/workspaces", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
       credentials: "include",
       body: JSON.stringify(params),
     })
@@ -348,7 +348,7 @@ export function useUpdateWorkspace() {
   ): Promise<Workspace> => {
     const res = await fetch(`/api/workspaces/${workspaceId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
       credentials: "include",
       body: JSON.stringify(params),
     })
@@ -377,6 +377,7 @@ export function useDeleteWorkspace() {
   const deleteWorkspace = async (workspaceId: string): Promise<void> => {
     const res = await fetch(`/api/workspaces/${workspaceId}`, {
       method: "DELETE",
+      headers: { "X-Requested-With": "XMLHttpRequest" },
       credentials: "include",
     })
 
