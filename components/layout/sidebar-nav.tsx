@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
-import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle, Search, FileText, BookOpen, UserCheck, FolderKanban, Building2 } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle, Search, FileText, BookOpen, UserCheck, FolderKanban, Building2, Briefcase } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
@@ -13,7 +13,7 @@ interface SidebarNavProps {
 }
 
 export function SidebarNav({ onNavigate }: SidebarNavProps) {
-  const { currentUser, currentPage, setCurrentPage, currentOrganization } = useApp()
+  const { currentUser, currentPage, setCurrentPage, currentOrganization, isSuperAdmin } = useApp()
   const { isFeatureEnabled } = useWorkspaceFeatures()
 
   const handleNavigation = (page: PageType) => {
@@ -135,6 +135,29 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
               <ExternalLink className="h-4 w-4 flex-shrink-0 text-slate-400" />
               <span className="truncate">Team Tools</span>
             </a>
+          </div>
+        )}
+
+        {/* Super Admin Section */}
+        {isSuperAdmin && (
+          <div className="px-3">
+            <h2 className="mb-3 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Executive
+            </h2>
+            <div className="space-y-1">
+              <button
+                onClick={() => handleNavigation("portfolio")}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap",
+                  currentPage === "portfolio" || currentPage === "portfolio-detail"
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                )}
+              >
+                <Briefcase className={cn("h-4 w-4 flex-shrink-0", currentPage === "portfolio" || currentPage === "portfolio-detail" ? "text-white" : "text-slate-400")} />
+                <span className="truncate">Portfolio</span>
+              </button>
+            </div>
           </div>
         )}
 

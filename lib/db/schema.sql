@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   email_verified BOOLEAN DEFAULT FALSE,
-  last_login_at TIMESTAMP WITH TIME ZONE
+  last_login_at TIMESTAMP WITH TIME ZONE,
+  is_super_admin BOOLEAN DEFAULT FALSE
 );
 
 -- Organizations table
@@ -484,3 +485,9 @@ CREATE INDEX IF NOT EXISTS idx_ma_employees_active ON ma_employees(is_active) WH
 
 ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
 ALTER TABLE organization_members ADD COLUMN IF NOT EXISTS onboarding_dismissed BOOLEAN DEFAULT FALSE;
+
+-- ============================================
+-- SUPER ADMIN FLAG
+-- ============================================
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN DEFAULT FALSE;

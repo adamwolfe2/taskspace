@@ -87,6 +87,7 @@ export interface User {
   failedLoginAttempts?: number
   lockedAt?: string | null
   lockReason?: string | null
+  isSuperAdmin?: boolean
 }
 
 /** User type without password hash - safe for API responses */
@@ -380,6 +381,8 @@ export type PageType =
   | "notes"
   | "vto"
   | "people-analyzer"
+  | "portfolio"
+  | "portfolio-detail"
 
 // ============================================
 // IDS BOARD TYPES

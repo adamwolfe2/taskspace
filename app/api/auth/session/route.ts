@@ -33,6 +33,7 @@ export const GET = withUserAuth(async (request: NextRequest, auth) => {
         member: typeof fullAuth.member,
         teamMember: TeamMember,
         token: string,
+        isSuperAdmin: boolean,
       }>>({
         success: true,
         data: {
@@ -41,6 +42,7 @@ export const GET = withUserAuth(async (request: NextRequest, auth) => {
           member: fullAuth.member,
           teamMember,
           token: sessionToken,
+          isSuperAdmin: fullAuth.isSuperAdmin,
         },
       })
     }

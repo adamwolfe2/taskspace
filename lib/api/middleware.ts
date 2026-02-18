@@ -361,6 +361,53 @@ export function withDangerousAdmin(
 }
 
 /**
+ * Super admin wrapper - requires is_super_admin flag on user record.
+ * Used for cross-org read operations (portfolio dashboard, org drill-down).
+ * Blocks API key access entirely.
+ */
+export function withSuperAdmin(
+  handler: AuthenticatedHandler<ApiResponse<unknown>>
+): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
+  return async (request: NextRequest, context?: RouteContext) => {
+    try {
+      if (!verifyCsrfHeader(request)) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: Missing CSRF header" },
+          { status: 403 }
+        )
+      }
+
+      const auth = await getAuthContext(request)
+
+      if (!auth) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        )
+      }
+
+      if (auth.isApiKey) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: API keys cannot access super admin operations" },
+          { status: 403 }
+        )
+      }
+
+      if (!auth.isSuperAdmin) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Forbidden: Super admin access required" },
+          { status: 403 }
+        )
+      }
+
+      return await handler(request, auth, context)
+    } catch (error) {
+      return handleError(error)
+    }
+  }
+}
+
+/**
  * Check if request method is state-changing (not safe/read-only)
  */
 function isWriteMethod(method: string): boolean {

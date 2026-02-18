@@ -63,6 +63,7 @@ function parseUser(row: Record<string, unknown>): User {
     updatedAt: (row.updated_at as Date)?.toISOString() || "",
     emailVerified: row.email_verified as boolean,
     lastLoginAt: row.last_login_at ? (row.last_login_at as Date).toISOString() : undefined,
+    isSuperAdmin: (row.is_super_admin as boolean) || false,
   }
 }
 

@@ -12,6 +12,7 @@ export interface AuthContext {
   sessionId: string
   isApiKey?: boolean
   apiKeyScopes?: string[]
+  isSuperAdmin: boolean
 }
 
 // Authenticate via API key (for MCP server and external integrations)
@@ -60,6 +61,7 @@ async function getApiKeyAuthContext(request: NextRequest): Promise<AuthContext |
       sessionId: apiKey.id, // Use API key ID as session ID
       isApiKey: true,
       apiKeyScopes: apiKey.scopes || ["read", "write"],
+      isSuperAdmin: user.isSuperAdmin || false,
     }
   } catch (error) {
     logError(logger, "API key auth error", error)
@@ -115,6 +117,7 @@ async function getSessionAuthContext(request: NextRequest): Promise<AuthContext 
       organization,
       member,
       sessionId: session.id,
+      isSuperAdmin: user.isSuperAdmin || false,
     }
   } catch (error) {
     logError(logger, "Session auth error", error)

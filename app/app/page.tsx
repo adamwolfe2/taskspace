@@ -89,6 +89,14 @@ const ClientsPage = dynamic(
   () => import("@/components/pages/clients-page").then(mod => ({ default: mod.ClientsPage })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
+const PortfolioPage = dynamic(
+  () => import("@/components/pages/portfolio-page").then(mod => ({ default: mod.PortfolioPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const PortfolioDetailPage = dynamic(
+  () => import("@/components/pages/portfolio-detail-page").then(mod => ({ default: mod.PortfolioDetailPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
 
 import { Loader2, Plus } from "lucide-react"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
@@ -98,7 +106,7 @@ import { SessionTimeoutWarning } from "@/components/shared/session-timeout-warni
 import { BugReporter } from "@/components/shared/bug-reporter"
 
 function AppContent() {
-  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization, pageFilter, clearPageFilter } = useApp()
+  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization, pageFilter, clearPageFilter, isSuperAdmin } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [resetToken, setResetToken] = useState<string | null>(null)
@@ -385,6 +393,10 @@ function AppContent() {
             deleteClient={teamData.deleteClient}
           />
         )
+      case "portfolio":
+        return isSuperAdmin ? <PortfolioPage /> : <DashboardPage {...dashboardProps} />
+      case "portfolio-detail":
+        return isSuperAdmin ? <PortfolioDetailPage /> : <DashboardPage {...dashboardProps} />
       default:
         return <DashboardPage {...dashboardProps} />
     }

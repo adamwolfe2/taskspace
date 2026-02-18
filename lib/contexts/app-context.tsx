@@ -44,6 +44,9 @@ interface AppContextType {
   // Email verification
   emailVerified: boolean
 
+  // Super admin
+  isSuperAdmin: boolean
+
   // Error state
   error: string | null
   clearError: () => void
@@ -100,6 +103,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [darkMode, setDarkMode] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [emailVerified, setEmailVerified] = useState(true) // Default true to avoid flash
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   const isAuthenticated = !!currentUser && !!currentOrganization
 
@@ -133,6 +137,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCurrentUser(teamMember)
         setCurrentOrganization(data.organization)
         setEmailVerified(data.user?.emailVerified ?? true)
+        setIsSuperAdmin((data as unknown as Record<string, unknown>).isSuperAdmin === true)
         setCurrentPage("dashboard")
       } else if (data.user && (data as unknown as Record<string, unknown>).needsOrganization) {
         // User is authenticated but has no org - go to onboarding
@@ -255,6 +260,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setCurrentUser(null)
       setCurrentOrganization(null)
       setIsDemoMode(false)
+      setIsSuperAdmin(false)
       setCurrentPage("login")
     }
   }, [isDemoMode])
@@ -312,6 +318,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         refreshSession,
         enterDemoMode,
         emailVerified,
+        isSuperAdmin,
         error,
         clearError,
       }}
@@ -346,6 +353,7 @@ const defaultAppContext: AppContextType = {
   refreshSession: noopAsync,
   enterDemoMode: noop,
   emailVerified: false,
+  isSuperAdmin: false,
   error: null,
   clearError: noop,
 }
