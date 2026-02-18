@@ -215,9 +215,9 @@ PARSING RULES:
 7. DETECT ESCALATIONS: Flag anything that mentions urgency, waiting on someone, or blocked
 
 MATCHING TIPS:
-- Rock titles often contain key project names (MedPros, Newsletter, Voice AI, etc.)
-- Look for context clues: "for the newsletter" -> match to Newsletter rock
-- Technical work like "N8N" or "GHL" should match to automation/workflow rocks
+- Rock titles often contain key project names or keywords
+- Look for context clues: "for the landing page" -> match to a web/design rock
+- Technical work should match to relevant engineering/infrastructure rocks
 - If unsure, put in General but note the ambiguity
 
 OUTPUT FORMAT:

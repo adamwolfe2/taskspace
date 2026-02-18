@@ -19,6 +19,8 @@ import { sendEODNotification } from "@/lib/email"
 import { updateStreak } from "@/lib/hooks/use-productivity"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
+import { useBrandTheme } from "@/lib/contexts/brand-theme-context"
+import { lighten, darken } from "@/lib/utils/color-helpers"
 import { CONFIG } from "@/lib/config"
 
 interface OrgDateInfo {
@@ -101,6 +103,7 @@ export function AIEODSubmission({
   currentUser,
 }: AIEODSubmissionProps) {
   const { currentOrganization } = useApp()
+  const { colors } = useBrandTheme()
   // Use organization timezone for date calculations
   const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
   const todayInOrgTz = getTodayInTimezone(orgTimezone)
@@ -419,7 +422,7 @@ export function AIEODSubmission({
     <div className="section-card">
       <div className="section-header">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-red-600" />
+          <Sparkles className="h-5 w-5" style={{ color: colors.primary }} />
           <div>
             <h3 className="font-semibold text-slate-900 text-lg">AI EOD Report Generator</h3>
             <p className="text-sm text-slate-500 mt-0.5">
@@ -441,7 +444,7 @@ export function AIEODSubmission({
           <>
             {/* Date Selection */}
             <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-              <Calendar className="h-5 w-5 text-red-500" />
+              <Calendar className="h-5 w-5" style={{ color: colors.primary }} />
               <div className="flex-1">
                 <Label className="text-xs font-medium text-slate-600">Report Date</Label>
                 <Select value={selectedDate} onValueChange={setSelectedDate}>
@@ -478,17 +481,17 @@ export function AIEODSubmission({
                 id="textDump"
                 placeholder={`Paste everything you accomplished today. Example:
 
-- Updated the MedPros landing page with new testimonials
-- Had a call with Sabbir about GHL automation progress
-- Reviewed newsletter draft from Ailyn
-- Set up new N8N workflow for lead routing
-- Blocked on: waiting for client feedback on Voice AI demo
+- Finished wireframes for the new dashboard
+- Had a strategy call with the team about Q1 priorities
+- Reviewed and approved the latest design mockups
+- Set up automated workflow for onboarding emails
+- Blocked on: waiting for API access from the vendor
 
-Tomorrow: finalize newsletter, follow up on MedPros campaign`}
+Tomorrow: finalize project proposal, sync with team on sprint goals`}
                 value={textDump}
                 onChange={(e) => setTextDump(e.target.value)}
                 rows={12}
-                className="bg-white border-slate-200 focus:border-red-300 font-mono text-sm"
+                className="bg-white border-slate-200 font-mono text-sm"
               />
               <p className="text-xs text-slate-500">
                 Include tasks, blockers, challenges, and tomorrow's priorities. The AI will match them to your {currentQuarter} rocks.
@@ -498,7 +501,8 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
             <Button
               onClick={handleParse}
               disabled={isParsing || !textDump.trim()}
-              className="w-full bg-red-600 hover:bg-red-700 text-white"
+              className="w-full text-white"
+              style={{ backgroundColor: colors.primary }}
               aria-busy={isParsing}
             >
               {isParsing ? (
@@ -519,7 +523,7 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
           <>
             {/* Date Selection */}
             <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-              <Calendar className="h-5 w-5 text-red-500" />
+              <Calendar className="h-5 w-5" style={{ color: colors.primary }} />
               <div className="flex-1">
                 <Label className="text-xs font-medium text-slate-600">Report Date</Label>
                 <Select value={selectedDate} onValueChange={setSelectedDate}>
@@ -552,8 +556,8 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
             {parsedData && (
               <div className="space-y-3">
                 {parsedData.summary && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <p className="text-sm font-medium text-red-800">{parsedData.summary}</p>
+                  <div className="rounded-lg p-3" style={{ backgroundColor: lighten(colors.primary, 45), borderWidth: 1, borderStyle: 'solid', borderColor: lighten(colors.primary, 30) }}>
+                    <p className="text-sm font-medium" style={{ color: darken(colors.primary, 20) }}>{parsedData.summary}</p>
                   </div>
                 )}
                 {parsedData.warnings && parsedData.warnings.length > 0 && (
@@ -588,7 +592,7 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
                   <CardHeader className="py-3 px-4 bg-slate-50">
                     <div className="flex items-center gap-2">
                       {key !== "general" && (
-                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                        <Badge variant="outline" style={{ backgroundColor: lighten(colors.primary, 45), color: darken(colors.primary, 15), borderColor: lighten(colors.primary, 30) }}>
                           Rock
                         </Badge>
                       )}
@@ -599,7 +603,7 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
                   <CardContent className="p-3 space-y-2">
                     {group.tasks.map((task) => (
                       <div key={task.id} className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-emerald-500 mt-2.5 flex-shrink-0" />
+                        <Check className="h-4 w-4 mt-2.5 flex-shrink-0" style={{ color: colors.primary }} />
                         <div className="flex-1 space-y-1.5">
                           <Input
                             value={task.text}
@@ -656,7 +660,7 @@ Tomorrow: finalize newsletter, follow up on MedPros campaign`}
             {activeMetric && (
               <div className="space-y-2">
                 <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <Target className="h-4 w-4 text-red-600" />
+                  <Target className="h-4 w-4" style={{ color: colors.primary }} />
                   {activeMetric.metricName}
                 </Label>
                 <div className="flex items-center gap-3">
