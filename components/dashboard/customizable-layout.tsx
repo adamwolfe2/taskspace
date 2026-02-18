@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import ReactGridLayout, { Layout } from "react-grid-layout"
 
 // Cast to any to avoid type definition mismatches with react-grid-layout v2.x
@@ -41,19 +41,24 @@ import {
  Target,
  CheckSquare,
  Calendar,
- Trophy,
  Sparkles,
  BarChart3,
  Clock,
  GripVertical,
  Save,
  RotateCcw,
+ Activity,
+ TrendingUp,
+ FileEdit,
+ Hand,
+ ClipboardCheck,
 } from "lucide-react"
+import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 import "react-grid-layout/css/styles.css"
 
-interface DashboardWidget {
+export interface DashboardWidget {
  id: string
- type: "stats" | "rocks" | "tasks" | "eod_calendar" | "focus" | "achievements" | "quick_actions" | "suggestions" | "time_tracking"
+ type: "welcome" | "eod_status" | "action_hub" | "rocks" | "tasks" | "stats" | "productivity" | "eod_calendar" | "eod_submission" | "focus" | "activity"
  title: string
  enabled: boolean
  minW?: number
@@ -63,7 +68,7 @@ interface DashboardWidget {
 }
 
 // Define LayoutItem with explicit properties to avoid type conflicts with react-grid-layout
-interface LayoutItem {
+export interface LayoutItem {
   i: string
   x: number
   y: number
@@ -83,7 +88,7 @@ interface CustomizableLayoutProps {
  layout: LayoutItem[]
  onLayoutChange: (layout: LayoutItem[]) => void
  onWidgetToggle: (widgetId: string, enabled: boolean) => void
- onSave: () => Promise<void>
+ onSave: () => void
  onReset: () => void
  isEditing: boolean
  setIsEditing: (editing: boolean) => void
@@ -93,27 +98,67 @@ interface CustomizableLayoutProps {
 
 // Default widget configurations
 export const DEFAULT_WIDGETS: DashboardWidget[] = [
+ { id: "welcome", type: "welcome", title: "Welcome & Quick Actions", enabled: true, minW: 2, minH: 1, maxH: 2 },
+ { id: "eod_status", type: "eod_status", title: "EOD Status", enabled: true, minW: 2, minH: 1, maxH: 1 },
+ { id: "action_hub", type: "action_hub", title: "Action Hub", enabled: true, minW: 2, minH: 2, maxH: 4 },
+ { id: "rocks", type: "rocks", title: "My Rocks", enabled: true, minW: 2, minH: 2, maxH: 6 },
+ { id: "tasks", type: "tasks", title: "Assigned Tasks", enabled: true, minW: 2, minH: 2, maxH: 6 },
  { id: "stats", type: "stats", title: "Stats Overview", enabled: true, minW: 2, minH: 1, maxH: 2 },
- { id: "rocks", type: "rocks", title: "My Rocks", enabled: true, minW: 2, minH: 2, maxH: 4 },
- { id: "tasks", type: "tasks", title: "Tasks", enabled: true, minW: 2, minH: 2, maxH: 6 },
- { id: "eod_calendar", type: "eod_calendar", title: "EOD Calendar", enabled: true, minW: 2, minH: 1, maxH: 3 },
- { id: "focus", type: "focus", title: "Focus Timer", enabled: true, minW: 1, minH: 1, maxH: 2 },
- { id: "achievements", type: "achievements", title: "Achievements", enabled: false, minW: 1, minH: 1, maxH: 2 },
- { id: "quick_actions", type: "quick_actions", title: "Quick Actions", enabled: true, minW: 2, minH: 1, maxH: 1 },
- { id: "suggestions", type: "suggestions", title: "AI Suggestions", enabled: true, minW: 1, minH: 2, maxH: 4 },
- { id: "time_tracking", type: "time_tracking", title: "Time Tracking", enabled: false, minW: 1, minH: 2, maxH: 3 },
+ { id: "productivity", type: "productivity", title: "Productivity", enabled: true, minW: 2, minH: 1, maxH: 2 },
+ { id: "eod_calendar", type: "eod_calendar", title: "Weekly EOD Calendar", enabled: true, minW: 2, minH: 2, maxH: 4 },
+ { id: "eod_submission", type: "eod_submission", title: "EOD Submission", enabled: true, minW: 2, minH: 3, maxH: 6 },
+ { id: "focus", type: "focus", title: "Focus Timer", enabled: true, minW: 1, minH: 2, maxH: 4 },
+ { id: "activity", type: "activity", title: "Activity Feed", enabled: true, minW: 2, minH: 2, maxH: 4 },
 ]
 
-// Default layout
+// Default layout — 4-column grid
 export const DEFAULT_LAYOUT: LayoutItem[] = [
- { i: "quick_actions", x: 0, y: 0, w: 4, h: 1 },
- { i: "stats", x: 0, y: 1, w: 4, h: 1 },
- { i: "eod_calendar", x: 0, y: 2, w: 4, h: 2 },
- { i: "suggestions", x: 0, y: 4, w: 2, h: 3 },
- { i: "focus", x: 2, y: 4, w: 2, h: 2 },
- { i: "rocks", x: 0, y: 7, w: 2, h: 3 },
- { i: "tasks", x: 2, y: 6, w: 2, h: 4 },
+ { i: "welcome", x: 0, y: 0, w: 4, h: 1 },
+ { i: "eod_status", x: 0, y: 1, w: 4, h: 1 },
+ { i: "action_hub", x: 0, y: 2, w: 4, h: 2 },
+ { i: "rocks", x: 0, y: 4, w: 2, h: 3 },
+ { i: "tasks", x: 2, y: 4, w: 2, h: 3 },
+ { i: "stats", x: 0, y: 7, w: 4, h: 1 },
+ { i: "productivity", x: 0, y: 8, w: 4, h: 1 },
+ { i: "eod_calendar", x: 0, y: 9, w: 2, h: 3 },
+ { i: "eod_submission", x: 2, y: 9, w: 2, h: 3 },
+ { i: "focus", x: 0, y: 12, w: 2, h: 2 },
+ { i: "activity", x: 2, y: 12, w: 2, h: 2 },
 ]
+
+function getWidgetIcon(type: DashboardWidget["type"]) {
+ switch (type) {
+  case "welcome": return Hand
+  case "eod_status": return ClipboardCheck
+  case "action_hub": return Sparkles
+  case "rocks": return Target
+  case "tasks": return CheckSquare
+  case "stats": return BarChart3
+  case "productivity": return TrendingUp
+  case "eod_calendar": return Calendar
+  case "eod_submission": return FileEdit
+  case "focus": return Clock
+  case "activity": return Activity
+  default: return LayoutGrid
+ }
+}
+
+function getWidgetDescription(type: DashboardWidget["type"]) {
+ switch (type) {
+  case "welcome": return "Welcome header and quick action buttons"
+  case "eod_status": return "EOD submission status for today"
+  case "action_hub": return "AI-powered task and rock suggestions"
+  case "rocks": return "Your quarterly goals and progress"
+  case "tasks": return "Assigned tasks with filtering and actions"
+  case "stats": return "Overview of tasks, rocks, and activity"
+  case "productivity": return "Streaks, achievements, and weekly reviews"
+  case "eod_calendar": return "Weekly EOD submission calendar"
+  case "eod_submission": return "AI and manual EOD report submission"
+  case "focus": return "Pomodoro timer for deep work sessions"
+  case "activity": return "Recent activity feed"
+  default: return ""
+ }
+}
 
 export function CustomizableLayout({
  widgets,
@@ -127,163 +172,174 @@ export function CustomizableLayout({
  renderWidget,
  className,
 }: CustomizableLayoutProps) {
- const [isSaving, setIsSaving] = useState(false)
  const [showSettings, setShowSettings] = useState(false)
+ const containerRef = useRef<HTMLDivElement>(null)
+ const [containerWidth, setContainerWidth] = useState(1200)
+ const themedColors = useThemedIconColors()
+
+ // Measure container width with ResizeObserver
+ useEffect(() => {
+  const el = containerRef.current
+  if (!el) return
+
+  const observer = new ResizeObserver((entries) => {
+   for (const entry of entries) {
+    setContainerWidth(entry.contentRect.width)
+   }
+  })
+  observer.observe(el)
+  // Set initial width
+  setContainerWidth(el.clientWidth || 1200)
+  return () => observer.disconnect()
+ }, [])
 
  // Filter to only enabled widgets
  const enabledWidgets = widgets.filter((w) => w.enabled)
  const enabledLayout = layout.filter((l) =>
- enabledWidgets.some((w) => w.id === l.i)
+  enabledWidgets.some((w) => w.id === l.i)
  )
 
  const handleLayoutChange = useCallback((newLayout: Layout[]) => {
- if (isEditing) {
- onLayoutChange(newLayout as unknown as LayoutItem[])
- }
+  if (isEditing) {
+   onLayoutChange(newLayout as unknown as LayoutItem[])
+  }
  }, [isEditing, onLayoutChange])
 
- const handleSave = async () => {
- setIsSaving(true)
- try {
- await onSave()
- setIsEditing(false)
- } catch (error) {
- // Error saving layout
- } finally {
- setIsSaving(false)
- }
- }
-
- const getWidgetIcon = (type: DashboardWidget["type"]) => {
- switch (type) {
- case "stats": return BarChart3
- case "rocks": return Target
- case "tasks": return CheckSquare
- case "eod_calendar": return Calendar
- case "focus": return Clock
- case "achievements": return Trophy
- case "quick_actions": return Sparkles
- case "suggestions": return Sparkles
- case "time_tracking": return Clock
- default: return LayoutGrid
- }
+ const handleSave = () => {
+  onSave()
+  setIsEditing(false)
  }
 
  return (
- <div className={cn("relative", className)}>
- {/* Edit Mode Controls */}
- <div className="flex items-center justify-between mb-4">
- <div className="flex items-center gap-2">
- {isEditing && (
- <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
- <Move className="h-3 w-3 mr-1" />
- Editing Layout
- </Badge>
- )}
- </div>
+  <div ref={containerRef} className={cn("relative", className)}>
+   {/* Edit Mode Controls */}
+   <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center gap-2">
+     {isEditing && (
+      <Badge
+       variant="outline"
+       style={{
+        backgroundColor: themedColors.primaryAlpha10,
+        color: themedColors.primary,
+        borderColor: themedColors.primaryAlpha20,
+       }}
+      >
+       <Move className="h-3 w-3 mr-1" />
+       Editing Layout
+      </Badge>
+     )}
+    </div>
 
- <div className="flex items-center gap-2">
- {isEditing ? (
- <>
- <Button variant="outline" size="sm" onClick={onReset}>
- <RotateCcw className="h-4 w-4 mr-1" />
- Reset
- </Button>
- <Button size="sm" onClick={handleSave} disabled={isSaving}>
- <Save className="h-4 w-4 mr-1" />
- {isSaving ? "Saving..." : "Save Layout"}
- </Button>
- <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
- <X className="h-4 w-4" />
- </Button>
- </>
- ) : (
- <>
- <Dialog open={showSettings} onOpenChange={setShowSettings}>
- <DialogTrigger asChild>
- <Button variant="outline" size="sm">
- <Settings2 className="h-4 w-4 mr-1" />
- Widgets
- </Button>
- </DialogTrigger>
- <WidgetSettingsDialog
- widgets={widgets}
- onToggle={onWidgetToggle}
- />
- </Dialog>
- <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
- <LayoutGrid className="h-4 w-4 mr-1" />
- Customize
- </Button>
- </>
- )}
- </div>
- </div>
+    <div className="flex items-center gap-2">
+     {isEditing ? (
+      <>
+       <Button variant="outline" size="sm" onClick={onReset}>
+        <RotateCcw className="h-4 w-4 mr-1" />
+        Reset
+       </Button>
+       <Button size="sm" onClick={handleSave}>
+        <Save className="h-4 w-4 mr-1" />
+        Save Layout
+       </Button>
+       <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+        <X className="h-4 w-4" />
+       </Button>
+      </>
+     ) : (
+      <>
+       <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogTrigger asChild>
+         <Button variant="outline" size="sm">
+          <Settings2 className="h-4 w-4 mr-1" />
+          Widgets
+         </Button>
+        </DialogTrigger>
+        <WidgetSettingsDialog
+         widgets={widgets}
+         onToggle={onWidgetToggle}
+        />
+       </Dialog>
+       <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+        <LayoutGrid className="h-4 w-4 mr-1" />
+        Customize
+       </Button>
+      </>
+     )}
+    </div>
+   </div>
 
- {/* Grid Layout */}
- <GridLayout
- className="layout"
- layout={enabledLayout as unknown as Layout[]}
- cols={4}
- rowHeight={100}
- width={1200}
- onLayoutChange={handleLayoutChange}
- isDraggable={isEditing}
- isResizable={isEditing}
- draggableHandle=".widget-drag-handle"
- margin={[16, 16]}
- containerPadding={[0, 0]}
- >
- {enabledWidgets.map((widget) => (
- <div
- key={widget.id}
- className={cn(
- "bg-white  rounded-lg border shadow-sm overflow-hidden",
- isEditing && "ring-2 ring-blue-200 "
- )}
- >
- {isEditing && (
- <div className="widget-drag-handle flex items-center justify-between px-3 py-1.5 bg-slate-50  border-b cursor-move">
- <div className="flex items-center gap-2 text-sm text-slate-600 ">
- <GripVertical className="h-4 w-4" />
- {widget.title}
- </div>
- <div className="flex items-center gap-1">
- <Button
- variant="ghost"
- size="icon"
- className="h-6 w-6"
- onClick={() => onWidgetToggle(widget.id, false)}
- >
- <X className="h-3.5 w-3.5" />
- </Button>
- </div>
- </div>
- )}
- <div className={cn(
- "h-full overflow-auto",
- isEditing ? "pointer-events-none opacity-75" : ""
- )}>
- {renderWidget(widget)}
- </div>
- </div>
- ))}
- </GridLayout>
+   {/* Grid Layout */}
+   <GridLayout
+    className="layout"
+    layout={enabledLayout as unknown as Layout[]}
+    cols={4}
+    rowHeight={100}
+    width={containerWidth}
+    onLayoutChange={handleLayoutChange}
+    isDraggable={isEditing}
+    isResizable={isEditing}
+    draggableHandle=".widget-drag-handle"
+    margin={[16, 16]}
+    containerPadding={[0, 0]}
+   >
+    {enabledWidgets.map((widget) => (
+     <div
+      key={widget.id}
+      className={cn(
+       "bg-white rounded-lg border shadow-sm overflow-hidden",
+      )}
+      style={isEditing ? {
+       outline: `2px solid ${themedColors.primaryAlpha20}`,
+       outlineOffset: "-1px",
+      } : undefined}
+     >
+      {isEditing && (
+       <div
+        className="widget-drag-handle flex items-center justify-between px-3 py-1.5 border-b cursor-move"
+        style={{
+         backgroundColor: themedColors.primaryAlpha10,
+        }}
+       >
+        <div className="flex items-center gap-2 text-sm" style={{ color: themedColors.primary }}>
+         <GripVertical className="h-4 w-4" />
+         {widget.title}
+        </div>
+        <div className="flex items-center gap-1">
+         <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={() => onWidgetToggle(widget.id, false)}
+         >
+          <X className="h-3.5 w-3.5" />
+         </Button>
+        </div>
+       </div>
+      )}
+      <div className={cn(
+       "h-full overflow-auto",
+       isEditing ? "pointer-events-none opacity-75" : ""
+      )}>
+       {renderWidget(widget)}
+      </div>
+     </div>
+    ))}
+   </GridLayout>
 
- {/* Empty state when no widgets */}
- {enabledWidgets.length === 0 && (
- <Card className="border-dashed">
- <CardContent className="flex flex-col items-center justify-center py-12">
- <LayoutGrid className="h-12 w-12 text-slate-300 mb-4" />
- <p className="text-slate-500 mb-4">No widgets enabled</p>
- <Button variant="outline" onClick={() => setShowSettings(true)}>
- <Plus className="h-4 w-4 mr-1" />
- Add Widgets
- </Button>
- </CardContent>
- </Card>
- )}
- </div>
+   {/* Empty state when no widgets */}
+   {enabledWidgets.length === 0 && (
+    <Card className="border-dashed">
+     <CardContent className="flex flex-col items-center justify-center py-12">
+      <LayoutGrid className="h-12 w-12 text-muted-foreground mb-4" />
+      <p className="text-muted-foreground mb-4">No widgets enabled</p>
+      <Button variant="outline" onClick={() => setShowSettings(true)}>
+       <Plus className="h-4 w-4 mr-1" />
+       Add Widgets
+      </Button>
+     </CardContent>
+    </Card>
+   )}
+  </div>
  )
 }
 
@@ -295,90 +351,62 @@ function WidgetSettingsDialog({
  widgets: DashboardWidget[]
  onToggle: (widgetId: string, enabled: boolean) => void
 }) {
- const getWidgetIcon = (type: DashboardWidget["type"]) => {
- switch (type) {
- case "stats": return BarChart3
- case "rocks": return Target
- case "tasks": return CheckSquare
- case "eod_calendar": return Calendar
- case "focus": return Clock
- case "achievements": return Trophy
- case "quick_actions": return Sparkles
- case "suggestions": return Sparkles
- case "time_tracking": return Clock
- default: return LayoutGrid
- }
- }
-
- const getWidgetDescription = (type: DashboardWidget["type"]) => {
- switch (type) {
- case "stats": return "Overview of your tasks, rocks, and activity"
- case "rocks": return "Your quarterly goals and progress"
- case "tasks": return "Task list with filtering and quick actions"
- case "eod_calendar": return "Weekly EOD submission calendar"
- case "focus": return "Pomodoro timer for deep work sessions"
- case "achievements": return "Gamification badges and points"
- case "quick_actions": return "Quick access buttons for common actions"
- case "suggestions": return "AI-powered task recommendations"
- case "time_tracking": return "Track time spent on tasks"
- default: return ""
- }
- }
+ const themedColors = useThemedIconColors()
 
  return (
- <DialogContent className="sm:max-w-[500px]">
- <DialogHeader>
- <DialogTitle>Dashboard Widgets</DialogTitle>
- <DialogDescription>
- Choose which widgets to show on your dashboard
- </DialogDescription>
- </DialogHeader>
+  <DialogContent className="sm:max-w-[500px]">
+   <DialogHeader>
+    <DialogTitle>Dashboard Widgets</DialogTitle>
+    <DialogDescription>
+     Choose which widgets to show on your dashboard
+    </DialogDescription>
+   </DialogHeader>
 
- <div className="space-y-4 py-4">
- {widgets.map((widget) => {
- const Icon = getWidgetIcon(widget.type)
- return (
- <div
- key={widget.id}
- className={cn(
- "flex items-start gap-4 p-3 rounded-lg border transition-colors",
- widget.enabled
- ? "bg-blue-50  border-blue-200 "
- : "hover:bg-slate-50 "
- )}
- >
- <div className={cn(
- "p-2 rounded-lg",
- widget.enabled
- ? "bg-blue-100 "
- : "bg-slate-100 "
- )}>
- <Icon className={cn(
- "h-5 w-5",
- widget.enabled ? "text-blue-600" : "text-slate-500"
- )} />
- </div>
- <div className="flex-1 min-w-0">
- <Label
- htmlFor={`widget-${widget.id}`}
- className="font-medium cursor-pointer"
- >
- {widget.title}
- </Label>
- <p className="text-sm text-slate-500 ">
- {getWidgetDescription(widget.type)}
- </p>
- </div>
- <Switch
- id={`widget-${widget.id}`}
- checked={widget.enabled}
- onCheckedChange={(checked) => onToggle(widget.id, checked)}
- />
- </div>
- )
- })}
- </div>
- </DialogContent>
+   <div className="space-y-4 py-4">
+    {widgets.map((widget) => {
+     const Icon = getWidgetIcon(widget.type)
+     return (
+      <div
+       key={widget.id}
+       className={cn(
+        "flex items-start gap-4 p-3 rounded-lg border transition-colors",
+        !widget.enabled && "hover:bg-muted/50"
+       )}
+       style={widget.enabled ? {
+        backgroundColor: themedColors.primaryAlpha10,
+        borderColor: themedColors.primaryAlpha20,
+       } : undefined}
+      >
+       <div
+        className={cn("p-2 rounded-lg", !widget.enabled && "bg-muted")}
+        style={widget.enabled ? { backgroundColor: themedColors.primaryAlpha20 } : undefined}
+       >
+        <Icon
+         className={cn("h-5 w-5", !widget.enabled && "text-muted-foreground")}
+         style={widget.enabled ? { color: themedColors.primary } : undefined}
+        />
+       </div>
+       <div className="flex-1 min-w-0">
+        <Label
+         htmlFor={`widget-${widget.id}`}
+         className="font-medium cursor-pointer"
+        >
+         {widget.title}
+        </Label>
+        <p className="text-sm text-muted-foreground">
+         {getWidgetDescription(widget.type)}
+        </p>
+       </div>
+       <Switch
+        id={`widget-${widget.id}`}
+        checked={widget.enabled}
+        onCheckedChange={(checked) => onToggle(widget.id, checked)}
+       />
+      </div>
+     )
+    })}
+   </div>
+  </DialogContent>
  )
 }
 
@@ -395,66 +423,163 @@ export function SimpleDashboardLayout({
  const enabledWidgets = widgets.filter((w) => w.enabled)
 
  return (
- <div className={cn("space-y-6", className)}>
- {enabledWidgets.map((widget) => (
- <div key={widget.id}>
- {renderWidget(widget)}
- </div>
- ))}
- </div>
+  <div className={cn("space-y-6", className)}>
+   {enabledWidgets.map((widget) => (
+    <div key={widget.id}>
+     {renderWidget(widget)}
+    </div>
+   ))}
+  </div>
  )
 }
 
-// Hook for managing dashboard layout state
+// Hook for managing dashboard layout state with localStorage persistence
 export function useDashboardLayout(
  initialWidgets: DashboardWidget[] = DEFAULT_WIDGETS,
- initialLayout: LayoutItem[] = DEFAULT_LAYOUT
+ initialLayout: LayoutItem[] = DEFAULT_LAYOUT,
+ workspaceId?: string | null,
+ enabledFeatures?: string[]
 ) {
- const [widgets, setWidgets] = useState(initialWidgets)
- const [layout, setLayout] = useState(initialLayout)
+ const storageKey = workspaceId ? `dashboard-layout-${workspaceId}` : null
+
+ // Filter widgets by enabled features
+ const filteredDefaults = enabledFeatures
+  ? initialWidgets.filter((w) => {
+     // Map widget types to feature keys
+     const featureMap: Record<string, string> = {
+      rocks: "core.rocks",
+      tasks: "core.tasks",
+      eod_status: "core.eodReports",
+      eod_calendar: "core.eodReports",
+      eod_submission: "core.eodReports",
+      focus: "productivity.focusBlocks",
+      productivity: "productivity.streakTracking",
+     }
+     const requiredFeature = featureMap[w.type]
+     if (!requiredFeature) return true // no feature gate
+     return enabledFeatures.includes(requiredFeature)
+    })
+  : initialWidgets
+
+ // Load saved state from localStorage (or use defaults)
+ const [widgets, setWidgets] = useState<DashboardWidget[]>(() => {
+  if (storageKey && typeof window !== "undefined") {
+   try {
+    const saved = localStorage.getItem(storageKey)
+    if (saved) {
+     const parsed = JSON.parse(saved)
+     if (parsed.widgets && Array.isArray(parsed.widgets)) {
+      // Merge saved state with current defaults (handles new widgets added since save)
+      const savedMap = new Map<string, DashboardWidget>(parsed.widgets.map((w: DashboardWidget) => [w.id, w]))
+      return filteredDefaults.map((def) => {
+       const savedWidget = savedMap.get(def.id)
+       return savedWidget ? { ...def, enabled: savedWidget.enabled } : def
+      })
+     }
+    }
+   } catch {
+    // Invalid saved data, use defaults
+   }
+  }
+  return filteredDefaults
+ })
+
+ const [layout, setLayout] = useState<LayoutItem[]>(() => {
+  if (storageKey && typeof window !== "undefined") {
+   try {
+    const saved = localStorage.getItem(storageKey)
+    if (saved) {
+     const parsed = JSON.parse(saved)
+     if (parsed.layout && Array.isArray(parsed.layout)) {
+      return parsed.layout
+     }
+    }
+   } catch {
+    // Invalid saved data, use defaults
+   }
+  }
+  return initialLayout
+ })
+
  const [isEditing, setIsEditing] = useState(false)
 
+ // Re-filter when features change
+ useEffect(() => {
+  if (!enabledFeatures) return
+  setWidgets((prev) => {
+   const featureMap: Record<string, string> = {
+    rocks: "core.rocks",
+    tasks: "core.tasks",
+    eod_status: "core.eodReports",
+    eod_calendar: "core.eodReports",
+    eod_submission: "core.eodReports",
+    focus: "productivity.focusBlocks",
+    productivity: "productivity.streakTracking",
+   }
+   return prev.filter((w) => {
+    const requiredFeature = featureMap[w.type]
+    if (!requiredFeature) return true
+    return enabledFeatures.includes(requiredFeature)
+   })
+  })
+ }, [enabledFeatures])
+
  const handleWidgetToggle = useCallback((widgetId: string, enabled: boolean) => {
- setWidgets((prev) =>
- prev.map((w) => (w.id === widgetId ? { ...w, enabled } : w))
- )
+  setWidgets((prev) =>
+   prev.map((w) => (w.id === widgetId ? { ...w, enabled } : w))
+  )
 
- // Add to layout if enabling
- if (enabled) {
- const widget = widgets.find((w) => w.id === widgetId)
- if (widget && !layout.some((l) => l.i === widgetId)) {
- // Find the lowest y position to add new widget
- const maxY = Math.max(...layout.map((l) => l.y + l.h), 0)
- setLayout((prev) => [
- ...prev,
- {
- i: widgetId,
- x: 0,
- y: maxY,
- w: widget.minW || 2,
- h: widget.minH || 2,
- },
- ])
- }
- }
- }, [widgets, layout])
-
- const handleLayoutChange = useCallback((newLayout: Layout[]) => {
- setLayout(newLayout as unknown as LayoutItem[])
+  // Add to layout if enabling
+  if (enabled) {
+   setWidgets((current) => {
+    const widget = current.find((w) => w.id === widgetId)
+    if (widget) {
+     setLayout((prevLayout) => {
+      if (prevLayout.some((l) => l.i === widgetId)) return prevLayout
+      const maxY = Math.max(...prevLayout.map((l) => l.y + l.h), 0)
+      return [
+       ...prevLayout,
+       {
+        i: widgetId,
+        x: 0,
+        y: maxY,
+        w: widget.minW || 2,
+        h: widget.minH || 2,
+       },
+      ]
+     })
+    }
+    return current
+   })
+  }
  }, [])
+
+ const handleLayoutChange = useCallback((newLayout: LayoutItem[]) => {
+  setLayout(newLayout)
+ }, [])
+
+ const handleSave = useCallback(() => {
+  if (storageKey && typeof window !== "undefined") {
+   localStorage.setItem(storageKey, JSON.stringify({ widgets, layout }))
+  }
+ }, [storageKey, widgets, layout])
 
  const handleReset = useCallback(() => {
- setWidgets(DEFAULT_WIDGETS)
- setLayout(DEFAULT_LAYOUT)
- }, [])
+  setWidgets(filteredDefaults)
+  setLayout(initialLayout)
+  if (storageKey && typeof window !== "undefined") {
+   localStorage.removeItem(storageKey)
+  }
+ }, [filteredDefaults, initialLayout, storageKey])
 
  return {
- widgets,
- layout,
- isEditing,
- setIsEditing,
- handleWidgetToggle,
- handleLayoutChange,
- handleReset,
+  widgets,
+  layout,
+  isEditing,
+  setIsEditing,
+  handleWidgetToggle,
+  handleLayoutChange,
+  handleSave,
+  handleReset,
  }
 }

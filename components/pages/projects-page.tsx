@@ -576,13 +576,13 @@ export function ProjectsPage({
 
         {/* Detail Sheet */}
         <Sheet open={!!detailProject} onOpenChange={(open) => !open && setDetailProject(null)}>
-          <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetContent className="w-full sm:max-w-lg overflow-y-auto px-6">
             {detailProject && (
               <>
-                <SheetHeader>
+                <SheetHeader className="px-0">
                   <SheetTitle>{detailProject.name}</SheetTitle>
                 </SheetHeader>
-                <div className="mt-4 space-y-4 px-4 pb-4">
+                <div className="space-y-5 pb-6">
                   <div className="flex gap-2">
                     <Badge variant="outline" style={getStatusStyle(detailProject.status)}>{detailProject.status}</Badge>
                     <Badge variant="outline" style={getPriorityStyle(detailProject.priority)}>{detailProject.priority}</Badge>
