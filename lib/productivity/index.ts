@@ -1,5 +1,5 @@
 // Productivity Calculations and Utilities
-// Rize-inspired productivity tracking for AIMS EOD
+// Rize-inspired productivity tracking for TaskSpace EOD
 
 export {
   calculateFocusScore,

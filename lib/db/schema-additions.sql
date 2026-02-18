@@ -103,40 +103,8 @@ CREATE TABLE IF NOT EXISTS rock_dependencies (
   UNIQUE(rock_id, depends_on_rock_id)
 );
 
--- Dashboard layouts for customization
-CREATE TABLE IF NOT EXISTS dashboard_layouts (
-  id VARCHAR(255) PRIMARY KEY,
-  organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  layout JSONB NOT NULL, -- Grid layout configuration
-  widgets JSONB DEFAULT '[]', -- Enabled widgets with settings
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(organization_id, user_id)
-);
-
--- Recent items for quick access
-CREATE TABLE IF NOT EXISTS recent_items (
-  id VARCHAR(255) PRIMARY KEY,
-  organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  item_type VARCHAR(50) NOT NULL, -- task, rock, eod_report
-  item_id VARCHAR(255) NOT NULL,
-  viewed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Standup reports (generated from EOD data)
-CREATE TABLE IF NOT EXISTS standup_reports (
-  id VARCHAR(255) PRIMARY KEY,
-  organization_id VARCHAR(255) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  generated_by VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  report_date DATE NOT NULL,
-  content JSONB NOT NULL, -- { members: [{ name, yesterday, today, blockers }] }
-  summary TEXT,
-  shared_to JSONB DEFAULT '[]', -- [{ channel: 'slack', sent_at: ... }]
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(organization_id, report_date)
-);
+-- NOTE: dashboard_layouts, recent_items, standup_reports tables were removed
+-- (unused — no API routes or UI). Tables may still exist in DB but are inactive.
 
 -- Add mood field to eod_reports if not exists
 ALTER TABLE eod_reports ADD COLUMN IF NOT EXISTS mood VARCHAR(50);
@@ -170,13 +138,6 @@ CREATE INDEX IF NOT EXISTS idx_user_achievements_achievement ON user_achievement
 CREATE INDEX IF NOT EXISTS idx_rock_dependencies_rock ON rock_dependencies(rock_id);
 CREATE INDEX IF NOT EXISTS idx_rock_dependencies_depends ON rock_dependencies(depends_on_rock_id);
 
-CREATE INDEX IF NOT EXISTS idx_dashboard_layouts_user ON dashboard_layouts(user_id);
-
-CREATE INDEX IF NOT EXISTS idx_recent_items_user ON recent_items(user_id, organization_id);
-CREATE INDEX IF NOT EXISTS idx_recent_items_viewed ON recent_items(viewed_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_standup_reports_org ON standup_reports(organization_id);
-CREATE INDEX IF NOT EXISTS idx_standup_reports_date ON standup_reports(report_date);
 
 -- Insert default achievements
 INSERT INTO achievements (id, name, description, category, icon, badge_color, criteria, points) VALUES

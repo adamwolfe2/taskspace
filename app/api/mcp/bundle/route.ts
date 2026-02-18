@@ -270,7 +270,7 @@ const getManifest = (orgName: string) => ({
   },
 })
 
-// Simple icon as base64 (a colored square with "AIMS" text - placeholder)
+// Simple icon as base64 placeholder
 const getIcon = () => {
   // This is a simple 128x128 PNG icon placeholder
   // In production, you'd want a proper icon file

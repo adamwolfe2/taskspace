@@ -183,7 +183,7 @@ async function processAsanaTasks(
 ) {
   // Process ALL tasks (both completed and incomplete)
 
-  // Get existing tasks from AIMS that were synced from Asana
+  // Get existing tasks from TaskSpace that were synced from Asana
   const { rows: existingTaskRows } = await sql`
     SELECT id, asana_gid, status, completed_at
     FROM assigned_tasks
@@ -210,18 +210,18 @@ async function processAsanaTasks(
   // Create a set of all Asana task GIDs for quick lookup
   const asanaTaskGids = new Set(asanaTasks.map(t => t.gid))
 
-  // Check for tasks in AIMS that no longer exist in Asana (deleted)
+  // Check for tasks in TaskSpace that no longer exist in Asana (deleted)
   // Only delete if it was an incomplete task that got deleted
   for (const [gid, existingTask] of existingTasksByGid) {
     if (!asanaTaskGids.has(gid) && existingTask.status !== "completed") {
       try {
-        // Task was deleted in Asana, delete it in AIMS
+        // Task was deleted in Asana, delete it in TaskSpace
         await sql`
           DELETE FROM assigned_tasks
           WHERE id = ${existingTask.id}
         `
         result.tasksDeleted++
-        logger.info({ taskId: existingTask.id, asanaGid: gid }, "Deleted AIMS task because it was deleted in Asana")
+        logger.info({ taskId: existingTask.id, asanaGid: gid }, "Deleted TaskSpace task because it was deleted in Asana")
       } catch (err) {
         logError(logger, `Failed to delete task ${existingTask.id}`, err)
         result.errors.push(`Failed to delete task that was removed from Asana`)

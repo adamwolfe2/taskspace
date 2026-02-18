@@ -316,6 +316,16 @@ export function initGlobalErrorHandler(): () => void {
           return
         }
 
+        // For 402s (Payment Required), show upgrade prompt
+        if (error.status === 402) {
+          toast({
+            variant: "destructive",
+            title: "Upgrade Required",
+            description: (error.message || "This feature requires a paid plan.") + " Visit Settings → Billing to upgrade.",
+          })
+          return
+        }
+
         toast({
           variant: "destructive",
           title: "Error",

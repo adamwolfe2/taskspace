@@ -321,10 +321,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// Safe defaults when no AppProvider is present (e.g. public pages, error boundaries)
+const noopAsync = async () => {}
+const noop = () => {}
+
+const defaultAppContext: AppContextType = {
+  currentUser: null,
+  setCurrentUser: noop,
+  currentOrganization: null,
+  setCurrentOrganization: noop,
+  isAuthenticated: false,
+  isLoading: false,
+  isDemoMode: false,
+  currentPage: "login",
+  setCurrentPage: noop,
+  pageFilter: null,
+  navigateWithFilter: noop,
+  clearPageFilter: noop,
+  darkMode: false,
+  setDarkMode: noop,
+  login: noopAsync,
+  register: noopAsync,
+  logout: noopAsync,
+  refreshSession: noopAsync,
+  enterDemoMode: noop,
+  emailVerified: false,
+  error: null,
+  clearError: noop,
+}
+
 export function useApp() {
   const context = useContext(AppContext)
-  if (context === undefined) {
-    throw new Error("useApp must be used within an AppProvider")
-  }
-  return context
+  // Return safe defaults instead of crashing when used outside the provider
+  // (public EOD pages, marketing pages, error boundaries, etc.)
+  return context ?? defaultAppContext
 }

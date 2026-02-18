@@ -7,6 +7,7 @@ import type { ApiResponse, FocusBlock } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createFocusBlockSchema } from "@/lib/validation/schemas"
+import { checkAchievements } from "@/lib/achievements/check-achievements"
 
 // GET /api/productivity/focus-blocks - List focus blocks for user
 export const GET = withAuth(async (request, auth) => {
@@ -103,6 +104,9 @@ export const POST = withAuth(async (request, auth) => {
     }
 
     const result = await db.focusBlocks.create(focusBlock)
+
+    // Check focus-related achievements (fire-and-forget)
+    checkAchievements(auth.user.id, auth.organization.id).catch(() => {})
 
     return NextResponse.json<ApiResponse<{ id: string }>>({
       success: true,

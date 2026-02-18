@@ -13,6 +13,7 @@ import { getRockById, completeRock, reopenRock } from "@/lib/db/rocks"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { completeRockSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
+import { checkAchievements } from "@/lib/achievements/check-achievements"
 import type { ApiResponse } from "@/lib/types"
 
 export const POST = withAuth(async (request, auth, context?) => {
@@ -101,6 +102,9 @@ export const POST = withAuth(async (request, auth, context?) => {
         rockId: id,
         rockTitle: rock.title,
       }, "Rock completed")
+
+      // Check achievements (fire-and-forget)
+      checkAchievements(auth.user.id, auth.organization.id).catch(() => {})
     }
 
     return NextResponse.json({

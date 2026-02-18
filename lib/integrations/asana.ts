@@ -1,6 +1,6 @@
 /**
  * Asana Integration Client
- * Handles two-way sync between AIMS EOD Tracker and Asana
+ * Handles two-way sync between TaskSpace and Asana
  * Includes webhook signature verification for incoming requests
  */
 

@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
+import { checkAchievements } from "@/lib/achievements/check-achievements"
 import { sendSlackMessage, buildTaskAssignmentMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import { asanaClient } from "@/lib/integrations/asana"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
@@ -447,6 +448,11 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
         // Log but don't fail the request - Asana sync is best-effort
         logError(logger, "Failed to sync task to Asana", asanaErr, { taskId: task.id, asanaGid: task.asanaGid })
       }
+    }
+
+    // Check achievements when task is completed (fire-and-forget)
+    if (updates.status === "completed") {
+      checkAchievements(auth.user.id, auth.organization.id).catch(() => {})
     }
 
     return NextResponse.json<ApiResponse<AssignedTask | null>>({

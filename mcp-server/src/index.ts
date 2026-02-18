@@ -20,8 +20,8 @@ import {
 } from "@modelcontextprotocol/sdk/types.js"
 
 // Configuration
-const ALIGN_API_URL = process.env.ALIGN_API_URL || process.env.AIMS_API_URL || "https://www.trytaskspace.com"
-const ALIGN_API_KEY = process.env.ALIGN_API_KEY || process.env.AIMS_API_KEY || ""
+const ALIGN_API_URL = process.env.ALIGN_API_URL || process.env.TASKSPACE_API_URL || "https://www.trytaskspace.com"
+const ALIGN_API_KEY = process.env.ALIGN_API_KEY || process.env.TASKSPACE_API_KEY || ""
 
 interface ApiResponse<T> {
   success: boolean

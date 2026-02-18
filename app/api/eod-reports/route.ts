@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { withAuth, withAdmin, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
 import { generateId } from "@/lib/auth/password"
+import { checkAchievements } from "@/lib/achievements/check-achievements"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createEODReportSchema, updateEODReportSchema } from "@/lib/validation/schemas"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
@@ -538,6 +539,9 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
         })
       }
     }
+
+    // Check achievements (fire-and-forget — never blocks the response)
+    checkAchievements(auth.user.id, auth.organization.id).catch(() => {})
 
     return NextResponse.json<ApiResponse<EODReport>>({
       success: true,

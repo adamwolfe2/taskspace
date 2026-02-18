@@ -1,5 +1,5 @@
 // Productivity Components
-// Rize-inspired productivity tracking for AIMS EOD
+// Rize-inspired productivity tracking for TaskSpace EOD
 
 export { FocusScoreGauge, FocusScoreCompact } from "./focus-score-gauge"
 export { StreakCounter, StreakBadge } from "./streak-counter"

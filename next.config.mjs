@@ -85,7 +85,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data: https://fonts.gstatic.com",
-              "connect-src 'self' https://api.resend.com https://*.vercel.com https://*.anthropic.com wss://*.vercel.com https://api.anthropic.com",
+              "connect-src 'self' https://api.resend.com https://*.vercel.com https://*.anthropic.com wss://*.vercel.com https://api.anthropic.com https://*.ingest.sentry.io",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

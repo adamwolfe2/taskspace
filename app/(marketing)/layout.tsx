@@ -50,6 +50,53 @@ export const metadata: Metadata = {
   },
 }
 
+// JSON-LD structured data for SEO
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Taskspace",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  url: APP_URL,
+  description:
+    "The all-in-one EOS management platform for multi-company founders and leadership teams. AI-powered EOD reports, quarterly rocks, scorecards, Level 10 meetings, and accountability charts.",
+  offers: [
+    {
+      "@type": "Offer",
+      name: "Free",
+      price: "0",
+      priceCurrency: "USD",
+      description: "3 team members, 50 AI credits/month",
+    },
+    {
+      "@type": "Offer",
+      name: "Team",
+      price: "9",
+      priceCurrency: "USD",
+      priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M", referenceQuantity: { "@type": "QuantitativeValue", value: 1, unitText: "user" } },
+      description: "25 team members, integrations, 200 AI credits/user/month",
+    },
+    {
+      "@type": "Offer",
+      name: "Business",
+      price: "19",
+      priceCurrency: "USD",
+      priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M", referenceQuantity: { "@type": "QuantitativeValue", value: 1, unitText: "user" } },
+      description: "Unlimited members, unlimited AI, SSO, custom branding, API access",
+    },
+  ],
+  featureList: [
+    "AI-powered EOD Reports",
+    "Quarterly Rocks Tracking",
+    "Weekly Scorecard",
+    "Level 10 Meetings",
+    "Accountability Charts",
+    "IDS Issue Tracking",
+    "Team Analytics",
+    "Slack & Asana Integration",
+  ],
+}
+
 export default function MarketingLayout({
   children,
 }: {
@@ -57,6 +104,10 @@ export default function MarketingLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <MegaMenu />
       <main className="flex-1">{children}</main>
       <MarketingFooter />

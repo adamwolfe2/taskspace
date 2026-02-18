@@ -1,15 +1,10 @@
 "use client"
 
-/**
- * Public EOD pages error boundary
- * Self-contained — no dependency on providers or shadcn components
- */
-
 import { useEffect } from "react"
 import * as Sentry from "@sentry/nextjs"
 import { AlertTriangle, RefreshCw } from "lucide-react"
 
-export default function PublicEODError({
+export default function PublicError({
   error,
   reset,
 }: {
@@ -17,7 +12,7 @@ export default function PublicEODError({
   reset: () => void
 }) {
   useEffect(() => {
-    Sentry.captureException(error, { tags: { area: "public-eod" } })
+    Sentry.captureException(error, { tags: { area: "public" } })
   }, [error])
 
   return (
@@ -27,10 +22,10 @@ export default function PublicEODError({
           <AlertTriangle className="h-8 w-8 text-red-500" />
         </div>
         <h1 className="text-xl font-semibold text-slate-900 mb-2">
-          Report Unavailable
+          Something went wrong
         </h1>
         <p className="text-slate-500 mb-6">
-          We couldn&apos;t load this EOD report. The link may be invalid or the report may no longer be available.
+          We encountered an unexpected error loading this page. Please try again.
         </p>
         {error.digest && (
           <p className="text-xs text-slate-400 mb-4">
