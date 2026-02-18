@@ -287,10 +287,18 @@ export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
   )
 }
 
+// Default context value used when no BrandThemeProvider is present
+// (e.g. public-facing pages that don't have the authenticated app layout).
+const defaultBrandThemeContext: BrandThemeContextValue = {
+  colors: defaultBrandColors,
+  isLoading: false,
+  updateBrandColors: () => {},
+  resetToDefault: () => {},
+}
+
 export function useBrandTheme() {
   const context = useContext(BrandThemeContext)
-  if (!context) {
-    throw new Error("useBrandTheme must be used within a BrandThemeProvider")
-  }
-  return context
+  // Return safe defaults instead of crashing when used outside the provider
+  // (public EOD pages, marketing pages, etc.)
+  return context ?? defaultBrandThemeContext
 }
