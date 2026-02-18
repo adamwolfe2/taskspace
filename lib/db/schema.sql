@@ -305,7 +305,7 @@ CREATE TABLE IF NOT EXISTS google_calendar_tokens (
   UNIQUE(user_id, organization_id)
 );
 
--- Google Calendar event mappings (link AIMS items to Google Calendar events)
+-- Google Calendar event mappings (link TaskSpace items to Google Calendar events)
 CREATE TABLE IF NOT EXISTS google_calendar_events (
   id VARCHAR(255) PRIMARY KEY,
   user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -456,7 +456,7 @@ CREATE INDEX IF NOT EXISTS idx_org_chart_rock_progress_composite ON org_chart_ro
 -- MA EMPLOYEES TABLE (Org Chart Data Source)
 -- ============================================
 
--- Stores all Modern Amenities employees for the org chart
+-- Stores organization employees for the org chart
 -- Hierarchy is built from the supervisor field (name matching)
 -- Note: full_name is computed in queries, not stored as a generated column
 CREATE TABLE IF NOT EXISTS ma_employees (

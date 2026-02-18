@@ -425,7 +425,7 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
           due_on?: string
         } = {}
 
-        // Map AIMS fields to Asana fields
+        // Map TaskSpace fields to Asana fields
         if (updates.title) asanaUpdates.name = updates.title
         if (updates.description !== undefined) asanaUpdates.notes = updates.description || ""
         if (updates.dueDate) asanaUpdates.due_on = updates.dueDate

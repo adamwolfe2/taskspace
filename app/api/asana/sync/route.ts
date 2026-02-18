@@ -104,7 +104,7 @@ export const POST = withAdmin(async (request, auth) => {
 
           // Check if task already exists in Asana (by matching name pattern)
           const existingAsanaTask = asanaTasks.find(
-            (at) => at.name === aimsTask.title || at.notes?.includes(`TS-${aimsTask.id}`)
+            (at) => at.name === aimsTask.title || at.notes?.includes(`TS-${aimsTask.id}`) || at.notes?.includes(`AIMS-${aimsTask.id}`)
           )
 
           if (existingAsanaTask) {
@@ -155,7 +155,7 @@ export const POST = withAdmin(async (request, auth) => {
 
           // Fall back to checking by TaskSpace ID in notes or matching name
           if (!existingAimsTask) {
-            const aimsIdMatch = asanaTask.notes?.match(/TS-([a-zA-Z0-9-]+)/)
+            const aimsIdMatch = asanaTask.notes?.match(/(?:TS|AIMS)-([a-zA-Z0-9-]+)/)
             if (aimsIdMatch) {
               existingAimsTask = aimsTasks.find((t) => t.id === aimsIdMatch[1])
             } else {

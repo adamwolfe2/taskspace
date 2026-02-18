@@ -1,5 +1,5 @@
 -- ============================================
--- AIMS EOD Dashboard - Schema Additions
+-- TaskSpace EOD Dashboard - Schema Additions
 -- New tables for enhanced features
 -- ============================================
 
