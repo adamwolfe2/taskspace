@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react"
 import dynamic from "next/dynamic"
-import "react-grid-layout/css/styles.css"
 
 // react-grid-layout references `Element` at module level which breaks SSR.
 // Use next/dynamic with ssr:false so the JS only loads on the client.
@@ -75,7 +74,7 @@ import {
  ClipboardCheck,
 } from "lucide-react"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
-import "react-grid-layout/css/styles.css"
+// Grid CSS is loaded globally via app/globals.css for reliability with dynamic imports
 
 export interface DashboardWidget {
  id: string
@@ -118,33 +117,35 @@ interface CustomizableLayoutProps {
 }
 
 // Default widget configurations
+// Heights use rowHeight=40px grid units. Pixel height ≈ h*40 + (h-1)*16 margin.
 export const DEFAULT_WIDGETS: DashboardWidget[] = [
- { id: "welcome", type: "welcome", title: "Welcome & Quick Actions", enabled: true, minW: 2, minH: 1, maxH: 2 },
- { id: "eod_status", type: "eod_status", title: "EOD Status", enabled: true, minW: 2, minH: 1, maxH: 1 },
- { id: "action_hub", type: "action_hub", title: "Action Hub", enabled: true, minW: 2, minH: 2, maxH: 4 },
- { id: "rocks", type: "rocks", title: "My Rocks", enabled: true, minW: 2, minH: 2, maxH: 6 },
- { id: "tasks", type: "tasks", title: "Assigned Tasks", enabled: true, minW: 2, minH: 2, maxH: 6 },
- { id: "stats", type: "stats", title: "Stats Overview", enabled: true, minW: 2, minH: 1, maxH: 2 },
- { id: "productivity", type: "productivity", title: "Productivity", enabled: true, minW: 2, minH: 1, maxH: 2 },
- { id: "eod_calendar", type: "eod_calendar", title: "Weekly EOD Calendar", enabled: true, minW: 2, minH: 2, maxH: 4 },
- { id: "eod_submission", type: "eod_submission", title: "EOD Submission", enabled: true, minW: 2, minH: 3, maxH: 6 },
- { id: "focus", type: "focus", title: "Focus Timer", enabled: true, minW: 1, minH: 2, maxH: 4 },
- { id: "activity", type: "activity", title: "Activity Feed", enabled: true, minW: 2, minH: 2, maxH: 4 },
+ { id: "welcome", type: "welcome", title: "Welcome & Quick Actions", enabled: true, minW: 2, minH: 2, maxH: 5 },
+ { id: "eod_status", type: "eod_status", title: "EOD Status", enabled: true, minW: 2, minH: 2, maxH: 3 },
+ { id: "action_hub", type: "action_hub", title: "Action Hub", enabled: true, minW: 2, minH: 4, maxH: 10 },
+ { id: "rocks", type: "rocks", title: "My Rocks", enabled: true, minW: 2, minH: 5, maxH: 16 },
+ { id: "tasks", type: "tasks", title: "Assigned Tasks", enabled: true, minW: 2, minH: 5, maxH: 16 },
+ { id: "stats", type: "stats", title: "Stats Overview", enabled: true, minW: 2, minH: 3, maxH: 6 },
+ { id: "productivity", type: "productivity", title: "Productivity", enabled: true, minW: 2, minH: 3, maxH: 6 },
+ { id: "eod_calendar", type: "eod_calendar", title: "Weekly EOD Calendar", enabled: true, minW: 2, minH: 5, maxH: 12 },
+ { id: "eod_submission", type: "eod_submission", title: "EOD Submission", enabled: true, minW: 2, minH: 6, maxH: 16 },
+ { id: "focus", type: "focus", title: "Focus Timer", enabled: true, minW: 1, minH: 5, maxH: 10 },
+ { id: "activity", type: "activity", title: "Activity Feed", enabled: true, minW: 2, minH: 4, maxH: 10 },
 ]
 
-// Default layout — 4-column grid
+// Default bento layout — 4 columns, rowHeight=40px
+// Designed to look like a polished dashboard out of the box
 export const DEFAULT_LAYOUT: LayoutItem[] = [
- { i: "welcome", x: 0, y: 0, w: 4, h: 1 },
- { i: "eod_status", x: 0, y: 1, w: 4, h: 1 },
- { i: "action_hub", x: 0, y: 2, w: 4, h: 2 },
- { i: "rocks", x: 0, y: 4, w: 2, h: 3 },
- { i: "tasks", x: 2, y: 4, w: 2, h: 3 },
- { i: "stats", x: 0, y: 7, w: 4, h: 1 },
- { i: "productivity", x: 0, y: 8, w: 4, h: 1 },
- { i: "eod_calendar", x: 0, y: 9, w: 2, h: 3 },
- { i: "eod_submission", x: 2, y: 9, w: 2, h: 3 },
- { i: "focus", x: 0, y: 12, w: 2, h: 2 },
- { i: "activity", x: 2, y: 12, w: 2, h: 2 },
+ { i: "welcome", x: 0, y: 0, w: 4, h: 3 },      // ~152px — header + quick actions
+ { i: "eod_status", x: 0, y: 3, w: 4, h: 2 },    // ~96px  — status bar
+ { i: "action_hub", x: 0, y: 5, w: 4, h: 6 },     // ~320px — AI suggestions
+ { i: "rocks", x: 0, y: 11, w: 2, h: 10 },         // ~544px — rock list
+ { i: "tasks", x: 2, y: 11, w: 2, h: 10 },         // ~544px — task list
+ { i: "stats", x: 0, y: 21, w: 4, h: 4 },          // ~208px — stat cards
+ { i: "productivity", x: 0, y: 25, w: 4, h: 4 },   // ~208px — streaks/achievements
+ { i: "eod_calendar", x: 0, y: 29, w: 2, h: 9 },   // ~488px — calendar
+ { i: "eod_submission", x: 2, y: 29, w: 2, h: 10 }, // ~544px — EOD form
+ { i: "focus", x: 0, y: 39, w: 2, h: 7 },           // ~376px — timer
+ { i: "activity", x: 2, y: 38, w: 2, h: 7 },        // ~376px — feed
 ]
 
 function getWidgetIcon(type: DashboardWidget["type"]) {
@@ -294,7 +295,7 @@ export function CustomizableLayout({
     className="layout"
     layout={enabledLayout as unknown as RGLLayout[]}
     cols={4}
-    rowHeight={100}
+    rowHeight={40}
     width={containerWidth}
     onLayoutChange={handleLayoutChange}
     isDraggable={isEditing}
