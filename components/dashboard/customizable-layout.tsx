@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef, useEffect } from "react"
+import { useState, useCallback, useRef, useEffect, useMemo } from "react"
 import ReactGridLayout, { Layout } from "react-grid-layout"
 
 // Cast to any to avoid type definition mismatches with react-grid-layout v2.x
@@ -433,6 +433,17 @@ export function SimpleDashboardLayout({
  )
 }
 
+// Map widget types to the feature key they require (if any)
+const WIDGET_FEATURE_MAP: Record<string, string> = {
+ rocks: "core.rocks",
+ tasks: "core.tasks",
+ eod_status: "core.eodReports",
+ eod_calendar: "core.eodReports",
+ eod_submission: "core.eodReports",
+ focus: "productivity.focusBlocks",
+ productivity: "productivity.streakTracking",
+}
+
 // Hook for managing dashboard layout state with localStorage persistence
 export function useDashboardLayout(
  initialWidgets: DashboardWidget[] = DEFAULT_WIDGETS,
@@ -442,26 +453,8 @@ export function useDashboardLayout(
 ) {
  const storageKey = workspaceId ? `dashboard-layout-${workspaceId}` : null
 
- // Filter widgets by enabled features
- const filteredDefaults = enabledFeatures
-  ? initialWidgets.filter((w) => {
-     // Map widget types to feature keys
-     const featureMap: Record<string, string> = {
-      rocks: "core.rocks",
-      tasks: "core.tasks",
-      eod_status: "core.eodReports",
-      eod_calendar: "core.eodReports",
-      eod_submission: "core.eodReports",
-      focus: "productivity.focusBlocks",
-      productivity: "productivity.streakTracking",
-     }
-     const requiredFeature = featureMap[w.type]
-     if (!requiredFeature) return true // no feature gate
-     return enabledFeatures.includes(requiredFeature)
-    })
-  : initialWidgets
-
- // Load saved state from localStorage (or use defaults)
+ // State always holds ALL widgets (not filtered by features).
+ // Feature filtering happens at display time via useMemo.
  const [widgets, setWidgets] = useState<DashboardWidget[]>(() => {
   if (storageKey && typeof window !== "undefined") {
    try {
@@ -469,9 +462,9 @@ export function useDashboardLayout(
     if (saved) {
      const parsed = JSON.parse(saved)
      if (parsed.widgets && Array.isArray(parsed.widgets)) {
-      // Merge saved state with current defaults (handles new widgets added since save)
+      // Merge saved enabled/disabled with current defaults (handles new widget types)
       const savedMap = new Map<string, DashboardWidget>(parsed.widgets.map((w: DashboardWidget) => [w.id, w]))
-      return filteredDefaults.map((def) => {
+      return initialWidgets.map((def) => {
        const savedWidget = savedMap.get(def.id)
        return savedWidget ? { ...def, enabled: savedWidget.enabled } : def
       })
@@ -481,7 +474,7 @@ export function useDashboardLayout(
     // Invalid saved data, use defaults
    }
   }
-  return filteredDefaults
+  return initialWidgets
  })
 
  const [layout, setLayout] = useState<LayoutItem[]>(() => {
@@ -503,56 +496,42 @@ export function useDashboardLayout(
 
  const [isEditing, setIsEditing] = useState(false)
 
- // Re-filter when features change
- useEffect(() => {
-  if (!enabledFeatures) return
-  setWidgets((prev) => {
-   const featureMap: Record<string, string> = {
-    rocks: "core.rocks",
-    tasks: "core.tasks",
-    eod_status: "core.eodReports",
-    eod_calendar: "core.eodReports",
-    eod_submission: "core.eodReports",
-    focus: "productivity.focusBlocks",
-    productivity: "productivity.streakTracking",
-   }
-   return prev.filter((w) => {
-    const requiredFeature = featureMap[w.type]
-    if (!requiredFeature) return true
-    return enabledFeatures.includes(requiredFeature)
-   })
+ // Filter widgets by workspace features at display time (non-destructive)
+ const visibleWidgets = useMemo(() => {
+  if (!enabledFeatures || enabledFeatures.length === 0) return widgets
+  return widgets.filter((w) => {
+   const requiredFeature = WIDGET_FEATURE_MAP[w.type]
+   if (!requiredFeature) return true // no feature gate
+   return enabledFeatures.includes(requiredFeature)
   })
- }, [enabledFeatures])
+ }, [widgets, enabledFeatures])
 
  const handleWidgetToggle = useCallback((widgetId: string, enabled: boolean) => {
   setWidgets((prev) =>
    prev.map((w) => (w.id === widgetId ? { ...w, enabled } : w))
   )
 
-  // Add to layout if enabling
+  // Add layout entry if enabling a widget that has no position yet
   if (enabled) {
-   setWidgets((current) => {
-    const widget = current.find((w) => w.id === widgetId)
-    if (widget) {
-     setLayout((prevLayout) => {
-      if (prevLayout.some((l) => l.i === widgetId)) return prevLayout
-      const maxY = Math.max(...prevLayout.map((l) => l.y + l.h), 0)
-      return [
-       ...prevLayout,
-       {
-        i: widgetId,
-        x: 0,
-        y: maxY,
-        w: widget.minW || 2,
-        h: widget.minH || 2,
-       },
-      ]
-     })
-    }
-    return current
-   })
+   const widgetDef = initialWidgets.find((w) => w.id === widgetId)
+   if (widgetDef) {
+    setLayout((prevLayout) => {
+     if (prevLayout.some((l) => l.i === widgetId)) return prevLayout
+     const maxY = Math.max(...prevLayout.map((l) => l.y + l.h), 0)
+     return [
+      ...prevLayout,
+      {
+       i: widgetId,
+       x: 0,
+       y: maxY,
+       w: widgetDef.minW || 2,
+       h: widgetDef.minH || 2,
+      },
+     ]
+    })
+   }
   }
- }, [])
+ }, [initialWidgets])
 
  const handleLayoutChange = useCallback((newLayout: LayoutItem[]) => {
   setLayout(newLayout)
@@ -565,15 +544,15 @@ export function useDashboardLayout(
  }, [storageKey, widgets, layout])
 
  const handleReset = useCallback(() => {
-  setWidgets(filteredDefaults)
+  setWidgets(initialWidgets)
   setLayout(initialLayout)
   if (storageKey && typeof window !== "undefined") {
    localStorage.removeItem(storageKey)
   }
- }, [filteredDefaults, initialLayout, storageKey])
+ }, [initialWidgets, initialLayout, storageKey])
 
  return {
-  widgets,
+  widgets: visibleWidgets,
   layout,
   isEditing,
   setIsEditing,
