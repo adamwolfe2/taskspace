@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
-import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle, Search, FileText, BookOpen, UserCheck, FolderKanban, Building2, Briefcase } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle, Search, FileText, BookOpen, UserCheck, FolderKanban, Building2, Briefcase, Activity } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
@@ -58,6 +58,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     { id: "admin", label: "Admin Dashboard", icon: Shield },
     { id: "admin-team", label: "Team Management", icon: Users, requiredFeature: "admin.teamManagement" },
     { id: "admin-database", label: "Database Management", icon: Database, requiredFeature: "admin.databaseManagement" },
+    { id: "admin-api", label: "API Usage", icon: Activity },
   ]
 
   // Filter nav items based on enabled features

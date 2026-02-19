@@ -65,6 +65,10 @@ const AdminDatabasePage = dynamic(
   () => import("@/components/pages/admin-database-page").then(mod => ({ default: mod.AdminDatabasePage })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
+const AdminApiPage = dynamic(
+  () => import("@/components/pages/admin-api-page").then(mod => ({ default: mod.AdminApiPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
 const CommandCenterPage = dynamic(
   () => import("@/components/pages/command-center-page").then(mod => ({ default: mod.CommandCenterPage })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
@@ -330,6 +334,13 @@ function AppContent() {
         if (isDemoMode) return <DashboardPage {...dashboardProps} />
         return isAdmin ? (
           <AdminDatabasePage />
+        ) : (
+          <DashboardPage {...dashboardProps} />
+        )
+      case "admin-api":
+        if (isDemoMode) return <DashboardPage {...dashboardProps} />
+        return isAdmin ? (
+          <AdminApiPage />
         ) : (
           <DashboardPage {...dashboardProps} />
         )
