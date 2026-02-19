@@ -522,7 +522,7 @@ export const api = {
 
     async getByToken(token: string) {
       const response = await fetchWithRetry(`${API_BASE}/invitations/accept?token=${token}`)
-      return handleResponse<{ invitation: Invitation; existingUser: boolean; organizationName: string }>(response)
+      return handleResponse<{ email: string; organizationName: string; role: string; department: string; existingUser: boolean }>(response)
     },
 
     async accept(token: string, name?: string, password?: string) {

@@ -37,10 +37,10 @@ export function AcceptInvitationPage({ token }: AcceptInvitationPageProps) {
       try {
         const data = await api.invitations.getByToken(token)
         setInvitation({
-          email: data.invitation.email,
+          email: data.email,
           organizationName: data.organizationName,
-          role: data.invitation.role,
-          department: data.invitation.department,
+          role: data.role,
+          department: data.department,
           existingUser: data.existingUser,
         })
       } catch (err: unknown) {
