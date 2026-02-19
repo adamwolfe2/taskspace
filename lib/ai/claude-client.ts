@@ -4,7 +4,7 @@
  */
 
 import { PROMPTS } from "./prompts"
-import { logger, logError } from "@/lib/logger"
+import { logger } from "@/lib/logger"
 import type {
   EODReport,
   TeamMember,
@@ -20,11 +20,6 @@ import type {
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 const MODEL = "claude-sonnet-4-20250514"
 const MAX_TOKENS = 4096
-
-interface ClaudeMessage {
-  role: "user" | "assistant"
-  content: string
-}
 
 interface ClaudeResponse {
   id: string
@@ -142,22 +137,6 @@ async function callClaudeWithUsage(
 }
 
 /**
- * Make a request to the Claude API (returns text only, usage discarded)
- * @deprecated Use callClaudeWithUsage instead for proper credit tracking
- */
-async function callClaude(
-  systemPrompt: string,
-  userMessage: string,
-  options?: {
-    maxTokens?: number
-    temperature?: number
-  }
-): Promise<string> {
-  const result = await callClaudeWithUsage(systemPrompt, userMessage, options)
-  return result.text
-}
-
-/**
  * Make a request to the Claude API and return both parsed result and usage
  * Used by all AI functions that need credit tracking
  */
@@ -196,7 +175,7 @@ function parseClaudeJSON<T>(text: string): T {
 
   try {
     return JSON.parse(cleaned) as T
-  } catch (error) {
+  } catch {
     logger.error({ responseText: text }, "Failed to parse Claude response")
     throw new Error("Failed to parse AI response as JSON")
   }

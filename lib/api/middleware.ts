@@ -462,8 +462,8 @@ function enforceApiKeyScopes(request: NextRequest, auth: AuthContext): NextRespo
  */
 export function withWorkspaceAccess(
   handler: WorkspaceHandler<ApiResponse<unknown>>
-): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
-  return async (request: NextRequest, context?: RouteContext) => {
+): (request: NextRequest, _context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
+  return async (request: NextRequest, _context?: RouteContext) => {
     try {
       if (!verifyCsrfHeader(request)) {
         return NextResponse.json<ApiResponse<null>>(

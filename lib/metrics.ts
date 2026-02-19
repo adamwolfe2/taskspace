@@ -117,7 +117,7 @@ export function formatDateString(date: Date): string {
 /**
  * Parse date string to Date object (internal use)
  */
-function parseDateString(dateStr: string): Date {
+function _parseDateString(dateStr: string): Date {
   const [year, month, day] = dateStr.split('-').map(Number)
   return new Date(year, month - 1, day)
 }

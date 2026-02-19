@@ -119,7 +119,7 @@ const fetcher = async (url: string) => {
 // ============================================
 
 export function useWorkspaces() {
-  const { currentWorkspaceId, currentWorkspace, setCurrentWorkspace, setCurrentWorkspaceId, clearWorkspace } =
+  const { currentWorkspaceId, currentWorkspace, setCurrentWorkspace, setCurrentWorkspaceId: _setCurrentWorkspaceId, clearWorkspace } =
     useWorkspaceStore()
 
   const hasInitialized = useRef(false)
@@ -341,7 +341,7 @@ interface UpdateWorkspaceParams {
 }
 
 export function useUpdateWorkspace() {
-  const { refresh, switchWorkspace } = useWorkspaces()
+  const { refresh, switchWorkspace: _switchWorkspace } = useWorkspaces()
 
   const updateWorkspace = async (
     workspaceId: string,

@@ -9,7 +9,6 @@ import type {
   ValidationResult,
   ImportError,
   ImportWarning,
-  NormalizedUser,
 } from '../types'
 
 export abstract class BaseImporter {

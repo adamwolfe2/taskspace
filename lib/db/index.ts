@@ -27,7 +27,6 @@ import type {
   GoogleCalendarEventMapping,
   FocusBlock,
   DailyEnergy,
-  UserStreak,
   FocusBlockCategory,
   EnergyLevel,
   MoodEmoji,
@@ -41,16 +40,6 @@ import type {
   UserAchievement,
 } from "../types"
 import type { PaginationParams } from "../utils/pagination"
-
-// Helper to convert snake_case DB rows to camelCase
-function toCamelCase<T>(row: Record<string, unknown>): T {
-  const result: Record<string, unknown> = {}
-  for (const key in row) {
-    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
-    result[camelKey] = row[key]
-  }
-  return result as T
-}
 
 // Helper to parse JSONB fields
 function parseUser(row: Record<string, unknown>): User {
@@ -1288,7 +1277,6 @@ export const db = {
       )
     },
     async update(id: string, updates: { text?: string; completed?: boolean; position?: number }): Promise<boolean> {
-      const completedAt = updates.completed ? "NOW()" : null
       const { rowCount } = await sql`
         UPDATE rock_milestones SET
           text = COALESCE(${updates.text || null}, text),
@@ -1312,12 +1300,12 @@ export const db = {
 
   // Tasks (deprecated stubs - assigned_tasks is used instead)
   tasks: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async findByOrganizationId(orgId: string): Promise<any[]> {
+     
+    async findByOrganizationId(_orgId: string): Promise<any[]> {
       return []
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async findByUserId(userId: string, orgId: string): Promise<any[]> {
+
+    async findByUserId(_userId: string, _orgId: string): Promise<any[]> {
       return []
     },
   },
@@ -3416,7 +3404,7 @@ export const db = {
       if (lastDate) {
         // Calculate working days difference
         const diffTime = todayDate.getTime() - lastDate.getTime()
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+        const _diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
         // Check if it's a consecutive working day (accounting for weekends)
         let workingDaysDiff = 0

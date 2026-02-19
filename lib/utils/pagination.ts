@@ -96,7 +96,7 @@ export function decodeCursor(cursor: string): DecodedCursor | null {
  */
 export function buildCursorFilter(
   cursor: string | undefined,
-  direction: "asc" | "desc" = "desc",
+  _direction: "asc" | "desc" = "desc",
   _timestampColumn: string = "created_at"
 ): DecodedCursor | null {
   if (!cursor) return null

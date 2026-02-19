@@ -8,7 +8,7 @@
 "use client"
 
 import { useEffect, useMemo } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useWorkspaces } from "./use-workspace"
 import type { WorkspaceFeatureKey, WorkspaceFeatureToggles } from "@/lib/types/workspace-features"
 import { DEFAULT_WORKSPACE_FEATURES } from "@/lib/types/workspace-features"
@@ -18,8 +18,6 @@ import { DEFAULT_WORKSPACE_FEATURES } from "@/lib/types/workspace-features"
  */
 export function useWorkspaceFeatures() {
   const { currentWorkspace, isLoading } = useWorkspaces()
-  const router = useRouter()
-  const pathname = usePathname()
 
   // Get features for current workspace (client-side safe)
   const features = useMemo(() => {

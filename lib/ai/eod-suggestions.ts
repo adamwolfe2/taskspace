@@ -5,9 +5,9 @@
  * Part of SESSION 4A: AI Inbox with Budget Controls
  */
 
-import { createSuggestion, createSuggestions, type CreateSuggestionParams } from "./suggestions"
+import { createSuggestions, type CreateSuggestionParams } from "./suggestions"
 import { AI_CREDIT_COSTS } from "./credits"
-import type { EODInsight, EODReport, TeamMember } from "@/lib/types"
+import type { EODInsight, EODReport } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 interface GenerateSuggestionsParams {

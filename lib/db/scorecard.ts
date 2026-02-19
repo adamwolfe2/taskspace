@@ -265,7 +265,7 @@ export async function createMetric(params: CreateMetricParams): Promise<Scorecar
     createdBy = null,
   } = params
 
-  const { rows } = await sql`
+  const { rows: _rows } = await sql`
     INSERT INTO scorecard_metrics (
       id, workspace_id, name, description, owner_id, target_value,
       target_direction, unit, frequency, display_order, created_by

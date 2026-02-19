@@ -736,7 +736,7 @@ export function buildConsolidatedDigestMessage(
  */
 export function buildEODReminderMessage(
   missingMemberNames: string[],
-  organizationName: string
+  _organizationName: string
 ): SlackMessage {
   const blocks: SlackBlock[] = [
     {

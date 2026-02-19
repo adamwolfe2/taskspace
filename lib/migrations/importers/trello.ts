@@ -148,7 +148,7 @@ export class TrelloImporter extends BaseImporter {
 
     // Success - return metadata
     const trelloData = data as TrelloExport
-    const activeLists = trelloData.lists?.filter((l) => !l.closed) || []
+    const _activeLists = trelloData.lists?.filter((l) => !l.closed) || []
     const activeCards = trelloData.cards?.filter((c) => !c.closed) || []
 
     return {

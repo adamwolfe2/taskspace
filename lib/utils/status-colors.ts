@@ -11,8 +11,6 @@
 import {
   getDynamicStatusColors,
   getDynamicPriorityColors,
-  getEnergyLevelColors as getDynamicEnergyColors,
-  getFocusScoreColors as getDynamicFocusColors,
 } from "./dynamic-status-colors"
 
 export type RockStatus = "on-track" | "at-risk" | "blocked" | "completed"

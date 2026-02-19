@@ -3,7 +3,7 @@
  * Handles all Stripe API interactions
  */
 
-import { getStripeConfig, STRIPE_PRICE_IDS, PLAN_FEATURES } from "./stripe-config"
+import { getStripeConfig, STRIPE_PRICE_IDS } from "./stripe-config"
 import type Stripe from "stripe"
 
 // Dynamic import for Stripe to handle cases where it's not installed
@@ -22,7 +22,7 @@ async function getStripeClient(): Promise<Stripe> {
     try {
       const stripeModule = await import("stripe")
       StripeClient = stripeModule.default as StripeConstructor
-    } catch (error) {
+    } catch {
       throw new Error("Stripe package not installed. Run: npm install stripe")
     }
   }
@@ -128,7 +128,7 @@ export async function getOrCreateCustomer(
       if (!customer.deleted) {
         return customer
       }
-    } catch (error) {
+    } catch {
       // Customer not found, create new one
     }
   }

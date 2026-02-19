@@ -232,15 +232,12 @@ export function validateEnv(): ValidationResult {
 
   for (const feature of ALL_FEATURES) {
     const missing: string[] = []
-    let featureEnabled = true
-
     for (const [varName, config] of Object.entries(feature.vars)) {
       const value = process.env[varName]
 
       if (!value) {
         if (config.required) {
           errors.push(`Missing required env var: ${varName} - ${config.description}`)
-          featureEnabled = false
         } else {
           missing.push(varName)
         }

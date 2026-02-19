@@ -182,7 +182,7 @@ export function isTokenEncrypted(token: string | null | undefined): boolean {
  */
 export function validateEncryptionKey(): { isValid: boolean; error?: string } {
   try {
-    const key = getEncryptionKey()
+    getEncryptionKey()
 
     // Test encryption/decryption with a sample token
     const testToken = "test_token_" + crypto.randomBytes(16).toString("hex")

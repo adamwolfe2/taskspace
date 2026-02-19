@@ -78,10 +78,10 @@ async function generateMemberDigest(
   report: EODReport | null,
   rocks: Rock[],
   tasks: AssignedTask[],
-  isAdmin: boolean
+  _isAdmin: boolean
 ): Promise<MemberDigest> {
   const memberRocks = rocks.filter(r => r.userId === member.id)
-  const completedTasks = tasks.filter(
+  const _completedTasks = tasks.filter(
     t => t.assigneeId === member.id && t.status === "completed"
   )
 

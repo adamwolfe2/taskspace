@@ -96,7 +96,7 @@ export function getCurrentTimeInTimezone(timezone: string = "America/Los_Angeles
       minute: "2-digit",
       hour12: true,
     })
-  } catch (_error) {
+  } catch {
     return now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
   }
 }

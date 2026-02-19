@@ -5,7 +5,7 @@
  * based on their subscription plan and usage limits.
  */
 
-import { PLANS, PlanTier, AI_OPERATION_COSTS, getPlanById } from "./plans"
+import { PlanTier, AI_OPERATION_COSTS, getPlanById } from "./plans"
 
 export interface FeatureGateContext {
   organizationId: string

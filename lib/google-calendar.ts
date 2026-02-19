@@ -3,7 +3,7 @@
 import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
 import { logger, logError } from "@/lib/logger"
-import type { GoogleCalendarToken, GoogleCalendarEventMapping, AssignedTask, Rock } from "@/lib/types"
+import type { AssignedTask, Rock } from "@/lib/types"
 import { encryptToken, decryptToken } from "@/lib/crypto/token-encryption"
 
 // OAuth configuration

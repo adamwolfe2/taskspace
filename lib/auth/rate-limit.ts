@@ -357,7 +357,7 @@ const ORG_RATE_LIMITS: Record<string, number> = {
   team: 10000,
   business: 50000,
 }
-const ORG_RATE_WINDOW_MS = 60 * 60 * 1000 // 1 hour
+const _ORG_RATE_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
 /**
  * Check org-level API rate limit (sync, in-memory).

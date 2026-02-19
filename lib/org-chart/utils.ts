@@ -1,4 +1,4 @@
-import type { OrgChartEmployee, OrgChartEmployeeNode, ParsedRock, AvatarColor, AVATAR_COLORS } from "./types"
+import type { OrgChartEmployee, OrgChartEmployeeNode, ParsedRock, AvatarColor } from "./types"
 
 /**
  * Get initials from a full name
@@ -328,7 +328,7 @@ export function findRelevantEmployees(
 
   // Check if query is asking about reporting relationships
   const reportsToMatch = queryLower.match(/(?:reports?\s+to|under|managed\s+by|supervisor\s+(?:of|is))\s+([a-z]+(?:\s+[a-z]+)?)/i)
-  const managesMatch = queryLower.match(/(?:who\s+(?:does|do)|(?:direct\s+)?reports?\s+(?:of|to))\s+([a-z]+(?:\s+[a-z]+)?)\s+(?:manage|supervise|lead)/i)
+  const _managesMatch = queryLower.match(/(?:who\s+(?:does|do)|(?:direct\s+)?reports?\s+(?:of|to))\s+([a-z]+(?:\s+[a-z]+)?)\s+(?:manage|supervise|lead)/i)
 
   return employees
     .map(emp => {

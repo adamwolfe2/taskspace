@@ -159,7 +159,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCurrentOrganization(null)
         setCurrentPage("login")
       }
-    } catch (err) {
+    } catch {
       // Session doesn't exist or expired - that's ok
       setCurrentUser(null)
       setCurrentOrganization(null)
@@ -254,7 +254,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!isDemoMode) {
         await api.auth.logout()
       }
-    } catch (err) {
+    } catch {
       // Ignore logout errors
     } finally {
       setCurrentUser(null)

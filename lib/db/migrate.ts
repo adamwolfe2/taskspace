@@ -66,7 +66,7 @@ export async function checkMigrationStatus(): Promise<MigrationStatus> {
       lastApplied,
       lastAppliedAt,
     }
-  } catch (error) {
+  } catch {
     // If pgmigrations doesn't exist, no migrations have been run
     return {
       applied: [],

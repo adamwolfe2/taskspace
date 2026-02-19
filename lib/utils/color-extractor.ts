@@ -245,7 +245,7 @@ export async function extractColorsFromImage(
           .slice(0, 15) // Top 15 colors for more options
 
         // Find the best brand color using scoring system
-        let primaryRgb: RGB = { r: 59, g: 130, b: 246 } // Default blue
+        let _primaryRgb: RGB = { r: 59, g: 130, b: 246 } // Default blue
         let primaryHsl: HSL = { h: 217, s: 91, l: 60 }
         let bestScore = 0
 
@@ -261,7 +261,7 @@ export async function extractColorsFromImage(
 
             if (score > bestScore) {
               bestScore = score
-              primaryRgb = rgb
+              _primaryRgb = rgb
               primaryHsl = hsl
             }
           }
@@ -270,7 +270,7 @@ export async function extractColorsFromImage(
         // If no viable color was found (very rare), use the most frequent color anyway
         if (bestScore === 0 && sortedColors.length > 0) {
           const { rgb } = sortedColors[0]
-          primaryRgb = rgb
+          _primaryRgb = rgb
           primaryHsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
         }
 
@@ -600,8 +600,8 @@ export function validateColorAccessibility(
   meetsAAA: boolean
   recommendation?: string
 } {
-  const fgHsl = hexToHsl(foreground)
-  const bgHsl = hexToHsl(background)
+  const _fgHsl = hexToHsl(foreground)
+  const _bgHsl = hexToHsl(background)
 
   const fgLuminance = getLuminance(
     parseInt(foreground.slice(1, 3), 16),

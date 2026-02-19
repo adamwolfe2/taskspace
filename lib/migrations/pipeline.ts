@@ -11,10 +11,7 @@ import type {
   ValidationResult,
   ImportError,
   ChunkProcessingResult,
-  NormalizedTask,
-  NormalizedProject,
   NormalizedWorkspace,
-  UserMapping,
 } from './types'
 
 // ========================================

@@ -5,7 +5,7 @@
  * Falls back to default semantic colors when no workspace theme is set.
  */
 
-import { lighten, darken, adjustOpacity, generateColorVariants } from "./color-helpers"
+import { lighten, darken, adjustOpacity } from "./color-helpers"
 
 export type StatusType =
   | "on-track"

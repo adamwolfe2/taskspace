@@ -225,7 +225,7 @@ class AuditLogger {
           ${entry.timestamp || new Date().toISOString()}
         )
       `
-    } catch (error) {
+    } catch {
       // If table doesn't exist yet, log via logger
       appLogger.error({ entry: JSON.stringify(entry) }, "Audit log insert failed")
     }
