@@ -500,85 +500,87 @@ export function ProjectsPage({
                 {editingProject ? "Update project details." : "Create a new project to track work."}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Name *</Label>
-                <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Project name" />
+            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+              <div className="space-y-4">
+                <div>
+                  <Label>Name *</Label>
+                  <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Project name" />
+                </div>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Brief description" rows={2} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Client</Label>
+                    <Select value={formClientId || "none"} onValueChange={(v) => setFormClientId(v === "none" ? "" : v)}>
+                      <SelectTrigger><SelectValue placeholder="No client" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {clients.filter(c => c.status === "active").map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Owner</Label>
+                    <Select value={formOwnerId || "none"} onValueChange={(v) => setFormOwnerId(v === "none" ? "" : v)}>
+                      <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Unassigned</SelectItem>
+                        {teamMembers.filter(m => m.status === "active" && m.userId).map(m => (
+                          <SelectItem key={m.userId!} value={m.userId!}>{m.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Status</Label>
+                    <Select value={formStatus} onValueChange={(v) => setFormStatus(v as Project["status"])}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="planning">Planning</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="on-hold">On Hold</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Priority</Label>
+                    <Select value={formPriority} onValueChange={(v) => setFormPriority(v as Project["priority"])}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Start Date</Label>
+                    <Input type="date" value={formStartDate} onChange={(e) => setFormStartDate(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Due Date</Label>
+                    <Input type="date" value={formDueDate} onChange={(e) => setFormDueDate(e.target.value)} />
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Brief description" rows={2} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Client</Label>
-                  <Select value={formClientId || "none"} onValueChange={(v) => setFormClientId(v === "none" ? "" : v)}>
-                    <SelectTrigger><SelectValue placeholder="No client" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {clients.filter(c => c.status === "active").map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Owner</Label>
-                  <Select value={formOwnerId || "none"} onValueChange={(v) => setFormOwnerId(v === "none" ? "" : v)}>
-                    <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Unassigned</SelectItem>
-                      {teamMembers.filter(m => m.status === "active" && m.userId).map(m => (
-                        <SelectItem key={m.userId!} value={m.userId!}>{m.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Status</Label>
-                  <Select value={formStatus} onValueChange={(v) => setFormStatus(v as Project["status"])}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planning">Planning</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="on-hold">On Hold</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Priority</Label>
-                  <Select value={formPriority} onValueChange={(v) => setFormPriority(v as Project["priority"])}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Start Date</Label>
-                  <Input type="date" value={formStartDate} onChange={(e) => setFormStartDate(e.target.value)} />
-                </div>
-                <div>
-                  <Label>Due Date</Label>
-                  <Input type="date" value={formDueDate} onChange={(e) => setFormDueDate(e.target.value)} />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
-              <Button onClick={handleSubmit} disabled={!formName.trim() || isSubmitting}>
-                {isSubmitting ? "Saving..." : editingProject ? "Save Changes" : "Create Project"}
-              </Button>
-            </DialogFooter>
+              <DialogFooter className="mt-4">
+                <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+                <Button type="submit" disabled={!formName.trim() || isSubmitting}>
+                  {isSubmitting ? "Saving..." : editingProject ? "Save Changes" : "Create Project"}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
 

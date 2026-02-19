@@ -332,64 +332,66 @@ export function ClientsPage({
                 {editingClient ? "Update client details." : "Add a new client to your workspace."}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Name *</Label>
-                <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Client name" />
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Brief description" rows={2} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+              <div className="space-y-4">
                 <div>
-                  <Label>Contact Name</Label>
-                  <Input value={formContactName} onChange={(e) => setFormContactName(e.target.value)} placeholder="John Doe" />
+                  <Label>Name *</Label>
+                  <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Client name" />
                 </div>
                 <div>
-                  <Label>Contact Email</Label>
-                  <Input type="email" value={formContactEmail} onChange={(e) => setFormContactEmail(e.target.value)} placeholder="john@example.com" />
+                  <Label>Description</Label>
+                  <Textarea value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Brief description" rows={2} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Contact Name</Label>
+                    <Input value={formContactName} onChange={(e) => setFormContactName(e.target.value)} placeholder="John Doe" />
+                  </div>
+                  <div>
+                    <Label>Contact Email</Label>
+                    <Input type="email" value={formContactEmail} onChange={(e) => setFormContactEmail(e.target.value)} placeholder="john@example.com" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Phone</Label>
+                    <Input value={formContactPhone} onChange={(e) => setFormContactPhone(e.target.value)} placeholder="(555) 123-4567" />
+                  </div>
+                  <div>
+                    <Label>Industry</Label>
+                    <Input value={formIndustry} onChange={(e) => setFormIndustry(e.target.value)} placeholder="Real Estate" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Website</Label>
+                    <Input value={formWebsite} onChange={(e) => setFormWebsite(e.target.value)} placeholder="https://example.com" />
+                  </div>
+                  <div>
+                    <Label>Status</Label>
+                    <Select value={formStatus} onValueChange={(v) => setFormStatus(v as Client["status"])}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="prospect">Prospect</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Notes</Label>
+                  <Textarea value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Additional notes..." rows={2} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Phone</Label>
-                  <Input value={formContactPhone} onChange={(e) => setFormContactPhone(e.target.value)} placeholder="(555) 123-4567" />
-                </div>
-                <div>
-                  <Label>Industry</Label>
-                  <Input value={formIndustry} onChange={(e) => setFormIndustry(e.target.value)} placeholder="Real Estate" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Website</Label>
-                  <Input value={formWebsite} onChange={(e) => setFormWebsite(e.target.value)} placeholder="https://example.com" />
-                </div>
-                <div>
-                  <Label>Status</Label>
-                  <Select value={formStatus} onValueChange={(v) => setFormStatus(v as Client["status"])}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="prospect">Prospect</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label>Notes</Label>
-                <Textarea value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Additional notes..." rows={2} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
-              <Button onClick={handleSubmit} disabled={!formName.trim() || isSubmitting}>
-                {isSubmitting ? "Saving..." : editingClient ? "Save Changes" : "Add Client"}
-              </Button>
-            </DialogFooter>
+              <DialogFooter className="mt-4">
+                <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+                <Button type="submit" disabled={!formName.trim() || isSubmitting}>
+                  {isSubmitting ? "Saving..." : editingClient ? "Save Changes" : "Add Client"}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
 
