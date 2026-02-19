@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useApp } from "@/lib/contexts/app-context"
+import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -84,6 +85,8 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
       const data = await response.json()
 
       if (data.success) {
+        // Clear stale workspace state before reload so the new org's default workspace gets selected
+        useWorkspaceStore.getState().clearWorkspace()
         // Refresh the entire app state
         await refreshSession()
         // Force a page reload to ensure all data is fresh
