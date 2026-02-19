@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -69,6 +69,27 @@ interface ScrapedBrand {
   tagline: string | null
 }
 
+const STORAGE_KEY = "taskspace_onboarding_state"
+const STORAGE_VERSION = 1
+
+interface PersistedOnboardingState {
+  version: number
+  currentStep: number
+  websiteUrl: string
+  hasScraped: boolean
+  scrapedBrand: ScrapedBrand | null
+  orgName: string
+  orgSlug: string
+  orgDescription: string
+  primaryColor: string
+  secondaryColor: string
+  accentColor: string
+  logoUrl: string
+  faviconUrl: string
+  teamInvites: Array<{ email: string; role: "admin" | "manager" | "member"; name?: string }>
+  rocks: Array<{ title: string; description: string }>
+}
+
 const STEPS = [
   { id: 1, name: "Website", optional: true },
   { id: 2, name: "Organization", optional: false },
@@ -76,38 +97,106 @@ const STEPS = [
   { id: 4, name: "Goals", optional: true },
 ]
 
+function loadPersistedState(): PersistedOnboardingState | null {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (!saved) return null
+    const parsed = JSON.parse(saved) as PersistedOnboardingState
+    if (parsed.version !== STORAGE_VERSION) {
+      localStorage.removeItem(STORAGE_KEY)
+      return null
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
 export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardProps) {
-  const [currentStep, setCurrentStep] = useState(1)
+  // Load persisted state once on mount
+  const [savedState] = useState(() => loadPersistedState())
+  const hasRestoredRef = useRef(false)
+
+  const [currentStep, setCurrentStep] = useState(() => savedState?.currentStep ?? 1)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Step 1: Website scrape
-  const [websiteUrl, setWebsiteUrl] = useState("")
+  const [websiteUrl, setWebsiteUrl] = useState(() => savedState?.websiteUrl ?? "")
   const [isScraping, setIsScraping] = useState(false)
   const [scrapeError, setScrapeError] = useState("")
-  const [scrapedBrand, setScrapedBrand] = useState<ScrapedBrand | null>(null)
-  const [hasScraped, setHasScraped] = useState(false)
+  const [scrapedBrand, setScrapedBrand] = useState<ScrapedBrand | null>(() => savedState?.scrapedBrand ?? null)
+  const [hasScraped, setHasScraped] = useState(() => savedState?.hasScraped ?? false)
 
   // Step 2: Organization (auto-populated from scrape)
-  const [orgName, setOrgName] = useState("")
-  const [orgSlug, setOrgSlug] = useState("")
-  const [orgDescription, setOrgDescription] = useState("")
+  const [orgName, setOrgName] = useState(() => savedState?.orgName ?? "")
+  const [orgSlug, setOrgSlug] = useState(() => savedState?.orgSlug ?? "")
+  const [orgDescription, setOrgDescription] = useState(() => savedState?.orgDescription ?? "")
 
   // Brand colors (auto-populated from scrape)
-  const [primaryColor, setPrimaryColor] = useState("#3b82f6")
-  const [secondaryColor, setSecondaryColor] = useState("#60a5fa")
-  const [accentColor, setAccentColor] = useState("#8b5cf6")
-  const [logoUrl, setLogoUrl] = useState("")
-  const [faviconUrl, setFaviconUrl] = useState("")
+  const [primaryColor, setPrimaryColor] = useState(() => savedState?.primaryColor ?? "#3b82f6")
+  const [secondaryColor, setSecondaryColor] = useState(() => savedState?.secondaryColor ?? "#60a5fa")
+  const [accentColor, setAccentColor] = useState(() => savedState?.accentColor ?? "#8b5cf6")
+  const [logoUrl, setLogoUrl] = useState(() => savedState?.logoUrl ?? "")
+  const [faviconUrl, setFaviconUrl] = useState(() => savedState?.faviconUrl ?? "")
 
   // Step 3: Team invites
-  const [teamInvites, setTeamInvites] = useState<Array<{ email: string; role: "admin" | "manager" | "member"; name?: string }>>([])
+  const [teamInvites, setTeamInvites] = useState<Array<{ email: string; role: "admin" | "manager" | "member"; name?: string }>>(() => savedState?.teamInvites ?? [])
   const [newInviteEmail, setNewInviteEmail] = useState("")
   const [emailError, setEmailError] = useState("")
 
   // Step 4: First rock/goal
-  const [rocks, setRocks] = useState<Array<{ title: string; description: string }>>([])
+  const [rocks, setRocks] = useState<Array<{ title: string; description: string }>>(() => savedState?.rocks ?? [])
   const [newRockTitle, setNewRockTitle] = useState("")
   const [newRockDescription, setNewRockDescription] = useState("")
+
+  // Persist state to localStorage on changes
+  useEffect(() => {
+    // Skip the very first render if we just restored from localStorage
+    // to avoid an unnecessary write-back of the same data
+    if (!hasRestoredRef.current && savedState) {
+      hasRestoredRef.current = true
+      return
+    }
+    hasRestoredRef.current = true
+
+    try {
+      const state: PersistedOnboardingState = {
+        version: STORAGE_VERSION,
+        currentStep,
+        websiteUrl,
+        hasScraped,
+        scrapedBrand,
+        orgName,
+        orgSlug,
+        orgDescription,
+        primaryColor,
+        secondaryColor,
+        accentColor,
+        logoUrl,
+        faviconUrl,
+        teamInvites,
+        rocks,
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    } catch {
+      // Ignore storage errors (quota exceeded, etc.)
+    }
+  }, [
+    currentStep,
+    websiteUrl,
+    hasScraped,
+    scrapedBrand,
+    orgName,
+    orgSlug,
+    orgDescription,
+    primaryColor,
+    secondaryColor,
+    accentColor,
+    logoUrl,
+    faviconUrl,
+    teamInvites,
+    rocks,
+  ])
 
   // Auto-generate slug from org name
   const handleOrgNameChange = (name: string) => {
@@ -276,6 +365,12 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
         teamInvites,
         rocks,
       })
+      // Clear persisted onboarding state on successful completion
+      try {
+        localStorage.removeItem(STORAGE_KEY)
+      } catch {
+        // Ignore storage errors
+      }
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Setup failed. Please try again.")
       setIsSubmitting(false)
@@ -1031,7 +1126,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
         {/* Bottom helper text */}
         <p className="text-center text-xs text-slate-400 mt-4">
           All settings can be changed later. Need help?{" "}
-          <a href="mailto:team@collectivecapital.com" className="underline hover:text-slate-600">
+          <a href="mailto:team@trytaskspace.com" className="underline hover:text-slate-600">
             Contact support
           </a>
         </p>
