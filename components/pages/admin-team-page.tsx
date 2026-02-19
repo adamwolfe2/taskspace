@@ -335,6 +335,15 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       })
       return
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(newMemberData.email.trim())) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      })
+      return
+    }
 
     try {
       setIsSubmitting(true)

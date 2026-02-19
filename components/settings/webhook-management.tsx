@@ -123,6 +123,17 @@ export function WebhookManagement() {
       return
     }
 
+    try {
+      const url = new URL(formUrl.trim())
+      if (url.protocol !== 'https:') {
+        toast({ title: "Invalid URL", description: "Webhook URL must use HTTPS", variant: "destructive" })
+        return
+      }
+    } catch {
+      toast({ title: "Invalid URL", description: "Please enter a valid URL", variant: "destructive" })
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const res = await fetch("/api/webhooks", {

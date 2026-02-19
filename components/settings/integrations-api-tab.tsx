@@ -671,10 +671,7 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
           </div>
 
           <div className="text-center text-xs text-muted-foreground">
-            For manual setup instructions, see the{" "}
-            <a href="/mcp-server/README.md" className="underline" target="_blank">
-              MCP Server README
-            </a>
+            For manual setup instructions, see the MCP Server documentation.
           </div>
         </CardContent>
       </Card>

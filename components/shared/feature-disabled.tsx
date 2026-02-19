@@ -50,7 +50,7 @@ export function FeatureDisabled({
             {isAdmin ? (
               <>
                 <Button asChild>
-                  <Link href="/settings?tab=features">
+                  <Link href="/app?page=settings">
                     <Settings className="h-4 w-4 mr-2" />
                     Enable in Settings
                   </Link>
