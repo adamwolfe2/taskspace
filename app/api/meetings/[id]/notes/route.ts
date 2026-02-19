@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
-import type { RouteContext } from "@/lib/api/middleware"
+
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -8,7 +8,6 @@ import { updateMeetingNotesSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import { isTerminalState } from "@/lib/api/meetings"
 import type { ApiResponse } from "@/lib/types"
-import type { SectionType } from "@/lib/db/meetings"
 
 // GET /api/meetings/[id]/notes - Get all notes for a meeting
 export const GET = withAuth(async (request, auth, context?) => {

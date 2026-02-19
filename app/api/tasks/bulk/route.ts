@@ -210,7 +210,7 @@ async function bulkComplete(
           WHERE id = ${id} AND organization_id = ${organizationId}
         `
         processed++
-      } catch (error) {
+      } catch {
         errors.push(`Failed to complete task ${id}`)
         skipped++
       }
@@ -236,7 +236,7 @@ async function bulkDelete(
           WHERE id = ${id} AND organization_id = ${organizationId}
         `
         processed++
-      } catch (error) {
+      } catch {
         errors.push(`Failed to delete task ${id}`)
       }
     }
@@ -279,7 +279,7 @@ async function bulkReassign(
           WHERE id = ${id} AND organization_id = ${organizationId}
         `
         processed++
-      } catch (error) {
+      } catch {
         errors.push(`Failed to reassign task ${id}`)
         skipped++
       }
@@ -315,7 +315,7 @@ async function bulkChangePriority(
           WHERE id = ${id} AND organization_id = ${organizationId}
         `
         processed++
-      } catch (error) {
+      } catch {
         errors.push(`Failed to change priority for task ${id}`)
         skipped++
       }
@@ -351,7 +351,7 @@ async function bulkChangeDueDate(
           WHERE id = ${id} AND organization_id = ${organizationId}
         `
         processed++
-      } catch (error) {
+      } catch {
         errors.push(`Failed to change due date for task ${id}`)
         skipped++
       }

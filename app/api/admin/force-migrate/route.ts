@@ -38,50 +38,50 @@ export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
     const r1 = await sql`UPDATE rocks SET workspace_id = ${wsId} WHERE organization_id = ${orgId} AND (workspace_id IS NULL OR workspace_id != ${wsId})`
     results.rocks = r1.rowCount || 0
     total += results.rocks
-  } catch (_e) { results.rocks_error = -1 }
+  } catch { results.rocks_error = -1 }
 
   try {
     const r2 = await sql`UPDATE assigned_tasks SET workspace_id = ${wsId} WHERE organization_id = ${orgId} AND (workspace_id IS NULL OR workspace_id != ${wsId})`
     results.tasks = r2.rowCount || 0
     total += results.tasks
-  } catch (_e) { results.tasks_error = -1 }
+  } catch { results.tasks_error = -1 }
 
   try {
     const r3 = await sql`UPDATE eod_reports SET workspace_id = ${wsId} WHERE organization_id = ${orgId} AND (workspace_id IS NULL OR workspace_id != ${wsId})`
     results.eod = r3.rowCount || 0
     total += results.eod
-  } catch (_e) { results.eod_error = -1 }
+  } catch { results.eod_error = -1 }
 
   try {
     const r4 = await sql`UPDATE meetings SET workspace_id = ${wsId} WHERE organization_id = ${orgId} AND (workspace_id IS NULL OR workspace_id != ${wsId})`
     results.meetings = r4.rowCount || 0
     total += results.meetings
-  } catch (_e) { results.meetings_error = -1 }
+  } catch { results.meetings_error = -1 }
 
   // User-based tables
   try {
     const r5 = await sql`UPDATE focus_blocks SET workspace_id = ${wsId} WHERE user_id IN (SELECT user_id FROM organization_members WHERE organization_id = ${orgId}) AND (workspace_id IS NULL OR workspace_id != ${wsId})`
     results.focus_blocks = r5.rowCount || 0
     total += results.focus_blocks
-  } catch (_e) { results.focus_blocks_error = -1 }
+  } catch { results.focus_blocks_error = -1 }
 
   try {
     const r6 = await sql`UPDATE daily_energy SET workspace_id = ${wsId} WHERE user_id IN (SELECT user_id FROM organization_members WHERE organization_id = ${orgId}) AND (workspace_id IS NULL OR workspace_id != ${wsId})`
     results.daily_energy = r6.rowCount || 0
     total += results.daily_energy
-  } catch (_e) { results.daily_energy_error = -1 }
+  } catch { results.daily_energy_error = -1 }
 
   try {
     const r7 = await sql`UPDATE user_streaks SET workspace_id = ${wsId} WHERE user_id IN (SELECT user_id FROM organization_members WHERE organization_id = ${orgId}) AND (workspace_id IS NULL OR workspace_id != ${wsId})`
     results.user_streaks = r7.rowCount || 0
     total += results.user_streaks
-  } catch (_e) { results.user_streaks_error = -1 }
+  } catch { results.user_streaks_error = -1 }
 
   try {
     const r8 = await sql`UPDATE focus_score_history SET workspace_id = ${wsId} WHERE user_id IN (SELECT user_id FROM organization_members WHERE organization_id = ${orgId}) AND (workspace_id IS NULL OR workspace_id != ${wsId})`
     results.focus_score_history = r8.rowCount || 0
     total += results.focus_score_history
-  } catch (_e) { results.focus_score_history_error = -1 }
+  } catch { results.focus_score_history_error = -1 }
 
   logger.info({ orgId, wsId, total, results }, "Force-migrated data to default workspace")
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { withAuth, withUserAuth } from "@/lib/api/middleware"
+import { withUserAuth } from "@/lib/api/middleware"
 import { getAuthContext } from "@/lib/auth/middleware"
 import type { ApiResponse, TeamMember } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"

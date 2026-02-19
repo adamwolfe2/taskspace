@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { maEmployeeCreateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { asanaClient } from "@/lib/integrations/asana"
 import { logger, logError } from "@/lib/logger"
 import { withAuth } from "@/lib/api/middleware"
@@ -8,7 +8,7 @@ import type { ApiResponse } from "@/lib/types"
  * GET /api/asana/projects?workspace=<workspaceGid>
  * Get all projects in a workspace
  */
-export const GET = withAuth(async (request, auth) => {
+export const GET = withAuth(async (request, _auth) => {
   try {
     const { searchParams } = new URL(request.url)
     const workspaceGid = searchParams.get("workspace")

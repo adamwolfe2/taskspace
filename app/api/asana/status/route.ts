@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { asanaClient } from "@/lib/integrations/asana"
 import { logger, logError } from "@/lib/logger"
 import { withAuth } from "@/lib/api/middleware"
@@ -24,7 +24,7 @@ interface AsanaStatusData {
  * GET /api/asana/status
  * Check Asana connection status and get current user info
  */
-export const GET = withAuth(async (request, auth) => {
+export const GET = withAuth(async (_request, _auth) => {
   try {
     // Check if Asana is configured
     if (!asanaClient.isConfigured()) {
@@ -59,7 +59,7 @@ export const GET = withAuth(async (request, auth) => {
           })),
         },
       })
-    } catch (error) {
+    } catch {
       return NextResponse.json<ApiResponse<AsanaStatusData>>({
         success: true,
         data: {

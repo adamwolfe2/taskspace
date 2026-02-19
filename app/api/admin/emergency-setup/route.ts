@@ -165,7 +165,7 @@ export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
           VALUES (${workspaceId}, ${member.user_id}, ${memberRole})
           ON CONFLICT (workspace_id, user_id) DO NOTHING
         `
-      } catch (_error) {
+      } catch {
         // Expected: member may already exist in workspace, skip duplicates
       }
     }

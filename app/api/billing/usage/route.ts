@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getUserWorkspaces } from "@/lib/db/workspaces"
 import { PLANS, type PlanTier } from "@/lib/billing/plans"

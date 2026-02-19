@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
-import type { RouteContext } from "@/lib/api/middleware"
+
 import { isAdmin } from "@/lib/auth/middleware"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { addWorkspaceMemberSchema } from "@/lib/validation/schemas"

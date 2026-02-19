@@ -182,7 +182,7 @@ async function validateImportJob(
       message: `Validation complete. Found ${validationResult.metadata?.estimatedItems || 0} items.`,
       metadata: validationResult.metadata,
     })
-  } catch (error) {
+  } catch {
     await db.migrations.importJobs.update(jobId, {
       status: 'failed',
       errors: [

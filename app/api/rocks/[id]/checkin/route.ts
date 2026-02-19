@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
-import type { RouteContext } from "@/lib/api/middleware"
+
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { getRockById, createRockCheckin, getWeekStart } from "@/lib/db/rocks"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"

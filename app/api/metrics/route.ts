@@ -17,7 +17,7 @@ import {
   type TeamMemberMetric,
 } from "@/lib/metrics"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { metricsCreateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 

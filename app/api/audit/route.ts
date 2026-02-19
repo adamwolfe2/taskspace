@@ -7,11 +7,10 @@
  * - Real-time audit event streaming
  */
 
-import { NextRequest } from "next/server"
 import { sql } from "@/lib/db/sql"
 import { Errors, paginatedResponse, successResponse } from "@/lib/api/errors"
 import { z } from "zod"
-import { validateBody, validateQuery, ValidationError } from "@/lib/validation/middleware"
+import { validateBody, validateQuery } from "@/lib/validation/middleware"
 import { auditSummarySchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 import { withAdmin } from "@/lib/api/middleware"

@@ -5,7 +5,7 @@ import { isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { generateId } from "@/lib/auth/password"
 import type { TaskTemplate, ApiResponse } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { taskTemplateCreateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 

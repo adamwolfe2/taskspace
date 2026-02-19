@@ -1035,7 +1035,7 @@ Task ID: ${taskId}`,
       {
         taskType: z.string().optional().describe("Optional: Type of task to find best assignee for"),
       },
-      async ({ taskType }) => {
+      async ({ taskType: _taskType }) => {
         const auth = await getAuthContext()
         if (!auth) {
           return { content: [{ type: "text", text: "Authentication required" }] }

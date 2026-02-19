@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
-import type { ApiResponse, EODReport } from "@/lib/types"
+import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { withAdmin } from "@/lib/api/middleware"
 

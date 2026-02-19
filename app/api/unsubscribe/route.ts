@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     }
 
     return renderUnsubscribePage()
-  } catch (error) {
+  } catch {
     // Still show success to prevent info leakage
     return renderUnsubscribePage()
   }

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
-import type { RouteContext } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { sql } from "@/lib/db/sql"
@@ -8,7 +7,6 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateAgendaSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
-import type { SectionType } from "@/lib/db/meetings"
 
 // GET /api/meetings/[id]/agenda - Get meeting agenda
 export const GET = withAuth(async (request, auth, context?) => {

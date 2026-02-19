@@ -9,7 +9,7 @@
 import { NextResponse } from "next/server"
 import { isAdmin } from "@/lib/auth/middleware"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
-import type { RouteContext } from "@/lib/api/middleware"
+
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
 import { getMetricById, updateMetric, deleteMetric } from "@/lib/db/scorecard"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"

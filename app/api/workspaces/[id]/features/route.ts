@@ -16,7 +16,6 @@ import {
   getWorkspaceById,
   updateWorkspace,
   userHasWorkspaceAccess,
-  type Workspace,
 } from "@/lib/db/workspaces"
 import {
   getWorkspaceFeatureConfig,
@@ -25,7 +24,7 @@ import {
   type WorkspaceFeatureToggles,
   type WorkspaceFeatureConfig,
 } from "@/lib/auth/workspace-features"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { workspaceFeaturesUpdateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 

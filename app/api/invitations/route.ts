@@ -37,7 +37,7 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
     // Validate request body
-    const { email, role, department, workspaceId, name: _name } = await validateBody(request, inviteMemberSchema)
+    const { email, role, department } = await validateBody(request, inviteMemberSchema)
 
     // Pre-flight checks (can do outside transaction)
     const existingUser = await db.users.findByEmail(email)

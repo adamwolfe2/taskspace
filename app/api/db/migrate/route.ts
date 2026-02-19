@@ -28,7 +28,7 @@ interface MigrationStatusResponse {
  * Returns database migration status (admin only).
  * Does NOT run migrations - use CLI instead.
  */
-export const GET = withAdmin(async (request: NextRequest, auth) => {
+export const GET = withAdmin(async (_request: NextRequest, _auth) => {
   try {
     // Get database health and migration status
     const health = await getDatabaseHealth()

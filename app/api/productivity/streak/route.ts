@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 import { isAdmin } from "@/lib/auth/middleware"
 import { withAuth } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
-import { getStreakMilestoneInfo } from "@/lib/productivity/calculations"
+
 import type { ApiResponse, UserStreak } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 

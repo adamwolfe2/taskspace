@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
-import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import { logger, logError } from "@/lib/logger"
@@ -167,7 +166,7 @@ export const POST = withAdmin(async (request, auth) => {
     let rows: CSVRow[]
     try {
       rows = parseCSV(content)
-    } catch (error) {
+    } catch {
       return NextResponse.json<UploadResult>({
         success: false,
         created: 0,

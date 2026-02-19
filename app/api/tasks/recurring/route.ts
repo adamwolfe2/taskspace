@@ -7,7 +7,6 @@
  * - Manually trigger task generation
  */
 
-import { NextResponse } from "next/server"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { Errors, successResponse } from "@/lib/api/errors"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"

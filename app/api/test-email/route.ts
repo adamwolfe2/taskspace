@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { testEmailSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -93,7 +93,7 @@ export const POST = withAdmin(async (request, auth) => {
 })
 
 // GET /api/test-email - Get email configuration status (debug)
-export const GET = withAdmin(async (request, auth) => {
+export const GET = withAdmin(async (_request, _auth) => {
   // Production guard
   if (process.env.NODE_ENV === "production" && !process.env.ALLOW_ADMIN_DANGEROUS_OPS) {
     return NextResponse.json({ success: false, error: "This endpoint is disabled in production" }, { status: 403 })
@@ -115,7 +115,7 @@ export const GET = withAdmin(async (request, auth) => {
         appUrlConfigured: !!process.env.NEXT_PUBLIC_APP_URL,
       },
     })
-  } catch (error: unknown) {
+  } catch {
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "An error occurred" },
       { status: 500 }

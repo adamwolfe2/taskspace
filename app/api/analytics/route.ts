@@ -89,7 +89,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 
     // Generate daily intervals
     const days = eachDayOfInterval({ start: startDate, end: now })
-    const _dateLabels = days.map((day) => format(day, "MMM dd"))
+    // Date labels are generated inline in the chart data below
 
     // 1. ROCK COMPLETION TREND
     const rockCompletionData = days.map((day) => {

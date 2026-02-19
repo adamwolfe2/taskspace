@@ -20,7 +20,7 @@ interface ExecutiveSummaryData {
 }
 
 // GET /api/super-admin/executive-summary — AI-generated daily briefing across all orgs
-export const GET = withSuperAdmin(async (request: NextRequest) => {
+export const GET = withSuperAdmin(async (_request: NextRequest) => {
   try {
     if (!isClaudeConfigured()) {
       return NextResponse.json<ApiResponse<null>>(

@@ -94,16 +94,9 @@ export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
 
     let migratedRecords = 0
 
-    const _tables = [
-      'assigned_tasks',
-      'rocks',
-      'eod_reports',
-      'meetings',
-      'focus_blocks',
-      'daily_energy',
-      'user_streaks',
-      'focus_score_history'
-    ]
+    // Tables to migrate (used by the queries below)
+    // 'assigned_tasks', 'rocks', 'eod_reports', 'meetings',
+    // 'focus_blocks', 'daily_energy', 'user_streaks', 'focus_score_history'
 
     // Org-based tables
     const tasksResult = await sql`

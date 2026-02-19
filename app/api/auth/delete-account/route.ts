@@ -19,7 +19,7 @@ const deleteAccountSchema = z.object({
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
     // Validate request body
-    const { password, confirmationText } = await validateBody(request, deleteAccountSchema)
+    const { password } = await validateBody(request, deleteAccountSchema)
 
     // Get the user with password hash from database
     // Note: auth.user may not include passwordHash for security, so we query directly

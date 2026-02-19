@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     // SECURITY FIX: No preflight checks - all validation inside transaction to prevent TOCTOU race
     // Execute in transaction with row-level locking to ensure idempotency
-    const userId = await withTransaction(async (client) => {
+    await withTransaction(async (client) => {
       const now = new Date().toISOString()
 
       // CRITICAL: Lock the reset token row with FOR UPDATE to prevent concurrent processing

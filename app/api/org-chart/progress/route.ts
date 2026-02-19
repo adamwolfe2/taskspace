@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAuth } from "@/lib/api/middleware"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { orgChartProgressSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // GET - Fetch all rock progress or for a specific employee
-export const GET = withAuth(async (request, auth) => {
+export const GET = withAuth(async (request, _auth) => {
   try {
     const { searchParams } = new URL(request.url)
     const employeeName = searchParams.get("employeeName")
@@ -60,7 +60,7 @@ export const POST = withAuth(async (request, auth) => {
 })
 
 // DELETE - Delete progress for an employee (when rocks are changed)
-export const DELETE = withAuth(async (request, auth) => {
+export const DELETE = withAuth(async (request, _auth) => {
   try {
     const { searchParams } = new URL(request.url)
     const employeeName = searchParams.get("employeeName")

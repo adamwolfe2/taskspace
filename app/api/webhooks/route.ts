@@ -7,13 +7,11 @@
  * - View delivery history and retry failed deliveries
  */
 
-import { NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
-import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
-import { Errors, successResponse, paginatedResponse } from "@/lib/api/errors"
+import { Errors, successResponse } from "@/lib/api/errors"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
-import { logIntegrationEvent, logSecurityEvent } from "@/lib/audit/logger"
+import { logIntegrationEvent } from "@/lib/audit/logger"
 import { z } from "zod"
 import crypto from "crypto"
 import { logger, logError } from "@/lib/logger"

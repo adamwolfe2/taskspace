@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { updateEmployeeRocks } from "@/lib/org-chart/airtable"
 import { withAuth } from "@/lib/api/middleware"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { orgChartEmployeeRocksSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"

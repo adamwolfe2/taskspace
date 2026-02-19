@@ -7,7 +7,7 @@ import { logger, logError } from "@/lib/logger"
 // POST - Seed the database with all MA employees
 // This will clear existing employees and insert fresh data
 // ADMIN ONLY - requires authentication
-export const POST = withAdmin(async (request, auth) => {
+export const POST = withAdmin(async (request, _auth) => {
   // Block test data seeding in production unless explicitly allowed
   if (process.env.NODE_ENV === "production" && !process.env.ALLOW_ADMIN_DANGEROUS_OPS) {
     return NextResponse.json({ success: false, error: "This operation is disabled in production" }, { status: 403 })
@@ -63,7 +63,7 @@ export const POST = withAdmin(async (request, auth) => {
 })
 
 // GET - Check current employee count (admin only)
-export const GET = withAdmin(async (request, auth) => {
+export const GET = withAdmin(async (request, _auth) => {
   try {
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")

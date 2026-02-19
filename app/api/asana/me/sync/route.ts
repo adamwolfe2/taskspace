@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import { db } from "@/lib/db"

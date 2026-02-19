@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { logger, logError } from "@/lib/logger"
 import { withAuth } from "@/lib/api/middleware"
 import { aiRateLimit, RATE_LIMITS } from "@/lib/api/rate-limit"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { crossWorkspaceTaskCreateSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 

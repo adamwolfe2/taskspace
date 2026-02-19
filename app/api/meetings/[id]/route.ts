@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
-import type { RouteContext } from "@/lib/api/middleware"
+
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -8,7 +8,7 @@ import { updateMeetingSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import { isTerminalState } from "@/lib/api/meetings"
 import type { ApiResponse } from "@/lib/types"
-import type { MeetingWithDetails, MeetingSection } from "@/lib/db/meetings"
+import type { MeetingWithDetails } from "@/lib/db/meetings"
 
 // GET /api/meetings/[id] - Get meeting with full details
 export const GET = withAuth(async (request, auth, context?) => {

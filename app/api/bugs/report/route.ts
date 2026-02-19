@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
 import type { ApiResponse } from "@/lib/types"
 

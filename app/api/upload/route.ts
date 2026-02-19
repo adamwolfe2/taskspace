@@ -54,7 +54,6 @@ export const POST = withAuth(async (request, auth) => {
 
     // Generate unique filename with org/user prefix for organization
     const fileId = generateId()
-    const extension = file.name.split(".").pop() || ""
     const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
     const blobPath = `${auth.organization.id}/${auth.user.id}/${fileId}-${safeFileName}`
 

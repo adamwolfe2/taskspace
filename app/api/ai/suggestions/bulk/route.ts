@@ -93,7 +93,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
               ? { type: result.createdEntity.type, id: result.createdEntity.id }
               : undefined,
           })
-        } catch (error) {
+        } catch {
           results.push({
             suggestionId: id,
             success: false,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAuth } from "@/lib/api/middleware"
 import type { ApiResponse } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { streakUpdateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 

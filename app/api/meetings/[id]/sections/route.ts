@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
-import type { RouteContext } from "@/lib/api/middleware"
+
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateMeetingSectionSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
-import type { MeetingSection, SectionType } from "@/lib/db/meetings"
+import type { MeetingSection } from "@/lib/db/meetings"
 
 // PATCH /api/meetings/[id]/sections - Update a section (start, complete, update data)
 export const PATCH = withAuth(async (request, auth, context?) => {

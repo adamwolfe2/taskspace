@@ -5,7 +5,7 @@ import { sendDailySummaryEmail, isEmailConfigured } from "@/lib/integrations/ema
 import { sendSlackMessage, buildConsolidatedDigestMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import { generateConsolidatedDigest, formatConsolidatedDigestHTML } from "@/lib/digest/daily-digest-generator"
 import { generateId } from "@/lib/auth/password"
-import type { ApiResponse, DailyDigest, TeamMember, EODInsight, Organization } from "@/lib/types"
+import type { ApiResponse, DailyDigest, TeamMember, Organization } from "@/lib/types"
 import { Resend } from "resend"
 import { logger, logError } from "@/lib/logger"
 import * as Sentry from "@sentry/nextjs"

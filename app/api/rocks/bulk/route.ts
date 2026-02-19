@@ -5,23 +5,9 @@ import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
 import { aiRateLimit, RATE_LIMITS } from "@/lib/api/rate-limit"
 import type { Rock, ApiResponse } from "@/lib/types"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { bulkRockCreateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
-
-interface BulkRockInput {
-  title: string
-  description: string
-  milestones: string[]
-  quarter?: string
-  dueDate?: string
-}
-
-interface MetricInput {
-  assigneeName: string
-  metricName: string
-  weeklyGoal: number
-}
 
 interface BulkCreateResponse {
   created: Rock[]

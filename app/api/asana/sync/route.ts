@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { asanaClient, AsanaTask } from "@/lib/integrations/asana"
 import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
 import type { AsanaUserMapping, AssignedTask, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { asanaSyncSchema } from "@/lib/validation/schemas"
 
 interface SyncResult {

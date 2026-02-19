@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { withAuth, type RouteContext } from "@/lib/api/middleware"
 import { peopleAssessments } from "@/lib/db/people-assessments"
-import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { validateBody } from "@/lib/validation/middleware"
 import { peopleAssessmentUpdateSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"

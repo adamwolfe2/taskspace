@@ -11,7 +11,7 @@ import type { ApiResponse } from "@/lib/types"
 import { logger } from "@/lib/logger"
 import { db as vercelDb } from "@vercel/postgres"
 
-export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
+export const POST = withDangerousAdmin(async (_request: NextRequest, _auth) => {
 
   try {
     logger.info("🚨 RUNNING DRAFT MEMBER ROCKS MIGRATION")

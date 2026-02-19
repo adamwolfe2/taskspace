@@ -4,7 +4,7 @@ import { checkAirtableConnection } from "@/lib/org-chart/airtable"
 import { withAuth } from "@/lib/api/middleware"
 import { logger, logError } from "@/lib/logger"
 
-export const GET = withAuth(async (request, auth) => {
+export const GET = withAuth(async (_request, _auth) => {
   try {
     // Check database for employees (primary source)
     let databaseConnected = false

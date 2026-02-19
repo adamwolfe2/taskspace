@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import {
-  getSubscription,
   updateSubscription,
   cancelSubscription,
   resumeSubscription,
@@ -115,7 +114,7 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
           }
         }
 
-        const updated = await updateSubscription(subscriptionId!, plan, billingCycle)
+        await updateSubscription(subscriptionId!, plan, billingCycle)
         return NextResponse.json<ApiResponse<{ message: string }>>({
           success: true,
           data: { message: "Subscription updated successfully" },

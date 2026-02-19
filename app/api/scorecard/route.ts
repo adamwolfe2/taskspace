@@ -167,7 +167,7 @@ export const PATCH = withAuth(async (request, auth) => {
     const metricId = metricResult.rows[0].id
 
     // Upsert the weekly metric entry
-    const result = await sql`
+    await sql`
       INSERT INTO weekly_metric_entries (id, team_member_id, metric_id, week_ending, actual_value, created_at, updated_at)
       VALUES (
         ${'wme_' + generateId()},

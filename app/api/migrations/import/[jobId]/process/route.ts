@@ -12,7 +12,6 @@ import type { ApiResponse } from '@/lib/types'
 import type {
   ProcessChunkRequest,
   ProcessChunkResponse,
-  NormalizedData,
 } from '@/lib/migrations/types'
 import { extract, normalize, map, load, calculateProgress } from '@/lib/migrations/pipeline'
 import { logger } from '@/lib/logger'

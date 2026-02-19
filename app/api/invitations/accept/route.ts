@@ -10,7 +10,7 @@ import {
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { acceptInvitationSchema } from "@/lib/validation/schemas"
 import { addWorkspaceMember, getDefaultWorkspace } from "@/lib/db/workspaces"
-import type { OrganizationMember, Session, ApiResponse, AuthResponse, User, Invitation } from "@/lib/types"
+import type { OrganizationMember, Session, ApiResponse, AuthResponse, User } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { withTransaction } from "@/lib/db/transactions"
 
@@ -320,7 +320,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Return response without password hash
-    const { passwordHash: _, ...safeUser } = result.user
+    const { passwordHash: _passwordHash, ...safeUser } = result.user
 
     const response = NextResponse.json<ApiResponse<AuthResponse>>({
       success: true,

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAuth } from "@/lib/api/middleware"
-import type { RouteContext } from "@/lib/api/middleware"
+
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateFocusBlockSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, FocusBlock } from "@/lib/types"

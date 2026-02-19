@@ -106,7 +106,7 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
     }
 
     return NextResponse.json({ success: true, data: status })
-  } catch (error) {
+  } catch {
     status.error = "Unknown error"
     return NextResponse.json({ success: false, data: status }, { status: 500 })
   }

@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
-export const POST = withOptionalAuth(async (request: NextRequest, auth) => {
+export const POST = withOptionalAuth(async (request: NextRequest, _auth) => {
   try {
     const sessionToken = request.cookies.get("session_token")?.value
 

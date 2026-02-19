@@ -3,25 +3,12 @@ import { db } from "@/lib/db"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateNotificationSchema } from "@/lib/validation/schemas"
-import type { Notification, NotificationType, ApiResponse } from "@/lib/types"
+import type { Notification, ApiResponse } from "@/lib/types"
 import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
 import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { sendNotification } from "@/lib/db/notifications"
 import { logger, logError } from "@/lib/logger"
 import { z } from "zod"
-
-const VALID_NOTIFICATION_TYPES: NotificationType[] = [
-  "task_assigned",
-  "task_completed",
-  "rock_updated",
-  "eod_reminder",
-  "escalation",
-  "invitation",
-  "mention",
-  "meeting_starting",
-  "issue_created",
-  "system",
-]
 
 // GET /api/notifications - Get user's notifications
 export const GET = withAuth(async (request: NextRequest, auth) => {
