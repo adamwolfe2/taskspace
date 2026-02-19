@@ -29,6 +29,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
   const [quarterFilter, setQuarterFilter] = useState<string>("all")
   const [isLoading, setIsLoading] = useState(false)
   const [deletingRockId, setDeletingRockId] = useState<string | null>(null)
+  const currentQuarter = `Q${Math.floor(new Date().getMonth() / 3) + 1} ${new Date().getFullYear()}`
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -36,7 +37,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
     outcome: "",
     doneWhen: [""],
     dueDate: "",
-    quarter: "Q1 2025",
+    quarter: currentQuarter,
   })
   const { toast } = useToast()
   const { currentWorkspace } = useWorkspaces()
@@ -57,7 +58,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
       outcome: rock.outcome || "",
       doneWhen: rock.doneWhen || [""],
       dueDate: rock.dueDate,
-      quarter: rock.quarter || "Q1 2025",
+      quarter: rock.quarter || currentQuarter,
     })
     setShowForm(true)
   }
@@ -79,7 +80,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
       outcome: "",
       doneWhen: [""],
       dueDate: "",
-      quarter: "Q1 2025",
+      quarter: currentQuarter,
     })
     setShowForm(true)
   }
@@ -476,6 +477,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
                               variant="ghost"
                               size="icon"
                               onClick={() => removeDoneWhenField(index)}
+                              aria-label="Remove criterion"
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -495,11 +497,19 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
                         <SelectValue placeholder="Select quarter" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Q4 2024">Q4 2024</SelectItem>
-                        <SelectItem value="Q1 2025">Q1 2025</SelectItem>
-                        <SelectItem value="Q2 2025">Q2 2025</SelectItem>
-                        <SelectItem value="Q3 2025">Q3 2025</SelectItem>
-                        <SelectItem value="Q4 2025">Q4 2025</SelectItem>
+                        {(() => {
+                          const now = new Date()
+                          const year = now.getFullYear()
+                          const options: string[] = []
+                          for (let y = year - 1; y <= year + 1; y++) {
+                            for (let q = 1; q <= 4; q++) {
+                              options.push(`Q${q} ${y}`)
+                            }
+                          }
+                          return options.map(opt => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))
+                        })()}
                       </SelectContent>
                     </Select>
                   </div>

@@ -3,6 +3,7 @@
 import { OnboardingWizard, type OnboardingData } from "@/components/onboarding/onboarding-wizard"
 import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 
 interface SetupOrganizationPageProps {
   mode?: "create" | "setup"
@@ -159,6 +160,7 @@ export function SetupOrganizationPage({ mode = "create" }: SetupOrganizationPage
   }
 
   return (
+    <ErrorBoundary>
     <OnboardingWizard
       onComplete={handleComplete}
       currentUser={{
@@ -166,5 +168,6 @@ export function SetupOrganizationPage({ mode = "create" }: SetupOrganizationPage
         name: currentUser?.name || "",
       }}
     />
+    </ErrorBoundary>
   )
 }

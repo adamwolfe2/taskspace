@@ -372,7 +372,7 @@ export function DirectReportDetailSheet({
 
             {/* Rock Summary */}
             {report.rocks.length > 0 && (
-              <div className="grid grid-cols-4 gap-2 mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
                 <div className="text-center p-2 rounded-lg bg-emerald-50">
                   <p className="text-lg font-bold text-emerald-600">{report.metrics.onTrackRocks}</p>
                   <p className="text-xs text-slate-500">On Track</p>

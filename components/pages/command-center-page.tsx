@@ -12,6 +12,7 @@ import { api } from "@/lib/api/client"
 import { useToast } from "@/hooks/use-toast"
 import { useApp } from "@/lib/contexts/app-context"
 import { getErrorMessage } from "@/lib/utils"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { Brain, Sparkles, MessageSquare, Calendar, AlertCircle, Zap, Mountain } from "lucide-react"
 import type {
   TeamMember,
@@ -58,8 +59,12 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
       if (data.success) {
         setPendingTasks(data.data || [])
       }
-    } catch (err) {
-      console.error("Failed to load pending tasks:", err)
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to load pending tasks",
+        variant: "destructive",
+      })
     } finally {
       setIsLoadingTasks(false)
     }
@@ -79,8 +84,12 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
       } else {
         setDigest(null)
       }
-    } catch (err) {
-      console.error("Failed to load digest:", err)
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to load digest",
+        variant: "destructive",
+      })
       setDigest(null)
     }
   }, [isDemoMode, selectedDate])
@@ -94,8 +103,12 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
       if (data.success) {
         setConversations(data.data || [])
       }
-    } catch (err) {
-      console.error("Failed to load conversations:", err)
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to load conversations",
+        variant: "destructive",
+      })
     }
   }, [isDemoMode])
 
@@ -286,6 +299,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
   }
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -402,5 +416,6 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
         </TabsContent>
       </Tabs>
     </div>
+    </ErrorBoundary>
   )
 }

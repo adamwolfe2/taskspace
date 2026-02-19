@@ -11,6 +11,7 @@ import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher"
 import { useToast } from "@/hooks/use-toast"
 import { BookOpen, ChevronDown, ChevronRight, Save, Loader2, Plus, X } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { DEMO_VTO, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 
 interface VTOData {
@@ -405,6 +406,7 @@ export function VTOPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       <NoWorkspaceAlert />
 
@@ -726,5 +728,6 @@ export function VTOPage() {
         </div>
       </CollapsibleSection>
     </div>
+    </ErrorBoundary>
   )
 }

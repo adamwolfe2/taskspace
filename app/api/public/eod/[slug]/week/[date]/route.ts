@@ -117,10 +117,12 @@ export async function GET(
 
     // Validate date format (YYYY-MM-DD) - should be a Thursday
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, error: "Invalid date format. Use YYYY-MM-DD" },
         { status: 400 }
       )
+      response.headers.set("X-Robots-Tag", "noindex, nofollow")
+      return response
     }
 
     // Calculate week range (Friday to Thursday)
@@ -139,10 +141,12 @@ export async function GET(
     `
 
     if (orgs.length === 0) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, error: "Organization not found" },
         { status: 404 }
       )
+      response.headers.set("X-Robots-Tag", "noindex, nofollow")
+      return response
     }
 
     const org = orgs[0]
@@ -157,10 +161,12 @@ export async function GET(
     const providedToken = searchParams.get("token")
     if (settings?.publicEodToken) {
       if (providedToken !== settings.publicEodToken) {
-        return NextResponse.json(
+        const response = NextResponse.json(
           { success: false, error: "Invalid or missing access token" },
           { status: 403 }
         )
+        response.headers.set("X-Robots-Tag", "noindex, nofollow")
+        return response
       }
     }
     // If no token configured, allow open access (original behavior)
@@ -461,6 +467,7 @@ export async function GET(
     // Add cache headers for 5 minute caching
     const headers = new Headers()
     headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600")
+    headers.set("X-Robots-Tag", "noindex, nofollow")
 
     // Include rate limit headers on successful responses
     const rlHeaders = ipRateLimitHeaders(rateLimitResult)
@@ -474,9 +481,11 @@ export async function GET(
     )
   } catch (error) {
     logError(logger, "Weekly EOD report error", error)
-    return NextResponse.json(
+    const response = NextResponse.json(
       { success: false, error: "Failed to load weekly report" },
       { status: 500 }
     )
+    response.headers.set("X-Robots-Tag", "noindex, nofollow")
+    return response
   }
 }

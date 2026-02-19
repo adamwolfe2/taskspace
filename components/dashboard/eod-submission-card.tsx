@@ -480,7 +480,7 @@ export function EODSubmissionCard({
                   className="flex-1 bg-white border-slate-200"
                 />
                 {tasks.length > 1 && (
-                  <Button variant="ghost" size="icon" className="text-slate-400 hover:text-red-500 hover:bg-red-50" onClick={() => removeTask(task.id)}>
+                  <Button variant="ghost" size="icon" className="text-slate-400 hover:text-red-500 hover:bg-red-50" onClick={() => removeTask(task.id)} aria-label="Remove task">
                     <X className="h-4 w-4" />
                   </Button>
                 )}
@@ -639,6 +639,7 @@ export function EODSubmissionCard({
                         setTomorrowPriorities(tomorrowPriorities.filter((p) => p.id !== priority.id))
                       }
                     }}
+                    aria-label="Remove priority"
                   >
                     <X className="h-4 w-4" />
                   </Button>

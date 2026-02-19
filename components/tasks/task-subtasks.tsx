@@ -109,6 +109,7 @@ export function TaskSubtasks({
  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-red-500"
  onClick={() => onDelete(subtask.id)}
  disabled={disabled}
+ aria-label="Delete subtask"
  >
  <Trash2 className="h-3.5 w-3.5" />
  </Button>

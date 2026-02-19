@@ -103,7 +103,7 @@ export function WorkspaceDashboard() {
     return (
       <Card>
         <CardContent className="py-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" role="status" aria-label="Loading" />
         </CardContent>
       </Card>
     )

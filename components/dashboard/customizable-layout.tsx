@@ -343,6 +343,7 @@ export function CustomizableLayout({
            size="icon"
            className="h-6 w-6"
            onClick={() => onWidgetToggle(widget.id, false)}
+           aria-label="Remove widget"
           >
            <X className="h-3.5 w-3.5" />
           </Button>
@@ -358,7 +359,7 @@ export function CustomizableLayout({
    ) : (
     /* ── Default Mode: Native CSS Grid — always reliable, no JS width measurement ── */
     <div
-     className="grid grid-cols-4 gap-4"
+     className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
      style={{ gridAutoRows: '40px' }}
     >
      {sortedWidgets.map((widget) => {

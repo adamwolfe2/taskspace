@@ -1,3 +1,5 @@
+import { withSentryConfig } from "@sentry/nextjs"
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Remove console.logs in production for security and performance
@@ -101,4 +103,19 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  // Upload source maps to Sentry for better error debugging
+  silent: true, // Suppress logs during build
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Only upload source maps in production builds
+  disableSourceMapUpload: !process.env.SENTRY_AUTH_TOKEN,
+
+  // Hide source maps from the client bundle
+  hideSourceMaps: true,
+
+  // Automatically instrument API routes and server components
+  autoInstrumentServerFunctions: true,
+  autoInstrumentMiddleware: true,
+})

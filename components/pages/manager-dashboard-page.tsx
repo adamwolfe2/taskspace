@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast"
 import { getDemoManagerDashboard, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 import { cn } from "@/lib/utils"
 import { useManagerAiInsights } from "@/lib/hooks/use-ai-insights"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 import type { TeamMember, ManagerDashboard, DirectReport, ManagerAlert } from "@/lib/types"
 import {
   Users,
@@ -167,7 +168,7 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
         {/* Skeleton loading state */}
         <div className="space-y-6">
           <Skeleton className="h-8 w-1/4" />
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-24 rounded-xl" />
             ))}
@@ -222,6 +223,7 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
   const { teamSummary, directReports, insights } = dashboard
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -247,6 +249,7 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
             onClick={fetchDashboard}
             disabled={isRefreshing}
             className="shrink-0"
+            aria-label="Refresh dashboard"
           >
             <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
           </Button>
@@ -470,7 +473,7 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <h2 className="text-lg font-semibold text-slate-900">Direct Reports</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="relative flex-1 sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
@@ -481,7 +484,7 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
               />
             </div>
             <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as typeof filterStatus)}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -497,6 +500,7 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => setViewMode("grid")}
+                aria-label="Grid view"
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
@@ -505,6 +509,7 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => setViewMode("list")}
+                aria-label="List view"
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -629,5 +634,6 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
         }}
       />
     </div>
+    </ErrorBoundary>
   )
 }

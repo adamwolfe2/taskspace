@@ -210,7 +210,7 @@ export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
           {onBack && (
-            <Button variant="ghost" size="icon" onClick={onBack}>
+            <Button variant="ghost" size="icon" onClick={onBack} aria-label="Go back">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}

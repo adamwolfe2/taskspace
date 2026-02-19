@@ -99,14 +99,14 @@ export function DailyReportShare({
         {/* Date Selector */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={goToPreviousDay}>
+            <Button variant="ghost" size="icon" onClick={goToPreviousDay} aria-label="Previous day">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-2 min-w-[200px] justify-center">
               <Calendar className="h-4 w-4 text-slate-400" />
               <span className="text-sm font-medium">{displayDate}</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={goToNextDay}>
+            <Button variant="ghost" size="icon" onClick={goToNextDay} aria-label="Next day">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

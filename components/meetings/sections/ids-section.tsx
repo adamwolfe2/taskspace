@@ -308,6 +308,7 @@ export function IDSSection({
                     className="h-5 w-5"
                     onClick={() => handleMovePriority(issue.id, "up")}
                     disabled={idx === 0}
+                    aria-label="Move up"
                   >
                     <ChevronUp className="h-3 w-3" />
                   </Button>
@@ -317,6 +318,7 @@ export function IDSSection({
                     className="h-5 w-5"
                     onClick={() => handleMovePriority(issue.id, "down")}
                     disabled={idx === openIssues.length - 1}
+                    aria-label="Move down"
                   >
                     <ChevronDown className="h-3 w-3" />
                   </Button>

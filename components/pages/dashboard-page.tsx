@@ -13,6 +13,7 @@ import { ActionHub } from "@/components/dashboard/action-hub"
 import { EODStatusBar } from "@/components/dashboard/eod-status-bar"
 import { ProductivityBar } from "@/components/dashboard/productivity-bar"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
+import { useToast } from "@/hooks/use-toast"
 import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { calculateUserStats } from "@/lib/utils/stats-calculator"
@@ -76,6 +77,7 @@ export function DashboardPage({
  const { currentOrganization } = useApp()
  const { isFeatureEnabled, enabledFeatures } = useWorkspaceFeatures()
  const { currentWorkspaceId } = useWorkspaces()
+ const { toast } = useToast()
 
  // Feature toggles
  const hasTasksFeature = isFeatureEnabled("core.tasks")
@@ -131,8 +133,12 @@ export function DashboardPage({
    if (!wasCompleted) {
     triggerConfetti("task_complete")
    }
-  } catch (err) {
-   console.error("Failed to toggle task:", err)
+  } catch {
+   toast({
+    title: "Error",
+    description: "Failed to toggle task",
+    variant: "destructive",
+   })
   }
  }
 
@@ -143,8 +149,12 @@ export function DashboardPage({
  const handleUpdateProgress = async (rockId: string, progress: number) => {
   try {
    await updateRock(rockId, { progress })
-  } catch (err) {
-   console.error("Failed to update rock progress:", err)
+  } catch {
+   toast({
+    title: "Error",
+    description: "Failed to update rock progress",
+    variant: "destructive",
+   })
   }
  }
 
@@ -152,7 +162,11 @@ export function DashboardPage({
   try {
    await submitEODReport(report)
   } catch (err) {
-   console.error("Failed to submit EOD report:", err)
+   toast({
+    title: "Error",
+    description: "Failed to submit EOD report",
+    variant: "destructive",
+   })
    throw err
   }
  }
@@ -180,7 +194,11 @@ export function DashboardPage({
     recurrence: taskData.recurrence,
    })
   } catch (err) {
-   console.error("Failed to create task:", err)
+   toast({
+    title: "Error",
+    description: "Failed to create task",
+    variant: "destructive",
+   })
    throw err
   }
  }
@@ -207,10 +225,18 @@ export function DashboardPage({
     }),
    })
    if (!response.ok) {
-    console.error("Failed to save focus block:", await response.text())
+    toast({
+     title: "Error",
+     description: "Failed to save focus block",
+     variant: "destructive",
+    })
    }
-  } catch (err) {
-   console.error("Failed to save focus block:", err)
+  } catch {
+   toast({
+    title: "Error",
+    description: "Failed to save focus block",
+    variant: "destructive",
+   })
   }
  }
 

@@ -265,7 +265,7 @@ export function WebhookManagement() {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" role="status" aria-label="Loading" />
             </div>
           ) : webhooks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -427,7 +427,7 @@ function WebhookRow({
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <Switch checked={webhook.enabled} onCheckedChange={onToggle} />
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onDelete}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onDelete} aria-label="Delete webhook">
             <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
           </Button>
         </div>
@@ -454,6 +454,7 @@ function WebhookRow({
             size="icon"
             className="h-5 w-5"
             onClick={() => setShowSecret(!showSecret)}
+            aria-label={showSecret ? "Hide secret" : "Show secret"}
           >
             {showSecret ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
           </Button>
@@ -465,6 +466,7 @@ function WebhookRow({
               navigator.clipboard.writeText(webhook.secret)
               toast({ title: "Copied to clipboard" })
             }}
+            aria-label="Copy secret"
           >
             <Copy className="h-3 w-3" />
           </Button>

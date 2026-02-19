@@ -100,10 +100,12 @@ export async function GET(
 
     // Validate date format (YYYY-MM-DD)
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, error: "Invalid date format. Use YYYY-MM-DD" },
         { status: 400 }
       )
+      response.headers.set("X-Robots-Tag", "noindex, nofollow")
+      return response
     }
 
     // Find organization by slug
@@ -114,10 +116,12 @@ export async function GET(
     `
 
     if (orgs.length === 0) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, error: "Organization not found" },
         { status: 404 }
       )
+      response.headers.set("X-Robots-Tag", "noindex, nofollow")
+      return response
     }
 
     const org = orgs[0]
@@ -133,10 +137,12 @@ export async function GET(
     if (settings?.publicEodToken) {
       // Org has a token configured — require it
       if (providedToken !== settings.publicEodToken) {
-        return NextResponse.json(
+        const response = NextResponse.json(
           { success: false, error: "Invalid or missing access token" },
           { status: 403 }
         )
+        response.headers.set("X-Robots-Tag", "noindex, nofollow")
+        return response
       }
     }
     // If no token configured, allow open access (original behavior)
@@ -341,6 +347,7 @@ export async function GET(
     // Add cache headers for 30 second caching
     const headers = new Headers()
     headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60")
+    headers.set("X-Robots-Tag", "noindex, nofollow")
 
     // Include rate limit headers on successful responses
     const rlHeaders = ipRateLimitHeaders(rateLimitResult)
@@ -354,9 +361,11 @@ export async function GET(
     )
   } catch (error) {
     logError(logger, "Public EOD report error", error)
-    return NextResponse.json(
+    const response = NextResponse.json(
       { success: false, error: "Failed to load daily report" },
       { status: 500 }
     )
+    response.headers.set("X-Robots-Tag", "noindex, nofollow")
+    return response
   }
 }

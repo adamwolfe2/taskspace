@@ -361,6 +361,7 @@ Rock 2: Launch New Product
                           e.stopPropagation()
                           removeRock(index)
                         }}
+                        aria-label="Remove rock"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -432,6 +433,7 @@ Rock 2: Launch New Product
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => removeMilestone(index, mIndex)}
+                              aria-label="Remove milestone"
                             >
                               <XCircle className="h-4 w-4 text-muted-foreground" />
                             </Button>

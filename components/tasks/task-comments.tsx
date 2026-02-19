@@ -111,6 +111,7 @@ export function TaskComments({ comments, currentUser, onAddComment, compact = fa
           onClick={handleSubmit}
           disabled={!newComment.trim() || isSending}
           className="h-10 w-10 shrink-0"
+          aria-label="Send comment"
         >
           <Send className="h-4 w-4" />
         </Button>

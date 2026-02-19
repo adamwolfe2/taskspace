@@ -223,7 +223,7 @@ export function ClientsPage({
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -235,7 +235,7 @@ export function ClientsPage({
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -296,7 +296,7 @@ export function ClientsPage({
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Client actions">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

@@ -394,6 +394,7 @@ export function ActionHub({
                     handlePin(item.id)
                   }}
                   title={pinnedIds.has(item.id) ? "Unpin" : "Pin"}
+                  aria-label={pinnedIds.has(item.id) ? "Unpin" : "Pin"}
                 >
                   <Pin
                     className={cn(
@@ -412,6 +413,7 @@ export function ActionHub({
                     handleDismiss(item.id)
                   }}
                   title="Dismiss"
+                  aria-label="Dismiss"
                 >
                   <X className="h-3.5 w-3.5" style={{ color: themedColors.secondary }} />
                 </Button>

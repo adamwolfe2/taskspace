@@ -34,7 +34,11 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
       onFilterConsumed?.()
     }
   }, [initialOwnerFilter, onFilterConsumed])
-  const [quarterFilter, setQuarterFilter] = useState<string>("Q1 2025") // Default to current quarter
+  const [quarterFilter, setQuarterFilter] = useState<string>(() => {
+    const now = new Date()
+    const quarter = Math.floor(now.getMonth() / 3) + 1
+    return `Q${quarter} ${now.getFullYear()}`
+  })
 
   const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
   // Use users.id (not org_members.id) for filtering rocks
@@ -49,8 +53,8 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
     baseRocks.forEach((rock) => {
       if (rock.quarter) quarters.add(rock.quarter)
     })
-    // Ensure Q1 2025 is always available
-    quarters.add("Q1 2025")
+    // Ensure current quarter is always available
+    quarters.add(quarterFilter)
     return Array.from(quarters).sort((a, b) => {
       // Sort by year then quarter
       const [qA, yearA] = a.split(" ")

@@ -147,6 +147,7 @@ function EditableMetricCell({
         className="h-6 w-6"
         onClick={handleSave}
         disabled={saving}
+        aria-label="Save"
       >
         {saving ? (
           <Loader2 className="h-3 w-3 animate-spin" />
@@ -160,6 +161,7 @@ function EditableMetricCell({
         className="h-6 w-6"
         onClick={onCancel}
         disabled={saving}
+        aria-label="Cancel"
       >
         <X className="h-3 w-3 text-red-600" />
       </Button>

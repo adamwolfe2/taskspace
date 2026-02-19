@@ -94,8 +94,12 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
             setMetricData({ metricName: "", weeklyGoal: "" })
           }
         }
-      } catch (err) {
-        console.error("Failed to load metric:", err)
+      } catch {
+        toast({
+          title: "Error",
+          description: "Failed to load metric",
+          variant: "destructive",
+        })
         setMetricData({ metricName: "", weeklyGoal: "" })
       } finally {
         setIsLoadingMetric(false)
@@ -176,7 +180,6 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
           })
           const metricResult = await metricResponse.json()
           if (!metricResult.success) {
-            console.error("Failed to save metric:", metricResult.error)
             throw new Error(metricResult.error || "Failed to save weekly metric")
           }
         }
@@ -944,7 +947,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
             <CardContent>
               {isLoadingInvites ? (
                 <div className="flex justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" role="status" aria-label="Loading" />
                 </div>
               ) : pendingInvitations.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">

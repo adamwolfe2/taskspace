@@ -165,7 +165,7 @@ export function WorkspaceSwitcher({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className={cn("w-[280px] justify-between", className)}
+            className={cn("w-full max-w-[280px] justify-between", className)}
           >
             {currentWorkspace ? (
               <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -187,7 +187,7 @@ export function WorkspaceSwitcher({
             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[280px] p-0" align="start">
+        <PopoverContent className="w-full max-w-[280px] p-0" align="start">
           <Command>
             {workspaces.length > 5 && <CommandInput placeholder="Search workspaces..." />}
             <CommandList>

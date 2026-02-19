@@ -16,6 +16,7 @@ export default function robots(): MetadataRoute.Robots {
           "/settings/",
           "/_next/",
           "/private/",
+          "/public/eod/",
         ],
       },
     ],

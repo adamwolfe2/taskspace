@@ -241,7 +241,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" role="status" aria-label="Loading" />
         </CardContent>
       </Card>
     )

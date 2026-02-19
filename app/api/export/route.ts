@@ -9,6 +9,7 @@ import { Errors } from "@/lib/api/errors"
 import { z } from "zod"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { aiRateLimit, RATE_LIMITS } from "@/lib/api/rate-limit"
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -79,6 +80,20 @@ function arrayToCSV(data: Record<string, unknown>[], headers?: string[]): string
 // GET /api/export - Export data as CSV
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
+    // Rate limit: 10 exports per hour per user
+    const rateLimitResult = aiRateLimit(
+      auth.user.id,
+      "export",
+      RATE_LIMITS.bulk.maxRequests,
+      RATE_LIMITS.bulk.windowMs
+    )
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: `Rate limited. Try again in ${rateLimitResult.retryAfter}s.` },
+        { status: 429, headers: { "Retry-After": String(rateLimitResult.retryAfter) } }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const type = searchParams.get("type") || "rocks"
     const format = searchParams.get("format") || "csv"
@@ -391,6 +406,20 @@ async function fetchTeamSummary(
 
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
+    // Rate limit: 10 exports per hour per user
+    const rateLimitResult = aiRateLimit(
+      auth.user.id,
+      "export",
+      RATE_LIMITS.bulk.maxRequests,
+      RATE_LIMITS.bulk.windowMs
+    )
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: `Rate limited. Try again in ${rateLimitResult.retryAfter}s.` },
+        { status: 429, headers: { "Retry-After": String(rateLimitResult.retryAfter) } }
+      )
+    }
+
     const body = await validateBody(request, advancedExportSchema)
     let data: Record<string, unknown>[]
     let filename: string

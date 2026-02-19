@@ -222,6 +222,7 @@ export function MetricCard({
                   className="h-8 w-8"
                   onClick={() => setIsEditing(true)}
                   title="Enter value"
+                  aria-label="Enter value"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -232,6 +233,7 @@ export function MetricCard({
                     className="h-8 w-8 text-slate-400 hover:text-slate-600"
                     onClick={() => onEditMetric(metric.metricId)}
                     title="Edit metric settings"
+                    aria-label="Edit metric settings"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
@@ -243,6 +245,7 @@ export function MetricCard({
                     className="h-8 w-8 text-slate-400 hover:text-red-600"
                     onClick={() => onDeleteMetric(metric.metricId)}
                     title="Delete metric"
+                    aria-label="Delete metric"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>

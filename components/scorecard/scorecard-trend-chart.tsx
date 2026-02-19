@@ -181,7 +181,7 @@ export function ScorecardTrendChart({ trends, loading }: ScorecardTrendChartProp
         <div className="flex items-center justify-between">
           <CardTitle>13-Week Trend</CardTitle>
           <Select value={selectedMetricId || undefined} onValueChange={setSelectedMetricId}>
-            <SelectTrigger className="w-[280px]">
+            <SelectTrigger className="w-full sm:w-[280px]">
               <SelectValue placeholder="Select metric" />
             </SelectTrigger>
             <SelectContent>

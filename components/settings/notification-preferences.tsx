@@ -131,7 +131,7 @@ export function NotificationPreferencesCard({ memberId, initialPreferences }: No
       <CardContent>
         <div className="space-y-6">
           {/* Header row */}
-          <div className="grid grid-cols-4 gap-4 pb-2 border-b text-sm font-medium text-muted-foreground">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-2 border-b text-sm font-medium text-muted-foreground">
             <div>Event Type</div>
             <div className="flex items-center justify-center gap-1">
               <Mail className="h-4 w-4" />
@@ -153,7 +153,7 @@ export function NotificationPreferencesCard({ memberId, initialPreferences }: No
             const noInApp = 'noInApp' in eventType ? eventType.noInApp : false
             const prefs = preferences[key as keyof NotificationPreferences]
             return (
-              <div key={key} className="grid grid-cols-4 gap-4 items-center">
+              <div key={key} className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center">
                 <div>
                   <Label className="font-medium">{label}</Label>
                   <p className="text-xs text-muted-foreground">{description}</p>

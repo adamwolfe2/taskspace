@@ -520,3 +520,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_portfolio_snapshots_org_date
   ON portfolio_snapshots(organization_id, snapshot_date);
 CREATE INDEX IF NOT EXISTS idx_portfolio_snapshots_date
   ON portfolio_snapshots(snapshot_date);
+
+-- ============================================
+-- PERFORMANCE INDEXES (Critical Hot Paths)
+-- ============================================
+
+CREATE INDEX IF NOT EXISTS idx_eod_reports_org_date ON eod_reports(organization_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_eod_reports_user_org ON eod_reports(user_id, organization_id);
+CREATE INDEX IF NOT EXISTS idx_assigned_tasks_assignee_org ON assigned_tasks(assignee_id, organization_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_workspace_status ON assigned_tasks(workspace_id, status);
+CREATE INDEX IF NOT EXISTS idx_rocks_org_user ON rocks(workspace_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_org_members_org_user ON organization_members(organization_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_org ON notifications(user_id, organization_id, read);

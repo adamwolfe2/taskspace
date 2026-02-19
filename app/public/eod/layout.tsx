@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: "Team EOD Report | Taskspace",
   description: "Live end-of-day team reporting dashboard. Track progress, view completed tasks, and stay aligned with your team's daily activities.",
+  robots: {
+    index: false,
+    follow: false,
+  },
   icons: {
     icon: "/icon-light-32x32.png",
     apple: "/apple-icon.png",

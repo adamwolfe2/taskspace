@@ -63,7 +63,7 @@ export function UsageMeter({ showCard = true, compact = false, onUpgradeClick }:
     if (compact) {
       return (
         <div className="flex items-center gap-2 text-slate-500">
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-4 w-4 animate-spin" role="status" aria-label="Loading" />
           <span className="text-sm">Loading...</span>
         </div>
       )
@@ -71,7 +71,7 @@ export function UsageMeter({ showCard = true, compact = false, onUpgradeClick }:
     return (
       <Card>
         <CardContent className="py-8 flex items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+          <Loader2 className="h-6 w-6 animate-spin text-slate-400" role="status" aria-label="Loading" />
         </CardContent>
       </Card>
     )

@@ -8,6 +8,13 @@ import { decryptToken } from "@/lib/crypto/token-encryption"
 import { withAuth } from "@/lib/api/middleware"
 
 const ASANA_API_BASE = "https://app.asana.com/api/1.0"
+const ASANA_TIMEOUT_MS = 30_000
+
+function asanaFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), ASANA_TIMEOUT_MS)
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeout))
+}
 
 interface AsanaTask {
   gid: string
@@ -76,7 +83,7 @@ export const POST = withAuth(async (request, auth) => {
 
         if (pat) {
           // Get user GID from their PAT
-          const meResponse = await fetch(`${ASANA_API_BASE}/users/me`, {
+          const meResponse = await asanaFetch(`${ASANA_API_BASE}/users/me`, {
             headers: { Authorization: `Bearer ${pat}` },
           })
 
@@ -107,7 +114,7 @@ export const POST = withAuth(async (request, auth) => {
     if (workspaceGid) {
       // Fetch incomplete tasks
       const incompleteEndpoint = `${ASANA_API_BASE}/tasks?assignee=${asanaUserGid}&workspace=${workspaceGid}&opt_fields=${optFields}`
-      const incompleteResponse = await fetch(incompleteEndpoint, {
+      const incompleteResponse = await asanaFetch(incompleteEndpoint, {
         headers: { Authorization: `Bearer ${pat}` },
       })
 
@@ -118,7 +125,7 @@ export const POST = withAuth(async (request, auth) => {
 
       // Fetch completed tasks from the last 365 days
       const completedEndpoint = `${ASANA_API_BASE}/tasks?assignee=${asanaUserGid}&workspace=${workspaceGid}&completed_since=${completedSinceStr}&opt_fields=${optFields}`
-      const completedResponse = await fetch(completedEndpoint, {
+      const completedResponse = await asanaFetch(completedEndpoint, {
         headers: { Authorization: `Bearer ${pat}` },
       })
 
@@ -136,7 +143,7 @@ export const POST = withAuth(async (request, auth) => {
     } else {
       // Fallback to user_task_list endpoint
       const tasksEndpoint = `${ASANA_API_BASE}/user_task_lists/${asanaUserGid}/tasks?opt_fields=${optFields}`
-      const tasksResponse = await fetch(tasksEndpoint, {
+      const tasksResponse = await asanaFetch(tasksEndpoint, {
         headers: { Authorization: `Bearer ${pat}` },
       })
 
@@ -150,7 +157,7 @@ export const POST = withAuth(async (request, auth) => {
       // Try the search endpoint as fallback (for both completed and incomplete)
       const searchEndpoint = `${ASANA_API_BASE}/workspaces/${workspaceGid}/tasks/search?assignee.any=${asanaUserGid}&is_subtask=false&opt_fields=${optFields}`
 
-      const searchResponse = await fetch(searchEndpoint, {
+      const searchResponse = await asanaFetch(searchEndpoint, {
         headers: { Authorization: `Bearer ${pat}` },
       })
 

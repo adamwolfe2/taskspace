@@ -36,6 +36,7 @@ import { useApp } from "@/lib/contexts/app-context";
 import { DEMO_PEOPLE_ASSESSMENTS, DEMO_READONLY_MESSAGE } from "@/lib/demo-data";
 import { Users, Plus, Check, X, UserCheck, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 
 interface PeopleAnalyzerSummary {
   employeeId: string;
@@ -145,8 +146,12 @@ export function PeopleAnalyzerPage() {
 
       const data = await response.json();
       setTeamMembers(data);
-    } catch (error) {
-      console.error("Failed to load team members:", error);
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to load team members",
+        variant: "destructive",
+      });
     }
   };
 
@@ -336,6 +341,7 @@ export function PeopleAnalyzerPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="container mx-auto py-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -353,7 +359,7 @@ export function PeopleAnalyzerPage() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -677,5 +683,6 @@ export function PeopleAnalyzerPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </ErrorBoundary>
   );
 }

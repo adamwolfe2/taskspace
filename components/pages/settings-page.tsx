@@ -22,6 +22,7 @@ import { WorkspaceBrandingSettings } from "@/components/settings/workspace-brand
 import { ProfileSettingsTab } from "@/components/settings/profile-settings-tab"
 import { AIInbox } from "@/components/ai/ai-inbox"
 import { AIBudgetControls } from "@/components/ai/ai-budget-controls"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 
 export function SettingsPage() {
   const { currentUser, currentOrganization } = useApp()
@@ -59,6 +60,7 @@ export function SettingsPage() {
   }, [])
 
   return (
+    <ErrorBoundary>
     <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
@@ -223,5 +225,6 @@ export function SettingsPage() {
         )}
       </Tabs>
     </div>
+    </ErrorBoundary>
   )
 }

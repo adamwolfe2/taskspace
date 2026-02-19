@@ -18,6 +18,7 @@ import { useApp } from "@/lib/contexts/app-context"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useToast } from "@/hooks/use-toast"
 import { CONFIG } from "@/lib/config"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { DEMO_ORG_CHART, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -198,7 +199,11 @@ export function OrgChartPage() {
       // Refresh progress data
       refreshProgress()
     } catch (error) {
-      console.error("Failed to save progress:", error)
+      toast({
+        title: "Error",
+        description: "Failed to save progress",
+        variant: "destructive",
+      })
       Sentry.captureException(error)
       // Revert on error
       setProgressData((prev) => {
@@ -268,7 +273,7 @@ export function OrgChartPage() {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" role="status" aria-label="Loading organization chart" />
           <p className="text-slate-500">Loading organization chart...</p>
         </div>
       </div>
@@ -296,6 +301,7 @@ export function OrgChartPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="relative h-[calc(100vh-8rem)] -m-4 md:-m-6">
       {/* Header bar */}
       <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
@@ -408,5 +414,6 @@ export function OrgChartPage() {
         isAdmin={isAdmin}
       />
     </div>
+    </ErrorBoundary>
   )
 }

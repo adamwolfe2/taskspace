@@ -107,14 +107,14 @@ export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
         {/* Week Selector */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={goToPreviousWeek}>
+            <Button variant="ghost" size="icon" onClick={goToPreviousWeek} aria-label="Previous week">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-2 min-w-[220px] justify-center">
               <Calendar className="h-4 w-4 text-slate-400" />
               <span className="text-sm font-medium">{weekRangeDisplay}</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={goToNextWeek}>
+            <Button variant="ghost" size="icon" onClick={goToNextWeek} aria-label="Next week">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

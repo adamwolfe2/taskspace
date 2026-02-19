@@ -73,6 +73,7 @@ export const POST = withAuth(async (request, auth) => {
       headers: {
         Authorization: `Bearer ${personalAccessToken}`,
       },
+      signal: AbortSignal.timeout(30_000),
     })
 
     if (!meResponse.ok) {
@@ -92,6 +93,7 @@ export const POST = withAuth(async (request, auth) => {
         headers: {
           Authorization: `Bearer ${personalAccessToken}`,
         },
+        signal: AbortSignal.timeout(30_000),
       })
 
       if (workspacesResponse.ok) {

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { AlertCircle, Loader2, Plus, RefreshCw, Search } from "lucide-react"
 import type { IdsBoardItem, IdsBoardColumn } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 
 function IdsBoardContent() {
   const { columns, isLoading, error, createItem, updateItem, moveItem, deleteItem, refresh } = useIdsBoard()
@@ -88,7 +89,7 @@ function IdsBoardContent() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" role="status" aria-label="Loading" />
       </div>
     )
   }
@@ -166,8 +167,10 @@ function IdsBoardContent() {
 
 export function IdsBoardPage() {
   return (
+    <ErrorBoundary>
     <FeatureGate feature="core.ids">
       <IdsBoardContent />
     </FeatureGate>
+    </ErrorBoundary>
   )
 }

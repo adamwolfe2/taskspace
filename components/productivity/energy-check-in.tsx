@@ -162,7 +162,7 @@ export function EnergyCheckIn({
             <label className="text-sm font-medium text-slate-700">
               Energy Level
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {energyLevels.map((level) => (
                 <button
                   key={level.value}

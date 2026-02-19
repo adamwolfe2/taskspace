@@ -132,7 +132,7 @@ export function ChatInterface({ employees, onMentionClick }: ChatInterfaceProps)
     <div
       className={cn(
         "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300",
-        isExpanded ? "w-[480px]" : "w-[400px]"
+        isExpanded ? "w-full max-w-[480px]" : "w-full max-w-[400px]"
       )}
     >
       <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
@@ -177,7 +177,7 @@ export function ChatInterface({ employees, onMentionClick }: ChatInterfaceProps)
                 {isLoading && (
                   <div className="text-left">
                     <div className="inline-block px-3 py-2 rounded-lg bg-slate-100">
-                      <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                      <Loader2 className="h-4 w-4 animate-spin text-slate-400" role="status" aria-label="Loading response" />
                     </div>
                   </div>
                 )}

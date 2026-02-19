@@ -12,6 +12,7 @@ import {
   AlertTriangle, Target, CheckCircle, Clock,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 
 interface OrgMemberActivity {
   userId: string
@@ -122,7 +123,7 @@ export function PortfolioDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" role="status" aria-label="Loading" />
       </div>
     )
   }
@@ -146,6 +147,7 @@ export function PortfolioDetailPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -165,7 +167,7 @@ export function PortfolioDetailPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
@@ -331,5 +333,6 @@ export function PortfolioDetailPage() {
         </CardContent>
       </Card>
     </div>
+    </ErrorBoundary>
   )
 }

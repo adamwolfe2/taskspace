@@ -159,6 +159,7 @@ export function RockDependencies({
  size="icon"
  className="h-7 w-7 text-slate-400 hover:text-red-500"
  onClick={() => handleRemove(dep.id)}
+ aria-label="Remove dependency"
  >
  <Unlink className="h-3.5 w-3.5" />
  </Button>

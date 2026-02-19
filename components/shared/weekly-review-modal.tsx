@@ -327,7 +327,7 @@ export function WeeklyReviewModal({
  placeholder="Add a goal..."
  className="flex-1"
  />
- <Button variant="outline" size="icon" onClick={handleAddGoal}>
+ <Button variant="outline" size="icon" onClick={handleAddGoal} aria-label="Add goal">
  <Plus className="h-4 w-4" />
  </Button>
  </div>

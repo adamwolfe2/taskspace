@@ -316,8 +316,7 @@ export function TasksPage({
             }
           }
         }
-      } catch (err: unknown) {
-        console.error(`Failed to complete task ${taskId}:`, err)
+      } catch {
         errorCount++
       }
     }
@@ -352,8 +351,7 @@ export function TasksPage({
       try {
         await deleteTask(taskId)
         successCount++
-      } catch (err: unknown) {
-        console.error(`Failed to delete task ${taskId}:`, err)
+      } catch {
         errorCount++
       }
     }

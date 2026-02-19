@@ -97,6 +97,7 @@ export async function GET(request: NextRequest) {
         redirect_uri: redirectUri,
         code,
       }),
+      signal: AbortSignal.timeout(30_000),
     })
 
     if (!tokenResponse.ok) {

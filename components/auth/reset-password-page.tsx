@@ -106,7 +106,7 @@ export function ResetPasswordPage({ token }: ResetPasswordPageProps) {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" role="status" aria-label="Verifying reset link" />
             <p className="text-muted-foreground">Verifying reset link...</p>
           </CardContent>
         </Card>

@@ -95,7 +95,7 @@ Return a JSON object in this exact format:
       "title": "Brief rock title",
       "description": "1-2 sentence description of what success looks like",
       "milestones": ["Milestone 1", "Milestone 2", "Milestone 3"],
-      "suggestedQuarter": "Q1 2025",
+      "suggestedQuarter": "Q${Math.floor(new Date().getMonth() / 3) + 1} ${new Date().getFullYear()}",
       "assigneeName": "Person's name if mentioned"
     }
   ],

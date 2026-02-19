@@ -408,7 +408,7 @@ export function ImportWizard() {
       {step === "processing" && (
         <div className="space-y-6">
           <div className="text-center py-12">
-            <ArrowPathIcon className="mx-auto h-16 w-16 animate-spin text-blue-600" />
+            <ArrowPathIcon className="mx-auto h-16 w-16 animate-spin text-blue-600" role="status" aria-label="Importing data" />
             <h2 className="mt-4 text-xl font-semibold text-gray-900">
               Importing Your Data
             </h2>

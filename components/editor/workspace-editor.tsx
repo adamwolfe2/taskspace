@@ -74,7 +74,7 @@ export function WorkspaceEditor({ initialContent, onSave, isSaving }: WorkspaceE
   if (!parsedContent) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" role="status" aria-label="Loading" />
       </div>
     )
   }

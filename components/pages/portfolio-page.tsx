@@ -9,6 +9,7 @@ import { ExecutiveSummary } from "@/components/portfolio/executive-summary"
 import { CrossOrgTaskDialog } from "@/components/portfolio/cross-org-task-dialog"
 import { Loader2, LayoutGrid, TrendingUp, Plus, ArrowRightLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 
 interface PortfolioOrg {
   id: string
@@ -67,7 +68,7 @@ export function PortfolioPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" role="status" aria-label="Loading" />
       </div>
     )
   }
@@ -92,16 +93,17 @@ export function PortfolioPage() {
   const totalEscalations = orgs.reduce((sum, o) => sum + o.openEscalations, 0)
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Portfolio</h1>
           <p className="text-sm text-slate-500 mt-1">
             {orgs.length} organizations &middot; {totalMembers} total members
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
             size="sm"
@@ -130,7 +132,7 @@ export function PortfolioPage() {
       </div>
 
       {/* Summary bar */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg border border-slate-200 p-4">
           <div className="text-2xl font-bold text-slate-900">{orgs.length}</div>
           <div className="text-xs text-slate-500">Organizations</div>
@@ -185,5 +187,6 @@ export function PortfolioPage() {
         onCreated={fetchPortfolio}
       />
     </div>
+    </ErrorBoundary>
   )
 }

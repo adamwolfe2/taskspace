@@ -305,7 +305,7 @@ export function WorkspaceScorecardPage() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-[220px]" />
         </div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
@@ -451,6 +451,7 @@ export function WorkspaceScorecardPage() {
             size="icon"
             onClick={() => setWeekOffset((prev) => prev - 1)}
             title="Previous week"
+            aria-label="Previous week"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -465,6 +466,7 @@ export function WorkspaceScorecardPage() {
             onClick={() => setWeekOffset((prev) => prev + 1)}
             disabled={weekOffset >= 0}
             title="Next week"
+            aria-label="Next week"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

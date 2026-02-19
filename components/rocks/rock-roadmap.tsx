@@ -181,14 +181,14 @@ export function RockRoadmap({
  Rock Roadmap
  </CardTitle>
 
- <div className="flex items-center gap-2">
+ <div className="flex items-center gap-2 flex-wrap">
  {/* User Filter */}
  {teamMembers.length > 0 && (
  <Select
  value={selectedUserId || "all"}
  onValueChange={(v) => setSelectedUserId(v === "all" ? null : v)}
  >
- <SelectTrigger className="w-[150px] h-8">
+ <SelectTrigger className="w-full sm:w-[150px] h-8">
  <Users className="h-3.5 w-3.5 mr-1" />
  <SelectValue placeholder="All members" />
  </SelectTrigger>
@@ -208,7 +208,7 @@ export function RockRoadmap({
  value={viewMode}
  onValueChange={(v) => setViewMode(v as ViewMode)}
  >
- <SelectTrigger className="w-[120px] h-8">
+ <SelectTrigger className="w-full sm:w-[120px] h-8">
  <SelectValue />
  </SelectTrigger>
  <SelectContent>
@@ -225,6 +225,7 @@ export function RockRoadmap({
  size="icon"
  className="h-8 w-8"
  onClick={() => navigateTime("prev")}
+ aria-label="Previous"
  >
  <ChevronLeft className="h-4 w-4" />
  </Button>
@@ -238,6 +239,7 @@ export function RockRoadmap({
  size="icon"
  className="h-8 w-8"
  onClick={() => navigateTime("next")}
+ aria-label="Next"
  >
  <ChevronRight className="h-4 w-4" />
  </Button>

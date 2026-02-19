@@ -215,7 +215,7 @@ export function FileTray({
 
         {isUploading ? (
           <>
-            <Loader2 className="h-8 w-8 text-slate-400 animate-spin" />
+            <Loader2 className="h-8 w-8 text-slate-400 animate-spin" role="status" aria-label="Uploading" />
             <p className="text-sm text-slate-500">Uploading...</p>
           </>
         ) : (

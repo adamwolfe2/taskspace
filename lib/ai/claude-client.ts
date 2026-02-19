@@ -88,26 +88,36 @@ async function callClaudeWithUsage(
     throw new Error("ANTHROPIC_API_KEY is not configured")
   }
 
-  const response = await fetch(ANTHROPIC_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: options?.maxTokens || MAX_TOKENS,
-      temperature: options?.temperature ?? 0.7,
-      system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: userMessage,
-        },
-      ],
-    }),
-  })
+  // 60-second timeout for Claude API calls
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 60_000)
+
+  let response: Response
+  try {
+    response = await fetch(ANTHROPIC_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: options?.maxTokens || MAX_TOKENS,
+        temperature: options?.temperature ?? 0.7,
+        system: systemPrompt,
+        messages: [
+          {
+            role: "user",
+            content: userMessage,
+          },
+        ],
+      }),
+    })
+  } finally {
+    clearTimeout(timeout)
+  }
 
   if (!response.ok) {
     const error = await response.text()

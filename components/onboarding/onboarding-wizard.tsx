@@ -305,7 +305,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
       {isSubmitting && (
         <div className="fixed inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center">
           <div className="text-center space-y-4">
-            <Loader2 className="w-10 h-10 text-black mx-auto animate-spin" />
+            <Loader2 className="w-10 h-10 text-black mx-auto animate-spin" role="status" aria-label="Setting up workspace" />
             <div>
               <p className="text-lg font-semibold text-slate-900">Setting up your workspace...</p>
               <p className="text-sm text-slate-500 mt-1">Creating organization, workspace, and sending invitations</p>
@@ -548,7 +548,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                         animate={{ opacity: 1 }}
                         className="p-6 bg-slate-50 border border-slate-200 rounded-lg text-center"
                       >
-                        <Loader2 className="w-8 h-8 text-slate-400 mx-auto mb-3 animate-spin" />
+                        <Loader2 className="w-8 h-8 text-slate-400 mx-auto mb-3 animate-spin" role="status" aria-label="Analyzing website" />
                         <p className="text-sm text-slate-600 font-medium">Analyzing your website...</p>
                         <p className="text-xs text-slate-500 mt-1">Extracting logo, colors, and brand details</p>
                       </motion.div>

@@ -214,6 +214,7 @@ export function RockMilestoneManager({ rock, onUpdateMilestones, compact = false
               className="h-7 w-7 text-slate-400 hover:text-red-500"
               onClick={() => handleRemoveMilestone(milestone.id)}
               disabled={isSaving}
+              aria-label="Remove milestone"
             >
               <X className="h-4 w-4" />
             </Button>
