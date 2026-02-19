@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, FolderKanban, MoreHorizontal, Pencil, Trash2, Calendar, Users, CheckCircle2, X, ArrowUpDown, RefreshCw, UserPlus } from "lucide-react"
@@ -70,6 +71,7 @@ export function ProjectsPage({
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [detailProject, setDetailProject] = useState<Project | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
 
   // Project members state
   const [projectMembers, setProjectMembers] = useState<ProjectMember[]>([])
@@ -202,14 +204,20 @@ export function ProjectsPage({
     }
   }
 
-  const handleDelete = async (project: Project) => {
-    if (!confirm(`Delete "${project.name}"? Linked tasks and rocks will be unlinked.`)) return
+  const handleDelete = (project: Project) => {
+    setProjectToDelete(project.id)
+  }
+
+  const confirmDeleteProject = async () => {
+    if (!projectToDelete) return
     try {
-      await deleteProject(project.id)
+      await deleteProject(projectToDelete)
       setDetailProject(null)
       toast({ title: "Project deleted" })
     } catch (err) {
       toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" })
+    } finally {
+      setProjectToDelete(null)
     }
   }
 
@@ -573,6 +581,31 @@ export function ProjectsPage({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation */}
+        <AlertDialog open={!!projectToDelete} onOpenChange={(open) => !open && setProjectToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Project?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {(() => {
+                  const project = projects.find(p => p.id === projectToDelete)
+                  if (!project) return "This action cannot be undone."
+                  return `This will permanently delete "${project.name}". Linked tasks and rocks will be unlinked. This action cannot be undone.`
+                })()}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={confirmDeleteProject}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Detail Sheet */}
         <Sheet open={!!detailProject} onOpenChange={(open) => !open && setDetailProject(null)}>

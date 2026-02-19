@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, Building2, MoreHorizontal, Pencil, Trash2, Mail, Phone, Globe, FolderKanban } from "lucide-react"
@@ -49,6 +50,7 @@ export function ClientsPage({
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [detailClient, setDetailClient] = useState<Client | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [clientToDelete, setClientToDelete] = useState<string | null>(null)
 
   // Form state
   const [formName, setFormName] = useState("")
@@ -174,18 +176,20 @@ export function ClientsPage({
     }
   }
 
-  const handleDelete = async (client: Client) => {
-    const linkedProjects = projects.filter(p => p.clientId === client.id)
-    const msg = linkedProjects.length > 0
-      ? `Delete "${client.name}"? ${linkedProjects.length} project(s) will be unlinked.`
-      : `Delete "${client.name}"?`
-    if (!confirm(msg)) return
+  const handleDelete = (client: Client) => {
+    setClientToDelete(client.id)
+  }
+
+  const confirmDeleteClient = async () => {
+    if (!clientToDelete) return
     try {
-      await deleteClient(client.id)
+      await deleteClient(clientToDelete)
       setDetailClient(null)
       toast({ title: "Client deleted" })
     } catch (err) {
       toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" })
+    } finally {
+      setClientToDelete(null)
     }
   }
 
@@ -388,6 +392,34 @@ export function ClientsPage({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation */}
+        <AlertDialog open={!!clientToDelete} onOpenChange={(open) => !open && setClientToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Client?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {(() => {
+                  const client = clients.find(c => c.id === clientToDelete)
+                  const linkedProjects = projects.filter(p => p.clientId === clientToDelete)
+                  if (!client) return "This action cannot be undone."
+                  return linkedProjects.length > 0
+                    ? `This will permanently delete "${client.name}". ${linkedProjects.length} project(s) will be unlinked. This action cannot be undone.`
+                    : `This will permanently delete "${client.name}". This action cannot be undone.`
+                })()}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={confirmDeleteClient}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Detail Sheet */}
         <Sheet open={!!detailClient} onOpenChange={(open) => !open && setDetailClient(null)}>

@@ -16,6 +16,7 @@ import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLe
 import { EmptyState } from "@/components/shared/empty-state"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useToast } from "@/hooks/use-toast"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { addDays, addWeeks, addMonths } from "date-fns"
 import { getErrorMessage } from "@/lib/utils"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
@@ -62,6 +63,7 @@ export function TasksPage({
   const [aiPrioritized, setAiPrioritized] = useState<Array<{ taskId: string; rank: number; reasoning: string }> | null>(null)
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
   const [isBulkProcessing, setIsBulkProcessing] = useState(false)
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
 
@@ -344,11 +346,11 @@ export function TasksPage({
     }
   }
 
-  const handleBulkDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedTasks.size} task${selectedTasks.size > 1 ? "s" : ""}?`)) {
-      return
-    }
+  const handleBulkDelete = () => {
+    setShowBulkDeleteConfirm(true)
+  }
 
+  const confirmBulkDelete = async () => {
     const tasksToDelete = Array.from(selectedTasks)
     let successCount = 0
     let errorCount = 0
@@ -381,6 +383,7 @@ export function TasksPage({
       }
     } finally {
       setIsBulkProcessing(false)
+      setShowBulkDeleteConfirm(false)
     }
   }
 
@@ -765,6 +768,26 @@ export function TasksPage({
           </div>
         </div>
       )}
+
+      <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Selected Tasks?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {selectedTasks.size} selected task{selectedTasks.size > 1 ? "s" : ""}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </FeatureGate>
   )

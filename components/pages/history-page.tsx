@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { EditEODModal } from "@/components/dashboard/edit-eod-modal"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 // Grace period for editing reports (24 hours in milliseconds)
 const EDIT_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000
@@ -41,10 +42,17 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set())
   const [editingReport, setEditingReport] = useState<EODReport | null>(null)
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
+  const [reportToDelete, setReportToDelete] = useState<string | null>(null)
 
-  const handleDeleteReport = async (reportId: string) => {
+  const handleDeleteReport = (reportId: string) => {
     if (!deleteEODReport) return
-    if (!confirm("Are you sure you want to delete this EOD report? This action cannot be undone.")) return
+    setReportToDelete(reportId)
+  }
+
+  const confirmDeleteReport = async () => {
+    if (!reportToDelete || !deleteEODReport) return
+    const reportId = reportToDelete
+    setReportToDelete(null)
 
     setDeletingReportId(reportId)
     try {
@@ -339,6 +347,27 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
           onSave={updateEODReport}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!reportToDelete} onOpenChange={(open) => !open && setReportToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete EOD Report?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this report. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteReport}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

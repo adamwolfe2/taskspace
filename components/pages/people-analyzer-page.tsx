@@ -37,6 +37,7 @@ import { DEMO_PEOPLE_ASSESSMENTS, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 import { Users, Plus, Check, X, UserCheck, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface PeopleAnalyzerSummary {
   employeeId: string;
@@ -81,6 +82,8 @@ export function PeopleAnalyzerPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAssessment, setEditingAssessment] =
     useState<PeopleAnalyzerSummary | null>(null);
+
+  const [assessmentToDelete, setAssessmentToDelete] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<AssessmentFormData>({
     employeeName: "",
@@ -253,14 +256,18 @@ export function PeopleAnalyzerPage() {
     }
   };
 
-  const handleDeleteAssessment = async (assessmentId: string) => {
+  const handleDeleteAssessment = (assessmentId: string) => {
     if (isDemoMode) {
       toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE });
       return;
     }
-    if (!confirm("Are you sure you want to delete this assessment?")) {
-      return;
-    }
+    setAssessmentToDelete(assessmentId);
+  };
+
+  const confirmDeleteAssessment = async () => {
+    if (!assessmentToDelete) return;
+    const assessmentId = assessmentToDelete;
+    setAssessmentToDelete(null);
 
     try {
       const response = await fetch(`/api/people-assessments/${assessmentId}`, {
@@ -682,6 +689,27 @@ export function PeopleAnalyzerPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!assessmentToDelete} onOpenChange={(open) => !open && setAssessmentToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Assessment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this assessment. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteAssessment}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </ErrorBoundary>
   );

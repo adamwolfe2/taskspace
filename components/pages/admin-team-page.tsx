@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { ManageRocksDialog } from "@/components/admin/manage-rocks-dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 interface AdminTeamPageProps {
   teamMembers: TeamMember[]
@@ -74,6 +75,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
   } | null>(null)
   const [metricData, setMetricData] = useState({ metricName: "", weeklyGoal: "" })
   const [isLoadingMetric, setIsLoadingMetric] = useState(false)
+  const [memberToRemove, setMemberToRemove] = useState<string | null>(null)
   const { toast } = useToast()
 
   // Load metric data when editing a member
@@ -395,13 +397,18 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
   }
 
   // Delete a pending or invited member (who hasn't fully joined yet)
-  const handleDeleteMember = async (memberId: string, memberName: string) => {
-    if (!confirm(`Are you sure you want to remove ${memberName} from the workspace?`)) {
-      return
-    }
+  const handleDeleteMember = (memberId: string) => {
+    setMemberToRemove(memberId)
+  }
+
+  const confirmRemoveMember = async () => {
+    if (!memberToRemove) return
+
+    const member = teamMembers.find(m => m.id === memberToRemove)
+    const memberName = member?.name || "Member"
 
     try {
-      const response = await fetch(`/api/members?memberId=${memberId}`, {
+      const response = await fetch(`/api/members?memberId=${memberToRemove}`, {
         method: "DELETE",
         headers: { "X-Requested-With": "XMLHttpRequest" },
       })
@@ -411,7 +418,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         throw new Error(data.error || "Failed to remove member")
       }
 
-      setTeamMembers(teamMembers.filter(m => m.id !== memberId))
+      setTeamMembers(teamMembers.filter(m => m.id !== memberToRemove))
       toast({
         title: "Member Removed",
         description: `${memberName} has been removed from the workspace`,
@@ -422,6 +429,8 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         description: getErrorMessage(err, "Failed to remove member"),
         variant: "destructive",
       })
+    } finally {
+      setMemberToRemove(null)
     }
   }
 
@@ -827,7 +836,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleDeleteMember(member.id, member.name)}
+                                onClick={() => handleDeleteMember(member.id)}
                                 title="Remove from workspace"
                                 className="text-red-500 hover:text-red-700 hover:bg-red-50"
                               >
@@ -924,7 +933,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDeleteMember(member.id, member.name)}
+                          onClick={() => handleDeleteMember(member.id)}
                           className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-700"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1147,6 +1156,26 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         rocks={rocks}
         setRocks={setRocks}
       />
+
+      <AlertDialog open={!!memberToRemove} onOpenChange={(open) => { if (!open) setMemberToRemove(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Team Member?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove this member from the workspace. They can be re-invited later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemoveMember}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
