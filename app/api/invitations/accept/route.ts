@@ -13,10 +13,19 @@ import { addWorkspaceMember, getDefaultWorkspace, getWorkspacesByOrg } from "@/l
 import type { OrganizationMember, Session, ApiResponse, AuthResponse, User } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { withTransaction } from "@/lib/db/transactions"
+import { checkIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
 
 // POST /api/invitations/accept - Accept an invitation
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 10 accept attempts per 15 min per IP
+    const rl = checkIpRateLimit(request, { endpoint: "invitation-accept", maxRequests: 10 })
+    if (!rl.allowed) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Too many attempts. Please try again later." },
+        { status: 429, headers: ipRateLimitHeaders(rl) }
+      )
+    }
     // Validate request body
     const { token, name, password } = await validateBody(request, acceptInvitationSchema)
 
@@ -420,6 +429,15 @@ export async function POST(request: NextRequest) {
 // GET /api/invitations/accept - Get invitation details
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit: 20 token lookups per 15 min per IP
+    const rl = checkIpRateLimit(request, { endpoint: "invitation-lookup", maxRequests: 20 })
+    if (!rl.allowed) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Too many attempts. Please try again later." },
+        { status: 429, headers: ipRateLimitHeaders(rl) }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const token = searchParams.get("token")
 
@@ -446,6 +464,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (isTokenExpired(invitation.expiresAt)) {
+      // Mark as expired in DB so it's cleaned up
+      await db.invitations.update(invitation.id, { status: "expired" }).catch(() => {})
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "This invitation has expired" },
         { status: 400 }

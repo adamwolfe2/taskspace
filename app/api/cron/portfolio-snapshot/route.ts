@@ -54,10 +54,12 @@ export async function GET(request: NextRequest) {
     const { rows: orgs } = await sql`SELECT id, name FROM organizations`
 
     const snapshots: OrgSnapshot[] = []
+    const failedOrgNames: string[] = []
 
     for (const org of orgs) {
       const orgId = org.id as string
 
+      try {
       // Member count
       const { rows: memberRows } = await sql`
         SELECT COUNT(*) as count FROM organization_members
@@ -161,13 +163,26 @@ export async function GET(request: NextRequest) {
         rocksBlocked,
         rocksCompleted,
       })
+      } catch (orgError) {
+        const orgName = org.name as string
+        failedOrgNames.push(orgName)
+        logError(logger, `Snapshot failed for org ${orgName} (${orgId})`, orgError)
+      }
     }
 
-    logger.info(`Portfolio snapshots captured for ${snapshots.length} organizations on ${today}`)
+    const failedOrgs = failedOrgNames
+    const successCount = snapshots.length
+    const totalOrgs = orgs.length
 
-    return NextResponse.json<ApiResponse<{ date: string; snapshotCount: number; snapshots: OrgSnapshot[] }>>({
+    if (failedOrgs.length > 0) {
+      logger.warn(`Portfolio snapshots: ${successCount}/${totalOrgs} succeeded, failed: ${failedOrgs.join(", ")}`)
+    } else {
+      logger.info(`Portfolio snapshots captured for ${successCount} organizations on ${today}`)
+    }
+
+    return NextResponse.json<ApiResponse<{ date: string; snapshotCount: number; totalOrgs: number; failedOrgs: string[]; snapshots: OrgSnapshot[] }>>({
       success: true,
-      data: { date: today, snapshotCount: snapshots.length, snapshots },
+      data: { date: today, snapshotCount: successCount, totalOrgs, failedOrgs, snapshots },
     })
   } catch (error) {
     logError(logger, "Portfolio snapshot cron error", error)
