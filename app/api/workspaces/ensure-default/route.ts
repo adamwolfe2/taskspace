@@ -29,6 +29,31 @@ export const POST = withAuth(async (request, auth) => {
       const defaultWorkspace = existingWorkspaces.find(w => w.isDefault) || existingWorkspaces[0]
       const targetWorkspaceId = String(defaultWorkspace.id)
 
+      // Auto-heal: ensure current user is a workspace member
+      try {
+        const { rows: existingMembership } = await sql`
+          SELECT 1 FROM workspace_members
+          WHERE workspace_id = ${targetWorkspaceId} AND user_id = ${auth.user.id}
+          LIMIT 1
+        `
+        if (existingMembership.length === 0) {
+          const memberRole = auth.member.role === "owner" || auth.member.role === "admin" ? "admin" : "member"
+          await db.workspaceMembers.create({
+            id: generateId(),
+            workspaceId: targetWorkspaceId,
+            userId: auth.user.id,
+            role: memberRole,
+            joinedAt: new Date().toISOString(),
+          })
+          logger.info({
+            userId: auth.user.id,
+            workspaceId: targetWorkspaceId,
+          }, "Auto-healed: added missing workspace membership for org member")
+        }
+      } catch (memberHealError) {
+        logError(logger, "Failed to auto-heal workspace membership (non-fatal)", memberHealError)
+      }
+
       // Auto-heal: migrate any orphaned data with NULL workspace_id
       let healedRecords = 0
       try {

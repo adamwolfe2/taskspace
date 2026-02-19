@@ -9,7 +9,7 @@ import {
 } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { acceptInvitationSchema } from "@/lib/validation/schemas"
-import { addWorkspaceMember, getDefaultWorkspace } from "@/lib/db/workspaces"
+import { addWorkspaceMember, getDefaultWorkspace, getWorkspacesByOrg } from "@/lib/db/workspaces"
 import type { OrganizationMember, Session, ApiResponse, AuthResponse, User } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { withTransaction } from "@/lib/db/transactions"
@@ -302,7 +302,7 @@ export async function POST(request: NextRequest) {
       logError(logger, "Failed to transfer pending items", error)
     }
 
-    // Add user to workspace
+    // Add user to workspace (critical for access — try multiple fallbacks)
     try {
       let targetWorkspaceId = result.workspaceId
 
@@ -311,9 +311,17 @@ export async function POST(request: NextRequest) {
         targetWorkspaceId = defaultWorkspace?.id || null
       }
 
+      // Fallback: if no default workspace, try any workspace in the org
+      if (!targetWorkspaceId) {
+        const orgWorkspaces = await getWorkspacesByOrg(organization.id)
+        targetWorkspaceId = orgWorkspaces[0]?.id || null
+      }
+
       if (targetWorkspaceId) {
         await addWorkspaceMember(targetWorkspaceId, result.user.id, "member")
         logger.info(`Added user ${result.user.id} to workspace ${targetWorkspaceId}`)
+      } else {
+        logger.warn(`No workspace found for org ${organization.id} — user ${result.user.id} has no workspace membership`)
       }
     } catch (error) {
       logError(logger, "Failed to add user to workspace", error)

@@ -34,7 +34,40 @@ import { logger, logError } from "@/lib/logger"
  */
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    const workspaces = await getUserWorkspaces(auth.user.id)
+    let workspaces = await getUserWorkspaces(auth.user.id)
+
+    // Auto-heal: if user is an org member but has no workspace memberships, add them to default workspace
+    if (workspaces.length === 0) {
+      try {
+        const { getDefaultWorkspace, addWorkspaceMember: addToWorkspace, getWorkspacesByOrg } = await import("@/lib/db/workspaces")
+
+        // Find default workspace for this org
+        let targetWorkspace = await getDefaultWorkspace(auth.organization.id)
+
+        // If no default workspace, try any workspace in the org
+        if (!targetWorkspace) {
+          const orgWorkspaces = await getWorkspacesByOrg(auth.organization.id)
+          targetWorkspace = orgWorkspaces[0] || null
+        }
+
+        if (targetWorkspace) {
+          // Determine role based on org membership
+          const memberRole = auth.member.role === "owner" || auth.member.role === "admin" ? "admin" : "member"
+          await addToWorkspace(targetWorkspace.id, auth.user.id, memberRole)
+
+          // Re-fetch workspaces now that user has been added
+          workspaces = await getUserWorkspaces(auth.user.id)
+
+          logger.info({
+            userId: auth.user.id,
+            organizationId: auth.organization.id,
+            workspaceId: targetWorkspace.id,
+          }, "Auto-healed: added org member to default workspace")
+        }
+      } catch (healError) {
+        logError(logger, "Auto-heal workspace membership failed (non-fatal)", healError)
+      }
+    }
 
     // Auto-heal: check for orphaned data with NULL workspace_id and migrate it
     if (workspaces.length > 0) {
