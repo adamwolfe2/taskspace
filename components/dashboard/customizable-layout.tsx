@@ -349,7 +349,7 @@ export function CustomizableLayout({
           </Button>
          </div>
         </div>
-        <div className="h-full overflow-auto pointer-events-none opacity-75">
+        <div className="h-full overflow-hidden pointer-events-none opacity-75">
          {renderWidget(widget)}
         </div>
        </div>
@@ -373,7 +373,7 @@ export function CustomizableLayout({
          gridRow: `span ${item?.h || 3}`,
         }}
        >
-        <div className="h-full overflow-auto">
+        <div className="h-full">
          {renderWidget(widget)}
         </div>
        </div>

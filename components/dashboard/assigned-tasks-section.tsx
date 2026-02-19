@@ -239,7 +239,7 @@ export function AssignedTasksSection({
       </div>
 
       {isExpanded && (
-        <div className="p-5 max-h-[500px] overflow-y-auto">
+        <div className="p-5">
           {tasks.length === 0 ? (
           <div>
             <EmptyState

@@ -6,6 +6,7 @@ import { OrgCard } from "@/components/portfolio/org-card"
 import { PortfolioTrends } from "@/components/portfolio/portfolio-trends"
 import { CreateOrgDialog } from "@/components/portfolio/create-org-dialog"
 import { ExecutiveSummary } from "@/components/portfolio/executive-summary"
+import { PortfolioHealthOverview } from "@/components/portfolio/portfolio-health-overview"
 import { CrossOrgTaskDialog } from "@/components/portfolio/cross-org-task-dialog"
 import { LayoutGrid, TrendingUp, Plus, ArrowRightLeft } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -24,6 +25,12 @@ interface PortfolioOrg {
   activeTasks: number
   openEscalations: number
   plan: string
+  eodRate7Day: number
+  eodRateTrend: "up" | "down" | "stable"
+  completedTasksThisWeek: number
+  riskLevel: "healthy" | "warning" | "critical"
+  avgRockProgress: number
+  rockHealth: { onTrack: number; atRisk: number; blocked: number; completed: number }
 }
 
 type ViewMode = "grid" | "trends"
@@ -36,6 +43,7 @@ export function PortfolioPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [showCreateOrg, setShowCreateOrg] = useState(false)
   const [showCrossOrgTask, setShowCrossOrgTask] = useState(false)
+  const [trends, setTrends] = useState<{date: string; eodSubmissionRate: number; completedTaskCount: number; openEscalationCount: number}[]>([])
 
   const fetchPortfolio = useCallback(async () => {
     try {
@@ -46,6 +54,7 @@ export function PortfolioPage() {
       const json = await res.json()
       if (json.success) {
         setOrgs(json.data.orgs)
+        setTrends(json.data.trends ?? [])
       } else {
         setError(json.error || "Failed to load portfolio")
       }
@@ -163,6 +172,9 @@ export function PortfolioPage() {
           <div className="text-xs text-slate-500 text-red-600">Open Escalations</div>
         </div>
       </div>
+
+      {/* Portfolio Health Overview */}
+      <PortfolioHealthOverview orgs={orgs} trends={trends} />
 
       {/* Content */}
       {viewMode === "grid" ? (

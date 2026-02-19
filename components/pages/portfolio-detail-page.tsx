@@ -9,7 +9,8 @@ import { Progress } from "@/components/ui/progress"
 import { QuickActions } from "@/components/portfolio/quick-actions"
 import {
   ArrowLeft, ExternalLink, Users, FileText, CheckSquare,
-  AlertTriangle, Target, CheckCircle, Clock,
+  AlertTriangle, Target, CheckCircle, Clock, Zap, Flame,
+  TrendingUp, TrendingDown,
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -67,6 +68,13 @@ export function PortfolioDetailPage() {
   const [data, setData] = useState<OrgDetailData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [metrics, setMetrics] = useState<{
+    avgFocusScore: number
+    focusScoreTrend: 'up' | 'down' | 'stable'
+    topPerformers: { name: string; score: number; streak: number }[]
+    memberEngagementRate: number
+    streakLeaderboard: { name: string; currentStreak: number }[]
+  } | null>(null)
 
   const orgId = typeof window !== "undefined"
     ? sessionStorage.getItem("portfolio-detail-orgId")
@@ -99,6 +107,20 @@ export function PortfolioDetailPage() {
   useEffect(() => {
     fetchDetail()
   }, [fetchDetail])
+
+  useEffect(() => {
+    if (!orgId || loading || !data) return
+    fetch(`/api/super-admin/orgs/${orgId}/metrics`, {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success) setMetrics(json.data)
+      })
+      .catch(() => {
+        // Non-blocking — metrics are supplementary
+      })
+  }, [orgId, loading, data])
 
   const handleSwitchToOrg = async () => {
     if (!orgId) return
@@ -230,6 +252,77 @@ export function PortfolioDetailPage() {
         </Card>
       </div>
 
+      {/* Executive Metrics */}
+      {metrics && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Zap className="h-4 w-4" /> Focus Score & Engagement
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-6 mb-4">
+                <div>
+                  <div className="text-3xl font-bold">{metrics.avgFocusScore}</div>
+                  <div className="text-xs text-slate-500 flex items-center gap-1">
+                    Avg focus score
+                    {metrics.focusScoreTrend === 'up' && <TrendingUp className="h-3 w-3 text-emerald-500" />}
+                    {metrics.focusScoreTrend === 'down' && <TrendingDown className="h-3 w-3 text-red-500" />}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold">{metrics.memberEngagementRate}%</div>
+                  <div className="text-xs text-slate-500">Engagement (7d)</div>
+                </div>
+              </div>
+              {metrics.topPerformers.length > 0 && (
+                <div>
+                  <div className="text-xs font-medium text-slate-500 mb-2">Top performers</div>
+                  <div className="space-y-1.5">
+                    {metrics.topPerformers.map((p, i) => (
+                      <div key={p.name} className="flex items-center justify-between text-sm">
+                        <span className="text-slate-700">{i + 1}. {p.name}</span>
+                        <span className="text-slate-500 text-xs">Score {p.score} &middot; {p.streak}d streak</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Flame className="h-4 w-4" /> EOD Streak Leaderboard
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {metrics.streakLeaderboard.map((entry, i) => (
+                  <div key={entry.name} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "text-sm font-bold w-5 text-center",
+                        i === 0 ? "text-amber-500" : i === 1 ? "text-slate-400" : "text-slate-300"
+                      )}>
+                        {i + 1}
+                      </span>
+                      <span className="text-sm text-slate-700">{entry.name}</span>
+                    </div>
+                    <span className="text-sm font-medium">{entry.currentStreak} days</span>
+                  </div>
+                ))}
+                {metrics.streakLeaderboard.length === 0 && (
+                  <p className="text-sm text-slate-500 text-center py-4">No streak data available</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Quick Actions */}
       <QuickActions
         orgId={data.id}
@@ -337,9 +430,20 @@ export function PortfolioDetailPage() {
                     </div>
                   </div>
                 </div>
-                {eod.needsEscalation && eod.escalationNote && (
-                  <div className="text-xs text-red-600 max-w-xs truncate">{eod.escalationNote}</div>
-                )}
+                <div className="flex items-center gap-3">
+                  {eod.needsEscalation && eod.escalationNote && (
+                    <div className="text-xs text-red-600 max-w-xs truncate">{eod.escalationNote}</div>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-blue-600 hover:text-blue-700 h-7 px-2"
+                    onClick={handleSwitchToOrg}
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    View
+                  </Button>
+                </div>
               </div>
             ))}
             {data.recentEods.length === 0 && (

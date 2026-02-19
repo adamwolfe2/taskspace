@@ -218,7 +218,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
       </div>
 
       {isExpanded && (
-        <div className="p-5 max-h-[500px] overflow-y-auto">
+        <div className="p-5">
           {filteredRocks.length === 0 ? (
           <EmptyState
             icon={Target}

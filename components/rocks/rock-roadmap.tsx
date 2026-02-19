@@ -263,7 +263,7 @@ export function RockRoadmap({
  </div>
 
  {/* Timeline Content */}
- <div className="min-h-[300px] max-h-[500px] overflow-y-auto">
+ <div className="min-h-[300px]">
  {viewMode === "team" ? (
  // Team View
  Object.entries(rocksByUser).map(([userId, userRocks]) => {
