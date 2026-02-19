@@ -81,7 +81,7 @@ export const GET = withAuth(async (request: NextRequest, auth, context?: RouteCo
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch rock",
+        error: "Failed to fetch rock",
       },
       { status: 500 }
     )

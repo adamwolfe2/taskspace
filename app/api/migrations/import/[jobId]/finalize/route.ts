@@ -111,7 +111,7 @@ export const POST = withAuth(
           errors: [
             {
               code: 'FINALIZATION_ERROR',
-              message: error instanceof Error ? error.message : 'Unknown error',
+              message: 'Unknown error',
             },
           ],
         })
@@ -122,7 +122,7 @@ export const POST = withAuth(
       return NextResponse.json<ApiResponse<null>>(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to finalize import',
+          error: 'Failed to finalize import',
         },
         { status: 500 }
       )

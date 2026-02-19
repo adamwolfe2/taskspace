@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       message: "Email verified successfully! You can now use all features.",
     })
   } catch (error) {
-    logger.error({ error: error instanceof Error ? error.message : String(error) }, "Email verification error")
+    logger.error({ error: String(error) }, "Email verification error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "An error occurred during verification. Please try again." },
       { status: 500 }

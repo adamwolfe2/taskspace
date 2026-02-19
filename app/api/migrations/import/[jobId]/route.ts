@@ -69,7 +69,7 @@ export const GET = withAuth(
       return NextResponse.json<ApiResponse<null>>(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to get import job',
+          error: 'Failed to get import job',
         },
         { status: 500 }
       )

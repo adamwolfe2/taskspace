@@ -37,7 +37,7 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to get settings",
+        error: "Failed to get settings",
       },
       { status: 500 }
     )
@@ -107,7 +107,7 @@ export const PUT = withAdmin(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update settings",
+        error: "Failed to update settings",
       },
       { status: 500 }
     )

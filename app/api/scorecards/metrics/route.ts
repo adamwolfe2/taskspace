@@ -61,7 +61,7 @@ export const GET = withAuth(async (request, auth) => {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch metrics",
+        error: "Failed to fetch metrics",
       },
       { status: 500 }
     )
@@ -137,7 +137,7 @@ export const POST = withAuth(async (request, auth) => {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create metric",
+        error: "Failed to create metric",
       },
       { status: 500 }
     )

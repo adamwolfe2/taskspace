@@ -352,7 +352,7 @@ export const GET = withAuth(async (request, auth) => {
   } catch (error: unknown) {
     logError(logger, "Error generating MCPB bundle", error)
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Failed to generate bundle" },
+      { success: false, error: "Failed to generate bundle" },
       { status: 500 }
     )
   }

@@ -171,7 +171,7 @@ export const POST = withAdmin(async (request, auth) => {
       return NextResponse.json<UploadResult>({
         success: false,
         created: 0,
-        errors: [error instanceof Error ? error.message : "Failed to parse CSV"],
+        errors: ["Failed to parse CSV"],
       })
     }
 
@@ -277,7 +277,7 @@ export const POST = withAdmin(async (request, auth) => {
       {
         success: false,
         created: 0,
-        errors: [error instanceof Error ? error.message : "Failed to upload org chart"],
+        errors: ["Failed to upload org chart"],
       },
       { status: 500 }
     )

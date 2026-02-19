@@ -97,7 +97,7 @@ export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: `Failed to set up default workspace: ${errorMessage}`,
+        error: "Failed to set up default workspace",
       },
       { status: 500 }
     )

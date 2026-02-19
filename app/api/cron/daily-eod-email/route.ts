@@ -236,7 +236,7 @@ export async function GET(request: NextRequest) {
         logError(logger, `Failed for org ${org.id}`, error)
         Sentry.captureMessage("Cron daily-eod-email partially failed", {
           level: "warning",
-          extra: { orgId: org.id, orgName: org.name, error: error instanceof Error ? error.message : "Unknown error" },
+          extra: { orgId: org.id, orgName: org.name, error: "Unknown error" },
         })
         results.push({
           orgId: org.id,
@@ -244,7 +244,7 @@ export async function GET(request: NextRequest) {
           timezone,
           emailsSent: 0,
           skipped: "",
-          errors: [error instanceof Error ? error.message : "Unknown error"],
+          errors: ["Unknown error"],
         })
       }
     }
@@ -270,7 +270,7 @@ export async function GET(request: NextRequest) {
     logError(logger, "Daily EOD email error", error)
     Sentry.captureException(error, { extra: { job: "daily-eod-email" } })
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error instanceof Error ? error.message : "Failed to send daily EOD emails" },
+      { success: false, error: "Failed to send daily EOD emails" },
       { status: 500 }
     )
   }

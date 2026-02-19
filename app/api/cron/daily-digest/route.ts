@@ -320,13 +320,13 @@ export async function GET(request: NextRequest) {
         logError(logger, `Failed for org ${org.name}`, error)
         Sentry.captureMessage("Cron daily-digest partially failed", {
           level: "warning",
-          extra: { orgId: org.id, orgName: org.name, error: error instanceof Error ? error.message : "Unknown error" },
+          extra: { orgId: org.id, orgName: org.name, error: "Unknown error" },
         })
         results.push({
           orgId: org.id,
           orgName: org.name,
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: "Unknown error",
         })
       }
     }
@@ -352,7 +352,7 @@ export async function GET(request: NextRequest) {
     logError(logger, "Daily digest error", error)
     Sentry.captureException(error, { extra: { job: "daily-digest" } })
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error instanceof Error ? error.message : "Failed to generate digests" },
+      { success: false, error: "Failed to generate digests" },
       { status: 500 }
     )
   }

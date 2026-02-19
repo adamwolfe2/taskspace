@@ -45,7 +45,7 @@ export const POST = withDangerousAdmin(async (_request: NextRequest, _auth) => {
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : "Unknown error"
         logger.error({ error: errorMsg }, `✗ Failed: ${file}`)
-        results.push({ file, status: "failed", error: errorMsg })
+        results.push({ file, status: "failed", error: "Unknown error" })
       }
     }
 
@@ -75,7 +75,7 @@ export const POST = withDangerousAdmin(async (_request: NextRequest, _auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: `Migration failed: ${errorMessage}`
+        error: "Migration failed"
       },
       { status: 500 }
     )

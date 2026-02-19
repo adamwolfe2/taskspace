@@ -86,7 +86,7 @@ export const POST = withAdmin(async (request, auth) => {
   } catch (error: unknown) {
     logError(logger, "Test email error", error)
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error instanceof Error ? error.message : "Failed to send test email" },
+      { success: false, error: "Failed to send test email" },
       { status: 500 }
     )
   }
@@ -117,7 +117,7 @@ export const GET = withAdmin(async (request, auth) => {
     })
   } catch (error: unknown) {
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error instanceof Error ? error.message : "An error occurred" },
+      { success: false, error: "An error occurred" },
       { status: 500 }
     )
   }

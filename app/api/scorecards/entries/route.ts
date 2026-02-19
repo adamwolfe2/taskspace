@@ -78,7 +78,7 @@ export const POST = withAuth(async (request, auth) => {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to submit entry",
+        error: "Failed to submit entry",
       },
       { status: 500 }
     )

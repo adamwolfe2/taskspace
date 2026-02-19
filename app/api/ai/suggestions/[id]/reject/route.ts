@@ -99,7 +99,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to reject suggestion",
+        error: "Failed to reject suggestion",
       },
       { status: 500 }
     )

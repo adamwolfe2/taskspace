@@ -97,7 +97,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           results.push({
             suggestionId: id,
             success: false,
-            error: error instanceof Error ? error.message : "Unknown error",
+            error: "Unknown error",
           })
         }
       }
@@ -120,7 +120,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Bulk action failed",
+        error: "Bulk action failed",
       },
       { status: 500 }
     )

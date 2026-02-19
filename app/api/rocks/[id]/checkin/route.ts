@@ -84,7 +84,7 @@ export const POST = withAuth(async (request, auth, context?) => {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create check-in",
+        error: "Failed to create check-in",
       },
       { status: 500 }
     )

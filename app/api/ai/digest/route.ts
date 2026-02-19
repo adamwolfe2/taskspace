@@ -123,7 +123,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
   } catch (error) {
     logError(logger, "Generate digest error", error)
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error instanceof Error ? error.message : "Failed to generate daily digest" },
+      { success: false, error: "Failed to generate daily digest" },
       { status: 500 }
     )
   }

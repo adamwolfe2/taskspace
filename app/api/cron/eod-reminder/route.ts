@@ -277,7 +277,7 @@ export async function GET(request: NextRequest) {
         logError(logger, `Failed for org ${org.id}`, error)
         Sentry.captureMessage("Cron eod-reminder partially failed", {
           level: "warning",
-          extra: { orgId: org.id, orgName: org.name, error: error instanceof Error ? error.message : "Unknown error" },
+          extra: { orgId: org.id, orgName: org.name, error: "Unknown error" },
         })
         results.push({
           orgId: org.id,
@@ -285,7 +285,7 @@ export async function GET(request: NextRequest) {
           timezone,
           reminders: 0,
           skipped: "",
-          errors: [error instanceof Error ? error.message : "Unknown error"],
+          errors: ["Unknown error"],
         })
       }
     }
@@ -311,7 +311,7 @@ export async function GET(request: NextRequest) {
     logError(logger, "EOD reminder error", error)
     Sentry.captureException(error, { extra: { job: "eod-reminder" } })
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error instanceof Error ? error.message : "Failed to send reminders" },
+      { success: false, error: "Failed to send reminders" },
       { status: 500 }
     )
   }

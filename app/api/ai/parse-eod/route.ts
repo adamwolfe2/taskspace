@@ -147,7 +147,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     }
     logError(logger, "Parse EOD error", error)
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error instanceof Error ? error.message : "Failed to parse EOD report" },
+      { success: false, error: "Failed to parse EOD report" },
       { status: 500 }
     )
   }
@@ -332,7 +332,7 @@ export const PUT = withAuth(async (request: NextRequest, auth) => {
     }
     logError(logger, "Batch parse error", error)
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error instanceof Error ? error.message : "Failed to batch parse EOD reports" },
+      { success: false, error: "Failed to batch parse EOD reports" },
       { status: 500 }
     )
   }

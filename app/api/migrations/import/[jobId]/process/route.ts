@@ -157,7 +157,7 @@ export const POST = withAuth(
           importJobId: jobId,
           level: 'error',
           stage: 'task_import',
-          message: `Chunk processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          message: 'Chunk processing failed: Unknown error',
         })
       } catch (logError) {
         logger.error({ logError }, 'Failed to log import error')
@@ -166,7 +166,7 @@ export const POST = withAuth(
       return NextResponse.json<ApiResponse<null>>(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to process chunk',
+          error: 'Failed to process chunk',
         },
         { status: 500 }
       )

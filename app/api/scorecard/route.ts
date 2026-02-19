@@ -82,7 +82,7 @@ export const GET = withAuth(async (request, auth) => {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch scorecard",
+        error: "Failed to fetch scorecard",
       },
       { status: 500 }
     )
@@ -205,7 +205,7 @@ export const PATCH = withAuth(async (request, auth) => {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update scorecard entry",
+        error: "Failed to update scorecard entry",
       },
       { status: 500 }
     )

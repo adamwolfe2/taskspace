@@ -207,7 +207,7 @@ export const POST = withUserAuth(async (request: NextRequest, auth) => {
         userId,
         orgId,
         url: validatedUrl,
-        error: error instanceof Error ? error.message : String(error),
+        error: String(error),
       },
       "Firecrawl scrape: Unexpected error"
     )

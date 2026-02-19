@@ -142,7 +142,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
   } catch (error) {
     logError(logger, "Seed error", error)
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Seed failed" },
+      { success: false, error: "Seed failed" },
       { status: 500 }
     )
   }

@@ -66,7 +66,7 @@ export const GET = withAuth(async (request, auth) => {
           connected: false,
           configured: true,
           message: "Failed to connect to Asana - check access token",
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: "Unknown error",
         },
       })
     }

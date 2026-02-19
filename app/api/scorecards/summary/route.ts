@@ -93,7 +93,7 @@ export const GET = withAuth(async (request, auth) => {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch summary",
+        error: "Failed to fetch summary",
       },
       { status: 500 }
     )

@@ -233,7 +233,7 @@ Rules:
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to parse rocks",
+        error: "Failed to parse rocks",
       },
       { status: 500 }
     )

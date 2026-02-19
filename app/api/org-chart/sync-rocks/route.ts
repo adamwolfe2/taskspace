@@ -201,7 +201,7 @@ export const POST = withAdmin(async (request, auth) => {
   } catch (error) {
     logError(logger, "Rocks sync error", error)
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Sync failed" },
+      { success: false, error: "Sync failed" },
       { status: 500 }
     )
   }
@@ -308,7 +308,7 @@ export const GET = withAuth(async (request, auth) => {
   } catch (error) {
     logError(logger, "Rocks sync status error", error)
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Failed to get status" },
+      { success: false, error: "Failed to get status" },
       { status: 500 }
     )
   }

@@ -62,7 +62,7 @@ export const GET = withAuth(async (request, auth, context?) => {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch metric",
+        error: "Failed to fetch metric",
       },
       { status: 500 }
     )
@@ -159,7 +159,7 @@ export const PATCH = withAuth(async (request, auth, context?) => {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update metric",
+        error: "Failed to update metric",
       },
       { status: 500 }
     )
@@ -236,7 +236,7 @@ export const DELETE = withAuth(async (request, auth, context?) => {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete metric",
+        error: "Failed to delete metric",
       },
       { status: 500 }
     )

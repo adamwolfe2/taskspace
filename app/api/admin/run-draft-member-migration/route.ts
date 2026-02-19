@@ -202,7 +202,7 @@ export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: `Migration failed: ${errorMessage}`
+        error: "Migration failed"
       },
       { status: 500 }
     )

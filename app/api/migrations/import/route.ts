@@ -110,7 +110,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to create import job',
+        error: 'Failed to create import job',
       },
       { status: 500 }
     )
@@ -188,7 +188,7 @@ async function validateImportJob(
       errors: [
         {
           code: 'VALIDATION_ERROR',
-          message: error instanceof Error ? error.message : 'Unknown validation error',
+          message: 'Unknown validation error',
         },
       ],
     })
@@ -197,7 +197,7 @@ async function validateImportJob(
       importJobId: jobId,
       level: 'error',
       stage: 'validation',
-      message: `Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      message: 'Validation error: Unknown error',
     })
   }
 }

@@ -119,7 +119,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
   } catch (error) {
     logError(logger, "EOD text parse error", error)
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: error instanceof Error ? error.message : "Failed to parse EOD text" },
+      { success: false, error: "Failed to parse EOD text" },
       { status: 500 }
     )
   }

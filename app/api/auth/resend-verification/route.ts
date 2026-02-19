@@ -71,7 +71,7 @@ export const POST = withUserAuth(async (_request: NextRequest, auth) => {
       message: "Verification email sent! Check your inbox.",
     })
   } catch (error) {
-    logger.error({ error: error instanceof Error ? error.message : String(error) }, "Resend verification error")
+    logger.error({ error: String(error) }, "Resend verification error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "An error occurred. Please try again." },
       { status: 500 }
