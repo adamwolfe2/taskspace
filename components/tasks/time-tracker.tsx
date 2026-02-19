@@ -37,6 +37,7 @@ import {
 } from "lucide-react"
 import { format, differenceInMinutes, differenceInSeconds, parseISO } from "date-fns"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
+import { useToast } from "@/hooks/use-toast"
 
 interface TimeTrackerProps {
  taskId: string
@@ -76,6 +77,7 @@ export function TimeTracker({
  const [isSubmitting, setIsSubmitting] = useState(false)
  const [showAddDialog, setShowAddDialog] = useState(false)
  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+ const { toast } = useToast()
 
  // Calculate elapsed time for active entry
  useEffect(() => {
@@ -105,7 +107,7 @@ export function TimeTracker({
  try {
  await onStartTimer()
  } catch (_error) {
-   /* silently ignore */
+   toast({ title: "Error", description: "Failed to start timer", variant: "destructive" })
  } finally {
  setIsSubmitting(false)
  }
@@ -118,7 +120,7 @@ export function TimeTracker({
  await onStopTimer(description || undefined)
  setDescription("")
  } catch (_error) {
-   /* silently ignore */
+   toast({ title: "Error", description: "Failed to stop timer", variant: "destructive" })
  } finally {
  setIsSubmitting(false)
  }
@@ -385,6 +387,7 @@ function ManualTimeEntryDialog({
  const [description, setDescription] = useState("")
  const [billable, setBillable] = useState(false)
  const [isSubmitting, setIsSubmitting] = useState(false)
+ const { toast } = useToast()
 
  const handleSubmit = async () => {
  if (isSubmitting) return
@@ -405,7 +408,7 @@ function ManualTimeEntryDialog({
  billable,
  })
  } catch (_error) {
-   /* silently ignore */
+   toast({ title: "Error", description: "Failed to log time entry", variant: "destructive" })
  } finally {
  setIsSubmitting(false)
  }

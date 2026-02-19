@@ -93,7 +93,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
       const data = await response.json()
       setProjects(data.projects || [])
     } catch (_error) {
-      /* silently ignore */
+      // Asana projects fetch failed — user can still configure manually
     }
   }, [])
 
@@ -103,7 +103,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
       const data = await response.json()
       setAsanaUsers(data.users || [])
     } catch (_error) {
-      /* silently ignore */
+      // Asana users fetch failed — user can still configure manually
     }
   }, [])
 

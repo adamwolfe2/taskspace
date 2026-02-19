@@ -39,14 +39,18 @@ function getDismissedIds(): Set<string> {
   try {
     const stored = localStorage.getItem(DISMISSED_KEY)
     if (stored) return new Set(JSON.parse(stored))
-  } catch {}
+  } catch {
+    // localStorage unavailable — graceful degradation
+  }
   return new Set()
 }
 
 function saveDismissedIds(ids: Set<string>) {
   try {
     localStorage.setItem(DISMISSED_KEY, JSON.stringify([...ids]))
-  } catch {}
+  } catch {
+    // localStorage unavailable — graceful degradation
+  }
 }
 
 interface ActionHubProps {

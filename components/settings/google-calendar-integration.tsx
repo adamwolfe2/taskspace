@@ -72,7 +72,7 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
         }
       }
     } catch (_error) {
-      /* silently ignore */
+      // Calendar status check failed — non-critical, user can retry
     } finally {
       setIsLoading(false)
     }

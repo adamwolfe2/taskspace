@@ -78,7 +78,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
         }
       }
     } catch (_error) {
-      /* silently ignore */
+      // Template loading failed — non-critical, form works without templates
     } finally {
       setIsLoadingTemplates(false)
     }

@@ -166,7 +166,7 @@ export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
           ON CONFLICT (workspace_id, user_id) DO NOTHING
         `
       } catch (_error) {
-        // Ignore conflicts
+        // Expected: member may already exist in workspace, skip duplicates
       }
     }
     steps.push(`✓ Added ${orgMembers.length} members to workspace`)
