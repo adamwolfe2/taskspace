@@ -1,23 +1,17 @@
 /**
  * Public EOD Daily Report API
  *
- * ⚠️ WARNING: INTENTIONALLY PUBLIC ENDPOINT ⚠️
+ * Token-protected endpoint for sharing EOD reports with external stakeholders.
+ * Requires a valid publicEodToken configured in organization settings.
  *
- * This endpoint provides UNAUTHENTICATED access to ALL EOD reports for a specific date.
- * Anyone who knows the organization slug can access all EOD data including:
- * - Employee names, roles, and departments
- * - Daily tasks and challenges
- * - Rock progress and priorities
- * - Escalation notes
+ * SECURITY:
+ * - Access token REQUIRED — orgs must configure publicEodToken in settings
+ * - IP-based rate limiting (30 req / 15 min)
+ * - No internal IDs or emails exposed in response
+ * - Cache-Control: private, no-store
  *
- * SECURITY CONSIDERATIONS:
- * - Organization slug is effectively the only "authentication" mechanism
- * - No per-user access controls or permission checks
- * - Designed for sharing with external stakeholders/board members via URL
- * - Consider implementing optional access tokens for sensitive organizations
- *
- * URL format: /api/public/eod/[org-slug]/[date]
- * Example: /api/public/eod/aims/2026-01-05
+ * URL format: /api/public/eod/[org-slug]/[date]?token=<publicEodToken>
+ * Example: /api/public/eod/aims/2026-01-05?token=abc123
  */
 
 import { NextRequest, NextResponse } from "next/server"
@@ -36,9 +30,8 @@ interface PublicEODPriority {
   rockTitle?: string
 }
 
-// Rock progress for bento cards
+// Rock progress for bento cards (no internal IDs exposed)
 interface PublicRockProgress {
-  id: string
   progress: number
   status: "on-track" | "at-risk" | "blocked" | "completed"
 }
@@ -89,10 +82,10 @@ export async function GET(
   { params }: { params: Promise<{ slug: string; date: string }> }
 ) {
   try {
-    // IP-based rate limiting: 60 requests per IP per 15 minutes
+    // IP-based rate limiting: 30 requests per IP per 15 minutes
     const { result: rateLimitResult, response: rateLimitResponse } = enforceIpRateLimit(
       request,
-      { endpoint: "public-eod-daily", maxRequests: 60 }
+      { endpoint: "public-eod-daily", maxRequests: 30 }
     )
     if (rateLimitResponse) return rateLimitResponse
 
@@ -131,21 +124,27 @@ export async function GET(
     const timezone = settings?.timezone || "America/Los_Angeles"
     const orgLogo = settings?.customBranding?.logo
 
-    // Optional access token protection for public EOD endpoints
+    // Access token protection for public EOD endpoints
+    // Token is REQUIRED — org must configure publicEodToken in settings
     const { searchParams } = new URL(request.url)
     const providedToken = searchParams.get("token")
-    if (settings?.publicEodToken) {
-      // Org has a token configured — require it
-      if (providedToken !== settings.publicEodToken) {
-        const response = NextResponse.json(
-          { success: false, error: "Invalid or missing access token" },
-          { status: 403 }
-        )
-        response.headers.set("X-Robots-Tag", "noindex, nofollow")
-        return response
-      }
+    if (!settings?.publicEodToken) {
+      // No token configured — public EOD access is disabled by default
+      const response = NextResponse.json(
+        { success: false, error: "Public EOD access is not configured for this organization" },
+        { status: 403 }
+      )
+      response.headers.set("X-Robots-Tag", "noindex, nofollow")
+      return response
     }
-    // If no token configured, allow open access (original behavior)
+    if (providedToken !== settings.publicEodToken) {
+      const response = NextResponse.json(
+        { success: false, error: "Invalid or missing access token" },
+        { status: 403 }
+      )
+      response.headers.set("X-Robots-Tag", "noindex, nofollow")
+      return response
+    }
 
     logger.info({ orgSlug: slug, date }, "Public EOD accessed")
 
@@ -222,7 +221,6 @@ export async function GET(
         rocksByUser.set(userId, [])
       }
       rocksByUser.get(userId)!.push({
-        id: rock.id as string,
         progress: (rock.progress as number) || 0,
         status: (rock.status as PublicRockProgress["status"]) || "on-track",
       })
@@ -344,9 +342,9 @@ export async function GET(
       },
     }
 
-    // Add cache headers for 30 second caching
+    // Private cache — this data requires a token and should not be stored in shared caches
     const headers = new Headers()
-    headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60")
+    headers.set("Cache-Control", "private, no-store")
     headers.set("X-Robots-Tag", "noindex, nofollow")
 
     // Include rate limit headers on successful responses

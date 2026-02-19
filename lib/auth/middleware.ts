@@ -33,6 +33,12 @@ async function getApiKeyAuthContext(request: NextRequest): Promise<AuthContext |
       return null
     }
 
+    // Reject expired API keys
+    if (apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date()) {
+      logger.warn({ apiKeyId: apiKey.id }, "Rejected expired API key")
+      return null
+    }
+
     // Get the organization
     const organization = await db.organizations.findById(apiKey.organizationId)
     if (!organization) {

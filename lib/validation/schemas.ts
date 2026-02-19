@@ -65,6 +65,7 @@ export const apiKeyCreateSchema = z.object({
   name: z.string().min(1).max(100),
   scopes: z.array(z.string()).min(1).default(["read"]),
   workspaceId: z.string().optional(),
+  expiresAt: z.string().datetime().optional(),
 })
 
 // ============================================

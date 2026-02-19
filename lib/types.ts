@@ -880,6 +880,7 @@ export interface ApiKey {
   scopes: string[]
   createdAt: string
   lastUsedAt: string | null
+  expiresAt: string | null
 }
 
 // ============================================

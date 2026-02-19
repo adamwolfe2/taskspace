@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { withAuth } from "@/lib/api/middleware"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { enforceIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
 
 // Generate iCalendar (ICS) format for calendar apps
 function generateICS(events: Array<{
@@ -66,6 +67,13 @@ function generateICS(events: Array<{
 // GET /api/export/calendar - Export tasks and rocks as ICS calendar
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
+    // IP-based rate limiting: 10 requests per IP per minute
+    const { result: rateLimitResult, response: rateLimitResponse } = enforceIpRateLimit(
+      request,
+      { endpoint: "export-calendar", maxRequests: 10, windowMs: 60 * 1000 }
+    )
+    if (rateLimitResponse) return rateLimitResponse as NextResponse<ApiResponse<null>>
+
     const { searchParams } = new URL(request.url)
     const type = searchParams.get("type") || "all" // tasks, rocks, or all
     const startDate = searchParams.get("startDate")
@@ -140,12 +148,15 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     const ics = generateICS(events)
     const filename = `align-calendar-${new Date().toISOString().split("T")[0]}.ics`
 
+    const rlHeaders = ipRateLimitHeaders(rateLimitResult)
+    // ICS file response — not JSON, so cast is required for withAuth's type signature
     return new NextResponse(ics, {
       headers: {
         "Content-Type": "text/calendar; charset=utf-8",
         "Content-Disposition": `attachment; filename="${filename}"`,
+        ...rlHeaders,
       },
-    })
+    }) as unknown as NextResponse<ApiResponse<null>>
   } catch (error) {
     logError(logger, "Calendar export error", error)
     return NextResponse.json<ApiResponse<null>>(

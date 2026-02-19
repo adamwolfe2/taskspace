@@ -261,6 +261,7 @@ function parseApiKey(row: Record<string, unknown>): ApiKey {
     scopes: row.scopes as string[],
     createdAt: (row.created_at as Date)?.toISOString() || "",
     lastUsedAt: row.last_used_at ? (row.last_used_at as Date).toISOString() : null,
+    expiresAt: row.expires_at ? (row.expires_at as Date).toISOString() : null,
   }
 }
 
@@ -390,9 +391,9 @@ export const db = {
     },
     async update(id: string, updates: Partial<User>): Promise<User | null> {
       const now = new Date().toISOString()
-      const setClauses: string[] = [`updated_at = '${now}'`]
-      const params: unknown[] = []
-      let paramIndex = 1
+      const setClauses: string[] = [`updated_at = $1`]
+      const params: unknown[] = [now]
+      let paramIndex = 2
 
       if (updates.name !== undefined) { setClauses.push(`name = $${paramIndex++}`); params.push(updates.name) }
       if (updates.avatar !== undefined) { setClauses.push(`avatar = $${paramIndex++}`); params.push(updates.avatar) }
@@ -418,10 +419,10 @@ export const db = {
     async findByEmails(emails: string[]): Promise<User[]> {
       if (emails.length === 0) return []
       const lowerEmails = emails.map(e => e.toLowerCase())
-      const emailArray = `{${lowerEmails.join(',')}}`
-      const { rows } = await sql`
-        SELECT * FROM users WHERE LOWER(email) = ANY(${emailArray}::text[])
-      `
+      const { rows } = await (sql.query as (q: string, p: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>)(
+        `SELECT * FROM users WHERE LOWER(email) = ANY($1::text[])`,
+        [lowerEmails]
+      )
       return rows.map(parseUser)
     },
   },
@@ -2385,9 +2386,9 @@ export const db = {
     },
     async create(apiKey: ApiKey): Promise<ApiKey> {
       await sql`
-        INSERT INTO api_keys (id, organization_id, workspace_id, created_by, name, key, scopes, created_at, last_used_at)
+        INSERT INTO api_keys (id, organization_id, workspace_id, created_by, name, key, scopes, created_at, last_used_at, expires_at)
         VALUES (${apiKey.id}, ${apiKey.organizationId}, ${apiKey.workspaceId}, ${apiKey.createdBy}, ${apiKey.name},
-                ${apiKey.key}, ${JSON.stringify(apiKey.scopes)}, ${apiKey.createdAt}, ${apiKey.lastUsedAt})
+                ${apiKey.key}, ${JSON.stringify(apiKey.scopes)}, ${apiKey.createdAt}, ${apiKey.lastUsedAt}, ${apiKey.expiresAt})
       `
       return apiKey
     },

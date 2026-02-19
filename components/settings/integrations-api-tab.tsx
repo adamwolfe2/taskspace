@@ -72,6 +72,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false)
   const [newApiKeyName, setNewApiKeyName] = useState("")
+  const [newApiKeyExpiry, setNewApiKeyExpiry] = useState("")
   const [isCreatingKey, setIsCreatingKey] = useState(false)
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null)
   const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
@@ -249,7 +250,11 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest"
         },
-        body: JSON.stringify({ name: newApiKeyName.trim(), workspaceId: currentWorkspaceId || undefined }),
+        body: JSON.stringify({
+          name: newApiKeyName.trim(),
+          workspaceId: currentWorkspaceId || undefined,
+          ...(newApiKeyExpiry ? { expiresAt: new Date(newApiKeyExpiry).toISOString() } : {}),
+        }),
       })
 
       const data = await response.json()
@@ -261,6 +266,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
       setNewlyCreatedKey(data.data.key)
       setApiKeys([...apiKeys, data.data])
       setNewApiKeyName("")
+      setNewApiKeyExpiry("")
 
       toast({
         title: "API key created",
@@ -549,6 +555,17 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
                   />
                   <p className="text-xs text-muted-foreground">A descriptive name to identify this key</p>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="apiKeyExpiry">Expiration Date (optional)</Label>
+                  <Input
+                    id="apiKeyExpiry"
+                    type="date"
+                    value={newApiKeyExpiry}
+                    onChange={(e) => setNewApiKeyExpiry(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                  <p className="text-xs text-muted-foreground">Leave blank for a key that never expires</p>
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowApiKeyDialog(false)}>
@@ -576,15 +593,26 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
             <div className="space-y-2">
               <Label>Your API Keys</Label>
               <div className="space-y-2">
-                {apiKeys.map((apiKey) => (
+                {apiKeys.map((apiKey) => {
+                  const isExpired = apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date()
+                  const isExpiringSoon = apiKey.expiresAt && !isExpired &&
+                    new Date(apiKey.expiresAt).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000
+                  return (
                   <div key={apiKey.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <div className="flex-1">
-                      <p className="font-medium">{apiKey.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{apiKey.name}</p>
+                        {isExpired && <Badge variant="destructive" className="text-xs">Expired</Badge>}
+                        {isExpiringSoon && <Badge variant="outline" className="text-xs border-amber-500 text-amber-700">Expires soon</Badge>}
+                      </div>
                       <p className="text-sm text-muted-foreground font-mono">{maskApiKey(apiKey.key)}</p>
                       <p className="text-xs text-muted-foreground">
                         Created {new Date(apiKey.createdAt).toLocaleDateString()}
                         {apiKey.lastUsedAt &&
                           ` • Last used ${new Date(apiKey.lastUsedAt).toLocaleDateString()}`}
+                        {apiKey.expiresAt &&
+                          ` • ${isExpired ? "Expired" : "Expires"} ${new Date(apiKey.expiresAt).toLocaleDateString()}`}
+                        {!apiKey.expiresAt && " • Never expires"}
                       </p>
                     </div>
                     <Button
@@ -596,7 +624,8 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
