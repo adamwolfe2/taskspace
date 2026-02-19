@@ -29,7 +29,7 @@ test.describe('Authentication Flow', () => {
     await expect(page.locator('text=Test Org')).toBeVisible({ timeout: 5000 })
   })
 
-  test('should login existing user successfully', async ({ page }) => {
+  test('should login existing user successfully', async ({ page: _page }) => {
     // This test assumes a test user exists in the database
     // For now, we'll skip this and test with the user we just created
     test.skip()
@@ -60,7 +60,7 @@ test.describe('Authentication Flow', () => {
     await expect(page.locator('text=/password.*must/i')).toBeVisible()
   })
 
-  test('should logout successfully', async ({ page }) => {
+  test('should logout successfully', async ({ page: _page }) => {
     // Skip for now - requires auth state
     test.skip()
   })

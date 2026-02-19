@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test } from '@playwright/test'
 
 // Setup authenticated session for workspace tests
 test.use({
@@ -14,22 +14,22 @@ test.describe('Workspace Management', () => {
   })
 
   test.describe('Workspace Creation', () => {
-    test('should create a new workspace', async ({ page }) => {
+    test('should create a new workspace', async ({ page: _page }) => {
       // Skip for now - needs auth
       test.skip()
     })
 
-    test('should validate workspace name', async ({ page }) => {
+    test('should validate workspace name', async ({ page: _page }) => {
       test.skip()
     })
   })
 
   test.describe('Workspace Switching', () => {
-    test('should switch between workspaces', async ({ page }) => {
+    test('should switch between workspaces', async ({ page: _page }) => {
       test.skip()
     })
 
-    test('should maintain separate data per workspace', async ({ page }) => {
+    test('should maintain separate data per workspace', async ({ page: _page }) => {
       test.skip()
     })
   })

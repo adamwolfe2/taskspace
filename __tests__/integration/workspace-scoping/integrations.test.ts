@@ -113,7 +113,7 @@ describe("Integrations - Workspace Scoping", () => {
           `http://localhost/api/google-calendar?workspaceId=${WORKSPACE_1}`
         )
         const response = await googleCalendarGET(request)
-        const data = await response.json()
+        await response.json()
 
         // SECURITY: Returns 404 instead of 403 to prevent workspace existence leakage
         expect(response.status).toBe(404)

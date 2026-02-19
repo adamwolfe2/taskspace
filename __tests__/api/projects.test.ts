@@ -506,7 +506,7 @@ describe("Projects API", () => {
       })
 
       const response = await PATCH(request, mockAuth as any)
-      const data = await response.json()
+      await response.json()
 
       expect(response.status).toBe(200)
       expect(mockClientsFindById).toHaveBeenCalledWith("org-1", "client-1")

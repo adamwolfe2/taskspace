@@ -102,7 +102,7 @@ describe("Productivity Features - Workspace Scoping", () => {
           `http://localhost/api/productivity/focus-blocks?workspaceId=${WORKSPACE_1}`
         )
         const response = await focusBlocksGET(request)
-        const data = await response.json()
+        await response.json()
 
         expect(response.status).toBe(404) // SECURITY: 404 prevents workspace leakage
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -179,7 +179,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         })
 
         const response = await focusBlocksPOST(request)
-        const data = await response.json()
+        await response.json()
 
         expect(response.status).toBe(404) // SECURITY: 404 prevents workspace leakage
         expect(userHasWorkspaceAccess).toHaveBeenCalledWith("user-1", WORKSPACE_1)
@@ -206,7 +206,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         })
 
         const response = await focusBlocksPOST(request)
-        const data = await response.json()
+        await response.json()
 
         expect(response.status).toBe(200)
         expect(db.focusBlocks.create).toHaveBeenCalledWith(
@@ -239,7 +239,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         `http://localhost/api/productivity/energy?workspaceId=${WORKSPACE_1}&startDate=2024-01-01&endDate=2024-01-31`
       )
       const response = await energyGET(request)
-      const data = await response.json()
+      await response.json()
 
       expect(response.status).toBe(200)
       // Energy route returns workspace-filtered data
@@ -260,7 +260,7 @@ describe("Productivity Features - Workspace Scoping", () => {
       })
 
       const response = await energyPOST(request)
-      const data = await response.json()
+      await response.json()
 
       expect(response.status).toBe(404) // SECURITY: 404 prevents workspace leakage
       expect(db.dailyEnergy.upsert).not.toHaveBeenCalled()
@@ -292,7 +292,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         `http://localhost/api/productivity/streak?workspaceId=${WORKSPACE_1}`
       )
       const response = await streakGET(request)
-      const data = await response.json()
+      await response.json()
 
       expect(response.status).toBe(200)
       // Streak calculation should only use WORKSPACE_1 reports (r-1, r-3, r-4)
@@ -331,7 +331,7 @@ describe("Productivity Features - Workspace Scoping", () => {
         `http://localhost/api/productivity/focus-score?workspaceId=${WORKSPACE_1}`
       )
       const response = await focusScoreGET(request)
-      const data = await response.json()
+      await response.json()
 
       expect(response.status).toBe(200)
       // Score calculation should only use WORKSPACE_1 data

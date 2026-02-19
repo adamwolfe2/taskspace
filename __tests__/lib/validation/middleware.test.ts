@@ -33,7 +33,6 @@ class MockNextRequest {
 // Import after setting up mocks
 import {
   validateBody,
-  validateQuery,
   ValidationError,
   sanitizeString,
   getPaginationParams,

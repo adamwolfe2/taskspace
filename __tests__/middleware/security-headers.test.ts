@@ -4,7 +4,7 @@
  * Tests to verify security headers are correctly applied
  */
 
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { proxy } from "@/proxy"
 
 // Alias for backward compatibility with existing test code

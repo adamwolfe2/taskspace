@@ -175,7 +175,7 @@ describe("Auth Login API", () => {
       })
 
       const response = await POST(request)
-      const data = await response.json()
+      await response.json()
 
       expect(response.status).toBe(200)
       expect(mockOrgFindById).toHaveBeenCalledWith("org-active")

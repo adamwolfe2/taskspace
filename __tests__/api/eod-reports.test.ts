@@ -98,10 +98,10 @@ import { GET, POST } from "@/app/api/eod-reports/route"
 import { db } from "@/lib/db"
 
 const mockFindByToken = db.sessions.findByToken as jest.Mock
-const mockSessionUpdate = db.sessions.update as jest.Mock
-const mockOrgFindById = db.organizations.findById as jest.Mock
-const mockFindByOrgAndUser = db.members.findByOrgAndUser as jest.Mock
-const mockUserFindById = db.users.findById as jest.Mock
+const _mockSessionUpdate = db.sessions.update as jest.Mock
+const _mockOrgFindById = db.organizations.findById as jest.Mock
+const _mockFindByOrgAndUser = db.members.findByOrgAndUser as jest.Mock
+const _mockUserFindById = db.users.findById as jest.Mock
 
 describe("EOD Reports API", () => {
   beforeEach(() => {

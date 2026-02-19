@@ -71,7 +71,6 @@ describe("GET /api/onboarding", () => {
     // 5. tasks
     // 6. workspace customization
     // 7. invitations
-    const callIndex = 0
     mockSqlResult
       .mockResolvedValueOnce({ rows: [{ onboarding_dismissed: false, onboarding_completed_at: null }] }) // member status
       .mockResolvedValueOnce({ rows: [{ job_title: "Engineer", timezone: "America/New_York" }] }) // profile
