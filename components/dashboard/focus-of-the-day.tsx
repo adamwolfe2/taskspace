@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import {
  Sparkles,
  Target,
- Clock,
  Pin,
  X,
  AlertCircle,

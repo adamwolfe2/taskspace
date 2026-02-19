@@ -10,8 +10,6 @@ import {
   TrendingUp,
   AlertTriangle,
   Calendar,
-  Clock,
-  Flame,
 } from "lucide-react"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 

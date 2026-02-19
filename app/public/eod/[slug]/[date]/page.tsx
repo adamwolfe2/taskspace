@@ -11,7 +11,6 @@ import {
   Users,
   RefreshCw,
   Target,
-  ArrowRight,
   Loader2,
   Calendar,
   Building2,
@@ -280,7 +279,7 @@ export default function PublicEODDailyReportPage() {
   const [data, setData] = useState<PublicDailyReport | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+  const [_lastRefresh, setLastRefresh] = useState<Date>(new Date())
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [viewMode, setViewMode] = useState<"bento" | "list">("bento")
 

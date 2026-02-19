@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Calendar,
   Clock,
@@ -129,7 +128,7 @@ export function MeetingDetailView({
 
       const data = await response.json()
       setAiSummary(data.summary || "No summary generated")
-    } catch (error) {
+    } catch {
       setAiSummary("Failed to generate summary. Please try again.")
     } finally {
       setIsGeneratingAI(false)

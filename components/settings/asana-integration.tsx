@@ -80,7 +80,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
       if (data.connected && data.workspaces?.length > 0 && !selectedWorkspace) {
         setSelectedWorkspace(data.workspaces[0].gid)
       }
-    } catch (error) {
+    } catch {
       setAsanaStatus({ connected: false, configured: false })
     } finally {
       setIsLoading(false)
@@ -92,7 +92,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
       const response = await fetch(`/api/asana/projects?workspace=${workspaceGid}`)
       const data = await response.json()
       setProjects(data.projects || [])
-    } catch (_error) {
+    } catch {
       // Asana projects fetch failed — user can still configure manually
     }
   }, [])
@@ -102,7 +102,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
       const response = await fetch(`/api/asana/users?workspace=${workspaceGid}`)
       const data = await response.json()
       setAsanaUsers(data.users || [])
-    } catch (_error) {
+    } catch {
       // Asana users fetch failed — user can still configure manually
     }
   }, [])
@@ -194,7 +194,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
         title: "Settings saved",
         description: "Asana integration settings have been updated.",
       })
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to save Asana settings.",

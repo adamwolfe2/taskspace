@@ -92,10 +92,10 @@ const MetricCell = React.memo(function MetricCell({
 
 // Inline edit component for metric values
 const EditableMetricCell = React.memo(function EditableMetricCell({
-  memberId,
-  weekEnding,
+  memberId: _memberId,
+  weekEnding: _weekEnding,
   currentValue,
-  goal,
+  goal: _goal,
   onSave,
   onCancel,
 }: {

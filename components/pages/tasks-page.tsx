@@ -41,7 +41,7 @@ interface TasksPageProps {
 export function TasksPage({
   currentUser,
   assignedTasks,
-  setAssignedTasks,
+  setAssignedTasks: _setAssignedTasks,
   rocks,
   projects,
   createTask,
@@ -53,14 +53,14 @@ export function TasksPage({
   onClearFilter,
 }: TasksPageProps) {
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
-  const [editingTask, setEditingTask] = useState<AssignedTask | null>(null)
+  const [_editingTask, setEditingTask] = useState<AssignedTask | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list")
   const [viewingUserId, setViewingUserId] = useState<string | null>(initialAssigneeFilter || null)
   const [viewingUserName, setViewingUserName] = useState<string | null>(filterUserName || null)
   const [aiPrioritizing, setAiPrioritizing] = useState(false)
-  const [aiPrioritized, setAiPrioritized] = useState<Array<{ taskId: string; rank: number; reasoning: string }> | null>(null)
+  const [_aiPrioritized, setAiPrioritized] = useState<Array<{ taskId: string; rank: number; reasoning: string }> | null>(null)
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
   const [isBulkProcessing, setIsBulkProcessing] = useState(false)
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)

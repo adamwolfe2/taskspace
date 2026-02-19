@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Download, Printer, Copy, Check, Link2, Share2, Mail } from "lucide-react"
+import { Download, Printer, Copy, Check, Link2, Mail } from "lucide-react"
 import { copyToClipboard, printReport } from "@/lib/utils/report-export"
 
 interface ExportDropdownProps {

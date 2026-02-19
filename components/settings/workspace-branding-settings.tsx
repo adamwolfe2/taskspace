@@ -6,14 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Palette,
   Upload,
@@ -146,7 +138,7 @@ export function WorkspaceBrandingSettings() {
   const [isScraping, setIsScraping] = useState(false)
 
   // Preview mode
-  const [showBeforeAfter, setShowBeforeAfter] = useState(false)
+  const [_showBeforeAfter, setShowBeforeAfter] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<ColorPreset | null>(null)
 
   // Update local state when workspace or organization changes
@@ -175,7 +167,6 @@ export function WorkspaceBrandingSettings() {
       background: "#f8fafc",
     }
 
-    const hsl = hexToHsl(primaryColor)
     const analysis = analyzeColorQuality(colors)
     setQuality(analysis)
   }, [primaryColor, secondaryColor, accentColor])
@@ -234,7 +225,7 @@ export function WorkspaceBrandingSettings() {
         title: "Logo uploaded",
         description: "Your logo has been uploaded successfully",
       })
-    } catch (error) {
+    } catch {
       toast({
         title: "Upload failed",
         description: "Failed to upload logo. Please try again.",
@@ -275,7 +266,7 @@ export function WorkspaceBrandingSettings() {
       // Show before/after comparison
       setShowBeforeAfter(true)
       setTimeout(() => setShowBeforeAfter(false), 5000)
-    } catch (error) {
+    } catch {
       toast({
         title: "Extraction failed",
         description: "Could not extract colors from the logo",
@@ -363,7 +354,7 @@ export function WorkspaceBrandingSettings() {
 
   const handleGenerateVariants = () => {
     const hsl = hexToHsl(primaryColor)
-    const presets = generateColorPresets(hsl)
+    const _presets = generateColorPresets(hsl)
 
     // Show dialog with variants (simplified here - would be a modal in production)
     toast({

@@ -42,7 +42,7 @@ export function RockMilestoneManager({ rock, onUpdateMilestones, compact = false
     setIsSaving(true)
     try {
       await onUpdateMilestones(rock.id, updatedMilestones)
-    } catch (err) {
+    } catch {
       // Revert on error
       setMilestones(milestones)
     } finally {
@@ -66,7 +66,7 @@ export function RockMilestoneManager({ rock, onUpdateMilestones, compact = false
     setIsSaving(true)
     try {
       await onUpdateMilestones(rock.id, updatedMilestones)
-    } catch (err) {
+    } catch {
       // Revert on error
       setMilestones(milestones)
     } finally {
@@ -81,7 +81,7 @@ export function RockMilestoneManager({ rock, onUpdateMilestones, compact = false
     setIsSaving(true)
     try {
       await onUpdateMilestones(rock.id, updatedMilestones)
-    } catch (err) {
+    } catch {
       // Revert on error
       setMilestones(milestones)
     } finally {

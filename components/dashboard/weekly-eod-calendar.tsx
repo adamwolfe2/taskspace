@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { CheckCircle2, Circle, Calendar, AlertTriangle, TrendingUp, Smile, Meh, Frown } from "lucide-react"
+import { useMemo } from "react"
+import { CheckCircle2, Circle, Calendar, AlertTriangle, Smile, Meh, Frown } from "lucide-react"
 import {
  Tooltip,
  TooltipContent,
@@ -34,7 +34,7 @@ interface WeekDay {
 }
 
 // Format date to YYYY-MM-DD using specified timezone
-function getDateStringInTimezone(date: Date, timezone: string): string {
+function _getDateStringInTimezone(date: Date, timezone: string): string {
  try {
    const formatter = new Intl.DateTimeFormat("en-CA", {
      timeZone: timezone,
@@ -44,7 +44,7 @@ function getDateStringInTimezone(date: Date, timezone: string): string {
    })
    // en-CA locale gives us YYYY-MM-DD format
    return formatter.format(date)
- } catch (error) {
+ } catch {
    // Fallback to local timezone
    const year = date.getFullYear()
    const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -54,7 +54,7 @@ function getDateStringInTimezone(date: Date, timezone: string): string {
 }
 
 // Get day of week in specified timezone (0 = Sunday, 6 = Saturday)
-function getDayOfWeekInTimezone(date: Date, timezone: string): number {
+function _getDayOfWeekInTimezone(date: Date, timezone: string): number {
  try {
    const formatter = new Intl.DateTimeFormat("en-US", {
      timeZone: timezone,
@@ -63,7 +63,7 @@ function getDayOfWeekInTimezone(date: Date, timezone: string): number {
    const dayName = formatter.format(date)
    const days: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
    return days[dayName] ?? date.getDay()
- } catch (error) {
+ } catch {
    return date.getDay()
  }
 }
@@ -145,7 +145,7 @@ export function WeeklyEODCalendar({
  const expectedCount = todayIndex >= 0 ? todayIndex + 1 : 5 // Days up to and including today
 
  // Calculate mood trend (if reports have mood data)
- const moodTrend = useMemo(() => {
+ const _moodTrend = useMemo(() => {
  const moods = weekDays
  .filter(d => d.hasSubmission)
  .map(d => {

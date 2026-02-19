@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
 import {
   Dialog,
   DialogContent,
@@ -33,8 +32,6 @@ import {
   Plus,
   Trash2,
   RefreshCw,
-  CheckCircle2,
-  XCircle,
   Copy,
   Eye,
   EyeOff,

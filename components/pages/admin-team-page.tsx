@@ -118,7 +118,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       try {
         const data = await api.invitations.list()
         setInvitations(data)
-      } catch (err) {
+      } catch {
         // Ignore - user might not have permission
       } finally {
         setIsLoadingInvites(false)

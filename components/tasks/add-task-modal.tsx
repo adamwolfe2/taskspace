@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Repeat, FileText, Bookmark, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
@@ -52,7 +51,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
 
   // Template state
   const [templates, setTemplates] = useState<TaskTemplate[]>([])
-  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
+  const [_isLoadingTemplates, setIsLoadingTemplates] = useState(false)
   const [saveAsTemplate, setSaveAsTemplate] = useState(false)
   const [templateName, setTemplateName] = useState("")
   const [isSavingTemplate, setIsSavingTemplate] = useState(false)
@@ -77,7 +76,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
           setTemplates(data.data || [])
         }
       }
-    } catch (_error) {
+    } catch {
       // Template loading failed — non-critical, form works without templates
     } finally {
       setIsLoadingTemplates(false)
@@ -138,7 +137,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
       } else {
         throw new Error("Failed to save template")
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to save template",

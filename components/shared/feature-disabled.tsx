@@ -8,7 +8,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, Settings, Mail } from "lucide-react"
+import { AlertTriangle, Settings } from "lucide-react"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import Link from "next/link"
 
@@ -23,7 +23,7 @@ export function FeatureDisabled({
   description,
   icon,
 }: FeatureDisabledProps) {
-  const { isAdmin, currentWorkspace } = useWorkspaces()
+  const { isAdmin } = useWorkspaces()
 
   return (
     <div className="flex items-center justify-center min-h-[400px] p-4">

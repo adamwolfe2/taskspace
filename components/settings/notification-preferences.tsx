@@ -77,7 +77,7 @@ export function NotificationPreferencesCard({ memberId, initialPreferences }: No
         description: "Your notification preferences have been updated",
       })
       setHasChanges(false)
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to save notification preferences",

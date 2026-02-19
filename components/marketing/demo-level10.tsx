@@ -2,7 +2,6 @@
 
 import { CheckCircle, Clock, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 
 export function DemoLevel10() {
   const sections = [

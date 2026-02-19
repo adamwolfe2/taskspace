@@ -18,7 +18,6 @@ import {
   Circle,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar"
 import "react-circular-progressbar/dist/styles.css"
 
 interface EnhancedKanbanCardProps {
@@ -43,7 +42,7 @@ export function EnhancedKanbanCard({
   const isCompleted = task.status === "completed"
 
   // Calculate progress if task has subtasks (future feature)
-  const progress = useMemo(() => {
+  const _progress = useMemo(() => {
     // This can be extended when we add subtasks
     return isCompleted ? 100 : 0
   }, [isCompleted])

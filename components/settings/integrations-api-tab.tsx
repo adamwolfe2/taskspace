@@ -28,7 +28,6 @@ import {
   ExternalLink,
   Trash2,
   Plus,
-  Terminal,
   Download,
   CheckCircle2,
   XCircle,
@@ -98,7 +97,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
             setApiKeys(data.data || [])
           }
         }
-      } catch (_err) {
+      } catch {
         /* silently ignore */
       }
     }
@@ -113,7 +112,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
             setIntegrationStatus(data.data)
           }
         }
-      } catch (_err) {
+      } catch {
         /* silently ignore */
       }
     }
@@ -169,7 +168,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
           }
         }
       }
-    } catch (err) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to check email configuration",

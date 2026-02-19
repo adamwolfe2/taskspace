@@ -42,7 +42,7 @@ const filterConfig: Record<SuggestionFilter, { label: string; icon: React.Elemen
   rock_update: { label: "Rock Updates", icon: Target },
 }
 
-export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
+export function AIInbox({ organizationId: _organizationId, teamMembers }: AIInboxProps) {
   const { toast } = useToast()
 
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([])
@@ -75,7 +75,7 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
       } else {
         throw new Error(data.error || "Failed to fetch suggestions")
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load suggestions",
@@ -190,7 +190,7 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
       } else {
         throw new Error(data.error || "Bulk approve failed")
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Bulk approve failed",
@@ -229,7 +229,7 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
       } else {
         throw new Error(data.error || "Bulk reject failed")
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Bulk reject failed",

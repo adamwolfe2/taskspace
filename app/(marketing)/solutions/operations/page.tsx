@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowRight, CheckCircle, Settings, BarChart3, Users, Zap } from "lucide-react"
+import { ArrowRight, CheckCircle, Settings, BarChart3, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { PageTransition } from "@/components/marketing/page-transition"

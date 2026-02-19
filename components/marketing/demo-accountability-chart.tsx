@@ -1,8 +1,7 @@
 "use client"
 
-import { Crown, Users, DollarSign, Megaphone, Settings } from "lucide-react"
+import { Crown, DollarSign, Megaphone, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { useState } from "react"
 
 export function DemoAccountabilityChart() {

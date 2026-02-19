@@ -42,7 +42,7 @@ export function ForgotPasswordPage() {
 
       // Always show success to prevent email enumeration
       setSuccess(true)
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)

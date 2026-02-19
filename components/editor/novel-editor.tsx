@@ -13,7 +13,6 @@ import {
 import { useEffect, useState } from "react"
 import { useDebouncedCallback } from "use-debounce"
 import { defaultExtensions } from "./extensions"
-import { Separator } from "@/components/ui/separator"
 import { slashCommand, suggestionItems } from "./slash-command"
 
 const extensions = [...defaultExtensions, slashCommand]

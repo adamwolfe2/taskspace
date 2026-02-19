@@ -1,16 +1,14 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Upload, Palette, Loader2, Check, X, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useApp } from "@/lib/contexts/app-context"
 import { useBrandTheme } from "@/lib/contexts/brand-theme-context"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
-import { api } from "@/lib/api/client"
 import { useToast } from "@/hooks/use-toast"
 import {
   extractColorsFromImage,
@@ -21,7 +19,6 @@ import {
 } from "@/lib/utils/color-extractor"
 
 export function BrandingSettings() {
-  const { currentOrganization, refreshSession } = useApp()
   const { currentWorkspace, refresh: refreshWorkspaces } = useWorkspaces()
   const { colors, updateBrandColors } = useBrandTheme()
   const { toast } = useToast()
@@ -94,12 +91,12 @@ export function BrandingSettings() {
           title: "Logo uploaded!",
           description: "We've automatically generated colors from your logo",
         })
-      } catch (error) {
+      } catch {
         // Keep existing colors
       } finally {
         setIsExtractingColors(false)
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Upload failed",
         description: "Failed to upload logo. Please try again.",
@@ -119,7 +116,7 @@ export function BrandingSettings() {
         const hsl = hexToHsl(value)
         const palette = generateColorPalette(hsl)
         setPendingColors(palette)
-      } catch (error) {
+      } catch {
         setPendingColors((prev) => ({ ...prev, [colorKey]: value }))
       }
     } else {

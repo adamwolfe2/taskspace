@@ -121,7 +121,7 @@ export function TeamActivityHeatmap({
  </div>
 
  {/* Member Rows */}
- {memberActivities.map(({ member, activities, totalEod, totalTasks }) => (
+ {memberActivities.map(({ member, activities, totalEod, totalTasks: _totalTasks }) => (
  <div key={member.id} className="flex items-center gap-2">
  {/* Member Name */}
  <div className="w-28 shrink-0 truncate">

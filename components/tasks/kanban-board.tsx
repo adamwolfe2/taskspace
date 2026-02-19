@@ -22,7 +22,6 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import type { AssignedTask } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { CheckCircle2, Circle, PlayCircle } from "lucide-react"
 import { EnhancedKanbanCard } from "./enhanced-kanban-card"
@@ -208,7 +207,7 @@ export function KanbanBoard({
     setActiveId(event.active.id as string)
   }
 
-  const handleDragOver = (event: DragOverEvent) => {
+  const handleDragOver = (_event: DragOverEvent) => {
     // Handle drag over for visual feedback if needed
   }
 

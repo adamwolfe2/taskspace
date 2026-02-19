@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Users,
@@ -45,7 +44,7 @@ interface WorkspaceMetrics {
 }
 
 export function WorkspaceDashboard() {
-  const { currentOrganization, currentUser } = useApp()
+  const { currentOrganization } = useApp()
   const [metrics, setMetrics] = useState<WorkspaceMetrics | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -89,7 +88,7 @@ export function WorkspaceDashboard() {
             aiCreditsLimit: 0,
           },
         })
-      } catch (err) {
+      } catch {
         setError("Failed to load workspace metrics")
       } finally {
         setIsLoading(false)

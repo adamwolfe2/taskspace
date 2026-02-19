@@ -28,7 +28,7 @@ interface StreakCounterProps {
 export function StreakCounter({
   currentStreak,
   longestStreak,
-  lastSubmissionDate,
+  lastSubmissionDate: _lastSubmissionDate,
   size = "md",
   showProgress = true,
   showBest = true,

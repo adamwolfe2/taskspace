@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import {
  Select,
  SelectContent,
@@ -26,10 +25,7 @@ import {
  Calendar,
  ChevronLeft,
  ChevronRight,
- ZoomIn,
- ZoomOut,
  Users,
- AlertTriangle,
  CheckCircle2,
  Clock,
  AlertCircle,
@@ -254,7 +250,7 @@ export function RockRoadmap({
  <div className="flex">
  <div className="w-48 shrink-0" /> {/* Space for rock names */}
  <div className="flex-1 flex">
- {timeMarkers.map((marker, i) => (
+ {timeMarkers.map((marker, _i) => (
  <div
  key={marker.date.toISOString()}
  className="flex-1 text-center text-xs font-medium text-slate-500 "

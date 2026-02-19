@@ -9,7 +9,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Sparkles, Send, Loader2, X, Plus, AlertTriangle, Check, Target, Calendar, Clock } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember } from "@/lib/types"
 import type { TeamMemberMetric } from "@/lib/metrics"
@@ -17,7 +16,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
 import { sendEODNotification } from "@/lib/email"
 import { updateStreak } from "@/lib/hooks/use-productivity"
-import { getTodayInTimezone, formatShortDate, getValidDateOptions, getCurrentQuarterDisplay } from "@/lib/utils/date-utils"
+import { getTodayInTimezone, getValidDateOptions, getCurrentQuarterDisplay } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useBrandTheme } from "@/lib/contexts/brand-theme-context"
 import { lighten, darken } from "@/lib/utils/color-helpers"
@@ -104,7 +103,7 @@ export function AIEODSubmission({
             setOrgDateInfo(data.data)
           }
         }
-      } catch (err) {
+      } catch {
         // Error fetching organization date
       }
     }
@@ -125,7 +124,7 @@ export function AIEODSubmission({
             setActiveMetric(data.data.metric)
           }
         }
-      } catch (err) {
+      } catch {
         // Error fetching active metric
       }
     }
@@ -251,13 +250,13 @@ export function AIEODSubmission({
             description: `Congratulations! You've achieved a ${streakResult.longestStreak}-day streak!`,
           })
         }
-      } catch (streakError) {
+      } catch {
         // Streak update failed, but EOD was submitted successfully
       }
 
       try {
         await sendEODNotification(report as EODReport, currentUser, allRocks)
-      } catch (error) {
+      } catch {
         // Email notification failed, but EOD was saved successfully
       }
 

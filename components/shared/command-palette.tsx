@@ -26,9 +26,7 @@ import {
   LogOut,
   Moon,
   Sun,
-  Bell,
   Zap,
-  Calendar,
 } from "lucide-react"
 import type { PageType } from "@/lib/types"
 import { QuickTaskDialog } from "./quick-task-dialog"

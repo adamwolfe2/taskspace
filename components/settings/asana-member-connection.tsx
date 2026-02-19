@@ -22,7 +22,6 @@ import {
   Key,
   Link2,
   Loader2,
-  RefreshCw,
   Unlink,
   XCircle,
 } from "lucide-react"
@@ -56,7 +55,7 @@ export function AsanaMemberConnection() {
       if (data.success) {
         setStatus(data.data)
       }
-    } catch (_err) {
+    } catch {
       /* silently ignore */
     } finally {
       setIsLoading(false)
@@ -98,7 +97,7 @@ export function AsanaMemberConnection() {
           variant: "destructive",
         })
       }
-    } catch (err) {
+    } catch {
       toast({
         title: "Connection failed",
         description: "Failed to connect to Asana",
@@ -132,7 +131,7 @@ export function AsanaMemberConnection() {
           variant: "destructive",
         })
       }
-    } catch (err) {
+    } catch {
       toast({
         title: "Failed to disconnect",
         description: "Failed to disconnect Asana",

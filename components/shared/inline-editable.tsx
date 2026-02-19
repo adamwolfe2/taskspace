@@ -62,7 +62,7 @@ export function InlineEditable({
  try {
  await onSave(editValue.trim())
  setIsEditing(false)
- } catch (error) {
+ } catch {
  setEditValue(value)
  } finally {
  setIsSaving(false)

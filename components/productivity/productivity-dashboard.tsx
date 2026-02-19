@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { FocusScoreGauge, FocusScoreCompact } from "./focus-score-gauge"
 import { StreakCounter, StreakBadge } from "./streak-counter"
 import { EnergyCheckIn, EnergyDisplay } from "./energy-check-in"
-import { WeeklyHoursChart, WeeklyHoursMini } from "./weekly-hours-chart"
+import { WeeklyHoursChart } from "./weekly-hours-chart"
 import { FocusBlockLogger } from "./focus-block-logger"
 import { Button } from "@/components/ui/button"
 import type {
@@ -49,7 +49,7 @@ export function ProductivityDashboard({
 }: ProductivityDashboardProps) {
   const [showDetailedBreakdown, setShowDetailedBreakdown] = useState(false)
 
-  const totalWeekMinutes = useMemo(
+  const _totalWeekMinutes = useMemo(
     () => weeklyHoursData.reduce((sum, d) => sum + d.totalMinutes, 0),
     [weeklyHoursData]
   )
@@ -193,7 +193,7 @@ export function ProductivityWidget({
   streak,
   todayEnergy,
   totalFocusMinutes,
-  onViewDetails,
+  onViewDetails: _onViewDetails,
   className,
 }: {
   focusScore: FocusScore

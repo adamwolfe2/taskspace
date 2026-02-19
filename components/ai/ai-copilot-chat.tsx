@@ -101,7 +101,7 @@ export function AICopilotChat({
       }
 
       setMessages((prev) => [...prev, assistantMessage])
-    } catch (error) {
+    } catch {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: "assistant",

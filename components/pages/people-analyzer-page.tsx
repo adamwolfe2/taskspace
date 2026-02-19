@@ -116,7 +116,7 @@ export function PeopleAnalyzerPage() {
 
       const data = await response.json();
       setAssessments(data);
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load people assessments",
@@ -245,7 +245,7 @@ export function PeopleAnalyzerPage() {
 
       handleCloseDialog();
       loadAssessments();
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to save assessment",
@@ -285,7 +285,7 @@ export function PeopleAnalyzerPage() {
       });
 
       loadAssessments();
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to delete assessment",

@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo } from "react"
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   LineChart,
@@ -223,7 +222,6 @@ export function TeamAnalyticsCharts({
 
   // Individual member performance
   const memberPerformance = useMemo(() => {
-    const memberMap = new Map(teamMembers.map(m => [m.id, m]))
     const performance: Record<string, {
       name: string
       reportsSubmitted: number

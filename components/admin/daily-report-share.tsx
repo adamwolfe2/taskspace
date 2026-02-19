@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,7 +17,7 @@ import {
   ChevronRight,
   RefreshCw,
 } from "lucide-react"
-import { format, addDays, subDays, parseISO } from "date-fns"
+import { format, addDays, subDays } from "date-fns"
 import type { Organization, EODReport, TeamMember } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 
@@ -57,7 +57,7 @@ export function DailyReportShare({
       await navigator.clipboard.writeText(publicUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
+    } catch {
       toast({ title: "Failed to copy", description: "Could not copy link to clipboard", variant: "destructive" })
     }
   }, [publicUrl, toast])

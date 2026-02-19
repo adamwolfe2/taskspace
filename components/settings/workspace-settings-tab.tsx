@@ -26,7 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Users, UserPlus, Loader2, Trash2, Shield, Eye, Crown, Settings2, BarChart3, AlertTriangle, Briefcase, Building2, Folder, Save, CheckCircle2, Target, FileText } from "lucide-react"
+import { Users, Loader2, Trash2, Shield, Eye, Crown, Settings2, BarChart3, AlertTriangle, Briefcase, Building2, Folder, Save, CheckCircle2, Target, FileText } from "lucide-react"
 import { useWorkspaces, useWorkspaceDetails, useUpdateWorkspace, useDeleteWorkspace } from "@/lib/hooks/use-workspace"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
@@ -47,7 +47,7 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
 
   const [memberToRemove, setMemberToRemove] = useState<string | null>(null)
   const [isRemoving, setIsRemoving] = useState(false)
-  const [roleChanges, setRoleChanges] = useState<Record<string, string>>({})
+  const [_roleChanges, setRoleChanges] = useState<Record<string, string>>({})
 
   // Workspace editing state
   const [isEditing, setIsEditing] = useState(false)
@@ -91,7 +91,7 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
           setStats(data.data)
         }
       })
-      .catch((err) => {
+      .catch(() => {
         // Error fetching workspace stats
       })
       .finally(() => {

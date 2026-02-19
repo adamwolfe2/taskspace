@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { UserInitials } from "@/components/shared/user-initials"
 import { formatDistanceToNow } from "date-fns"
-import { MessageSquare, Send, X } from "lucide-react"
+import { MessageSquare, Send } from "lucide-react"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 import { useToast } from "@/hooks/use-toast"
 

@@ -2,13 +2,6 @@
 
 import * as React from "react"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -19,7 +12,6 @@ import {
 } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Briefcase, Building2, Users, Folder, ChevronDown, Plus, Check, Settings } from "lucide-react"
@@ -95,8 +87,8 @@ interface WorkspaceSwitcherProps {
 export function WorkspaceSwitcher({
   className,
   showMemberCount = false,
-  showType = true,
-  size = "default",
+  showType: _showType = true,
+  size: _size = "default",
 }: WorkspaceSwitcherProps) {
   const { workspaces, currentWorkspace, currentWorkspaceId, isLoading, switchWorkspace } =
     useWorkspaces()

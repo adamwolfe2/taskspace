@@ -23,7 +23,7 @@ import { getDemoManagerDashboard, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 import { cn } from "@/lib/utils"
 import { useManagerAiInsights } from "@/lib/hooks/use-ai-insights"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
-import type { TeamMember, ManagerDashboard, DirectReport, ManagerAlert } from "@/lib/types"
+import type { TeamMember, ManagerDashboard, DirectReport } from "@/lib/types"
 import {
   Users,
   Target,
@@ -48,7 +48,7 @@ interface ManagerDashboardPageProps {
   currentUser: TeamMember
 }
 
-export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps) {
+export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashboardPageProps) {
   const { currentWorkspace } = useWorkspaces()
   const { navigateWithFilter, isDemoMode } = useApp()
   const { toast } = useToast()

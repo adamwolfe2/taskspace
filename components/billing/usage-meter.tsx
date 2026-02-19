@@ -49,7 +49,7 @@ export function UsageMeter({ showCard = true, compact = false, onUpgradeClick }:
         } else {
           setError(data.error || "Failed to load usage")
         }
-      } catch (err) {
+      } catch {
         setError("Failed to load usage data")
       } finally {
         setIsLoading(false)

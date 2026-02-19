@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Clock, Star, AlertCircle, X } from "lucide-react"
+import { Plus, Clock, Star, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

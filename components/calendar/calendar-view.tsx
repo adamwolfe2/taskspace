@@ -34,7 +34,7 @@ interface DayData {
   hasEOD: boolean
 }
 
-export function CalendarView({ tasks, rocks, eodReports, currentUser, onSelectDate }: CalendarViewProps) {
+export function CalendarView({ tasks, rocks, eodReports, currentUser: _currentUser, onSelectDate }: CalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,7 +58,7 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
         if (data.success && data.data?.organizations) {
           setOrganizations(data.data.organizations)
         }
-      } catch (_err) {
+      } catch {
         /* silently ignore */
       } finally {
         setIsLoading(false)
@@ -92,7 +91,7 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
       } else {
         setError(data.error || "Failed to switch organization")
       }
-    } catch (err) {
+    } catch {
       setError("Failed to switch organization")
     } finally {
       setIsSwitching(false)
@@ -122,7 +121,7 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
       } else {
         setError(data.error || "Failed to create organization")
       }
-    } catch (err) {
+    } catch {
       setError("Failed to create organization")
     } finally {
       setIsCreating(false)
@@ -137,25 +136,6 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
         return <Shield className="h-3 w-3 text-blue-500" />
       default:
         return <Users className="h-3 w-3 text-gray-400" />
-    }
-  }
-
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case "owner":
-        return (
-          <Badge className="bg-amber-100 text-amber-700 border-0 text-[10px] px-1.5 py-0">
-            Owner
-          </Badge>
-        )
-      case "admin":
-        return (
-          <Badge className="bg-blue-100 text-blue-700 border-0 text-[10px] px-1.5 py-0">
-            Admin
-          </Badge>
-        )
-      default:
-        return null
     }
   }
 

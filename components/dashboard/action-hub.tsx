@@ -19,7 +19,6 @@ import {
   AlertTriangle,
   TrendingUp,
   Target,
-  CheckCircle2,
   Flame,
   Calendar,
   Brain,

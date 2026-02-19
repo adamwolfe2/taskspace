@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { BarChart3, AlertCircle, CheckCircle2, ChevronRight, ExternalLink } from "lucide-react"
+import { BarChart3, AlertCircle, CheckCircle2, ChevronRight } from "lucide-react"
 import type { MeetingSection, MeetingPrep } from "@/lib/db/meetings"
 
 interface ScorecardSectionProps {

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import type { Rock, RockDependency } from "@/lib/types"
-import { Plus, X, ArrowRight, Link2, Unlink, AlertTriangle, Target } from "lucide-react"
+import { Plus, ArrowRight, Link2, Unlink, AlertTriangle, Target } from "lucide-react"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 import { useToast } from "@/hooks/use-toast"

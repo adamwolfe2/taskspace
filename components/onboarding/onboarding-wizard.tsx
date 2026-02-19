@@ -268,7 +268,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
       if (brand.colors.accent) {
         setAccentColor(brand.colors.accent)
       }
-    } catch (err) {
+    } catch {
       setScrapeError("Could not connect to website. You can skip this step and set up manually.")
     } finally {
       setIsScraping(false)

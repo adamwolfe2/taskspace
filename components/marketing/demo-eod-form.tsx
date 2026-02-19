@@ -3,10 +3,9 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Sparkles, Send, Check, Target, X, Plus } from "lucide-react"
+import { Sparkles, Send, Check, Target, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 const DEMO_TEXT = `- Updated the marketing landing page with new testimonials
@@ -16,12 +15,6 @@ const DEMO_TEXT = `- Updated the marketing landing page with new testimonials
 - Blocked on: waiting for design feedback
 
 Tomorrow: finalize newsletter, launch new feature`
-
-const DEMO_ROCKS = [
-  { id: "1", title: "Improve Marketing Conversion Rate" },
-  { id: "2", title: "Launch New Product Features" },
-  { id: "3", title: "Build Engineering Team" },
-]
 
 interface ParsedTask {
   id: string

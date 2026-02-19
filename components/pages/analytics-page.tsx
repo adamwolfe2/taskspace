@@ -22,7 +22,7 @@ import { ActivityHeatmap } from "@/components/analytics/activity-heatmap"
 import { GoalVsActualChart } from "@/components/analytics/goal-vs-actual-chart"
 import { Skeleton } from "@/components/ui/skeleton"
 import { BarChart3, Calendar, Download } from "lucide-react"
-import { cn } from "@/lib/utils"
+
 import { EmptyState } from "@/components/shared/empty-state"
 
 interface AnalyticsData {
@@ -56,7 +56,7 @@ interface AnalyticsData {
 }
 
 export function AnalyticsPage() {
-  const { currentWorkspace, workspaces } = useWorkspaces()
+  const { workspaces } = useWorkspaces()
   const { currentWorkspaceId } = useWorkspaceStore()
   const { isDemoMode } = useApp()
   const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "1y">("30d")

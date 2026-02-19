@@ -94,7 +94,7 @@ export function ResetPasswordPage({ token }: ResetPasswordPageProps) {
       }
 
       setSuccess(true)
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)

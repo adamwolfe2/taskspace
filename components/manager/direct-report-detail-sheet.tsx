@@ -20,11 +20,8 @@ import type { DirectReport } from "@/lib/types"
 import {
   CheckCircle2,
   Clock,
-  AlertTriangle,
   Target,
   Flame,
-  TrendingUp,
-  TrendingDown,
   AlertCircle,
   Mail,
   Calendar,

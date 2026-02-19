@@ -13,7 +13,6 @@ import {
   XCircle,
   Loader2,
   ExternalLink,
-  RefreshCcw,
   AlertTriangle,
 } from "lucide-react"
 import { IntegrationLogo } from "@/components/ui/integration-logo"
@@ -32,7 +31,7 @@ interface CalendarStatus {
   authUrl: string | null
 }
 
-export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationProps) {
+export function GoogleCalendarIntegration({ userId: _userId }: GoogleCalendarIntegrationProps) {
   const [status, setStatus] = useState<CalendarStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
@@ -71,7 +70,7 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
           setStatus(data.data)
         }
       }
-    } catch (_error) {
+    } catch {
       // Calendar status check failed — non-critical, user can retry
     } finally {
       setIsLoading(false)
@@ -100,7 +99,7 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
       } else {
         throw new Error("Failed to disconnect")
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to disconnect Google Calendar",
@@ -129,7 +128,7 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
       } else {
         throw new Error("Failed to update settings")
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to update settings",

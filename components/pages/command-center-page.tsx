@@ -8,7 +8,7 @@ import { AITaskReview } from "@/components/ai/ai-task-review"
 import { AICopilotChat } from "@/components/ai/ai-copilot-chat"
 import { DailyDigestCard } from "@/components/ai/daily-digest-card"
 import { BulkRockImport } from "@/components/ai/bulk-rock-import"
-import { api } from "@/lib/api/client"
+
 import { useToast } from "@/hooks/use-toast"
 import { useApp } from "@/lib/contexts/app-context"
 import { getErrorMessage } from "@/lib/utils"
@@ -28,7 +28,7 @@ interface CommandCenterPageProps {
   currentUser: TeamMember
 }
 
-export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPageProps) {
+export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: CommandCenterPageProps) {
   const { isDemoMode } = useApp()
   const [activeTab, setActiveTab] = useState("brain-dump")
   const [pendingTasks, setPendingTasks] = useState<AIGeneratedTask[]>([])
@@ -40,7 +40,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
   const [isQuerying, setIsQuerying] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // Use local timezone for date string to match EOD report format
-  const [selectedDate, setSelectedDate] = useState(() => {
+  const [selectedDate] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   })

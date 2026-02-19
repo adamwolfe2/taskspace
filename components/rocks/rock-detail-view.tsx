@@ -79,7 +79,7 @@ export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
   const [loading, setLoading] = useState(true)
   const [rock, setRock] = useState<Rock | null>(null)
   const [tasks, setTasks] = useState<RockTask[]>([])
-  const [milestones, setMilestones] = useState<RockMilestone[]>([])
+  const [_milestones, setMilestones] = useState<RockMilestone[]>([])
   const [checkins, setCheckins] = useState<RockCheckin[]>([])
   const [showCheckinDialog, setShowCheckinDialog] = useState(false)
   const [isCompleting, setIsCompleting] = useState(false)
@@ -104,7 +104,7 @@ export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load rock details",

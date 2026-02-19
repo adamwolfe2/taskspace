@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useCallback } from "react"
+import { useCallback } from "react"
 import { EmployeeCard } from "./employee-card"
 import { cn } from "@/lib/utils"
 import type { OrgChartEmployeeNode, OrgChartEmployee } from "@/lib/org-chart/types"
@@ -57,7 +57,7 @@ function OrgChartNode({
   highlightedEmployee,
   progressData,
   cardRefs,
-  isRoot = false,
+  isRoot: _isRoot = false,
 }: OrgChartNodeProps) {
   const hasReports = node.directReports.length > 0
 

@@ -9,7 +9,7 @@ interface SetupOrganizationPageProps {
   mode?: "create" | "setup"
 }
 
-export function SetupOrganizationPage({ mode = "create" }: SetupOrganizationPageProps) {
+export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizationPageProps) {
   const { currentUser, setCurrentPage, refreshSession } = useApp()
   const { toast } = useToast()
 
@@ -52,7 +52,7 @@ export function SetupOrganizationPage({ mode = "create" }: SetupOrganizationPage
     })
 
     if (!workspaceResponse.ok) {
-      const error = await workspaceResponse.json().catch(() => ({ error: "Failed to create workspace" }))
+      const _error = await workspaceResponse.json().catch(() => ({ error: "Failed to create workspace" }))
       // Workspace failed but org exists - user can still proceed
       // The ensure-default endpoint will create a workspace on next login
       toast({

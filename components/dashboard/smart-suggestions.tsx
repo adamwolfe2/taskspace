@@ -57,7 +57,7 @@ export function SmartSuggestions({
  onRockClick,
  className,
 }: SmartSuggestionsProps) {
- const { getPriorityStyle: getBrandPriorityStyle, getStatusStyle } = useBrandStatusStyles()
+ const { getPriorityStyle: getBrandPriorityStyle } = useBrandStatusStyles()
  const suggestions = useMemo(() => {
  const result: Suggestion[] = []
  const today = startOfDay(new Date())

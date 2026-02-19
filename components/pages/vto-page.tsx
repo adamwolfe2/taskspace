@@ -7,9 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useApp } from "@/lib/contexts/app-context"
-import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher"
+
 import { useToast } from "@/hooks/use-toast"
-import { BookOpen, ChevronDown, ChevronRight, Save, Loader2, Plus, X } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronRight, Loader2, Plus, X } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { DEMO_VTO, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
@@ -117,7 +117,7 @@ export function VTOPage() {
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to fetch V/TO data",
@@ -167,7 +167,7 @@ export function VTOPage() {
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to save V/TO data",

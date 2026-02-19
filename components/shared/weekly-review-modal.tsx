@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo } from "react"
 import {
  Dialog,
  DialogContent,
@@ -70,7 +70,7 @@ export function WeeklyReviewModal({
  existingReview?.mood || "neutral"
  )
  const [energyLevel, setEnergyLevel] = useState(existingReview?.energyLevel || 3)
- const [productivityRating, setProductivityRating] = useState(
+ const [productivityRating, _setProductivityRating] = useState(
  existingReview?.productivityRating || 3
  )
  const [nextWeekGoals, setNextWeekGoals] = useState<{ text: string; priority?: string }[]>(

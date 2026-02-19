@@ -91,7 +91,7 @@ export function QuickTaskDialog({ open, onOpenChange, userId }: QuickTaskDialogP
 
       // Trigger a refresh of the tasks list
       window.dispatchEvent(new CustomEvent("task-created"))
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to create task. Please try again.",

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Check, Loader2, Sparkles, Crown, Building2, ArrowRight, Zap } from "lucide-react"
+import { Check, Loader2, Sparkles, Crown, ArrowRight, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { STRIPE_PAYMENT_LINKS } from "@/lib/integrations/stripe-config"

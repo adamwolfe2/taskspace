@@ -32,7 +32,7 @@ interface ClientsPageProps {
 
 
 export function ClientsPage({
-  currentUser,
+  currentUser: _currentUser,
   clients,
   projects,
   createClient,

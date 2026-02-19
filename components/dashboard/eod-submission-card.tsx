@@ -11,12 +11,11 @@ import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2, Paperclip, Loade
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask, FileAttachment } from "@/lib/types"
 import { FileTray } from "@/components/ui/file-tray"
 import type { TeamMemberMetric } from "@/lib/metrics"
-import { getTodayInTimezone, formatShortDate, getValidDateOptions, getCurrentQuarterDisplay, isThursday } from "@/lib/utils/date-utils"
+import { getTodayInTimezone, getValidDateOptions, getCurrentQuarterDisplay, isThursday } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 import { useToast } from "@/hooks/use-toast"
-import { ToastAction } from "@/components/ui/toast"
 import { sendEODNotification } from "@/lib/email"
 import { updateStreak } from "@/lib/hooks/use-productivity"
 import { api } from "@/lib/api/client"
@@ -107,7 +106,7 @@ export function EODSubmissionCard({
             setWeeklyMetricTotal(data.data.weeklyTotal)
           }
         }
-      } catch (err) {
+      } catch {
         // Error fetching active metric
       }
     }
@@ -153,7 +152,7 @@ export function EODSubmissionCard({
     )
   }
 
-  const addPriority = () => {
+  const _addPriority = () => {
     if (tomorrowPriorities.length < 5) {
       setTomorrowPriorities([
         ...tomorrowPriorities,
@@ -162,13 +161,13 @@ export function EODSubmissionCard({
     }
   }
 
-  const removePriority = (id: string) => {
+  const _removePriority = (id: string) => {
     if (tomorrowPriorities.length > 1) {
       setTomorrowPriorities(tomorrowPriorities.filter((p) => p.id !== id))
     }
   }
 
-  const updatePriority = (id: string, field: keyof EODPriority, value: string) => {
+  const _updatePriority = (id: string, field: keyof EODPriority, value: string) => {
     setTomorrowPriorities(
       tomorrowPriorities.map((p) => {
         if (p.id === id) {
@@ -252,13 +251,13 @@ export function EODSubmissionCard({
             description: `Congratulations! You've achieved a ${streakResult.longestStreak}-day streak!`,
           })
         }
-      } catch (streakError) {
+      } catch {
         // Don't fail the submission if streak update fails
       }
 
       try {
         await sendEODNotification(report as EODReport, currentUser, allRocks)
-      } catch (error) {
+      } catch {
         // Email notification failed, but EOD was saved successfully
       }
 
@@ -305,7 +304,7 @@ export function EODSubmissionCard({
                 description: `Congratulations! You've achieved a ${streakResult.longestStreak}-day streak!`,
               })
             }
-          } catch (streakError) {
+          } catch {
             // Streak update failed, but report was updated successfully
           }
 
@@ -426,7 +425,7 @@ export function EODSubmissionCard({
         {/* Manually added tasks */}
         <div className="space-y-3">
           <Label className="text-sm font-semibold text-slate-700">Additional Tasks</Label>
-          {tasks.map((task, index) => (
+          {tasks.map((task, _index) => (
             <div key={task.id} className="space-y-2 p-3 border border-slate-200 rounded-lg bg-slate-50/50">
               <div className="flex gap-2">
                 <Input
@@ -572,7 +571,7 @@ export function EODSubmissionCard({
         {/* Tomorrow's Priorities */}
         <div className="space-y-3">
           <Label className="text-sm font-semibold text-slate-700">Tomorrow's Priorities</Label>
-          {tomorrowPriorities.map((priority, index) => (
+          {tomorrowPriorities.map((priority, _index) => (
             <div key={priority.id} className="space-y-2 p-3 border border-slate-200 rounded-lg bg-slate-50/50">
               <div className="flex gap-2">
                 <Input

@@ -10,7 +10,6 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,11 +54,6 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   admin: Settings,
 }
 
-interface FeatureConfigResponse {
-  features: WorkspaceFeatureToggles
-  config: WorkspaceFeatureConfig
-}
-
 export function WorkspaceFeaturesTab() {
   const { currentWorkspace, isAdmin, refresh } = useWorkspaces()
   const { toast } = useToast()
@@ -96,7 +90,7 @@ export function WorkspaceFeaturesTab() {
             variant: "destructive",
           })
         }
-      } catch (error) {
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load workspace features",
@@ -239,7 +233,7 @@ export function WorkspaceFeaturesTab() {
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to update workspace features",

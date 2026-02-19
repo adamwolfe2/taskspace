@@ -63,7 +63,7 @@ function getDueDateStatus(dueDate: string | null, isCompleted: boolean) {
   return null
 }
 
-export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, rocks, currentUser, isSelected, onToggleSelection, showSelectionCheckbox }: TaskCardProps) {
+export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, rocks: _rocks, currentUser, isSelected, onToggleSelection, showSelectionCheckbox }: TaskCardProps) {
   const [showDetail, setShowDetail] = useState(false)
   const [showFullDescription, setShowFullDescription] = useState(false)
   const { getStatusStyle, getPriorityStyle } = useBrandStatusStyles()

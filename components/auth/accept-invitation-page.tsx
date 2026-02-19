@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Target, AlertCircle, Check, Users } from "lucide-react"
+import { Loader2, AlertCircle, Check, Users } from "lucide-react"
 
 interface InvitationDetails {
   email: string

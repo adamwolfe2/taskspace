@@ -18,15 +18,12 @@ import {
   getInitials,
   getAvatarColor,
   parseRocks,
-  formatRocks,
   calculateRockProgress,
 } from "@/lib/org-chart/utils"
-import type { OrgChartEmployee, OrgChartEmployeeNode, ParsedRock } from "@/lib/org-chart/types"
+import type { OrgChartEmployee } from "@/lib/org-chart/types"
 import {
-  User,
   Mail,
   Building2,
-  Briefcase,
   Users,
   Target,
   Edit2,
@@ -125,7 +122,7 @@ export function EmployeeModal({
       setIsEditing(false)
       // Update local state by triggering a refresh
       window.location.reload()
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to save rocks. Please try again.",

@@ -80,7 +80,7 @@ function getAvailableQuarters(rocks: Rock[]): string[] {
 }
 
 export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefresh, projects }: MyRocksSectionProps) {
-  const [draggedRock, setDraggedRock] = useState<string | null>(null)
+  const [_draggedRock, setDraggedRock] = useState<string | null>(null)
   const [selectedRock, setSelectedRock] = useState<Rock | null>(null)
   const [selectedQuarter, setSelectedQuarter] = useState<string>("all")
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -131,7 +131,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
         title: "Rocks refreshed",
         description: "Your rocks have been synchronized",
       })
-    } catch (err) {
+    } catch {
       toast({
         title: "Refresh failed",
         description: "Failed to sync rocks",

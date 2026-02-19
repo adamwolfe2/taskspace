@@ -67,7 +67,7 @@ export function MetricCard({
   onUpdateEntry,
   onEditMetric,
   onDeleteMetric,
-  showHistory = false,
+  showHistory: _showHistory = false,
 }: MetricCardProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState(metric.currentValue?.toString() || "")

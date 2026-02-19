@@ -11,7 +11,7 @@ interface PushNotificationsCardProps {
   userId: string
 }
 
-export function PushNotificationsCard({ userId }: PushNotificationsCardProps) {
+export function PushNotificationsCard({ userId: _userId }: PushNotificationsCardProps) {
   const [isSupported, setIsSupported] = useState(false)
   const [isConfigured, setIsConfigured] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
@@ -45,7 +45,7 @@ export function PushNotificationsCard({ userId }: PushNotificationsCardProps) {
           setIsSubscribed(data.data.subscriptions.length > 0)
         }
       }
-    } catch (error) {
+    } catch {
       // Error checking push subscription status
     } finally {
       setIsLoading(false)
@@ -122,7 +122,7 @@ export function PushNotificationsCard({ userId }: PushNotificationsCardProps) {
         title: "Notifications enabled",
         description: "You will now receive push notifications",
       })
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to enable push notifications",
@@ -155,7 +155,7 @@ export function PushNotificationsCard({ userId }: PushNotificationsCardProps) {
         title: "Notifications disabled",
         description: "You will no longer receive push notifications on this device",
       })
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to disable push notifications",

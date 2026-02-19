@@ -90,7 +90,7 @@ interface SubscriptionInfo {
 }
 
 export function BillingSettings() {
-  const { currentOrganization, currentUser, refreshSession } = useApp()
+  const { currentUser, refreshSession } = useApp()
   const { toast } = useToast()
 
   const [isLoading, setIsLoading] = useState(true)
@@ -116,7 +116,7 @@ export function BillingSettings() {
             setBillingCycle(data.data.billingCycle)
           }
         }
-      } catch (error) {
+      } catch {
         // Error fetching subscription
       } finally {
         setIsLoading(false)
@@ -210,7 +210,7 @@ export function BillingSettings() {
       } else {
         throw new Error(data.error || "Failed to open billing portal")
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to open billing portal",
@@ -242,7 +242,7 @@ export function BillingSettings() {
       } else {
         throw new Error(data.error || "Failed to cancel subscription")
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to cancel subscription",
@@ -273,7 +273,7 @@ export function BillingSettings() {
       } else {
         throw new Error(data.error || "Failed to resume subscription")
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to resume subscription",

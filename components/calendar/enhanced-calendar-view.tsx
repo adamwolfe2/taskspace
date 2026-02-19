@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import type { AssignedTask, Rock, EODReport, TeamMember } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   format,
   startOfMonth,
@@ -31,7 +31,6 @@ import {
   List,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 interface EnhancedCalendarViewProps {
   tasks: AssignedTask[]
@@ -52,7 +51,7 @@ export function EnhancedCalendarView({
   tasks,
   rocks,
   eodReports,
-  currentUser,
+  currentUser: _currentUser,
   onSelectDate
 }: EnhancedCalendarViewProps) {
   const [view, setView] = useState<"month" | "week">("month")
@@ -242,7 +241,6 @@ export function EnhancedCalendarView({
             const isDayToday = isToday(day)
 
             const pendingTasks = dayData?.tasks.filter((t) => t.status !== "completed") || []
-            const completedTasks = dayData?.tasks.filter((t) => t.status === "completed") || []
 
             return (
               <button
@@ -277,7 +275,7 @@ export function EnhancedCalendarView({
                 {/* Event Indicators */}
                 <div className="space-y-1">
                   {/* Tasks */}
-                  {pendingTasks.slice(0, view === "week" ? 3 : 2).map((task, idx) => (
+                  {pendingTasks.slice(0, view === "week" ? 3 : 2).map((task, _idx) => (
                     <div
                       key={task.id}
                       className="text-[10px] md:text-xs truncate px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 border border-blue-200"

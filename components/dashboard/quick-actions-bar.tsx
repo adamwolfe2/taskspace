@@ -35,11 +35,11 @@ interface QuickActionsBarProps {
 }
 
 export function QuickActionsBar({
- onSubmitEOD,
+ onSubmitEOD: _onSubmitEOD,
  onAddTask,
  onUpdateRock,
  onStartFocus,
- hasSubmittedEOD,
+ hasSubmittedEOD: _hasSubmittedEOD,
  activeFocusSession,
  className,
 }: QuickActionsBarProps) {

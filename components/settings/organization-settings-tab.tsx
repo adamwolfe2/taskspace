@@ -88,7 +88,7 @@ export function OrganizationSettingsTab() {
         setIsUploadingLogo(false)
       }
       reader.readAsDataURL(file)
-    } catch (err) {
+    } catch {
       setIsUploadingLogo(false)
     }
   }

@@ -11,7 +11,7 @@ import { ChatInterface } from "@/components/org-chart/chat-interface"
 import { ZoomControls } from "@/components/org-chart/zoom-controls"
 import { StatusIndicator } from "@/components/org-chart/status-indicator"
 import { buildOrgTree } from "@/lib/org-chart/utils"
-import type { OrgChartEmployee, OrgChartEmployeeNode } from "@/lib/org-chart/types"
+import type { OrgChartEmployee } from "@/lib/org-chart/types"
 import { Loader2, RefreshCw, Users, ArrowRightLeft, Upload } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
@@ -259,7 +259,7 @@ export function OrgChartPage() {
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Sync failed",
         description: "Failed to sync rocks from workspace",

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { AssignedTask, TaskComment, TaskSubtask, TeamMember, Rock } from "@/lib/types"
+import type { AssignedTask, TaskComment, TaskSubtask, TeamMember } from "@/lib/types"
 import {
   Dialog,
   DialogContent,
@@ -130,7 +130,7 @@ export function TaskDetailModal({
       if (result.success && result.data) {
         setSubtasks(result.data)
       }
-    } catch (error) {
+    } catch {
       // Error loading subtasks
     } finally {
       setIsLoadingSubtasks(false)

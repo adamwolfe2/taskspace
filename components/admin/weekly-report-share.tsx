@@ -65,7 +65,7 @@ export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
       await navigator.clipboard.writeText(publicUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
+    } catch {
       toast({ title: "Failed to copy", description: "Could not copy link to clipboard", variant: "destructive" })
     }
   }, [publicUrl, toast])

@@ -3,7 +3,7 @@
 import { FeatureGate } from "@/components/shared/feature-gate"
 import { useState, useMemo, useEffect, useCallback } from "react"
 import type { Project, Client, TeamMember, Rock, AssignedTask, ProjectMember } from "@/lib/types"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -19,7 +19,7 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
-import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
+
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -48,7 +48,7 @@ function formatDate(dateStr: string | null | undefined): string {
 }
 
 export function ProjectsPage({
-  currentUser,
+  currentUser: _currentUser,
   teamMembers,
   projects,
   clients,
@@ -58,7 +58,6 @@ export function ProjectsPage({
   updateProject,
   deleteProject,
 }: ProjectsPageProps) {
-  const { currentWorkspaceId } = useWorkspaceStore()
   const { toast } = useToast()
   const { getStatusStyle, getPriorityStyle } = useBrandStatusStyles()
 

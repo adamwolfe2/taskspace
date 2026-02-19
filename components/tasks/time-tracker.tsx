@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -21,10 +21,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-import type { TimeEntry, AssignedTask, Rock } from "@/lib/types"
+import type { TimeEntry } from "@/lib/types"
 import {
  Play,
- Pause,
  Square,
  Clock,
  Timer,
@@ -59,8 +58,8 @@ interface TimeTrackerProps {
 }
 
 export function TimeTracker({
- taskId,
- taskTitle,
+ taskId: _taskId,
+ taskTitle: _taskTitle,
  timeEntries,
  activeEntry,
  onStartTimer,
@@ -106,7 +105,7 @@ export function TimeTracker({
  setIsSubmitting(true)
  try {
  await onStartTimer()
- } catch (_error) {
+ } catch {
    toast({ title: "Error", description: "Failed to start timer", variant: "destructive" })
  } finally {
  setIsSubmitting(false)
@@ -119,7 +118,7 @@ export function TimeTracker({
  try {
  await onStopTimer(description || undefined)
  setDescription("")
- } catch (_error) {
+ } catch {
    toast({ title: "Error", description: "Failed to stop timer", variant: "destructive" })
  } finally {
  setIsSubmitting(false)
@@ -407,7 +406,7 @@ function ManualTimeEntryDialog({
  description: description || undefined,
  billable,
  })
- } catch (_error) {
+ } catch {
    toast({ title: "Error", description: "Failed to log time entry", variant: "destructive" })
  } finally {
  setIsSubmitting(false)
@@ -593,7 +592,7 @@ export function TimeTrackingSummary({
 
  return (
  <div className={cn("space-y-3", className)}>
- {Object.entries(grouped).map(([key, { entries, totalMinutes }]) => (
+ {Object.entries(grouped).map(([key, { entries: _entries, totalMinutes }]) => (
  <div key={key} className="space-y-1">
  <div className="flex items-center justify-between">
  <span className="text-sm font-medium text-slate-700 ">

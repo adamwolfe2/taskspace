@@ -5,7 +5,7 @@ import type { AssignedTask, Rock, TeamMember } from "@/lib/types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils/date-utils"
-import { CheckSquare, CheckCircle2, ArrowRight, Circle, RefreshCw, ChevronDown, ChevronUp, AlertCircle, Clock, Plus, Trash2, Loader2 } from "lucide-react"
+import { CheckSquare, CheckCircle2, ArrowRight, Circle, RefreshCw, ChevronDown, ChevronUp, AlertCircle, Clock, Trash2, Loader2 } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { useToast } from "@/hooks/use-toast"
 import { useApp } from "@/lib/contexts/app-context"
@@ -120,7 +120,7 @@ export function AssignedTasksSection({
         if (data.success) {
           setAsanaConnected(data.data.connected)
         }
-      } catch (err) {
+      } catch {
         // Error checking Asana connection
       } finally {
         setIsCheckingConnection(false)
@@ -160,7 +160,7 @@ export function AssignedTasksSection({
           variant: "destructive",
         })
       }
-    } catch (err) {
+    } catch {
       toast({
         title: "Sync failed",
         description: "Failed to connect to Asana",

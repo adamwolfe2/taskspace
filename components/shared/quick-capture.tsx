@@ -8,24 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import {
  Dialog,
  DialogContent,
- DialogDescription,
- DialogHeader,
- DialogTitle,
 } from "@/components/ui/dialog"
-import {
- Command,
- CommandEmpty,
- CommandGroup,
- CommandInput,
- CommandItem,
- CommandList,
- CommandSeparator,
-} from "@/components/ui/command"
-import {
- Popover,
- PopoverContent,
- PopoverTrigger,
-} from "@/components/ui/popover"
 import {
  Select,
  SelectContent,
@@ -34,20 +17,14 @@ import {
  SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import type { Rock, AssignedTask } from "@/lib/types"
+import type { Rock } from "@/lib/types"
 import {
  Plus,
  Target,
  CheckSquare,
  Calendar,
- Clock,
  Flag,
- Mic,
- MicOff,
  Sparkles,
- Command as CommandIcon,
- Hash,
- AtSign,
  ArrowUp,
  X,
 } from "lucide-react"
@@ -417,7 +394,7 @@ export function QuickCapture({
 
 // Floating quick capture for mobile
 export function FloatingQuickCapture({
- rocks,
+ rocks: _rocks,
  onCreateTask,
  className,
 }: {
