@@ -164,17 +164,27 @@ function formatDate(date: Date | string | null | undefined): string {
 // ============================================
 
 /**
- * Get the Monday of the week for a given date (or current date if not provided)
+ * Get the Monday of the week for a given date (or current date if not provided).
+ * Accepts an optional YYYY-MM-DD string (e.g. from getTodayInTimezone) to avoid
+ * UTC conversion bugs when the server timezone differs from the org timezone.
  */
-export function getWeekStart(date?: Date): string {
-  const d = date ? new Date(date) : new Date()
+export function getWeekStart(date?: Date, todayStr?: string): string {
+  // If a timezone-correct date string is provided, use it to avoid UTC shift
+  const d = todayStr
+    ? new Date(todayStr + "T12:00:00Z")
+    : date
+      ? new Date(date)
+      : new Date()
   // Get the day of week (0 = Sunday, 1 = Monday, etc.)
   const dayOfWeek = d.getDay()
   // Calculate days to subtract to get to Monday
   // If Sunday (0), go back 6 days; otherwise go back (dayOfWeek - 1) days
   const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1
   d.setDate(d.getDate() - daysToSubtract)
-  return d.toISOString().split("T")[0]
+  const year = d.getUTCFullYear()
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 /**

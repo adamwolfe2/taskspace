@@ -10,6 +10,7 @@ import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { getMetricById, upsertEntry, getWeekStart } from "@/lib/db/scorecard"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createScorecardEntrySchema } from "@/lib/validation/schemas"
+import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { logger } from "@/lib/logger"
 
 export const POST = withAuth(async (request, auth) => {
@@ -43,8 +44,10 @@ export const POST = withAuth(async (request, auth) => {
       )
     }
 
-    // Use current week if not specified
-    const entryWeekStart = weekStart || getWeekStart()
+    // Use current week if not specified — use org timezone to avoid UTC date shift
+    const orgTimezone = auth.organization.settings?.timezone || "America/New_York"
+    const todayStr = getTodayInTimezone(orgTimezone)
+    const entryWeekStart = weekStart || getWeekStart(undefined, todayStr)
 
     const entry = await upsertEntry({
       metricId,

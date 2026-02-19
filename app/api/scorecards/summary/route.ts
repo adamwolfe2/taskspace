@@ -15,6 +15,7 @@ import {
   getScorecardTrends,
   getWeekStart,
 } from "@/lib/db/scorecard"
+import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { logger } from "@/lib/logger"
 
 export const GET = withAuth(async (request, auth) => {
@@ -54,7 +55,10 @@ export const GET = withAuth(async (request, auth) => {
     const workspaceRole = await getUserWorkspaceRole(auth.user.id, workspaceId)
     const canEdit = isAdmin(auth) || workspaceRole === "admin" || workspaceRole === "owner"
 
-    const week = weekStart || getWeekStart()
+    // Use org timezone to avoid UTC date shift when defaulting to current week
+    const orgTimezone = auth.organization.settings?.timezone || "America/New_York"
+    const todayStr = getTodayInTimezone(orgTimezone)
+    const week = weekStart || getWeekStart(undefined, todayStr)
 
     // Fetch summary and stats in parallel
     const [summary, stats, redMetrics] = await Promise.all([

@@ -95,9 +95,11 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 
     // OPTIMIZED: Default to last 90 days to reduce data transfer
     // This significantly reduces Vercel Postgres bandwidth usage
-    const today = new Date()
-    const defaultStartDate = format(subDays(today, 90), "yyyy-MM-dd")
-    const defaultEndDate = format(today, "yyyy-MM-dd")
+    const orgTimezone = auth.organization.settings?.timezone || "America/New_York"
+    const todayStr = getTodayInTimezone(orgTimezone)
+    const todayDate = new Date(todayStr + "T12:00:00Z")
+    const defaultStartDate = format(subDays(todayDate, 90), "yyyy-MM-dd")
+    const defaultEndDate = todayStr
     const effectiveStartDate = startDate || defaultStartDate
     const effectiveEndDate = endDate || defaultEndDate
 
@@ -257,78 +259,43 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       ? parsedMetricValue
       : null
 
-    // Check if user already has a report for this date — merge if so.
-    // Note: There is a narrow race window between the check and insert below.
-    // This is accepted risk because: (1) the unique constraint was intentionally removed
-    // to support re-submissions, (2) subsequent submissions merge gracefully via the
-    // existingReport branch, and (3) the window is sub-millisecond for a single user.
+    // Duplicate detection: prevent multiple EOD reports for the same user + date
     const existingReport = await db.eodReports.findByUserAndDate(auth.user.id, auth.organization.id, reportDate)
-
-    let report: EODReport
-    let isMerge = false
-
     if (existingReport) {
-      isMerge = true
-      // Merge tasks: append new tasks, deduplicate by text
-      const existingTexts = new Set(existingReport.tasks.map(t => t.text))
-      const newTasks = tasks.filter(t => !existingTexts.has(t.text))
-      const mergedTasks = [...existingReport.tasks, ...newTasks]
-
-      // Merge challenges: join with separator if both non-empty
-      const newChallenges = challenges || ""
-      let mergedChallenges = existingReport.challenges || ""
-      if (newChallenges && mergedChallenges) {
-        mergedChallenges = mergedChallenges + "\n\n" + newChallenges
-      } else if (newChallenges) {
-        mergedChallenges = newChallenges
-      }
-
-      const mergedUpdates: Partial<EODReport> = {
-        tasks: mergedTasks,
-        challenges: mergedChallenges,
-        tomorrowPriorities, // Replace with latest
-        needsEscalation: needsEscalation || false,
-        escalationNote: needsEscalation ? (escalationNote || null) : null,
-        metricValueToday: validMetricValue,
-        submittedAt: now,
-      }
-
-      const updated = await db.eodReports.update(existingReport.id, mergedUpdates)
-      report = updated || { ...existingReport, ...mergedUpdates }
-
-      // Delete stale AI insight — it will be regenerated below
-      await db.eodInsights.deleteByReportId(existingReport.id)
-        .catch(err => logError(logger, "Failed to delete stale AI insight on merge", err, { reportId: existingReport.id }))
-    } else {
-      report = {
-        id: generateId(),
-        organizationId: auth.organization.id,
-        workspaceId: workspaceId, // Required - validated above
-        userId: auth.user.id,
-        date: reportDate,
-        tasks,
-        challenges: challenges || "",
-        tomorrowPriorities,
-        needsEscalation: needsEscalation || false,
-        escalationNote: needsEscalation ? (escalationNote || null) : null,
-        metricValueToday: validMetricValue,
-        attachments: attachments && Array.isArray(attachments) && attachments.length > 0 ? attachments : undefined,
-        submittedAt: now,
-        createdAt: now,
-      }
-
-      await db.eodReports.create(report)
-
-      // Fire webhook for new submission (best-effort, non-blocking)
-      dispatchWebhook(auth.organization.id, "eod.submitted", {
-        reportId: report.id,
-        userId: auth.user.id,
-        date: report.date,
-        tasksCount: tasks.length,
-        needsEscalation: report.needsEscalation,
-        workspaceId: report.workspaceId,
-      }).catch(err => logError(logger, "EOD submission webhook failed", err))
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "You have already submitted an EOD report for this date. Please edit your existing report instead." },
+        { status: 409 }
+      )
     }
+
+    const report: EODReport = {
+      id: generateId(),
+      organizationId: auth.organization.id,
+      workspaceId: workspaceId, // Required - validated above
+      userId: auth.user.id,
+      date: reportDate,
+      tasks,
+      challenges: challenges || "",
+      tomorrowPriorities,
+      needsEscalation: needsEscalation || false,
+      escalationNote: needsEscalation ? (escalationNote || null) : null,
+      metricValueToday: validMetricValue,
+      attachments: attachments && Array.isArray(attachments) && attachments.length > 0 ? attachments : undefined,
+      submittedAt: now,
+      createdAt: now,
+    }
+
+    await db.eodReports.create(report)
+
+    // Fire webhook for new submission (best-effort, non-blocking)
+    dispatchWebhook(auth.organization.id, "eod.submitted", {
+      reportId: report.id,
+      userId: auth.user.id,
+      date: report.date,
+      tasksCount: tasks.length,
+      needsEscalation: report.needsEscalation,
+      workspaceId: report.workspaceId,
+    }).catch(err => logError(logger, "EOD submission webhook failed", err))
 
     // Update weekly metric aggregation if user has a metric defined
     if (validMetricValue !== null) {
@@ -546,9 +513,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<EODReport>>({
       success: true,
       data: report,
-      message: isMerge
-        ? "EOD report updated — new tasks merged with existing report"
-        : "EOD report submitted successfully",
+      message: "EOD report submitted successfully",
     })
   } catch (error) {
     // Handle validation errors

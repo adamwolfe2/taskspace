@@ -16,6 +16,7 @@ import {
   getMetricHistory,
   type TeamMemberMetric,
 } from "@/lib/metrics"
+import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { metricsCreateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
@@ -42,15 +43,16 @@ export const GET = withAuth(async (request, auth) => {
     // Helper to calculate weekly total from EOD reports
     const getWeeklyMetricTotal = async (userId: string, orgId: string): Promise<number> => {
       const { sql } = await import("@vercel/postgres")
-      // Get current week (Friday to Thursday)
-      const today = new Date()
+      // Get current week (Friday to Thursday) using org timezone
+      const orgTimezone = auth.organization.settings?.timezone || "America/New_York"
+      const todayStr = getTodayInTimezone(orgTimezone)
+      const today = new Date(todayStr + "T12:00:00Z")
       const dayOfWeek = today.getDay()
       // Calculate start of current week (Friday)
       const fridayOffset = dayOfWeek >= 5 ? dayOfWeek - 5 : dayOfWeek + 2
       const weekStart = new Date(today)
       weekStart.setDate(today.getDate() - fridayOffset)
-      const weekStartStr = weekStart.toISOString().split("T")[0]
-      const todayStr = today.toISOString().split("T")[0]
+      const weekStartStr = `${weekStart.getUTCFullYear()}-${String(weekStart.getUTCMonth() + 1).padStart(2, '0')}-${String(weekStart.getUTCDate()).padStart(2, '0')}`
 
       const { rows } = await sql`
         SELECT COALESCE(SUM(metric_value_today), 0) as total
