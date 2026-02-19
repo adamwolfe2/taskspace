@@ -173,6 +173,23 @@ export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
     `
     results.brainDumpsTransferred = brainDumpsTransferred ?? 0
 
+    // 14. Transfer workspace_members (skip duplicates where new user already has membership)
+    const { rowCount: workspaceMembersTransferred } = await sql`
+      UPDATE workspace_members
+      SET user_id = ${newUserId}
+      WHERE user_id = ${oldUserId}
+        AND workspace_id NOT IN (
+          SELECT workspace_id FROM workspace_members WHERE user_id = ${newUserId}
+        )
+    `
+    results.workspaceMembersTransferred = workspaceMembersTransferred ?? 0
+
+    // Clean up leftover workspace_members for old user (duplicates that couldn't transfer)
+    const { rowCount: workspaceMembersDeleted } = await sql`
+      DELETE FROM workspace_members WHERE user_id = ${oldUserId}
+    `
+    results.workspaceMembersDuplicatesDeleted = workspaceMembersDeleted ?? 0
+
     logger.info(`Account consolidation complete: ${oldUserEmail} → ${newUserEmail} — ${JSON.stringify(results)}`)
 
     return NextResponse.json<ApiResponse<{
