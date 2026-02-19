@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { format, addDays, subDays, nextThursday, previousThursday, isThursday } from "date-fns"
 import type { Organization } from "@/lib/types"
+import { useToast } from "@/hooks/use-toast"
 
 interface WeeklyReportShareProps {
   organization: Organization
@@ -44,6 +45,7 @@ function getThursdayForWeek(date: Date): Date {
 }
 
 export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
+  const { toast } = useToast()
   const [selectedThursday, setSelectedThursday] = useState(() => getThursdayForWeek(new Date()))
   const [copied, setCopied] = useState(false)
 
@@ -64,9 +66,9 @@ export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error("Failed to copy:", err)
+      toast({ title: "Failed to copy", description: "Could not copy link to clipboard", variant: "destructive" })
     }
-  }, [publicUrl])
+  }, [publicUrl, toast])
 
   const goToPreviousWeek = () => {
     setSelectedThursday(prev => subDays(prev, 7))

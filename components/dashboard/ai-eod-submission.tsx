@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
 import { sendEODNotification } from "@/lib/email"
 import { updateStreak } from "@/lib/hooks/use-productivity"
-import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { getTodayInTimezone, formatShortDate, getValidDateOptions, getCurrentQuarterDisplay } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useBrandTheme } from "@/lib/contexts/brand-theme-context"
 import { lighten, darken } from "@/lib/utils/color-helpers"
@@ -29,45 +29,6 @@ interface OrgDateInfo {
   time: string
   timezone: string
   timezoneDisplay: string
-}
-
-function formatShortDate(dateStr: string): string {
-  const date = new Date(dateStr + "T12:00:00")
-  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
-}
-
-// Get valid date options for EOD submission (today, yesterday, 2 days ago)
-function getValidDateOptions(todayInOrgTz: string): { value: string; label: string; isToday: boolean }[] {
-  const today = new Date(todayInOrgTz + "T12:00:00")
-  const options = []
-
-  for (let i = 0; i <= 2; i++) {
-    const date = new Date(today)
-    date.setDate(today.getDate() - i)
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-
-    let label = formatShortDate(dateStr)
-    if (i === 0) label = `Today - ${label}`
-    else if (i === 1) label = `Yesterday - ${label}`
-    else label = `${i} days ago - ${label}`
-
-    options.push({
-      value: dateStr,
-      label,
-      isToday: i === 0
-    })
-  }
-
-  return options
-}
-
-// Get current quarter string
-function getCurrentQuarter(): string {
-  const now = new Date()
-  const month = now.getMonth()
-  const year = now.getFullYear()
-  const quarter = Math.floor(month / 3) + 1
-  return `Q${quarter} ${year}`
 }
 
 interface ParsedTask {
@@ -130,7 +91,7 @@ export function AIEODSubmission({
   const [orgDateInfo, setOrgDateInfo] = useState<OrgDateInfo | null>(null)
 
   const { toast } = useToast()
-  const currentQuarter = getCurrentQuarter()
+  const currentQuarter = getCurrentQuarterDisplay()
 
   // Fetch organization's current date (in org timezone)
   useEffect(() => {

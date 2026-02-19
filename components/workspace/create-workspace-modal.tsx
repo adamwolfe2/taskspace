@@ -104,7 +104,6 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
       setDescription("")
       onOpenChange(false)
     } catch (error) {
-      console.error("Failed to create workspace:", error)
       toast({
         title: "Failed to create workspace",
         description: error instanceof Error ? error.message : "An error occurred",

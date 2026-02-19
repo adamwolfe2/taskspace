@@ -81,7 +81,6 @@ export function BugReporter() {
         setSubmitted(false)
       }, 2000)
     } catch (error) {
-      console.error("Bug report error:", error)
       toast({
         title: "Failed to submit",
         description: error instanceof Error ? error.message : "Please try again",

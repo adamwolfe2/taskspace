@@ -4,7 +4,6 @@ import {
   isToday,
   isTomorrow,
   isYesterday,
-  isPast,
   differenceInDays,
   differenceInHours,
   startOfWeek,
@@ -126,14 +125,6 @@ export function formatDuration(minutes: number): string {
 export function formatTime(date: string | Date): string {
   const d = typeof date === "string" ? parseISO(date) : date
   return format(d, "h:mm a")
-}
-
-/**
- * Format date for display (e.g., "Jan 15, 2025")
- */
-export function formatDate(date: string | Date): string {
-  const d = typeof date === "string" ? parseISO(date) : date
-  return format(d, "MMM d, yyyy")
 }
 
 /**

@@ -32,6 +32,7 @@ import {
   Ban,
   TrendingUp,
 } from "lucide-react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { ProgressBar } from "@/components/shared/progress-bar"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
@@ -240,9 +241,12 @@ function Column({
         <SortableContext items={rockIds} strategy={verticalListSortingStrategy}>
           <div className="space-y-3 flex-1 overflow-y-auto min-h-[300px] max-h-[calc(100vh-300px)]">
             {rocks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[200px] text-sm text-muted-foreground border-2 border-dashed rounded-xl bg-background/50">
-                <config.icon className="h-8 w-8 mb-2 opacity-30" style={{ color: statusStyle.color }} />
-                <span>No rocks</span>
+              <div className="border-2 border-dashed rounded-xl bg-background/50">
+                <EmptyState
+                  icon={config.icon}
+                  title="No rocks"
+                  size="sm"
+                />
               </div>
             ) : (
               rocks.map((rock) => (

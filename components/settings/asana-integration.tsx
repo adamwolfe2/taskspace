@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -70,25 +70,6 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
     checkAsanaStatus()
   }, [])
 
-  // Load saved settings from organization
-  useEffect(() => {
-    if (currentOrganization?.settings?.asanaIntegration) {
-      const config = currentOrganization.settings.asanaIntegration
-      setIsEnabled(config.enabled)
-      setSelectedWorkspace(config.workspaceGid)
-      setSelectedProject(config.projectGid)
-      setUserMappings(config.userMappings || [])
-    }
-  }, [currentOrganization])
-
-  // Load projects when workspace changes
-  useEffect(() => {
-    if (selectedWorkspace) {
-      loadProjects(selectedWorkspace)
-      loadAsanaUsers(selectedWorkspace)
-    }
-  }, [selectedWorkspace])
-
   const checkAsanaStatus = async () => {
     setIsLoading(true)
     try {
@@ -106,7 +87,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
     }
   }
 
-  const loadProjects = async (workspaceGid: string) => {
+  const loadProjects = useCallback(async (workspaceGid: string) => {
     try {
       const response = await fetch(`/api/asana/projects?workspace=${workspaceGid}`)
       const data = await response.json()
@@ -114,9 +95,9 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
     } catch (_error) {
       /* silently ignore */
     }
-  }
+  }, [])
 
-  const loadAsanaUsers = async (workspaceGid: string) => {
+  const loadAsanaUsers = useCallback(async (workspaceGid: string) => {
     try {
       const response = await fetch(`/api/asana/users?workspace=${workspaceGid}`)
       const data = await response.json()
@@ -124,7 +105,26 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
     } catch (_error) {
       /* silently ignore */
     }
-  }
+  }, [])
+
+  // Load saved settings from organization
+  useEffect(() => {
+    if (currentOrganization?.settings?.asanaIntegration) {
+      const config = currentOrganization.settings.asanaIntegration
+      setIsEnabled(config.enabled)
+      setSelectedWorkspace(config.workspaceGid)
+      setSelectedProject(config.projectGid)
+      setUserMappings(config.userMappings || [])
+    }
+  }, [currentOrganization])
+
+  // Load projects when workspace changes
+  useEffect(() => {
+    if (selectedWorkspace) {
+      loadProjects(selectedWorkspace)
+      loadAsanaUsers(selectedWorkspace)
+    }
+  }, [selectedWorkspace, loadProjects, loadAsanaUsers])
 
   const handleUserMapping = (aimsUserId: string, asanaUserGid: string) => {
     const aimsUser = teamMembers.find(m => m.id === aimsUserId)

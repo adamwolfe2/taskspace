@@ -34,6 +34,7 @@ import {
 import { cn } from "@/lib/utils"
 import type { EODReport, AssignedTask, Rock, WeeklyReview } from "@/lib/types"
 import { startOfWeek, endOfWeek, format, parseISO, isWithinInterval } from "date-fns"
+import { useToast } from "@/hooks/use-toast"
 
 interface WeeklyReviewModalProps {
  open: boolean
@@ -58,6 +59,7 @@ export function WeeklyReviewModal({
  onSave,
  userId,
 }: WeeklyReviewModalProps) {
+ const { toast } = useToast()
  const [isSaving, setIsSaving] = useState(false)
 
  // Form state
@@ -148,7 +150,7 @@ export function WeeklyReviewModal({
  })
  onOpenChange(false)
  } catch (error) {
- console.error("Failed to save review:", error)
+ toast({ title: "Failed to save review", description: error instanceof Error ? error.message : "An error occurred", variant: "destructive" })
  } finally {
  setIsSaving(false)
  }

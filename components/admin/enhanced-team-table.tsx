@@ -32,7 +32,9 @@ import {
   Pencil,
   Trash2,
   Target,
+  Users,
 } from "lucide-react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { cn } from "@/lib/utils"
 import { formatDate } from "@/lib/utils/date-utils"
 
@@ -202,8 +204,13 @@ export function EnhancedTeamTable({
           <TableBody>
             {filteredMembers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No members found
+                <TableCell colSpan={6} className="p-0">
+                  <EmptyState
+                    icon={Users}
+                    title="No members found"
+                    description={searchQuery ? `No matches for "${searchQuery}". Try a different search term.` : "No team members match the current filters"}
+                    size="sm"
+                  />
                 </TableCell>
               </TableRow>
             ) : (

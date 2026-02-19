@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import type { Rock, Project } from "@/lib/types"
 import { formatDate } from "@/lib/utils/date-utils"
 import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight, RefreshCw, ChevronDown, ChevronUp } from "lucide-react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
@@ -217,21 +218,16 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
       {isExpanded && (
         <div className="p-5 max-h-[500px] overflow-y-auto">
           {filteredRocks.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Target className="h-6 w-6" style={{ color: themedColors.secondary }} />
-            </div>
-            <p className="text-slate-600 font-medium">
-              {rocks.length === 0
-                ? "No rocks assigned yet"
-                : `No rocks in ${selectedQuarter}`}
-            </p>
-            <p className="text-sm text-slate-400 mt-1">
-              {rocks.length === 0
+          <EmptyState
+            icon={Target}
+            title={rocks.length === 0 ? "No rocks assigned yet" : `No rocks in ${selectedQuarter}`}
+            description={
+              rocks.length === 0
                 ? "Your quarterly goals will appear here"
-                : "Select a different quarter or view all rocks"}
-            </p>
-          </div>
+                : "Select a different quarter or view all rocks"
+            }
+            size="sm"
+          />
         ) : (
           <div className="space-y-4">
             {filteredRocks.map((rock) => {

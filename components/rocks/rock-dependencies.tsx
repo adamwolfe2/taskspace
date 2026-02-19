@@ -21,6 +21,7 @@ import type { Rock, RockDependency } from "@/lib/types"
 import { Plus, X, ArrowRight, Link2, Unlink, AlertTriangle, Target } from "lucide-react"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
+import { useToast } from "@/hooks/use-toast"
 
 interface RockDependenciesProps {
  rock: Rock
@@ -42,6 +43,7 @@ export function RockDependencies({
  className,
 }: RockDependenciesProps) {
  const themedColors = useThemedIconColors()
+ const { toast } = useToast()
  const [isAdding, setIsAdding] = useState(false)
  const [selectedRockId, setSelectedRockId] = useState<string>("")
  const [dependencyType, setDependencyType] = useState<"blocks" | "soft_dependency">("blocks")
@@ -83,7 +85,7 @@ export function RockDependencies({
  setSelectedRockId("")
  setIsAdding(false)
  } catch (error) {
- console.error("Failed to add dependency:", error)
+ toast({ title: "Failed to add dependency", description: error instanceof Error ? error.message : "An error occurred", variant: "destructive" })
  } finally {
  setIsSubmitting(false)
  }
@@ -93,7 +95,7 @@ export function RockDependencies({
  try {
  await onRemoveDependency(dependencyId)
  } catch (error) {
- console.error("Failed to remove dependency:", error)
+ toast({ title: "Failed to remove dependency", description: error instanceof Error ? error.message : "An error occurred", variant: "destructive" })
  }
  }
 

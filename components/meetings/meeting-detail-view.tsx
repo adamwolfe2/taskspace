@@ -130,7 +130,6 @@ export function MeetingDetailView({
       const data = await response.json()
       setAiSummary(data.summary || "No summary generated")
     } catch (error) {
-      console.error("Error generating AI summary:", error)
       setAiSummary("Failed to generate summary. Please try again.")
     } finally {
       setIsGeneratingAI(false)

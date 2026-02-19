@@ -63,7 +63,6 @@ export function InlineEditable({
  await onSave(editValue.trim())
  setIsEditing(false)
  } catch (error) {
- console.error("Failed to save:", error)
  setEditValue(value)
  } finally {
  setIsSaving(false)

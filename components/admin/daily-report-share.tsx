@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import { format, addDays, subDays, parseISO } from "date-fns"
 import type { Organization, EODReport, TeamMember } from "@/lib/types"
+import { useToast } from "@/hooks/use-toast"
 
 interface DailyReportShareProps {
   organization: Organization
@@ -31,6 +32,7 @@ export function DailyReportShare({
   eodReports,
   teamMembers,
 }: DailyReportShareProps) {
+  const { toast } = useToast()
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [copied, setCopied] = useState(false)
 
@@ -56,9 +58,9 @@ export function DailyReportShare({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error("Failed to copy:", err)
+      toast({ title: "Failed to copy", description: "Could not copy link to clipboard", variant: "destructive" })
     }
-  }, [publicUrl])
+  }, [publicUrl, toast])
 
   const goToPreviousDay = () => {
     setSelectedDate(prev => subDays(prev, 1))

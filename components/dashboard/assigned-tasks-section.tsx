@@ -5,7 +5,8 @@ import type { AssignedTask, Rock, TeamMember } from "@/lib/types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils/date-utils"
-import { CheckSquare, ArrowRight, Circle, RefreshCw, ChevronDown, ChevronUp, AlertCircle, Clock, Plus, Trash2, Loader2 } from "lucide-react"
+import { CheckSquare, CheckCircle2, ArrowRight, Circle, RefreshCw, ChevronDown, ChevronUp, AlertCircle, Clock, Plus, Trash2, Loader2 } from "lucide-react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { useToast } from "@/hooks/use-toast"
 import { useApp } from "@/lib/contexts/app-context"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
@@ -239,26 +240,24 @@ export function AssignedTasksSection({
       {isExpanded && (
         <div className="p-5 max-h-[500px] overflow-y-auto">
           {tasks.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckSquare className="h-6 w-6" style={{ color: themedColors.secondary }} />
-            </div>
-            <p className="text-slate-600 font-medium">No tasks assigned yet</p>
-            <p className="text-sm text-slate-400 mt-1">Tasks assigned to you will appear here</p>
-            {!isCheckingConnection && asanaConnected && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSyncAsana}
-                disabled={isSyncing}
-                className="mt-4 gap-1.5"
-              >
-                <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
-                {isSyncing ? "Syncing..." : "Import from Asana"}
-              </Button>
-            )}
+          <div>
+            <EmptyState
+              icon={CheckCircle2}
+              title="No tasks assigned yet"
+              description="Tasks assigned to you will appear here"
+              size="sm"
+              action={
+                !isCheckingConnection && asanaConnected
+                  ? {
+                      label: isSyncing ? "Syncing..." : "Import from Asana",
+                      onClick: handleSyncAsana,
+                      variant: "outline",
+                    }
+                  : undefined
+              }
+            />
             {!isCheckingConnection && !asanaConnected && (
-              <p className="text-xs text-slate-400 mt-4">
+              <p className="text-xs text-slate-400 text-center mt-2">
                 <button
                   onClick={() => setCurrentPage("settings")}
                   className="text-blue-500 hover:underline"

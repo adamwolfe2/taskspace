@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { Pencil, Check, X, Loader2 } from "lucide-react"
+import { Pencil, Check, X, Loader2, BarChart3 } from "lucide-react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { useToast } from "@/hooks/use-toast"
 
 interface ScorecardRow {
@@ -270,11 +271,13 @@ export function ScorecardTable() {
 
   if (!data || data.rows.length === 0) {
     return (
-      <div className="text-center py-12 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-        <p className="text-slate-600 font-medium">No metrics configured yet</p>
-        <p className="text-sm text-slate-500 mt-1">
-          Set up weekly metrics for team members in the Team Management section
-        </p>
+      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50">
+        <EmptyState
+          icon={BarChart3}
+          title="No metrics configured yet"
+          description="Set up weekly metrics for team members in the Team Management section"
+          size="md"
+        />
       </div>
     )
   }

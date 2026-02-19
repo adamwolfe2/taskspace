@@ -182,3 +182,57 @@ export function formatDateForDisplay(dateString: string): string {
     day: "numeric",
   })
 }
+
+/**
+ * Format a date string as a short display string (e.g., "Mon, Feb 18")
+ */
+export function formatShortDate(dateStr: string): string {
+  const date = new Date(dateStr + "T12:00:00")
+  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+}
+
+/**
+ * Get valid date options for EOD submission (today, yesterday, 2 days ago)
+ */
+export function getValidDateOptions(todayInOrgTz: string): { value: string; label: string; isToday: boolean }[] {
+  const today = new Date(todayInOrgTz + "T12:00:00")
+  const options = []
+
+  for (let i = 0; i <= 2; i++) {
+    const date = new Date(today)
+    date.setDate(today.getDate() - i)
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+    let label = formatShortDate(dateStr)
+    if (i === 0) label = `Today - ${label}`
+    else if (i === 1) label = `Yesterday - ${label}`
+    else label = `${i} days ago - ${label}`
+
+    options.push({
+      value: dateStr,
+      label,
+      isToday: i === 0
+    })
+  }
+
+  return options
+}
+
+/**
+ * Get current quarter display string (e.g., "Q1 2026")
+ */
+export function getCurrentQuarterDisplay(): string {
+  const now = new Date()
+  const month = now.getMonth()
+  const year = now.getFullYear()
+  const quarter = Math.floor(month / 3) + 1
+  return `Q${quarter} ${year}`
+}
+
+/**
+ * Check if a date string falls on a Thursday (day 4)
+ */
+export function isThursday(dateStr: string): boolean {
+  const date = new Date(dateStr + "T12:00:00")
+  return date.getDay() === 4
+}

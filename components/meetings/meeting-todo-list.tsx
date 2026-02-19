@@ -46,7 +46,7 @@ export function MeetingTodoList({ meetingId, workspaceId }: MeetingTodoListProps
         setTodos(data.data)
       }
     } catch (err) {
-      console.error("Failed to load todos:", err)
+      toast({ title: "Failed to load todos", description: err instanceof Error ? err.message : "An error occurred", variant: "destructive" })
     }
   }
 
@@ -59,7 +59,7 @@ export function MeetingTodoList({ meetingId, workspaceId }: MeetingTodoListProps
         setTasks(data.data)
       }
     } catch (err) {
-      console.error("Failed to load tasks:", err)
+      toast({ title: "Failed to load tasks", description: err instanceof Error ? err.message : "An error occurred", variant: "destructive" })
     }
   }
 
