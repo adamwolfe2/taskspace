@@ -18,7 +18,8 @@ import type {
 } from "../types"
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
-const MODEL = "claude-sonnet-4-20250514"
+const MODEL_SONNET = "claude-sonnet-4-20250514"
+const MODEL_HAIKU = "claude-haiku-4-5-20251001"
 const MAX_TOKENS = 4096
 
 interface ClaudeResponse {
@@ -75,6 +76,7 @@ async function callClaudeWithUsage(
   options?: {
     maxTokens?: number
     temperature?: number
+    model?: string
   }
 ): Promise<ClaudeCallResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY
@@ -98,7 +100,7 @@ async function callClaudeWithUsage(
       },
       signal: controller.signal,
       body: JSON.stringify({
-        model: MODEL,
+        model: options?.model || MODEL_SONNET,
         max_tokens: options?.maxTokens || MAX_TOKENS,
         temperature: options?.temperature ?? 0.7,
         system: systemPrompt,
@@ -146,6 +148,7 @@ async function callClaudeJSONWithUsage<T>(
   options?: {
     maxTokens?: number
     temperature?: number
+    model?: string
   }
 ): Promise<{ result: T; usage: { inputTokens: number; outputTokens: number }; model: string }> {
   const callResult = await callClaudeWithUsage(systemPrompt, userMessage, options)
@@ -203,6 +206,7 @@ Parse this brain dump into specific task assignments. Return JSON only.`
 
   const { result, usage, model } = await callClaudeJSONWithUsage<AITaskGenerationResponse>(PROMPTS.brainDumpParser, userMessage, {
     temperature: 0.5,
+    model: MODEL_HAIKU,
   })
 
   return { result, usage: { ...usage, model } }
@@ -247,6 +251,7 @@ Analyze this EOD report. Return JSON only.`
 
   const { result, usage, model } = await callClaudeJSONWithUsage<EODParseResponse>(PROMPTS.eodParser, userMessage, {
     temperature: 0.3,
+    model: MODEL_HAIKU,
   })
 
   return { result, usage: { ...usage, model } }
@@ -317,6 +322,7 @@ Generate the daily digest. Focus on what actually matters. Challenge my thinking
   const { result: parsed, usage, model } = await callClaudeJSONWithUsage<Omit<DailyDigest, "id" | "organizationId" | "digestDate" | "generatedAt">>(PROMPTS.digestGenerator, userMessage, {
     maxTokens: 6000,
     temperature: 0.6,
+    model: MODEL_HAIKU,
   })
 
   return {
@@ -443,6 +449,7 @@ Parse this into a structured EOD report. Match tasks to my rocks where possible.
 
   const { result: parsed, usage, model } = await callClaudeJSONWithUsage<ParsedEODReport>(PROMPTS.eodTextParser, userMessage, {
     temperature: 0.3,
+    model: MODEL_HAIKU,
   })
 
   return {
@@ -492,7 +499,7 @@ export async function generateScorecardInsights(
 
   const userMessage = `SCORECARD METRICS (last 4 weeks):\n${metricsContext}\n\nAnalyze these scorecard trends. Identify declining metrics, patterns, and suggest actions. Return JSON only.`
 
-  const { result, usage, model } = await callClaudeJSONWithUsage<ScorecardInsightsResult>(PROMPTS.scorecardInsights, userMessage, { temperature: 0.4 })
+  const { result, usage, model } = await callClaudeJSONWithUsage<ScorecardInsightsResult>(PROMPTS.scorecardInsights, userMessage, { temperature: 0.4, model: MODEL_HAIKU })
   return { result, usage: { ...usage, model } }
 }
 
@@ -559,7 +566,7 @@ export async function prioritizeTasks(
   const rocksContext = rocks ? rocks.map((r) => `- ${r.title}: ${r.progress}% (${r.status})`).join("\n") : "No rocks data"
 
   const userMessage = `TASKS TO PRIORITIZE:\n${tasksContext}\n\nROCKS CONTEXT:\n${rocksContext}\n\nPrioritize these tasks by impact and urgency. Return JSON only.`
-  const { result, usage, model } = await callClaudeJSONWithUsage<PrioritizeResult>(PROMPTS.taskPrioritizer, userMessage, { temperature: 0.3 })
+  const { result, usage, model } = await callClaudeJSONWithUsage<PrioritizeResult>(PROMPTS.taskPrioritizer, userMessage, { temperature: 0.3, model: MODEL_HAIKU })
   return { result, usage: { ...usage, model } }
 }
 
@@ -635,7 +642,7 @@ export async function generateMeetingNotesSummary(meetingData: {
   }
 
   const userMessage = `${parts.join("\n\n")}\n\nSummarize this meeting. Return JSON only.`
-  const { result, usage, model } = await callClaudeJSONWithUsage<MeetingNotesResult>(PROMPTS.meetingNotesSummary, userMessage, { temperature: 0.4 })
+  const { result, usage, model } = await callClaudeJSONWithUsage<MeetingNotesResult>(PROMPTS.meetingNotesSummary, userMessage, { temperature: 0.4, model: MODEL_HAIKU })
   return { result, usage: { ...usage, model } }
 }
 
@@ -673,6 +680,7 @@ Identify the brand colors for this company. Return JSON only.`
     }>(PROMPTS.brandExtractor, userMessage, {
       maxTokens: 300,
       temperature: 0.2,
+      model: MODEL_HAIKU,
     })
 
     // Validate hex codes
