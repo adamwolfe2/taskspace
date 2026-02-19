@@ -13,6 +13,7 @@ import { StatusIndicator } from "@/components/org-chart/status-indicator"
 import { buildOrgTree } from "@/lib/org-chart/utils"
 import type { OrgChartEmployee, OrgChartEmployeeNode } from "@/lib/org-chart/types"
 import { Loader2, RefreshCw, Users, ArrowRightLeft, Upload } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/lib/contexts/app-context"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
@@ -272,9 +273,22 @@ export function OrgChartPage() {
   if (employeesLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" role="status" aria-label="Loading organization chart" />
-          <p className="text-slate-500">Loading organization chart...</p>
+        <div className="space-y-6 w-full max-w-2xl px-8">
+          <Skeleton className="h-7 w-56 mx-auto" />
+          <div className="flex justify-center">
+            <div className="space-y-4 w-full">
+              <Skeleton className="h-16 w-40 mx-auto rounded-lg" />
+              <div className="flex justify-center gap-8">
+                <Skeleton className="h-14 w-36 rounded-lg" />
+                <Skeleton className="h-14 w-36 rounded-lg" />
+              </div>
+              <div className="flex justify-center gap-6">
+                <Skeleton className="h-12 w-28 rounded-lg" />
+                <Skeleton className="h-12 w-28 rounded-lg" />
+                <Skeleton className="h-12 w-28 rounded-lg" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )

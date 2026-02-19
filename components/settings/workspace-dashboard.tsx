@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Users,
   Zap,
@@ -14,7 +15,6 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
-  Loader2,
   ArrowUpRight,
   Building2,
   BarChart3,
@@ -101,11 +101,32 @@ export function WorkspaceDashboard() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" role="status" aria-label="Loading" />
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        {/* Header card skeleton */}
+        <Card>
+          <CardContent className="py-6">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-12 w-12 rounded-lg" />
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-4 w-56" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        {/* Stat card grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-28 w-full rounded-xl" />
+          <Skeleton className="h-28 w-full rounded-xl" />
+          <Skeleton className="h-28 w-full rounded-xl" />
+          <Skeleton className="h-28 w-full rounded-xl" />
+        </div>
+        {/* Chart area */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-48 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-xl" />
+        </div>
+      </div>
     )
   }
 

@@ -14,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Check,
   Loader2,
@@ -285,11 +286,29 @@ export function BillingSettings() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" role="status" aria-label="Loading" />
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        {/* Plan card skeleton */}
+        <Card>
+          <CardContent className="py-8 space-y-4">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded" />
+              <Skeleton className="h-6 w-32" />
+            </div>
+            <Skeleton className="h-4 w-48" />
+          </CardContent>
+        </Card>
+        {/* Usage bar skeletons */}
+        <Card>
+          <CardContent className="py-8 space-y-4">
+            <Skeleton className="h-6 w-24" />
+            <div className="grid gap-4 md:grid-cols-3">
+              <Skeleton className="h-40 w-full rounded-xl" />
+              <Skeleton className="h-40 w-full rounded-xl" />
+              <Skeleton className="h-40 w-full rounded-xl" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     )
   }
 

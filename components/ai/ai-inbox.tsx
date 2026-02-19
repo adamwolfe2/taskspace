@@ -23,6 +23,7 @@ import {
   ChevronUp,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { AISuggestion, TeamMember, SuggestionStats } from "@/lib/types"
 
 interface AIInboxProps {
@@ -281,8 +282,21 @@ export function AIInbox({ organizationId, teamMembers }: AIInboxProps) {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="py-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" role="status" aria-label="Loading" />
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-64 mt-1" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="p-4 border rounded-lg space-y-2">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-2/3" />
+            </div>
+          ))}
         </CardContent>
       </Card>
     )

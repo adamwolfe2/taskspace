@@ -7,7 +7,8 @@ import { IdsBoardKanban } from "@/components/ids-board/ids-board-kanban"
 import { IdsBoardItemDialog } from "@/components/ids-board/ids-board-item-dialog"
 import { FeatureGate } from "@/components/shared/feature-gate"
 import { Button } from "@/components/ui/button"
-import { AlertCircle, Loader2, Plus, RefreshCw, Search } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { AlertCircle, Plus, RefreshCw, Search } from "lucide-react"
 import type { IdsBoardItem, IdsBoardColumn } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
@@ -88,8 +89,18 @@ function IdsBoardContent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" role="status" aria-label="Loading" />
+      <div className="space-y-6 min-h-[400px]">
+        {/* Title */}
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        {/* 3 column skeletons side by side */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Skeleton className="h-64 w-full rounded-xl" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </div>
       </div>
     )
   }

@@ -11,7 +11,7 @@ import { useRequireFeature } from "@/lib/hooks/use-workspace-features"
 import { FeatureDisabled } from "./feature-disabled"
 import type { WorkspaceFeatureKey } from "@/lib/types/workspace-features"
 import { WORKSPACE_FEATURE_METADATA } from "@/lib/types/workspace-features"
-import { Loader2 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface FeatureGateProps {
   feature: WorkspaceFeatureKey
@@ -36,8 +36,10 @@ export function FeatureGate({
   // Show loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" role="status" aria-label="Loading" />
+      <div className="min-h-[400px] p-6 space-y-4">
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-4 w-64" />
+        <Skeleton className="h-32 w-full" />
       </div>
     )
   }

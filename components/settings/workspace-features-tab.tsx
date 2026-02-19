@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Loader2,
   Save,
@@ -145,8 +146,21 @@ export function WorkspaceFeaturesTab() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" role="status" aria-label="Loading" />
+        <CardContent className="py-8 space-y-4">
+          {/* Title */}
+          <Skeleton className="h-6 w-40" />
+          {/* Toggle-shaped skeletons */}
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+                <Skeleton className="h-6 w-10 rounded-full" />
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     )

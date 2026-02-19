@@ -33,6 +33,7 @@ import {
 } from "lucide-react"
 import type { SectionType } from "@/lib/db/meetings"
 import { useToast } from "@/hooks/use-toast"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface AgendaSection {
   sectionType: SectionType
@@ -308,8 +309,20 @@ export function AgendaBuilder({ meetingId, disabled = false }: AgendaBuilderProp
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-slate-400" role="status" aria-label="Loading" />
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="p-4 border rounded-lg flex items-center gap-3">
+              <Skeleton className="h-5 w-5" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <Skeleton className="h-8 w-16" />
+            </div>
+          ))}
         </CardContent>
       </Card>
     )

@@ -21,6 +21,7 @@ import {
 import type { MeetingTodo } from "@/lib/db/meetings"
 import type { AssignedTask } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface MeetingTodoListProps {
   meetingId: string
@@ -157,8 +158,13 @@ export function MeetingTodoList({ meetingId, workspaceId }: MeetingTodoListProps
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-slate-400" role="status" aria-label="Loading" />
+        <CardContent className="py-6 space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-3 p-3">
+              <Skeleton className="h-4 w-4 rounded" />
+              <Skeleton className="h-4 flex-1" />
+            </div>
+          ))}
         </CardContent>
       </Card>
     )

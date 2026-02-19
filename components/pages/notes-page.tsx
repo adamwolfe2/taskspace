@@ -3,15 +3,27 @@
 import { FeatureGate } from "@/components/shared/feature-gate"
 import { WorkspaceEditor } from "@/components/editor/workspace-editor"
 import { useWorkspaceNotes } from "@/lib/hooks/use-workspace-notes"
-import { FileText, Loader2, AlertCircle } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { FileText, AlertCircle } from "lucide-react"
 
 function NotesContent() {
   const { note, isLoading, error, isSaving, saveNote } = useWorkspaceNotes()
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" role="status" aria-label="Loading" />
+      <div className="space-y-6 min-h-[400px]">
+        {/* Title area */}
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+        </div>
+        {/* Note card skeletons */}
+        <Skeleton className="h-48 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-xl" />
       </div>
     )
   }

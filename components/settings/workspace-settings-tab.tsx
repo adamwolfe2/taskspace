@@ -117,8 +117,20 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" role="status" aria-label="Loading" />
+        <CardContent className="py-8 space-y-6">
+          {/* Form field skeletons */}
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-20 w-full rounded-lg" />
+          </div>
         </CardContent>
       </Card>
     )

@@ -32,6 +32,7 @@ import {
   Users,
   Loader2,
 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { UserOrganizationItem } from "@/lib/types"
 
 interface OrganizationSwitcherProps {
@@ -320,8 +321,16 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {isLoading ? (
-            <div className="py-4 flex items-center justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+            <div className="py-2 space-y-2 px-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-3 py-2">
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             renderOrgList()

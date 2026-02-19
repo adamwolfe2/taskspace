@@ -12,6 +12,7 @@ import { RocksSection } from "./sections/rocks-section"
 import { HeadlinesSection } from "./sections/headlines-section"
 import { IDSSection } from "./sections/ids-section"
 import { ConcludeSection } from "./sections/conclude-section"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Play,
   Users,
@@ -347,8 +348,17 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
 
   if (loading && !meeting) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" role="status" aria-label="Loading" />
+      <div className="space-y-6 min-h-[400px]">
+        {/* Title */}
+        <Skeleton className="h-8 w-48" />
+        {/* Stat cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+        </div>
+        {/* Content area */}
+        <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     )
   }

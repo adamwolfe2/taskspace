@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Webhook,
   Loader2,
@@ -275,8 +276,31 @@ export function WebhookManagement() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" role="status" aria-label="Loading" />
+            <div className="space-y-3 py-2">
+              <Skeleton className="h-6 w-36" />
+              {/* Webhook card skeletons */}
+              <div className="border rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-6 w-10 rounded-full" />
+                </div>
+                <Skeleton className="h-3 w-64" />
+                <div className="flex gap-1">
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                </div>
+              </div>
+              <div className="border rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-36" />
+                  <Skeleton className="h-6 w-10 rounded-full" />
+                </div>
+                <Skeleton className="h-3 w-56" />
+                <div className="flex gap-1">
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+              </div>
             </div>
           ) : webhooks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
