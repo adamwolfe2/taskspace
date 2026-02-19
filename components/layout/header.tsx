@@ -5,8 +5,6 @@ import { UserInitials } from "@/components/shared/user-initials"
 import { NotificationCenter } from "@/components/shared/notification-center"
 import { DemoModeIndicator } from "@/components/shared/demo-mode-banner"
 import { OrganizationSwitcher } from "@/components/shared/organization-switcher"
-import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher"
-import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { LogOut, Menu, Settings, Building, Search, ChevronDown } from "lucide-react"
@@ -25,14 +23,10 @@ interface HeaderProps {
 
 export function Header({ onMenuClick }: HeaderProps) {
   const { currentUser, currentOrganization, logout, setCurrentPage } = useApp()
-  const { workspaces } = useWorkspaces()
 
   const handleLogout = async () => {
     await logout()
   }
-
-  // Only show workspace switcher when org has multiple workspaces
-  const showWorkspaceSwitcher = workspaces.length > 1
 
   if (!currentUser) return null
 
@@ -72,12 +66,6 @@ export function Header({ onMenuClick }: HeaderProps) {
             <OrganizationSwitcher />
           </div>
 
-          {/* Workspace switcher - only shown when org has multiple workspaces */}
-          {showWorkspaceSwitcher && (
-            <div className="border-l border-gray-200 pl-1.5 sm:pl-2 md:pl-3 min-w-0 flex-shrink overflow-hidden">
-              <WorkspaceSwitcher compact />
-            </div>
-          )}
         </div>
 
         {/* Right side */}

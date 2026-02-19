@@ -37,7 +37,7 @@ export const GET = withAuth(async (request, auth) => {
           id: org.id,
           name: org.name,
           slug: org.slug,
-          logoUrl: org.logoUrl,
+          logoUrl: org.logoUrl || (org.settings as { customBranding?: { logo?: string } })?.customBranding?.logo || undefined,
           primaryColor: org.primaryColor,
           role: membership.role,
           memberStatus: membership.status,
