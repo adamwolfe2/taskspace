@@ -117,6 +117,17 @@ export async function GET(request: NextRequest) {
       logError(logger, "Session cleanup failed", cleanupError)
     }
 
+    // Clean up old email delivery logs and cron execution records (older than 30 days)
+    try {
+      const [emailLogsDeleted, cronExecsDeleted] = await Promise.all([
+        db.emailDeliveryLog.cleanupOldLogs(),
+        db.cronExecutions.cleanupOldExecutions(),
+      ])
+      logger.info({ emailLogsDeleted, cronExecsDeleted }, "Cleaned up old email delivery logs and cron execution records")
+    } catch (cleanupError) {
+      logError(logger, "Email delivery log / cron execution cleanup failed", cleanupError)
+    }
+
     // Get all organizations
     const organizations = await db.organizations.findAll()
     const results: { orgId: string; orgName: string; success: boolean; skipped?: string; error?: string }[] = []
@@ -251,7 +262,7 @@ export async function GET(request: NextRequest) {
                 .map(a => a.email)
 
               await resend.emails.send({
-                from: process.env.EMAIL_FROM || "Taskspace <team@collectivecapital.com>",
+                from: process.env.EMAIL_FROM || "Taskspace <team@trytaskspace.com>",
                 to: adminEmails,
                 subject: `📊 Daily Rock Progress Summary - ${consolidatedDigest.formattedDate}`,
                 html: formatConsolidatedDigestHTML(consolidatedDigest),

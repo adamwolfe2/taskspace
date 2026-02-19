@@ -4017,6 +4017,18 @@ export const db = {
       `
       return rows.length > 0
     },
+
+    /**
+     * Delete cron execution records older than 30 days
+     * to prevent the table from growing indefinitely.
+     */
+    async cleanupOldExecutions(): Promise<number> {
+      const { rowCount } = await sql`
+        DELETE FROM cron_executions
+        WHERE started_at < NOW() - INTERVAL '30 days'
+      `
+      return rowCount ?? 0
+    },
   },
 
   // Email Delivery Log (for per-member deduplication)
@@ -4087,6 +4099,18 @@ export const db = {
         LIMIT 1
       `
       return rows.length > 0
+    },
+
+    /**
+     * Delete email delivery log records older than 30 days
+     * to prevent the table from growing indefinitely.
+     */
+    async cleanupOldLogs(): Promise<number> {
+      const { rowCount } = await sql`
+        DELETE FROM email_delivery_log
+        WHERE delivery_date < CURRENT_DATE - INTERVAL '30 days'
+      `
+      return rowCount ?? 0
     },
   },
 
