@@ -78,8 +78,8 @@ export const POST = withAdmin(async (request, auth) => {
       allOrgChartEmployees.map(e => [e.fullName.toLowerCase(), e])
     )
 
-    // Get all rocks for this organization, filtering by current quarter
-    const allRocks = await db.rocks.findByOrganizationId(orgId)
+    // Get all rocks for this organization/workspace, filtering by current quarter
+    const allRocks = await db.rocks.findByOrganizationId(orgId, workspaceId)
     const quarterRocks = allRocks.filter(rock =>
       rock.quarter === currentQuarter || !rock.quarter
     )
@@ -250,8 +250,8 @@ export const GET = withAuth(async (request, auth) => {
       allOrgChartEmployees.map(e => [e.fullName.toLowerCase(), e])
     )
 
-    // Pre-fetch all rocks for the organization (single query instead of per-member)
-    const allRocks = await db.rocks.findByOrganizationId(orgId)
+    // Pre-fetch all rocks for the organization/workspace (single query instead of per-member)
+    const allRocks = await db.rocks.findByOrganizationId(orgId, workspaceId)
     const rocksByUserId = new Map<string, typeof allRocks>()
     for (const rock of allRocks) {
       if (!rock.userId) continue // Skip rocks for draft members who haven't accepted invitation

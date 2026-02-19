@@ -89,6 +89,9 @@ function getThisWeekDates(): string[] {
 // GET /api/eod-reports/verify - Verify EOD data sync for all users
 export const GET = withAdmin(async (request, auth) => {
   try {
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId") || undefined
+
     const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"
     const todayInOrgTz = getTodayInTimezone(orgTimezone)
 
@@ -97,7 +100,7 @@ export const GET = withAdmin(async (request, auth) => {
     const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
     // Get all reports for the organization
-    const allReports = await db.eodReports.findByOrganizationId(auth.organization.id)
+    const allReports = await db.eodReports.findByOrganizationId(auth.organization.id, workspaceId)
 
     // Get all team members
     const teamMembers = await db.members.findWithUsersByOrganizationId(auth.organization.id)

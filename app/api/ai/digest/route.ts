@@ -38,6 +38,9 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       return creditCheck as NextResponse<ApiResponse<null>>
     }
 
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId") || undefined
+
     const { date } = await validateBody(request, aiDigestSchema)
 
     // Default to today
@@ -67,7 +70,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     const reportIds = dateReports.map(r => r.id)
     const [teamMembersData, rocks, insights, previousDigest] = await Promise.all([
       db.members.findWithUsersByOrganizationId(auth.organization.id),
-      db.rocks.findByOrganizationId(auth.organization.id),
+      db.rocks.findByOrganizationId(auth.organization.id, workspaceId),
       db.eodInsights.findByReportIds(reportIds),
       db.dailyDigests.getLatest(auth.organization.id),
     ])
