@@ -641,6 +641,77 @@ export const db = {
         notificationPreferences: row.notification_preferences as NotificationPreferences | undefined,
       }))
     },
+    async findWithUsersByOrganizationIdPaginated(orgId: string, options: {
+      limit: number
+      cursorTimestamp?: string | null
+      cursorId?: string | null
+      direction?: "asc" | "desc"
+    }): Promise<{ data: Array<{
+      id: string; userId?: string; name: string; email: string
+      role: "owner" | "admin" | "member"; department: string; avatar?: string
+      joinDate: string; weeklyMeasurable?: string
+      status?: "active" | "invited" | "pending" | "inactive"
+      timezone?: string; eodReminderTime?: string; managerId?: string | null
+      jobTitle?: string; notificationPreferences?: NotificationPreferences
+    }>; totalCount: number }> {
+      const cursorTs = options.cursorTimestamp || null
+      const cursorId = options.cursorId || null
+      const fetchLimit = options.limit + 1
+      // Members default to ASC by join date
+      const isAsc = options.direction !== "desc"
+
+      const [countResult, dataResult] = await Promise.all([
+        sql`SELECT COUNT(*)::int as total FROM organization_members WHERE organization_id = ${orgId}`,
+        isAsc
+          ? sql`
+              SELECT om.id as id, om.user_id as user_id,
+                COALESCE(u.name, om.name) as name, COALESCE(u.email, om.email) as email,
+                u.avatar, om.role, om.department, om.joined_at, om.weekly_measurable,
+                om.status, om.timezone, om.eod_reminder_time, om.manager_id, om.job_title,
+                om.notification_preferences
+              FROM organization_members om
+              LEFT JOIN users u ON u.id = om.user_id
+              WHERE om.organization_id = ${orgId}
+                AND (${cursorTs}::timestamp IS NULL OR om.joined_at > ${cursorTs}::timestamp OR (om.joined_at = ${cursorTs}::timestamp AND om.id > ${cursorId}))
+              ORDER BY om.joined_at ASC, om.id ASC
+              LIMIT ${fetchLimit}
+            `
+          : sql`
+              SELECT om.id as id, om.user_id as user_id,
+                COALESCE(u.name, om.name) as name, COALESCE(u.email, om.email) as email,
+                u.avatar, om.role, om.department, om.joined_at, om.weekly_measurable,
+                om.status, om.timezone, om.eod_reminder_time, om.manager_id, om.job_title,
+                om.notification_preferences
+              FROM organization_members om
+              LEFT JOIN users u ON u.id = om.user_id
+              WHERE om.organization_id = ${orgId}
+                AND (${cursorTs}::timestamp IS NULL OR om.joined_at < ${cursorTs}::timestamp OR (om.joined_at = ${cursorTs}::timestamp AND om.id < ${cursorId}))
+              ORDER BY om.joined_at DESC, om.id DESC
+              LIMIT ${fetchLimit}
+            `,
+      ])
+      return {
+        data: dataResult.rows.map(row => ({
+          id: row.id as string,
+          userId: row.user_id as string | undefined,
+          name: row.name as string,
+          email: row.email as string,
+          role: row.role as "owner" | "admin" | "member",
+          department: row.department as string,
+          avatar: row.avatar as string | undefined,
+          joinDate: (row.joined_at as Date)?.toISOString() || "",
+          weeklyMeasurable: row.weekly_measurable as string | undefined,
+          status: row.status as "active" | "invited" | "pending" | "inactive" | undefined,
+          timezone: row.timezone as string | undefined,
+          eodReminderTime: row.eod_reminder_time as string | undefined,
+          managerId: (row.manager_id as string) || null,
+          jobTitle: row.job_title as string | undefined,
+          notificationPreferences: row.notification_preferences as NotificationPreferences | undefined,
+        })),
+        totalCount: (countResult.rows[0]?.total as number) ?? 0,
+      }
+    },
+
     async findByUserId(userId: string): Promise<OrganizationMember[]> {
       const { rows } = await sql`SELECT * FROM organization_members WHERE user_id = ${userId}`
       return rows.map(parseMember)
@@ -4145,6 +4216,55 @@ export const db = {
       return rows.map(parseClient)
     },
 
+    async findByWorkspacePaginated(orgId: string, workspaceId: string, options: {
+      status?: string
+      limit: number
+      cursorTimestamp?: string | null
+      cursorId?: string | null
+      direction?: "asc" | "desc"
+    }): Promise<{ data: Client[]; totalCount: number }> {
+      const status = options.status || null
+      const cursorTs = options.cursorTimestamp || null
+      const cursorId = options.cursorId || null
+      const fetchLimit = options.limit + 1 // +1 to detect hasMore
+      const isDesc = options.direction !== "asc"
+
+      const [countResult, dataResult] = await Promise.all([
+        sql`SELECT COUNT(*)::int as total FROM clients WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND (${status}::text IS NULL OR status = ${status})`,
+        isDesc
+          ? sql`
+              SELECT c.*,
+                COUNT(p.id)::int as project_count,
+                COUNT(p.id) FILTER (WHERE p.status IN ('planning', 'active', 'on-hold'))::int as active_project_count
+              FROM clients c
+              LEFT JOIN projects p ON p.client_id = c.id
+              WHERE c.organization_id = ${orgId} AND c.workspace_id = ${workspaceId}
+                AND (${status}::text IS NULL OR c.status = ${status})
+                AND (${cursorTs}::timestamp IS NULL OR c.created_at < ${cursorTs}::timestamp OR (c.created_at = ${cursorTs}::timestamp AND c.id < ${cursorId}))
+              GROUP BY c.id
+              ORDER BY c.created_at DESC, c.id DESC
+              LIMIT ${fetchLimit}
+            `
+          : sql`
+              SELECT c.*,
+                COUNT(p.id)::int as project_count,
+                COUNT(p.id) FILTER (WHERE p.status IN ('planning', 'active', 'on-hold'))::int as active_project_count
+              FROM clients c
+              LEFT JOIN projects p ON p.client_id = c.id
+              WHERE c.organization_id = ${orgId} AND c.workspace_id = ${workspaceId}
+                AND (${status}::text IS NULL OR c.status = ${status})
+                AND (${cursorTs}::timestamp IS NULL OR c.created_at > ${cursorTs}::timestamp OR (c.created_at = ${cursorTs}::timestamp AND c.id > ${cursorId}))
+              GROUP BY c.id
+              ORDER BY c.created_at ASC, c.id ASC
+              LIMIT ${fetchLimit}
+            `,
+      ])
+      return {
+        data: dataResult.rows.map(parseClient),
+        totalCount: (countResult.rows[0]?.total as number) ?? 0,
+      }
+    },
+
     async findById(orgId: string, id: string): Promise<Client | null> {
       const { rows } = await sql`
         SELECT c.*,
@@ -4244,9 +4364,78 @@ export const db = {
           AND (${clientId}::text IS NULL OR p.client_id = ${clientId})
           AND (${ownerId}::text IS NULL OR p.owner_id = ${ownerId})
         GROUP BY p.id, cl.name, u.name
-        ORDER BY p.created_at DESC
+        Order BY p.created_at DESC
       `
       return rows.map(parseProject)
+    },
+
+    async findByWorkspacePaginated(orgId: string, workspaceId: string, options: {
+      status?: string | null
+      clientId?: string | null
+      ownerId?: string | null
+      limit: number
+      cursorTimestamp?: string | null
+      cursorId?: string | null
+      direction?: "asc" | "desc"
+    }): Promise<{ data: Project[]; totalCount: number }> {
+      const status = options.status || null
+      const clientId = options.clientId || null
+      const ownerId = options.ownerId || null
+      const cursorTs = options.cursorTimestamp || null
+      const cursorId = options.cursorId || null
+      const fetchLimit = options.limit + 1
+      const isDesc = options.direction !== "asc"
+
+      const [countResult, dataResult] = await Promise.all([
+        sql`SELECT COUNT(*)::int as total FROM projects WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND (${status}::text IS NULL OR status = ${status}) AND (${clientId}::text IS NULL OR client_id = ${clientId}) AND (${ownerId}::text IS NULL OR owner_id = ${ownerId})`,
+        isDesc
+          ? sql`
+              SELECT p.*,
+                cl.name as client_name,
+                u.name as owner_name,
+                COUNT(at.id)::int as task_count,
+                COUNT(at.id) FILTER (WHERE at.status = 'completed')::int as completed_task_count,
+                (SELECT COUNT(*)::int FROM project_members pm WHERE pm.project_id = p.id) as member_count
+              FROM projects p
+              LEFT JOIN clients cl ON cl.id = p.client_id
+              LEFT JOIN users u ON u.id = p.owner_id
+              LEFT JOIN assigned_tasks at ON at.project_id = p.id
+              WHERE p.organization_id = ${orgId}
+                AND p.workspace_id = ${workspaceId}
+                AND (${status}::text IS NULL OR p.status = ${status})
+                AND (${clientId}::text IS NULL OR p.client_id = ${clientId})
+                AND (${ownerId}::text IS NULL OR p.owner_id = ${ownerId})
+                AND (${cursorTs}::timestamp IS NULL OR p.created_at < ${cursorTs}::timestamp OR (p.created_at = ${cursorTs}::timestamp AND p.id < ${cursorId}))
+              GROUP BY p.id, cl.name, u.name
+              ORDER BY p.created_at DESC, p.id DESC
+              LIMIT ${fetchLimit}
+            `
+          : sql`
+              SELECT p.*,
+                cl.name as client_name,
+                u.name as owner_name,
+                COUNT(at.id)::int as task_count,
+                COUNT(at.id) FILTER (WHERE at.status = 'completed')::int as completed_task_count,
+                (SELECT COUNT(*)::int FROM project_members pm WHERE pm.project_id = p.id) as member_count
+              FROM projects p
+              LEFT JOIN clients cl ON cl.id = p.client_id
+              LEFT JOIN users u ON u.id = p.owner_id
+              LEFT JOIN assigned_tasks at ON at.project_id = p.id
+              WHERE p.organization_id = ${orgId}
+                AND p.workspace_id = ${workspaceId}
+                AND (${status}::text IS NULL OR p.status = ${status})
+                AND (${clientId}::text IS NULL OR p.client_id = ${clientId})
+                AND (${ownerId}::text IS NULL OR p.owner_id = ${ownerId})
+                AND (${cursorTs}::timestamp IS NULL OR p.created_at > ${cursorTs}::timestamp OR (p.created_at = ${cursorTs}::timestamp AND p.id > ${cursorId}))
+              GROUP BY p.id, cl.name, u.name
+              ORDER BY p.created_at ASC, p.id ASC
+              LIMIT ${fetchLimit}
+            `,
+      ])
+      return {
+        data: dataResult.rows.map(parseProject),
+        totalCount: (countResult.rows[0]?.total as number) ?? 0,
+      }
     },
 
     async findById(orgId: string, id: string): Promise<Project | null> {

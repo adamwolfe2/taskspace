@@ -51,8 +51,6 @@ export const GET = withAuth(async (request, auth) => {
       )
     }
 
-    const allClients = await db.clients.findByWorkspace(auth.organization.id, workspaceId, status)
-
     // Check if pagination params are provided
     const cursor = searchParams.get("cursor")
     const limitParam = searchParams.get("limit")
@@ -60,37 +58,22 @@ export const GET = withAuth(async (request, auth) => {
 
     if (usePagination) {
       const pagination = parsePaginationParams(searchParams)
+      const decoded = pagination.cursor ? decodeCursor(pagination.cursor) : null
 
-      // Sort by createdAt descending (or ascending based on direction)
-      const sorted = [...allClients].sort((a, b) => {
-        const cmp = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        return pagination.direction === "asc" ? -cmp : cmp
-      })
-
-      // Apply cursor filter if present
-      let filtered = sorted
-      if (pagination.cursor) {
-        const decoded = decodeCursor(pagination.cursor)
-        if (decoded) {
-          filtered = sorted.filter((client) => {
-            const itemTime = new Date(client.createdAt).getTime()
-            const cursorTime = new Date(decoded.timestamp).getTime()
-            if (pagination.direction === "desc") {
-              return itemTime < cursorTime || (itemTime === cursorTime && client.id < decoded.id)
-            } else {
-              return itemTime > cursorTime || (itemTime === cursorTime && client.id > decoded.id)
-            }
-          })
+      const { data, totalCount } = await db.clients.findByWorkspacePaginated(
+        auth.organization.id, workspaceId, {
+          status,
+          limit: pagination.limit,
+          cursorTimestamp: decoded?.timestamp,
+          cursorId: decoded?.id,
+          direction: pagination.direction,
         }
-      }
-
-      // Take limit + 1 to detect hasMore
-      const page = filtered.slice(0, pagination.limit + 1)
+      )
 
       const response = buildPaginatedResponse(
-        page,
+        data,
         pagination.limit,
-        allClients.length,
+        totalCount,
         (c) => c.createdAt,
         (c) => c.id
       )
@@ -102,9 +85,10 @@ export const GET = withAuth(async (request, auth) => {
     }
 
     // Legacy non-paginated path (backward compatible)
+    const clients = await db.clients.findByWorkspace(auth.organization.id, workspaceId, status)
     return NextResponse.json<ApiResponse<Client[]>>({
       success: true,
-      data: allClients,
+      data: clients,
     })
   } catch (error) {
     logger.error({ error }, "Get clients error")
