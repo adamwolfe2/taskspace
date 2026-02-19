@@ -106,7 +106,7 @@ import { SessionTimeoutWarning } from "@/components/shared/session-timeout-warni
 import { BugReporter } from "@/components/shared/bug-reporter"
 
 function AppContent() {
-  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization, pageFilter, clearPageFilter, isSuperAdmin } = useApp()
+  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization, pageFilter, clearPageFilter, isSuperAdmin, isDemoMode } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [resetToken, setResetToken] = useState<string | null>(null)
@@ -289,6 +289,7 @@ function AppContent() {
           />
         )
       case "admin":
+        if (isDemoMode) return <DashboardPage {...dashboardProps} />
         return isAdmin ? (
           <AdminPage
             teamMembers={teamData.teamMembers}
@@ -308,6 +309,7 @@ function AppContent() {
           <DashboardPage {...dashboardProps} />
         )
       case "admin-team":
+        if (isDemoMode) return <DashboardPage {...dashboardProps} />
         return isAdmin ? (
           <AdminTeamPage
             teamMembers={teamData.teamMembers}
@@ -319,6 +321,7 @@ function AppContent() {
           <DashboardPage {...dashboardProps} />
         )
       case "admin-database":
+        if (isDemoMode) return <DashboardPage {...dashboardProps} />
         return isAdmin ? (
           <AdminDatabasePage />
         ) : (
@@ -357,6 +360,7 @@ function AppContent() {
           />
         )
       case "settings":
+        if (isDemoMode) return <DashboardPage {...dashboardProps} />
         return <SettingsPage />
       case "org-chart":
         return <OrgChartPage />

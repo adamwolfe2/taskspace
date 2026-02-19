@@ -13,7 +13,7 @@ interface SidebarNavProps {
 }
 
 export function SidebarNav({ onNavigate }: SidebarNavProps) {
-  const { currentUser, currentPage, setCurrentPage, currentOrganization, isSuperAdmin } = useApp()
+  const { currentUser, currentPage, setCurrentPage, currentOrganization, isSuperAdmin, isDemoMode } = useApp()
   const { isFeatureEnabled } = useWorkspaceFeatures()
 
   const handleNavigation = (page: PageType) => {
@@ -161,8 +161,8 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
           </div>
         )}
 
-        {/* Admin Section */}
-        {isAdmin && filteredAdminItems.length > 0 && (
+        {/* Admin Section — hidden in demo mode */}
+        {isAdmin && !isDemoMode && filteredAdminItems.length > 0 && (
           <div className="px-3">
             <h2 className="mb-3 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Admin
@@ -194,6 +194,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
       {/* Onboarding checklist + Settings at bottom */}
       <div className="mt-auto space-y-0">
         <GettingStartedChecklist onNavigate={(page) => handleNavigation(page)} />
+      {!isDemoMode && (
       <div className="px-3 pt-2 border-t border-slate-100">
         <button
           onClick={() => handleNavigation("settings")}
@@ -208,6 +209,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
           Settings
         </button>
       </div>
+      )}
       </div>
     </nav>
   )
