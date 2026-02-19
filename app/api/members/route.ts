@@ -6,6 +6,8 @@ import { generateId } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createMemberSchema, updateMemberSchema } from "@/lib/validation/schemas"
 import type { TeamMember, OrganizationMember, ApiResponse } from "@/lib/types"
+import { parsePaginationParams, buildPaginatedResponse, decodeCursor } from "@/lib/utils/pagination"
+import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { logger, logError } from "@/lib/logger"
 import { audit } from "@/lib/audit"
 
@@ -104,13 +106,64 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 // GET /api/members - Get all team members in the organization
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
+    const { searchParams } = new URL(request.url)
+
     // Use optimized JOIN query to get members with user data in a single call
     // This fixes the N+1 query problem (was: 1 query + N queries for each user)
-    const teamMembers = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+    const allMembers = await db.members.findWithUsersByOrganizationId(auth.organization.id)
 
+    // Check if pagination params are provided
+    const cursor = searchParams.get("cursor")
+    const limitParam = searchParams.get("limit")
+    const usePagination = cursor !== null || limitParam !== null
+
+    if (usePagination) {
+      const pagination = parsePaginationParams(searchParams)
+
+      // Use joinDate as the cursor timestamp (always present on TeamMember)
+      const sorted = [...allMembers].sort((a, b) => {
+        const cmp = new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime()
+        return pagination.direction === "asc" ? -cmp : cmp
+      })
+
+      // Apply cursor filter if present
+      let filtered = sorted
+      if (pagination.cursor) {
+        const decoded = decodeCursor(pagination.cursor)
+        if (decoded) {
+          filtered = sorted.filter((member) => {
+            const itemTime = new Date(member.joinDate).getTime()
+            const cursorTime = new Date(decoded.timestamp).getTime()
+            if (pagination.direction === "desc") {
+              return itemTime < cursorTime || (itemTime === cursorTime && member.id < decoded.id)
+            } else {
+              return itemTime > cursorTime || (itemTime === cursorTime && member.id > decoded.id)
+            }
+          })
+        }
+      }
+
+      // Take limit + 1 to detect hasMore
+      const page = filtered.slice(0, pagination.limit + 1)
+
+      const response = buildPaginatedResponse(
+        page,
+        pagination.limit,
+        allMembers.length,
+        (m) => m.joinDate,
+        (m) => m.id
+      )
+
+      return NextResponse.json<ApiResponse<PaginatedResponse<TeamMember>>>({
+        success: true,
+        data: response,
+      })
+    }
+
+    // Legacy non-paginated path (backward compatible)
     return NextResponse.json<ApiResponse<TeamMember[]>>({
       success: true,
-      data: teamMembers,
+      data: allMembers,
     })
   } catch (error) {
     logError(logger, "Get members error", error)

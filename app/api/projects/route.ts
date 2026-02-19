@@ -4,9 +4,12 @@ import { verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess, getWorkspaceById } from "@/lib/db/workspaces"
 import { isWorkspaceFeatureEnabled } from "@/lib/auth/workspace-features"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createProjectSchema, updateProjectSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
+import { parsePaginationParams, buildPaginatedResponse, decodeCursor } from "@/lib/utils/pagination"
+import type { PaginatedResponse } from "@/lib/utils/pagination"
 import type { ApiResponse, Project } from "@/lib/types"
 
 // GET /api/projects?workspaceId=xxx&status=xxx&clientId=xxx&ownerId=xxx
@@ -50,15 +53,64 @@ export const GET = withAuth(async (request, auth) => {
       )
     }
 
-    const projects = await db.projects.findByWorkspace(auth.organization.id, workspaceId, {
+    const allProjects = await db.projects.findByWorkspace(auth.organization.id, workspaceId, {
       status,
       clientId,
       ownerId,
     })
 
+    // Check if pagination params are provided
+    const cursor = searchParams.get("cursor")
+    const limitParam = searchParams.get("limit")
+    const usePagination = cursor !== null || limitParam !== null
+
+    if (usePagination) {
+      const pagination = parsePaginationParams(searchParams)
+
+      // Sort by createdAt descending (or ascending based on direction)
+      const sorted = [...allProjects].sort((a, b) => {
+        const cmp = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        return pagination.direction === "asc" ? -cmp : cmp
+      })
+
+      // Apply cursor filter if present
+      let filtered = sorted
+      if (pagination.cursor) {
+        const decoded = decodeCursor(pagination.cursor)
+        if (decoded) {
+          filtered = sorted.filter((project) => {
+            const itemTime = new Date(project.createdAt).getTime()
+            const cursorTime = new Date(decoded.timestamp).getTime()
+            if (pagination.direction === "desc") {
+              return itemTime < cursorTime || (itemTime === cursorTime && project.id < decoded.id)
+            } else {
+              return itemTime > cursorTime || (itemTime === cursorTime && project.id > decoded.id)
+            }
+          })
+        }
+      }
+
+      // Take limit + 1 to detect hasMore
+      const page = filtered.slice(0, pagination.limit + 1)
+
+      const response = buildPaginatedResponse(
+        page,
+        pagination.limit,
+        allProjects.length,
+        (p) => p.createdAt,
+        (p) => p.id
+      )
+
+      return NextResponse.json<ApiResponse<PaginatedResponse<Project>>>({
+        success: true,
+        data: response,
+      })
+    }
+
+    // Legacy non-paginated path (backward compatible)
     return NextResponse.json<ApiResponse<Project[]>>({
       success: true,
-      data: projects,
+      data: allProjects,
     })
   } catch (error) {
     logger.error({ error }, "Get projects error")
@@ -230,6 +282,10 @@ export const DELETE = withAuth(async (request, auth) => {
         { status: 404 }
       )
     }
+
+    // Unlink tasks that reference this project before deleting
+    const { rowCount: unlinkedTasks } = await sql`UPDATE assigned_tasks SET project_id = NULL WHERE project_id = ${id} AND organization_id = ${auth.organization.id}`
+    logger.info(`Unlinked ${unlinkedTasks ?? 0} tasks from project ${id} before deletion`)
 
     const deleted = await db.projects.delete(auth.organization.id, id)
 

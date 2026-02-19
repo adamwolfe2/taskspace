@@ -4,9 +4,12 @@ import { verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess, getWorkspaceById } from "@/lib/db/workspaces"
 import { isWorkspaceFeatureEnabled } from "@/lib/auth/workspace-features"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createClientSchema, updateClientSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
+import { parsePaginationParams, buildPaginatedResponse, decodeCursor } from "@/lib/utils/pagination"
+import type { PaginatedResponse } from "@/lib/utils/pagination"
 import type { ApiResponse, Client } from "@/lib/types"
 
 // GET /api/clients?workspaceId=xxx&status=xxx
@@ -48,11 +51,60 @@ export const GET = withAuth(async (request, auth) => {
       )
     }
 
-    const clients = await db.clients.findByWorkspace(auth.organization.id, workspaceId, status)
+    const allClients = await db.clients.findByWorkspace(auth.organization.id, workspaceId, status)
 
+    // Check if pagination params are provided
+    const cursor = searchParams.get("cursor")
+    const limitParam = searchParams.get("limit")
+    const usePagination = cursor !== null || limitParam !== null
+
+    if (usePagination) {
+      const pagination = parsePaginationParams(searchParams)
+
+      // Sort by createdAt descending (or ascending based on direction)
+      const sorted = [...allClients].sort((a, b) => {
+        const cmp = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        return pagination.direction === "asc" ? -cmp : cmp
+      })
+
+      // Apply cursor filter if present
+      let filtered = sorted
+      if (pagination.cursor) {
+        const decoded = decodeCursor(pagination.cursor)
+        if (decoded) {
+          filtered = sorted.filter((client) => {
+            const itemTime = new Date(client.createdAt).getTime()
+            const cursorTime = new Date(decoded.timestamp).getTime()
+            if (pagination.direction === "desc") {
+              return itemTime < cursorTime || (itemTime === cursorTime && client.id < decoded.id)
+            } else {
+              return itemTime > cursorTime || (itemTime === cursorTime && client.id > decoded.id)
+            }
+          })
+        }
+      }
+
+      // Take limit + 1 to detect hasMore
+      const page = filtered.slice(0, pagination.limit + 1)
+
+      const response = buildPaginatedResponse(
+        page,
+        pagination.limit,
+        allClients.length,
+        (c) => c.createdAt,
+        (c) => c.id
+      )
+
+      return NextResponse.json<ApiResponse<PaginatedResponse<Client>>>({
+        success: true,
+        data: response,
+      })
+    }
+
+    // Legacy non-paginated path (backward compatible)
     return NextResponse.json<ApiResponse<Client[]>>({
       success: true,
-      data: clients,
+      data: allClients,
     })
   } catch (error) {
     logger.error({ error }, "Get clients error")
@@ -200,6 +252,10 @@ export const DELETE = withAuth(async (request, auth) => {
         { status: 404 }
       )
     }
+
+    // Unlink projects that reference this client before deleting
+    const { rowCount: unlinkedProjects } = await sql`UPDATE projects SET client_id = NULL WHERE client_id = ${id} AND organization_id = ${auth.organization.id}`
+    logger.info(`Unlinked ${unlinkedProjects ?? 0} projects from client ${id} before deletion`)
 
     const deleted = await db.clients.delete(auth.organization.id, id)
 
