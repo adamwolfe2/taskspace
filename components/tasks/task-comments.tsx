@@ -8,6 +8,7 @@ import { UserInitials } from "@/components/shared/user-initials"
 import { formatDistanceToNow } from "date-fns"
 import { MessageSquare, Send, X } from "lucide-react"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
+import { useToast } from "@/hooks/use-toast"
 
 interface TaskCommentsProps {
   comments: TaskComment[]
@@ -21,6 +22,7 @@ export function TaskComments({ comments, currentUser, onAddComment, compact = fa
   const [newComment, setNewComment] = useState("")
   const [isSending, setIsSending] = useState(false)
   const themedColors = useThemedIconColors()
+  const { toast } = useToast()
 
   const handleSubmit = async () => {
     if (!newComment.trim()) return
@@ -29,6 +31,12 @@ export function TaskComments({ comments, currentUser, onAddComment, compact = fa
     try {
       await onAddComment(newComment.trim())
       setNewComment("")
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to add comment. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsSending(false)
     }

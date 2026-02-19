@@ -188,6 +188,12 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
       setSaveAsTemplate(false)
       setTemplateName("")
       onOpenChange(false)
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to create task. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }

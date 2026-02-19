@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress"
 import { Plus, GripVertical, Trash2, Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
+import { useToast } from "@/hooks/use-toast"
 import type { TaskSubtask } from "@/lib/types"
 
 interface TaskSubtasksProps {
@@ -30,6 +31,7 @@ export function TaskSubtasks({
  className,
 }: TaskSubtasksProps) {
  const { getStatusStyle } = useBrandStatusStyles()
+ const { toast } = useToast()
  const [isAdding, setIsAdding] = useState(false)
  const [newTitle, setNewTitle] = useState("")
  const [isSubmitting, setIsSubmitting] = useState(false)
@@ -47,8 +49,12 @@ export function TaskSubtasks({
  await onAdd(newTitle.trim())
  setNewTitle("")
  setIsAdding(false)
- } catch (_error) {
-   /* silently ignore */
+ } catch {
+   toast({
+     title: "Error",
+     description: "Failed to add subtask. Please try again.",
+     variant: "destructive",
+   })
  } finally {
  setIsSubmitting(false)
  }

@@ -61,6 +61,7 @@ export function TasksPage({
   const [aiPrioritizing, setAiPrioritizing] = useState(false)
   const [aiPrioritized, setAiPrioritized] = useState<Array<{ taskId: string; rank: number; reasoning: string }> | null>(null)
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false)
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
 
@@ -289,52 +290,57 @@ export function TasksPage({
     let successCount = 0
     let errorCount = 0
 
-    for (const taskId of tasksToComplete) {
-      try {
-        const task = userTasks.find((t) => t.id === taskId)
-        if (task && task.status !== "completed") {
-          await updateTask(taskId, {
-            status: "completed",
-            completedAt: new Date().toISOString(),
-          })
-          successCount++
+    setIsBulkProcessing(true)
+    try {
+      for (const taskId of tasksToComplete) {
+        try {
+          const task = userTasks.find((t) => t.id === taskId)
+          if (task && task.status !== "completed") {
+            await updateTask(taskId, {
+              status: "completed",
+              completedAt: new Date().toISOString(),
+            })
+            successCount++
 
-          // Handle recurring tasks
-          if (task.recurrence && task.dueDate) {
-            const nextDueDate = calculateNextDueDate(task.dueDate, task.recurrence)
-            if (!task.recurrence.endDate || nextDueDate <= new Date(task.recurrence.endDate)) {
-              await createTask({
-                title: task.title,
-                description: task.description,
-                assigneeId: task.assigneeId,
-                rockId: task.rockId,
-                priority: task.priority,
-                dueDate: nextDueDate.toISOString().split("T")[0],
-                recurrence: task.recurrence,
-                parentRecurringTaskId: task.parentRecurringTaskId || task.id,
-              })
+            // Handle recurring tasks
+            if (task.recurrence && task.dueDate) {
+              const nextDueDate = calculateNextDueDate(task.dueDate, task.recurrence)
+              if (!task.recurrence.endDate || nextDueDate <= new Date(task.recurrence.endDate)) {
+                await createTask({
+                  title: task.title,
+                  description: task.description,
+                  assigneeId: task.assigneeId,
+                  rockId: task.rockId,
+                  priority: task.priority,
+                  dueDate: nextDueDate.toISOString().split("T")[0],
+                  recurrence: task.recurrence,
+                  parentRecurringTaskId: task.parentRecurringTaskId || task.id,
+                })
+              }
             }
           }
+        } catch {
+          errorCount++
         }
-      } catch {
-        errorCount++
       }
-    }
 
-    setSelectedTasks(new Set())
+      setSelectedTasks(new Set())
 
-    if (successCount > 0) {
-      toast({
-        title: "Tasks completed",
-        description: `${successCount} task${successCount > 1 ? "s" : ""} marked as complete`,
-      })
-    }
-    if (errorCount > 0) {
-      toast({
-        title: "Some tasks failed",
-        description: `${errorCount} task${errorCount > 1 ? "s" : ""} could not be completed`,
-        variant: "destructive",
-      })
+      if (successCount > 0) {
+        toast({
+          title: "Tasks completed",
+          description: `${successCount} task${successCount > 1 ? "s" : ""} marked as complete`,
+        })
+      }
+      if (errorCount > 0) {
+        toast({
+          title: "Some tasks failed",
+          description: `${errorCount} task${errorCount > 1 ? "s" : ""} could not be completed`,
+          variant: "destructive",
+        })
+      }
+    } finally {
+      setIsBulkProcessing(false)
     }
   }
 
@@ -347,29 +353,34 @@ export function TasksPage({
     let successCount = 0
     let errorCount = 0
 
-    for (const taskId of tasksToDelete) {
-      try {
-        await deleteTask(taskId)
-        successCount++
-      } catch {
-        errorCount++
+    setIsBulkProcessing(true)
+    try {
+      for (const taskId of tasksToDelete) {
+        try {
+          await deleteTask(taskId)
+          successCount++
+        } catch {
+          errorCount++
+        }
       }
-    }
 
-    setSelectedTasks(new Set())
+      setSelectedTasks(new Set())
 
-    if (successCount > 0) {
-      toast({
-        title: "Tasks deleted",
-        description: `${successCount} task${successCount > 1 ? "s" : ""} removed`,
-      })
-    }
-    if (errorCount > 0) {
-      toast({
-        title: "Some tasks failed",
-        description: `${errorCount} task${errorCount > 1 ? "s" : ""} could not be deleted`,
-        variant: "destructive",
-      })
+      if (successCount > 0) {
+        toast({
+          title: "Tasks deleted",
+          description: `${successCount} task${successCount > 1 ? "s" : ""} removed`,
+        })
+      }
+      if (errorCount > 0) {
+        toast({
+          title: "Some tasks failed",
+          description: `${errorCount} task${errorCount > 1 ? "s" : ""} could not be deleted`,
+          variant: "destructive",
+        })
+      }
+    } finally {
+      setIsBulkProcessing(false)
     }
   }
 
@@ -716,6 +727,7 @@ export function TasksPage({
                   size="sm"
                   onClick={handleClearSelection}
                   className="gap-2"
+                  disabled={isBulkProcessing}
                 >
                   <X className="h-4 w-4" />
                   Clear Selection
@@ -725,17 +737,27 @@ export function TasksPage({
                   size="sm"
                   onClick={handleBulkComplete}
                   className="gap-2"
+                  disabled={isBulkProcessing}
                 >
-                  <CheckSquare className="h-4 w-4" />
-                  Mark Complete
+                  {isBulkProcessing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckSquare className="h-4 w-4" />
+                  )}
+                  {isBulkProcessing ? "Processing..." : "Mark Complete"}
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={handleBulkDelete}
                   className="gap-2"
+                  disabled={isBulkProcessing}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  {isBulkProcessing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
                   Delete
                 </Button>
               </div>

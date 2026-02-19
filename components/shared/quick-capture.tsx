@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -83,6 +84,7 @@ export function QuickCapture({
  const [isSubmitting, setIsSubmitting] = useState(false)
  const [mode, setMode] = useState<"task" | "rock">("task")
  const inputRef = useRef<HTMLInputElement>(null)
+ const { toast } = useToast()
 
  // Parse natural language commands from input
  const parseInput = useCallback((text: string) => {
@@ -193,8 +195,12 @@ export function QuickCapture({
  setPriority("normal")
  setDueDate(null)
  setOpen(false)
- } catch (_error) {
-   /* silently ignore */
+ } catch {
+   toast({
+     title: "Error",
+     description: "Failed to create item. Please try again.",
+     variant: "destructive",
+   })
  } finally {
  setIsSubmitting(false)
  }
@@ -422,6 +428,7 @@ export function FloatingQuickCapture({
  const [open, setOpen] = useState(false)
  const [input, setInput] = useState("")
  const [isSubmitting, setIsSubmitting] = useState(false)
+ const { toast } = useToast()
 
  const handleSubmit = async () => {
  if (!input.trim() || isSubmitting) return
@@ -431,8 +438,12 @@ export function FloatingQuickCapture({
  await onCreateTask({ title: input.trim() })
  setInput("")
  setOpen(false)
- } catch (_error) {
-   /* silently ignore */
+ } catch {
+   toast({
+     title: "Error",
+     description: "Failed to create task. Please try again.",
+     variant: "destructive",
+   })
  } finally {
  setIsSubmitting(false)
  }
@@ -509,6 +520,7 @@ export function InlineQuickAdd({
  const [value, setValue] = useState("")
  const [isSubmitting, setIsSubmitting] = useState(false)
  const [isFocused, setIsFocused] = useState(false)
+ const { toast } = useToast()
 
  const handleSubmit = async () => {
  if (!value.trim() || isSubmitting) return
@@ -517,8 +529,12 @@ export function InlineQuickAdd({
  try {
  await onSubmit(value.trim())
  setValue("")
- } catch (_error) {
-   /* silently ignore */
+ } catch {
+   toast({
+     title: "Error",
+     description: "Failed to add item. Please try again.",
+     variant: "destructive",
+   })
  } finally {
  setIsSubmitting(false)
  }

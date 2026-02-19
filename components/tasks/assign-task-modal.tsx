@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface AssignTaskModalProps {
   open: boolean
@@ -32,7 +34,7 @@ interface AssignTaskModalProps {
     priority: "high" | "medium" | "normal"
     dueDate: string
     sendEmail: boolean
-  }) => void
+  }) => void | Promise<void>
   teamMembers: TeamMember[]
   allRocks: Rock[]
   currentUserId: string
@@ -56,6 +58,8 @@ export function AssignTaskModal({
   const [priority, setPriority] = useState<"high" | "medium" | "normal">("medium")
   const [dueDate, setDueDate] = useState("")
   const [sendEmail, setSendEmail] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
 
   const assignableMembers = teamMembers.filter((m) => m.id !== currentUserId)
   const assigneeRocks = assigneeId ? allRocks.filter((r) => r.userId === assigneeId) : []
@@ -67,35 +71,46 @@ export function AssignTaskModal({
     }
   }, [assigneeId])
 
-  const handleSubmit = () => {
-    if (!assigneeId || !title.trim() || !dueDate) return
+  const handleSubmit = async () => {
+    if (!assigneeId || !title.trim() || !dueDate || isSubmitting) return
 
     const selectedRock = rockId ? allRocks.find((r) => r.id === rockId) : null
     const selectedProject = projectId ? projects.find((p) => p.id === projectId) : null
 
-    onSubmit({
-      assigneeId,
-      assigneeName: selectedAssignee?.name || "",
-      title: title.trim(),
-      description: description.trim(),
-      rockId: rockId,
-      rockTitle: selectedRock?.title || null,
-      projectId: projectId,
-      projectName: selectedProject?.name || null,
-      priority,
-      dueDate,
-      sendEmail,
-    })
+    setIsSubmitting(true)
+    try {
+      await onSubmit({
+        assigneeId,
+        assigneeName: selectedAssignee?.name || "",
+        title: title.trim(),
+        description: description.trim(),
+        rockId: rockId,
+        rockTitle: selectedRock?.title || null,
+        projectId: projectId,
+        projectName: selectedProject?.name || null,
+        priority,
+        dueDate,
+        sendEmail,
+      })
 
-    setAssigneeId("")
-    setTitle("")
-    setDescription("")
-    setRockId(null)
-    setProjectId(null)
-    setPriority("medium")
-    setDueDate("")
-    setSendEmail(false)
-    onOpenChange(false)
+      setAssigneeId("")
+      setTitle("")
+      setDescription("")
+      setRockId(null)
+      setProjectId(null)
+      setPriority("medium")
+      setDueDate("")
+      setSendEmail(false)
+      onOpenChange(false)
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to assign task. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -211,11 +226,18 @@ export function AssignTaskModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!assigneeId || !title.trim() || !dueDate}>
-            Assign Task
+          <Button onClick={handleSubmit} disabled={!assigneeId || !title.trim() || !dueDate || isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Assigning...
+              </>
+            ) : (
+              "Assign Task"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
