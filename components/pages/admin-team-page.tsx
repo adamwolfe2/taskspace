@@ -12,7 +12,7 @@ import { UserInitials } from "@/components/shared/user-initials"
 import { RoleBadge } from "@/components/shared/role-badge"
 import { formatDate } from "@/lib/utils/date-utils"
 import { getErrorMessage } from "@/lib/utils"
-import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle, Send, Target, KeyRound } from "lucide-react"
+import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle, Send, Target, KeyRound, ArrowRightLeft } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -76,6 +76,10 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
   const [metricData, setMetricData] = useState({ metricName: "", weeklyGoal: "" })
   const [isLoadingMetric, setIsLoadingMetric] = useState(false)
   const [memberToRemove, setMemberToRemove] = useState<string | null>(null)
+  const [migrateDialogOpen, setMigrateDialogOpen] = useState(false)
+  const [migrateTarget, setMigrateTarget] = useState<TeamMember | null>(null)
+  const [migrateEmail, setMigrateEmail] = useState("")
+  const [isMigrating, setIsMigrating] = useState(false)
   const { toast } = useToast()
 
   // Load metric data when editing a member
@@ -402,6 +406,86 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       })
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Migrate a pending member from placeholder email to real email
+  const handleMigrateMember = (member: TeamMember) => {
+    setMigrateTarget(member)
+    setMigrateEmail("")
+    setMigrateDialogOpen(true)
+  }
+
+  const confirmMigrateMember = async () => {
+    if (!migrateTarget || !migrateEmail.trim()) return
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(migrateEmail.trim())) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsMigrating(true)
+      const response = await fetch("/api/admin/migrate-member", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({
+          memberId: migrateTarget.id,
+          newEmail: migrateEmail.trim().toLowerCase(),
+        }),
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to migrate member")
+      }
+
+      // Update local state
+      setTeamMembers(teamMembers.map(m =>
+        m.id === migrateTarget.id
+          ? { ...m, email: migrateEmail.trim().toLowerCase(), status: "invited" }
+          : m
+      ))
+
+      // Add to invitations list
+      if (data.data?.invitation) {
+        setInvitations(prev => [...prev, data.data.invitation])
+      }
+
+      const migration = data.data?.migration
+      toast({
+        title: "Migration Started",
+        description: `Invitation sent to ${migrateEmail}. ${migration?.tasksToTransfer || 0} tasks and ${migration?.rocksToTransfer || 0} rocks will transfer when they accept.`,
+      })
+
+      // Copy invite link
+      if (data.data?.invitation?.token && typeof window !== "undefined") {
+        const inviteLink = `${window.location.origin}?invite=${data.data.invitation.token}`
+        try {
+          await navigator.clipboard.writeText(inviteLink)
+          toast({
+            title: "Link Copied",
+            description: "Invitation link copied to clipboard",
+          })
+        } catch {
+          // Clipboard API not available
+        }
+      }
+
+      setMigrateDialogOpen(false)
+    } catch (err: unknown) {
+      toast({
+        title: "Error",
+        description: getErrorMessage(err, "Failed to migrate member"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsMigrating(false)
     }
   }
 
@@ -819,16 +903,28 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             {member.status === "pending" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleSendInviteToPending(member)}
-                                disabled={isSubmitting}
-                                title="Send Invitation"
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              >
-                                <Send className="h-4 w-4" />
-                              </Button>
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleMigrateMember(member)}
+                                  disabled={isSubmitting || isMigrating}
+                                  title="Migrate to real email"
+                                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                >
+                                  <ArrowRightLeft className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleSendInviteToPending(member)}
+                                  disabled={isSubmitting}
+                                  title="Send Invitation (same email)"
+                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                >
+                                  <Send className="h-4 w-4" />
+                                </Button>
+                              </>
                             )}
                             {member.status === "active" && (
                               <Button
@@ -917,16 +1013,28 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
                       <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
                         {member.status === "pending" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSendInviteToPending(member)}
-                            disabled={isSubmitting}
-                            className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50"
-                          >
-                            <Send className="h-4 w-4 mr-1.5" />
-                            Invite
-                          </Button>
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMigrateMember(member)}
+                              disabled={isSubmitting || isMigrating}
+                              className="flex-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                            >
+                              <ArrowRightLeft className="h-4 w-4 mr-1.5" />
+                              Migrate
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSendInviteToPending(member)}
+                              disabled={isSubmitting}
+                              className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50"
+                            >
+                              <Send className="h-4 w-4 mr-1.5" />
+                              Invite
+                            </Button>
+                          </>
                         )}
                         {member.status === "active" && (
                           <Button
@@ -1197,6 +1305,64 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Migrate Member Dialog */}
+      <Dialog open={migrateDialogOpen} onOpenChange={setMigrateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Migrate to Real Email</DialogTitle>
+            <DialogDescription>
+              Update {migrateTarget?.name}&apos;s placeholder email to their real email address.
+              All tasks and rocks will transfer when they accept the invitation.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-3 bg-muted rounded-lg space-y-1">
+              <p className="text-sm font-medium">{migrateTarget?.name}</p>
+              <p className="text-sm text-muted-foreground">
+                Current: <span className="font-mono">{migrateTarget?.email}</span>
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="migrateEmail">Real Email Address</Label>
+              <Input
+                id="migrateEmail"
+                type="email"
+                placeholder="logan@realcompany.com"
+                value={migrateEmail}
+                onChange={(e) => setMigrateEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") confirmMigrateMember()
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                An invitation will be sent to this email. When they accept, all their tasks, rocks, and data will transfer automatically.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setMigrateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmMigrateMember}
+              disabled={isMigrating || !migrateEmail.trim()}
+            >
+              {isMigrating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Migrating...
+                </>
+              ) : (
+                <>
+                  <ArrowRightLeft className="mr-2 h-4 w-4" />
+                  Migrate &amp; Send Invite
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

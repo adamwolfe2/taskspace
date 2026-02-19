@@ -14,6 +14,7 @@ import type { OrganizationMember, Session, ApiResponse, AuthResponse, User } fro
 import { logger, logError } from "@/lib/logger"
 import { withTransaction } from "@/lib/db/transactions"
 import { checkIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
+import { sql } from "@/lib/db/sql"
 
 // POST /api/invitations/accept - Accept an invitation
 export async function POST(request: NextRequest) {
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
         invited_by: string
         status: string
         workspace_id: string | null
+        placeholder_user_id: string | null
       }>`SELECT * FROM invitations WHERE token = ${token} FOR UPDATE`
 
       if (invitationRows.length === 0) {
@@ -290,6 +292,7 @@ export async function POST(request: NextRequest) {
         invitationEmail: lockedInvitation.email,
         workspaceId: lockedInvitation.workspace_id,
         organizationId,
+        placeholderUserId: lockedInvitation.placeholder_user_id || null,
       }
     })
 
@@ -309,6 +312,47 @@ export async function POST(request: NextRequest) {
       logger.info(`Transferred pending items for ${result.invitationEmail} to user ${result.user.id}`)
     } catch (error) {
       logError(logger, "Failed to transfer pending items", error)
+    }
+
+    // Transfer tasks/rocks from placeholder user (when migrating from placeholder email)
+    if (result.placeholderUserId && result.placeholderUserId !== result.user.id) {
+      try {
+        // Transfer assigned tasks from placeholder user to real user
+        const { rowCount: tasksTransferred } = await sql`
+          UPDATE assigned_tasks
+          SET assignee_id = ${result.user.id},
+              assignee_name = ${result.user.name},
+              updated_at = NOW()
+          WHERE assignee_id = ${result.placeholderUserId}
+            AND organization_id = ${result.organizationId}
+        `
+
+        // Transfer rocks owned by placeholder user to real user
+        const { rowCount: rocksTransferred } = await sql`
+          UPDATE rocks
+          SET user_id = ${result.user.id},
+              updated_at = NOW()
+          WHERE user_id = ${result.placeholderUserId}
+            AND organization_id = ${result.organizationId}
+        `
+
+        // Transfer EOD reports from placeholder user
+        await sql`
+          UPDATE eod_reports
+          SET user_id = ${result.user.id}
+          WHERE user_id = ${result.placeholderUserId}
+            AND organization_id = ${result.organizationId}
+        `
+
+        logger.info({
+          placeholderUserId: result.placeholderUserId,
+          newUserId: result.user.id,
+          tasksTransferred: tasksTransferred ?? 0,
+          rocksTransferred: rocksTransferred ?? 0,
+        }, "Transferred items from placeholder user to real user")
+      } catch (error) {
+        logError(logger, "Failed to transfer placeholder user items", error)
+      }
     }
 
     // Add user to workspace (critical for access — try multiple fallbacks)
