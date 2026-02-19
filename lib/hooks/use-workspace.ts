@@ -153,6 +153,7 @@ export function useWorkspaces() {
       // Call API to ensure default workspace exists
       fetch("/api/workspaces/ensure-default", {
         method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
         credentials: "include",
       })
         .then((res) => res.json())

@@ -116,7 +116,7 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
     try {
       const response = await fetch("/api/google-calendar", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify(updates),
       })
 

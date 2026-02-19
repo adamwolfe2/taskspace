@@ -93,6 +93,7 @@ export function ImportWizard() {
       // Upload and create import job
       const response = await fetch("/api/migrations/import", {
         method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
         body: formData,
       })
 
@@ -220,6 +221,7 @@ export function ImportWizard() {
     try {
       const response = await fetch(`/api/migrations/import/${jobId}/finalize`, {
         method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
 
       const result = await response.json()

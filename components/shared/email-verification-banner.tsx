@@ -20,6 +20,7 @@ export function EmailVerificationBanner() {
     try {
       const res = await fetch("/api/auth/resend-verification", {
         method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
         credentials: "include",
       })
       const data = await res.json()

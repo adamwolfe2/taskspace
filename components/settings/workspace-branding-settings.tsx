@@ -213,6 +213,7 @@ export function WorkspaceBrandingSettings() {
 
       const response = await fetch("/api/upload", {
         method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
         body: formData,
       })
 

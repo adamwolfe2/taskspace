@@ -17,6 +17,7 @@ export default function FixWorkspacePage() {
       const response = await fetch("/api/workspaces/ensure-default", {
         method: "POST",
         credentials: "include",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
 
       const data = await response.json()
@@ -44,6 +45,7 @@ export default function FixWorkspacePage() {
       const response = await fetch("/api/admin/force-workspace-creation", {
         method: "POST",
         credentials: "include",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
 
       const data = await response.json()

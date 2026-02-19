@@ -30,6 +30,7 @@ export function AdminDatabasePage() {
       const response = await fetch("/api/admin/emergency-setup", {
         method: "POST",
         credentials: "include",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
 
       const data = await response.json()
@@ -70,6 +71,7 @@ export function AdminDatabasePage() {
       const response = await fetch("/api/admin/diagnose-data", {
         method: "POST",
         credentials: "include",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
       const data = await response.json()
       setDiagnoseResult(data.data || data)
@@ -89,6 +91,7 @@ export function AdminDatabasePage() {
       const response = await fetch("/api/admin/force-migrate", {
         method: "POST",
         credentials: "include",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
       const data = await response.json()
 

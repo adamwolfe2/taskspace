@@ -134,6 +134,7 @@ export function AssignedTasksSection({
     try {
       const response = await fetch("/api/asana/me/sync", {
         method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
       const data = await response.json()
 

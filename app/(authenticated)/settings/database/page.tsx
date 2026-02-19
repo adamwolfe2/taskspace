@@ -21,6 +21,7 @@ export default function DatabaseManagementPage() {
       const response = await fetch("/api/admin/emergency-setup", {
         method: "POST",
         credentials: "include",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
 
       const data = await response.json()

@@ -43,7 +43,7 @@ async function sendToAnalytics(metric: Metric, rating: Rating) {
     // Send to internal analytics endpoint
     await fetch('/api/analytics/web-vitals', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       body: JSON.stringify({
         name: metric.name,
         value: metric.value,

@@ -154,6 +154,7 @@ export function OrgChartUploadWizard({ onUploadComplete }: { onUploadComplete: (
 
       const response = await fetch("/api/org-chart/upload", {
         method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
         body: formData,
       })
 
