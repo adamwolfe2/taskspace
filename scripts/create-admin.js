@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+ 
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 

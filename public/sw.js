@@ -1,4 +1,4 @@
-/* eslint-disable no-redeclare */
+ 
 // Service Worker for TaskSpace Push Notifications
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
