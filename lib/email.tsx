@@ -198,7 +198,7 @@ export async function sendVerificationEmail(
       </div>
 
       <div class="content">
-        <p>Hi ${escapeHtml(userName.split(" ")[0])},</p>
+        <p>Hi ${escapeHtml((userName || "there").split(" ")[0])},</p>
         <p>Thanks for signing up for Taskspace! Please verify your email address to get started.</p>
 
         <div class="verify-box">
@@ -452,7 +452,7 @@ export async function sendEODReminder(user: TeamMember, organization: Organizati
         <h1 style="margin:0;">⏰ EOD Reminder</h1>
       </div>
       <div class="content">
-        <p>Hi ${escapeHtml(user.name.split(" ")[0])},</p>
+        <p>Hi ${escapeHtml((user.name || "there").split(" ")[0])},</p>
         <p>Don't forget to submit your End of Day report!</p>
         <p>Take a few minutes to reflect on what you accomplished today and plan for tomorrow.</p>
         <a href="${APP_URL}" class="button">Submit EOD Report</a>
@@ -511,7 +511,7 @@ export async function sendPasswordResetEmail(
       </div>
 
       <div class="content">
-        <p>Hi ${escapeHtml(userName.split(" ")[0])},</p>
+        <p>Hi ${escapeHtml((userName || "there").split(" ")[0])},</p>
         <p>We received a request to reset your password for your account. Click the button below to create a new password:</p>
 
         <div class="reset-box">
@@ -577,7 +577,7 @@ export async function sendWelcomeEmail(user: TeamMember, organization: Organizat
       </div>
 
       <div class="content">
-        <p>Hi ${escapeHtml(user.name.split(" ")[0])},</p>
+        <p>Hi ${escapeHtml((user.name || "there").split(" ")[0])},</p>
         <p>Welcome to <strong>${escapeHtml(organization.name)}</strong> on TaskSpace! We're excited to have you on board.</p>
 
         <div class="welcome-box">
@@ -657,7 +657,7 @@ export async function sendRockAssignedEmail(
       </div>
 
       <div class="content">
-        <p>Hi ${escapeHtml(assignedTo.name.split(" ")[0])},</p>
+        <p>Hi ${escapeHtml((assignedTo.name || "there").split(" ")[0])},</p>
         <p><strong>${escapeHtml(assignedBy.name)}</strong> has assigned you a new quarterly rock:</p>
 
         <div class="rock-box">
@@ -733,7 +733,7 @@ export async function sendTaskAssignedEmail(
       </div>
 
       <div class="content">
-        <p>Hi ${escapeHtml(assignedTo.name.split(" ")[0])},</p>
+        <p>Hi ${escapeHtml((assignedTo.name || "there").split(" ")[0])},</p>
         <p><strong>${escapeHtml(assignedBy.name)}</strong> has assigned you a new task:</p>
 
         <div class="task-box">
@@ -803,7 +803,7 @@ export async function sendRockDeadlineEmail(
       </div>
 
       <div class="content">
-        <p>Hi ${escapeHtml(owner.name.split(" ")[0])},</p>
+        <p>Hi ${escapeHtml((owner.name || "there").split(" ")[0])},</p>
         <p>Your quarterly rock deadline is coming up soon:</p>
 
         <div class="warning-box">

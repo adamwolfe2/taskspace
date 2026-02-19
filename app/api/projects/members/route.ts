@@ -43,6 +43,14 @@ export const GET = withAuth(async (request, auth) => {
   }
 })
 
+// Check if requesting user can manage project members (org admin/owner, or project owner/lead)
+async function canManageMembers(orgId: string, projectId: string, userId: string, memberRole: string): Promise<boolean> {
+  if (memberRole === "owner" || memberRole === "admin") return true
+  const members = await db.projects.getMembers(projectId)
+  const userMembership = members.find(m => m.userId === userId)
+  return userMembership?.role === "owner" || userMembership?.role === "lead"
+}
+
 // POST /api/projects/members - Add a member to a project
 export const POST = withAuth(async (request, auth) => {
   try {
@@ -54,6 +62,15 @@ export const POST = withAuth(async (request, auth) => {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Project not found" },
         { status: 404 }
+      )
+    }
+
+    // Check if user has permission to manage members
+    const canManage = await canManageMembers(auth.organization.id, projectId, auth.user.id, auth.member.role)
+    if (!canManage) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Only project owners, leads, or org admins can manage members" },
+        { status: 403 }
       )
     }
 
@@ -92,6 +109,15 @@ export const PATCH = withAuth(async (request, auth) => {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Project not found" },
         { status: 404 }
+      )
+    }
+
+    // Check if user has permission to manage members
+    const canManage = await canManageMembers(auth.organization.id, projectId, auth.user.id, auth.member.role)
+    if (!canManage) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Only project owners, leads, or org admins can manage members" },
+        { status: 403 }
       )
     }
 
@@ -143,6 +169,15 @@ export const DELETE = withAuth(async (request, auth) => {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Project not found" },
         { status: 404 }
+      )
+    }
+
+    // Check if user has permission to manage members
+    const canManage = await canManageMembers(auth.organization.id, projectId, auth.user.id, auth.member.role)
+    if (!canManage) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Only project owners, leads, or org admins can manage members" },
+        { status: 403 }
       )
     }
 
