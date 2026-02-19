@@ -1,11 +1,11 @@
 #!/bin/bash
-# AIMS MCP Server - One Command Setup
+# Taskspace MCP Server - One Command Setup
 # This script builds the server and generates the Claude Desktop config
 
 set -e
 
-echo "🚀 AIMS MCP Server Setup"
-echo "========================"
+echo "🚀 Taskspace MCP Server Setup"
+echo "=============================="
 echo ""
 
 # Get the directory where this script is located
@@ -38,7 +38,7 @@ else
 fi
 
 # Get API key from user
-echo "🔑 Enter your AIMS API Key (from Settings > API Keys):"
+echo "🔑 Enter your Taskspace API Key (from Settings > API Keys):"
 read -p "API Key: " API_KEY
 
 if [[ -z "$API_KEY" ]]; then
@@ -48,20 +48,20 @@ fi
 
 # Get API URL
 echo ""
-echo "🌐 Enter your AIMS API URL (press Enter for default):"
-read -p "API URL [https://eod.aimanagingservices.com]: " API_URL
-API_URL="${API_URL:-https://eod.aimanagingservices.com}"
+echo "🌐 Enter your Taskspace API URL (press Enter for default):"
+read -p "API URL [https://trytaskspace.com]: " API_URL
+API_URL="${API_URL:-https://trytaskspace.com}"
 
 # Generate config JSON
 CONFIG_JSON=$(cat <<EOF
 {
   "mcpServers": {
-    "aims-eod-tracker": {
+    "taskspace": {
       "command": "node",
       "args": ["$SCRIPT_DIR/dist/index.js"],
       "env": {
-        "AIMS_API_URL": "$API_URL",
-        "AIMS_API_KEY": "$API_KEY"
+        "TASKSPACE_API_URL": "$API_URL",
+        "TASKSPACE_API_KEY": "$API_KEY"
       }
     }
   }
@@ -101,6 +101,6 @@ echo "🎉 Setup Complete!"
 echo ""
 echo "Next steps:"
 echo "1. Restart Claude Desktop completely (quit and reopen)"
-echo "2. Look for 'aims-eod-tracker' in the connectors menu"
+echo "2. Look for 'taskspace' in the connectors menu"
 echo "3. Try asking: 'Check who has submitted their EOD today'"
 echo ""

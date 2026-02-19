@@ -1,6 +1,6 @@
-# Align MCP Server
+# Taskspace MCP Server
 
-This MCP (Model Context Protocol) server enables Claude Desktop to interact with your Align workspace.
+This MCP (Model Context Protocol) server enables Claude Desktop to interact with your Taskspace workspace.
 
 ## Features
 
@@ -19,7 +19,7 @@ The simplest way to connect Claude Desktop - no local installation required:
 
 ### Step 1: Get your API Key
 
-1. Log into your Align dashboard
+1. Log into your Taskspace dashboard
 2. Go to **Settings** → **API Keys**
 3. Click **Generate API Key**
 4. Copy the key
@@ -30,7 +30,7 @@ The simplest way to connect Claude Desktop - no local installation required:
 2. Go to **Settings** → **Extensions** → **Connectors** (or **Connections**)
 3. Click **Add custom connector**
 4. Fill in:
-   - **Name**: `Align`
+   - **Name**: `Taskspace`
    - **Remote MCP server URL**: `https://your-domain.com/api/mcp`
    - **OAuth Client Secret**: Your API key
 5. Click **Add**
@@ -63,7 +63,7 @@ This will:
 
 ### Step 1: Generate an API Key
 
-1. Log into your Align dashboard
+1. Log into your Taskspace dashboard
 2. Go to **Settings** (gear icon in sidebar)
 3. Scroll down to **API Keys** section
 4. Click **Generate API Key**
@@ -90,12 +90,12 @@ Copy this configuration (replace the placeholders):
 ```json
 {
   "mcpServers": {
-    "align": {
+    "taskspace": {
       "command": "node",
       "args": ["/FULL/PATH/TO/aimseod/mcp-server/dist/index.js"],
       "env": {
-        "AIMS_API_URL": "https://eod.aimanagingservices.com",
-        "AIMS_API_KEY": "aims_your_api_key_here"
+        "TASKSPACE_API_URL": "https://trytaskspace.com",
+        "TASKSPACE_API_KEY": "aims_your_api_key_here"
       }
     }
   }
@@ -108,7 +108,7 @@ Replace:
 
 ### Step 4: Restart Claude Desktop
 
-Completely quit Claude Desktop and reopen it. The AIMS connector should now appear in the connectors menu.
+Completely quit Claude Desktop and reopen it. The Taskspace connector should now appear in the connectors menu.
 
 ---
 
@@ -119,12 +119,12 @@ If you're using Claude Code (CLI), add to your `~/.claude/settings.json`:
 ```json
 {
   "mcpServers": {
-    "align": {
+    "taskspace": {
       "command": "node",
       "args": ["/path/to/aimseod/mcp-server/dist/index.js"],
       "env": {
-        "AIMS_API_URL": "https://eod.aimanagingservices.com",
-        "AIMS_API_KEY": "aims_your_api_key_here"
+        "TASKSPACE_API_URL": "https://trytaskspace.com",
+        "TASKSPACE_API_KEY": "aims_your_api_key_here"
       }
     }
   }
@@ -134,8 +134,8 @@ If you're using Claude Code (CLI), add to your `~/.claude/settings.json`:
 Or run with environment variables:
 
 ```bash
-AIMS_API_URL="https://eod.aimanagingservices.com" \
-AIMS_API_KEY="aims_..." \
+TASKSPACE_API_URL="https://trytaskspace.com" \
+TASKSPACE_API_KEY="aims_..." \
 claude --mcp /path/to/aimseod/mcp-server/dist/index.js
 ```
 
@@ -147,14 +147,14 @@ claude --mcp /path/to/aimseod/mcp-server/dist/index.js
 
 1. **Check the path**: Make sure the path to `dist/index.js` is correct and absolute
 2. **Check the API key**: Verify your API key is valid and starts with `aims_`
-3. **Check the URL**: Ensure `AIMS_API_URL` points to your Align deployment
+3. **Check the URL**: Ensure `TASKSPACE_API_URL` points to your Taskspace deployment
 4. **Check the build**: Run `npm run build` in the mcp-server folder again
 
 ### Testing the Server Locally
 
 ```bash
 cd mcp-server
-AIMS_API_URL="https://eod.aimanagingservices.com" AIMS_API_KEY="aims_..." npm run dev
+TASKSPACE_API_URL="https://trytaskspace.com" TASKSPACE_API_KEY="aims_..." npm run dev
 ```
 
 If it starts without errors, the server is working.
@@ -201,8 +201,10 @@ Once configured, you can ask Claude:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `AIMS_API_URL` | URL of your Align deployment | `http://localhost:3000` |
-| `AIMS_API_KEY` | API key for authentication | (required) |
+| `TASKSPACE_API_URL` | URL of your Taskspace deployment | `https://trytaskspace.com` |
+| `TASKSPACE_API_KEY` | API key for authentication | (required) |
+| `AIMS_API_URL` | Legacy URL variable (still supported) | — |
+| `AIMS_API_KEY` | Legacy API key variable (still supported) | — |
 
 ---
 
