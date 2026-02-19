@@ -172,11 +172,17 @@ function AppContent() {
             // Silently fail - user can resend from banner
           })
       }
-      if (page && !isAuthenticated) {
-        setCurrentPage(page as PageType)
+      if (page) {
+        // Clean the URL immediately to prevent stale params from persisting
+        window.history.replaceState({}, "", window.location.pathname)
+        // Only apply page param for unauthenticated users who aren't still loading
+        // (prevents ?page=register from overriding a valid session during load)
+        if (!isAuthenticated && !isLoading) {
+          setCurrentPage(page as PageType)
+        }
       }
     }
-  }, [setCurrentPage, isAuthenticated])
+  }, [setCurrentPage, isAuthenticated, isLoading])
 
   // Show loading spinner while checking session
   if (isLoading) {
