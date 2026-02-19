@@ -74,15 +74,22 @@ export function useIdsBoard() {
         { revalidate: false }
       )
 
-      const res = await fetch("/api/ids-board", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workspaceId, ...params }),
-      })
+      try {
+        const res = await fetch("/api/ids-board", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+          body: JSON.stringify({ workspaceId, ...params }),
+        })
 
-      const result = await res.json()
-      mutate() // Revalidate
-      return result.data as IdsBoardItem
+        const result = await res.json()
+        if (!result.success) throw new Error(result.error)
+        mutate() // Revalidate
+        return result.data as IdsBoardItem
+      } catch {
+        mutate() // Rollback optimistic update
+        toast({ title: "Error", description: "Failed to create item", variant: "destructive" })
+        return null
+      }
     },
     [isDemoMode, workspaceId, items, columns, mutate]
   )
@@ -109,15 +116,22 @@ export function useIdsBoard() {
         { revalidate: false }
       )
 
-      const res = await fetch(`/api/ids-board/${itemId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
-      })
+      try {
+        const res = await fetch(`/api/ids-board/${itemId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+          body: JSON.stringify(updates),
+        })
 
-      const result = await res.json()
-      mutate()
-      return result.data as IdsBoardItem
+        const result = await res.json()
+        if (!result.success) throw new Error(result.error)
+        mutate()
+        return result.data as IdsBoardItem
+      } catch {
+        mutate() // Rollback optimistic update
+        toast({ title: "Error", description: "Failed to update item", variant: "destructive" })
+        return null as unknown as IdsBoardItem
+      }
     },
     [isDemoMode, items, mutate]
   )
@@ -137,15 +151,22 @@ export function useIdsBoard() {
         { revalidate: false }
       )
 
-      const res = await fetch(`/api/ids-board/${itemId}/move`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ columnName, orderIndex }),
-      })
+      try {
+        const res = await fetch(`/api/ids-board/${itemId}/move`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+          body: JSON.stringify({ columnName, orderIndex }),
+        })
 
-      const result = await res.json()
-      mutate()
-      return result.data as IdsBoardItem
+        const result = await res.json()
+        if (!result.success) throw new Error(result.error)
+        mutate()
+        return result.data as IdsBoardItem
+      } catch {
+        mutate() // Rollback optimistic update
+        toast({ title: "Error", description: "Failed to move item", variant: "destructive" })
+        return null as unknown as IdsBoardItem
+      }
     },
     [isDemoMode, items, mutate]
   )
@@ -161,11 +182,16 @@ export function useIdsBoard() {
         { revalidate: false }
       )
 
-      await fetch(`/api/ids-board/${itemId}`, {
-        method: "DELETE",
-        headers: { "X-Requested-With": "XMLHttpRequest" }
-      })
-      mutate()
+      try {
+        await fetch(`/api/ids-board/${itemId}`, {
+          method: "DELETE",
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        mutate()
+      } catch {
+        mutate() // Rollback optimistic update
+        toast({ title: "Error", description: "Failed to delete item", variant: "destructive" })
+      }
     },
     [isDemoMode, items, mutate]
   )

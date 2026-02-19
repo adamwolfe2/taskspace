@@ -174,6 +174,7 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
       setLoading(true)
       const res = await fetch(`/api/meetings/${meetingId}/start`, {
         method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       })
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
@@ -211,7 +212,7 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
     try {
       const res = await fetch(`/api/meetings/${meetingId}/sections`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           sectionType: currentSection.sectionType,
           action: "complete",
@@ -245,7 +246,7 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
       setLoading(true)
       const res = await fetch(`/api/meetings/${meetingId}/end`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           rating: data.rating,
           notes: data.feedback,
@@ -268,7 +269,7 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
     try {
       const res = await fetch("/api/issues", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           workspaceId,
           title,
@@ -281,7 +282,7 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
         setIssues((prev) => [...prev, data.data])
       }
     } catch {
-      // Issue creation failed - non-critical
+      setError("Failed to create issue. Please try again.")
     }
   }
 
@@ -290,7 +291,7 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
     try {
       const res = await fetch(`/api/issues/${issueId}/resolve`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ resolution, meetingId }),
       })
       const data = await res.json()
@@ -300,7 +301,7 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
         )
       }
     } catch {
-      // Issue resolution failed - non-critical
+      setError("Failed to resolve issue. Please try again.")
     }
   }
 
@@ -324,7 +325,7 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
     try {
       const res = await fetch(`/api/meetings/${meetingId}/todos`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ title, issueId }),
       })
       const data = await res.json()
@@ -332,7 +333,7 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
         setTodos((prev) => [...prev, data.data])
       }
     } catch {
-      // Todo creation failed silently - user can retry
+      setError("Failed to create todo. Please try again.")
     }
   }
 
