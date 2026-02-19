@@ -3,6 +3,7 @@
  * CRUD operations for import_jobs, external_id_map, import_conflicts, import_logs
  */
 
+import crypto from 'crypto'
 import { sql } from './sql'
 import type {
   ImportJob,
@@ -108,7 +109,7 @@ export const importJobs = {
     config?: Partial<ImportConfig>
     sourceMetadata?: SourceMetadata
   }): Promise<ImportJob> {
-    const id = 'imp_' + require('crypto').randomBytes(12).toString('hex')
+    const id = 'imp_' + crypto.randomBytes(12).toString('hex')
     const defaultConfig: ImportConfig = {
       workspaceStrategy: 'single',
       userMappings: [],
@@ -241,7 +242,7 @@ export const externalIdMap = {
     entityType: 'workspace' | 'user' | 'project' | 'task'
     internalId: string
   }): Promise<ExternalIdMap> {
-    const id = 'eim_' + require('crypto').randomBytes(12).toString('hex')
+    const id = 'eim_' + crypto.randomBytes(12).toString('hex')
     const { rows } = await sql`
       INSERT INTO external_id_map (
         id, organization_id, import_job_id, provider,
@@ -315,7 +316,7 @@ export const importConflicts = {
     sourceItem: Record<string, unknown>
     potentialMatches?: Array<Record<string, unknown>>
   }): Promise<ImportConflict> {
-    const id = 'ic_' + require('crypto').randomBytes(12).toString('hex')
+    const id = 'ic_' + crypto.randomBytes(12).toString('hex')
     const { rows } = await sql`
       INSERT INTO import_conflicts (
         id, import_job_id, conflict_type, severity,
@@ -374,7 +375,7 @@ export const importLogs = {
     message: string
     metadata?: Record<string, unknown>
   }): Promise<ImportLog> {
-    const id = 'il_' + require('crypto').randomBytes(12).toString('hex')
+    const id = 'il_' + crypto.randomBytes(12).toString('hex')
     const { rows } = await sql`
       INSERT INTO import_logs (
         id, import_job_id, level, stage, message, metadata

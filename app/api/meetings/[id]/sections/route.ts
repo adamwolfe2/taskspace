@@ -53,10 +53,11 @@ export const PATCH = withAuth(async (request, auth, context?) => {
       case "start":
         updatedSection = await meetings.startSection(id, sectionType)
         break
-      case "complete":
+      case "complete": {
         const result = await meetings.completeSection(id, sectionType, data)
         updatedSection = result.completedSection
         break
+      }
       case "update":
         updatedSection = await meetings.updateSectionData(id, sectionType, data || {})
         break

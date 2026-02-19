@@ -1,3 +1,4 @@
+import crypto from "crypto"
 import { sql } from "./sql"
 import { withTransaction } from "./transactions"
 import { sanitizeText } from "@/lib/utils/sanitize"
@@ -4295,7 +4296,7 @@ export const db = {
       tags?: string[]
       createdBy: string
     }): Promise<Client> {
-      const id = "cli_" + require("crypto").randomBytes(12).toString("hex")
+      const id = "cli_" + crypto.randomBytes(12).toString("hex")
       const now = new Date().toISOString()
       const { rows } = await sql`
         INSERT INTO clients (id, organization_id, workspace_id, name, description, contact_name, contact_email, contact_phone, website, industry, status, notes, tags, created_by, created_at, updated_at)
@@ -4472,7 +4473,7 @@ export const db = {
       tags?: string[]
       createdBy: string
     }): Promise<Project> {
-      const id = "prj_" + require("crypto").randomBytes(12).toString("hex")
+      const id = "prj_" + crypto.randomBytes(12).toString("hex")
       const now = new Date().toISOString()
       const { rows } = await sql`
         INSERT INTO projects (id, organization_id, workspace_id, client_id, name, description, status, priority, start_date, due_date, owner_id, tags, created_by, created_at, updated_at)
@@ -4544,7 +4545,7 @@ export const db = {
     },
 
     async addMember(projectId: string, userId: string, role: ProjectMember["role"] = "member"): Promise<ProjectMember> {
-      const id = "pm_" + require("crypto").randomBytes(12).toString("hex")
+      const id = "pm_" + crypto.randomBytes(12).toString("hex")
       const { rows } = await sql`
         INSERT INTO project_members (id, project_id, user_id, role)
         VALUES (${id}, ${projectId}, ${userId}, ${role})

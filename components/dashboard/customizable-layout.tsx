@@ -525,7 +525,6 @@ export function useDashboardLayout(
   } catch {
    return null
   }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [storageKey])
 
  // State always holds ALL widgets (not filtered by features).

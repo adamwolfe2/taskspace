@@ -1,4 +1,4 @@
-/* global describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, jest */
+/* eslint-disable no-redeclare, @typescript-eslint/no-require-imports */
 /**
  * Jest Setup File
  *

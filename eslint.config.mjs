@@ -26,6 +26,17 @@ export default [
         ...globals.jest,
       },
     },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "no-redeclare": "off",
+    },
+  },
+  // Scripts (Node.js CommonJS)
+  {
+    files: ["scripts/**/*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
   },
   // Service worker config
   {
@@ -34,6 +45,9 @@ export default [
       globals: {
         ...globals.serviceworker,
       },
+    },
+    rules: {
+      "no-redeclare": "off",
     },
   },
   {
