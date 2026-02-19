@@ -103,8 +103,7 @@ export function GettingStartedChecklist({ onNavigate }: GettingStartedChecklistP
     if (!loading) {
       fetchStatus()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage])
+  }, [fetchStatus, currentPage, loading])
 
   // Track client-side page visits
   useEffect(() => {

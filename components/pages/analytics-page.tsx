@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useWorkspaces, useWorkspaceStore } from "@/lib/hooks/use-workspace"
 import { useApp } from "@/lib/contexts/app-context"
 import { getDemoAnalyticsData } from "@/lib/demo-data"
@@ -106,13 +106,7 @@ export function AnalyticsPage() {
     }
   }, [currentWorkspaceId, selectedWorkspaceId])
 
-  useEffect(() => {
-    if (selectedWorkspaceId) {
-      fetchAnalytics()
-    }
-  }, [dateRange, selectedWorkspaceId, isDemoMode])
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     if (isDemoMode) {
       const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : dateRange === "90d" ? 90 : 365
       setData(getDemoAnalyticsData(days))
@@ -150,7 +144,13 @@ export function AnalyticsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [dateRange, selectedWorkspaceId, isDemoMode])
+
+  useEffect(() => {
+    if (selectedWorkspaceId) {
+      fetchAnalytics()
+    }
+  }, [fetchAnalytics, selectedWorkspaceId])
 
   if (loading) {
     return (

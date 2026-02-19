@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -63,7 +63,7 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
   const { data: aiInsights, isLoading: aiInsightsLoading, fetchInsights: fetchAiInsights } = useManagerAiInsights()
 
   // Fetch dashboard data
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     if (isDemoMode) {
       setDashboard(getDemoManagerDashboard())
       setIsLoading(false)
@@ -92,13 +92,13 @@ export function ManagerDashboardPage({ currentUser }: ManagerDashboardPageProps)
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }
+  }, [isDemoMode, currentWorkspace])
 
   useEffect(() => {
     if (currentWorkspace) {
       fetchDashboard()
     }
-  }, [currentWorkspace?.id])
+  }, [fetchDashboard, currentWorkspace])
 
   const handleAiInsights = async () => {
     if (isDemoMode) {

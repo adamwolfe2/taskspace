@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,15 +95,7 @@ export function PeopleAnalyzerPage() {
     notes: "",
   });
 
-  // Load assessments
-  useEffect(() => {
-    if (currentWorkspace?.id) {
-      loadAssessments();
-      loadTeamMembers();
-    }
-  }, [currentWorkspace?.id]);
-
-  const loadAssessments = async () => {
+  const loadAssessments = useCallback(async () => {
     if (!currentWorkspace?.id) return;
 
     if (isDemoMode) {
@@ -133,9 +125,9 @@ export function PeopleAnalyzerPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isDemoMode, currentWorkspace?.id, toast]);
 
-  const loadTeamMembers = async () => {
+  const loadTeamMembers = useCallback(async () => {
     if (!currentWorkspace?.id) return;
 
     try {
@@ -156,7 +148,15 @@ export function PeopleAnalyzerPage() {
         variant: "destructive",
       });
     }
-  };
+  }, [currentWorkspace?.id, toast]);
+
+  // Load assessments
+  useEffect(() => {
+    if (currentWorkspace?.id) {
+      loadAssessments();
+      loadTeamMembers();
+    }
+  }, [loadAssessments, loadTeamMembers, currentWorkspace?.id]);
 
   const handleOpenDialog = (assessment?: PeopleAnalyzerSummary) => {
     if (assessment) {
@@ -516,177 +516,179 @@ export function PeopleAnalyzerPage() {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
-            {/* Employee Selection */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Employee</label>
-              {teamMembers.length > 0 && !editingAssessment ? (
-                <Select
-                  value={formData.employeeId || "custom"}
-                  onValueChange={(value) => {
-                    if (value === "custom") {
-                      setFormData({
-                        ...formData,
-                        employeeId: undefined,
-                        employeeName: "",
-                      });
-                    } else {
-                      const member = teamMembers.find((m) => m.id === value);
-                      setFormData({
-                        ...formData,
-                        employeeId: value,
-                        employeeName: member?.name || "",
-                      });
+          <form onSubmit={(e) => { e.preventDefault(); handleSaveAssessment(); }}>
+            <div className="space-y-4">
+              {/* Employee Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Employee</label>
+                {teamMembers.length > 0 && !editingAssessment ? (
+                  <Select
+                    value={formData.employeeId || "custom"}
+                    onValueChange={(value) => {
+                      if (value === "custom") {
+                        setFormData({
+                          ...formData,
+                          employeeId: undefined,
+                          employeeName: "",
+                        });
+                      } else {
+                        const member = teamMembers.find((m) => m.id === value);
+                        setFormData({
+                          ...formData,
+                          employeeId: value,
+                          employeeName: member?.name || "",
+                        });
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select employee or enter custom name" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="custom">Custom Name</SelectItem>
+                      {teamMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : null}
+
+                {(!formData.employeeId || editingAssessment) && (
+                  <Input
+                    placeholder="Employee name"
+                    value={formData.employeeName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, employeeName: e.target.value })
                     }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select employee or enter custom name" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="custom">Custom Name</SelectItem>
-                    {teamMembers.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : null}
+                    disabled={editingAssessment !== null}
+                  />
+                )}
+              </div>
 
-              {(!formData.employeeId || editingAssessment) && (
+              {/* GWC Checkboxes */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">GWC Assessment</label>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="getsIt"
+                    checked={formData.getsIt}
+                    onChange={(e) =>
+                      setFormData({ ...formData, getsIt: e.target.checked })
+                    }
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <label htmlFor="getsIt" className="text-sm cursor-pointer">
+                    Gets It - Understands the role and its responsibilities
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="wantsIt"
+                    checked={formData.wantsIt}
+                    onChange={(e) =>
+                      setFormData({ ...formData, wantsIt: e.target.checked })
+                    }
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <label htmlFor="wantsIt" className="text-sm cursor-pointer">
+                    Wants It - Has genuine desire and passion for the role
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="hasCapacity"
+                    checked={formData.hasCapacity}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        hasCapacity: e.target.checked,
+                      })
+                    }
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <label htmlFor="hasCapacity" className="text-sm cursor-pointer">
+                    Has Capacity - Has the time and ability to do the job well
+                  </label>
+                </div>
+              </div>
+
+              {/* Core Values Rating */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Core Values Rating (Optional)
+                </label>
                 <Input
-                  placeholder="Employee name"
-                  value={formData.employeeName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, employeeName: e.target.value })
-                  }
-                  disabled={editingAssessment !== null}
-                />
-              )}
-            </div>
-
-            {/* GWC Checkboxes */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium">GWC Assessment</label>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="getsIt"
-                  checked={formData.getsIt}
-                  onChange={(e) =>
-                    setFormData({ ...formData, getsIt: e.target.checked })
-                  }
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                <label htmlFor="getsIt" className="text-sm cursor-pointer">
-                  Gets It - Understands the role and its responsibilities
-                </label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="wantsIt"
-                  checked={formData.wantsIt}
-                  onChange={(e) =>
-                    setFormData({ ...formData, wantsIt: e.target.checked })
-                  }
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                <label htmlFor="wantsIt" className="text-sm cursor-pointer">
-                  Wants It - Has genuine desire and passion for the role
-                </label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="hasCapacity"
-                  checked={formData.hasCapacity}
+                  placeholder="e.g., 8/10, Strong alignment, Needs improvement"
+                  value={formData.coreValuesRating}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      hasCapacity: e.target.checked,
+                      coreValuesRating: e.target.value,
                     })
                   }
-                  className="h-4 w-4 rounded border-gray-300"
                 />
-                <label htmlFor="hasCapacity" className="text-sm cursor-pointer">
-                  Has Capacity - Has the time and ability to do the job well
+              </div>
+
+              {/* Right Person Right Seat */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Right Person Right Seat
                 </label>
+                <Select
+                  value={formData.rightPersonRightSeat}
+                  onValueChange={(value: "right" | "wrong" | "unsure") =>
+                    setFormData({ ...formData, rightPersonRightSeat: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="right">Right Person Right Seat</SelectItem>
+                    <SelectItem value="wrong">Wrong</SelectItem>
+                    <SelectItem value="unsure">Unsure</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Notes (Optional)</label>
+                <Textarea
+                  placeholder="Additional observations, action items, or context..."
+                  value={formData.notes}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
+                  rows={4}
+                />
               </div>
             </div>
 
-            {/* Core Values Rating */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Core Values Rating (Optional)
-              </label>
-              <Input
-                placeholder="e.g., 8/10, Strong alignment, Needs improvement"
-                value={formData.coreValuesRating}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    coreValuesRating: e.target.value,
-                  })
-                }
-              />
-            </div>
-
-            {/* Right Person Right Seat */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Right Person Right Seat
-              </label>
-              <Select
-                value={formData.rightPersonRightSeat}
-                onValueChange={(value: "right" | "wrong" | "unsure") =>
-                  setFormData({ ...formData, rightPersonRightSeat: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="right">Right Person Right Seat</SelectItem>
-                  <SelectItem value="wrong">Wrong</SelectItem>
-                  <SelectItem value="unsure">Unsure</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Notes */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Notes (Optional)</label>
-              <Textarea
-                placeholder="Additional observations, action items, or context..."
-                value={formData.notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
-                }
-                rows={4}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCloseDialog}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveAssessment} disabled={saving}>
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Assessment"
-              )}
-            </Button>
-          </DialogFooter>
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Assessment"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
