@@ -37,14 +37,17 @@ interface TrendsData {
 }
 
 /**
- * GET /api/super-admin/trends
+ * GET /api/super-admin/trends?days=30&orgId=optional
  *
  * Returns EOD submission rates, task completion velocity, and rock progress
- * across all organizations the super admin manages. Last 30 days.
+ * across organizations. Supports days (7-90, default 30) and orgId filter.
  */
 export const GET = withSuperAdmin(async (request: NextRequest, auth) => {
   try {
     const userId = auth.user.id
+    const { searchParams } = new URL(request.url)
+    const days = Math.min(Math.max(parseInt(searchParams.get("days") || "30", 10) || 30, 7), 90)
+    const orgIdFilter = searchParams.get("orgId") || null
 
     // Get user's orgs (owner/admin only)
     const { rows: orgRows } = await sql`
@@ -64,11 +67,23 @@ export const GET = withSuperAdmin(async (request: NextRequest, auth) => {
       })
     }
 
-    const orgIdList = orgRows.map((r) => r.id as string)
-    const orgIds = orgIdList.length > 0 ? `{${orgIdList.join(",")}}` : "{}"
-    const orgNameMap = new Map(orgRows.map((r) => [r.id as string, r.name as string]))
+    // If orgId filter provided, validate it's in the user's orgs
+    const orgIdList = orgIdFilter
+      ? orgRows.filter((r) => r.id === orgIdFilter).map((r) => r.id as string)
+      : orgRows.map((r) => r.id as string)
 
-    // EOD trends: daily submission counts per org over last 30 days
+    if (orgIdList.length === 0) {
+      return NextResponse.json<ApiResponse<TrendsData>>({
+        success: true,
+        data: { eodTrends: [], taskTrends: [], rockSummary: [] },
+      })
+    }
+
+    const orgIds = `{${orgIdList.join(",")}}`
+    const orgNameMap = new Map(orgRows.map((r) => [r.id as string, r.name as string]))
+    const interval = `${days} days`
+
+    // EOD trends: daily submission counts per org
     const { rows: eodRows } = await sql`
       SELECT
         er.organization_id as org_id,
@@ -78,7 +93,7 @@ export const GET = withSuperAdmin(async (request: NextRequest, auth) => {
          WHERE om.organization_id = er.organization_id AND om.status = 'active' AND om.user_id IS NOT NULL) as member_count
       FROM eod_reports er
       WHERE er.organization_id = ANY(${orgIds}::text[])
-        AND er.date >= CURRENT_DATE - INTERVAL '30 days'
+        AND er.date >= CURRENT_DATE - ${interval}::interval
       GROUP BY er.organization_id, er.date
       ORDER BY er.date ASC
     `
@@ -96,7 +111,7 @@ export const GET = withSuperAdmin(async (request: NextRequest, auth) => {
       }
     })
 
-    // Task trends: weekly completed tasks per org over last 30 days
+    // Task trends: weekly completed tasks per org
     const { rows: taskRows } = await sql`
       SELECT
         at2.organization_id as org_id,
@@ -105,7 +120,7 @@ export const GET = withSuperAdmin(async (request: NextRequest, auth) => {
       FROM assigned_tasks at2
       WHERE at2.organization_id = ANY(${orgIds}::text[])
         AND at2.status = 'completed'
-        AND at2.completed_at >= CURRENT_DATE - INTERVAL '30 days'
+        AND at2.completed_at >= CURRENT_DATE - ${interval}::interval
       GROUP BY at2.organization_id, date_trunc('week', at2.completed_at)
       ORDER BY week_start ASC
     `

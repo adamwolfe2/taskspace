@@ -8,6 +8,8 @@ import {
   Brain, Loader2, RefreshCw, AlertTriangle, CheckCircle, Lightbulb,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ErrorState } from "@/components/shared/error-state"
+import { EmptyState } from "@/components/shared/empty-state"
 
 interface OrgHighlight {
   orgName: string
@@ -59,9 +61,16 @@ export function ExecutiveSummary() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Brain className="h-4 w-4" /> AI Executive Briefing
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Brain className="h-4 w-4" /> AI Executive Briefing
+            </CardTitle>
+            {data && (
+              <span className="text-[10px] text-slate-400">
+                Last generated {new Date(data.generatedAt).toLocaleString()}
+              </span>
+            )}
+          </div>
           <Button
             variant="outline"
             size="sm"
@@ -78,16 +87,28 @@ export function ExecutiveSummary() {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Initial empty state */}
         {!data && !loading && !error && (
-          <p className="text-sm text-slate-500 text-center py-4">
-            Click Generate to create an AI briefing across all your organizations.
-          </p>
+          <EmptyState
+            icon={Brain}
+            title="No briefing yet"
+            description="Generate an AI-powered executive briefing across all your organizations."
+            action={{ label: "Generate Briefing", onClick: generate }}
+            size="sm"
+          />
         )}
 
-        {error && (
-          <p className="text-sm text-red-600 text-center py-4">{error}</p>
+        {/* Error state */}
+        {error && !loading && (
+          <ErrorState
+            title="Failed to generate briefing"
+            message={error}
+            onRetry={generate}
+            size="sm"
+          />
         )}
 
+        {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
@@ -95,9 +116,9 @@ export function ExecutiveSummary() {
           </div>
         )}
 
+        {/* Content */}
         {data && !loading && (
           <div className="space-y-4">
-            {/* Summary */}
             <p className="text-sm text-slate-700 leading-relaxed">{data.summary}</p>
 
             {/* Org Highlights */}
@@ -163,10 +184,6 @@ export function ExecutiveSummary() {
                 </ul>
               </div>
             )}
-
-            <p className="text-xs text-slate-400 text-right">
-              Generated {new Date(data.generatedAt).toLocaleString()}
-            </p>
           </div>
         )}
       </CardContent>

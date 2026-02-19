@@ -1,20 +1,31 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { QuickActions } from "@/components/portfolio/quick-actions"
+import { MiniSparkline } from "@/components/portfolio/mini-sparkline"
+import { OrgTrendChart } from "@/components/portfolio/org-trend-chart"
 import {
   ArrowLeft, ExternalLink, Users, FileText, CheckSquare,
   AlertTriangle, Target, CheckCircle, Clock, Zap, Flame,
-  TrendingUp, TrendingDown,
+  TrendingUp, TrendingDown, Bell, UserPlus, ChevronDown, ChevronUp,
+  Loader2, Mail,
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
+import { ErrorState } from "@/components/shared/error-state"
+import { EmptyState } from "@/components/shared/empty-state"
+import {
+  Dialog, DialogContent, DialogDescription,
+  DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/components/ui/use-toast"
 
 interface OrgMemberActivity {
   userId: string
@@ -63,11 +74,23 @@ interface OrgDetailData {
   }
 }
 
+interface SnapshotPoint {
+  snapshotDate: string
+  eodSubmissionRate: number
+  activeTaskCount: number
+  completedTaskCount: number
+  openEscalationCount: number
+}
+
+type RockFilter = "all" | "on-track" | "at-risk" | "blocked"
+
 export function PortfolioDetailPage() {
   const { setCurrentPage, refreshSession } = useApp()
+  const { toast } = useToast()
   const [data, setData] = useState<OrgDetailData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [snapshots, setSnapshots] = useState<SnapshotPoint[]>([])
   const [metrics, setMetrics] = useState<{
     avgFocusScore: number
     focusScoreTrend: 'up' | 'down' | 'stable'
@@ -75,6 +98,15 @@ export function PortfolioDetailPage() {
     memberEngagementRate: number
     streakLeaderboard: { name: string; currentStreak: number }[]
   } | null>(null)
+  const [showAllRocks, setShowAllRocks] = useState(false)
+  const [rockFilter, setRockFilter] = useState<RockFilter>("all")
+  const [showOlderEods, setShowOlderEods] = useState(false)
+
+  // Quick action state
+  const [nudging, setNudging] = useState(false)
+  const [showInvite, setShowInvite] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteLoading, setInviteLoading] = useState(false)
 
   const orgId = typeof window !== "undefined"
     ? sessionStorage.getItem("portfolio-detail-orgId")
@@ -108,18 +140,30 @@ export function PortfolioDetailPage() {
     fetchDetail()
   }, [fetchDetail])
 
+  // Fetch metrics + snapshots after main data loads
   useEffect(() => {
     if (!orgId || loading || !data) return
+
     fetch(`/api/super-admin/orgs/${orgId}/metrics`, {
       headers: { "X-Requested-With": "XMLHttpRequest" },
     })
       .then((res) => res.json())
+      .then((json) => { if (json.success) setMetrics(json.data) })
+      .catch(() => {})
+
+    fetch(`/api/super-admin/snapshots?days=14&orgId=${orgId}`, {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    })
+      .then((res) => res.json())
       .then((json) => {
-        if (json.success) setMetrics(json.data)
+        if (json.success) {
+          setSnapshots(
+            (json.data.snapshots as SnapshotPoint[])
+              .sort((a, b) => a.snapshotDate.localeCompare(b.snapshotDate))
+          )
+        }
       })
-      .catch(() => {
-        // Non-blocking — metrics are supplementary
-      })
+      .catch(() => {})
   }, [orgId, loading, data])
 
   const handleSwitchToOrg = async () => {
@@ -143,6 +187,96 @@ export function PortfolioDetailPage() {
     }
   }
 
+  const handleNudge = async () => {
+    if (!data) return
+    const missing = data.members.filter((m) => !m.eodSubmittedToday)
+    if (missing.length === 0) return
+    setNudging(true)
+    try {
+      const res = await fetch(`/api/notifications/batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({
+          organizationId: orgId,
+          userIds: missing.map((m) => m.userId),
+          notification: { type: "eod_reminder", title: "EOD Report Reminder", message: "Please submit your End-of-Day report for today." },
+        }),
+      })
+      const json = await res.json()
+      toast({
+        title: json.success ? "Nudge sent" : "Missing EODs",
+        description: json.success
+          ? `Reminded ${missing.length} team members to submit their EOD.`
+          : `${missing.map((m) => m.name).join(", ")} haven't submitted today.`,
+      })
+    } catch {
+      toast({ title: "Missing EODs", description: `${data.members.filter(m => !m.eodSubmittedToday).map((m) => m.name).join(", ")} haven't submitted today.` })
+    } finally {
+      setNudging(false)
+    }
+  }
+
+  const handleInvite = async () => {
+    if (!inviteEmail.trim() || !orgId) return
+    setInviteLoading(true)
+    try {
+      const res = await fetch(`/api/super-admin/orgs/${orgId}/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({ email: inviteEmail.trim(), role: "member", department: "General" }),
+      })
+      const json = await res.json()
+      if (json.success) {
+        toast({ title: "Invitation sent", description: `Invited ${inviteEmail} to ${data?.name}` })
+        setInviteEmail("")
+        setShowInvite(false)
+        fetchDetail()
+      } else {
+        toast({ title: "Error", description: json.error || "Failed to send invite", variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to send invite", variant: "destructive" })
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  // Sparkline data from snapshots
+  const eodSparkline = snapshots.map((s) => s.eodSubmissionRate)
+  const taskSparkline = snapshots.map((s) => s.activeTaskCount)
+  const completedSparkline = snapshots.map((s) => s.completedTaskCount)
+  const escalationSparkline = snapshots.map((s) => s.openEscalationCount)
+
+  // Filtered & sorted rocks
+  const filteredRocks = useMemo(() => {
+    if (!data) return []
+    let rocks = [...data.rocks]
+    if (rockFilter !== "all") {
+      rocks = rocks.filter((r) => r.status === rockFilter)
+    }
+    // Sort: blocked first, at-risk, on-track, completed
+    const order: Record<string, number> = { "blocked": 0, "at-risk": 1, "on-track": 2, "completed": 3 }
+    rocks.sort((a, b) => (order[a.status] ?? 4) - (order[b.status] ?? 4))
+    return rocks
+  }, [data, rockFilter])
+
+  const visibleRocks = showAllRocks ? filteredRocks : filteredRocks.slice(0, 5)
+
+  // Group EODs by date
+  const eodsByDate = useMemo(() => {
+    if (!data) return new Map<string, RecentEod[]>()
+    const map = new Map<string, RecentEod[]>()
+    for (const eod of data.recentEods) {
+      const group = map.get(eod.date) || []
+      group.push(eod)
+      map.set(eod.date, group)
+    }
+    return map
+  }, [data])
+
+  const eodDates = Array.from(eodsByDate.keys()).sort((a, b) => b.localeCompare(a))
+  const visibleEodDates = showOlderEods ? eodDates : eodDates.slice(0, 7)
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -161,7 +295,7 @@ export function PortfolioDetailPage() {
             </div>
           ))}
         </div>
-        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-[350px] w-full" />
       </div>
     )
   }
@@ -172,7 +306,11 @@ export function PortfolioDetailPage() {
         <Button variant="ghost" size="sm" onClick={() => setCurrentPage("portfolio")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Portfolio
         </Button>
-        <div className="text-center py-12 text-red-600">{error || "Organization not found"}</div>
+        <ErrorState
+          title="Failed to load organization"
+          message={error || "Organization not found"}
+          onRetry={fetchDetail}
+        />
       </div>
     )
   }
@@ -184,10 +322,12 @@ export function PortfolioDetailPage() {
     "completed": "bg-slate-100 text-slate-600",
   }
 
+  const missingEodCount = data.members.filter((m) => !m.eodSubmittedToday).length
+
   return (
     <ErrorBoundary>
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with inline quick actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => setCurrentPage("portfolio")}>
@@ -198,140 +338,98 @@ export function PortfolioDetailPage() {
             <p className="text-sm text-slate-500">{data.memberCount} members &middot; /{data.slug}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={handleSwitchToOrg}>
-          <ExternalLink className="h-4 w-4 mr-1" />
-          Switch to Org
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNudge}
+            disabled={missingEodCount === 0 || nudging}
+          >
+            {nudging ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Bell className="h-3 w-3 mr-1" />}
+            Nudge ({missingEodCount})
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowInvite(true)}>
+            <UserPlus className="h-3 w-3 mr-1" />
+            Invite
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSwitchToOrg}>
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Switch to Org
+          </Button>
+        </div>
       </div>
 
-      {/* Stats */}
+      {/* Stat Cards with Sparklines */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-500" />
-              <div>
-                <div className="text-xl font-bold">{data.stats.eodRateToday}%</div>
-                <div className="text-xs text-slate-500">EOD Rate Today</div>
-              </div>
+            <div className="flex items-center gap-2 mb-1">
+              <FileText className="h-4 w-4 text-blue-500" />
+              <span className="text-xs text-slate-500">EOD Rate Today</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div className="text-xl font-bold">{data.stats.eodRateToday}%</div>
+              {eodSparkline.length > 1 && (
+                <MiniSparkline data={eodSparkline} color="#3b82f6" width={80} height={24} />
+              )}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <CheckSquare className="h-5 w-5 text-indigo-500" />
-              <div>
-                <div className="text-xl font-bold">{data.stats.activeTaskCount}</div>
-                <div className="text-xs text-slate-500">Active Tasks</div>
-              </div>
+            <div className="flex items-center gap-2 mb-1">
+              <CheckSquare className="h-4 w-4 text-indigo-500" />
+              <span className="text-xs text-slate-500">Active Tasks</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div className="text-xl font-bold">{data.stats.activeTaskCount}</div>
+              {taskSparkline.length > 1 && (
+                <MiniSparkline data={taskSparkline} color="#6366f1" width={80} height={24} />
+              )}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-emerald-500" />
-              <div>
-                <div className="text-xl font-bold">{data.stats.avgRockProgress}%</div>
-                <div className="text-xs text-slate-500">Avg Rock Progress</div>
-              </div>
+            <div className="flex items-center gap-2 mb-1">
+              <Target className="h-4 w-4 text-emerald-500" />
+              <span className="text-xs text-slate-500">Avg Rock Progress</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div className="text-xl font-bold">{data.stats.avgRockProgress}%</div>
+              {completedSparkline.length > 1 && (
+                <MiniSparkline data={completedSparkline} color="#059669" width={80} height={24} />
+              )}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className={cn("h-5 w-5", data.stats.openEscalationCount > 0 ? "text-red-500" : "text-slate-400")} />
-              <div>
-                <div className="text-xl font-bold">{data.stats.openEscalationCount}</div>
-                <div className="text-xs text-slate-500">Escalations</div>
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className={cn("h-4 w-4", data.stats.openEscalationCount > 0 ? "text-red-500" : "text-slate-400")} />
+              <span className="text-xs text-slate-500">Escalations</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div className={cn("text-xl font-bold", data.stats.openEscalationCount > 0 && "text-red-600")}>
+                {data.stats.openEscalationCount}
               </div>
+              {escalationSparkline.length > 1 && (
+                <MiniSparkline
+                  data={escalationSparkline}
+                  color={data.stats.openEscalationCount > 0 ? "#dc2626" : "#94a3b8"}
+                  width={80}
+                  height={24}
+                />
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Executive Metrics */}
-      {metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Zap className="h-4 w-4" /> Focus Score & Engagement
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-6 mb-4">
-                <div>
-                  <div className="text-3xl font-bold">{metrics.avgFocusScore}</div>
-                  <div className="text-xs text-slate-500 flex items-center gap-1">
-                    Avg focus score
-                    {metrics.focusScoreTrend === 'up' && <TrendingUp className="h-3 w-3 text-emerald-500" />}
-                    {metrics.focusScoreTrend === 'down' && <TrendingDown className="h-3 w-3 text-red-500" />}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold">{metrics.memberEngagementRate}%</div>
-                  <div className="text-xs text-slate-500">Engagement (7d)</div>
-                </div>
-              </div>
-              {metrics.topPerformers.length > 0 && (
-                <div>
-                  <div className="text-xs font-medium text-slate-500 mb-2">Top performers</div>
-                  <div className="space-y-1.5">
-                    {metrics.topPerformers.map((p, i) => (
-                      <div key={p.name} className="flex items-center justify-between text-sm">
-                        <span className="text-slate-700">{i + 1}. {p.name}</span>
-                        <span className="text-slate-500 text-xs">Score {p.score} &middot; {p.streak}d streak</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+      {/* Org Trend Chart */}
+      <OrgTrendChart orgId={data.id} orgName={data.name} />
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Flame className="h-4 w-4" /> EOD Streak Leaderboard
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {metrics.streakLeaderboard.map((entry, i) => (
-                  <div key={entry.name} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
-                    <div className="flex items-center gap-2">
-                      <span className={cn(
-                        "text-sm font-bold w-5 text-center",
-                        i === 0 ? "text-amber-500" : i === 1 ? "text-slate-400" : "text-slate-300"
-                      )}>
-                        {i + 1}
-                      </span>
-                      <span className="text-sm text-slate-700">{entry.name}</span>
-                    </div>
-                    <span className="text-sm font-medium">{entry.currentStreak} days</span>
-                  </div>
-                ))}
-                {metrics.streakLeaderboard.length === 0 && (
-                  <p className="text-sm text-slate-500 text-center py-4">No streak data available</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <QuickActions
-        orgId={data.id}
-        orgName={data.name}
-        missingEodMembers={data.members.filter((m) => !m.eodSubmittedToday)}
-        openEscalationCount={data.stats.openEscalationCount}
-        onRefresh={fetchDetail}
-      />
-
+      {/* Two-col: Team Activity + Team Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Team Activity */}
         <Card>
@@ -367,92 +465,272 @@ export function PortfolioDetailPage() {
                 </div>
               ))}
               {data.members.length === 0 && (
-                <p className="text-sm text-slate-500 text-center py-4">No active members</p>
+                <EmptyState title="No active members" size="sm" />
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Rocks */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Target className="h-4 w-4" /> Active Rocks
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {data.rocks.map((rock) => (
-                <div key={rock.id} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{rock.title}</div>
-                      <div className="text-xs text-slate-500">{rock.ownerName}</div>
+        {/* Team Performance: Focus + Streak merged */}
+        {metrics ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Zap className="h-4 w-4" /> Team Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-6">
+                {/* Focus Score side (60%) */}
+                <div className="flex-[3] space-y-3">
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <div className="text-3xl font-bold">{metrics.avgFocusScore}</div>
+                      <div className="text-xs text-slate-500 flex items-center gap-1">
+                        Focus score
+                        {metrics.focusScoreTrend === 'up' && <TrendingUp className="h-3 w-3 text-emerald-500" />}
+                        {metrics.focusScoreTrend === 'down' && <TrendingDown className="h-3 w-3 text-red-500" />}
+                      </div>
                     </div>
-                    <Badge className={cn("text-xs ml-2", statusColors[rock.status] || "bg-slate-100")}>
-                      {rock.status}
-                    </Badge>
+                    <div>
+                      <div className="text-3xl font-bold">{metrics.memberEngagementRate}%</div>
+                      <div className="text-xs text-slate-500">Engagement (7d)</div>
+                    </div>
                   </div>
-                  <Progress value={rock.progress} className="h-1.5" />
-                  <div className="flex justify-between text-xs text-slate-500">
-                    <span>{rock.progress}%</span>
-                    {rock.dueDate && <span>Due: {rock.dueDate}</span>}
+                  {metrics.topPerformers.length > 0 && (
+                    <div>
+                      <div className="text-xs font-medium text-slate-500 mb-1.5">Top performers</div>
+                      <div className="space-y-1">
+                        {metrics.topPerformers.slice(0, 3).map((p, i) => (
+                          <div key={p.name} className="flex items-center justify-between text-sm">
+                            <span className="text-slate-700">{i + 1}. {p.name}</span>
+                            <span className="text-slate-500 text-xs">Score {p.score}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* Streak side (40%) */}
+                <div className="flex-[2] border-l border-slate-100 pl-6">
+                  <div className="text-xs font-medium text-slate-500 mb-2 flex items-center gap-1">
+                    <Flame className="h-3 w-3" /> Streak Leaderboard
+                  </div>
+                  <div className="space-y-1.5">
+                    {metrics.streakLeaderboard.slice(0, 5).map((entry, i) => (
+                      <div key={entry.name} className="flex items-center justify-between py-1">
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "text-xs font-bold w-4 text-center",
+                            i === 0 ? "text-amber-500" : i === 1 ? "text-slate-400" : "text-slate-300"
+                          )}>
+                            {i + 1}
+                          </span>
+                          <span className="text-sm text-slate-700">{entry.name}</span>
+                        </div>
+                        <span className="text-xs font-medium tabular-nums">{entry.currentStreak}d</span>
+                      </div>
+                    ))}
+                    {metrics.streakLeaderboard.length === 0 && (
+                      <p className="text-xs text-slate-500 text-center py-2">No streak data</p>
+                    )}
                   </div>
                 </div>
-              ))}
-              {data.rocks.length === 0 && (
-                <p className="text-sm text-slate-500 text-center py-4">No active rocks</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="pt-6 pb-6">
+              <EmptyState
+                icon={Zap}
+                title="Team metrics loading"
+                description="Performance data will appear shortly."
+                size="sm"
+              />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      {/* Recent EODs */}
+      {/* Active Rocks — full width */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Target className="h-4 w-4" /> Active Rocks
+              <Badge variant="secondary" className="text-xs ml-1">{data.rocks.length}</Badge>
+            </CardTitle>
+            <div className="flex items-center gap-1">
+              {(["all", "on-track", "at-risk", "blocked"] as const).map((f) => (
+                <Button
+                  key={f}
+                  variant={rockFilter === f ? "default" : "ghost"}
+                  size="sm"
+                  className="text-xs h-7 px-2.5"
+                  onClick={() => { setRockFilter(f); setShowAllRocks(false) }}
+                >
+                  {f === "all" ? "All" : f === "on-track" ? "On Track" : f === "at-risk" ? "At Risk" : "Blocked"}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {filteredRocks.length === 0 ? (
+            <EmptyState
+              icon={Target}
+              title={rockFilter === "all" ? "No active rocks" : `No ${rockFilter} rocks`}
+              size="sm"
+            />
+          ) : (
+            <div className="space-y-2">
+              {visibleRocks.map((rock) => (
+                <div key={rock.id} className="flex items-center gap-4 py-2 border-b border-slate-100 last:border-0">
+                  <Badge className={cn("text-[10px] flex-shrink-0 w-16 justify-center", statusColors[rock.status] || "bg-slate-100")}>
+                    {rock.status}
+                  </Badge>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{rock.title}</div>
+                  </div>
+                  <span className="text-xs text-slate-500 flex-shrink-0">{rock.ownerName}</span>
+                  <div className="w-24 flex-shrink-0">
+                    <Progress value={rock.progress} className="h-1.5" />
+                  </div>
+                  <span className="text-xs text-slate-500 tabular-nums w-8 text-right flex-shrink-0">{rock.progress}%</span>
+                  {rock.dueDate && (
+                    <span className="text-[10px] text-slate-400 flex-shrink-0">{rock.dueDate}</span>
+                  )}
+                </div>
+              ))}
+              {filteredRocks.length > 5 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-slate-500"
+                  onClick={() => setShowAllRocks(!showAllRocks)}
+                >
+                  {showAllRocks ? (
+                    <><ChevronUp className="h-3 w-3 mr-1" /> Show less</>
+                  ) : (
+                    <><ChevronDown className="h-3 w-3 mr-1" /> Show all {filteredRocks.length} rocks</>
+                  )}
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recent EODs — grouped by date */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <FileText className="h-4 w-4" /> Recent EOD Reports (7 days)
+            <FileText className="h-4 w-4" /> Recent EOD Reports
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {data.recentEods.slice(0, 20).map((eod) => (
-              <div key={eod.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
-                <div className="flex items-center gap-3">
-                  {eod.needsEscalation && (
-                    <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
-                  )}
-                  <div>
-                    <div className="text-sm font-medium">{eod.userName}</div>
-                    <div className="text-xs text-slate-500">
-                      {eod.date} &middot; {eod.taskCount} tasks reported
+          {eodDates.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title="No EOD reports"
+              description="No EOD reports in the last 7 days."
+              size="sm"
+            />
+          ) : (
+            <div className="space-y-4">
+              {visibleEodDates.map((date) => {
+                const eods = eodsByDate.get(date)!
+                return (
+                  <div key={date}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                        {formatEodDate(date)}
+                      </h4>
+                      <Badge variant="secondary" className="text-[10px]">{eods.length} reports</Badge>
+                    </div>
+                    <div className="space-y-1">
+                      {eods.map((eod) => (
+                        <div
+                          key={eod.id}
+                          className={cn(
+                            "flex items-center justify-between py-2 px-2 rounded-md",
+                            eod.needsEscalation ? "bg-red-50" : "hover:bg-slate-50"
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            {eod.needsEscalation && (
+                              <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+                            )}
+                            <div>
+                              <div className="text-sm font-medium">{eod.userName}</div>
+                              <div className="text-xs text-slate-500">{eod.taskCount} tasks reported</div>
+                            </div>
+                          </div>
+                          {eod.needsEscalation && eod.escalationNote && (
+                            <div className="text-xs text-red-600 max-w-xs truncate">{eod.escalationNote}</div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {eod.needsEscalation && eod.escalationNote && (
-                    <div className="text-xs text-red-600 max-w-xs truncate">{eod.escalationNote}</div>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs text-blue-600 hover:text-blue-700 h-7 px-2"
-                    onClick={handleSwitchToOrg}
-                  >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    View
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {data.recentEods.length === 0 && (
-              <p className="text-sm text-slate-500 text-center py-4">No EOD reports in the last 7 days</p>
-            )}
-          </div>
+                )
+              })}
+              {eodDates.length > 7 && !showOlderEods && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-slate-500"
+                  onClick={() => setShowOlderEods(true)}
+                >
+                  <ChevronDown className="h-3 w-3 mr-1" /> View older reports
+                </Button>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
+
+    {/* Invite Dialog */}
+    <Dialog open={showInvite} onOpenChange={setShowInvite}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Invite to {data.name}</DialogTitle>
+          <DialogDescription>Send an invitation to join this organization.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="invite-email">Email Address</Label>
+            <Input
+              id="invite-email"
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="name@company.com"
+              onKeyDown={(e) => e.key === "Enter" && handleInvite()}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowInvite(false)}>Cancel</Button>
+          <Button onClick={handleInvite} disabled={inviteLoading || !inviteEmail.trim()}>
+            {inviteLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Send Invite
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </ErrorBoundary>
   )
+}
+
+function formatEodDate(dateStr: string): string {
+  const date = new Date(dateStr + "T00:00:00")
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const diff = Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+  if (diff === 0) return "Today"
+  if (diff === 1) return "Yesterday"
+  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
 }
