@@ -248,16 +248,21 @@ export function AssignedTasksSection({
               description="Tasks assigned to you will appear here"
               size="sm"
               action={
-                !isCheckingConnection && asanaConnected
+                onAddTask
                   ? {
-                      label: isSyncing ? "Syncing..." : "Import from Asana",
-                      onClick: handleSyncAsana,
-                      variant: "outline",
+                      label: "Add a task",
+                      onClick: () => setShowAddTaskModal(true),
                     }
-                  : undefined
+                  : !isCheckingConnection && asanaConnected
+                    ? {
+                        label: isSyncing ? "Syncing..." : "Import from Asana",
+                        onClick: handleSyncAsana,
+                        variant: "outline",
+                      }
+                    : undefined
               }
             />
-            {!isCheckingConnection && !asanaConnected && (
+            {!isCheckingConnection && !asanaConnected && !onAddTask && (
               <p className="text-xs text-slate-400 text-center mt-2">
                 <button
                   onClick={() => setCurrentPage("settings")}

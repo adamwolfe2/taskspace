@@ -5,6 +5,7 @@ import type { Rock, Project } from "@/lib/types"
 import { formatDate } from "@/lib/utils/date-utils"
 import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight, RefreshCw, ChevronDown, ChevronUp } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
+import { useApp } from "@/lib/contexts/app-context"
 import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
@@ -80,6 +81,7 @@ function getAvailableQuarters(rocks: Rock[]): string[] {
 }
 
 export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefresh, projects }: MyRocksSectionProps) {
+  const { setCurrentPage } = useApp()
   const [_draggedRock, setDraggedRock] = useState<string | null>(null)
   const [selectedRock, setSelectedRock] = useState<Rock | null>(null)
   const [selectedQuarter, setSelectedQuarter] = useState<string>("all")
@@ -223,10 +225,15 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
             title={rocks.length === 0 ? "No rocks assigned yet" : `No rocks in ${selectedQuarter}`}
             description={
               rocks.length === 0
-                ? "Your quarterly goals will appear here"
+                ? "Set quarterly goals to track your most important priorities"
                 : "Select a different quarter or view all rocks"
             }
             size="sm"
+            action={
+              rocks.length === 0
+                ? { label: "Go to Rocks", onClick: () => setCurrentPage("rocks") }
+                : undefined
+            }
           />
         ) : (
           <div className="space-y-4">
