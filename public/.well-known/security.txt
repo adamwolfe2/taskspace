@@ -1,4 +1,4 @@
-Contact: mailto:security@collectivecapital.com
+Contact: mailto:security@trytaskspace.com
 Expires: 2027-02-12T23:59:59.000Z
 Preferred-Languages: en
 Canonical: https://trytaskspace.com/.well-known/security.txt
@@ -11,7 +11,7 @@ We take security seriously at TaskSpace. If you discover a security vulnerabilit
 
 ## Reporting
 
-Please email security@collectivecapital.com with:
+Please email security@trytaskspace.com with:
 - Description of the vulnerability
 - Steps to reproduce
 - Potential impact

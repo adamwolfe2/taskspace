@@ -66,7 +66,7 @@ export default function ContactPage() {
               <h3 className="text-lg font-semibold text-black mb-2">Sales</h3>
               <p className="text-gray-600 mb-4">Questions about pricing or plans</p>
               <Button variant="outline" className="border-gray-200 text-black" asChild>
-                <a href="mailto:team@collectivecapital.com?subject=Sales Inquiry">Contact Sales</a>
+                <a href="mailto:team@trytaskspace.com?subject=Sales Inquiry">Contact Sales</a>
               </Button>
             </motion.div>
 
@@ -80,7 +80,7 @@ export default function ContactPage() {
               <h3 className="text-lg font-semibold text-black mb-2">Support</h3>
               <p className="text-gray-600 mb-4">Get help with your account</p>
               <Button variant="outline" className="border-gray-200 text-black" asChild>
-                <a href="mailto:team@collectivecapital.com?subject=Support Request">Get Support</a>
+                <a href="mailto:team@trytaskspace.com?subject=Support Request">Get Support</a>
               </Button>
             </motion.div>
 
@@ -94,7 +94,7 @@ export default function ContactPage() {
               <h3 className="text-lg font-semibold text-black mb-2">Call Us</h3>
               <p className="text-gray-600 mb-4">Speak with our team directly</p>
               <Button variant="outline" className="border-gray-200 text-black" asChild>
-                <a href="mailto:team@collectivecapital.com?subject=Schedule a Call">Schedule Call</a>
+                <a href="mailto:team@trytaskspace.com?subject=Schedule a Call">Schedule Call</a>
               </Button>
             </motion.div>
           </motion.div>

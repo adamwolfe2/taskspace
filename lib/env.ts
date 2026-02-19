@@ -371,7 +371,7 @@ export const env = {
     return process.env.RESEND_API_KEY
   },
   get EMAIL_FROM() {
-    return process.env.EMAIL_FROM || "Taskspace <team@collectivecapital.com>"
+    return process.env.EMAIL_FROM || "Taskspace <team@trytaskspace.com>"
   },
   get emailConfigured() {
     return !!this.RESEND_API_KEY

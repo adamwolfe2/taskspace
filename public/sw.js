@@ -1,8 +1,8 @@
 /* global self, clients, addEventListener */
-// Service Worker for Align Push Notifications
+// Service Worker for TaskSpace Push Notifications
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const CACHE_NAME = 'align-v1';
+const CACHE_NAME = 'taskspace-v1';
 
 // Install event - cache static assets
 self.addEventListener('install', (_event) => {
@@ -25,7 +25,7 @@ self.addEventListener('push', (event) => {
       body: data.body || 'You have a new notification',
       icon: data.icon || '/icon-192.png',
       badge: data.badge || '/badge-72.png',
-      tag: data.tag || 'align-notification',
+      tag: data.tag || 'taskspace-notification',
       data: {
         url: data.url || '/',
         type: data.type,
@@ -37,7 +37,7 @@ self.addEventListener('push', (event) => {
     };
 
     event.waitUntil(
-      self.registration.showNotification(data.title || 'Align', options)
+      self.registration.showNotification(data.title || 'TaskSpace', options)
     );
   } catch (error) {
     console.error('Error handling push event:', error);

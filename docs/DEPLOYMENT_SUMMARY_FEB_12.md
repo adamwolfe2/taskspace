@@ -464,7 +464,7 @@
 
 ### Issues
 - GitHub: https://github.com/adamwolfe2/taskspace
-- Security: security@collectivecapital.com
+- Security: security@trytaskspace.com
 
 ---
 

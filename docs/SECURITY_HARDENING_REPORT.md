@@ -436,4 +436,4 @@ upgrade-insecure-requests;
 
 **Security Status:** ✅ Enterprise-Grade Security
 **Next Review:** Quarterly security audit recommended
-**Contact:** security@collectivecapital.com
+**Contact:** security@trytaskspace.com

@@ -171,10 +171,10 @@ TaskSpace uses **Resend** for transactional email delivery with beautiful, moder
 RESEND_API_KEY=re_xxxxxxxxxxxx
 
 # Email sender (must be verified domain in Resend)
-EMAIL_FROM="Taskspace <team@collectivecapital.com>"
+EMAIL_FROM="Taskspace <team@trytaskspace.com>"
 
 # Admin notification recipient
-ADMIN_EMAIL="team@collectivecapital.com"
+ADMIN_EMAIL="team@trytaskspace.com"
 
 # Application URL for links
 NEXT_PUBLIC_APP_URL="https://trytaskspace.com"
