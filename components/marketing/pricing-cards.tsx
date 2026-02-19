@@ -117,8 +117,8 @@ export function PricingCards({ plans }: PricingCardsProps) {
                 {isFree
                   ? "Free forever, no credit card needed"
                   : billingCycle === "yearly"
-                  ? "Per user, billed annually"
-                  : "Per user, billed monthly"}
+                  ? "14-day free trial · Billed annually"
+                  : "14-day free trial · Billed monthly"}
               </p>
 
               {billingCycle === "yearly" && calculateYearlySavings(plan) > 0 && (

@@ -105,7 +105,7 @@ export default function AccountabilityChartPage() {
                 <div className="text-sm text-slate-500">
                   Free forever.
                   <br />
-                  No credit card.
+                  14-day free trial.
                 </div>
               </motion.div>
 
@@ -596,7 +596,7 @@ export default function AccountabilityChartPage() {
             Ready to build your Accountability Chart?
           </h2>
           <p className="text-lg text-slate-600 mb-8">
-            Define clear seats, roles, and responsibilities for your entire organization. Free forever, no credit card required.
+            Define clear seats, roles, and responsibilities for your entire organization. Free forever. 14-day free trial on paid plans.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/app?page=register">

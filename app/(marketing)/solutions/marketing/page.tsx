@@ -38,7 +38,7 @@ export default function MarketingPage() {
 
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
                   <Button asChild size="lg" className="bg-black text-white hover:bg-gray-800">
-                    <Link href="/app?page=register">
+                    <Link href="/pricing">
                       Start Free Trial
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
@@ -211,11 +211,11 @@ export default function MarketingPage() {
                 Ship campaigns that move the needle
               </h2>
               <p className="mt-4 text-lg text-gray-600">
-                Start your free trial today. No credit card required.
+                Start your 14-day free trial today.
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
                 <Button asChild size="lg" className="bg-black text-white hover:bg-gray-800">
-                  <Link href="/app?page=register">
+                  <Link href="/pricing">
                     Start Free Trial
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>

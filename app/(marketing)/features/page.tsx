@@ -359,7 +359,7 @@ export default function FeaturesPage() {
               variants={fadeInUp}
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
-              <Link href="/app?page=register">
+              <Link href="/pricing">
                 <Button size="lg" className="bg-black text-white hover:bg-gray-900">
                   Start Free Trial
                   <ArrowRight className="w-5 h-5 ml-2" />

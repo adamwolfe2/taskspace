@@ -87,7 +87,7 @@ export default function Level10MeetingsPage() {
                 <div className="text-sm text-slate-500">
                   Free forever.
                   <br />
-                  No credit card.
+                  14-day free trial.
                 </div>
               </motion.div>
 
@@ -508,7 +508,7 @@ export default function Level10MeetingsPage() {
             Ready to run better meetings?
           </h2>
           <p className="text-lg text-slate-600 mb-8">
-            Start running structured Level 10 meetings that solve real problems. Free forever, no credit card required.
+            Start running structured Level 10 meetings that solve real problems. Free forever. 14-day free trial on paid plans.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/app?page=register">

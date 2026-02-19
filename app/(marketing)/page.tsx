@@ -678,7 +678,7 @@ function CTASection() {
             </Button>
           </Link>
         </div>
-        <p className="text-gray-500 mt-6 text-sm">Free forever plan -- No credit card required -- Cancel anytime</p>
+        <p className="text-gray-500 mt-6 text-sm">Free forever plan -- 14-day free trial on paid plans -- Cancel anytime</p>
       </div>
     </section>
   )

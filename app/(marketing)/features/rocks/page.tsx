@@ -72,7 +72,7 @@ export default function RocksPage() {
                 <div className="text-sm text-slate-500">
                   Free forever.
                   <br />
-                  No credit card.
+                  14-day free trial.
                 </div>
               </motion.div>
 
@@ -284,7 +284,7 @@ export default function RocksPage() {
             Ready to execute on your quarterly priorities?
           </h2>
           <p className="text-lg text-slate-600 mb-8">
-            Set your rocks, track progress, and hit your goals every quarter. Free forever, no credit card required.
+            Set your rocks, track progress, and hit your goals every quarter. Free forever. 14-day free trial on paid plans.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/app?page=register">

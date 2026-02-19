@@ -72,7 +72,7 @@ export default function VtoPage() {
                   <div className="text-sm text-slate-500">
                     Free forever.
                     <br />
-                    No credit card.
+                    14-day free trial.
                   </div>
                 </motion.div>
               </motion.div>
@@ -398,7 +398,7 @@ export default function VtoPage() {
             </h2>
             <p className="text-lg text-slate-600 mb-8">
               Build your V/TO, cascade it into quarterly rocks, and watch your company execute with perfect clarity.
-              Free forever, no credit card required.
+              Free forever. 14-day free trial on paid plans.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/app?page=register">

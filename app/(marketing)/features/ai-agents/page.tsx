@@ -73,7 +73,7 @@ export default function AiAgentsPage() {
                   <div className="text-sm text-slate-500">
                     Free forever.
                     <br />
-                    No credit card.
+                    14-day free trial.
                   </div>
                 </motion.div>
               </motion.div>
@@ -389,7 +389,7 @@ export default function AiAgentsPage() {
               Ready to let AI handle the analysis?
             </h2>
             <p className="text-lg text-slate-600 mb-8">
-              Get automated insights, pattern detection, and smart recommendations. Free forever, no credit card required.
+              Get automated insights, pattern detection, and smart recommendations. Free forever. 14-day free trial on paid plans.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/app?page=register">

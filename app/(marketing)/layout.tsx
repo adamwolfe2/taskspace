@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Taskspace - EOS Management Platform | Run All Your Teams In True Parallel",
-    description: "The all-in-one EOS platform with AI-powered EOD reports, rocks tracking, scorecards, L10 meetings, and more. Free forever plan, no credit card required.",
+    description: "The all-in-one EOS platform with AI-powered EOD reports, rocks tracking, scorecards, L10 meetings, and more. Free forever plan. 14-day free trial on paid plans.",
     type: "website",
     url: APP_URL,
     siteName: "Taskspace",

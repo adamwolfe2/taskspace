@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline"
 import { PLANS, FEATURE_CATEGORIES, type PlanConfig } from "@/lib/billing/plans"
-import { AI_CREDIT_PAYMENT_LINKS } from "@/lib/integrations/stripe-config"
+import { AI_CREDIT_PAYMENT_LINKS, STRIPE_PAYMENT_LINKS } from "@/lib/integrations/stripe-config"
 import { PricingCards } from "@/components/marketing/pricing-cards"
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: "Pricing | Taskspace - Simple, Transparent Pricing for EOS Teams",
   description:
-    "Choose the perfect Taskspace plan for your EOS team. Free, Team, and Business tiers with AI-powered EOD reports, rocks tracking, scorecards, and L10 meetings. Free forever plan, no credit card required.",
+    "Choose the perfect Taskspace plan for your EOS team. Free, Team, and Business tiers with AI-powered EOD reports, rocks tracking, scorecards, and L10 meetings. Free forever plan. 14-day free trial on paid plans.",
   openGraph: {
     title: "Pricing | Taskspace - Simple, Transparent Pricing",
     description:
@@ -41,7 +41,7 @@ const faqs = [
   {
     question: "Can I try Taskspace before paying?",
     answer:
-      "Yes! Taskspace is free forever for teams of up to 3. Paid plans include a 14-day free trial with no credit card required, so you can test all features before committing.",
+      "Yes! Taskspace is free forever for teams of up to 3. Paid plans include a 14-day free trial — just add a card to start, and you won't be charged until day 15. Cancel anytime during your trial.",
   },
   {
     question: "What happens when I hit my AI credit limit?",
@@ -86,7 +86,7 @@ export default function PricingPage() {
           </h1>
           <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
             Free forever for small teams. Upgrade when you need full EOS tools.
-            No credit card required.
+            14-day free trial on all paid plans.
           </p>
         </div>
 
@@ -102,7 +102,7 @@ export default function PricingPage() {
             <div className="flex items-center gap-2">
               <CheckIcon className="h-5 w-5 text-black" />
               <span className="text-sm font-medium text-gray-700">
-                No credit card required
+                14-day free trial
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -266,11 +266,11 @@ export default function PricingPage() {
             Ready to run your teams in true parallel?
           </h2>
           <p className="mt-4 text-lg text-gray-600">
-            Free forever for small teams. No credit card required.
+            Free forever for small teams. 14-day free trial on paid plans.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <Link
-              href="/app?page=register"
+              href={STRIPE_PAYMENT_LINKS.team?.monthly || "/pricing"}
               className="rounded-lg bg-black px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-900 transition-colors"
             >
               Start Free Trial
@@ -283,7 +283,7 @@ export default function PricingPage() {
             </Link>
           </div>
           <p className="text-gray-500 mt-6 text-sm">
-            Free forever plan -- No credit card required -- Cancel anytime
+            Free forever plan -- 14-day free trial on paid plans -- Cancel anytime
           </p>
         </div>
       </div>

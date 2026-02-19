@@ -34,7 +34,7 @@ export default function CommunicationPage() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                  <Link href="/app?page=register">
+                  <Link href="/pricing">
                     <Button size="lg" className="bg-black hover:bg-gray-800 text-white">
                       Start Free Trial
                       <ArrowRight className="ml-2 h-5 w-5" />
@@ -50,7 +50,7 @@ export default function CommunicationPage() {
                 <div className="flex items-center gap-8 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-gray-900" />
-                    <span>No credit card required</span>
+                    <span>Free forever plan</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-gray-900" />
@@ -392,7 +392,7 @@ export default function CommunicationPage() {
               and moving forward every single day.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/app?page=register">
+              <Link href="/pricing">
                 <Button size="lg" className="bg-white hover:bg-gray-100 text-gray-900">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -405,7 +405,7 @@ export default function CommunicationPage() {
               </Link>
             </div>
             <p className="text-sm text-gray-400 mt-6">
-              No credit card required • 14-day free trial • Cancel anytime
+              Free forever plan • 14-day free trial on paid plans • Cancel anytime
             </p>
           </div>
         </section>

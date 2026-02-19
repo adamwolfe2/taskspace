@@ -79,7 +79,7 @@ export default function ScorecardPage() {
                 <div className="text-sm text-slate-500">
                   Free forever.
                   <br />
-                  No credit card.
+                  14-day free trial.
                 </div>
               </motion.div>
 
@@ -526,7 +526,7 @@ export default function ScorecardPage() {
             Ready to track the metrics that matter?
           </h2>
           <p className="text-lg text-slate-600 mb-8">
-            Start building your weekly scorecard today. Free forever, no credit card required.
+            Start building your weekly scorecard today. Free forever. 14-day free trial on paid plans.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/app?page=register">
