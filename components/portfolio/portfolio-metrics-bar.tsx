@@ -122,7 +122,7 @@ export function PortfolioMetricsBar({ orgs, trends }: PortfolioMetricsBarProps) 
             <div className="flex items-end justify-between">
               <div>
                 <div className={cn("text-2xl font-bold", m.valueColor)}>{m.value}</div>
-                <div className="text-[11px] text-slate-500 leading-tight mt-0.5">{m.sublabel}</div>
+                <div className="text-[11px] sm:text-xs text-slate-500 leading-tight mt-0.5">{m.sublabel}</div>
               </div>
               {m.sparkData.length > 1 && (
                 <MiniSparkline data={m.sparkData} color={m.sparkColor} gradient />

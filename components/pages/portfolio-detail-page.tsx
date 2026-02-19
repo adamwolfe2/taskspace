@@ -328,7 +328,7 @@ export function PortfolioDetailPage() {
     <ErrorBoundary>
     <div className="space-y-6">
       {/* Header with inline quick actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => setCurrentPage("portfolio")}>
             <ArrowLeft className="h-4 w-4" />
@@ -338,23 +338,24 @@ export function PortfolioDetailPage() {
             <p className="text-sm text-slate-500">{data.memberCount} members &middot; /{data.slug}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-11 sm:ml-0">
           <Button
             variant="outline"
             size="sm"
             onClick={handleNudge}
             disabled={missingEodCount === 0 || nudging}
           >
-            {nudging ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Bell className="h-3 w-3 mr-1" />}
-            Nudge ({missingEodCount})
+            {nudging ? <Loader2 className="h-3 w-3 animate-spin sm:mr-1" /> : <Bell className="h-3 w-3 sm:mr-1" />}
+            <span className="hidden sm:inline">Nudge ({missingEodCount})</span>
+            <span className="sm:hidden">{missingEodCount}</span>
           </Button>
           <Button variant="outline" size="sm" onClick={() => setShowInvite(true)}>
-            <UserPlus className="h-3 w-3 mr-1" />
-            Invite
+            <UserPlus className="h-3 w-3 sm:mr-1" />
+            <span className="hidden sm:inline">Invite</span>
           </Button>
           <Button variant="outline" size="sm" onClick={handleSwitchToOrg}>
-            <ExternalLink className="h-4 w-4 mr-1" />
-            Switch to Org
+            <ExternalLink className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Switch to Org</span>
           </Button>
         </div>
       </div>
@@ -480,7 +481,7 @@ export function PortfolioDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-6">
+              <div className="flex flex-col lg:flex-row gap-6">
                 {/* Focus Score side (60%) */}
                 <div className="flex-[3] space-y-3">
                   <div className="flex items-center gap-4">
@@ -512,7 +513,7 @@ export function PortfolioDetailPage() {
                   )}
                 </div>
                 {/* Streak side (40%) */}
-                <div className="flex-[2] border-l border-slate-100 pl-6">
+                <div className="flex-[2] border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6">
                   <div className="text-xs font-medium text-slate-500 mb-2 flex items-center gap-1">
                     <Flame className="h-3 w-3" /> Streak Leaderboard
                   </div>
@@ -556,12 +557,12 @@ export function PortfolioDetailPage() {
       {/* Active Rocks — full width */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Target className="h-4 w-4" /> Active Rocks
               <Badge variant="secondary" className="text-xs ml-1">{data.rocks.length}</Badge>
             </CardTitle>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-wrap">
               {(["all", "on-track", "at-risk", "blocked"] as const).map((f) => (
                 <Button
                   key={f}
@@ -586,20 +587,20 @@ export function PortfolioDetailPage() {
           ) : (
             <div className="space-y-2">
               {visibleRocks.map((rock) => (
-                <div key={rock.id} className="flex items-center gap-4 py-2 border-b border-slate-100 last:border-0">
+                <div key={rock.id} className="flex items-center gap-2 sm:gap-4 py-2 border-b border-slate-100 last:border-0">
                   <Badge className={cn("text-[10px] flex-shrink-0 w-16 justify-center", statusColors[rock.status] || "bg-slate-100")}>
                     {rock.status}
                   </Badge>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{rock.title}</div>
                   </div>
-                  <span className="text-xs text-slate-500 flex-shrink-0">{rock.ownerName}</span>
-                  <div className="w-24 flex-shrink-0">
+                  <span className="text-xs text-slate-500 flex-shrink-0 hidden md:inline">{rock.ownerName}</span>
+                  <div className="w-16 sm:w-24 flex-shrink-0">
                     <Progress value={rock.progress} className="h-1.5" />
                   </div>
                   <span className="text-xs text-slate-500 tabular-nums w-8 text-right flex-shrink-0">{rock.progress}%</span>
                   {rock.dueDate && (
-                    <span className="text-[10px] text-slate-400 flex-shrink-0">{rock.dueDate}</span>
+                    <span className="text-[10px] text-slate-400 flex-shrink-0 hidden lg:inline">{rock.dueDate}</span>
                   )}
                 </div>
               ))}

@@ -147,22 +147,22 @@ export function OrgCard({
       {rockHealth && <div className="mb-3"><RockHealthBar health={rockHealth} /></div>}
 
       {/* Compact stat row */}
-      <div className="flex items-center gap-3 text-xs text-slate-500">
+      <div className="flex items-center gap-2 sm:gap-3 text-xs text-slate-500 flex-wrap">
         <span className="flex items-center gap-1">
           <Users className="h-3 w-3" />
           {memberCount}
         </span>
-        <span className="text-slate-300">|</span>
+        <span className="text-slate-300 hidden sm:inline">|</span>
         <span className="flex items-center gap-1">
           <FileText className="h-3 w-3" />
           {eodsToday} EODs
         </span>
-        <span className="text-slate-300">|</span>
+        <span className="text-slate-300 hidden sm:inline">|</span>
         <span className="flex items-center gap-1">
           <CheckSquare className="h-3 w-3" />
           {completedTasksThisWeek !== undefined ? `${completedTasksThisWeek} done` : `${activeTasks} active`}
         </span>
-        <span className="text-slate-300">|</span>
+        <span className="text-slate-300 hidden sm:inline">|</span>
         <span className={cn("flex items-center gap-1", openEscalations > 0 && "text-red-600")}>
           <AlertTriangle className={cn("h-3 w-3", openEscalations > 0 ? "text-red-500" : "")} />
           {openEscalations} esc

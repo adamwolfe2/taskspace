@@ -140,7 +140,7 @@ export function PortfolioTrends({ orgs }: PortfolioTrendsProps) {
       {/* Toolbar */}
       <div className="flex flex-wrap gap-3">
         <Select value={days} onValueChange={setDays}>
-          <SelectTrigger className="w-40" size="sm">
+          <SelectTrigger className="w-full sm:w-40" size="sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -150,7 +150,7 @@ export function PortfolioTrends({ orgs }: PortfolioTrendsProps) {
           </SelectContent>
         </Select>
         <Select value={orgFilter} onValueChange={setOrgFilter}>
-          <SelectTrigger className="w-48" size="sm">
+          <SelectTrigger className="w-full sm:w-48" size="sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -306,7 +306,7 @@ export function PortfolioTrends({ orgs }: PortfolioTrendsProps) {
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-4 text-xs text-slate-500">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                       <span className="h-2 w-2 rounded-full bg-emerald-500" /> On Track: {org.onTrack}
                     </span>
