@@ -344,7 +344,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
     // Validate request body
-    const { id, ...updates } = await validateBody(request, updateTaskSchema)
+    const { id, expectedUpdatedAt, ...updates } = await validateBody(request, updateTaskSchema)
 
     const task = await db.assignedTasks.findById(id)
     if (!task) {
@@ -404,7 +404,14 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     }
     updateData.updatedAt = new Date().toISOString()
 
-    const updatedTask = await db.assignedTasks.update(id, updateData)
+    const updatedTask = await db.assignedTasks.update(id, updateData, expectedUpdatedAt)
+
+    if (!updatedTask && expectedUpdatedAt) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "This task was modified by another user. Please refresh and try again." },
+        { status: 409 }
+      )
+    }
 
     // Fire webhook (best-effort, non-blocking)
     const webhookEvent = updates.status === "completed" ? "task.completed" as const : "task.updated" as const

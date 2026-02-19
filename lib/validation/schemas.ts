@@ -228,6 +228,7 @@ export const updateTaskSchema = z.object({
   rockId: uuidSchema.nullable().optional(),
   projectId: uuidSchema.nullable().optional(),
   recurrence: recurrenceSchema.nullable().optional(),
+  expectedUpdatedAt: isoDateSchema.optional(), // Optimistic concurrency — reject if stale
 })
 
 export const addTaskCommentSchema = z.object({
@@ -279,6 +280,7 @@ export const updateRockSchema = z.object({
   outcome: z.string().max(1000).optional(),
   doneWhen: z.array(z.string()).optional(),
   projectId: uuidSchema.nullable().optional(),
+  expectedUpdatedAt: isoDateSchema.optional(), // Optimistic concurrency — reject if stale
 })
 
 export const bulkRockSchema = z.object({

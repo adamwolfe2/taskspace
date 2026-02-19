@@ -263,7 +263,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
     // Validate request body
-    const { id, ...updates } = await validateBody(request, updateRockSchema)
+    const { id, expectedUpdatedAt, ...updates } = await validateBody(request, updateRockSchema)
 
     const rock = await db.rocks.findById(id)
     if (!rock) {
@@ -310,7 +310,14 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       }
     }
 
-    const updatedRock = await db.rocks.update(id, updates)
+    const updatedRock = await db.rocks.update(id, updates, expectedUpdatedAt)
+
+    if (!updatedRock && expectedUpdatedAt) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "This rock was modified by another user. Please refresh and try again." },
+        { status: 409 }
+      )
+    }
 
     // Fire webhook (best-effort, non-blocking)
     dispatchWebhook(auth.organization.id, "rock.updated", {

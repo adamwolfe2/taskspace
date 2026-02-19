@@ -1102,11 +1102,12 @@ export const db = {
       `
       return rock
     },
-    async update(id: string, updates: Partial<Rock>): Promise<Rock | null> {
+    async update(id: string, updates: Partial<Rock>, expectedUpdatedAt?: string): Promise<Rock | null> {
       const now = new Date().toISOString()
       const sanitizedTitle = updates.title ? sanitizeText(updates.title) : null
       const sanitizedDescription = updates.description ? sanitizeText(updates.description) : null
       const sanitizedOutcome = updates.outcome ? sanitizeText(updates.outcome) : null
+      const expectTs = expectedUpdatedAt || null
       const { rows } = await sql`
         UPDATE rocks SET
           title = COALESCE(${sanitizedTitle}, title),
@@ -1120,6 +1121,7 @@ export const db = {
           quarter = COALESCE(${updates.quarter || null}, quarter),
           updated_at = ${now}
         WHERE id = ${id}
+          AND (${expectTs}::timestamp IS NULL OR updated_at = ${expectTs}::timestamp)
         RETURNING *
       `
       return rows[0] ? parseRock(rows[0]) : null
@@ -1388,10 +1390,11 @@ export const db = {
       `
       return task
     },
-    async update(id: string, updates: Partial<AssignedTask>): Promise<AssignedTask | null> {
+    async update(id: string, updates: Partial<AssignedTask>, expectedUpdatedAt?: string): Promise<AssignedTask | null> {
       const now = new Date().toISOString()
       const sanitizedTitle = updates.title ? sanitizeText(updates.title) : null
       const sanitizedDescription = updates.description ? sanitizeText(updates.description) : null
+      const expectTs = expectedUpdatedAt || null
       const { rows } = await sql`
         UPDATE assigned_tasks SET
           title = COALESCE(${sanitizedTitle}, title),
@@ -1406,6 +1409,7 @@ export const db = {
           recurrence = COALESCE(${updates.recurrence ? JSON.stringify(updates.recurrence) : null}::jsonb, recurrence),
           updated_at = ${now}
         WHERE id = ${id}
+          AND (${expectTs}::timestamp IS NULL OR updated_at = ${expectTs}::timestamp)
         RETURNING *
       `
       return rows[0] ? parseAssignedTask(rows[0]) : null
