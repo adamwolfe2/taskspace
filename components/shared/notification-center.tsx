@@ -327,7 +327,7 @@ export function NotificationCenter() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6"
+                            className="h-6 w-6 touch-target"
                             onClick={() => markAsRead(notification.id)}
                             disabled={processingIds.has(notification.id)}
                             aria-label="Mark as read"
@@ -342,7 +342,7 @@ export function NotificationCenter() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          className="h-6 w-6 touch-target text-muted-foreground hover:text-destructive"
                           onClick={() => deleteNotification(notification.id)}
                           disabled={processingIds.has(notification.id)}
                           aria-label="Delete notification"

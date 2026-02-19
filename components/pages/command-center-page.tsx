@@ -329,7 +329,7 @@ export function CommandCenterPage({ teamMembers, currentUser }: CommandCenterPag
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5">
           <TabsTrigger value="brain-dump" className="gap-2">
             <Brain className="h-4 w-4" />
             <span className="hidden sm:inline">Brain Dump</span>

@@ -305,7 +305,7 @@ export function IDSSection({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-5 w-5"
+                    className="h-5 w-5 touch-target"
                     onClick={() => handleMovePriority(issue.id, "up")}
                     disabled={idx === 0}
                     aria-label="Move up"
@@ -315,7 +315,7 @@ export function IDSSection({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-5 w-5"
+                    className="h-5 w-5 touch-target"
                     onClick={() => handleMovePriority(issue.id, "down")}
                     disabled={idx === openIssues.length - 1}
                     aria-label="Move down"

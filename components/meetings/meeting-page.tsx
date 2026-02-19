@@ -453,7 +453,7 @@ export function MeetingPage({ meetingId, workspaceId }: MeetingPageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-3 bg-white rounded-lg border">
               <div className="text-2xl font-bold">{meeting?.rating || "—"}/10</div>
               <div className="text-sm text-slate-500">Rating</div>

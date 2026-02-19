@@ -452,7 +452,7 @@ function WebhookRow({
           <Button
             variant="ghost"
             size="icon"
-            className="h-5 w-5"
+            className="h-5 w-5 touch-target"
             onClick={() => setShowSecret(!showSecret)}
             aria-label={showSecret ? "Hide secret" : "Show secret"}
           >
@@ -461,7 +461,7 @@ function WebhookRow({
           <Button
             variant="ghost"
             size="icon"
-            className="h-5 w-5"
+            className="h-5 w-5 touch-target"
             onClick={() => {
               navigator.clipboard.writeText(webhook.secret)
               toast({ title: "Copied to clipboard" })
@@ -470,7 +470,7 @@ function WebhookRow({
           >
             <Copy className="h-3 w-3" />
           </Button>
-          <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5" onClick={onRegenerateSecret}>
+          <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5 touch-target" onClick={onRegenerateSecret}>
             <RefreshCw className="h-3 w-3 mr-1" />
             Rotate
           </Button>

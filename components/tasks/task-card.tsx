@@ -122,12 +122,12 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
             {isPersonal && !isCompleted && (
               <div className="flex items-center gap-1 flex-shrink-0">
                 {onEdit && (
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onEdit(task)} aria-label="Edit task">
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 touch-target" onClick={() => onEdit(task)} aria-label="Edit task">
                     <Pencil className="h-3 w-3" />
                   </Button>
                 )}
                 {onDelete && (
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onDelete(task.id)} aria-label="Delete task">
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 touch-target" onClick={() => onDelete(task.id)} aria-label="Delete task">
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 )}

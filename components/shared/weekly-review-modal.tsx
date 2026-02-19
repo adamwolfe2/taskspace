@@ -177,7 +177,7 @@ export function WeeklyReviewModal({
 
  <div className="space-y-6">
  {/* Week Summary Stats */}
- <div className="grid grid-cols-3 gap-3">
+ <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
  <Card>
  <CardContent className="pt-4 text-center">
  <CheckCircle2 className="h-6 w-6 text-green-500 mx-auto mb-1" />

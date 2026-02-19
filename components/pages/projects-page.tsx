@@ -453,7 +453,7 @@ export function ProjectsPage({
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Project actions">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 touch-target" aria-label="Project actions">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -676,7 +676,7 @@ export function ProjectsPage({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-6 w-6"
+                                    className="h-6 w-6 touch-target"
                                     onClick={() => removeProjectMember(detailProject.id, member.userId)}
                                     aria-label="Remove member"
                                   >

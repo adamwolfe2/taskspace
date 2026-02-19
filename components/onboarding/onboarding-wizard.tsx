@@ -659,7 +659,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                         </div>
                       )}
 
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <Label className="text-xs text-slate-500">Primary</Label>
                           <div className="mt-1 flex items-center gap-2">

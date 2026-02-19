@@ -273,7 +273,7 @@ export function DirectReportDetailSheet({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="text-center p-3 rounded-lg bg-slate-50">
                     <p className={cn(
                       "text-lg font-bold",
