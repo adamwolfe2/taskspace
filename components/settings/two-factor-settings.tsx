@@ -229,7 +229,6 @@ export function TwoFactorSettings({ totpEnabled, onStatusChange }: TwoFactorSett
             </Alert>
 
             <div className="flex justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={qrCode} alt="2FA QR code" className="w-48 h-48 border rounded-lg" />
             </div>
 

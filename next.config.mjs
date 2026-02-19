@@ -114,8 +114,4 @@ export default withSentryConfig(nextConfig, {
 
   // Hide source maps from the client bundle
   hideSourceMaps: true,
-
-  // Automatically instrument API routes and server components
-  autoInstrumentServerFunctions: true,
-  autoInstrumentMiddleware: true,
 })
