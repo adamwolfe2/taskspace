@@ -96,7 +96,6 @@ export function useTeamData() {
       refreshInterval: CONFIG.polling.standard, // 60s background polling
       dedupingInterval: 5000,
       onError: (err) => {
-        console.error("Failed to load team data:", err)
         Sentry.captureException(err)
       },
     }

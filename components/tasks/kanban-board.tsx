@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import React, { useState, useMemo } from "react"
 import {
   DndContext,
   DragOverlay,
@@ -60,7 +60,7 @@ const columns: ColumnConfig[] = [
 ]
 
 // Draggable Task Card (now using EnhancedKanbanCard)
-function TaskCard({
+const TaskCard = React.memo(function TaskCard({
   task,
   isDragging,
   onClick,
@@ -72,10 +72,10 @@ function TaskCard({
   return (
     <EnhancedKanbanCard task={task} isDragging={isDragging} onClick={onClick} />
   )
-}
+})
 
 // Sortable Task Item
-function SortableTaskItem({
+const SortableTaskItem = React.memo(function SortableTaskItem({
   task,
   onClick,
 }: {
@@ -101,10 +101,10 @@ function SortableTaskItem({
       <TaskCard task={task} isDragging={isDragging} onClick={onClick} />
     </div>
   )
-}
+})
 
 // Droppable Column with enhanced styling
-function Column({
+const Column = React.memo(function Column({
   config,
   tasks,
   onTaskClick,
@@ -154,7 +154,7 @@ function Column({
       </div>
     </div>
   )
-}
+})
 
 export function KanbanBoard({
   tasks,

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import {
   Table,
   TableBody,
@@ -37,7 +37,7 @@ function formatWeekHeader(dateStr: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 }
 
-function MetricCell({
+const MetricCell = React.memo(function MetricCell({
   value,
   goal,
   isAdmin,
@@ -88,10 +88,10 @@ function MetricCell({
       </span>
     </div>
   )
-}
+})
 
 // Inline edit component for metric values
-function EditableMetricCell({
+const EditableMetricCell = React.memo(function EditableMetricCell({
   memberId,
   weekEnding,
   currentValue,
@@ -168,7 +168,7 @@ function EditableMetricCell({
       </Button>
     </div>
   )
-}
+})
 
 export function ScorecardTable() {
   const [data, setData] = useState<ScorecardData | null>(null)

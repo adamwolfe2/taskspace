@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import React, { useState, useMemo } from "react"
 import {
   DndContext,
   DragOverlay,
@@ -59,7 +59,7 @@ const columns: ColumnConfig[] = [
 ]
 
 // Rock Card Component
-function RockCard({
+const RockCard = React.memo(function RockCard({
   rock,
   isDragging,
   onClick,
@@ -174,10 +174,10 @@ function RockCard({
       </CardContent>
     </Card>
   )
-}
+})
 
 // Sortable Rock Item
-function SortableRockItem({
+const SortableRockItem = React.memo(function SortableRockItem({
   rock,
   onClick,
 }: {
@@ -203,10 +203,10 @@ function SortableRockItem({
       <RockCard rock={rock} isDragging={isDragging} onClick={onClick} />
     </div>
   )
-}
+})
 
 // Column Component
-function Column({
+const Column = React.memo(function Column({
   config,
   rocks,
   onRockClick,
@@ -262,7 +262,7 @@ function Column({
       </div>
     </div>
   )
-}
+})
 
 export function RocksKanbanBoard({
   rocks,

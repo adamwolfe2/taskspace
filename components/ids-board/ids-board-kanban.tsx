@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import React, { useState, useMemo } from "react"
 import {
   DndContext,
   DragOverlay,
@@ -63,7 +63,7 @@ const columnConfigs: ColumnConfig[] = [
 ]
 
 // Sortable Item
-function SortableItem({
+const SortableItem = React.memo(function SortableItem({
   item,
   onClick,
 }: {
@@ -89,10 +89,10 @@ function SortableItem({
       <IdsBoardCard item={item} isDragging={isDragging} onClick={onClick} />
     </div>
   )
-}
+})
 
 // Column component
-function Column({
+const Column = React.memo(function Column({
   config,
   items,
   onItemClick,
@@ -152,7 +152,7 @@ function Column({
       </div>
     </div>
   )
-}
+})
 
 interface IdsBoardKanbanProps {
   columns: Record<IdsBoardColumn, IdsBoardItem[]>

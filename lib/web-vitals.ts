@@ -121,7 +121,9 @@ export async function initWebVitals() {
     onINP(reportWebVitals)
   } catch (error) {
     // Web vitals library not available
-    console.warn('Web Vitals tracking not available:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Web Vitals tracking not available:', error)
+    }
   }
 }
 
