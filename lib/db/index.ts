@@ -54,6 +54,8 @@ function parseUser(row: Record<string, unknown>): User {
     emailVerified: row.email_verified as boolean,
     lastLoginAt: row.last_login_at ? (row.last_login_at as Date).toISOString() : undefined,
     isSuperAdmin: (row.is_super_admin as boolean) || false,
+    totpEnabled: (row.totp_enabled as boolean) || false,
+    totpSecret: row.totp_secret as string | null | undefined,
   }
 }
 
@@ -388,16 +390,24 @@ export const db = {
     },
     async update(id: string, updates: Partial<User>): Promise<User | null> {
       const now = new Date().toISOString()
-      const { rows } = await sql`
-        UPDATE users SET
-          name = COALESCE(${updates.name || null}, name),
-          avatar = COALESCE(${updates.avatar || null}, avatar),
-          email_verified = COALESCE(${updates.emailVerified ?? null}, email_verified),
-          last_login_at = COALESCE(${updates.lastLoginAt || null}, last_login_at),
-          updated_at = ${now}
-        WHERE id = ${id}
-        RETURNING *
-      `
+      const setClauses: string[] = [`updated_at = '${now}'`]
+      const params: unknown[] = []
+      let paramIndex = 1
+
+      if (updates.name !== undefined) { setClauses.push(`name = $${paramIndex++}`); params.push(updates.name) }
+      if (updates.avatar !== undefined) { setClauses.push(`avatar = $${paramIndex++}`); params.push(updates.avatar) }
+      if (updates.emailVerified !== undefined) { setClauses.push(`email_verified = $${paramIndex++}`); params.push(updates.emailVerified) }
+      if (updates.lastLoginAt !== undefined) { setClauses.push(`last_login_at = $${paramIndex++}`); params.push(updates.lastLoginAt) }
+      if (updates.failedLoginAttempts !== undefined) { setClauses.push(`failed_login_attempts = $${paramIndex++}`); params.push(updates.failedLoginAttempts) }
+      if ("lockedAt" in updates) { setClauses.push(`locked_at = $${paramIndex++}`); params.push(updates.lockedAt ?? null) }
+      if ("lockReason" in updates) { setClauses.push(`lock_reason = $${paramIndex++}`); params.push(updates.lockReason ?? null) }
+      if ("totpSecret" in updates) { setClauses.push(`totp_secret = $${paramIndex++}`); params.push(updates.totpSecret ?? null) }
+      if (updates.totpEnabled !== undefined) { setClauses.push(`totp_enabled = $${paramIndex++}`); params.push(updates.totpEnabled) }
+
+      params.push(id)
+      const query = `UPDATE users SET ${setClauses.join(", ")} WHERE id = $${paramIndex} RETURNING *`
+
+      const { rows } = await (sql.query as (q: string, p: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>)(query, params)
       return rows[0] ? parseUser(rows[0]) : null
     },
     async delete(id: string): Promise<boolean> {

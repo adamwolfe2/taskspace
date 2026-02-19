@@ -138,6 +138,17 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // SECURITY: If 2FA is enabled, return pending status instead of creating session
+    if (user.totpEnabled) {
+      logAuthEvent("login", user.id, true, { pendingTwoFactor: true })
+      resetLoginRateLimit(request)
+      return NextResponse.json<ApiResponse<{ pendingTwoFactor: true; userId: string }>>({
+        success: true,
+        data: { pendingTwoFactor: true, userId: user.id },
+        message: "Two-factor authentication required",
+      })
+    }
+
     // Get user's organizations
     const memberships = await db.members.findByUserId(user.id)
 
@@ -169,7 +180,7 @@ export async function POST(request: NextRequest) {
       resetLoginRateLimit(request)
       logAuthEvent("login", user.id, true, { needsOrganization: true })
 
-      const { passwordHash: _passwordHash, ...safeUser } = user
+      const { passwordHash: _passwordHash, totpSecret: _ts, ...safeUser } = user
 
       const response = NextResponse.json<ApiResponse<AuthResponse>>({
         success: true,
@@ -256,8 +267,8 @@ export async function POST(request: NextRequest) {
     // Log successful login
     logAuthEvent("login", user.id, true, { orgId: selectedOrgId })
 
-    // Return response without password hash
-    const { passwordHash: _passwordHash, ...safeUser } = user
+    // Return response without password hash or TOTP secret
+    const { passwordHash: _passwordHash, totpSecret: _ts2, ...safeUser } = user
 
     const response = NextResponse.json<ApiResponse<AuthResponse>>({
       success: true,

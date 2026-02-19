@@ -1,6 +1,7 @@
 import type {
   ApiResponse,
   AuthResponse,
+  TwoFactorPendingResponse,
   Organization,
   OrganizationSettings,
   OrganizationMember,
@@ -348,11 +349,20 @@ export function initGlobalErrorHandler(): () => void {
 export const api = {
   // Auth
   auth: {
-    async login(email: string, password: string, organizationId?: string) {
+    async login(email: string, password: string, organizationId?: string): Promise<AuthResponse | TwoFactorPendingResponse> {
       const response = await fetchWithRetry(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, organizationId }),
+      })
+      return handleResponse<AuthResponse | TwoFactorPendingResponse>(response)
+    },
+
+    async verify2FA(userId: string, code: string, organizationId?: string) {
+      const response = await fetchWithRetry(`${API_BASE}/auth/2fa/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, code, organizationId }),
       })
       return handleResponse<AuthResponse>(response)
     },

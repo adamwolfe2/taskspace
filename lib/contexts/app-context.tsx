@@ -35,7 +35,8 @@ interface AppContextType {
   setDarkMode: (dark: boolean) => void
 
   // Auth actions
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<{ pendingTwoFactor?: true; userId?: string } | void>
+  verify2FA: (userId: string, code: string) => Promise<void>
   register: (email: string, password: string, name: string) => Promise<void>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
@@ -169,20 +170,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string): Promise<{ pendingTwoFactor?: true; userId?: string } | void> => {
     try {
       setIsLoading(true)
       setError(null)
 
       const data = await api.auth.login(email, password)
 
-      if (!data.organization || !data.member) {
+      // Handle 2FA pending response
+      if ("pendingTwoFactor" in data && data.pendingTwoFactor) {
+        return { pendingTwoFactor: true, userId: data.userId }
+      }
+
+      // At this point, data is guaranteed to be AuthResponse
+      const authData = data as import("../types").AuthResponse
+
+      if (!authData.organization || !authData.member) {
         // User needs to create an organization - store user info for onboarding wizard
         const partialUser: TeamMember = {
-          id: data.user?.id || "",
-          userId: data.user?.id || "",
-          name: data.user?.name || "",
-          email: data.user?.email || email,
+          id: authData.user?.id || "",
+          userId: authData.user?.id || "",
+          name: authData.user?.name || "",
+          email: authData.user?.email || email,
           role: "owner",
           department: "",
           joinDate: new Date().toISOString(),
@@ -195,8 +204,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Build team member from response
       const teamMember: TeamMember = {
-        id: data.member.id, // organization_members.id - use for metrics, manager assignments
-        userId: data.user.id, // users.id - use for rocks, tasks, EOD reports
+        id: authData.member.id,
+        userId: authData.user.id,
+        name: authData.user.name,
+        email: authData.user.email,
+        role: authData.member.role,
+        department: authData.member.department,
+        avatar: authData.user.avatar,
+        joinDate: authData.member.joinedAt,
+        weeklyMeasurable: authData.member.weeklyMeasurable,
+        status: authData.member.status,
+      }
+
+      setCurrentUser(teamMember)
+      setCurrentOrganization(authData.organization)
+      setEmailVerified(authData.user?.emailVerified ?? true)
+      setCurrentPage("dashboard")
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Login failed"))
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const verify2FA = useCallback(async (userId: string, code: string) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const data = await api.auth.verify2FA(userId, code)
+
+      if (!data.organization || !data.member) {
+        const partialUser: TeamMember = {
+          id: data.user?.id || "",
+          userId: data.user?.id || "",
+          name: data.user?.name || "",
+          email: data.user?.email || "",
+          role: "owner",
+          department: "",
+          joinDate: new Date().toISOString(),
+          status: "active",
+        }
+        setCurrentUser(partialUser)
+        setCurrentPage("setup-organization")
+        return
+      }
+
+      const teamMember: TeamMember = {
+        id: data.member.id,
+        userId: data.user.id,
         name: data.user.name,
         email: data.user.email,
         role: data.member.role,
@@ -210,9 +267,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setCurrentUser(teamMember)
       setCurrentOrganization(data.organization)
       setEmailVerified(data.user?.emailVerified ?? true)
+      setIsSuperAdmin(data.user?.isSuperAdmin ?? false)
       setCurrentPage("dashboard")
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Login failed"))
+      setError(getErrorMessage(err, "Verification failed"))
       throw err
     } finally {
       setIsLoading(false)
@@ -313,6 +371,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         darkMode,
         setDarkMode,
         login,
+        verify2FA,
         register,
         logout,
         refreshSession,
@@ -348,6 +407,7 @@ const defaultAppContext: AppContextType = {
   darkMode: false,
   setDarkMode: noop,
   login: noopAsync,
+  verify2FA: noopAsync,
   register: noopAsync,
   logout: noopAsync,
   refreshSession: noopAsync,

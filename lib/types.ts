@@ -88,10 +88,12 @@ export interface User {
   lockedAt?: string | null
   lockReason?: string | null
   isSuperAdmin?: boolean
+  totpEnabled?: boolean
+  totpSecret?: string | null
 }
 
-/** User type without password hash - safe for API responses */
-export type SafeUser = Omit<User, "passwordHash">
+/** User type without password hash or TOTP secret - safe for API responses */
+export type SafeUser = Omit<User, "passwordHash" | "totpSecret">
 
 // Notification preferences for each event type
 export interface NotificationChannels {
@@ -524,6 +526,11 @@ export interface AuthResponse {
   member?: OrganizationMember
   token: string
   expiresAt: string
+}
+
+export interface TwoFactorPendingResponse {
+  pendingTwoFactor: true
+  userId: string
 }
 
 // Dashboard Stats

@@ -26,7 +26,7 @@ export const GET = withUserAuth(async (request: NextRequest, auth) => {
         status: fullAuth.member.status,
       }
 
-      const { passwordHash: _, ...safeUser } = fullAuth.user
+      const { passwordHash: _, totpSecret: _s, ...safeUser } = fullAuth.user
 
       return NextResponse.json<ApiResponse<{
         user: typeof safeUser,
@@ -76,7 +76,7 @@ export const GET = withUserAuth(async (request: NextRequest, auth) => {
           status: activeMembership.status,
         }
 
-        const { passwordHash: _, ...safeUser } = auth.user
+        const { passwordHash: _, totpSecret: _ts, ...safeUser } = auth.user
 
         logger.info(
           { userId: auth.user.id, orgId: organization.id },
@@ -105,7 +105,7 @@ export const GET = withUserAuth(async (request: NextRequest, auth) => {
     }
 
     // User truly has no org memberships - return user-only data for onboarding
-    const { passwordHash: _, ...safeUser } = auth.user
+    const { passwordHash: _, totpSecret: _ts2, ...safeUser } = auth.user
 
     return NextResponse.json<ApiResponse<{
       user: typeof safeUser,

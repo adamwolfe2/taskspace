@@ -337,7 +337,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Return response without password hash
-    const { passwordHash: _passwordHash, ...safeUser } = result.user
+    const { passwordHash: _passwordHash, totpSecret: _ts, ...safeUser } = result.user
 
     const response = NextResponse.json<ApiResponse<AuthResponse>>({
       success: true,

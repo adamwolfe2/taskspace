@@ -13,6 +13,7 @@ import { User, Mail, Lock, Loader2, Check, Upload, Camera, Eye, EyeOff, AlertTri
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import { useRouter } from "next/navigation"
+import { TwoFactorSettings } from "./two-factor-settings"
 
 export function ProfileSettingsTab() {
   const { currentUser, refreshSession } = useApp()
@@ -40,6 +41,30 @@ export function ProfileSettingsTab() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSavingPassword, setIsSavingPassword] = useState(false)
   const [passwordErrors, setPasswordErrors] = useState<string[]>([])
+
+  // 2FA state
+  const [totpEnabled, setTotpEnabled] = useState(false)
+  const [totpStatusLoaded, setTotpStatusLoaded] = useState(false)
+
+  // Fetch 2FA status on mount via the session endpoint
+  React.useEffect(() => {
+    async function check2FAStatus() {
+      try {
+        const res = await fetch("/api/auth/session", {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        })
+        const data = await res.json()
+        if (data.success) {
+          setTotpEnabled(data.data?.user?.totpEnabled ?? false)
+        }
+      } catch {
+        // Silently fail - 2FA section will default to disabled
+      } finally {
+        setTotpStatusLoaded(true)
+      }
+    }
+    check2FAStatus()
+  }, [])
 
   // Delete account state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -595,6 +620,14 @@ export function ProfileSettingsTab() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Two-Factor Authentication */}
+      {totpStatusLoaded && (
+        <TwoFactorSettings
+          totpEnabled={totpEnabled}
+          onStatusChange={() => setTotpEnabled(!totpEnabled)}
+        />
+      )}
 
       {/* Account Info */}
       <Card>
