@@ -456,7 +456,7 @@ export function WorkspaceBrandingSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <Card>
         <CardHeader>
@@ -481,7 +481,7 @@ export function WorkspaceBrandingSettings() {
 
         <CardContent>
           {isEditing ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Website Scrape (Firecrawl) */}
               <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex items-center gap-2 mb-2">

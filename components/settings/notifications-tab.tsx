@@ -154,7 +154,7 @@ export function NotificationsTab({ teamMembers, setTeamMembers }: NotificationsT
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Personal Preferences - available to all users */}
       <Card>
         <CardHeader>

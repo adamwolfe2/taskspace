@@ -12,7 +12,7 @@ export function DataExportTab() {
   const [activeSubTab, setActiveSubTab] = useState("export")
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
         <TabsList className="grid w-full grid-cols-2 mb-6">
           <TabsTrigger value="export" className="gap-2">
@@ -37,7 +37,7 @@ export function DataExportTab() {
                 Download your organization's data in CSV or JSON format. Exports include all historical data for the current workspace. Use CSV for spreadsheet applications or JSON for data migration and programmatic access.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             {/* Rocks Export */}
             <div className="border rounded-lg p-4">

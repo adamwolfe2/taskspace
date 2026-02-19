@@ -295,7 +295,7 @@ export function ProfileSettingsTab() {
   const canDeleteAccount = deleteConfirmText === "delete my account" && deletePassword.length > 0
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Profile Information */}
       <Card>
         <CardHeader>
@@ -307,7 +307,7 @@ export function ProfileSettingsTab() {
             Manage your personal details and how you appear to your team
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {/* Avatar Section */}
           <div className="flex items-start gap-6">
             <div className="relative group">

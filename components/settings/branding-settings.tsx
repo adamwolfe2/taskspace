@@ -197,7 +197,7 @@ export function BrandingSettings() {
           Customize your workspace with your logo and brand colors
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Logo Upload */}
         <div className="space-y-4">
           <Label>Logo</Label>

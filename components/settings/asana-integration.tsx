@@ -258,7 +258,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
           Two-way sync tasks between Taskspace and Asana for your team members
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Connection Status */}
         <div className={`flex items-center gap-3 p-4 rounded-lg ${
           asanaStatus?.connected

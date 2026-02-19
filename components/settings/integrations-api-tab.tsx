@@ -322,7 +322,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Email Configuration Status */}
       <Card>
         <CardHeader>

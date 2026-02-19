@@ -216,7 +216,7 @@ export function TeamManagementTab() {
   const teamCount = teamMembers.length + pendingInvitations.length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle>Invite Team Members</CardTitle>

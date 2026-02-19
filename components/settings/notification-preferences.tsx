@@ -129,7 +129,7 @@ export function NotificationPreferencesCard({ memberId, initialPreferences }: No
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Header row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-2 border-b text-sm font-medium text-muted-foreground">
             <div>Event Type</div>

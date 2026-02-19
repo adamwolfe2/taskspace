@@ -139,7 +139,7 @@ export function OrganizationSettingsTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -150,7 +150,7 @@ export function OrganizationSettingsTab() {
             Basic information about your organization. These settings apply to all workspaces and team members.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {/* Logo Upload */}
           <div className="space-y-3">
             <Label>Organization Logo</Label>

@@ -121,7 +121,7 @@
   --chart-5: 139 154 127;           /* Sage green */
 
   /* Clean radius */
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 
   /* Sidebar */
   --sidebar: 255 255 255;
@@ -222,28 +222,25 @@
    PREMIUM SHADOW SYSTEM
    ============================================ */
 @layer utilities {
-  /* Elevated card shadow - subtle and premium */
+  /* Elevated card shadow - crisp and professional */
   .shadow-card {
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.03),
-      0 1px 2px rgb(0 0 0 / 0.04),
-      0 2px 4px rgb(0 0 0 / 0.04);
+      0 0 0 1px rgb(0 0 0 / 0.04),
+      0 1px 3px rgb(0 0 0 / 0.06);
   }
 
   .shadow-card-hover {
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.03),
-      0 4px 8px rgb(0 0 0 / 0.06),
-      0 8px 16px rgb(0 0 0 / 0.04);
+      0 0 0 1px rgb(0 0 0 / 0.04),
+      0 2px 6px rgb(0 0 0 / 0.08);
   }
 
-  /* Premium elevated shadow */
+  /* Elevated shadow - crisp */
   .shadow-elevated {
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.02),
-      0 1px 2px rgb(0 0 0 / 0.03),
-      0 4px 8px rgb(0 0 0 / 0.04),
-      0 12px 24px rgb(0 0 0 / 0.06);
+      0 0 0 1px rgb(0 0 0 / 0.04),
+      0 2px 4px rgb(0 0 0 / 0.04),
+      0 8px 16px rgb(0 0 0 / 0.06);
   }
 
   /* Soft glow for buttons */
@@ -322,14 +319,14 @@
   }
 
   .transition-premium {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Keyframe animations */
   @keyframes fade-in-up {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(4px);
     }
     to {
       opacity: 1;
@@ -340,7 +337,7 @@
   @keyframes fade-in-scale {
     from {
       opacity: 0;
-      transform: scale(0.96);
+      transform: scale(0.98);
     }
     to {
       opacity: 1;
@@ -351,7 +348,7 @@
   @keyframes slide-in-right {
     from {
       opacity: 0;
-      transform: translateX(20px);
+      transform: translateX(8px);
     }
     to {
       opacity: 1;
@@ -393,7 +390,7 @@
       transform: translateY(0);
     }
     50% {
-      transform: translateY(-3px);
+      transform: translateY(0);
     }
   }
 
@@ -428,19 +425,19 @@
 
   /* Animation classes */
   .animate-fade-in-up {
-    animation: fade-in-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: fade-in-up 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   .animate-fade-in-scale {
-    animation: fade-in-scale 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: fade-in-scale 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   .animate-slide-in-right {
-    animation: slide-in-right 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: slide-in-right 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   .animate-slide-up {
-    animation: slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: slide-up 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   .animate-pulse-soft {
@@ -481,20 +478,20 @@
 @layer utilities {
   /* Hover lift effect */
   .hover-lift {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .hover-lift:hover {
-    transform: translateY(-2px);
+    transform: none;
   }
 
   /* Hover scale effect */
   .hover-scale {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .hover-scale:hover {
-    transform: scale(1.02);
+    transform: none;
   }
 
   /* Active press effect */
@@ -502,21 +499,18 @@
     transform: scale(0.98);
   }
 
-  /* Card hover - lift and glow */
+  /* Card hover - shadow only */
   .card-interactive {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.03),
-      0 1px 2px rgb(0 0 0 / 0.04),
-      0 2px 4px rgb(0 0 0 / 0.04);
+      0 0 0 1px rgb(0 0 0 / 0.04),
+      0 1px 3px rgb(0 0 0 / 0.06);
   }
 
   .card-interactive:hover {
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.03),
-      0 4px 8px rgb(0 0 0 / 0.06),
-      0 8px 16px rgb(0 0 0 / 0.04);
-    transform: translateY(-2px);
+      0 0 0 1px rgb(0 0 0 / 0.04),
+      0 2px 6px rgb(0 0 0 / 0.08);
   }
 }
 
@@ -525,25 +519,25 @@
    ============================================ */
 @layer utilities {
   .trend-up {
-    @apply inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full;
+    @apply inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-md;
     background: #f5f5f5;
     color: #000000;
   }
 
   .trend-down {
-    @apply inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full;
+    @apply inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-md;
     background: #f5f5f5;
     color: #000000;
   }
 
   .trend-neutral {
-    @apply inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full;
+    @apply inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-md;
     background: #f5f5f5;
     color: #6b7280;
   }
 
   .status-pill {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-3 py-1 rounded-md text-xs font-medium;
   }
 
   .status-success {
@@ -573,28 +567,28 @@
 
   /* Priority badges - minimal */
   .badge-critical {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold;
     background: #f5f5f5;
     color: #000000;
     border: 1px solid #e5e5e5;
   }
 
   .badge-high {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold;
     background: #f5f5f5;
     color: #000000;
     border: 1px solid #e5e5e5;
   }
 
   .badge-medium {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold;
     background: #f5f5f5;
     color: #6b7280;
     border: 1px solid #e5e5e5;
   }
 
   .badge-low {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold;
     background: #f5f5f5;
     color: #6b7280;
     border: 1px solid #e5e5e5;
@@ -607,31 +601,28 @@
 @layer components {
   /* Stat card with subtle accent */
   .stat-card {
-    @apply bg-white rounded-2xl p-5 relative overflow-hidden;
+    @apply bg-white rounded-xl p-5 relative overflow-hidden;
     border: 1px solid rgb(241 245 249);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.02),
-      0 1px 2px rgb(0 0 0 / 0.03),
-      0 2px 4px rgb(0 0 0 / 0.03);
+      0 0 0 1px rgb(0 0 0 / 0.04),
+      0 1px 3px rgb(0 0 0 / 0.06);
   }
 
   .stat-card:hover {
-    transform: translateY(-2px);
     border-color: rgb(226 232 240);
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.02),
-      0 4px 8px rgb(0 0 0 / 0.05),
-      0 8px 16px rgb(0 0 0 / 0.04);
+      0 0 0 1px rgb(0 0 0 / 0.04),
+      0 2px 6px rgb(0 0 0 / 0.08);
   }
 
   /* Section card wrapper */
   .section-card {
-    @apply bg-white rounded-2xl overflow-hidden;
+    @apply bg-white rounded-xl overflow-hidden;
     border: 1px solid rgb(241 245 249);
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.02),
-      0 1px 2px rgb(0 0 0 / 0.03);
+      0 0 0 1px rgb(0 0 0 / 0.04),
+      0 1px 3px rgb(0 0 0 / 0.06);
   }
 
   .section-header {
@@ -682,8 +673,8 @@
    ============================================ */
 @layer utilities {
   .nav-item {
-    @apply relative px-3 py-2 rounded-xl text-gray-600 font-medium;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    @apply relative px-3 py-2 rounded-lg text-gray-600 font-medium;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .nav-item:hover {
@@ -779,32 +770,28 @@
    ============================================ */
 @layer components {
   .card-premium {
-    @apply bg-white rounded-2xl;
+    @apply bg-white rounded-xl;
     border: 1px solid rgb(241 245 249);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.03),
-      0 1px 2px rgb(0 0 0 / 0.04),
-      0 2px 4px rgb(0 0 0 / 0.04);
+      0 0 0 1px rgb(0 0 0 / 0.04),
+      0 1px 3px rgb(0 0 0 / 0.06);
   }
 
   .card-premium:hover {
-    transform: translateY(-1px);
     border-color: rgb(226 232 240);
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.03),
-      0 4px 8px rgb(0 0 0 / 0.06),
-      0 8px 16px rgb(0 0 0 / 0.04);
+      0 0 0 1px rgb(0 0 0 / 0.04),
+      0 2px 6px rgb(0 0 0 / 0.08);
   }
 
   /* Card with accent border */
   .card-accent {
-    @apply bg-white rounded-2xl overflow-hidden;
+    @apply bg-white rounded-xl overflow-hidden;
     border: 1px solid rgb(241 245 249);
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.03),
-      0 1px 2px rgb(0 0 0 / 0.04),
-      0 2px 4px rgb(0 0 0 / 0.04);
+      0 0 0 1px rgb(0 0 0 / 0.04),
+      0 1px 3px rgb(0 0 0 / 0.06);
   }
 
   .card-accent::before {
@@ -816,7 +803,7 @@
 
   /* Glass effect card */
   .card-glass {
-    @apply backdrop-blur-xl rounded-2xl;
+    @apply backdrop-blur-xl rounded-xl;
     background: rgb(255 255 255 / 0.8);
     border: 1px solid rgb(255 255 255 / 0.5);
     box-shadow: 0 4px 24px rgb(0 0 0 / 0.06);

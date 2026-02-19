@@ -61,7 +61,7 @@ export function SettingsPage() {
 
   return (
     <ErrorBoundary>
-    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
+    <div className="space-y-3 sm:space-y-4 w-full max-w-full overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Settings</h1>
@@ -70,7 +70,7 @@ export function SettingsPage() {
         <WorkspaceSwitcher className="w-full sm:w-auto" />
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 sm:space-y-4">
         {/* Tabs container - wraps into rows */}
         <div className="w-full">
           <TabsList className="flex flex-wrap gap-2 h-auto bg-gray-100/80 p-2">
@@ -153,58 +153,58 @@ export function SettingsPage() {
         </div>
 
         {/* Profile Tab - User profile settings */}
-        <TabsContent value="profile" className="space-y-6">
+        <TabsContent value="profile" className="space-y-4">
           <ProfileSettingsTab />
         </TabsContent>
 
         {/* General Tab - Organization details + branding */}
-        <TabsContent value="general" className="space-y-6">
+        <TabsContent value="general" className="space-y-4">
           <OrganizationSettingsTab />
         </TabsContent>
 
         {/* Workspace Tab - Workspace members & settings */}
         {isAdmin && (
-          <TabsContent value="workspace" className="space-y-6">
+          <TabsContent value="workspace" className="space-y-4">
             <WorkspaceSettingsTab teamMembers={teamMembers} />
           </TabsContent>
         )}
 
         {/* Features Tab - Workspace feature toggles */}
         {isAdmin && (
-          <TabsContent value="features" className="space-y-6">
+          <TabsContent value="features" className="space-y-4">
             <WorkspaceFeaturesTab />
           </TabsContent>
         )}
 
         {/* Branding Tab - Workspace colors and logo */}
         {isAdmin && (
-          <TabsContent value="branding" className="space-y-6">
+          <TabsContent value="branding" className="space-y-4">
             <WorkspaceBrandingSettings />
           </TabsContent>
         )}
 
         {/* Team Tab - Invitations + team limits */}
         {isAdmin && (
-          <TabsContent value="team" className="space-y-6">
+          <TabsContent value="team" className="space-y-4">
             <TeamManagementTab />
           </TabsContent>
         )}
 
         {/* Notifications Tab - Personal + org-wide notifications */}
-        <TabsContent value="notifications" className="space-y-6">
+        <TabsContent value="notifications" className="space-y-4">
           <NotificationsTab teamMembers={teamMembers} setTeamMembers={setTeamMembers} />
         </TabsContent>
 
         {/* Integrations Tab - Email, API keys, MCP, Asana, Google Calendar */}
         {isAdmin && (
-          <TabsContent value="integrations" className="space-y-6">
+          <TabsContent value="integrations" className="space-y-4">
             <IntegrationsApiTab teamMembers={teamMembers} />
           </TabsContent>
         )}
 
         {/* AI Command Center Tab */}
         {isAdmin && currentOrganization && (
-          <TabsContent value="ai" className="space-y-6">
+          <TabsContent value="ai" className="space-y-4">
             <AIBudgetControls organizationId={currentOrganization.id} />
             <AIInbox organizationId={currentOrganization.id} teamMembers={teamMembers} />
           </TabsContent>
@@ -212,14 +212,14 @@ export function SettingsPage() {
 
         {/* Data & Export Tab */}
         {isAdmin && (
-          <TabsContent value="data" className="space-y-6">
+          <TabsContent value="data" className="space-y-4">
             <DataExportTab />
           </TabsContent>
         )}
 
         {/* Billing Tab */}
         {isOwner && (
-          <TabsContent value="billing" className="space-y-6">
+          <TabsContent value="billing" className="space-y-4">
             <BillingSettings />
           </TabsContent>
         )}
