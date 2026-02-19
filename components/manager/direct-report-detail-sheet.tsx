@@ -29,10 +29,7 @@ import {
   Mail,
   Calendar,
   ListTodo,
-  BarChart3,
-  Activity,
   ExternalLink,
-  ChevronRight,
 } from "lucide-react"
 import { format, parseISO, formatDistanceToNow } from "date-fns"
 

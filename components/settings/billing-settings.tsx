@@ -20,7 +20,6 @@ import {
   ArrowRight,
   AlertCircle,
   Crown,
-  Building2,
   Sparkles,
   ExternalLink,
   AlertTriangle,
