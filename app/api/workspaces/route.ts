@@ -34,7 +34,7 @@ import { logger, logError } from "@/lib/logger"
  */
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
-    let workspaces = await getUserWorkspaces(auth.user.id)
+    let workspaces = await getUserWorkspaces(auth.user.id, auth.organization.id)
 
     // Auto-heal: if user is an org member but has no workspace memberships, add them to default workspace
     if (workspaces.length === 0) {
@@ -56,7 +56,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
           await addToWorkspace(targetWorkspace.id, auth.user.id, memberRole)
 
           // Re-fetch workspaces now that user has been added
-          workspaces = await getUserWorkspaces(auth.user.id)
+          workspaces = await getUserWorkspaces(auth.user.id, auth.organization.id)
 
           logger.info({
             userId: auth.user.id,
@@ -178,7 +178,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     const { name, type, description, settings, isDefault, logoUrl, primaryColor, secondaryColor, accentColor, faviconUrl } = await validateBody(request, createWorkspaceSchema)
 
     // Check feature gate: Can create workspace?
-    const allWorkspaces = await getUserWorkspaces(auth.user.id)
+    const allWorkspaces = await getUserWorkspaces(auth.user.id, auth.organization.id)
     const activeMembers = await db.members.findWithUsersByOrganizationId(auth.organization.id)
     const featureContext = await buildFeatureGateContext(
       auth.organization.id,

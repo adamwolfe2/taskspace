@@ -33,7 +33,7 @@ export const GET = withAuth(async (request, auth) => {
 
     // Get usage data
     const members = await db.members.findByOrganizationId(org.id)
-    const workspaces = await getUserWorkspaces(auth.user.id)
+    const workspaces = await getUserWorkspaces(auth.user.id, auth.organization.id)
     const activeUsers = members.filter(m => m.status === "active").length
 
     // Get AI usage from subscription or database

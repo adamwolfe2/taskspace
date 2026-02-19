@@ -42,7 +42,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     // Check feature gate: Can use AI?
     const members = await db.members.findByOrganizationId(auth.organization.id)
-    const workspaces = await getUserWorkspaces(auth.user.id)
+    const workspaces = await getUserWorkspaces(auth.user.id, auth.organization.id)
     const aiUsage = auth.organization.subscription?.aiCreditsUsed || 0
 
     const featureContext = await buildFeatureGateContext(

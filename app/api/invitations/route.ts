@@ -115,7 +115,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         const totalUsers = memberCount + pendingInvitesCount
 
         // Get workspaces for feature gate check
-        const workspaces = await getUserWorkspaces(auth.user.id)
+        const workspaces = await getUserWorkspaces(auth.user.id, auth.organization.id)
 
         // Build organization object for feature gate
         const organization: Organization = {
