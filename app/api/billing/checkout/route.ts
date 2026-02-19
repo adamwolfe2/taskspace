@@ -53,8 +53,8 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       billingEmail,
       plan,
       billingCycle,
-      successUrl: `${baseUrl}/settings?billing=success`,
-      cancelUrl: `${baseUrl}/settings?billing=canceled`,
+      successUrl: `${baseUrl}/settings/billing?billing=success`,
+      cancelUrl: `${baseUrl}/settings/billing?billing=canceled`,
       customerId,
     })
 

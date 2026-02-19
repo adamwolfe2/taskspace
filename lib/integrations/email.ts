@@ -646,7 +646,7 @@ export async function sendMissingEODReminder(
 interface BillingAlertParams {
   to: string[]
   subject: string
-  alertType: "payment_failed" | "subscription_canceled" | "subscription_updated"
+  alertType: "payment_failed" | "payment_failed_urgent" | "payment_failed_final" | "subscription_canceled" | "subscription_updated" | "trial_ending"
   organizationName: string
   message: string
   details: string
@@ -663,10 +663,13 @@ export async function sendBillingAlertEmail(params: BillingAlertParams): Promise
     return { success: false, error: "Email not configured" }
   }
 
-  const alertColors = {
+  const alertColors: Record<string, { bg: string; border: string; emoji: string }> = {
     payment_failed: { bg: "#fef2f2", border: "#ef4444", emoji: "💳" },
+    payment_failed_urgent: { bg: "#fef2f2", border: "#dc2626", emoji: "🚨" },
+    payment_failed_final: { bg: "#fef2f2", border: "#991b1b", emoji: "⛔" },
     subscription_canceled: { bg: "#fef3c7", border: "#f59e0b", emoji: "⚠️" },
     subscription_updated: { bg: "#f0f9ff", border: "#3b82f6", emoji: "ℹ️" },
+    trial_ending: { bg: "#eff6ff", border: "#3b82f6", emoji: "⏰" },
   }
 
   const color = alertColors[params.alertType]

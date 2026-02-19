@@ -80,6 +80,7 @@ export type AuditAction =
   | "subscription.payment_failed"
   | "subscription.payment_succeeded"
   | "subscription.seats_updated"
+  | "subscription.claimed"
   // Export
   | "export.data"
   | "export.calendar"

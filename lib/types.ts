@@ -71,6 +71,10 @@ export interface SubscriptionInfo {
   billingCycle?: "monthly" | "yearly" | null
   cancelAtPeriodEnd?: boolean
   aiCreditsUsed?: number
+  trialEnd?: string | null
+  paymentFailureCount?: number
+  firstFailedAt?: string | null
+  lastFailedAt?: string | null
 }
 
 // User Types

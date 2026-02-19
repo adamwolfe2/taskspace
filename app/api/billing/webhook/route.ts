@@ -95,6 +95,11 @@ export async function POST(request: NextRequest) {
           break
         }
 
+        case STRIPE_EVENTS.SUBSCRIPTION_TRIAL_WILL_END: {
+          await handleTrialWillEnd(event.data.object)
+          break
+        }
+
         default:
           logger.info({ eventType: event.type }, "Unhandled event type")
       }
@@ -150,43 +155,113 @@ interface StripeWebhookObject {
   period_end?: number
   needs_escalation?: boolean
   escalation_note?: string
+  customer_details?: { email?: string }
+  customer_email?: string
   [key: string]: unknown
 }
 
 /**
  * Handle checkout.session.completed
- * This is the first event after a successful subscription checkout
+ * This is the first event after a successful subscription checkout.
+ *
+ * Two flows:
+ * 1. In-app checkout (has organizationId metadata) → link customer to org directly
+ * 2. Payment Link checkout (no metadata) → store in pending_subscriptions for claim
  */
 async function handleCheckoutCompleted(session: StripeWebhookObject) {
   const organizationId = session.metadata?.organizationId
-  const plan = session.metadata?.plan
-  const billingCycle = session.metadata?.billingCycle
+  const plan = session.metadata?.plan || "team"
+  const billingCycle = session.metadata?.billingCycle || "monthly"
 
-  if (!organizationId) {
-    logger.error("Checkout completed: Missing organizationId in metadata")
+  if (organizationId) {
+    // Flow 1: In-app checkout — org is known
+    logger.info({ organizationId, plan, billingCycle }, "Checkout completed for org")
+
+    if (session.customer) {
+      await db.organizations.update(organizationId, {
+        stripeCustomerId: session.customer,
+      })
+    }
+
+    await auditLogger.log({
+      organizationId,
+      userId: null,
+      action: "subscription.checkout_completed",
+      severity: "info",
+      resourceType: "subscription",
+      resourceId: session.subscription || session.id,
+      metadata: { plan, billingCycle, customerId: session.customer },
+    })
     return
   }
 
-  logger.info({ organizationId, plan, billingCycle }, "Checkout completed for org")
+  // Flow 2: Payment Link checkout — no org metadata
+  // Try to match by customer email to an existing org
+  const customerEmail = session.customer_details?.email || session.customer_email || null
+  let matchedOrgId: string | null = null
 
-  // The subscription details will be handled by subscription.created event
-  // Here we just ensure the customer ID is saved
-  if (session.customer) {
-    await db.organizations.update(organizationId, {
-      stripeCustomerId: session.customer,
-    })
+  if (customerEmail) {
+    try {
+      const { rows } = await sql<{ organization_id: string }>`
+        SELECT om.organization_id
+        FROM users u
+        JOIN organization_members om ON om.user_id = u.id
+        WHERE LOWER(u.email) = LOWER(${customerEmail})
+          AND (om.role = 'admin' OR om.role = 'owner')
+        LIMIT 1
+      `
+      if (rows.length > 0) {
+        matchedOrgId = rows[0].organization_id
+      }
+    } catch (error) {
+      logError(logger, "Failed to look up org by customer email", error)
+    }
   }
 
-  // Log the event
-  await auditLogger.log({
-    organizationId,
-    userId: null,
-    action: "subscription.checkout_completed",
-    severity: "info",
-    resourceType: "subscription",
-    resourceId: session.subscription || session.id,
-    metadata: { plan, billingCycle, customerId: session.customer },
-  })
+  if (matchedOrgId && session.customer) {
+    // Auto-link: found an org matching the checkout email
+    logger.info({ matchedOrgId, customerEmail, plan }, "Payment Link checkout auto-linked to org by email")
+
+    await db.organizations.update(matchedOrgId, {
+      stripeCustomerId: session.customer,
+    })
+
+    await auditLogger.log({
+      organizationId: matchedOrgId,
+      userId: null,
+      action: "subscription.checkout_completed",
+      severity: "info",
+      resourceType: "subscription",
+      resourceId: session.subscription || session.id,
+      metadata: { plan, billingCycle, customerId: session.customer, source: "payment_link_auto" },
+    })
+    return
+  }
+
+  // No org match — store as pending for later claim
+  logger.info({ sessionId: session.id, customerEmail }, "Payment Link checkout stored as pending (no org match)")
+
+  try {
+    await sql`
+      INSERT INTO pending_subscriptions (
+        stripe_session_id, stripe_customer_id, stripe_subscription_id,
+        customer_email, plan, billing_cycle, status, metadata
+      ) VALUES (
+        ${session.id},
+        ${session.customer || ''},
+        ${session.subscription || null},
+        ${customerEmail},
+        ${plan},
+        ${billingCycle},
+        'pending',
+        ${JSON.stringify({ source: "payment_link", eventId: session.id })}
+      )
+      ON CONFLICT (stripe_session_id) DO NOTHING
+    `
+  } catch (error) {
+    // Table might not exist yet — log but don't fail the webhook
+    logError(logger, "Failed to insert pending subscription (table may not exist yet)", error)
+  }
 }
 
 /**
@@ -206,11 +281,24 @@ async function handleSubscriptionUpdated(subscription: StripeWebhookObject) {
       const { rows: orgResults } = await client.sql<{ id: string }>`
         SELECT id FROM organizations WHERE stripe_customer_id = ${subscription.customer} LIMIT 1
       `
-      if (orgResults.length === 0) {
-        logger.error({ customerId: subscription.customer }, "Subscription updated: Cannot find organization for customer")
+      if (orgResults.length > 0) {
+        orgId = orgResults[0].id
+      } else {
+        // Payment Link flow: subscription may not be linked to an org yet.
+        // Update the pending_subscriptions record with the subscription ID for later claim.
+        logger.info({ customerId: subscription.customer }, "Subscription updated: No org found, may be pending Payment Link claim")
+        try {
+          await sql`
+            UPDATE pending_subscriptions
+            SET stripe_subscription_id = ${subscription.id}
+            WHERE stripe_customer_id = ${subscription.customer}
+              AND status = 'pending'
+          `
+        } catch {
+          // Table may not exist — non-critical
+        }
         return
       }
-      orgId = orgResults[0].id
     }
 
     if (!orgId) return
@@ -401,12 +489,20 @@ async function handleInvoicePaid(invoice: StripeWebhookObject) {
 }
 
 /**
- * Handle failed invoice payment
- * Uses transaction to ensure atomicity of organization read + update
+ * Handle failed invoice payment with dunning logic.
+ *
+ * Tracks attempt count and sends escalating emails:
+ * - 1st attempt: Gentle reminder
+ * - 2nd attempt: Urgent warning
+ * - 3rd+ attempt: Final notice + access restriction warning
+ *
+ * Grace period: Org stays on paid plan for 7 days past_due.
+ * After 7 days, a separate cron/webhook event (subscription.deleted) will downgrade.
  */
 async function handleInvoicePaymentFailed(invoice: StripeWebhookObject) {
   let orgId: string | null = null
   let subscriptionData: Record<string, unknown> | null = null
+  let failureCount = 1
 
   // Use transaction for atomic read + update
   await withTransaction(async (client) => {
@@ -420,11 +516,18 @@ async function handleInvoicePaymentFailed(invoice: StripeWebhookObject) {
     orgId = org.id
     subscriptionData = org.subscription
 
-    // Update subscription status to past_due if subscription exists
+    // Track failure count from subscription metadata
+    const existingSub = org.subscription as { paymentFailureCount?: number } | null
+    failureCount = (existingSub?.paymentFailureCount || 0) + 1
+
+    // Update subscription status to past_due with failure tracking
     if (org.subscription) {
       const updatedSubscription = {
         ...org.subscription,
         status: "past_due",
+        paymentFailureCount: failureCount,
+        firstFailedAt: (org.subscription as { firstFailedAt?: string }).firstFailedAt || new Date().toISOString(),
+        lastFailedAt: new Date().toISOString(),
       }
 
       await client.sql`
@@ -439,9 +542,8 @@ async function handleInvoicePaymentFailed(invoice: StripeWebhookObject) {
 
   if (!orgId) return
 
-  logger.info({ orgId }, "Invoice payment failed for org")
+  logger.info({ orgId, failureCount }, "Invoice payment failed for org")
 
-  // Log the event (outside transaction is fine for audit log)
   await auditLogger.log({
     organizationId: orgId,
     userId: null,
@@ -449,13 +551,12 @@ async function handleInvoicePaymentFailed(invoice: StripeWebhookObject) {
     severity: "error",
     resourceType: "subscription",
     resourceId: invoice.subscription,
-    metadata: { invoiceId: invoice.id, amount: invoice.amount_due },
+    metadata: { invoiceId: invoice.id, amount: invoice.amount_due, failureCount },
   })
 
-  // Send email notification to billing admin
+  // Send escalating email based on failure count
   if (isEmailConfigured() && orgId) {
     try {
-      // Find admins/owners for the organization
       const { rows: adminUsers } = await sql`
         SELECT u.email, u.name
         FROM users u
@@ -466,35 +567,151 @@ async function handleInvoicePaymentFailed(invoice: StripeWebhookObject) {
       `
 
       if (adminUsers.length > 0) {
-        // Get organization name
         const { rows: orgResults } = await sql<{ name: string }>`
           SELECT name FROM organizations WHERE id = ${orgId} LIMIT 1
         `
         const orgName = orgResults.length > 0 ? orgResults[0].name : "Your Organization"
-
         const adminEmails = adminUsers.map(u => u.email as string)
         const amount = invoice.amount_due ? (invoice.amount_due / 100).toFixed(2) : "0.00"
         const currency = (invoice.currency || "usd").toUpperCase()
+        const planName = ((subscriptionData || {}) as { plan?: string })?.plan || "subscription"
 
-        await sendBillingAlertEmail({
-          to: adminEmails,
-          subject: `Payment Failed for ${orgName} Subscription`,
-          alertType: "payment_failed",
-          organizationName: orgName,
-          message: `A payment attempt has failed for your ${((subscriptionData || {}) as { plan?: string })?.plan || "subscription"} plan.`,
-          details: `Amount due: ${currency} $${amount}. Please update your payment method to avoid service interruption.`,
-          invoiceUrl: invoice.hosted_invoice_url as string | undefined,
-        })
+        if (failureCount === 1) {
+          // Gentle first reminder
+          await sendBillingAlertEmail({
+            to: adminEmails,
+            subject: `Action needed: Payment failed for ${orgName}`,
+            alertType: "payment_failed",
+            organizationName: orgName,
+            message: `We couldn't process the payment for your ${planName} plan.`,
+            details: `Amount due: ${currency} $${amount}. Please update your payment method. We'll retry automatically in a few days.`,
+            invoiceUrl: invoice.hosted_invoice_url as string | undefined,
+          })
+        } else if (failureCount === 2) {
+          // Urgent second attempt
+          await sendBillingAlertEmail({
+            to: adminEmails,
+            subject: `Urgent: Second payment attempt failed for ${orgName}`,
+            alertType: "payment_failed_urgent",
+            organizationName: orgName,
+            message: `We've now tried twice to process your ${planName} plan payment.`,
+            details: `Amount due: ${currency} $${amount}. Please update your payment method immediately to avoid losing access to paid features.`,
+            invoiceUrl: invoice.hosted_invoice_url as string | undefined,
+          })
+        } else {
+          // Final notice — access will be restricted
+          await sendBillingAlertEmail({
+            to: adminEmails,
+            subject: `Final notice: Your ${orgName} subscription will be downgraded`,
+            alertType: "payment_failed_final",
+            organizationName: orgName,
+            message: `After ${failureCount} failed payment attempts, your ${planName} plan will be downgraded to Free.`,
+            details: `Amount due: ${currency} $${amount}. Update your payment method now to keep your current plan and avoid losing access to paid features.`,
+            invoiceUrl: invoice.hosted_invoice_url as string | undefined,
+          })
+        }
 
-        logger.info({ orgId, adminCount: adminEmails.length }, "Billing alert email sent to admins")
+        logger.info({ orgId, adminCount: adminEmails.length, failureCount }, "Dunning email sent to admins")
       } else {
         logger.warn({ orgId }, "No admin emails found for payment failed notification")
       }
     } catch (emailError) {
-      // Don't fail the webhook if email fails
       logError(logger, "Failed to send payment failed email", emailError)
     }
-  } else {
-    logger.debug("Email not configured, skipping payment failed notification")
+  }
+}
+
+/**
+ * Handle trial ending in 3 days (customer.subscription.trial_will_end)
+ * Sends a reminder email to org admins so they can add a payment method.
+ */
+async function handleTrialWillEnd(subscription: StripeWebhookObject) {
+  const orgId = subscription.metadata?.organizationId
+
+  // Find org by metadata or customer ID
+  let resolvedOrgId: string | null = orgId || null
+  if (!resolvedOrgId && subscription.customer) {
+    try {
+      const { rows } = await sql<{ id: string }>`
+        SELECT id FROM organizations WHERE stripe_customer_id = ${subscription.customer} LIMIT 1
+      `
+      if (rows.length > 0) resolvedOrgId = rows[0].id
+    } catch {
+      // Non-critical
+    }
+  }
+
+  if (!resolvedOrgId) {
+    logger.warn({ customerId: subscription.customer }, "Trial ending: Cannot find organization")
+    return
+  }
+
+  // Update subscription with trial_end timestamp
+  try {
+    const trialEnd = subscription.current_period_end
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+
+    await sql`
+      UPDATE organizations
+      SET
+        subscription = jsonb_set(
+          COALESCE(subscription, '{}')::jsonb,
+          '{trialEnd}',
+          ${JSON.stringify(trialEnd)}::jsonb
+        ),
+        updated_at = NOW()
+      WHERE id = ${resolvedOrgId}
+    `
+  } catch (error) {
+    logError(logger, "Failed to update trial end date", error)
+  }
+
+  logger.info({ orgId: resolvedOrgId }, "Trial ending in 3 days for org")
+
+  await auditLogger.log({
+    organizationId: resolvedOrgId,
+    userId: null,
+    action: "subscription.updated",
+    severity: "warning",
+    resourceType: "subscription",
+    resourceId: subscription.id,
+    metadata: { event: "trial_will_end" },
+  })
+
+  // Send trial ending reminder email
+  if (isEmailConfigured()) {
+    try {
+      const { rows: adminUsers } = await sql`
+        SELECT u.email, u.name
+        FROM users u
+        JOIN organization_members om ON om.user_id = u.id
+        WHERE om.organization_id = ${resolvedOrgId}
+          AND (om.role = 'admin' OR om.role = 'owner')
+          AND u.email IS NOT NULL
+      `
+
+      if (adminUsers.length > 0) {
+        const { rows: orgResults } = await sql<{ name: string; subscription: Record<string, unknown> }>`
+          SELECT name, subscription FROM organizations WHERE id = ${resolvedOrgId} LIMIT 1
+        `
+        const orgName = orgResults[0]?.name || "Your Organization"
+        const planName = (orgResults[0]?.subscription as { plan?: string })?.plan || "Team"
+        const adminEmails = adminUsers.map(u => u.email as string)
+
+        await sendBillingAlertEmail({
+          to: adminEmails,
+          subject: `Your ${orgName} free trial ends in 3 days`,
+          alertType: "trial_ending",
+          organizationName: orgName,
+          message: `Your ${planName} plan free trial is ending soon.`,
+          details: `Your card on file will be charged automatically when the trial ends. If you'd like to continue using Taskspace, no action is needed. To cancel, visit your billing settings before the trial expires.`,
+        })
+
+        logger.info({ orgId: resolvedOrgId, adminCount: adminEmails.length }, "Trial ending reminder email sent")
+      }
+    } catch (emailError) {
+      logError(logger, "Failed to send trial ending email", emailError)
+    }
   }
 }
