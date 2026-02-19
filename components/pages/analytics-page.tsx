@@ -1,9 +1,11 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
+import useSWR from "swr"
 import { useWorkspaces, useWorkspaceStore } from "@/lib/hooks/use-workspace"
 import { useApp } from "@/lib/contexts/app-context"
 import { getDemoAnalyticsData } from "@/lib/demo-data"
+import { CONFIG } from "@/lib/config"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -55,15 +57,51 @@ interface AnalyticsData {
   }>
 }
 
+async function analyticsFetcher([, workspaceId, dateRange]: [string, string, string]): Promise<AnalyticsData> {
+  const params = new URLSearchParams({ dateRange, workspaceId })
+  const response = await fetch(`/api/analytics?${params.toString()}`)
+  const result = await response.json()
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || "Failed to fetch analytics")
+  }
+  return result.data
+}
+
 export function AnalyticsPage() {
   const { workspaces } = useWorkspaces()
   const { currentWorkspaceId } = useWorkspaceStore()
   const { isDemoMode } = useApp()
   const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "1y">("30d")
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null)
-  const [data, setData] = useState<AnalyticsData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+
+  // Sync selected workspace with current workspace from the store
+  useEffect(() => {
+    if (currentWorkspaceId && currentWorkspaceId !== selectedWorkspaceId) {
+      setSelectedWorkspaceId(currentWorkspaceId)
+    }
+  }, [currentWorkspaceId, selectedWorkspaceId])
+
+  // SWR for real data fetching
+  const shouldFetch = !isDemoMode && !!selectedWorkspaceId
+  const { data: swrData, error: swrError, isLoading: swrLoading, mutate } = useSWR<AnalyticsData>(
+    shouldFetch ? ["analytics", selectedWorkspaceId, dateRange] : null,
+    analyticsFetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      refreshInterval: CONFIG.polling.standard,
+      dedupingInterval: 5000,
+    }
+  )
+
+  // Demo mode data
+  const demoData = isDemoMode
+    ? getDemoAnalyticsData(dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : dateRange === "90d" ? 90 : 365)
+    : null
+
+  const data = isDemoMode ? demoData : swrData
+  const loading = isDemoMode ? false : swrLoading
+  const error = isDemoMode ? null : (swrError ? (swrError instanceof Error ? swrError.message : "Failed to load analytics") : null)
 
   const exportToCSV = (analyticsData: AnalyticsData) => {
     const rows: string[][] = [
@@ -98,60 +136,6 @@ export function AnalyticsPage() {
     { value: "1y", label: "Last year" },
   ]
 
-  // Sync selected workspace with current workspace from the store
-  // This ensures analytics refresh when the user switches workspaces via the sidebar
-  useEffect(() => {
-    if (currentWorkspaceId && currentWorkspaceId !== selectedWorkspaceId) {
-      setSelectedWorkspaceId(currentWorkspaceId)
-    }
-  }, [currentWorkspaceId, selectedWorkspaceId])
-
-  const fetchAnalytics = useCallback(async () => {
-    if (isDemoMode) {
-      const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : dateRange === "90d" ? 90 : 365
-      setData(getDemoAnalyticsData(days))
-      setLoading(false)
-      return
-    }
-
-    // CRITICAL: Workspace is required for data isolation
-    if (!selectedWorkspaceId) {
-      setError("No workspace selected")
-      setLoading(false)
-      return
-    }
-
-    try {
-      setLoading(true)
-      setError(null)
-
-      // ALWAYS include workspaceId - required for workspace isolation
-      const params = new URLSearchParams({
-        dateRange,
-        workspaceId: selectedWorkspaceId,
-      })
-
-      const response = await fetch(`/api/analytics?${params.toString()}`)
-      const result = await response.json()
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Failed to fetch analytics")
-      }
-
-      setData(result.data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load analytics")
-    } finally {
-      setLoading(false)
-    }
-  }, [dateRange, selectedWorkspaceId, isDemoMode])
-
-  useEffect(() => {
-    if (selectedWorkspaceId) {
-      fetchAnalytics()
-    }
-  }, [fetchAnalytics, selectedWorkspaceId])
-
   if (loading) {
     return (
       <div className="flex-1 space-y-6 p-8">
@@ -183,7 +167,7 @@ export function AnalyticsPage() {
           <BarChart3 className="h-12 w-12 text-slate-300 mx-auto" />
           <h3 className="text-lg font-semibold text-slate-900">Failed to load analytics</h3>
           <p className="text-sm text-slate-500">{error}</p>
-          <Button onClick={fetchAnalytics} variant="outline" size="sm">
+          <Button onClick={() => mutate()} variant="outline" size="sm">
             Try Again
           </Button>
         </div>
