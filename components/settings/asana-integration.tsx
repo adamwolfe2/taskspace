@@ -285,7 +285,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
           {asanaStatus?.connected && (
             <Badge className="bg-green-500">Connected</Badge>
           )}
-          <Button size="sm" variant="outline" onClick={checkAsanaStatus}>
+          <Button size="sm" variant="outline" onClick={checkAsanaStatus} aria-label="Refresh Asana status">
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>

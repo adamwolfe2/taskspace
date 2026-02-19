@@ -194,13 +194,13 @@ export function EnhancedCalendarView({
             </Tabs>
 
             {/* Navigation */}
-            <Button variant="outline" size="sm" onClick={handlePrevious}>
+            <Button variant="outline" size="sm" onClick={handlePrevious} aria-label="Previous">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="sm" onClick={handleToday} className="hidden sm:inline-flex">
               Today
             </Button>
-            <Button variant="outline" size="sm" onClick={handleNext}>
+            <Button variant="outline" size="sm" onClick={handleNext} aria-label="Next">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

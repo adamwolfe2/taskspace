@@ -312,7 +312,7 @@ export function ProfileSettingsTab() {
           <div className="flex items-start gap-6">
             <div className="relative group">
               <Avatar className="h-20 w-20 border-2 border-slate-200">
-                <AvatarImage src={avatarPreview} alt={name} />
+                <AvatarImage src={avatarPreview} alt={name || "User avatar"} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-semibold">
                   {getInitials(name || "?")}
                 </AvatarFallback>
@@ -321,6 +321,7 @@ export function ProfileSettingsTab() {
                 onClick={() => avatarInputRef.current?.click()}
                 className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 disabled={isUploadingAvatar}
+                aria-label="Upload profile photo"
               >
                 {isUploadingAvatar ? (
                   <Loader2 className="h-6 w-6 text-white animate-spin" />
@@ -484,6 +485,7 @@ export function ProfileSettingsTab() {
                 type="button"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
               >
                 {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -509,6 +511,7 @@ export function ProfileSettingsTab() {
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showNewPassword ? "Hide new password" : "Show new password"}
               >
                 {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -558,6 +561,7 @@ export function ProfileSettingsTab() {
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
               >
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -694,6 +698,7 @@ export function ProfileSettingsTab() {
                       type="button"
                       onClick={() => setShowDeletePassword(!showDeletePassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showDeletePassword ? "Hide password" : "Show password"}
                     >
                       {showDeletePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>

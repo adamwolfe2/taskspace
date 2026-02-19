@@ -169,6 +169,7 @@ export function OrganizationSettingsTab() {
                         onClick={handleRemoveLogo}
                         className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                         disabled={isLoading}
+                        aria-label="Remove logo"
                       >
                         <X className="h-3 w-3" />
                       </button>

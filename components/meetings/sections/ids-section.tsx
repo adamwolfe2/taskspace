@@ -247,7 +247,7 @@ export function IDSSection({
                     if (e.key === "Enter") handleAddTodo()
                   }}
                 />
-                <Button onClick={handleAddTodo} disabled={!newTodo.trim()}>
+                <Button onClick={handleAddTodo} disabled={!newTodo.trim()} aria-label="Add to-do">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>

@@ -364,7 +364,7 @@ export function WorkspaceScorecardPage() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className="p-2 rounded-full hover:bg-slate-100">
+                <button className="p-2 rounded-full hover:bg-slate-100" aria-label="Scorecard help">
                   <HelpCircle className="h-5 w-5 text-slate-500" />
                 </button>
               </TooltipTrigger>

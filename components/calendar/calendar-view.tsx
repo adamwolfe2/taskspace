@@ -113,13 +113,13 @@ export function CalendarView({ tasks, rocks, eodReports, currentUser, onSelectDa
             <h3 className="font-semibold text-slate-900">Calendar</h3>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handlePreviousMonth}>
+            <Button variant="outline" size="sm" onClick={handlePreviousMonth} aria-label="Previous month">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="sm" onClick={handleToday}>
               Today
             </Button>
-            <Button variant="outline" size="sm" onClick={handleNextMonth}>
+            <Button variant="outline" size="sm" onClick={handleNextMonth} aria-label="Next month">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

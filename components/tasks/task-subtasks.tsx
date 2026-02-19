@@ -141,6 +141,7 @@ export function TaskSubtasks({
  onClick={handleAdd}
  disabled={!newTitle.trim() || isSubmitting}
  className="h-8 px-2"
+ aria-label="Confirm add subtask"
  >
  <Check className="h-4 w-4" />
  </Button>
@@ -153,6 +154,7 @@ export function TaskSubtasks({
  }}
  disabled={isSubmitting}
  className="h-8 px-2"
+ aria-label="Cancel"
  >
  <X className="h-4 w-4" />
  </Button>

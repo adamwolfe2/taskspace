@@ -182,7 +182,7 @@ export function HeadlinesSection({
                 if (e.key === "Enter") handleAddHeadline()
               }}
             />
-            <Button onClick={handleAddHeadline} disabled={!newHeadline.trim()}>
+            <Button onClick={handleAddHeadline} disabled={!newHeadline.trim()} aria-label="Add headline">
               <Plus className="h-4 w-4" />
             </Button>
           </div>

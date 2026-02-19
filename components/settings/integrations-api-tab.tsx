@@ -366,6 +366,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
                     variant="outline"
                     onClick={refreshEmailStatus}
                     disabled={isRefreshingEmail}
+                    aria-label="Refresh email status"
                   >
                     <RefreshCw className={`h-4 w-4 ${isRefreshingEmail ? "animate-spin" : ""}`} />
                   </Button>

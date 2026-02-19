@@ -111,6 +111,7 @@ export function InlineEditable({
  onClick={handleSave}
  disabled={isSaving}
  className="p-1 text-green-600 hover:bg-green-50  rounded transition-colors"
+ aria-label="Save"
  >
  <Check className="h-4 w-4" />
  </button>
@@ -118,6 +119,7 @@ export function InlineEditable({
  onClick={handleCancel}
  disabled={isSaving}
  className="p-1 text-slate-400 hover:bg-slate-100  rounded transition-colors"
+ aria-label="Cancel"
  >
  <X className="h-4 w-4" />
  </button>

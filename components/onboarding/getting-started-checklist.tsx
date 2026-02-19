@@ -249,12 +249,14 @@ export function GettingStartedChecklist({ onNavigate }: GettingStartedChecklistP
               onClick={handleDismiss}
               className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
               title="Dismiss checklist"
+              aria-label="Dismiss checklist"
             >
               <X className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={() => setExpanded(false)}
               className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
+              aria-label="Collapse checklist"
             >
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
