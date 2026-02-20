@@ -473,8 +473,8 @@ export async function POST(request: NextRequest) {
 // GET /api/invitations/accept - Get invitation details
 export async function GET(request: NextRequest) {
   try {
-    // Rate limit: 20 token lookups per 15 min per IP
-    const rl = checkIpRateLimit(request, { endpoint: "invitation-lookup", maxRequests: 20 })
+    // Rate limit: 5 token lookups per 15 min per IP (strict to prevent enumeration)
+    const rl = checkIpRateLimit(request, { endpoint: "invitation-lookup", maxRequests: 5 })
     if (!rl.allowed) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Too many attempts. Please try again later." },

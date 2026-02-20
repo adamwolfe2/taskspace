@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
+import { checkIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
 import type { ApiResponse } from "@/lib/types"
 
 /**
@@ -11,6 +12,15 @@ import type { ApiResponse } from "@/lib/types"
  */
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit: 10 attempts per 15 min per IP
+    const rl = checkIpRateLimit(request, { endpoint: "verify-email", maxRequests: 10 })
+    if (!rl.allowed) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Too many attempts. Please try again later." },
+        { status: 429, headers: ipRateLimitHeaders(rl) }
+      )
+    }
+
     const token = request.nextUrl.searchParams.get("token")
 
     if (!token || token.length < 20) {

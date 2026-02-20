@@ -18,6 +18,7 @@ import {
   type WorkspaceMember,
 } from "@/lib/db/workspaces"
 import { logger, logError } from "@/lib/logger"
+import { sql } from "@/lib/db/sql"
 
 /**
  * POST /api/workspaces/[id]/members
@@ -60,6 +61,18 @@ export const POST = withAuth(async (request, auth, context?) => {
     }
 
     const { userId, role } = await validateBody(request, addWorkspaceMemberSchema)
+
+    // SECURITY: Verify user belongs to this organization before adding to workspace
+    const { rows: orgMemberRows } = await sql`
+      SELECT id FROM organization_members
+      WHERE user_id = ${userId} AND organization_id = ${auth.organization.id} AND status = 'active'
+    `
+    if (orgMemberRows.length === 0) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "User is not a member of this organization" },
+        { status: 400 }
+      )
+    }
 
     // Add member to workspace
     const member = await addWorkspaceMember(id, userId, role as WorkspaceMember["role"])
