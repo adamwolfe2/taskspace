@@ -27,6 +27,13 @@ export function RegisterPage() {
       return
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setLocalError("Please enter a valid email address")
+      return
+    }
+
     if (password !== confirmPassword) {
       setLocalError("Passwords do not match")
       return
@@ -119,6 +126,9 @@ export function RegisterPage() {
                   autoComplete="email"
                   className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400"
                 />
+                {email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                  <p className="text-xs mt-1 text-red-500">Please enter a valid email address</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -170,13 +180,18 @@ export function RegisterPage() {
                   autoComplete="new-password"
                   className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400"
                 />
+                {confirmPassword && (
+                  <p className={`text-xs mt-1 ${password === confirmPassword ? "text-black" : "text-red-500"}`}>
+                    {password === confirmPassword ? "Passwords match" : "Passwords do not match"}
+                  </p>
+                )}
               </div>
             </div>
 
             <Button
               type="submit"
               className="w-full h-11 bg-black hover:bg-gray-800 text-white font-medium transition-colors"
-              disabled={isLoading || !allRequirementsMet || !name || !email || password !== confirmPassword}
+              disabled={isLoading || !allRequirementsMet || !name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password !== confirmPassword}
             >
               {isLoading ? (
                 <>
