@@ -710,3 +710,99 @@ Identify the brand colors for this company. Return JSON only.`
 export function isClaudeConfigured(): boolean {
   return !!process.env.ANTHROPIC_API_KEY
 }
+
+// ============================================================
+// WORKSPACE BUILDER
+// ============================================================
+
+export interface WorkspaceBuilderPayload {
+  members?: Array<{
+    name: string
+    email: string
+    role?: "admin" | "member"
+    department?: string
+    jobTitle?: string
+  }>
+  clients?: Array<{
+    name: string
+    industry?: string
+    website?: string
+    notes?: string
+  }>
+  projects?: Array<{
+    name: string
+    description?: string
+    clientName?: string
+    status?: string
+  }>
+  rocks?: Array<{
+    title: string
+    description?: string
+    ownerEmail?: string
+    quarter?: string
+    dueDate?: string
+    milestones?: string[]
+  }>
+  tasks?: Array<{
+    title: string
+    description?: string
+    assigneeEmail?: string
+    priority?: "low" | "normal" | "high" | "urgent"
+    dueDate?: string
+    rockTitle?: string
+  }>
+}
+
+const WORKSPACE_BUILDER_SYSTEM_PROMPT = `You are an expert organizational setup assistant that parses unstructured text and extracts structured workspace data for a team management platform called TaskSpace.
+
+Given a text dump of organizational information (org charts, goals, team roles, projects, clients, tasks, quarterly rocks, etc.), extract all relevant data into the structured format below.
+
+Return ONLY valid JSON with this exact structure (omit any key where you have no data):
+{
+  "members": [{ "name": "Full Name", "email": "email@company.com", "role": "member|admin", "department": "Sales", "jobTitle": "Account Executive" }],
+  "clients": [{ "name": "Acme Corp", "industry": "Technology", "website": "https://acme.com", "notes": "Notes about client..." }],
+  "projects": [{ "name": "Q1 Launch", "description": "...", "clientName": "Acme Corp", "status": "active|planning|on-hold|completed" }],
+  "rocks": [{ "title": "Increase MRR by 20%", "description": "...", "ownerEmail": "owner@co.com", "quarter": "Q1 2025", "dueDate": "2025-03-31", "milestones": ["Close 5 deals", "Launch referral program"] }],
+  "tasks": [{ "title": "Send proposal to Acme", "description": "...", "assigneeEmail": "john@co.com", "priority": "high", "dueDate": "2025-01-31", "rockTitle": "Increase MRR by 20%" }]
+}
+
+Extraction rules:
+- email: if not provided, generate "firstname.lastname@company.com" if company domain is known, otherwise omit
+- role: only use "admin" for managers/directors/VPs/C-suite
+- dueDate: YYYY-MM-DD format only (e.g., 2025-03-31)
+- quarter: "Q1 2025", "Q2 2025", "Q3 2025", or "Q4 2025" format only
+- milestones: extract only specific, actionable milestones from rocks
+- rockTitle in tasks: match EXACTLY to a rock title in the rocks array if task clearly belongs to a rock
+- priority: default to "normal" unless urgency is clearly indicated
+- Omit entire categories (members/clients/etc.) if no data exists for them
+- Be thorough - extract everything clearly mentioned or strongly implied`
+
+/**
+ * Parse an unstructured text dump into a structured WorkspaceBuilderPayload
+ * Used by the Master Builder onboarding flow
+ */
+export async function parseWorkspaceSetup(
+  text: string
+): Promise<AIResultWithUsage<WorkspaceBuilderPayload>> {
+  const userMessage = `Parse this organizational text and extract structured workspace data. Return JSON only.
+
+TEXT TO PARSE:
+${text}`
+
+  const { result, usage, model } = await callClaudeJSONWithUsage<WorkspaceBuilderPayload>(
+    WORKSPACE_BUILDER_SYSTEM_PROMPT,
+    userMessage,
+    { maxTokens: 8192, temperature: 0.2, model: MODEL_SONNET }
+  )
+
+  return {
+    result: {
+      members: result.members || [],
+      clients: result.clients || [],
+      projects: result.projects || [],
+      rocks: result.rocks || [],
+      tasks: result.tasks || [],
+    },
+    usage: { ...usage, model },
+  }
+}

@@ -260,13 +260,66 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       ? parsedMetricValue
       : null
 
-    // Duplicate detection: prevent multiple EOD reports for the same user + date
+    // Upsert: if a report already exists for this date, merge new data into it
     const existingReport = await db.eodReports.findByUserAndDate(auth.user.id, auth.organization.id, reportDate)
     if (existingReport) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "You have already submitted an EOD report for this date. Please edit your existing report instead." },
-        { status: 409 }
+      // Merge tasks — append new ones, skip exact duplicates by text
+      const existingTaskTexts = new Set(
+        (existingReport.tasks || []).map(t => t.text.toLowerCase().trim())
       )
+      const newTasks = tasks.filter(t => !existingTaskTexts.has(t.text.toLowerCase().trim()))
+      const mergedTasks = [...(existingReport.tasks || []), ...newTasks]
+
+      // Merge tomorrow priorities — same dedup logic
+      const existingPriorityTexts = new Set(
+        (existingReport.tomorrowPriorities || []).map(p => p.text.toLowerCase().trim())
+      )
+      const newPriorities = tomorrowPriorities.filter(
+        p => !existingPriorityTexts.has(p.text.toLowerCase().trim())
+      )
+      const mergedPriorities = [...(existingReport.tomorrowPriorities || []), ...newPriorities]
+
+      // Merge challenges — append if new content provided
+      const mergedChallenges = challenges && challenges.trim()
+        ? existingReport.challenges
+          ? `${existingReport.challenges}\n\n${challenges}`.trim()
+          : challenges.trim()
+        : existingReport.challenges || ""
+
+      // Escalation: once true, stays true
+      const mergedEscalation = (needsEscalation || false) || (existingReport.needsEscalation || false)
+      const mergedEscalationNote = needsEscalation
+        ? (escalationNote || null)
+        : existingReport.escalationNote
+
+      // Metric: use new value if provided, keep existing otherwise
+      const mergedMetricValue = validMetricValue !== null ? validMetricValue : (existingReport.metricValueToday ?? null)
+
+      const updatedReport = await db.eodReports.update(existingReport.id, {
+        tasks: mergedTasks,
+        challenges: mergedChallenges,
+        tomorrowPriorities: mergedPriorities,
+        needsEscalation: mergedEscalation,
+        escalationNote: mergedEscalationNote,
+        metricValueToday: mergedMetricValue,
+        submittedAt: now,
+      })
+
+      // Fire webhook for update
+      dispatchWebhook(auth.organization.id, "eod.submitted", {
+        reportId: existingReport.id,
+        userId: auth.user.id,
+        date: existingReport.date,
+        tasksCount: mergedTasks.length,
+        needsEscalation: mergedEscalation,
+        workspaceId: existingReport.workspaceId,
+      }).catch(err => logError(logger, "EOD update webhook failed", err))
+
+      return NextResponse.json<ApiResponse<EODReport>>({
+        success: true,
+        data: updatedReport || existingReport,
+        message: `EOD report updated — ${newTasks.length} task${newTasks.length !== 1 ? "s" : ""} added`,
+      })
     }
 
     const report: EODReport = {
