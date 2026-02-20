@@ -11,6 +11,7 @@ import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagin
 import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { logger, logError } from "@/lib/logger"
 import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
+import { sendNotification } from "@/lib/db/notifications"
 
 // GET /api/rocks - Get rocks
 export const GET = withAuth(async (request: NextRequest, auth) => {
@@ -317,6 +318,23 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
         { success: false, error: "This rock was modified by another user. Please refresh and try again." },
         { status: 409 }
       )
+    }
+
+    // Send notification when rock is newly completed (best-effort, non-blocking)
+    const justCompleted = updatedRock?.status === "completed" && rock.status !== "completed"
+    if (justCompleted && updatedRock) {
+      // If admin completed another user's rock, notify that user
+      if (updatedRock.userId && updatedRock.userId !== auth.user.id) {
+        sendNotification({
+          organizationId: auth.organization.id,
+          workspaceId: rock.workspaceId || undefined,
+          userId: updatedRock.userId,
+          type: "rock_updated",
+          title: "Rock marked complete",
+          message: `"${updatedRock.title}" was marked complete.`,
+          link: "/rocks",
+        }).catch(err => logError(logger, "Rock completion notification failed", err))
+      }
     }
 
     // Fire webhook (best-effort, non-blocking)

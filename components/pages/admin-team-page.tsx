@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { ManageRocksDialog } from "@/components/admin/manage-rocks-dialog"
+import { AuditLogTab } from "@/components/admin/audit-log-tab"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 interface AdminTeamPageProps {
@@ -885,6 +886,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
               </Badge>
             )}
           </TabsTrigger>
+          <TabsTrigger value="activity">Activity Log</TabsTrigger>
         </TabsList>
 
         <TabsContent value="members">
@@ -1204,6 +1206,18 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                   </TableBody>
                 </Table>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="activity">
+          <Card>
+            <CardHeader>
+              <CardTitle>Activity Log</CardTitle>
+              <CardDescription>Recent actions taken by team members and the system</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AuditLogTab />
             </CardContent>
           </Card>
         </TabsContent>
