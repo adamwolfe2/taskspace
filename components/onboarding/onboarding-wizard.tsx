@@ -129,6 +129,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
   const [currentStep, setCurrentStep] = useState(() => savedState?.currentStep ?? 1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [setupProgress, setSetupProgress] = useState(0) // 0-based index into SETUP_STEPS
+  const [setupSlow, setSetupSlow] = useState(false) // Shows "taking longer" message after timeout
 
   // Step 1: Website scrape
   const [websiteUrl, setWebsiteUrl] = useState(() => savedState?.websiteUrl ?? "")
@@ -363,12 +364,24 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
   // Progress callback that updates local state for the overlay
   const reportProgress = useCallback((step: number, _label: string) => {
     setSetupProgress(step)
+    setSetupSlow(false) // Reset slow indicator on progress
   }, [])
+
+  // Show "taking longer" message if setup stalls for 20 seconds
+  useEffect(() => {
+    if (!isSubmitting) {
+      setSetupSlow(false)
+      return
+    }
+    const timer = setTimeout(() => setSetupSlow(true), 20000)
+    return () => clearTimeout(timer)
+  }, [isSubmitting, setupProgress])
 
   const handleComplete = async () => {
     setIsSubmitting(true)
     setSubmitError(null)
     setSetupProgress(0)
+    setSetupSlow(false)
     try {
       await onComplete({
         organization: {
@@ -424,7 +437,9 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
           <div className="w-full max-w-sm mx-4 space-y-6">
             <div className="text-center">
               <p className="text-lg font-semibold text-slate-900">Setting up your workspace</p>
-              <p className="text-sm text-slate-500 mt-1">This usually takes about 10 seconds</p>
+              <p className="text-sm text-slate-500 mt-1">
+                {setupSlow ? "Taking a bit longer than expected — hang tight..." : "This usually takes about 10 seconds"}
+              </p>
             </div>
 
             {/* Progress bar */}
@@ -1115,15 +1130,28 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
 
             {/* Submit Error */}
             {submitError && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-red-700 font-medium">Setup failed</p>
-                  <p className="text-xs text-red-600 mt-0.5">{submitError}</p>
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-red-700 font-medium">Setup failed</p>
+                    <p className="text-xs text-red-600 mt-0.5">{submitError}</p>
+                  </div>
+                  <button onClick={() => setSubmitError(null)} className="text-red-400 hover:text-red-600 flex-shrink-0">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button onClick={() => setSubmitError(null)} className="text-red-400 hover:text-red-600 flex-shrink-0">
-                  <X className="w-4 h-4" />
-                </button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2 text-red-700 border-red-200 hover:bg-red-100"
+                  onClick={() => {
+                    setSubmitError(null)
+                    handleComplete()
+                  }}
+                >
+                  Try Again
+                </Button>
               </div>
             )}
 
