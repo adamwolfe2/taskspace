@@ -418,7 +418,7 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
                     <div className="flex items-center gap-3">
                       <Avatar>
                         <AvatarImage src={teamMember.avatar || undefined} />
-                        <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                        <AvatarFallback className="bg-slate-700 text-white">
                           {getInitials(teamMember.name)}
                         </AvatarFallback>
                       </Avatar>

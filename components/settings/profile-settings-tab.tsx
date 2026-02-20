@@ -338,7 +338,7 @@ export function ProfileSettingsTab() {
             <div className="relative group">
               <Avatar className="h-20 w-20 border-2 border-slate-200">
                 <AvatarImage src={avatarPreview} alt={name || "User avatar"} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-semibold">
+                <AvatarFallback className="bg-slate-700 text-white text-xl font-semibold">
                   {getInitials(name || "?")}
                 </AvatarFallback>
               </Avatar>

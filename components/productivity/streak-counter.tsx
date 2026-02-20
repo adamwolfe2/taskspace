@@ -93,7 +93,7 @@ export function StreakCounter({
             className={cn(
               "flex items-center justify-center rounded-full",
               currentStreak > 0
-                ? "bg-gradient-to-br from-orange-400 to-red-500"
+                ? "bg-primary"
                 : "bg-slate-200",
               size === "sm" ? "w-10 h-10" : size === "md" ? "w-12 h-12" : "w-14 h-14"
             )}
@@ -203,7 +203,7 @@ export function StreakBadge({
       className={cn(
         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full",
         currentStreak >= 7
-          ? "bg-gradient-to-r from-orange-100 to-red-100"
+          ? "bg-slate-100"
           : "bg-slate-100",
         className
       )}

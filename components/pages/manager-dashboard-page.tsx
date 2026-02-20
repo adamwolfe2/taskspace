@@ -343,7 +343,7 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
 
       {/* Alerts Section */}
       {criticalAlerts.length > 0 && (
-        <Card className="border-red-200 bg-gradient-to-r from-red-50 to-orange-50">
+        <Card className="border-red-200 bg-red-50">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -429,7 +429,7 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
 
       {/* AI Insights Card */}
       {aiInsights && (
-        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Card className="border-slate-200 bg-slate-50">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-blue-600" />

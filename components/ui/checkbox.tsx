@@ -15,9 +15,9 @@ function Checkbox({
       data-slot="checkbox"
       className={cn(
         'peer size-5 shrink-0 rounded-md border-2 border-slate-300 bg-white shadow-sm transition-all duration-200 ease-out outline-none',
-        'data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-blue-500 data-[state=checked]:to-blue-600 data-[state=checked]:text-white data-[state=checked]:border-blue-500 data-[state=checked]:shadow-md data-[state=checked]:shadow-blue-500/25',
-        'focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2',
-        'hover:border-blue-400',
+        'data-[state=checked]:bg-primary data-[state=checked]:text-white data-[state=checked]:border-primary data-[state=checked]:shadow-md',
+        'focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2',
+        'hover:border-primary/40',
         'disabled:cursor-not-allowed disabled:opacity-50',
         'aria-invalid:border-red-400',
         className,

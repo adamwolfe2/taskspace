@@ -46,9 +46,9 @@ export function TrialBanner() {
 
   // Warning banner for <14 days remaining
   const isUrgent = daysRemaining <= 3
-  const bgColor = isUrgent ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"
-  const textColor = isUrgent ? "text-red-800" : "text-blue-800"
-  const iconColor = isUrgent ? "text-red-500" : "text-blue-500"
+  const bgColor = isUrgent ? "bg-red-50 border-red-200" : "bg-slate-50 border-slate-200"
+  const textColor = isUrgent ? "text-red-800" : "text-slate-800"
+  const iconColor = isUrgent ? "text-red-500" : "text-slate-500"
 
   return (
     <>
@@ -72,7 +72,7 @@ export function TrialBanner() {
         </div>
         <button
           onClick={() => setDismissed(true)}
-          className={`${isUrgent ? "text-red-400 hover:text-red-600" : "text-blue-400 hover:text-blue-600"} p-1`}
+          className={`${isUrgent ? "text-red-400 hover:text-red-600" : "text-slate-400 hover:text-slate-600"} p-1`}
           aria-label="Dismiss"
         >
           <X className="h-4 w-4" />
@@ -91,7 +91,7 @@ export function TrialBanner() {
 function TrialExpiredWall({ onUpgrade }: { onUpgrade: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+      <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-8 text-center">
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Clock className="h-8 w-8 text-red-600" />
         </div>

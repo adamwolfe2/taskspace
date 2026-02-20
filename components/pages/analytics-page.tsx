@@ -201,7 +201,7 @@ export function AnalyticsPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-            <div className="rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 p-2.5">
+            <div className="rounded-xl bg-primary p-2.5">
               <BarChart3 className="h-6 w-6 text-white" />
             </div>
             Analytics Dashboard

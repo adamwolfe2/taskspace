@@ -67,11 +67,11 @@ export function ProfileCompletionCard() {
   }
 
   return (
-    <Card className="border-blue-200 bg-gradient-to-r from-blue-50/50 to-indigo-50/30">
+    <Card className="border-slate-200 bg-slate-50/50">
       <CardContent className="pt-5 pb-4 px-5">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <UserCircle className="w-5 h-5 text-blue-600" />
+          <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+            <UserCircle className="w-5 h-5 text-slate-600" />
           </div>
           <div>
             <h3 className="text-base font-semibold text-slate-900">Complete your profile</h3>

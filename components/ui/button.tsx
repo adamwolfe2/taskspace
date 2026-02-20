@@ -12,9 +12,9 @@ const buttonVariants = cva(
         default:
           'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md',
         destructive:
-          'bg-gradient-to-b from-red-500 to-red-600 text-white shadow-sm hover:from-red-600 hover:to-red-700 hover:shadow-md shadow-red-500/25',
+          'bg-red-600 text-white shadow-sm hover:bg-red-700 hover:shadow-md',
         success:
-          'bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-600 hover:to-emerald-700 hover:shadow-md shadow-emerald-500/25',
+          'bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 hover:shadow-md',
         outline:
           'border-2 border-primary/20 bg-white shadow-sm hover:bg-primary/5 hover:border-primary/40 text-foreground',
         secondary:

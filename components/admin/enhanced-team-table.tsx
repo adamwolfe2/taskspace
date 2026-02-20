@@ -221,7 +221,7 @@ export function EnhancedTeamTable({
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10 border-2 border-background">
-                          <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-semibold">
+                          <AvatarFallback className="bg-slate-700 text-white font-semibold">
                             {member.name
                               .split(" ")
                               .map((n) => n[0])

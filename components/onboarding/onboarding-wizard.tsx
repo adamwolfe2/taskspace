@@ -430,7 +430,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
   const isLastStep = currentStep === STEPS.length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex items-center justify-center p-4 sm:p-6">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
       {/* Submission progress overlay */}
       {isSubmitting && (
         <div className="fixed inset-0 z-50 bg-white/95 backdrop-blur-sm flex items-center justify-center">

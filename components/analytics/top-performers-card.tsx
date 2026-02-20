@@ -94,7 +94,7 @@ export function TopPerformersCard({ performers }: TopPerformersCardProps) {
                 </div>
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={performer.avatar || undefined} alt={performer.name} />
-                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-sm">
+                  <AvatarFallback className="bg-slate-700 text-white text-sm">
                     {getInitials(performer.name)}
                   </AvatarFallback>
                 </Avatar>

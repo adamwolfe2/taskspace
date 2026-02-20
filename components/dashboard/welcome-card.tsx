@@ -80,7 +80,7 @@ export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodRepor
   const firstName = userName?.split(" ")[0] || "there"
 
   return (
-    <Card className="border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30 relative overflow-hidden">
+    <Card className="border-slate-200 bg-slate-50/50 relative overflow-hidden">
       <button
         onClick={handleDismiss}
         className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors z-10"
@@ -91,8 +91,8 @@ export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodRepor
 
       <CardContent className="pt-5 pb-4 px-5">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-5 h-5 text-emerald-600" />
+          <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-5 h-5 text-slate-600" />
           </div>
           <div>
             <h3 className="text-base font-semibold text-slate-900">
@@ -117,20 +117,20 @@ export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodRepor
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all",
                   step.done
-                    ? "bg-emerald-50/50 cursor-default"
+                    ? "bg-slate-50 cursor-default"
                     : "bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 cursor-pointer"
                 )}
               >
                 <div className={cn(
                   "w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0",
-                  step.done ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400"
+                  step.done ? "bg-primary/10 text-primary" : "bg-slate-100 text-slate-400"
                 )}>
                   <StepIcon className="w-3.5 h-3.5" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={cn(
                     "text-sm font-medium",
-                    step.done ? "text-emerald-700 line-through" : "text-slate-900"
+                    step.done ? "text-slate-500 line-through" : "text-slate-900"
                   )}>
                     {step.label}
                   </p>
@@ -139,7 +139,7 @@ export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodRepor
                   )}
                 </div>
                 {!step.done && (
-                  <span className="text-xs text-blue-600 font-medium flex-shrink-0">Go →</span>
+                  <span className="text-xs text-primary font-medium flex-shrink-0">Go →</span>
                 )}
               </button>
             )

@@ -104,7 +104,7 @@ export function DirectReportDetailSheet({
                 {report.avatar ? (
                   <AvatarImage src={report.avatar} alt={report.name} />
                 ) : null}
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-semibold">
+                <AvatarFallback className="bg-slate-700 text-white text-xl font-semibold">
                   {initials}
                 </AvatarFallback>
               </Avatar>

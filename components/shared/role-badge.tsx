@@ -8,7 +8,7 @@ export function RoleBadge({ role }: RoleBadgeProps) {
   switch (role) {
     case "owner":
       return (
-        <Badge className="text-xs bg-amber-500 hover:bg-amber-600 text-white">
+        <Badge variant="default" className="text-xs">
           Owner
         </Badge>
       )

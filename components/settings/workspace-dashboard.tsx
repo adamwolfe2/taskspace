@@ -147,7 +147,7 @@ export function WorkspaceDashboard() {
     free: "bg-slate-500",
     starter: "bg-blue-500",
     professional: "bg-purple-500",
-    enterprise: "bg-gradient-to-r from-amber-500 to-orange-500",
+    enterprise: "bg-primary",
   }
 
   return (

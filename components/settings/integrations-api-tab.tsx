@@ -651,7 +651,7 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
         </CardHeader>
         <CardContent className="space-y-4">
           {/* One-Click Setup */}
-          <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
+          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
             <div className="flex items-start gap-4">
               <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
                 <Download className="h-6 w-6 text-purple-600" />

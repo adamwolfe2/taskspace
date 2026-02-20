@@ -198,7 +198,7 @@ export function GettingStartedChecklist({ onNavigate }: GettingStartedChecklistP
   if (celebrating) {
     return (
       <div className="px-3 pb-2">
-        <div className="rounded-lg bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 p-4 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
           <PartyPopper className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
           <p className="text-sm font-semibold text-emerald-800">All done!</p>
           <p className="text-xs text-emerald-600 mt-1">You&apos;re all set up. Nice work!</p>

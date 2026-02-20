@@ -80,7 +80,7 @@ export function AchievementBadge({
  "relative rounded-full flex items-center justify-center transition-all",
  sizeClasses[size],
  earned
- ? `bg-gradient-to-br from-amber-100 to-amber-200   ring-2 ring-amber-400 shadow-lg`
+ ? "bg-slate-800 ring-2 ring-slate-600 shadow-lg"
  : "bg-slate-100  ring-1 ring-slate-200  opacity-50",
  className
  )}
@@ -88,11 +88,11 @@ export function AchievementBadge({
  <Icon
  className={cn(
  iconSizes[size],
- earned ? achievement.badgeColor : "text-slate-400 "
+ earned ? "text-white" : "text-slate-400 "
  )}
  />
  {earned && size !== "sm" && (
- <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full flex items-center justify-center ring-2 ring-white ">
+ <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-primary rounded-full flex items-center justify-center ring-2 ring-white ">
  <CheckCircle2 className="h-3 w-3 text-white" />
  </div>
  )}
@@ -119,7 +119,7 @@ export function AchievementBadge({
  strokeWidth="2"
  strokeDasharray={`${progress} 100`}
  strokeLinecap="round"
- className="text-amber-500 transform -rotate-90 origin-center"
+ className="text-primary transform -rotate-90 origin-center"
  />
  </svg>
  )}
@@ -141,7 +141,7 @@ export function AchievementBadge({
  </p>
  )}
  {earned && earnedAt && (
- <p className="text-xs text-green-600 ">
+ <p className="text-xs text-slate-600 ">
  Earned {new Date(earnedAt).toLocaleDateString()}
  </p>
  )}
@@ -150,7 +150,7 @@ export function AchievementBadge({
  Progress: {progress}%
  </p>
  )}
- <p className="text-xs text-amber-600 ">
+ <p className="text-xs text-primary ">
  {achievement.points} points
  </p>
  </div>
@@ -234,7 +234,7 @@ export function AchievementSummary({
  </div>
  {earnedAchievements.length > 0 && (
  <div className="text-sm">
- <span className="font-semibold text-amber-600 ">
+ <span className="font-semibold text-primary ">
  {totalPoints.toLocaleString()}
  </span>
  <span className="text-slate-500 "> pts</span>
@@ -257,7 +257,7 @@ export function AchievementUnlockedBanner({
  return (
  <div
  className={cn(
- "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl shadow-2xl animate-slide-up",
+ "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-4 bg-primary text-white rounded-lg shadow-2xl animate-slide-up",
  className
  )}
  >

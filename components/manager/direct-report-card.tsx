@@ -84,7 +84,7 @@ export function DirectReportCard({ report, onClick, className }: DirectReportCar
               {report.avatar ? (
                 <AvatarImage src={report.avatar} alt={report.name} />
               ) : null}
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-semibold">
+              <AvatarFallback className="bg-slate-700 text-white text-lg font-semibold">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -293,7 +293,7 @@ export function DirectReportCardCompact({
         {report.avatar ? (
           <AvatarImage src={report.avatar} alt={report.name} />
         ) : null}
-        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm">
+        <AvatarFallback className="bg-slate-700 text-white text-sm">
           {initials}
         </AvatarFallback>
       </Avatar>

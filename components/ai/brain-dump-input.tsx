@@ -30,7 +30,7 @@ Examples:
 - "Assign the dashboard redesign to whoever has the most capacity"`
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
+    <Card className="border-primary/20 bg-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="h-5 w-5 text-primary" />
