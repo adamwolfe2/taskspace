@@ -99,7 +99,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
           }
         }
       } catch {
-        /* silently ignore */
+        toast({ title: "Warning", description: "Could not load API keys", variant: "destructive" })
       }
     }
 
@@ -114,7 +114,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
           }
         }
       } catch {
-        /* silently ignore */
+        // Integration status is non-critical — don't toast
       }
     }
 

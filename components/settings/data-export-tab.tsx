@@ -5,11 +5,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, FileSpreadsheet, FileJson, Users, Upload } from "lucide-react"
+import { Download, FileSpreadsheet, FileJson, Users, Upload, Loader2 } from "lucide-react"
 import { ImportWizard } from "@/components/migrations/import-wizard"
+import { useToast } from "@/hooks/use-toast"
 
 export function DataExportTab() {
   const [activeSubTab, setActiveSubTab] = useState("export")
+  const [exportingType, setExportingType] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  const handleExport = (type: string, format: string) => {
+    const key = `${type}-${format}`
+    setExportingType(key)
+    window.open(`/api/export?type=${type}&format=${format}`, "_blank")
+    toast({ title: "Export started", description: "Check your downloads folder" })
+    setTimeout(() => setExportingType(null), 2000)
+  }
+
+  const handleCalendarExport = (type: string) => {
+    setExportingType(`cal-${type}`)
+    window.open(`/api/export/calendar?type=${type}`, "_blank")
+    toast({ title: "Calendar export started", description: "Import the .ics file into your calendar app" })
+    setTimeout(() => setExportingType(null), 2000)
+  }
 
   return (
     <div className="space-y-4">
@@ -42,8 +60,8 @@ export function DataExportTab() {
             {/* Rocks Export */}
             <div className="border rounded-lg p-4">
               <div className="flex items-center gap-3 mb-3">
-                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <FileSpreadsheet className="h-5 w-5 text-blue-600" />
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                  <FileSpreadsheet className="h-5 w-5 text-slate-600" />
                 </div>
                 <div>
                   <h3 className="font-medium">Rocks (Goals)</h3>
@@ -51,20 +69,12 @@ export function DataExportTab() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open("/api/export?type=rocks&format=csv", "_blank")}
-                >
-                  <Download className="h-4 w-4 mr-1" />
+                <Button variant="outline" size="sm" onClick={() => handleExport("rocks", "csv")} disabled={exportingType === "rocks-csv"}>
+                  {exportingType === "rocks-csv" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
                   CSV
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open("/api/export?type=rocks&format=json", "_blank")}
-                >
-                  <FileJson className="h-4 w-4 mr-1" />
+                <Button variant="outline" size="sm" onClick={() => handleExport("rocks", "json")} disabled={exportingType === "rocks-json"}>
+                  {exportingType === "rocks-json" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileJson className="h-4 w-4 mr-1" />}
                   JSON
                 </Button>
               </div>
@@ -73,8 +83,8 @@ export function DataExportTab() {
             {/* Tasks Export */}
             <div className="border rounded-lg p-4">
               <div className="flex items-center gap-3 mb-3">
-                <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <FileSpreadsheet className="h-5 w-5 text-green-600" />
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                  <FileSpreadsheet className="h-5 w-5 text-slate-600" />
                 </div>
                 <div>
                   <h3 className="font-medium">Tasks</h3>
@@ -82,20 +92,12 @@ export function DataExportTab() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open("/api/export?type=tasks&format=csv", "_blank")}
-                >
-                  <Download className="h-4 w-4 mr-1" />
+                <Button variant="outline" size="sm" onClick={() => handleExport("tasks", "csv")} disabled={exportingType === "tasks-csv"}>
+                  {exportingType === "tasks-csv" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
                   CSV
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open("/api/export?type=tasks&format=json", "_blank")}
-                >
-                  <FileJson className="h-4 w-4 mr-1" />
+                <Button variant="outline" size="sm" onClick={() => handleExport("tasks", "json")} disabled={exportingType === "tasks-json"}>
+                  {exportingType === "tasks-json" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileJson className="h-4 w-4 mr-1" />}
                   JSON
                 </Button>
               </div>
@@ -104,8 +106,8 @@ export function DataExportTab() {
             {/* EOD Reports Export */}
             <div className="border rounded-lg p-4">
               <div className="flex items-center gap-3 mb-3">
-                <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                  <FileSpreadsheet className="h-5 w-5 text-amber-600" />
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                  <FileSpreadsheet className="h-5 w-5 text-slate-600" />
                 </div>
                 <div>
                   <h3 className="font-medium">EOD Reports</h3>
@@ -113,20 +115,12 @@ export function DataExportTab() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open("/api/export?type=eod-reports&format=csv", "_blank")}
-                >
-                  <Download className="h-4 w-4 mr-1" />
+                <Button variant="outline" size="sm" onClick={() => handleExport("eod-reports", "csv")} disabled={exportingType === "eod-reports-csv"}>
+                  {exportingType === "eod-reports-csv" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
                   CSV
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open("/api/export?type=eod-reports&format=json", "_blank")}
-                >
-                  <FileJson className="h-4 w-4 mr-1" />
+                <Button variant="outline" size="sm" onClick={() => handleExport("eod-reports", "json")} disabled={exportingType === "eod-reports-json"}>
+                  {exportingType === "eod-reports-json" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileJson className="h-4 w-4 mr-1" />}
                   JSON
                 </Button>
               </div>
@@ -135,8 +129,8 @@ export function DataExportTab() {
             {/* Team Export */}
             <div className="border rounded-lg p-4">
               <div className="flex items-center gap-3 mb-3">
-                <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-purple-600" />
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-slate-600" />
                 </div>
                 <div>
                   <h3 className="font-medium">Team Members</h3>
@@ -144,20 +138,12 @@ export function DataExportTab() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open("/api/export?type=team&format=csv", "_blank")}
-                >
-                  <Download className="h-4 w-4 mr-1" />
+                <Button variant="outline" size="sm" onClick={() => handleExport("team", "csv")} disabled={exportingType === "team-csv"}>
+                  {exportingType === "team-csv" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
                   CSV
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open("/api/export?type=team&format=json", "_blank")}
-                >
-                  <FileJson className="h-4 w-4 mr-1" />
+                <Button variant="outline" size="sm" onClick={() => handleExport("team", "json")} disabled={exportingType === "team-json"}>
+                  {exportingType === "team-json" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileJson className="h-4 w-4 mr-1" />}
                   JSON
                 </Button>
               </div>
@@ -169,8 +155,8 @@ export function DataExportTab() {
           {/* Calendar Export */}
           <div className="border rounded-lg p-4">
             <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                <Download className="h-5 w-5 text-indigo-600" />
+              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                <Download className="h-5 w-5 text-slate-600" />
               </div>
               <div>
                 <h3 className="font-medium">Calendar Export (ICS)</h3>
@@ -180,28 +166,16 @@ export function DataExportTab() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open("/api/export/calendar?type=all", "_blank")}
-              >
-                <Download className="h-4 w-4 mr-1" />
+              <Button variant="outline" size="sm" onClick={() => handleCalendarExport("all")} disabled={exportingType === "cal-all"}>
+                {exportingType === "cal-all" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
                 All Items
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open("/api/export/calendar?type=tasks", "_blank")}
-              >
-                <Download className="h-4 w-4 mr-1" />
+              <Button variant="outline" size="sm" onClick={() => handleCalendarExport("tasks")} disabled={exportingType === "cal-tasks"}>
+                {exportingType === "cal-tasks" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
                 Tasks Only
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open("/api/export/calendar?type=rocks", "_blank")}
-              >
-                <Download className="h-4 w-4 mr-1" />
+              <Button variant="outline" size="sm" onClick={() => handleCalendarExport("rocks")} disabled={exportingType === "cal-rocks"}>
+                {exportingType === "cal-rocks" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
                 Rocks Only
               </Button>
             </div>
