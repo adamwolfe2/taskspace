@@ -81,7 +81,7 @@ import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 // Bump this whenever DEFAULT_LAYOUT or rowHeight changes.
 // Stale localStorage with a different version is discarded on load.
-const LAYOUT_VERSION = 5
+const LAYOUT_VERSION = 6
 
 export interface DashboardWidget {
  id: string
@@ -140,19 +140,19 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
 ]
 
 // Default bento layout — 4 columns, rowHeight=40px
-// Designed to look like a polished dashboard out of the box
+// Row height formula: h*40 + (h-1)*16 = (h*56)-16 pixels
 export const DEFAULT_LAYOUT: LayoutItem[] = [
- { i: "welcome", x: 0, y: 0, w: 4, h: 3 },      // ~152px — header + quick actions
- { i: "eod_status", x: 0, y: 3, w: 4, h: 2 },    // ~96px  — status bar
- { i: "action_hub", x: 0, y: 5, w: 4, h: 6 },     // ~320px — AI suggestions
- { i: "rocks", x: 0, y: 11, w: 2, h: 10 },         // ~544px — rock list
- { i: "tasks", x: 2, y: 11, w: 2, h: 10 },         // ~544px — task list
- { i: "stats", x: 0, y: 21, w: 4, h: 4 },          // ~208px — stat cards
- { i: "productivity", x: 0, y: 25, w: 4, h: 4 },   // ~208px — streaks/achievements
- { i: "eod_calendar", x: 0, y: 29, w: 2, h: 9 },   // ~488px — calendar
- { i: "eod_submission", x: 2, y: 29, w: 2, h: 10 }, // ~544px — EOD form
- { i: "focus", x: 0, y: 39, w: 2, h: 7 },           // ~376px — timer
- { i: "activity", x: 2, y: 38, w: 2, h: 7 },        // ~376px — feed
+ { i: "welcome",        x: 0, y: 0,  w: 4, h: 3  }, // ~152px — header bar (full width)
+ { i: "stats",          x: 0, y: 3,  w: 4, h: 4  }, // ~208px — stat cards (full width)
+ { i: "rocks",          x: 0, y: 7,  w: 2, h: 12 }, // ~672px — left column
+ { i: "tasks",          x: 2, y: 7,  w: 2, h: 12 }, // ~672px — right column
+ { i: "action_hub",     x: 0, y: 19, w: 4, h: 5  }, // ~264px — skinny bar (full width)
+ { i: "productivity",   x: 0, y: 24, w: 4, h: 3  }, // ~152px — skinny bar (full width)
+ { i: "eod_calendar",   x: 0, y: 27, w: 2, h: 9  }, // ~488px — left column
+ { i: "activity",       x: 2, y: 27, w: 2, h: 9  }, // ~488px — right column
+ { i: "eod_submission", x: 0, y: 36, w: 4, h: 10 }, // ~544px — full width
+ { i: "eod_status",     x: 0, y: 46, w: 4, h: 2  }, // ~96px  — below fold (optional)
+ { i: "focus",          x: 0, y: 48, w: 2, h: 7  }, // ~376px — below fold (optional)
 ]
 
 function getWidgetIcon(type: DashboardWidget["type"]) {
@@ -412,9 +412,9 @@ export function CustomizableLayout({
      </GridLayout>
     ) : null
    ) : (
-    /* ── Default Mode: Native CSS Grid — always reliable, no JS width measurement ── */
+    /* ── Default Mode: Native CSS Grid — fixed 4 cols matching RGL edit mode ── */
     <div
-     className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+     className="grid grid-cols-4 gap-4"
      style={{ gridAutoRows: '40px' }}
     >
      {sortedWidgets.map((widget) => {
