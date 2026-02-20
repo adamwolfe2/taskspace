@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -86,7 +86,57 @@ export function EODSubmissionCard({
   const [weeklyMetricConfirmed, setWeeklyMetricConfirmed] = useState<string>("")
   const [attachments, setAttachments] = useState<FileAttachment[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [draftRestored, setDraftRestored] = useState(false)
   const { toast } = useToast()
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Draft key scoped to user + date
+  const draftKey = `eod-draft:${userId}:${reportDate}`
+
+  // Restore draft from localStorage on mount / date change
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(draftKey)
+      if (!saved) return
+      const draft = JSON.parse(saved)
+      if (draft.tasks) setTasks(draft.tasks)
+      if (draft.challenges) setChallenges(draft.challenges)
+      if (draft.tomorrowPriorities) setTomorrowPriorities(draft.tomorrowPriorities)
+      if (draft.needsEscalation !== undefined) setNeedsEscalation(draft.needsEscalation)
+      if (draft.escalationNote) setEscalationNote(draft.escalationNote)
+      if (draft.metricValueToday) setMetricValueToday(draft.metricValueToday)
+      setDraftRestored(true)
+    } catch {
+      // Corrupted draft — ignore
+    }
+  }, [draftKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-save draft to localStorage every 10 seconds when form has content
+  const saveDraft = useCallback(() => {
+    const hasContent = tasks.some(t => t.text.trim()) || challenges.trim() ||
+      tomorrowPriorities.some(p => p.text.trim()) || needsEscalation || metricValueToday.trim()
+    if (!hasContent) return
+    try {
+      localStorage.setItem(draftKey, JSON.stringify({
+        tasks, challenges, tomorrowPriorities, needsEscalation, escalationNote, metricValueToday,
+        savedAt: Date.now(),
+      }))
+    } catch {
+      // localStorage full or unavailable — ignore
+    }
+  }, [draftKey, tasks, challenges, tomorrowPriorities, needsEscalation, escalationNote, metricValueToday])
+
+  useEffect(() => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    autoSaveTimer.current = setTimeout(saveDraft, 10_000)
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
+  }, [saveDraft])
+
+  // Clear draft helper (called after successful submit)
+  const clearDraft = useCallback(() => {
+    try { localStorage.removeItem(draftKey) } catch { /* ignore */ }
+    setDraftRestored(false)
+  }, [draftKey])
 
   // Check if this is a Thursday submission (weekly deliverable due)
   const isThursdaySubmission = isThursday(reportDate)
@@ -261,7 +311,7 @@ export function EODSubmissionCard({
         // Email notification failed, but EOD was saved successfully
       }
 
-      // Reset form
+      // Reset form + clear draft
       setAutoTasks([])
       setTasks([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
       setChallenges("")
@@ -272,6 +322,7 @@ export function EODSubmissionCard({
       setAttachments([])
       setInternalSelectedDate(todayInOrgTz) // Reset date to today
       onDateReset?.()
+      clearDraft()
 
       toast({
         title: "EOD Report Submitted",
@@ -308,7 +359,7 @@ export function EODSubmissionCard({
             // Streak update failed, but report was updated successfully
           }
 
-          // Reset form
+          // Reset form + clear draft
           setAutoTasks([])
           setTasks([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
           setChallenges("")
@@ -319,6 +370,7 @@ export function EODSubmissionCard({
           setAttachments([])
           setInternalSelectedDate(todayInOrgTz) // Reset date to today
           onDateReset?.()
+          clearDraft()
 
           toast({
             title: "EOD Report Updated",
@@ -400,6 +452,30 @@ export function EODSubmissionCard({
         </div>
       </div>
       <div className="p-5 space-y-6">
+        {/* Draft restored notice */}
+        {draftRestored && (
+          <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+            <span className="text-slate-600">Draft restored from earlier session</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-500 hover:text-red-600 h-7 px-2"
+              onClick={() => {
+                clearDraft()
+                setTasks([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
+                setChallenges("")
+                setTomorrowPriorities([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
+                setNeedsEscalation(false)
+                setEscalationNote("")
+                setMetricValueToday("")
+              }}
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Discard
+            </Button>
+          </div>
+        )}
+
         {/* Auto-populated tasks from completed tasks */}
         {autoTasks.length > 0 && (
           <div className="space-y-3">

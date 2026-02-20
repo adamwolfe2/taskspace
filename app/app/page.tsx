@@ -111,7 +111,7 @@ import { SessionTimeoutWarning } from "@/components/shared/session-timeout-warni
 import { BugReporter } from "@/components/shared/bug-reporter"
 
 function AppContent() {
-  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization, pageFilter, clearPageFilter, isSuperAdmin, isDemoMode } = useApp()
+  const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization, pageFilter, clearPageFilter, isSuperAdmin, isDemoMode, enterDemoMode } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [resetToken, setResetToken] = useState<string | null>(null)
@@ -154,10 +154,17 @@ function AppContent() {
       const reset = params.get("resetToken")
       const verifyEmail = params.get("verifyEmail")
       const page = params.get("page")
+      const demo = params.get("demo")
 
       // Clear sensitive tokens from URL immediately to prevent exposure in browser history
-      if (invite || reset || verifyEmail || page) {
+      if (invite || reset || verifyEmail || page || demo) {
         window.history.replaceState({}, "", window.location.pathname)
+      }
+
+      // Auto-enter demo mode via URL param (e.g. /app?demo=true)
+      if (demo === "true" && !isAuthenticated && !isDemoMode) {
+        enterDemoMode()
+        return
       }
 
       if (invite) {
@@ -188,7 +195,7 @@ function AppContent() {
         }
       }
     }
-  }, [setCurrentPage, isAuthenticated, isLoading])
+  }, [setCurrentPage, isAuthenticated, isLoading, isDemoMode, enterDemoMode])
 
   // Show loading spinner while checking session
   if (isLoading) {

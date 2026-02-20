@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import type { Rock, Project } from "@/lib/types"
 import { formatDate } from "@/lib/utils/date-utils"
-import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight, RefreshCw, ChevronDown, ChevronUp } from "lucide-react"
+import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight, RefreshCw, ChevronDown, ChevronUp, Minus, Plus } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { useApp } from "@/lib/contexts/app-context"
 import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
@@ -268,7 +268,23 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-500">Progress</span>
-                      <span className="font-semibold text-slate-700">{rock.progress}%</span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleSliderChange(rock.id, Math.max(0, rock.progress - 10))}
+                          className="h-6 w-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                          aria-label="Decrease progress by 10%"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="font-semibold text-slate-700 w-10 text-center">{rock.progress}%</span>
+                        <button
+                          onClick={() => handleSliderChange(rock.id, Math.min(100, rock.progress + 10))}
+                          className="h-6 w-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                          aria-label="Increase progress by 10%"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
                     </div>
                     <div className="relative">
                       <div className="h-2 bg-slate-100 rounded-full overflow-hidden">

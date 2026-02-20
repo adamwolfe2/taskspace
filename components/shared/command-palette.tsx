@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import {
   CommandDialog,
@@ -27,6 +27,8 @@ import {
   Moon,
   Sun,
   Zap,
+  Loader2,
+  User,
 } from "lucide-react"
 import type { PageType } from "@/lib/types"
 import { QuickTaskDialog } from "./quick-task-dialog"
@@ -41,10 +43,21 @@ interface CommandItem {
   group: string
 }
 
+interface SearchResult {
+  id: string
+  type: "task" | "rock" | "member"
+  title: string
+  subtitle?: string
+  status?: string
+}
+
 export function CommandPalette() {
   const [open, setOpen] = useState(false)
   const [showQuickTask, setShowQuickTask] = useState(false)
   const [search, setSearch] = useState("")
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { setCurrentPage, currentUser, logout, darkMode, setDarkMode } = useApp()
 
   // Listen for keyboard shortcut (Cmd+K or Ctrl+K)
@@ -63,6 +76,38 @@ export function CommandPalette() {
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
   }, [])
+
+  // Debounced search
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+
+    if (search.length < 2) {
+      setSearchResults([])
+      setIsSearching(false)
+      return
+    }
+
+    setIsSearching(true)
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(search)}`, {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        })
+        const data = await res.json()
+        if (data.success && data.data) {
+          setSearchResults(data.data)
+        }
+      } catch {
+        // Search failed silently
+      } finally {
+        setIsSearching(false)
+      }
+    }, 250)
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [search])
 
   const navigateTo = useCallback((page: PageType) => {
     setCurrentPage(page)
@@ -84,10 +129,30 @@ export function CommandPalette() {
     setTimeout(() => setShowQuickTask(true), 100)
   }, [])
 
+  const handleSearchResultClick = useCallback((result: SearchResult) => {
+    setOpen(false)
+    switch (result.type) {
+      case "task":
+        setCurrentPage("tasks")
+        break
+      case "rock":
+        setCurrentPage("rocks")
+        break
+      case "member":
+        setCurrentPage("admin-team")
+        break
+    }
+  }, [setCurrentPage])
+
   const isAdmin = currentUser?.role === "owner" || currentUser?.role === "admin"
 
   // Show "Create task" option when search text doesn't look like a command
   const showCreateOption = search.length >= 3
+
+  const hasSearchResults = searchResults.length > 0
+  const taskResults = searchResults.filter(r => r.type === "task")
+  const rockResults = searchResults.filter(r => r.type === "rock")
+  const memberResults = searchResults.filter(r => r.type === "member")
 
   // Define all available commands
   const commands: CommandItem[] = [
@@ -234,6 +299,23 @@ export function CommandPalette() {
   const adminCommands = commands.filter(c => c.group === "Admin")
   const actionCommands = commands.filter(c => c.group === "Actions")
 
+  const getStatusBadge = (status?: string) => {
+    if (!status) return null
+    const colors: Record<string, string> = {
+      pending: "bg-amber-100 text-amber-700",
+      "in-progress": "bg-blue-100 text-blue-700",
+      completed: "bg-emerald-100 text-emerald-700",
+      "on-track": "bg-emerald-100 text-emerald-700",
+      "at-risk": "bg-amber-100 text-amber-700",
+      blocked: "bg-red-100 text-red-700",
+    }
+    return (
+      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${colors[status] || "bg-slate-100 text-slate-600"}`}>
+        {status.replace("-", " ")}
+      </span>
+    )
+  }
+
   if (!currentUser) return null
 
   return (
@@ -245,11 +327,16 @@ export function CommandPalette() {
         aria-label="Open command palette"
       />
 
-      <CommandDialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setSearch("") }}>
-        <CommandInput placeholder="Type a command or search..." value={search} onValueChange={setSearch} />
+      <CommandDialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setSearch(""); setSearchResults([]) } }}>
+        <CommandInput placeholder="Search tasks, rocks, people or type a command..." value={search} onValueChange={setSearch} />
         <CommandList>
           <CommandEmpty>
-            {search.length >= 3 ? (
+            {isSearching ? (
+              <div className="flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Searching...
+              </div>
+            ) : search.length >= 3 ? (
               <button
                 className="flex items-center gap-2 w-full px-2 py-3 text-sm text-left hover:bg-accent rounded-md cursor-pointer"
                 onClick={handleQuickCreate}
@@ -261,6 +348,72 @@ export function CommandPalette() {
               "No results found."
             )}
           </CommandEmpty>
+
+          {/* Live search results */}
+          {taskResults.length > 0 && (
+            <CommandGroup heading="Tasks">
+              {taskResults.map((result) => (
+                <CommandItem
+                  key={`task-${result.id}`}
+                  onSelect={() => handleSearchResultClick(result)}
+                >
+                  <CheckSquare className="mr-2 h-4 w-4 text-slate-400" />
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate">{result.title}</span>
+                      {getStatusBadge(result.status)}
+                    </div>
+                    {result.subtitle && (
+                      <span className="text-xs text-muted-foreground truncate">{result.subtitle}</span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {rockResults.length > 0 && (
+            <CommandGroup heading="Rocks">
+              {rockResults.map((result) => (
+                <CommandItem
+                  key={`rock-${result.id}`}
+                  onSelect={() => handleSearchResultClick(result)}
+                >
+                  <Target className="mr-2 h-4 w-4 text-slate-400" />
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate">{result.title}</span>
+                      {getStatusBadge(result.status)}
+                    </div>
+                    {result.subtitle && (
+                      <span className="text-xs text-muted-foreground truncate">{result.subtitle}</span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {memberResults.length > 0 && (
+            <CommandGroup heading="People">
+              {memberResults.map((result) => (
+                <CommandItem
+                  key={`member-${result.id}`}
+                  onSelect={() => handleSearchResultClick(result)}
+                >
+                  <User className="mr-2 h-4 w-4 text-slate-400" />
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <span className="truncate">{result.title}</span>
+                    {result.subtitle && (
+                      <span className="text-xs text-muted-foreground truncate">{result.subtitle}</span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {hasSearchResults && <CommandSeparator />}
 
           {showCreateOption && (
             <CommandGroup heading="Quick Create">
