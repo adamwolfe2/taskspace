@@ -445,7 +445,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
             {/* Progress bar */}
             <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
               <motion.div
-                className="h-full bg-emerald-500 rounded-full"
+                className="h-full bg-slate-800 rounded-full"
                 initial={{ width: "0%" }}
                 animate={{ width: `${Math.min(((setupProgress + 1) / SETUP_STEPS.length) * 100, 100)}%` }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
@@ -470,7 +470,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                   >
                     <div className={cn(
                       "w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300",
-                      isDone && "bg-emerald-100 text-emerald-600",
+                      isDone && "bg-slate-100 text-slate-600",
                       isActive && "bg-black text-white",
                       !isActive && !isDone && "bg-slate-100 text-slate-400"
                     )}>
@@ -531,7 +531,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                       className={cn(
                         "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300",
                         isActive && "bg-black text-white shadow-md",
-                        isCompleted && "bg-emerald-500 text-white",
+                        isCompleted && "bg-slate-700 text-white",
                         !isActive && !isCompleted && "bg-slate-200 text-slate-400"
                       )}
                     >
@@ -551,7 +551,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                       className={cn(
                         "text-xs mt-1 hidden sm:block font-medium whitespace-nowrap",
                         isActive && "text-black",
-                        isCompleted && "text-emerald-600",
+                        isCompleted && "text-slate-700",
                         !isActive && !isCompleted && "text-slate-400"
                       )}
                     >
@@ -564,7 +564,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                       className={cn(
                         "text-[10px] hidden lg:block whitespace-nowrap",
                         isActive && "text-slate-500",
-                        isCompleted && "text-emerald-500",
+                        isCompleted && "text-slate-500",
                         !isActive && !isCompleted && "text-slate-300"
                       )}
                     >
@@ -575,7 +575,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                     <div
                       className={cn(
                         "h-0.5 flex-1 mx-1 sm:mx-2 rounded transition-all duration-300",
-                        isCompleted ? "bg-emerald-500" : "bg-slate-200"
+                        isCompleted ? "bg-slate-700" : "bg-slate-200"
                       )}
                     />
                   )}
@@ -663,9 +663,9 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-4"
+                        className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-4"
                       >
-                        <div className="flex items-center gap-2 text-emerald-700">
+                        <div className="flex items-center gap-2 text-slate-700">
                           <CheckCircle className="w-5 h-5" />
                           <span className="font-medium text-sm">Brand detected!</span>
                         </div>
@@ -732,7 +732,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                           )}
                         </div>
 
-                        <p className="text-xs text-emerald-600">
+                        <p className="text-xs text-slate-500">
                           These details will be used to set up your workspace. You can adjust everything in the next step.
                         </p>
                       </motion.div>
@@ -992,8 +992,8 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                               className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200"
                             >
                               <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                  <Mail className="w-4 h-4 text-blue-600" />
+                                <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <Mail className="w-4 h-4 text-slate-600" />
                                 </div>
                                 <div className="min-w-0">
                                   <p className="font-medium text-sm text-slate-900 truncate">{invite.email}</p>
@@ -1090,12 +1090,12 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                           {rocks.map((rock, index) => (
                             <div
                               key={index}
-                              className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg"
+                              className="p-3 bg-slate-50 border border-slate-200 rounded-lg"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <Target className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                                    <Target className="w-4 h-4 text-slate-600 flex-shrink-0" />
                                     <h4 className="font-medium text-sm text-slate-900 truncate">{rock.title}</h4>
                                   </div>
                                   {rock.description && (
@@ -1217,7 +1217,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                     <Button
                       onClick={handleComplete}
                       disabled={isSubmitting}
-                      className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                      className="w-full sm:w-auto gap-2"
                     >
                       {isSubmitting ? (
                         <>

@@ -144,9 +144,9 @@ export function WorkspaceDashboard() {
     : 0
 
   const planColors: Record<string, string> = {
-    free: "bg-slate-500",
-    starter: "bg-blue-500",
-    professional: "bg-purple-500",
+    free: "bg-slate-400",
+    starter: "bg-slate-600",
+    professional: "bg-slate-700",
     enterprise: "bg-primary",
   }
 
@@ -229,8 +229,8 @@ export function WorkspaceDashboard() {
                 value={metrics.usage.eodSubmissionRate}
                 className={cn(
                   "h-1.5",
-                  metrics.usage.eodSubmissionRate === 100 && "[&>div]:bg-emerald-500",
-                  metrics.usage.eodSubmissionRate >= 75 && metrics.usage.eodSubmissionRate < 100 && "[&>div]:bg-blue-500",
+                  metrics.usage.eodSubmissionRate === 100 && "[&>div]:bg-slate-800",
+                  metrics.usage.eodSubmissionRate >= 75 && metrics.usage.eodSubmissionRate < 100 && "[&>div]:bg-slate-600",
                   metrics.usage.eodSubmissionRate < 75 && "[&>div]:bg-amber-500"
                 )}
               />

@@ -145,9 +145,9 @@ export function StreakCounter({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
-                <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 rounded-full">
-                  <Trophy className="h-3 w-3 text-amber-500" />
-                  <span className="text-[10px] font-medium text-amber-600">NEW BEST</span>
+                <div className="flex items-center gap-1 px-2 py-1 bg-slate-100 rounded-full">
+                  <Trophy className="h-3 w-3 text-slate-600" />
+                  <span className="text-[10px] font-medium text-slate-700">NEW BEST</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent>

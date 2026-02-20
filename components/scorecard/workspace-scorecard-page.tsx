@@ -626,28 +626,32 @@ export function WorkspaceScorecardPage() {
 
       {/* AI Insights Display */}
       {aiInsights && (
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-slate-200 bg-slate-50">
           <CardHeader>
             <CardTitle className="text-base">AI Scorecard Insights</CardTitle>
             <CardDescription>{aiInsights.summary}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {aiInsights.insights.map((insight, i) => (
-              <div key={i} className={cn(
-                "p-3 rounded-lg border",
-                insight.severity === "critical" ? "bg-red-50 border-red-200" :
-                insight.severity === "warning" ? "bg-yellow-50 border-yellow-200" : "bg-slate-50 border-slate-200"
-              )}>
-                <p className="font-medium text-sm">{insight.metricName} ({insight.trend})</p>
-                <p className="text-sm text-slate-600">{insight.message}</p>
-              </div>
-            ))}
+            {aiInsights.insights.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-2">No specific insights generated for this period.</p>
+            ) : (
+              aiInsights.insights.map((insight, i) => (
+                <div key={i} className={cn(
+                  "p-3 rounded-lg border",
+                  insight.severity === "critical" ? "bg-red-50 border-red-200" :
+                  insight.severity === "warning" ? "bg-amber-50 border-amber-200" : "bg-white border-slate-200"
+                )}>
+                  <p className="font-medium text-sm">{insight.metricName} ({insight.trend})</p>
+                  <p className="text-sm text-slate-600">{insight.message}</p>
+                </div>
+              ))
+            )}
             {aiInsights.suggestedActions.length > 0 && (
               <div className="pt-2 border-t">
                 <p className="text-sm font-medium mb-1">Suggested Actions:</p>
                 <ul className="text-sm text-slate-600 space-y-1">
                   {aiInsights.suggestedActions.map((action, i) => (
-                    <li key={i}>- {action}</li>
+                    <li key={i}>— {action}</li>
                   ))}
                 </ul>
               </div>
