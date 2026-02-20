@@ -266,8 +266,8 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
                 <p className="text-3xl font-bold text-slate-900 mt-1">{teamSummary.totalMembers}</p>
                 <p className="text-xs text-slate-400 mt-1">{teamSummary.activeMembers} active</p>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                <Users className="h-5 w-5 text-blue-600" />
+              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <Users className="h-5 w-5 text-slate-600" />
               </div>
             </div>
           </CardContent>
@@ -290,11 +290,11 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
               </div>
               <div className={cn(
                 "h-10 w-10 rounded-xl flex items-center justify-center",
-                teamSummary.totalOverdueTasks > 0 ? "bg-red-50" : "bg-emerald-50"
+                teamSummary.totalOverdueTasks > 0 ? "bg-red-50" : "bg-slate-100"
               )}>
                 <CheckCircle2 className={cn(
                   "h-5 w-5",
-                  teamSummary.totalOverdueTasks > 0 ? "text-red-600" : "text-emerald-600"
+                  teamSummary.totalOverdueTasks > 0 ? "text-red-600" : "text-slate-600"
                 )} />
               </div>
             </div>
@@ -316,8 +316,8 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
                     : `${teamSummary.rocksOnTrack} on track`}
                 </p>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center">
-                <Target className="h-5 w-5 text-purple-600" />
+              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <Target className="h-5 w-5 text-slate-600" />
               </div>
             </div>
           </CardContent>
@@ -333,8 +333,8 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
                   {Math.round(teamSummary.eodSubmissionRateToday * teamSummary.activeMembers / 100)}/{teamSummary.activeMembers} submitted
                 </p>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-orange-600" />
+              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-slate-600" />
               </div>
             </div>
           </CardContent>
@@ -393,7 +393,7 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-600" />
+              <Sparkles className="h-5 w-5 text-slate-600" />
               Insights
             </CardTitle>
           </CardHeader>
@@ -403,22 +403,22 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
                 key={insight.id}
                 className={cn(
                   "flex items-start gap-3 p-3 rounded-lg border animate-fade-in-up opacity-0",
-                  insight.priority === "high" ? "bg-amber-50 border-amber-200" :
-                  insight.priority === "medium" ? "bg-blue-50 border-blue-200" :
-                  "bg-slate-50 border-slate-200"
+                  insight.priority === "high" ? "bg-red-50 border-red-200" :
+                  insight.priority === "medium" ? "bg-slate-50 border-slate-200" :
+                  "bg-white border-slate-200"
                 )}
                 style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'forwards' }}
               >
-                {insight.type === "workload" && <BarChart3 className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />}
-                {insight.type === "performance" && <TrendingUp className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />}
-                {insight.type === "pattern" && <Clock className="h-5 w-5 text-purple-600 shrink-0 mt-0.5" />}
-                {insight.type === "sentiment" && <Flame className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />}
-                {insight.type === "recommendation" && <Sparkles className="h-5 w-5 text-purple-600 shrink-0 mt-0.5" />}
+                {insight.type === "workload" && <BarChart3 className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />}
+                {insight.type === "performance" && <TrendingUp className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />}
+                {insight.type === "pattern" && <Clock className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />}
+                {insight.type === "sentiment" && <Flame className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />}
+                {insight.type === "recommendation" && <Sparkles className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />}
                 <div className="flex-1">
                   <p className="font-medium text-slate-900 text-sm">{insight.title}</p>
                   <p className="text-xs text-slate-500 mt-0.5">{insight.description}</p>
                   {insight.suggestedAction && (
-                    <p className="text-xs text-blue-600 mt-1 font-medium">{insight.suggestedAction}</p>
+                    <p className="text-xs text-slate-600 mt-1 font-medium">{insight.suggestedAction}</p>
                   )}
                 </div>
               </div>
@@ -432,7 +432,7 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
         <Card className="border-slate-200 bg-slate-50">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-blue-600" />
+              <Sparkles className="h-4 w-4 text-slate-600" />
               AI Team Insights
               <Badge variant={aiInsights.teamHealth === "good" ? "default" : aiInsights.teamHealth === "warning" ? "secondary" : "destructive"} className="ml-2">
                 {aiInsights.teamHealth}
@@ -447,9 +447,9 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
                   key={i}
                   className={cn(
                     "p-3 rounded-lg border text-sm",
-                    insight.type === "positive" ? "bg-emerald-50 border-emerald-200" :
-                    insight.type === "warning" ? "bg-yellow-50 border-yellow-200" :
-                    "bg-blue-50 border-blue-200"
+                    insight.type === "positive" ? "bg-white border-slate-200" :
+                    insight.type === "warning" ? "bg-red-50 border-red-200" :
+                    "bg-slate-50 border-slate-200"
                   )}
                 >
                   <p className="font-medium">{insight.title}</p>
@@ -584,7 +584,7 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
             <div>
               <p className="text-sm text-slate-500 mb-2">Avg EOD Streak</p>
               <div className="flex items-center gap-2">
-                <Flame className="h-5 w-5 text-orange-500" />
+                <Flame className="h-5 w-5 text-slate-500" />
                 <span className="text-lg font-bold text-slate-900">{teamSummary.avgEodStreak}</span>
                 <span className="text-sm text-slate-400">days</span>
               </div>
