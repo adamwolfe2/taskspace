@@ -393,7 +393,7 @@ export function EnhancedCalendarView({
                 {selectedDayData.rocks.map((rock) => (
                   <div
                     key={rock.id}
-                    className="p-3 rounded-lg border border-purple-200 bg-purple-50/50"
+                    className="p-3 rounded-lg border border-slate-200 bg-slate-50/50"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-medium flex-1 min-w-0">{rock.title}</p>

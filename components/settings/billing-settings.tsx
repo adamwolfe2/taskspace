@@ -334,7 +334,7 @@ export function BillingSettings() {
                   <Badge variant="default" className="bg-emerald-500">Active</Badge>
                 )}
                 {subscription?.status === "trialing" && (
-                  <Badge variant="default" className="bg-blue-500">Trial</Badge>
+                  <Badge variant="secondary">Trial</Badge>
                 )}
                 {subscription?.status === "past_due" && (
                   <Badge variant="destructive">Past Due</Badge>

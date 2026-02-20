@@ -47,33 +47,33 @@ export function ImportSummary({ job, onReset }: ImportSummaryProps) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Workspaces Created */}
         {stats.workspacesCreated !== undefined && stats.workspacesCreated > 0 && (
-          <div className="rounded-lg bg-blue-50 p-4">
-            <p className="text-sm font-medium text-blue-900">Workspaces</p>
-            <p className="mt-2 text-3xl font-bold text-blue-600">
+          <div className="rounded-lg bg-slate-50 border border-slate-200 p-4">
+            <p className="text-sm font-medium text-slate-700">Workspaces</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900">
               {stats.workspacesCreated}
             </p>
-            <p className="mt-1 text-xs text-blue-700">Created</p>
+            <p className="mt-1 text-xs text-slate-500">Created</p>
           </div>
         )}
 
         {/* Projects Created */}
         {stats.projectsCreated !== undefined && stats.projectsCreated > 0 && (
-          <div className="rounded-lg bg-purple-50 p-4">
-            <p className="text-sm font-medium text-purple-900">Projects</p>
-            <p className="mt-2 text-3xl font-bold text-purple-600">
+          <div className="rounded-lg bg-slate-50 border border-slate-200 p-4">
+            <p className="text-sm font-medium text-slate-700">Projects</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900">
               {stats.projectsCreated}
             </p>
-            <p className="mt-1 text-xs text-purple-700">Created</p>
+            <p className="mt-1 text-xs text-slate-500">Created</p>
           </div>
         )}
 
         {/* Tasks Created */}
-        <div className="rounded-lg bg-green-50 p-4">
-          <p className="text-sm font-medium text-green-900">Tasks</p>
-          <p className="mt-2 text-3xl font-bold text-green-600">
+        <div className="rounded-lg bg-slate-50 border border-slate-200 p-4">
+          <p className="text-sm font-medium text-slate-700">Tasks</p>
+          <p className="mt-2 text-3xl font-bold text-slate-900">
             {stats.tasksCreated || 0}
           </p>
-          <p className="mt-1 text-xs text-green-700">Created</p>
+          <p className="mt-1 text-xs text-slate-500">Created</p>
         </div>
 
         {/* Tasks Failed */}
@@ -89,23 +89,23 @@ export function ImportSummary({ job, onReset }: ImportSummaryProps) {
 
         {/* Users Invited */}
         {stats.usersInvited !== undefined && stats.usersInvited > 0 && (
-          <div className="rounded-lg bg-indigo-50 p-4">
-            <p className="text-sm font-medium text-indigo-900">Users</p>
-            <p className="mt-2 text-3xl font-bold text-indigo-600">
+          <div className="rounded-lg bg-slate-50 border border-slate-200 p-4">
+            <p className="text-sm font-medium text-slate-700">Users</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900">
               {stats.usersInvited}
             </p>
-            <p className="mt-1 text-xs text-indigo-700">Invited</p>
+            <p className="mt-1 text-xs text-slate-500">Invited</p>
           </div>
         )}
 
         {/* Tags Created */}
         {stats.tagsCreated !== undefined && stats.tagsCreated > 0 && (
-          <div className="rounded-lg bg-yellow-50 p-4">
-            <p className="text-sm font-medium text-yellow-900">Tags</p>
-            <p className="mt-2 text-3xl font-bold text-yellow-600">
+          <div className="rounded-lg bg-slate-50 border border-slate-200 p-4">
+            <p className="text-sm font-medium text-slate-700">Tags</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900">
               {stats.tagsCreated}
             </p>
-            <p className="mt-1 text-xs text-yellow-700">Created</p>
+            <p className="mt-1 text-xs text-slate-500">Created</p>
           </div>
         )}
       </div>
@@ -245,7 +245,7 @@ export function ImportSummary({ job, onReset }: ImportSummaryProps) {
             a.click()
             URL.revokeObjectURL(url)
           }}
-          className="text-sm text-blue-600 hover:text-blue-700"
+          className="text-sm text-slate-600 hover:text-slate-900 underline"
         >
           Download Full Report
         </button>

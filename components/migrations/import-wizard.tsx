@@ -324,7 +324,7 @@ export function ImportWizard() {
           <div>
             <button
               onClick={() => setStep("source-selection")}
-              className="text-sm text-blue-600 hover:text-blue-700 mb-4"
+              className="text-sm text-slate-500 hover:text-slate-800 mb-4 underline"
             >
               ← Back to source selection
             </button>
@@ -410,7 +410,7 @@ export function ImportWizard() {
       {step === "processing" && (
         <div className="space-y-6">
           <div className="text-center py-12">
-            <ArrowPathIcon className="mx-auto h-16 w-16 animate-spin text-blue-600" role="status" aria-label="Importing data" />
+            <ArrowPathIcon className="mx-auto h-16 w-16 animate-spin text-slate-600" role="status" aria-label="Importing data" />
             <h2 className="mt-4 text-xl font-semibold text-slate-900">
               Importing Your Data
             </h2>

@@ -147,7 +147,7 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
               {isLongDescription && (
                 <button
                   onClick={() => setShowFullDescription(!showFullDescription)}
-                  className="text-xs text-blue-500 hover:text-blue-600 mt-1"
+                  className="text-xs text-slate-500 hover:text-slate-700 mt-1 underline"
                   aria-expanded={showFullDescription}
                   aria-label={showFullDescription ? "Show less of description" : "Show more of description"}
                 >

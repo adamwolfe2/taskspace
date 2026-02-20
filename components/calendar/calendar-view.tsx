@@ -184,7 +184,7 @@ export function CalendarView({ tasks, rocks, eodReports, currentUser: _currentUs
                   className={cn(
                     "text-sm font-medium",
                     isDayToday &&
-                      "bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                      "bg-slate-900 text-white rounded-full w-6 h-6 flex items-center justify-center"
                   )}
                 >
                   {format(day, "d")}
@@ -196,7 +196,7 @@ export function CalendarView({ tasks, rocks, eodReports, currentUser: _currentUs
                     <div
                       className={cn(
                         "flex items-center gap-0.5 text-xs",
-                        overdueTasks.length > 0 ? "text-red-600" : "text-blue-600"
+                        overdueTasks.length > 0 ? "text-red-600" : "text-slate-600"
                       )}
                     >
                       <CheckSquare className="h-3 w-3" />
@@ -204,7 +204,7 @@ export function CalendarView({ tasks, rocks, eodReports, currentUser: _currentUs
                     </div>
                   )}
                   {dayData && dayData.rocks.length > 0 && (
-                    <div className="flex items-center gap-0.5 text-xs text-purple-600">
+                    <div className="flex items-center gap-0.5 text-xs text-slate-500">
                       <Target className="h-3 w-3" />
                       <span>{dayData.rocks.length}</span>
                     </div>

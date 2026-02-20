@@ -604,7 +604,7 @@ export function TimeTrackingSummary({
  </div>
  <div className="h-2 bg-slate-100  rounded-full overflow-hidden">
  <div
- className="h-full bg-blue-500 rounded-full"
+ className="h-full bg-slate-800 rounded-full"
  style={{ width: `${Math.min(100, (totalMinutes / 480) * 100)}%` }}
  />
  </div>

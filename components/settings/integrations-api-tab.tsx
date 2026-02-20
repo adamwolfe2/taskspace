@@ -654,17 +654,17 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
           {/* One-Click Setup */}
           <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
             <div className="flex items-start gap-4">
-              <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                <Download className="h-6 w-6 text-purple-600" />
+              <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                <Download className="h-6 w-6 text-slate-600" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-purple-900">One-Click Setup (Recommended)</h4>
-                <p className="text-sm text-purple-700 mt-1">
+                <h4 className="font-semibold text-slate-900">One-Click Setup (Recommended)</h4>
+                <p className="text-sm text-slate-600 mt-1">
                   Download a pre-configured extension and drag it into Claude Desktop's Extensions settings.
                 </p>
                 {apiKeys.length > 0 ? (
                   <div className="mt-3 space-y-2">
-                    <Label className="text-sm text-purple-800">Select an API key to include:</Label>
+                    <Label className="text-sm text-slate-700">Select an API key to include:</Label>
                     <div className="flex items-center gap-2 flex-wrap">
                       {apiKeys.map((key) => (
                         <Button
@@ -684,7 +684,7 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
                         </Button>
                       ))}
                     </div>
-                    <p className="text-xs text-purple-600 mt-2">
+                    <p className="text-xs text-slate-500 mt-2">
                       After downloading, open Claude Desktop → Settings → Extensions, then drag and drop the
                       file.
                     </p>
