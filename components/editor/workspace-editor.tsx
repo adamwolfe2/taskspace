@@ -70,12 +70,12 @@ export function WorkspaceEditor({ initialContent, onSave, isSaving }: WorkspaceE
 
   return (
     <div className="relative w-full">
-      <div className="flex absolute right-4 top-4 z-10 gap-2">
-        <div className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs text-slate-500">
+      <div className="flex items-center justify-end gap-2 mb-2">
+        <div className="text-xs text-slate-400">
           {saveStatus === "saving" ? "Saving..." : saveStatus === "unsaved" ? "Unsaved" : "Saved"}
         </div>
         {wordCount > 0 && (
-          <div className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs text-slate-500">
+          <div className="text-xs text-slate-400">
             {wordCount} words
           </div>
         )}
@@ -84,11 +84,11 @@ export function WorkspaceEditor({ initialContent, onSave, isSaving }: WorkspaceE
         <EditorContent
           initialContent={parsedContent}
           extensions={extensions}
-          className="relative min-h-[500px] w-full border border-slate-200 bg-white rounded-lg shadow-sm"
+          className="relative min-h-[300px] w-full"
           editorProps={{
             attributes: {
               class:
-                "prose prose-lg dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full p-8 pt-14",
+                "prose prose-lg dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full px-1 pt-10",
             },
           }}
           onCreate={({ editor }) => {

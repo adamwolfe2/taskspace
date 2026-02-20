@@ -98,6 +98,7 @@ export function ProfileCompletionCard() {
                 placeholder="e.g. Product Manager"
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && jobTitle.trim() && handleSave()}
                 className="mt-1"
               />
             </div>

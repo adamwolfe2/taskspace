@@ -35,8 +35,8 @@ export function EnhancedStatCard({
   badge,
 }: EnhancedStatCardProps) {
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-card p-3 sm:p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-2 sm:mb-4">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card p-3 sm:p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-2 sm:mb-3">
         <div className={cn("p-2 sm:p-3 rounded-lg", iconBg)} style={iconBgStyle}>
           <Icon className={cn("h-4 w-4 sm:h-6 sm:w-6", iconColor)} style={iconColorStyle} />
         </div>

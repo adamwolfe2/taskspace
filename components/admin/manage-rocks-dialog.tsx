@@ -419,6 +419,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
                       id="title"
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      onKeyDown={(e) => e.key === "Enter" && formData.title && formData.description && handleSubmit()}
                       placeholder="Enter rock title"
                     />
                   </div>

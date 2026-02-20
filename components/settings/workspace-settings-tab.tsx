@@ -318,15 +318,6 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
       return
     }
 
-    if (currentWorkspace.isDefault) {
-      toast({
-        title: "Cannot delete default workspace",
-        description: "The default workspace cannot be deleted",
-        variant: "destructive",
-      })
-      return
-    }
-
     setIsDeleting(true)
     try {
       await deleteWorkspace(currentWorkspace.id)
@@ -729,7 +720,7 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
       </Card>
 
       {/* Danger Zone */}
-      {isAdmin && !currentWorkspace.isDefault && (
+      {isAdmin && (
         <Card className="border-destructive">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
@@ -770,7 +761,7 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
             </AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the{" "}
-              <strong>{currentWorkspace.name}</strong> workspace and remove all associated data
+              <strong>{currentWorkspace.name}</strong> {currentWorkspace.isDefault ? "organization" : "workspace"} and remove all associated data
               including members, tasks, rocks, and EOD reports.
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -151,6 +151,7 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
               placeholder="e.g., Marketing Team, Project Alpha, Engineering"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && name.trim() && handleCreate()}
               maxLength={100}
               disabled={isCreating}
             />

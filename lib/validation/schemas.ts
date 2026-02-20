@@ -1061,6 +1061,16 @@ export const peopleAssessmentUpdateSchema = z.object({
 
 export const vtoUpsertSchema = z.object({
   workspaceId: z.string().min(1, "Workspace ID is required"),
+  coreValues: z.array(z.string()).optional(),
+  coreFocus: z.record(z.unknown()).optional(),
+  tenYearTarget: z.record(z.unknown()).optional(),
+  marketingStrategy: z.record(z.unknown()).optional(),
+  threeYearPicture: z.record(z.unknown()).optional(),
+  oneYearPlan: z.record(z.unknown()).optional(),
+  quarterlyRocks: z.array(z.string()).optional(),
+  issuesList: z.array(z.string()).optional(),
+  lastEditedBy: z.string().nullable().optional(),
+  updatedAt: z.string().optional(),
 })
 
 export const taskTemplateCreateSchema = z.object({

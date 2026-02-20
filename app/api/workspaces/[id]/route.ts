@@ -250,12 +250,21 @@ export const DELETE = withAdmin(async (request, auth, context?) => {
       )
     }
 
-    // Cannot delete default workspace
+    // If default workspace, cascade delete the entire organization
     if (workspace.isDefault) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Cannot delete the default workspace" },
-        { status: 400 }
-      )
+      const { db } = await import("@/lib/db")
+      const deleted = await db.organizations.delete(workspace.organizationId)
+      if (!deleted) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Failed to delete organization" },
+          { status: 500 }
+        )
+      }
+      return NextResponse.json<ApiResponse<{ deleted: boolean }>>({
+        success: true,
+        data: { deleted: true },
+        message: "Organization and all workspaces deleted successfully",
+      })
     }
 
     const deleted = await deleteWorkspace(id)

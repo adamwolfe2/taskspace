@@ -40,18 +40,26 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    // Prevent owner from deleting account if they're the only owner
+    // Check if sole owner — cascade delete org if they're the only member
     if (auth.member.role === "owner") {
       const members = await db.members.findByOrganizationId(auth.organization.id)
       const ownerCount = members.filter(m => m.role === "owner").length
-      if (ownerCount <= 1) {
+      if (ownerCount <= 1 && members.length > 1) {
+        // Other non-owner members exist — can't just delete
         return NextResponse.json<ApiResponse<null>>(
           {
             success: false,
-            error: "You are the only owner of this organization. Please transfer ownership or delete the organization first.",
+            error: "You are the only owner of this organization but other members exist. Please transfer ownership or remove members first.",
           },
           { status: 400 }
         )
+      }
+      // Sole owner AND only member — cascade delete the organization
+      if (ownerCount <= 1 && members.length <= 1) {
+        logger.info({
+          organizationId: auth.organization.id,
+        }, "Cascade deleting organization (sole owner/member deleting account)")
+        await db.organizations.delete(auth.organization.id)
       }
     }
 

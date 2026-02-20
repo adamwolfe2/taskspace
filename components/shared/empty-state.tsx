@@ -46,9 +46,9 @@ export function EmptyState({
 }: EmptyStateProps) {
  const sizeStyles = {
  sm: {
- container: "py-6 px-4",
- icon: "h-8 w-8",
- iconWrapper: "h-12 w-12",
+ container: "py-4 px-4",
+ icon: "h-6 w-6",
+ iconWrapper: "h-10 w-10",
  title: "text-sm font-medium",
  description: "text-xs",
  },
@@ -85,7 +85,7 @@ export function EmptyState({
  >
  <div
  className={cn(
- "rounded-full bg-slate-100 flex items-center justify-center mb-4",
+ "rounded-full bg-slate-100 flex items-center justify-center mb-3",
  styles.iconWrapper
  )}
  >
@@ -99,7 +99,7 @@ export function EmptyState({
  {title}
  </h3>
  {description && (
- <p className={cn("text-slate-500 max-w-sm mb-4 px-4 sm:px-0", styles.description)}>
+ <p className={cn("text-slate-500 max-w-sm mb-2 px-4 sm:px-0", styles.description)}>
  {description}
  </p>
  )}
