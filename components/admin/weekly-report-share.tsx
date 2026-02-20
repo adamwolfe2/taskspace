@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   BarChart3,
+  Lock,
+  KeyRound,
 } from "lucide-react"
 import { format, addDays, subDays, nextThursday, previousThursday, isThursday } from "date-fns"
 import type { Organization } from "@/lib/types"
@@ -25,21 +27,13 @@ interface WeeklyReportShareProps {
 }
 
 function getThursdayForWeek(date: Date): Date {
-  // If it's already Thursday, return this Thursday
-  // Otherwise get the Thursday of the current week (looking forward)
   if (isThursday(date)) {
     return date
   }
-  // Get the most recent Thursday (including today if Thursday)
   const day = date.getDay()
-  // Thursday is day 4
-  // If we're past Thursday (Fri=5, Sat=6, Sun=0), get next Thursday's date as "this week's end"
-  // If we're before Thursday (Mon=1, Tue=2, Wed=3), get the upcoming Thursday
   if (day > 4 || day === 0) {
-    // We're past Thursday, show this past Thursday as current week
     return previousThursday(date)
   } else {
-    // We're before Thursday, show upcoming Thursday
     return nextThursday(date)
   }
 }
@@ -48,17 +42,20 @@ export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
   const { toast } = useToast()
   const [selectedThursday, setSelectedThursday] = useState(() => getThursdayForWeek(new Date()))
   const [copied, setCopied] = useState(false)
+  const [token, setToken] = useState<string | null>(
+    (organization.settings as { publicEodToken?: string } | null)?.publicEodToken || null
+  )
+  const [isGenerating, setIsGenerating] = useState(false)
 
   const dateString = format(selectedThursday, "yyyy-MM-dd")
 
-  // Calculate week range (Friday to Thursday)
   const weekStart = subDays(selectedThursday, 6)
   const weekRangeDisplay = `${format(weekStart, "MMM d")} - ${format(selectedThursday, "MMM d, yyyy")}`
 
-  // Build the public URL
-  const publicUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/public/eod/${organization.slug}/week/${dateString}`
-    : `/public/eod/${organization.slug}/week/${dateString}`
+  const origin = typeof window !== "undefined" ? window.location.origin : ""
+  const publicUrl = token
+    ? `${origin}/public/eod/${organization.slug}/week/${dateString}?token=${token}`
+    : `${origin}/public/eod/${organization.slug}/week/${dateString}`
 
   const copyToClipboard = useCallback(async () => {
     try {
@@ -70,17 +67,31 @@ export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
     }
   }, [publicUrl, toast])
 
-  const goToPreviousWeek = () => {
-    setSelectedThursday(prev => subDays(prev, 7))
-  }
+  const handleGenerateToken = useCallback(async () => {
+    setIsGenerating(true)
+    try {
+      const res = await fetch("/api/organizations/public-eod-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ action: "generate" }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error || "Failed")
+      setToken(data.data.publicEodToken)
+      toast({ title: "Access token generated", description: "Your public weekly EOD link is now active." })
+    } catch {
+      toast({ title: "Failed to generate token", variant: "destructive" })
+    } finally {
+      setIsGenerating(false)
+    }
+  }, [toast])
 
-  const goToNextWeek = () => {
-    setSelectedThursday(prev => addDays(prev, 7))
-  }
-
-  const goToCurrentWeek = () => {
-    setSelectedThursday(getThursdayForWeek(new Date()))
-  }
+  const goToPreviousWeek = () => setSelectedThursday(prev => subDays(prev, 7))
+  const goToNextWeek = () => setSelectedThursday(prev => addDays(prev, 7))
+  const goToCurrentWeek = () => setSelectedThursday(getThursdayForWeek(new Date()))
 
   const isCurrentWeek = format(selectedThursday, "yyyy-MM-dd") === format(getThursdayForWeek(new Date()), "yyyy-MM-dd")
 
@@ -97,12 +108,14 @@ export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
               Share a consolidated weekly EOD report with stakeholders (Friday - Thursday)
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" asChild>
-            <a href={publicUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Open Preview
-            </a>
-          </Button>
+          {token && (
+            <Button variant="outline" size="sm" asChild>
+              <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open Preview
+              </a>
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -142,30 +155,51 @@ export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
 
         {/* Shareable URL */}
         <div className="space-y-2">
-          <Label htmlFor="weekly-share-url" className="text-sm text-slate-600">
+          <Label className="text-sm text-slate-600">
             Shareable Link (no login required)
           </Label>
-          <div className="flex gap-2">
-            <Input
-              id="weekly-share-url"
-              value={publicUrl}
-              readOnly
-              className="font-mono text-sm"
-            />
-            <Button onClick={copyToClipboard} variant="secondary">
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4 mr-2 text-green-500" />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy
-                </>
-              )}
-            </Button>
-          </div>
+          {!token ? (
+            <div className="flex flex-col gap-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
+              <div className="flex items-center gap-2 text-slate-600">
+                <Lock className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm">Public access is not yet enabled. Generate a token to create a shareable link.</span>
+              </div>
+              <Button
+                onClick={handleGenerateToken}
+                disabled={isGenerating}
+                size="sm"
+                className="gap-2 w-fit"
+              >
+                <KeyRound className="h-3.5 w-3.5" />
+                {isGenerating ? "Generating…" : "Generate Access Token"}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  id="weekly-share-url"
+                  value={publicUrl}
+                  readOnly
+                  className="font-mono text-xs"
+                />
+                <Button onClick={copyToClipboard} variant="secondary">
+                  {copied ? (
+                    <><Check className="h-4 w-4 mr-2 text-green-500" />Copied!</>
+                  ) : (
+                    <><Copy className="h-4 w-4 mr-2" />Copy</>
+                  )}
+                </Button>
+              </div>
+              <button
+                onClick={handleGenerateToken}
+                disabled={isGenerating}
+                className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                {isGenerating ? "Regenerating…" : "Regenerate token (invalidates old link)"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Info */}
