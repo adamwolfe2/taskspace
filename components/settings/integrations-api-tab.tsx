@@ -701,7 +701,11 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
           </div>
 
           <div className="text-center text-xs text-muted-foreground">
-            For manual setup instructions, see the MCP Server documentation.
+            For manual setup instructions, visit the{" "}
+            <a href="/help" className="underline hover:text-foreground transition-colors">
+              Help Center
+            </a>
+            .
           </div>
         </CardContent>
       </Card>
