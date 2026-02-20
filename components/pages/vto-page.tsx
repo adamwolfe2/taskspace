@@ -392,15 +392,48 @@ export function VTOPage() {
   }
 
   if (!vtoData) {
+    const initializeVTO = () => {
+      const emptyVTO: VTOData = {
+        coreValues: [],
+        coreFocus: {},
+        tenYearTarget: {},
+        marketingStrategy: {},
+        threeYearPicture: {},
+        oneYearPlan: { goals: [] },
+        quarterlyRocks: [],
+        issuesList: [],
+        lastEditedBy: null,
+        updatedAt: "",
+      }
+      setVtoData(emptyVTO)
+    }
+
     return (
       <div className="space-y-6">
         <NoWorkspaceAlert />
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Vision/Traction Organizer</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <BookOpen className="h-6 w-6" />
+            Vision/Traction Organizer
+          </h1>
           <p className="text-sm sm:text-base text-slate-500 mt-1">
-            No V/TO data available
+            Define your company vision, core values, and strategic plan
           </p>
         </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <BookOpen className="h-12 w-12 text-slate-300 mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">No V/TO Document Yet</h3>
+            <p className="text-sm text-slate-500 mb-6 max-w-md">
+              The Vision/Traction Organizer helps you define your company&apos;s core values,
+              focus, targets, and strategic plan. Start building yours now.
+            </p>
+            <Button onClick={initializeVTO}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create V/TO Document
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }

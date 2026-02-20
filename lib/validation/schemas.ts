@@ -22,7 +22,11 @@ export const passwordSchema = z
     "Password must contain at least one uppercase letter, one lowercase letter, and one number"
   )
 
-export const uuidSchema = z.string().uuid("Invalid ID format")
+// TaskSpace uses 24-char hex IDs (not UUIDs), so accept both formats
+export const uuidSchema = z.string().min(1, "ID is required").regex(
+  /^[0-9a-f]{24}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+  "Invalid ID format"
+)
 
 export const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
 
@@ -258,7 +262,7 @@ export const milestoneSchema = z.object({
 
 export const createRockSchema = z.object({
   title: z.string().trim().min(1).max(500),
-  description: z.string().trim().min(1).max(5000), // Required per route validation
+  description: z.string().trim().max(5000).default(""), // Optional — defaults to empty string
   userId: uuidSchema.optional(), // Optional - defaults to current user
   workspaceId: uuidSchema, // Required for data isolation
   dueDate: dateSchema,

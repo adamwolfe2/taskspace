@@ -114,8 +114,8 @@ export function PeopleAnalyzerPage() {
         throw new Error("Failed to load assessments");
       }
 
-      const data = await response.json();
-      setAssessments(data);
+      const json = await response.json();
+      setAssessments(json.data || []);
     } catch {
       toast({
         title: "Error",
