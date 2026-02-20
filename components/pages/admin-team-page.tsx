@@ -12,7 +12,7 @@ import { UserInitials } from "@/components/shared/user-initials"
 import { RoleBadge } from "@/components/shared/role-badge"
 import { formatDate } from "@/lib/utils/date-utils"
 import { getErrorMessage } from "@/lib/utils"
-import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle, Send, Target, KeyRound, ArrowRightLeft } from "lucide-react"
+import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle, Send, Target, KeyRound, ArrowRightLeft, RefreshCw } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -250,6 +250,8 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     }
   }
 
+  const [resendingInvitationId, setResendingInvitationId] = useState<string | null>(null)
+
   const handleCancelInvite = async (invitationId: string) => {
     try {
       await api.invitations.cancel(invitationId)
@@ -264,6 +266,49 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         description: getErrorMessage(err, "Failed to cancel invitation"),
         variant: "destructive",
       })
+    }
+  }
+
+  const handleResendInvite = async (invitationId: string) => {
+    setResendingInvitationId(invitationId)
+    try {
+      const response = await fetch("/api/invitations", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ id: invitationId }),
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to resend invitation")
+      }
+
+      if (data.data?.emailSent) {
+        toast({
+          title: "Invitation Resent",
+          description: "A fresh invitation email has been sent.",
+        })
+      } else {
+        const inviteLink = data.data?.inviteLink
+        if (inviteLink) {
+          await navigator.clipboard.writeText(inviteLink)
+          toast({
+            title: "Email failed — link copied",
+            description: "The invite link has been copied to your clipboard. Share it manually.",
+          })
+        }
+      }
+    } catch (err: unknown) {
+      toast({
+        title: "Error",
+        description: getErrorMessage(err, "Failed to resend invitation"),
+        variant: "destructive",
+      })
+    } finally {
+      setResendingInvitationId(null)
     }
   }
 
@@ -1121,11 +1166,25 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                           {formatDate(invitation.createdAt)}
                         </TableCell>
                         <TableCell className="text-right space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleResendInvite(invitation.id)}
+                            disabled={resendingInvitationId === invitation.id}
+                            title="Resend invitation"
+                          >
+                            {resendingInvitationId === invitation.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-4 w-4" />
+                            )}
+                          </Button>
                           {"token" in invitation && invitation.token && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => copyInviteLink(invitation.token)}
+                              title="Copy invite link"
                             >
                               <Copy className="h-4 w-4" />
                             </Button>
@@ -1135,6 +1194,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                             size="sm"
                             onClick={() => handleCancelInvite(invitation.id)}
                             className="text-destructive hover:text-destructive"
+                            title="Cancel invitation"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

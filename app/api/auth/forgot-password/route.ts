@@ -48,8 +48,27 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Find user (don't reveal if user exists)
-    const user = await db.users.findByEmail(email)
+    // Find user by primary email OR org-specific email
+    let user = await db.users.findByEmail(email)
+
+    // Fallback: check organization_members for org-specific emails
+    if (!user) {
+      try {
+        const { sql } = await import("@/lib/db/sql")
+        const { rows } = await sql<{ user_id: string }>`
+          SELECT user_id
+          FROM organization_members
+          WHERE LOWER(email) = LOWER(${email})
+            AND user_id IS NOT NULL
+          LIMIT 1
+        `
+        if (rows.length > 0) {
+          user = await db.users.findById(rows[0].user_id)
+        }
+      } catch {
+        // Non-critical — fall through
+      }
+    }
 
     if (user) {
       // Delete any existing reset tokens for this user
