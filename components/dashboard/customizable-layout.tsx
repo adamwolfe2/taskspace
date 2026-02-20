@@ -204,13 +204,19 @@ export function CustomizableLayout({
  const [showSettings, setShowSettings] = useState(false)
  const containerRef = useRef<HTMLDivElement>(null)
  const [containerWidth, setContainerWidth] = useState(0)
+ // Ref so the ResizeObserver callback can read editing state without stale closure
+ const isEditingRef = useRef(false)
  const themedColors = useThemedIconColors()
 
- // Measure container width — only needed for edit mode (react-grid-layout)
+ // Measure container width for react-grid-layout.
+ // Skip updates while editing: when RGL switches to absolute positioning the
+ // container loses its block-flow width, triggering the observer with a smaller
+ // value → widgets shrink → container shrinks further (feedback loop).
  useEffect(() => {
   const el = containerRef.current
   if (!el) return
   const observer = new ResizeObserver((entries) => {
+   if (isEditingRef.current) return // frozen while editing
    for (const entry of entries) {
     setContainerWidth(entry.contentRect.width)
    }
@@ -220,10 +226,16 @@ export function CustomizableLayout({
   return () => observer.disconnect()
  }, [])
 
- // Reset interaction tracking when entering edit mode
+ // Snapshot the real DOM width the moment we enter edit mode (before RGL
+ // absolutely-positions children and potentially shrinks the container).
+ // Also reset interaction tracking.
  useEffect(() => {
+  isEditingRef.current = isEditing
   if (isEditing) {
    userInteractedRef.current = false
+   if (containerRef.current) {
+    setContainerWidth(containerRef.current.clientWidth)
+   }
   }
  }, [isEditing])
 
@@ -392,7 +404,7 @@ export function CustomizableLayout({
           </Button>
          </div>
         </div>
-        <div className="h-full overflow-hidden pointer-events-none opacity-75">
+        <div className="h-full overflow-hidden">
          {renderWidget(widget)}
         </div>
        </div>
