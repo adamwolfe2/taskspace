@@ -27,7 +27,7 @@ import {
 import { cn } from "@/lib/utils"
 
 interface OnboardingWizardProps {
-  onComplete: (data: OnboardingData) => Promise<void>
+  onComplete: (data: OnboardingData, reportProgress?: (step: number, label: string) => void) => Promise<void>
   currentUser: { email: string; name: string }
 }
 
@@ -112,6 +112,15 @@ function loadPersistedState(): PersistedOnboardingState | null {
   }
 }
 
+const SETUP_STEPS = [
+  { label: "Creating organization", icon: Building2 },
+  { label: "Setting up workspace", icon: Palette },
+  { label: "Configuring features", icon: Sparkles },
+  { label: "Sending invitations", icon: Mail },
+  { label: "Creating goals", icon: Target },
+  { label: "Finishing up", icon: CheckCircle },
+]
+
 export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardProps) {
   // Load persisted state once on mount
   const [savedState] = useState(() => loadPersistedState())
@@ -119,6 +128,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
 
   const [currentStep, setCurrentStep] = useState(() => savedState?.currentStep ?? 1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [setupProgress, setSetupProgress] = useState(0) // 0-based index into SETUP_STEPS
 
   // Step 1: Website scrape
   const [websiteUrl, setWebsiteUrl] = useState(() => savedState?.websiteUrl ?? "")
@@ -350,9 +360,15 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
 
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  // Progress callback that updates local state for the overlay
+  const reportProgress = useCallback((step: number, _label: string) => {
+    setSetupProgress(step)
+  }, [])
+
   const handleComplete = async () => {
     setIsSubmitting(true)
     setSubmitError(null)
+    setSetupProgress(0)
     try {
       await onComplete({
         organization: {
@@ -370,7 +386,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
         },
         teamInvites,
         rocks,
-      })
+      }, reportProgress)
       // Clear persisted onboarding state on successful completion
       try {
         localStorage.removeItem(STORAGE_KEY)
@@ -402,14 +418,66 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex items-center justify-center p-4 sm:p-6">
-      {/* Submission overlay */}
+      {/* Submission progress overlay */}
       {isSubmitting && (
-        <div className="fixed inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Loader2 className="w-10 h-10 text-black mx-auto animate-spin" role="status" aria-label="Setting up workspace" />
-            <div>
-              <p className="text-lg font-semibold text-slate-900">Setting up your workspace...</p>
-              <p className="text-sm text-slate-500 mt-1">Creating organization, workspace, and sending invitations</p>
+        <div className="fixed inset-0 z-50 bg-white/95 backdrop-blur-sm flex items-center justify-center">
+          <div className="w-full max-w-sm mx-4 space-y-6">
+            <div className="text-center">
+              <p className="text-lg font-semibold text-slate-900">Setting up your workspace</p>
+              <p className="text-sm text-slate-500 mt-1">This usually takes about 10 seconds</p>
+            </div>
+
+            {/* Progress bar */}
+            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+              <motion.div
+                className="h-full bg-emerald-500 rounded-full"
+                initial={{ width: "0%" }}
+                animate={{ width: `${Math.min(((setupProgress + 1) / SETUP_STEPS.length) * 100, 100)}%` }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              />
+            </div>
+
+            {/* Step list */}
+            <div className="space-y-2">
+              {SETUP_STEPS.map((step, index) => {
+                const StepIcon = step.icon
+                const isActive = index === setupProgress
+                const isDone = index < setupProgress
+                return (
+                  <div
+                    key={index}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300",
+                      isActive && "bg-slate-50",
+                      isDone && "opacity-60",
+                      !isActive && !isDone && "opacity-30"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300",
+                      isDone && "bg-emerald-100 text-emerald-600",
+                      isActive && "bg-black text-white",
+                      !isActive && !isDone && "bg-slate-100 text-slate-400"
+                    )}>
+                      {isDone ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : isActive ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <StepIcon className="w-3.5 h-3.5" />
+                      )}
+                    </div>
+                    <span className={cn(
+                      "text-sm transition-all duration-300",
+                      isActive && "text-slate-900 font-medium",
+                      isDone && "text-slate-600",
+                      !isActive && !isDone && "text-slate-400"
+                    )}>
+                      {step.label}{isDone ? "" : isActive ? "..." : ""}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>

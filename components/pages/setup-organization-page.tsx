@@ -13,8 +13,11 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
   const { currentUser, setCurrentPage, refreshSession } = useApp()
   const { toast } = useToast()
 
-  const handleComplete = async (data: OnboardingData) => {
+  const handleComplete = async (data: OnboardingData, reportProgress?: (step: number, label: string) => void) => {
+    const progress = (step: number, label: string) => reportProgress?.(step, label)
+
     // Step 1: Create organization
+    progress(0, "Creating organization")
     const orgResponse = await fetch("/api/organizations", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
@@ -34,6 +37,7 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
     const { data: organization } = await orgResponse.json()
 
     // Step 2: Create default workspace with branding
+    progress(1, "Setting up workspace")
     const workspaceResponse = await fetch("/api/workspaces", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
@@ -68,6 +72,7 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
     const { data: workspace } = await workspaceResponse.json()
 
     // Step 2.5: Set starter workspace features (curated for new users)
+    progress(2, "Configuring features")
     // Non-blocking — defaults to all features if this fails
     try {
       const { STARTER_WORKSPACE_FEATURES } = await import("@/lib/types/workspace-features")
@@ -82,6 +87,7 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
     }
 
     // Step 3: Send team invitations (non-blocking)
+    progress(3, "Sending invitations")
     if (data.teamInvites.length > 0) {
       const results = await Promise.allSettled(
         data.teamInvites.map((invite) =>
@@ -129,6 +135,7 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
     }
 
     // Step 4: Create quarterly rocks (non-blocking)
+    progress(4, "Creating goals")
     if (data.rocks.length > 0) {
       try {
         const quarter = `Q${Math.floor(new Date().getMonth() / 3) + 1} ${new Date().getFullYear()}`
@@ -160,6 +167,7 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
     }
 
     // Step 5: Refresh session and navigate to dashboard
+    progress(5, "Finishing up")
     await refreshSession()
 
     toast({
