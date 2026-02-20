@@ -387,7 +387,11 @@ export function CustomizableLayout({
     <Card className="border-dashed">
      <CardContent className="flex flex-col items-center justify-center py-12">
       <LayoutGrid className="h-12 w-12 text-muted-foreground mb-4" />
-      <p className="text-muted-foreground mb-4">No widgets enabled</p>
+      <h3 className="text-base font-semibold text-foreground mb-1">Customize your dashboard</h3>
+      <p className="text-sm text-muted-foreground mb-6 max-w-md text-center">
+       Add widgets to see your tasks, rocks, EOD reports, and more at a glance.
+       You can rearrange and resize them anytime.
+      </p>
       <Button variant="outline" onClick={() => setShowSettings(true)}>
        <Plus className="h-4 w-4 mr-1" />
        Add Widgets

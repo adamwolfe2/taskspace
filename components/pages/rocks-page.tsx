@@ -183,7 +183,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
               <EmptyState
                 icon={Target}
                 title="No quarterly rocks yet"
-                description="Rocks are your most important quarterly goals. They keep your team focused on what matters most. Your admin will assign rocks to help drive your success."
+                description="Rocks are your 3-7 most important goals for the quarter — the big bets that move the needle. Create rocks from the dashboard or AI Command Center to start tracking progress."
                 size="md"
               />
             ) : (

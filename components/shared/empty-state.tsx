@@ -137,8 +137,8 @@ export function EmptyTasksState({ onAddTask }: { onAddTask?: () => void }) {
  <EmptyState
  icon={ClipboardList}
  title="No tasks yet"
- description="Get started by creating your first task. Stay organized and track your progress."
- action={onAddTask ? { label: "Add Task", onClick: onAddTask } : undefined}
+ description="Tasks are your daily and weekly action items. Create specific, time-bound tasks to stay on track — e.g., 'Follow up with client by Friday'."
+ action={onAddTask ? { label: "Create your first task", onClick: onAddTask } : undefined}
  />
  )
 }
@@ -147,9 +147,9 @@ export function EmptyRocksState({ onAddRock }: { onAddRock?: () => void }) {
  return (
  <EmptyState
  icon={Target}
- title="No quarterly goals"
- description="Set ambitious quarterly goals (rocks) to drive your team's success."
- action={onAddRock ? { label: "Create Rock", onClick: onAddRock } : undefined}
+ title="No quarterly rocks yet"
+ description="Rocks are your 3-7 most important goals for the quarter. Focus on outcomes, not activities — e.g., 'Increase NPS by 15 points' or 'Launch V2 product'."
+ action={onAddRock ? { label: "Create a rock", onClick: onAddRock } : undefined}
  />
  )
 }
@@ -158,9 +158,9 @@ export function EmptyEODState({ onSubmitEOD }: { onSubmitEOD?: () => void }) {
  return (
  <EmptyState
  icon={Calendar}
- title="No EOD reports"
- description="Start tracking your daily progress with end-of-day reports."
- action={onSubmitEOD ? { label: "Submit EOD", onClick: onSubmitEOD } : undefined}
+ title="No EOD reports yet"
+ description="End-of-day reports take 2-3 minutes and keep your team aligned. Share what you accomplished, what's next, and any blockers."
+ action={onSubmitEOD ? { label: "Submit your first report", onClick: onSubmitEOD } : undefined}
  />
  )
 }

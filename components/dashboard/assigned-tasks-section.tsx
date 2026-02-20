@@ -245,7 +245,7 @@ export function AssignedTasksSection({
             <EmptyState
               icon={CheckCircle2}
               title="No tasks assigned yet"
-              description="Tasks assigned to you will appear here"
+              description="Create tasks to track your daily work, or have your team assign tasks to you"
               size="sm"
               action={
                 onAddTask
