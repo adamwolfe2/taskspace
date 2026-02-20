@@ -19,7 +19,9 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     return successResponse<SearchResult[]>([])
   }
 
-  const searchTerm = `%${q}%`
+  // Escape ILIKE metacharacters to prevent wildcard injection
+  const escaped = q.replace(/[\\%_]/g, "\\$&")
+  const searchTerm = `%${escaped}%`
   const orgId = auth.organization.id
   const limit = 5
 

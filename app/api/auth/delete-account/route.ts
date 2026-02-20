@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import { withAuth } from "@/lib/api/middleware"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { verifyPassword } from "@/lib/auth/password"
@@ -46,9 +47,14 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     // If sole owner with other members, block — they need to transfer ownership first
     if (auth.member.role === "owner") {
-      const orgMembers = await db.members.findByOrganizationId(auth.organization.id)
-      const ownerCount = orgMembers.filter(m => m.role === "owner").length
-      if (ownerCount <= 1 && orgMembers.length > 1) {
+      const { rows: [{ owner_count, total_count }] } = await sql<{ owner_count: number; total_count: number }>`
+        SELECT
+          COUNT(*) FILTER (WHERE role = 'owner')::int AS owner_count,
+          COUNT(*)::int AS total_count
+        FROM organization_members
+        WHERE organization_id = ${auth.organization.id}
+      `
+      if (owner_count <= 1 && total_count > 1) {
         return NextResponse.json<ApiResponse<null>>(
           {
             success: false,

@@ -198,6 +198,14 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                 title="No rocks match your filters"
                 description="Try adjusting your search query, status filter, or selected quarter to find what you're looking for."
                 size="sm"
+                action={{
+                  label: "Clear all filters",
+                  onClick: () => {
+                    setSearchQuery("")
+                    setStatusFilter("all")
+                    setOwnerFilter("all")
+                  },
+                }}
               />
             )
           ) : (

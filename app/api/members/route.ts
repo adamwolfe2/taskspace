@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
+import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createMemberSchema, updateMemberSchema } from "@/lib/validation/schemas"
@@ -194,11 +195,13 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
           { status: 403 }
         )
       }
-      // Prevent demoting the only owner
+      // Prevent demoting the only owner (targeted count query)
       if (member.role === "owner") {
-        const members = await db.members.findByOrganizationId(auth.organization.id)
-        const ownerCount = members.filter(m => m.role === "owner").length
-        if (ownerCount <= 1) {
+        const { rows: [{ count }] } = await sql<{ count: number }>`
+          SELECT COUNT(*)::int AS count FROM organization_members
+          WHERE organization_id = ${auth.organization.id} AND role = 'owner'
+        `
+        if (count <= 1) {
           return NextResponse.json<ApiResponse<null>>(
             { success: false, error: "Cannot remove the only owner" },
             { status: 400 }

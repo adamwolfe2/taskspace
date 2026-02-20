@@ -92,6 +92,8 @@ export function AssignedTasksSection({
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState<AssignedTask | null>(null)
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [togglingTaskId, setTogglingTaskId] = useState<string | null>(null)
   const [isExpanded, setIsExpanded] = useState(true)
 
   // Sort tasks: platform-assigned (manual) first, then Asana tasks
@@ -176,6 +178,15 @@ export function AssignedTasksSection({
     e.stopPropagation()
     if (!onDeleteTask) return
 
+    // Two-click delete: first click sets confirmation, second click deletes
+    if (confirmDeleteId !== taskId) {
+      setConfirmDeleteId(taskId)
+      // Auto-clear confirmation after 3 seconds
+      setTimeout(() => setConfirmDeleteId((prev) => prev === taskId ? null : prev), 3000)
+      return
+    }
+
+    setConfirmDeleteId(null)
     setDeletingTaskId(taskId)
     try {
       await onDeleteTask(taskId)
@@ -298,14 +309,24 @@ export function AssignedTasksSection({
                           dueDateStatus?.bgColor === "bg-red-50" ? "border-red-200 bg-red-50/30" : "border-slate-200"
                         } ${onUpdateTask && currentUser ? "cursor-pointer" : ""}`}
                       >
-                        <Checkbox
-                          checked={false}
-                          onCheckedChange={() => {
-                            onToggleTask(task.id)
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          className="mt-0.5"
-                        />
+                        {togglingTaskId === task.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-slate-400 mt-0.5 flex-shrink-0" />
+                        ) : (
+                          <Checkbox
+                            checked={false}
+                            onCheckedChange={async () => {
+                              setTogglingTaskId(task.id)
+                              try {
+                                await onToggleTask(task.id)
+                              } finally {
+                                setTogglingTaskId(null)
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="mt-0.5"
+                            disabled={togglingTaskId === task.id}
+                          />
+                        )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-medium text-slate-900">{task.title}</p>
@@ -344,13 +365,19 @@ export function AssignedTasksSection({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 flex-shrink-0"
+                            className={`h-7 p-0 flex-shrink-0 ${
+                              confirmDeleteId === task.id
+                                ? "w-auto px-2 text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700"
+                                : "w-7 text-slate-400 hover:text-red-500"
+                            }`}
                             onClick={(e) => handleDeleteTask(task.id, e)}
                             disabled={deletingTaskId === task.id}
-                            aria-label="Delete task"
+                            aria-label={confirmDeleteId === task.id ? "Confirm delete" : "Delete task"}
                           >
                             {deletingTaskId === task.id ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : confirmDeleteId === task.id ? (
+                              <span className="text-xs font-medium">Delete?</span>
                             ) : (
                               <Trash2 className="h-3.5 w-3.5" />
                             )}
@@ -389,11 +416,23 @@ export function AssignedTasksSection({
                       key={task.id}
                       className="flex items-start gap-3 p-3 border border-slate-100 rounded-lg bg-slate-50/50"
                     >
-                      <Checkbox
-                        checked={true}
-                        onCheckedChange={() => onToggleTask(task.id)}
-                        className="mt-0.5"
-                      />
+                      {togglingTaskId === task.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-slate-400 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <Checkbox
+                          checked={true}
+                          onCheckedChange={async () => {
+                            setTogglingTaskId(task.id)
+                            try {
+                              await onToggleTask(task.id)
+                            } finally {
+                              setTogglingTaskId(null)
+                            }
+                          }}
+                          className="mt-0.5"
+                          disabled={togglingTaskId === task.id}
+                        />
+                      )}
                       <div className="flex-1">
                         <p className="font-medium line-through text-slate-400">{task.title}</p>
                       </div>

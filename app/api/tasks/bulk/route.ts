@@ -12,6 +12,7 @@
 import { NextRequest } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import { withTransaction } from "@/lib/db/transactions"
 import { logTaskEvent } from "@/lib/audit/logger"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -69,11 +70,17 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
     const body = await validateBody(request, bulkOperationSchema)
 
-    // Verify all tasks belong to the organization
-    const tasks = await db.assignedTasks.findByOrganizationId(auth.organization.id)
-    const taskMap = new Map(tasks.map((t) => [t.id, t]))
+    // Verify all tasks belong to the organization (targeted query, not full table scan)
+    const taskIdList = body.taskIds.join(",")
+    const { rows: validRows } = await sql<{ id: string; assignee_id: string; status: string }>`
+      SELECT id, assignee_id, status
+      FROM assigned_tasks
+      WHERE organization_id = ${auth.organization.id}
+        AND id = ANY(string_to_array(${taskIdList}, ','))
+    `
+    const taskMap = new Map(validRows.map((t) => [t.id, t as unknown as AssignedTask]))
 
-    const validTaskIds = body.taskIds.filter((id) => taskMap.has(id))
+    const validTaskIds = validRows.map((r) => r.id)
 
     if (validTaskIds.length === 0) {
       return Errors.validationError("No valid tasks found for this operation").toResponse()
@@ -256,9 +263,13 @@ async function bulkReassign(
   let skipped = 0
   const errors: string[] = []
 
-  // Verify new assignee exists
-  const members = await db.members.findByOrganizationId(organizationId)
-  const assignee = members.find((m: { id: string; status?: string }) => m.id === newAssigneeId && m.status === "active")
+  // Verify new assignee exists (targeted query instead of full member list)
+  const { rows: assigneeRows } = await sql<{ id: string; name: string }>`
+    SELECT id, name FROM organization_members
+    WHERE id = ${newAssigneeId} AND organization_id = ${organizationId} AND status = 'active'
+    LIMIT 1
+  `
+  const assignee = assigneeRows[0]
 
   if (!assignee) {
     return { processed: 0, skipped: taskIds.length, errors: ["Invalid assignee"] }
