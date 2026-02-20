@@ -211,13 +211,13 @@ export function StreakBadge({
       <Flame
         className={cn(
           "h-3.5 w-3.5",
-          currentStreak >= 7 ? "text-orange-500" : "text-slate-500"
+          currentStreak >= 7 ? "text-primary" : "text-slate-500"
         )}
       />
       <span
         className={cn(
           "text-xs font-semibold",
-          currentStreak >= 7 ? "text-orange-700" : "text-slate-600"
+          currentStreak >= 7 ? "text-slate-700" : "text-slate-600"
         )}
       >
         {currentStreak}

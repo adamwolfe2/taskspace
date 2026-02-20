@@ -245,13 +245,13 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "owner":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+        return "bg-slate-800 text-white border-slate-800"
       case "admin":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return "bg-slate-100 text-slate-800 border-slate-200"
       case "viewer":
         return "bg-slate-100 text-slate-800 border-slate-200"
       default:
-        return "bg-green-100 text-green-800 border-green-200"
+        return "bg-slate-100 text-slate-800 border-slate-200"
     }
   }
 
@@ -646,7 +646,7 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
                 </div>
               )}
               {currentWorkspace.isDefault && (
-                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-200">
                   Default Workspace
                 </Badge>
               )}

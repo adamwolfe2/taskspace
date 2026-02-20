@@ -33,9 +33,9 @@ export function Header({ onMenuClick }: HeaderProps) {
   const getRoleBadge = () => {
     switch (currentUser.role) {
       case "owner":
-        return <Badge className="bg-amber-100 text-amber-700 border-0 font-medium text-[10px] px-1.5 py-0.5">Owner</Badge>
+        return <Badge className="bg-primary/10 text-primary border-0 font-medium text-[10px] px-1.5 py-0.5">Owner</Badge>
       case "admin":
-        return <Badge className="bg-blue-100 text-blue-700 border-0 font-medium text-[10px] px-1.5 py-0.5">Admin</Badge>
+        return <Badge className="bg-slate-100 text-slate-700 border-0 font-medium text-[10px] px-1.5 py-0.5">Admin</Badge>
       default:
         return null
     }

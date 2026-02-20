@@ -34,8 +34,8 @@ export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <div className="rounded-lg bg-indigo-50 p-2">
-              <Activity className="h-5 w-5 text-indigo-600" />
+            <div className="rounded-lg bg-slate-50 p-2">
+              <Activity className="h-5 w-5 text-slate-600" />
             </div>
             <div>
               <CardTitle>Activity by Day of Week</CardTitle>
@@ -57,8 +57,8 @@ export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-indigo-50 p-2">
-            <Activity className="h-5 w-5 text-indigo-600" />
+          <div className="rounded-lg bg-slate-50 p-2">
+            <Activity className="h-5 w-5 text-slate-600" />
           </div>
           <div>
             <CardTitle>Activity by Day of Week</CardTitle>

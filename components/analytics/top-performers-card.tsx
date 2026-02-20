@@ -47,8 +47,8 @@ export function TopPerformersCard({ performers }: TopPerformersCardProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <div className="rounded-lg bg-amber-50 p-2">
-              <Trophy className="h-5 w-5 text-amber-600" />
+            <div className="rounded-lg bg-slate-50 p-2">
+              <Trophy className="h-5 w-5 text-slate-600" />
             </div>
             <div>
               <CardTitle>Top Performers</CardTitle>
@@ -104,7 +104,7 @@ export function TopPerformersCard({ performers }: TopPerformersCardProps) {
                   </p>
                   <div className="flex items-center gap-3 mt-1">
                     <div className="flex items-center gap-1 text-xs text-slate-500">
-                      <Target className="h-3 w-3 text-blue-600" />
+                      <Target className="h-3 w-3 text-slate-500" />
                       <span>{performer.rocksCompleted}</span>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-slate-500">
@@ -112,7 +112,7 @@ export function TopPerformersCard({ performers }: TopPerformersCardProps) {
                       <span>{performer.tasksCompleted}</span>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-slate-500">
-                      <Calendar className="h-3 w-3 text-purple-600" />
+                      <Calendar className="h-3 w-3 text-slate-500" />
                       <span>{performer.eodReports}</span>
                     </div>
                   </div>

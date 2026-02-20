@@ -16,8 +16,8 @@ export function EODSubmissionChart({ data }: EODSubmissionChartProps) {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-purple-50 p-2">
-            <Calendar className="h-5 w-5 text-purple-600" />
+          <div className="rounded-lg bg-slate-50 p-2">
+            <Calendar className="h-5 w-5 text-slate-600" />
           </div>
           <div>
             <CardTitle>EOD Report Submissions</CardTitle>

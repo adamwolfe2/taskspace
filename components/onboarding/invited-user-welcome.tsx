@@ -60,29 +60,29 @@ const FEATURE_CARDS = [
     icon: FileText,
     title: "Daily EOD Reports",
     description: "Submit your end-of-day updates to keep your team in sync on what you accomplished and what's next.",
-    color: "bg-blue-50 text-blue-600 border-blue-200",
-    iconBg: "bg-blue-100",
+    color: "bg-slate-50 text-slate-600 border-slate-200",
+    iconBg: "bg-slate-100",
   },
   {
     icon: Target,
     title: "Rocks",
     description: "Track your quarterly goals (Rocks) and milestones. Stay focused on the priorities that matter most.",
-    color: "bg-emerald-50 text-emerald-600 border-emerald-200",
-    iconBg: "bg-emerald-100",
+    color: "bg-slate-50 text-slate-600 border-slate-200",
+    iconBg: "bg-slate-100",
   },
   {
     icon: Users,
     title: "Meetings",
     description: "Join Level 10 meetings with your team. Structured agendas, scorecard reviews, and IDS sessions.",
-    color: "bg-purple-50 text-purple-600 border-purple-200",
-    iconBg: "bg-purple-100",
+    color: "bg-slate-50 text-slate-600 border-slate-200",
+    iconBg: "bg-slate-100",
   },
   {
     icon: ListTodo,
     title: "Tasks",
     description: "Manage your to-dos, track assignments, and link tasks to your quarterly Rocks for full visibility.",
-    color: "bg-amber-50 text-amber-600 border-amber-200",
-    iconBg: "bg-amber-100",
+    color: "bg-slate-50 text-slate-600 border-slate-200",
+    iconBg: "bg-slate-100",
   },
 ]
 
@@ -175,8 +175,8 @@ export function InvitedUserWelcome() {
                     <div
                       className={cn(
                         "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300",
-                        isActive && "bg-blue-600 text-white shadow-md shadow-blue-200",
-                        isCompleted && "bg-emerald-500 text-white",
+                        isActive && "bg-black text-white shadow-md",
+                        isCompleted && "bg-slate-700 text-white",
                         !isActive && !isCompleted && "bg-slate-200 text-slate-400"
                       )}
                     >
@@ -189,8 +189,8 @@ export function InvitedUserWelcome() {
                     <span
                       className={cn(
                         "text-xs mt-1 hidden sm:block font-medium",
-                        isActive && "text-blue-600",
-                        isCompleted && "text-emerald-600",
+                        isActive && "text-primary",
+                        isCompleted && "text-slate-700",
                         !isActive && !isCompleted && "text-slate-400"
                       )}
                     >
@@ -201,7 +201,7 @@ export function InvitedUserWelcome() {
                     <div
                       className={cn(
                         "h-0.5 flex-1 mx-1 sm:mx-2 rounded transition-all duration-300",
-                        isCompleted ? "bg-emerald-500" : "bg-slate-200"
+                        isCompleted ? "bg-slate-700" : "bg-slate-200"
                       )}
                     />
                   )}
@@ -261,16 +261,16 @@ export function InvitedUserWelcome() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                    <div className="text-center p-3 rounded-lg bg-blue-50 border border-blue-100">
-                      <Target className="w-6 h-6 text-blue-600 mx-auto mb-1.5" />
+                    <div className="text-center p-3 rounded-lg bg-slate-50 border border-slate-100">
+                      <Target className="w-6 h-6 text-slate-600 mx-auto mb-1.5" />
                       <p className="text-xs sm:text-sm font-medium text-slate-700">Set Goals</p>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-emerald-50 border border-emerald-100">
-                      <FileText className="w-6 h-6 text-emerald-600 mx-auto mb-1.5" />
+                    <div className="text-center p-3 rounded-lg bg-slate-50 border border-slate-100">
+                      <FileText className="w-6 h-6 text-slate-600 mx-auto mb-1.5" />
                       <p className="text-xs sm:text-sm font-medium text-slate-700">Daily Updates</p>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-purple-50 border border-purple-100">
-                      <Users className="w-6 h-6 text-purple-600 mx-auto mb-1.5" />
+                    <div className="text-center p-3 rounded-lg bg-slate-50 border border-slate-100">
+                      <Users className="w-6 h-6 text-slate-600 mx-auto mb-1.5" />
                       <p className="text-xs sm:text-sm font-medium text-slate-700">Team Sync</p>
                     </div>
                   </div>
@@ -286,7 +286,7 @@ export function InvitedUserWelcome() {
                     </Button>
                     <Button
                       onClick={handleNext}
-                      className="bg-blue-600 hover:bg-blue-700 text-white gap-2 order-1 sm:order-2"
+                      className="gap-2 order-1 sm:order-2"
                     >
                       Let's get started
                       <ArrowRight className="w-4 h-4" />
@@ -389,7 +389,7 @@ export function InvitedUserWelcome() {
                       <Button
                         onClick={handleSaveProfile}
                         disabled={isSaving}
-                        className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                        className="gap-2"
                       >
                         {isSaving ? "Saving..." : "Continue"}
                         {!isSaving && <ArrowRight className="w-4 h-4" />}
