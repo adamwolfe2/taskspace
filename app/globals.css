@@ -673,16 +673,16 @@
    ============================================ */
 @layer utilities {
   .nav-item {
-    @apply relative px-3 py-2 rounded-lg text-gray-600 font-medium;
+    @apply relative px-3 py-2 rounded-lg text-slate-600 font-medium;
     transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .nav-item:hover {
-    @apply bg-gray-100 text-gray-900;
+    @apply bg-slate-100 text-slate-900;
   }
 
   .nav-item-active {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-slate-50 text-slate-900;
   }
 
   .nav-item-active::before {

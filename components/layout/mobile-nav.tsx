@@ -73,7 +73,7 @@ export function MobileNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200 z-40"
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 z-40"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-center justify-around h-16 px-2">
@@ -88,7 +88,7 @@ export function MobileNav() {
                 "flex flex-col items-center justify-center flex-1 min-w-0 h-14 gap-1 rounded-xl transition-all duration-200 active:scale-95",
                 isActive
                   ? "text-primary bg-primary/10"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
               )}
               onClick={() => setCurrentPage(item.id)}
             >
@@ -118,7 +118,7 @@ export function MobileNav() {
                 "flex flex-col items-center justify-center flex-1 min-w-0 h-14 gap-1 rounded-xl transition-all duration-200 active:scale-95",
                 isMoreActive
                   ? "text-red-600 bg-red-50"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
               )}
             >
               <div className="relative">
@@ -155,7 +155,7 @@ export function MobileNav() {
                       "flex flex-col items-center justify-center h-20 gap-2 rounded-2xl border transition-all duration-200 active:scale-95",
                       isActive
                         ? "border-red-200 bg-red-50 text-red-600"
-                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                     )}
                     onClick={() => handleNavigation(item.id)}
                   >
@@ -169,8 +169,8 @@ export function MobileNav() {
             </div>
 
             {/* Quick actions */}
-            <div className="border-t border-gray-200 pt-4 space-y-3">
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+            <div className="border-t border-slate-200 pt-4 space-y-3">
+              <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
                 Quick Actions
               </p>
               <div className="flex gap-2">

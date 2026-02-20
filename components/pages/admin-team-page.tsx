@@ -606,8 +606,8 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Team Management</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage team members and invite new users</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Team Management</h1>
+          <p className="text-sm text-slate-500 mt-1">Manage team members and invite new users</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {/* Add Team Member Dialog */}
@@ -1017,14 +1017,14 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                   teamMembers.map((member) => (
                     <div
                       key={member.id}
-                      className="bg-white border border-gray-200 rounded-xl p-4 space-y-3"
+                      className="bg-white border border-slate-200 rounded-xl p-4 space-y-3"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                           <UserInitials name={member.name} size="sm" />
                           <div className="min-w-0">
-                            <p className="font-medium text-gray-900 truncate">{member.name}</p>
-                            <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                            <p className="font-medium text-slate-900 truncate">{member.name}</p>
+                            <p className="text-xs text-slate-500 truncate">{member.email}</p>
                           </div>
                         </div>
                         {member.status === "pending" ? (
@@ -1047,16 +1047,16 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
                       <div className="flex items-center gap-4 text-sm">
                         <div>
-                          <span className="text-gray-500">Dept:</span>{" "}
-                          <span className="text-gray-700">{member.department}</span>
+                          <span className="text-slate-500">Dept:</span>{" "}
+                          <span className="text-slate-700">{member.department}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="text-gray-500">Role:</span>{" "}
+                          <span className="text-slate-500">Role:</span>{" "}
                           <RoleBadge role={member.role} />
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                      <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
                         {member.status === "pending" && (
                           <>
                             <Button

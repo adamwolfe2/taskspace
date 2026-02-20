@@ -82,7 +82,7 @@ export function RegisterPage() {
           {/* Welcome Text */}
           <div className="text-center space-y-2">
             <h2 className="text-2xl font-semibold text-black">Create your account</h2>
-            <p className="text-gray-500">Get started with your team in minutes</p>
+            <p className="text-slate-500">Get started with your team in minutes</p>
           </div>
 
           {/* Error Alert */}
@@ -108,7 +108,7 @@ export function RegisterPage() {
                   onChange={(e) => setName(e.target.value)}
                   disabled={isLoading}
                   autoComplete="name"
-                  className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400"
+                  className="h-11 bg-white border-slate-200 focus:border-black focus:ring-black text-black placeholder:text-slate-400"
                 />
               </div>
 
@@ -124,7 +124,7 @@ export function RegisterPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
                   autoComplete="email"
-                  className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400"
+                  className="h-11 bg-white border-slate-200 focus:border-black focus:ring-black text-black placeholder:text-slate-400"
                 />
                 {email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
                   <p className="text-xs mt-1 text-red-500">Please enter a valid email address</p>
@@ -143,7 +143,7 @@ export function RegisterPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                   autoComplete="new-password"
-                  className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400"
+                  className="h-11 bg-white border-slate-200 focus:border-black focus:ring-black text-black placeholder:text-slate-400"
                 />
                 {password && (
                   <div className="mt-3 space-y-2">
@@ -151,11 +151,11 @@ export function RegisterPage() {
                       <div
                         key={i}
                         className={`flex items-center gap-2 text-xs ${
-                          req.met ? "text-black" : "text-gray-400"
+                          req.met ? "text-black" : "text-slate-400"
                         }`}
                       >
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          req.met ? "bg-black border-black" : "border-gray-300"
+                          req.met ? "bg-black border-black" : "border-slate-300"
                         }`}>
                           {req.met && <Check className="h-2.5 w-2.5 text-white" />}
                         </div>
@@ -178,7 +178,7 @@ export function RegisterPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isLoading}
                   autoComplete="new-password"
-                  className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400"
+                  className="h-11 bg-white border-slate-200 focus:border-black focus:ring-black text-black placeholder:text-slate-400"
                 />
                 {confirmPassword && (
                   <p className={`text-xs mt-1 ${password === confirmPassword ? "text-black" : "text-red-500"}`}>
@@ -190,7 +190,7 @@ export function RegisterPage() {
 
             <Button
               type="submit"
-              className="w-full h-11 bg-black hover:bg-gray-800 text-white font-medium transition-colors"
+              className="w-full h-11 bg-black hover:bg-slate-800 text-white font-medium transition-colors"
               disabled={isLoading || !allRequirementsMet || !name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password !== confirmPassword}
             >
               {isLoading ? (
@@ -206,7 +206,7 @@ export function RegisterPage() {
               )}
             </Button>
 
-            <p className="text-xs text-center text-gray-500 leading-relaxed">
+            <p className="text-xs text-center text-slate-500 leading-relaxed">
               By creating an account, you agree to our{" "}
               <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-black transition-colors">
                 Terms of Service
@@ -219,7 +219,7 @@ export function RegisterPage() {
           </form>
 
           {/* Sign In Link */}
-          <p className="text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-slate-600">
             Already have an account?{" "}
             <button
               type="button"
@@ -242,7 +242,7 @@ export function RegisterPage() {
             <h2 className="text-4xl font-bold leading-tight">
               Everything your team needs to stay aligned
             </h2>
-            <p className="text-lg text-gray-300">
+            <p className="text-lg text-slate-300">
               Join teams using Taskspace to run their business with the EOS framework
             </p>
           </div>
@@ -250,17 +250,17 @@ export function RegisterPage() {
           <div className="space-y-6 pt-8">
             <div className="border-l-2 border-white/20 pl-6 space-y-2">
               <h3 className="font-semibold text-lg">Free to start</h3>
-              <p className="text-gray-400">Get up to 5 team members on the free plan</p>
+              <p className="text-slate-400">Get up to 5 team members on the free plan</p>
             </div>
 
             <div className="border-l-2 border-white/20 pl-6 space-y-2">
               <h3 className="font-semibold text-lg">No credit card required</h3>
-              <p className="text-gray-400">Start using Taskspace immediately after signup</p>
+              <p className="text-slate-400">Start using Taskspace immediately after signup</p>
             </div>
 
             <div className="border-l-2 border-white/20 pl-6 space-y-2">
               <h3 className="font-semibold text-lg">AI-powered insights</h3>
-              <p className="text-gray-400">Get intelligent suggestions and automated reports</p>
+              <p className="text-slate-400">Get intelligent suggestions and automated reports</p>
             </div>
           </div>
         </div>

@@ -632,7 +632,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                         <Button
                           onClick={handleScrapeWebsite}
                           disabled={isScraping || !websiteUrl.trim()}
-                          className="bg-black hover:bg-gray-800 text-white shrink-0"
+                          className="bg-black hover:bg-slate-800 text-white shrink-0"
                         >
                           {isScraping ? (
                             <>
@@ -1196,7 +1196,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                   <Button
                     onClick={handleNext}
                     disabled={!canProceed() || isScraping}
-                    className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white gap-2 order-1 sm:order-2"
+                    className="w-full sm:w-auto bg-black hover:bg-slate-800 text-white gap-2 order-1 sm:order-2"
                   >
                     {currentStep === 1 && hasScraped ? "Use these details" : "Continue"}
                     <ArrowRight className="w-4 h-4" />

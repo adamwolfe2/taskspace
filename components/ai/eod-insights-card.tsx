@@ -38,9 +38,9 @@ const sentimentConfig: Record<string, {
   },
   neutral: {
     icon: CheckCircle2,
-    color: "text-gray-500",
-    bgColor: "bg-gray-50",
-    borderColor: "border-gray-200",
+    color: "text-slate-500",
+    bgColor: "bg-slate-50",
+    borderColor: "border-slate-200",
     label: "Neutral",
   },
   negative: {
@@ -61,9 +61,9 @@ const sentimentConfig: Record<string, {
 
 const defaultSentiment = {
   icon: CheckCircle2,
-  color: "text-gray-500",
-  bgColor: "bg-gray-50",
-  borderColor: "border-gray-200",
+  color: "text-slate-500",
+  bgColor: "bg-slate-50",
+  borderColor: "border-slate-200",
   label: "Unknown",
 }
 

@@ -85,21 +85,21 @@ export function EmptyState({
  >
  <div
  className={cn(
- "rounded-full bg-gray-100 flex items-center justify-center mb-4",
+ "rounded-full bg-slate-100 flex items-center justify-center mb-4",
  styles.iconWrapper
  )}
  >
  {IconComponent ? (
- <IconComponent className={cn("text-gray-400", styles.icon)} />
+ <IconComponent className={cn("text-slate-400", styles.icon)} />
  ) : (
- (IconProp as React.ReactNode) || <Inbox className={cn("text-gray-400", styles.icon)} />
+ (IconProp as React.ReactNode) || <Inbox className={cn("text-slate-400", styles.icon)} />
  )}
  </div>
- <h3 className={cn("text-gray-900 mb-1", styles.title)}>
+ <h3 className={cn("text-slate-900 mb-1", styles.title)}>
  {title}
  </h3>
  {description && (
- <p className={cn("text-gray-500 max-w-sm mb-4 px-4 sm:px-0", styles.description)}>
+ <p className={cn("text-slate-500 max-w-sm mb-4 px-4 sm:px-0", styles.description)}>
  {description}
  </p>
  )}

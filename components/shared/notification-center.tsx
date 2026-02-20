@@ -225,7 +225,7 @@ export function NotificationCenter() {
         return <CirclePlus className="h-4 w-4 text-orange-500" />
       case "system":
       default:
-        return <FileText className="h-4 w-4 text-gray-500" />
+        return <FileText className="h-4 w-4 text-slate-500" />
     }
   }
 

@@ -266,10 +266,10 @@ export function ImportWizard() {
       {step === "source-selection" && (
         <div className="space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
               Choose Import Source
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Select where you want to import data from
             </p>
           </div>
@@ -287,8 +287,8 @@ export function ImportWizard() {
                 disabled={!provider.available}
                 className={`relative rounded-lg border-2 p-6 text-left transition-all ${
                   provider.available
-                    ? "border-gray-200 hover:border-blue-500 hover:shadow-md cursor-pointer"
-                    : "border-gray-100 bg-gray-50 cursor-not-allowed opacity-60"
+                    ? "border-slate-200 hover:border-blue-500 hover:shadow-md cursor-pointer"
+                    : "border-slate-100 bg-slate-50 cursor-not-allowed opacity-60"
                 }`}
               >
                 <div className="flex items-start gap-4">
@@ -302,13 +302,13 @@ export function ImportWizard() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900">{provider.name}</h3>
-                    <p className="mt-1 text-sm text-gray-500">{provider.description}</p>
-                    <p className="mt-2 text-xs text-gray-400">Supports: {provider.formats}</p>
+                    <h3 className="font-medium text-slate-900">{provider.name}</h3>
+                    <p className="mt-1 text-sm text-slate-500">{provider.description}</p>
+                    <p className="mt-2 text-xs text-slate-400">Supports: {provider.formats}</p>
                   </div>
                 </div>
                 {!provider.available && (
-                  <span className="absolute top-4 right-4 rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700">
+                  <span className="absolute top-4 right-4 rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
                     Coming Soon
                   </span>
                 )}
@@ -328,10 +328,10 @@ export function ImportWizard() {
             >
               ← Back to source selection
             </button>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
               Upload {PROVIDERS.find((p) => p.id === selectedProvider)?.name} File
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Upload your export file (max 50MB)
             </p>
           </div>
@@ -342,17 +342,17 @@ export function ImportWizard() {
             className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
               isDragActive
                 ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 hover:border-gray-400"
+                : "border-slate-300 hover:border-slate-400"
             }`}
           >
             <input {...getInputProps()} />
-            <ArrowUpTrayIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <p className="mt-2 text-sm text-gray-600">
+            <ArrowUpTrayIcon className="mx-auto h-12 w-12 text-slate-400" />
+            <p className="mt-2 text-sm text-slate-600">
               {isDragActive
                 ? "Drop the file here"
                 : "Drag and drop your file here, or click to browse"}
             </p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-slate-500">
               Supports {PROVIDERS.find((p) => p.id === selectedProvider)?.formats}
             </p>
           </div>
@@ -391,7 +391,7 @@ export function ImportWizard() {
                 setFile(null)
                 setStep("source-selection")
               }}
-              className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               Cancel
             </button>
@@ -411,20 +411,20 @@ export function ImportWizard() {
         <div className="space-y-6">
           <div className="text-center py-12">
             <ArrowPathIcon className="mx-auto h-16 w-16 animate-spin text-blue-600" role="status" aria-label="Importing data" />
-            <h2 className="mt-4 text-xl font-semibold text-gray-900">
+            <h2 className="mt-4 text-xl font-semibold text-slate-900">
               Importing Your Data
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-slate-600">
               Please wait while we import your data...
             </p>
 
             {/* Progress bar */}
             <div className="mt-8 max-w-md mx-auto">
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <div className="flex justify-between text-sm text-slate-600 mb-2">
                 <span>Progress</span>
                 <span>{progress}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-slate-200 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-500"
                   style={{ width: `${progress}%` }}
@@ -433,7 +433,7 @@ export function ImportWizard() {
             </div>
 
             {importJob && (
-              <div className="mt-6 text-sm text-gray-600">
+              <div className="mt-6 text-sm text-slate-600">
                 Status: {importJob.status}
               </div>
             )}

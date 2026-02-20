@@ -35,10 +35,10 @@ export function ImportSummary({ job, onReset }: ImportSummaryProps) {
             <CheckCircleIcon className="h-10 w-10 text-green-600" />
           )}
         </div>
-        <h2 className="mt-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mt-4 text-2xl font-semibold text-slate-900">
           {hasErrors ? "Import Completed with Errors" : "Import Successful!"}
         </h2>
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm text-slate-600">
           Completed in {duration} seconds
         </p>
       </div>
@@ -163,36 +163,36 @@ export function ImportSummary({ job, onReset }: ImportSummaryProps) {
       )}
 
       {/* Import Details */}
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
-        <h3 className="text-sm font-medium text-gray-900 mb-4">Import Details</h3>
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-6">
+        <h3 className="text-sm font-medium text-slate-900 mb-4">Import Details</h3>
         <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <dt className="text-gray-500">Import ID</dt>
-            <dd className="mt-1 font-mono text-xs text-gray-900">{job.id}</dd>
+            <dt className="text-slate-500">Import ID</dt>
+            <dd className="mt-1 font-mono text-xs text-slate-900">{job.id}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">Provider</dt>
-            <dd className="mt-1 text-gray-900 capitalize">{job.provider}</dd>
+            <dt className="text-slate-500">Provider</dt>
+            <dd className="mt-1 text-slate-900 capitalize">{job.provider}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">File Name</dt>
-            <dd className="mt-1 text-gray-900">{job.fileName}</dd>
+            <dt className="text-slate-500">File Name</dt>
+            <dd className="mt-1 text-slate-900">{job.fileName}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">File Size</dt>
-            <dd className="mt-1 text-gray-900">
+            <dt className="text-slate-500">File Size</dt>
+            <dd className="mt-1 text-slate-900">
               {(job.fileSize / 1024 / 1024).toFixed(2)} MB
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">Started</dt>
-            <dd className="mt-1 text-gray-900">
+            <dt className="text-slate-500">Started</dt>
+            <dd className="mt-1 text-slate-900">
               {new Date(job.startedAt).toLocaleString()}
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">Completed</dt>
-            <dd className="mt-1 text-gray-900">
+            <dt className="text-slate-500">Completed</dt>
+            <dd className="mt-1 text-slate-900">
               {job.completedAt
                 ? new Date(job.completedAt).toLocaleString()
                 : "N/A"}
@@ -205,7 +205,7 @@ export function ImportSummary({ job, onReset }: ImportSummaryProps) {
       <div className="flex justify-between gap-3">
         <button
           onClick={onReset}
-          className="rounded-md border border-gray-300 px-6 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="rounded-md border border-slate-300 px-6 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
           Import More Data
         </button>

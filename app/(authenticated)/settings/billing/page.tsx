@@ -49,7 +49,7 @@ interface InvoiceRecord {
 export default function BillingSettingsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-slate-50 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-12">
             <ArrowPathIcon className="h-8 w-8 animate-spin text-blue-600" />
@@ -218,7 +218,7 @@ function BillingSettingsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-slate-50 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-12">
             <ArrowPathIcon className="h-8 w-8 animate-spin text-blue-600" />
@@ -230,7 +230,7 @@ function BillingSettingsContent() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-slate-50 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-lg bg-red-50 p-4 text-red-800">
             {error || "Failed to load billing data"}
@@ -249,7 +249,7 @@ function BillingSettingsContent() {
   const isCanceling = data.subscription?.cancelAtPeriodEnd
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-slate-50 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Billing toast notification */}
         {billingToast === "success" && (
@@ -297,12 +297,12 @@ function BillingSettingsContent() {
 
         {/* Canceled subscription notice */}
         {isCanceled && currentPlan === "free" && (
-          <div className="mb-6 rounded-lg bg-gray-50 border border-gray-200 p-4 flex items-center justify-between">
+          <div className="mb-6 rounded-lg bg-slate-50 border border-slate-200 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <XCircleIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />
+              <XCircleIcon className="h-5 w-5 text-slate-500 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-gray-800">Your subscription was canceled</p>
-                <p className="text-sm text-gray-600">You&apos;re on the Free plan. Upgrade anytime to restore paid features.</p>
+                <p className="text-sm font-medium text-slate-800">Your subscription was canceled</p>
+                <p className="text-sm text-slate-600">You&apos;re on the Free plan. Upgrade anytime to restore paid features.</p>
               </div>
             </div>
             <button
@@ -316,8 +316,8 @@ function BillingSettingsContent() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Billing & Usage</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-900">Billing & Usage</h1>
+          <p className="mt-2 text-slate-600">
             Manage your subscription, view usage, and update payment information
           </p>
         </div>
@@ -338,8 +338,8 @@ function BillingSettingsContent() {
             />
 
             {/* Billing Status */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Billing Status</h2>
+            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Billing Status</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -348,10 +348,10 @@ function BillingSettingsContent() {
                     ) : isPastDue ? (
                       <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
                     ) : (
-                      <XCircleIcon className="h-5 w-5 text-gray-400" />
+                      <XCircleIcon className="h-5 w-5 text-slate-400" />
                     )}
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-slate-900">
                         {isTrial ? "Free Trial" :
                          isPastDue ? "Payment Past Due" :
                          isCanceled ? "Subscription Canceled" :
@@ -359,7 +359,7 @@ function BillingSettingsContent() {
                          isCanceling ? "Canceling at Period End" :
                          "No Active Subscription"}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         {isTrial
                           ? `${plan.name} plan trial · Billed ${data.subscription?.billingCycle || "monthly"} after trial`
                           : isActive
@@ -373,12 +373,12 @@ function BillingSettingsContent() {
                 </div>
 
                 {data.subscription?.trialEnd && isTrial && (
-                  <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                     <div className="flex items-center gap-3">
                       <ClockIcon className="h-5 w-5 text-blue-400" />
                       <div>
-                        <p className="font-medium text-gray-900">Trial Ends</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="font-medium text-slate-900">Trial Ends</p>
+                        <p className="text-sm text-slate-600">
                           {new Date(data.subscription.trialEnd).toLocaleDateString("en-US", {
                             year: "numeric", month: "long", day: "numeric",
                           })}
@@ -389,14 +389,14 @@ function BillingSettingsContent() {
                 )}
 
                 {data.subscription?.currentPeriodEnd && !isTrial && (
-                  <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                     <div className="flex items-center gap-3">
-                      <ClockIcon className="h-5 w-5 text-gray-400" />
+                      <ClockIcon className="h-5 w-5 text-slate-400" />
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-slate-900">
                           {isCanceling ? "Access Until" : "Next Billing Date"}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-slate-600">
                           {new Date(data.subscription.currentPeriodEnd).toLocaleDateString("en-US", {
                             year: "numeric", month: "long", day: "numeric",
                           })}
@@ -407,12 +407,12 @@ function BillingSettingsContent() {
                 )}
 
                 {data.hasStripeAccount && (
-                  <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                     <div className="flex items-center gap-3">
-                      <CreditCardIcon className="h-5 w-5 text-gray-400" />
+                      <CreditCardIcon className="h-5 w-5 text-slate-400" />
                       <div>
-                        <p className="font-medium text-gray-900">Payment Method</p>
-                        <p className="text-sm text-gray-600">Manage via Stripe Customer Portal</p>
+                        <p className="font-medium text-slate-900">Payment Method</p>
+                        <p className="text-sm text-slate-600">Manage via Stripe Customer Portal</p>
                       </div>
                     </div>
                     <button
@@ -427,7 +427,7 @@ function BillingSettingsContent() {
 
                 {/* Cancel / Resume actions */}
                 {currentPlan !== "free" && (
-                  <div className="border-t border-gray-100 pt-4">
+                  <div className="border-t border-slate-100 pt-4">
                     {isCanceling ? (
                       <button
                         onClick={handleResumeSubscription}
@@ -440,7 +440,7 @@ function BillingSettingsContent() {
                       <button
                         onClick={handleCancelSubscription}
                         disabled={cancelLoading}
-                        className="text-sm text-gray-500 hover:text-red-600 disabled:opacity-50"
+                        className="text-sm text-slate-500 hover:text-red-600 disabled:opacity-50"
                       >
                         {cancelLoading ? "Processing..." : "Cancel Subscription"}
                       </button>
@@ -452,19 +452,19 @@ function BillingSettingsContent() {
 
             {/* Change Plan Section */}
             {currentPlan !== "free" && (
-              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Change Plan</h2>
+              <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-slate-900 mb-4">Change Plan</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {(["team", "business"] as const).filter(p => p !== currentPlan).map((planKey) => {
                     const targetPlan = PLANS[planKey]
                     const isUpgrade = planKey === "business"
                     return (
-                      <div key={planKey} className={`rounded-lg border p-4 ${isUpgrade ? "border-blue-200 bg-blue-50/30" : "border-gray-200"}`}>
-                        <h3 className="font-semibold text-gray-900">{targetPlan.name}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{targetPlan.description}</p>
-                        <p className="text-xl font-bold text-gray-900 mt-2">
+                      <div key={planKey} className={`rounded-lg border p-4 ${isUpgrade ? "border-blue-200 bg-blue-50/30" : "border-slate-200"}`}>
+                        <h3 className="font-semibold text-slate-900">{targetPlan.name}</h3>
+                        <p className="text-sm text-slate-600 mt-1">{targetPlan.description}</p>
+                        <p className="text-xl font-bold text-slate-900 mt-2">
                           {formatPrice(targetPlan.priceMonthly)}
-                          <span className="text-sm font-normal text-gray-500">/user/mo</span>
+                          <span className="text-sm font-normal text-slate-500">/user/mo</span>
                         </p>
                         <div className="flex gap-2 mt-3">
                           <button
@@ -473,7 +473,7 @@ function BillingSettingsContent() {
                             className={`flex-1 text-xs py-2 px-3 rounded-lg font-medium disabled:opacity-50 transition-colors ${
                               isUpgrade
                                 ? "bg-blue-600 text-white hover:bg-blue-700"
-                                : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                                : "border border-slate-300 text-slate-700 hover:bg-slate-50"
                             }`}
                           >
                             {changePlanLoading ? "..." : "Monthly"}
@@ -484,7 +484,7 @@ function BillingSettingsContent() {
                             className={`flex-1 text-xs py-2 px-3 rounded-lg font-medium disabled:opacity-50 transition-colors ${
                               isUpgrade
                                 ? "bg-blue-600 text-white hover:bg-blue-700"
-                                : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                                : "border border-slate-300 text-slate-700 hover:bg-slate-50"
                             }`}
                           >
                             {changePlanLoading ? "..." : "Yearly (Save 20%)"}
@@ -498,24 +498,24 @@ function BillingSettingsContent() {
             )}
 
             {/* AI Usage Details */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">AI Usage This Month</h2>
+            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">AI Usage This Month</h2>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Credits Used</span>
-                  <span className="font-semibold text-gray-900">{data.aiCreditsUsed}</span>
+                  <span className="text-slate-700">Credits Used</span>
+                  <span className="font-semibold text-slate-900">{data.aiCreditsUsed}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Credits Remaining</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="text-slate-700">Credits Remaining</span>
+                  <span className="font-semibold text-slate-900">
                     {plan.limits.aiCreditsPerUser === null
                       ? "Unlimited"
                       : Math.max(0, data.aiCreditsTotal - data.aiCreditsUsed)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-                  <span className="text-gray-700">Monthly Allowance</span>
-                  <span className="font-semibold text-gray-900">
+                <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                  <span className="text-slate-700">Monthly Allowance</span>
+                  <span className="font-semibold text-slate-900">
                     {plan.limits.aiCreditsPerUser === null
                       ? "Unlimited"
                       : `${data.aiCreditsTotal} (${plan.limits.aiCreditsPerUser} per user)`}
@@ -535,27 +535,27 @@ function BillingSettingsContent() {
 
             {/* Invoice History */}
             {data.invoices && data.invoices.length > 0 && (
-              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Invoice History</h2>
+              <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-slate-900 mb-4">Invoice History</h2>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
+                  <table className="min-w-full divide-y divide-slate-200">
                     <thead>
                       <tr>
-                        <th className="text-left text-xs font-medium text-gray-500 uppercase pb-3">Date</th>
-                        <th className="text-left text-xs font-medium text-gray-500 uppercase pb-3">Amount</th>
-                        <th className="text-left text-xs font-medium text-gray-500 uppercase pb-3">Status</th>
-                        <th className="text-right text-xs font-medium text-gray-500 uppercase pb-3">Invoice</th>
+                        <th className="text-left text-xs font-medium text-slate-500 uppercase pb-3">Date</th>
+                        <th className="text-left text-xs font-medium text-slate-500 uppercase pb-3">Amount</th>
+                        <th className="text-left text-xs font-medium text-slate-500 uppercase pb-3">Status</th>
+                        <th className="text-right text-xs font-medium text-slate-500 uppercase pb-3">Invoice</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-slate-100">
                       {data.invoices.map((invoice) => (
                         <tr key={invoice.id}>
-                          <td className="py-3 text-sm text-gray-900">
+                          <td className="py-3 text-sm text-slate-900">
                             {new Date(invoice.date).toLocaleDateString("en-US", {
                               year: "numeric", month: "short", day: "numeric",
                             })}
                           </td>
-                          <td className="py-3 text-sm font-medium text-gray-900">
+                          <td className="py-3 text-sm font-medium text-slate-900">
                             ${(invoice.amount / 100).toFixed(2)} {invoice.currency.toUpperCase()}
                           </td>
                           <td className="py-3">
@@ -564,7 +564,7 @@ function BillingSettingsContent() {
                                 ? "bg-green-100 text-green-700"
                                 : invoice.status === "open"
                                   ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-gray-100 text-gray-700"
+                                  : "bg-slate-100 text-slate-700"
                             }`}>
                               {invoice.status}
                             </span>
@@ -588,7 +588,7 @@ function BillingSettingsContent() {
                   </table>
                 </div>
                 {data.hasStripeAccount && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="mt-4 pt-4 border-t border-slate-100">
                     <button
                       onClick={openCustomerPortal}
                       disabled={portalLoading}
@@ -625,20 +625,20 @@ function BillingSettingsContent() {
             )}
 
             {/* Quick Stats */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Stats</h3>
+            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-900 mb-4">Quick Stats</h3>
               <div className="space-y-3">
                 <div>
-                  <p className="text-xs text-gray-600">Team Members</p>
-                  <p className="text-2xl font-bold text-gray-900">{data.activeUsers}</p>
+                  <p className="text-xs text-slate-600">Team Members</p>
+                  <p className="text-2xl font-bold text-slate-900">{data.activeUsers}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600">Workspaces</p>
-                  <p className="text-2xl font-bold text-gray-900">{data.workspaces}</p>
+                  <p className="text-xs text-slate-600">Workspaces</p>
+                  <p className="text-2xl font-bold text-slate-900">{data.workspaces}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600">AI Operations</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xs text-slate-600">AI Operations</p>
+                  <p className="text-2xl font-bold text-slate-900">
                     {data.aiCreditsUsed > 0 ? Math.ceil(data.aiCreditsUsed / 5) : 0}
                   </p>
                 </div>
@@ -646,14 +646,14 @@ function BillingSettingsContent() {
             </div>
 
             {/* Need Help */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">Need Help?</h3>
-              <p className="text-sm text-gray-600 mb-4">
+            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-900 mb-2">Need Help?</h3>
+              <p className="text-sm text-slate-600 mb-4">
                 Questions about billing or your subscription? We&apos;re here to help.
               </p>
               <Link
                 href="/contact"
-                className="block w-full rounded-lg border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="block w-full rounded-lg border border-slate-300 px-4 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
                 Contact Support
               </Link>

@@ -75,9 +75,9 @@ export function ErrorState({
           (IconProp as React.ReactNode) || <AlertCircle className={cn("text-red-500", styles.icon)} />
         )}
       </div>
-      <h3 className={cn("text-gray-900 mb-1", styles.title)}>{title}</h3>
+      <h3 className={cn("text-slate-900 mb-1", styles.title)}>{title}</h3>
       {message && (
-        <p className={cn("text-gray-500 max-w-sm mb-4", styles.message)}>
+        <p className={cn("text-slate-500 max-w-sm mb-4", styles.message)}>
           {message}
         </p>
       )}

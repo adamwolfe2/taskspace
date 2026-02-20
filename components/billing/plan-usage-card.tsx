@@ -48,14 +48,14 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
   ]
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">{plan.name} Plan</h3>
-          <p className="mt-1 text-sm text-gray-600">{plan.description}</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">
+          <h3 className="text-lg font-semibold text-slate-900">{plan.name} Plan</h3>
+          <p className="mt-1 text-sm text-slate-600">{plan.description}</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">
             {formatPrice(plan.priceYearly / 12)}
-            <span className="text-sm font-normal text-gray-600">/user/month</span>
+            <span className="text-sm font-normal text-slate-600">/user/month</span>
           </p>
         </div>
         {currentPlan !== "business" && (
@@ -78,14 +78,14 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
           return (
             <div key={stat.label}>
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-gray-700">{stat.label}</span>
-                <span className="text-gray-600">
+                <span className="font-medium text-slate-700">{stat.label}</span>
+                <span className="text-slate-600">
                   {stat.current} {unlimited ? "" : `/ ${stat.limit}`} {stat.unit}
                 </span>
               </div>
               {!unlimited && (
                 <div className="mt-2">
-                  <div className="h-2 w-full rounded-full bg-gray-200">
+                  <div className="h-2 w-full rounded-full bg-slate-200">
                     <div
                       className={`h-2 rounded-full transition-all ${
                         percentage >= 100
@@ -122,7 +122,7 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
         })}
       </div>
 
-      <div className="mt-6 border-t border-gray-200 pt-4">
+      <div className="mt-6 border-t border-slate-200 pt-4">
         <Link href="/pricing" className="text-sm font-medium text-blue-600 hover:text-blue-700">
           Compare all plans →
         </Link>

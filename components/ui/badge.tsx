@@ -53,9 +53,9 @@ const badgeVariants = cva(
         'soft-yellow':
           'border-transparent bg-yellow-50 text-yellow-700',
         'soft-slate':
-          'border-transparent bg-gray-100 text-gray-600',
+          'border-transparent bg-slate-100 text-slate-600',
         'soft-gray':
-          'border-transparent bg-gray-100 text-gray-600',
+          'border-transparent bg-slate-100 text-slate-600',
         'soft-violet':
           'border-transparent bg-violet-50 text-violet-700',
         'soft-purple':
@@ -79,18 +79,18 @@ const badgeVariants = cva(
         completed:
           'border-primary/20 bg-primary/10 text-primary',
         pending:
-          'border-gray-200 bg-gray-50 text-gray-600',
+          'border-slate-200 bg-slate-50 text-slate-600',
         active:
           'border-primary/20 bg-primary/10 text-primary',
         inactive:
-          'border-gray-200 bg-gray-100 text-gray-500',
+          'border-slate-200 bg-slate-100 text-slate-500',
         // Role badges - professional workspace-aware colors
         owner:
           'border-primary/30 bg-primary/10 text-primary font-semibold',
         admin:
           'border-primary/20 bg-primary/5 text-primary/80 font-semibold',
         member:
-          'border-gray-200 bg-gray-50 text-gray-600',
+          'border-slate-200 bg-slate-50 text-slate-600',
       },
     },
     defaultVariants: {

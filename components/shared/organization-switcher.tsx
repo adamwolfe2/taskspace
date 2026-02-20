@@ -138,7 +138,7 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
       case "admin":
         return <Shield className="h-3 w-3 text-blue-500" />
       default:
-        return <Users className="h-3 w-3 text-gray-400" />
+        return <Users className="h-3 w-3 text-slate-400" />
     }
   }
 
@@ -174,11 +174,11 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
                 <Building className="h-3 w-3" style={{ color: currentOrgColor }} />
               </div>
             )}
-            {showSwitcher && <ChevronDown className="h-3 w-3 text-gray-400" />}
+            {showSwitcher && <ChevronDown className="h-3 w-3 text-slate-400" />}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
-          <DropdownMenuLabel className="text-xs text-gray-500">
+          <DropdownMenuLabel className="text-xs text-slate-500">
             Workspaces
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -196,7 +196,7 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
             key={org.id}
             onClick={() => handleSwitchOrganization(org.id)}
             className={`cursor-pointer py-2 ${
-              org.isCurrent ? "bg-gray-50" : ""
+              org.isCurrent ? "bg-slate-50" : ""
             }`}
           >
             <div className="flex items-center gap-3 w-full">
@@ -221,7 +221,7 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-gray-900 truncate">
+                  <span className="font-medium text-slate-900 truncate">
                     {org.name}
                   </span>
                   {org.isCurrent && (
@@ -230,13 +230,13 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   {getRoleIcon(org.role)}
-                  <span className="text-xs text-gray-500 capitalize">
+                  <span className="text-xs text-slate-500 capitalize">
                     {org.role}
                   </span>
                   {org.subscriptionTier && (
                     <>
-                      <span className="text-gray-300">·</span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-slate-300">·</span>
+                      <span className="text-xs text-slate-500">
                         {org.subscriptionTier}
                       </span>
                     </>
@@ -249,7 +249,7 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => setShowCreateDialog(true)}
-          className="cursor-pointer text-gray-600"
+          className="cursor-pointer text-slate-600"
         >
           <Plus className="h-4 w-4 mr-2" />
           Create new workspace
@@ -264,11 +264,11 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="flex items-center gap-2 hover:bg-gray-100 px-2 h-10"
+            className="flex items-center gap-2 hover:bg-slate-100 px-2 h-10"
             disabled={isSwitching}
           >
             {isSwitching ? (
-              <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+              <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
             ) : currentOrgLogo ? (
               <img
                 src={currentOrgLogo}
@@ -284,22 +284,22 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
               </div>
             )}
             <div className="hidden md:flex flex-col items-start">
-              <span className="font-semibold text-gray-900 text-sm leading-tight">
+              <span className="font-semibold text-slate-900 text-sm leading-tight">
                 {currentOrganization?.name || "Organization"}
               </span>
               {organizations.find((o) => o.isCurrent)?.role && (
-                <span className="text-xs text-gray-500 capitalize">
+                <span className="text-xs text-slate-500 capitalize">
                   {organizations.find((o) => o.isCurrent)?.role}
                 </span>
               )}
             </div>
             {showSwitcher && (
-              <ChevronDown className="h-4 w-4 text-gray-400 hidden md:block" />
+              <ChevronDown className="h-4 w-4 text-slate-400 hidden md:block" />
             )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-72">
-          <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
+          <DropdownMenuLabel className="text-xs text-slate-500 font-normal">
             Switch workspace
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

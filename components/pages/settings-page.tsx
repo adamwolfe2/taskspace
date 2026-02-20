@@ -64,8 +64,8 @@ export function SettingsPage() {
     <div className="space-y-3 sm:space-y-4 w-full max-w-full overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Settings</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage your account, organization, and workspace preferences</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Settings</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">Manage your account, organization, and workspace preferences</p>
         </div>
         <WorkspaceSwitcher className="w-full sm:w-auto" />
       </div>
@@ -73,7 +73,7 @@ export function SettingsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 sm:space-y-4">
         {/* Tabs container - wraps into rows */}
         <div className="w-full">
-          <TabsList className="flex flex-wrap gap-2 h-auto bg-gray-100/80 p-2">
+          <TabsList className="flex flex-wrap gap-2 h-auto bg-slate-100/80 p-2">
             <TabsTrigger value="profile" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap min-h-[40px] sm:min-h-[36px]">
               <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Profile

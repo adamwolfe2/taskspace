@@ -101,12 +101,12 @@ export function LoginPage() {
                   </div>
                 </div>
                 <h2 className="text-2xl font-semibold text-black">Two-factor authentication</h2>
-                <p className="text-gray-500">Enter the 6-digit code from your authenticator app, or use a backup code</p>
+                <p className="text-slate-500">Enter the 6-digit code from your authenticator app, or use a backup code</p>
               </>
             ) : (
               <>
                 <h2 className="text-2xl font-semibold text-black">Welcome back</h2>
-                <p className="text-gray-500">Sign in to your account to continue</p>
+                <p className="text-slate-500">Sign in to your account to continue</p>
               </>
             )}
           </div>
@@ -137,14 +137,14 @@ export function LoginPage() {
                   value={totpCode}
                   onChange={(e) => setTotpCode(e.target.value.replace(/[^a-fA-F0-9]/g, ""))}
                   disabled={isLoading}
-                  className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400 text-center text-lg tracking-widest font-mono"
+                  className="h-11 bg-white border-slate-200 focus:border-black focus:ring-black text-black placeholder:text-slate-400 text-center text-lg tracking-widest font-mono"
                 />
-                <p className="text-xs text-gray-400">Enter 6-digit TOTP code or 8-character backup code</p>
+                <p className="text-xs text-slate-400">Enter 6-digit TOTP code or 8-character backup code</p>
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-11 bg-black hover:bg-gray-800 text-white font-medium transition-colors"
+                className="w-full h-11 bg-black hover:bg-slate-800 text-white font-medium transition-colors"
                 disabled={isLoading || totpCode.length < 6}
               >
                 {isLoading ? (
@@ -160,7 +160,7 @@ export function LoginPage() {
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full text-gray-500 hover:text-black"
+                className="w-full text-slate-500 hover:text-black"
                 onClick={handleBack}
                 disabled={isLoading}
               >
@@ -185,7 +185,7 @@ export function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={isLoading}
                       autoComplete="email"
-                      className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400"
+                      className="h-11 bg-white border-slate-200 focus:border-black focus:ring-black text-black placeholder:text-slate-400"
                     />
                   </div>
 
@@ -197,7 +197,7 @@ export function LoginPage() {
                       <button
                         type="button"
                         onClick={() => setCurrentPage("forgot-password")}
-                        className="text-sm text-gray-600 hover:text-black transition-colors"
+                        className="text-sm text-slate-600 hover:text-black transition-colors"
                       >
                         Forgot password?
                       </button>
@@ -210,14 +210,14 @@ export function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={isLoading}
                       autoComplete="current-password"
-                      className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400"
+                      className="h-11 bg-white border-slate-200 focus:border-black focus:ring-black text-black placeholder:text-slate-400"
                     />
                   </div>
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full h-11 bg-black hover:bg-gray-800 text-white font-medium transition-colors"
+                  className="w-full h-11 bg-black hover:bg-slate-800 text-white font-medium transition-colors"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -237,10 +237,10 @@ export function LoginPage() {
               {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
+                  <div className="w-full border-t border-slate-200" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Or</span>
+                  <span className="bg-white px-2 text-slate-500">Or</span>
                 </div>
               </div>
 
@@ -248,7 +248,7 @@ export function LoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full h-11 border-gray-200 hover:bg-gray-50 text-black font-medium"
+                className="w-full h-11 border-slate-200 hover:bg-slate-50 text-black font-medium"
                 onClick={enterDemoMode}
                 disabled={isLoading}
               >
@@ -256,7 +256,7 @@ export function LoginPage() {
               </Button>
 
               {/* Sign Up Link */}
-              <p className="text-center text-sm text-gray-600">
+              <p className="text-center text-sm text-slate-600">
                 Don't have an account?{" "}
                 <button
                   type="button"
@@ -281,7 +281,7 @@ export function LoginPage() {
             <h2 className="text-4xl font-bold leading-tight">
               Run your business with clarity and focus
             </h2>
-            <p className="text-lg text-gray-300">
+            <p className="text-lg text-slate-300">
               Taskspace brings the power of EOS to your team with EOD reports,
               quarterly rocks, and AI-powered insights.
             </p>
@@ -294,7 +294,7 @@ export function LoginPage() {
               </div>
               <div>
                 <h3 className="font-semibold mb-1">Daily EOD Reports</h3>
-                <p className="text-gray-400 text-sm">Track progress and blockers with AI-powered insights</p>
+                <p className="text-slate-400 text-sm">Track progress and blockers with AI-powered insights</p>
               </div>
             </div>
 
@@ -304,7 +304,7 @@ export function LoginPage() {
               </div>
               <div>
                 <h3 className="font-semibold mb-1">Quarterly Rocks</h3>
-                <p className="text-gray-400 text-sm">Set and track your most important goals</p>
+                <p className="text-slate-400 text-sm">Set and track your most important goals</p>
               </div>
             </div>
 
@@ -314,7 +314,7 @@ export function LoginPage() {
               </div>
               <div>
                 <h3 className="font-semibold mb-1">Team Alignment</h3>
-                <p className="text-gray-400 text-sm">Keep everyone focused on what matters most</p>
+                <p className="text-slate-400 text-sm">Keep everyone focused on what matters most</p>
               </div>
             </div>
           </div>

@@ -31,11 +31,11 @@ export function PageHeader({ icon, title, subtitle, actions, className }: PageHe
             </div>
           )}
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 truncate">
               {title}
             </h1>
             {subtitle && (
-              <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+              <p className="text-sm text-slate-500 mt-1 line-clamp-2">
                 {subtitle}
               </p>
             )}

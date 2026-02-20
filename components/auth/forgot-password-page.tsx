@@ -59,22 +59,22 @@ export function ForgotPasswordPage() {
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-black">Check your email</h2>
-              <p className="text-gray-500">
+              <p className="text-slate-500">
                 If an account exists for <span className="font-medium text-black">{email}</span>,
                 we've sent a password reset link.
               </p>
             </div>
           </div>
 
-          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-600">
+          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <p className="text-sm text-slate-600">
               The link will expire in 1 hour. Check your spam folder if you don't see it.
             </p>
           </div>
 
           <Button
             variant="outline"
-            className="w-full h-11 border-gray-200 hover:bg-gray-50 text-black font-medium"
+            className="w-full h-11 border-slate-200 hover:bg-slate-50 text-black font-medium"
             onClick={() => setCurrentPage("login")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -103,7 +103,7 @@ export function ForgotPasswordPage() {
         {/* Title */}
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-semibold text-black">Forgot password?</h2>
-          <p className="text-gray-500">
+          <p className="text-slate-500">
             Enter your email address and we'll send you a link to reset your password
           </p>
         </div>
@@ -130,13 +130,13 @@ export function ForgotPasswordPage() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               autoComplete="email"
-              className="h-11 bg-white border-gray-200 focus:border-black focus:ring-black text-black placeholder:text-gray-400"
+              className="h-11 bg-white border-slate-200 focus:border-black focus:ring-black text-black placeholder:text-slate-400"
             />
           </div>
 
           <Button
             type="submit"
-            className="w-full h-11 bg-black hover:bg-gray-800 text-white font-medium transition-colors"
+            className="w-full h-11 bg-black hover:bg-slate-800 text-white font-medium transition-colors"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -154,7 +154,7 @@ export function ForgotPasswordPage() {
         <button
           type="button"
           onClick={() => setCurrentPage("login")}
-          className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-black transition-colors"
+          className="w-full flex items-center justify-center gap-2 text-sm text-slate-600 hover:text-black transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to login

@@ -98,7 +98,7 @@ function ActionLabel({ action }: { action: string }) {
     prioritize: { label: "Prioritize", color: "bg-teal-100 text-teal-800" },
     task_suggestion: { label: "Task Suggestion", color: "bg-lime-100 text-lime-800" },
   }
-  const config = labels[action] || { label: action, color: "bg-gray-100 text-gray-800" }
+  const config = labels[action] || { label: action, color: "bg-slate-100 text-slate-800" }
   return <Badge variant="outline" className={`${config.color} border-0 text-xs`}>{config.label}</Badge>
 }
 

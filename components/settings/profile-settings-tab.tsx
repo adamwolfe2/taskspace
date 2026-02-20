@@ -545,7 +545,7 @@ export function ProfileSettingsTab() {
             {newPassword && (
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${passwordStrength.color} transition-all duration-300 rounded-full`}
                       style={{ width: `${passwordStrength.width}%` }}

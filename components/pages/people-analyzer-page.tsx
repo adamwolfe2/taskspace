@@ -579,7 +579,7 @@ export function PeopleAnalyzerPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, getsIt: e.target.checked })
                     }
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-slate-300"
                   />
                   <label htmlFor="getsIt" className="text-sm cursor-pointer">
                     Gets It - Understands the role and its responsibilities
@@ -594,7 +594,7 @@ export function PeopleAnalyzerPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, wantsIt: e.target.checked })
                     }
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-slate-300"
                   />
                   <label htmlFor="wantsIt" className="text-sm cursor-pointer">
                     Wants It - Has genuine desire and passion for the role
@@ -612,7 +612,7 @@ export function PeopleAnalyzerPage() {
                         hasCapacity: e.target.checked,
                       })
                     }
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-slate-300"
                   />
                   <label htmlFor="hasCapacity" className="text-sm cursor-pointer">
                     Has Capacity - Has the time and ability to do the job well
