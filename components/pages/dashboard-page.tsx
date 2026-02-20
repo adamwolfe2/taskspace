@@ -27,6 +27,7 @@ import { AlertCircle, Settings } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { WelcomeCard } from "@/components/dashboard/welcome-card"
+import { ProfileCompletionCard } from "@/components/dashboard/profile-completion-card"
 import { FocusTimer } from "@/components/shared/focus-timer"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import {
@@ -421,6 +422,9 @@ export function DashboardPage({
    {/* Alerts & Dialogs — always outside grid */}
    <NoWorkspaceAlert />
    <KeyboardShortcutsDialog />
+
+   {/* Profile completion nudge for new users */}
+   <ProfileCompletionCard />
 
    {/* Welcome card for new users */}
    <WelcomeCard
