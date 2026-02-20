@@ -717,6 +717,21 @@ export const db = {
       const { rows } = await sql`SELECT * FROM organization_members WHERE user_id = ${userId}`
       return rows.map(parseMember)
     },
+    async findByEmail(email: string): Promise<OrganizationMember[]> {
+      const { rows } = await sql`
+        SELECT * FROM organization_members
+        WHERE LOWER(email) = LOWER(${email})
+          AND status IN ('active', 'invited')
+      `
+      return rows.map(parseMember)
+    },
+    async linkUserId(memberId: string, userId: string): Promise<void> {
+      await sql`
+        UPDATE organization_members
+        SET user_id = ${userId}, updated_at = NOW()
+        WHERE id = ${memberId} AND user_id IS NULL
+      `
+    },
     async findByOrgAndUser(orgId: string, userId: string): Promise<OrganizationMember | null> {
       const { rows } = await sql`
         SELECT * FROM organization_members

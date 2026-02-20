@@ -50,7 +50,37 @@ export const GET = withUserAuth(async (request: NextRequest, auth) => {
 
     // Full auth failed — but user IS authenticated (withUserAuth passed).
     // Check if user actually has org memberships before assuming they need onboarding.
-    const memberships = await db.members.findByUserId(auth.user.id)
+    let memberships = await db.members.findByUserId(auth.user.id)
+
+    // Fallback: if no memberships found by user_id, try by email
+    if (memberships.length === 0) {
+      logger.warn(
+        { userId: auth.user.id, email: auth.user.email },
+        "Session: no memberships by user_id — trying email fallback"
+      )
+
+      const emailMemberships = await db.members.findByEmail(auth.user.email)
+
+      if (emailMemberships.length > 0) {
+        // Auto-repair: link user_id to membership records missing it
+        for (const membership of emailMemberships) {
+          if (!membership.userId) {
+            await db.members.linkUserId(membership.id, auth.user.id)
+            logger.info(
+              { memberId: membership.id, userId: auth.user.id, orgId: membership.organizationId },
+              "Session: auto-repaired membership user_id linkage"
+            )
+          }
+        }
+
+        // Re-fetch after repair
+        memberships = await db.members.findByUserId(auth.user.id)
+        if (memberships.length === 0) {
+          memberships = emailMemberships
+        }
+      }
+    }
+
     const activeMembership = memberships.find((m) => m.status === "active") || memberships[0]
 
     if (activeMembership) {

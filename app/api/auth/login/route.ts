@@ -176,7 +176,43 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's organizations
-    const memberships = await db.members.findByUserId(user.id)
+    let memberships = await db.members.findByUserId(user.id)
+
+    // Fallback: if no memberships found by user_id, try by email
+    // This handles data integrity issues where user_id linkage was lost
+    if (memberships.length === 0) {
+      logger.warn(
+        { userId: user.id, email: user.email },
+        "No memberships found by user_id — trying email fallback"
+      )
+
+      const emailMemberships = await db.members.findByEmail(user.email)
+
+      if (emailMemberships.length > 0) {
+        // Auto-repair: link user_id to membership records that are missing it
+        for (const membership of emailMemberships) {
+          if (!membership.userId) {
+            await db.members.linkUserId(membership.id, user.id)
+            logger.info(
+              { memberId: membership.id, userId: user.id, orgId: membership.organizationId },
+              "Auto-repaired membership user_id linkage"
+            )
+          }
+        }
+
+        // Re-fetch with proper user_id linkage
+        memberships = await db.members.findByUserId(user.id)
+
+        // If still empty (user_id was set but to a different value), use email-matched memberships
+        if (memberships.length === 0) {
+          memberships = emailMemberships
+          logger.warn(
+            { userId: user.id, email: user.email, membershipUserIds: emailMemberships.map(m => m.userId) },
+            "Email fallback found memberships with different user_ids"
+          )
+        }
+      }
+    }
 
     if (memberships.length === 0) {
       // User has no organizations - create a session so they can use onboarding

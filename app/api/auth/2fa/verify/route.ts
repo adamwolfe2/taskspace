@@ -83,7 +83,23 @@ export async function POST(request: NextRequest) {
     }
 
     // 2FA verified — create full session (same logic as login route)
-    const memberships = await db.members.findByUserId(userId)
+    let memberships = await db.members.findByUserId(userId)
+
+    // Fallback: if no memberships found by user_id, try by email
+    if (memberships.length === 0) {
+      const emailMemberships = await db.members.findByEmail(user.email)
+      if (emailMemberships.length > 0) {
+        for (const m of emailMemberships) {
+          if (!m.userId) {
+            await db.members.linkUserId(m.id, userId)
+          }
+        }
+        memberships = await db.members.findByUserId(userId)
+        if (memberships.length === 0) {
+          memberships = emailMemberships
+        }
+      }
+    }
 
     let selectedOrgId = organizationId
     if (!selectedOrgId) {
