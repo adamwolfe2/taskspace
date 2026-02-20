@@ -160,7 +160,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
     // Validate request body
-    const { memberId, department, weeklyMeasurable, role, timezone, eodReminderTime, notificationPreferences } =
+    const { memberId, department, weeklyMeasurable, role, jobTitle, timezone, eodReminderTime, notificationPreferences } =
       await validateBody(request, updateMemberSchema)
 
     // Get the member record - try organization_members.id first, then user_id
@@ -210,6 +210,7 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     const updates: Partial<OrganizationMember> = {}
     if (department !== undefined) updates.department = department
     if (weeklyMeasurable !== undefined) updates.weeklyMeasurable = weeklyMeasurable
+    if (jobTitle !== undefined) updates.jobTitle = jobTitle
     if (role !== undefined && isAdmin(auth)) updates.role = role
     if (timezone !== undefined) updates.timezone = timezone
     if (eodReminderTime !== undefined) updates.eodReminderTime = eodReminderTime

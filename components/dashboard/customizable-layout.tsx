@@ -416,7 +416,7 @@ export function CustomizableLayout({
          gridRow: `span ${item?.h || 3}`,
         }}
        >
-        <div className="h-full">
+        <div className="h-full overflow-y-auto">
          {renderWidget(widget)}
         </div>
        </div>

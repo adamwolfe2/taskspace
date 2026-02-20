@@ -79,6 +79,59 @@ async function sendEmail(to: string[], subject: string, html: string) {
   }
 }
 
+// Shared email wrapper — clean, minimal layout with top accent border
+function emailWrapper(content: string, footerText?: string): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; background: #f8fafc; margin: 0; padding: 0; }
+    .wrapper { max-width: 560px; margin: 0 auto; padding: 40px 20px; }
+    .card { background: #ffffff; border: 1px solid #e2e8f0; border-top: 3px solid #0f172a; }
+    .card-body { padding: 32px; }
+    .brand { font-size: 13px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: #64748b; margin-bottom: 24px; }
+    h1 { font-size: 22px; font-weight: 600; color: #0f172a; margin: 0 0 8px 0; line-height: 1.3; }
+    .subtitle { font-size: 14px; color: #64748b; margin: 0 0 24px 0; }
+    p { font-size: 15px; color: #374151; margin: 0 0 16px 0; }
+    .btn { display: inline-block; background: #0f172a; color: #ffffff; padding: 12px 28px; text-decoration: none; font-weight: 500; font-size: 14px; }
+    .btn-outline { display: inline-block; background: transparent; color: #0f172a; padding: 11px 27px; text-decoration: none; font-weight: 500; font-size: 14px; border: 1px solid #0f172a; }
+    .btn-danger { display: inline-block; background: #dc2626; color: #ffffff; padding: 12px 28px; text-decoration: none; font-weight: 500; font-size: 14px; }
+    .cta { text-align: center; margin: 28px 0; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { font-size: 13px; color: #64748b; }
+    .detail-value { font-size: 13px; font-weight: 600; color: #1f2937; }
+    .note { font-size: 13px; color: #64748b; margin: 24px 0 0 0; }
+    .divider { border: none; border-top: 1px solid #f1f5f9; margin: 24px 0; }
+    .footer { text-align: center; padding: 20px 32px; font-size: 12px; color: #94a3b8; }
+    .footer a { color: #94a3b8; text-decoration: underline; }
+    .link-fallback { font-size: 12px; color: #94a3b8; word-break: break-all; margin-top: 8px; }
+    .callout { background: #f8fafc; border-left: 3px solid #0f172a; padding: 14px 16px; margin: 20px 0; }
+    .callout-warning { background: #fef2f2; border-left: 3px solid #dc2626; padding: 14px 16px; margin: 20px 0; }
+    .callout-amber { background: #fffbeb; border-left: 3px solid #d97706; padding: 14px 16px; margin: 20px 0; }
+    .tag { display: inline-block; font-size: 12px; font-weight: 500; padding: 2px 8px; background: #f1f5f9; color: #475569; }
+    .expires { font-size: 13px; color: #94a3b8; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="card-body">
+        <div class="brand">Taskspace</div>
+        ${content}
+      </div>
+      <div class="footer">
+        ${footerText || "Taskspace"}
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+}
+
 // Send invitation email
 export async function sendInvitationEmail(
   invitation: Invitation,
@@ -87,75 +140,36 @@ export async function sendInvitationEmail(
 ) {
   const inviteLink = `${APP_URL}/app?invite=${invitation.token}`
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: linear-gradient(135deg, #000000, #1f2937); color: white; padding: 30px; text-align: center; }
-    .header h1 { margin: 0; font-size: 24px; }
-    .content { padding: 30px; }
-    .invite-box { background: #f9fafb; border: 2px dashed #000000; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
-    .button { display: inline-block; background: #000000; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 10px 0; }
-    .button:hover { background: #1f2937; }
-    .details { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; }
-    .details-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
-    .details-row:last-child { border-bottom: none; }
-    .label { color: #6b7280; }
-    .value { font-weight: 600; color: #1f2937; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-    .expires { color: #dc2626; font-size: 14px; margin-top: 10px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <div class="header">
-        <h1>You're Invited!</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9;">Join ${escapeHtml(organization.name)}</p>
-      </div>
+  const html = emailWrapper(`
+    <h1>You're invited to ${escapeHtml(organization.name)}</h1>
+    <p class="subtitle">${escapeHtml(inviterName)} wants you on the team</p>
 
-      <div class="content">
-        <p>Hi there,</p>
-        <p><strong>${escapeHtml(inviterName)}</strong> has invited you to join <strong>${escapeHtml(organization.name)}</strong> on Taskspace - the AI operational infrastructure for multi-company founders & builders.</p>
+    <p>${escapeHtml(inviterName)} has invited you to join <strong>${escapeHtml(organization.name)}</strong> on Taskspace.</p>
 
-        <div class="invite-box">
-          <p style="margin: 0 0 15px 0;">Click the button below to accept your invitation:</p>
-          <a href="${inviteLink}" class="button">Accept Invitation</a>
-          <p class="expires">This invitation expires in 7 days</p>
-        </div>
-
-        <div class="details">
-          <div class="details-row">
-            <span class="label">Organization</span>
-            <span class="value">${escapeHtml(organization.name)}</span>
-          </div>
-          <div class="details-row">
-            <span class="label">Role</span>
-            <span class="value">${invitation.role === "admin" ? "Administrator" : "Team Member"}</span>
-          </div>
-          <div class="details-row">
-            <span class="label">Department</span>
-            <span class="value">${escapeHtml(invitation.department)}</span>
-          </div>
-        </div>
-
-        <p style="color: #6b7280; font-size: 14px;">If you didn't expect this invitation, you can safely ignore this email.</p>
-      </div>
-
-      <div class="footer">
-        <p>${escapeHtml(organization.name)} - Powered by Taskspace</p>
-        <p style="margin-top: 10px;">If the button doesn't work, copy and paste this link:<br/>
-        <a href="${inviteLink}" style="color: #000000; word-break: break-all;">${inviteLink}</a></p>
-      </div>
+    <div class="cta">
+      <a href="${inviteLink}" class="btn">Accept Invitation</a>
     </div>
-  </div>
-</body>
-</html>
-`
+
+    <hr class="divider">
+
+    <div class="detail-row">
+      <span class="detail-label">Organization</span>
+      <span class="detail-value">${escapeHtml(organization.name)}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Role</span>
+      <span class="detail-value">${invitation.role === "admin" ? "Administrator" : "Team Member"}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Department</span>
+      <span class="detail-value">${escapeHtml(invitation.department)}</span>
+    </div>
+
+    <p class="expires">This invitation expires in 7 days</p>
+
+    <p class="note">If you didn't expect this invitation, you can safely ignore this email.</p>
+    <p class="link-fallback">Or copy this link: ${inviteLink}</p>
+  `, `${escapeHtml(organization.name)} &middot; Powered by Taskspace`)
 
   return sendEmail(
     [invitation.email],
@@ -171,55 +185,22 @@ export async function sendVerificationEmail(
 ) {
   const verifyLink = `${APP_URL}/app?verifyEmail=${verificationToken.token}`
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: linear-gradient(135deg, #000000, #1f2937); color: white; padding: 30px; text-align: center; }
-    .header h1 { margin: 0; font-size: 24px; }
-    .content { padding: 30px; }
-    .verify-box { background: #f9fafb; border: 2px dashed #000000; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
-    .button { display: inline-block; background: #000000; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 10px 0; }
-    .button:hover { background: #1f2937; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-    .expires { color: #6b7280; font-size: 14px; margin-top: 10px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <div class="header">
-        <h1>Verify Your Email</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9;">Welcome to Taskspace</p>
-      </div>
+  const html = emailWrapper(`
+    <h1>Verify your email</h1>
+    <p class="subtitle">One quick step to get started</p>
 
-      <div class="content">
-        <p>Hi ${escapeHtml((userName || "there").split(" ")[0])},</p>
-        <p>Thanks for signing up for Taskspace! Please verify your email address to get started.</p>
+    <p>Hi ${escapeHtml((userName || "there").split(" ")[0])},</p>
+    <p>Thanks for signing up. Please verify your email address to activate your account.</p>
 
-        <div class="verify-box">
-          <p style="margin: 0 0 15px 0;">Click the button below to verify your email:</p>
-          <a href="${verifyLink}" class="button">Verify Email Address</a>
-          <p class="expires">This link expires in 24 hours</p>
-        </div>
-
-        <p style="color: #6b7280; font-size: 14px;">If you didn't create an account on Taskspace, you can safely ignore this email.</p>
-      </div>
-
-      <div class="footer">
-        <p>Taskspace - Team Productivity Platform</p>
-        <p style="margin-top: 10px;">If the button doesn't work, copy and paste this link:<br/>
-        <a href="${verifyLink}" style="color: #000000; word-break: break-all;">${verifyLink}</a></p>
-      </div>
+    <div class="cta">
+      <a href="${verifyLink}" class="btn">Verify Email</a>
     </div>
-  </div>
-</body>
-</html>
-`
+
+    <p class="expires">This link expires in 24 hours</p>
+
+    <p class="note">If you didn't create an account on Taskspace, you can safely ignore this email.</p>
+    <p class="link-fallback">Or copy this link: ${verifyLink}</p>
+  `)
 
   return sendEmail(
     [verificationToken.email],
@@ -234,64 +215,40 @@ export async function sendEscalationNotification(
   submittedBy: TeamMember,
   organization: Organization
 ) {
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .alert { background: #fef2f2; border: 2px solid #fecaca; border-radius: 12px; padding: 20px; }
-    .alert-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-    .alert-icon { font-size: 24px; }
-    .alert-title { color: #dc2626; font-size: 20px; font-weight: 600; margin: 0; }
-    .content { background: white; border-radius: 8px; padding: 20px; margin-top: 15px; }
-    .meta { color: #6b7280; font-size: 14px; margin-bottom: 15px; }
-    .note { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0; }
-    .footer { text-align: center; padding: 15px; color: #6b7280; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="alert">
-      <div class="alert-header">
-        <span class="alert-icon">⚠️</span>
-        <h1 class="alert-title">Escalation Required</h1>
-      </div>
-      <p><strong>${escapeHtml(submittedBy.name)}</strong> has flagged an issue that needs your attention.</p>
+  const html = emailWrapper(`
+    <h1>Escalation from ${escapeHtml(submittedBy.name)}</h1>
+    <p class="subtitle">${new Date(eodReport.date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
 
-      <div class="content">
-        <div class="meta">
-          <strong>Date:</strong> ${new Date(eodReport.date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}<br/>
-          <strong>Department:</strong> ${escapeHtml(submittedBy.department)}<br/>
-          <strong>Submitted:</strong> ${new Date(eodReport.submittedAt).toLocaleString()}
-        </div>
-
-        <div class="note">
-          <strong>Escalation Note:</strong><br/>
-          ${escapeHtml(eodReport.escalationNote || "No details provided")}
-        </div>
-
-        ${eodReport.challenges ? `
-        <div style="margin-top: 15px;">
-          <strong>Challenges Mentioned:</strong><br/>
-          ${escapeHtml(eodReport.challenges)}
-        </div>
-        ` : ""}
-      </div>
+    <div class="callout-warning">
+      <p style="margin: 0; font-size: 14px; font-weight: 600; color: #dc2626;">Needs Attention</p>
+      <p style="margin: 8px 0 0 0; font-size: 14px; color: #374151;">${escapeHtml(eodReport.escalationNote || "No details provided")}</p>
     </div>
 
-    <div class="footer">
-      <p>${escapeHtml(organization.name)}</p>
+    <hr class="divider">
+
+    <div class="detail-row">
+      <span class="detail-label">Submitted by</span>
+      <span class="detail-value">${escapeHtml(submittedBy.name)}</span>
     </div>
-  </div>
-</body>
-</html>
-`
+    <div class="detail-row">
+      <span class="detail-label">Department</span>
+      <span class="detail-value">${escapeHtml(submittedBy.department)}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Submitted</span>
+      <span class="detail-value">${new Date(eodReport.submittedAt).toLocaleString()}</span>
+    </div>
+
+    ${eodReport.challenges ? `
+    <hr class="divider">
+    <p style="font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 8px;">Challenges Mentioned</p>
+    <p style="font-size: 14px;">${escapeHtml(eodReport.challenges)}</p>
+    ` : ""}
+  `, `${escapeHtml(organization.name)}`)
 
   return sendEmail(
     [ADMIN_EMAIL],
-    `⚠️ Escalation from ${escapeHtml(submittedBy.name)} - ${escapeHtml(organization.name)}`,
+    `Escalation from ${escapeHtml(submittedBy.name)} - ${escapeHtml(organization.name)}`,
     html
   )
 }
@@ -326,19 +283,19 @@ export async function sendEODNotification(
         const rockPriorities = (eodReport.tomorrowPriorities || []).filter((p) => p.rockId === rockId)
 
         return `
-          <div class="rock-section">
-            <div class="rock-title">${escapeHtml(data.title)}</div>
-            <span class="status status-ontrack">${rock?.status === "completed" ? "Completed" : "On Track"}</span>
-            <h4>Today's Key Activities:</h4>
-            <ul class="task-list">
-              ${data.tasks.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}
+          <div class="callout">
+            <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #0f172a;">${escapeHtml(data.title)}</p>
+            <span class="tag">${rock?.status === "completed" ? "Completed" : "On Track"}</span>
+            <p style="margin: 12px 0 4px 0; font-size: 13px; font-weight: 600; color: #64748b;">Today's Activities</p>
+            <ul style="margin: 4px 0 0 0; padding-left: 18px; font-size: 14px; color: #374151;">
+              ${data.tasks.map((t) => `<li style="margin: 4px 0;">${escapeHtml(t)}</li>`).join("")}
             </ul>
             ${
               rockPriorities.length > 0
                 ? `
-              <h4>Tomorrow's Priorities:</h4>
-              <ul class="task-list">
-                ${rockPriorities.map((p) => `<li>${escapeHtml(p.text)}</li>`).join("")}
+              <p style="margin: 12px 0 4px 0; font-size: 13px; font-weight: 600; color: #64748b;">Tomorrow's Priorities</p>
+              <ul style="margin: 4px 0 0 0; padding-left: 18px; font-size: 14px; color: #374151;">
+                ${rockPriorities.map((p) => `<li style="margin: 4px 0;">${escapeHtml(p.text)}</li>`).join("")}
               </ul>
             `
                 : ""
@@ -351,44 +308,18 @@ export async function sendEODNotification(
     const generalSection =
       tasksByRock.general && tasksByRock.general.tasks.length > 0
         ? `
-      <div class="rock-section">
-        <div class="rock-title">General Activities</div>
-        <ul class="task-list">
-          ${tasksByRock.general.tasks.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}
+      <div class="callout">
+        <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #0f172a;">General Activities</p>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; color: #374151;">
+          ${tasksByRock.general.tasks.map((t) => `<li style="margin: 4px 0;">${escapeHtml(t)}</li>`).join("")}
         </ul>
       </div>
     `
         : ""
 
-    const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #2563EB; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
-    .content { background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; }
-    .rock-section { background: white; padding: 15px; margin: 10px 0; border-radius: 6px; border-left: 4px solid #2563EB; }
-    .rock-title { font-weight: 600; color: #1f2937; margin-bottom: 8px; }
-    .status { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-    .status-ontrack { background: #dcfce7; color: #166534; }
-    .task-list { margin: 10px 0; padding-left: 20px; }
-    .task-list li { margin: 5px 0; }
-    .escalation { background: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 6px; margin-top: 15px; }
-    .escalation-header { color: #dc2626; font-weight: 600; }
-    .footer { text-align: center; padding: 15px; color: #6b7280; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1 style="margin:0;">EOD Report Submitted</h1>
-      <p style="margin:5px 0 0 0;">${escapeHtml(submittedBy.name)} • ${new Date(eodReport.date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
-    </div>
-
-    <div class="content">
-      <h2>Rock Progress Update</h2>
+    const html = emailWrapper(`
+      <h1>EOD Report</h1>
+      <p class="subtitle">${escapeHtml(submittedBy.name)} &middot; ${new Date(eodReport.date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
 
       ${rockSections}
       ${generalSection}
@@ -396,8 +327,9 @@ export async function sendEODNotification(
       ${
         eodReport.challenges
           ? `
-        <h3>Challenges</h3>
-        <p>${escapeHtml(eodReport.challenges)}</p>
+        <hr class="divider">
+        <p style="font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 8px;">Challenges</p>
+        <p style="font-size: 14px;">${escapeHtml(eodReport.challenges)}</p>
       `
           : ""
       }
@@ -405,22 +337,14 @@ export async function sendEODNotification(
       ${
         eodReport.needsEscalation && eodReport.escalationNote
           ? `
-        <div class="escalation">
-          <div class="escalation-header">⚠️ ESCALATION NEEDED</div>
-          <p>${escapeHtml(eodReport.escalationNote)}</p>
+        <div class="callout-warning">
+          <p style="margin: 0; font-size: 14px; font-weight: 600; color: #dc2626;">Escalation Needed</p>
+          <p style="margin: 8px 0 0 0; font-size: 14px; color: #374151;">${escapeHtml(eodReport.escalationNote)}</p>
         </div>
       `
           : ""
       }
-    </div>
-
-    <div class="footer">
-      ${organization ? escapeHtml(organization.name) : "Taskspace"} • Submitted at ${new Date(eodReport.submittedAt).toLocaleTimeString()}
-    </div>
-  </div>
-</body>
-</html>
-`
+    `, `${organization ? escapeHtml(organization.name) : "Taskspace"} &middot; Submitted at ${new Date(eodReport.submittedAt).toLocaleTimeString()}`)
 
     return sendEmail([ADMIN_EMAIL], `EOD Report: ${submittedBy.name} - ${new Date(eodReport.date).toLocaleDateString()}`, html)
   } catch (error) {
@@ -431,47 +355,21 @@ export async function sendEODNotification(
 
 // Send daily EOD reminder
 export async function sendEODReminder(user: TeamMember, organization: Organization) {
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: #f59e0b; color: white; padding: 20px; text-align: center; }
-    .content { padding: 30px; text-align: center; }
-    .button { display: inline-block; background: #2563EB; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; }
-    .footer { text-align: center; padding: 15px; color: #6b7280; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <div class="header">
-        <h1 style="margin:0;">⏰ EOD Reminder</h1>
-      </div>
-      <div class="content">
-        <p>Hi ${escapeHtml((user.name || "there").split(" ")[0])},</p>
-        <p>Don't forget to submit your End of Day report!</p>
-        <p>Take a few minutes to reflect on what you accomplished today and plan for tomorrow.</p>
-        <a href="${APP_URL}" class="button">Submit EOD Report</a>
-      </div>
-      <div class="footer">
-        <p>${escapeHtml(organization.name)}</p>
-        <p style="margin-top: 10px; font-size: 11px;">
-          <a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(user.email)}" style="color: #6b7280;">Unsubscribe from notifications</a>
-        </p>
-      </div>
+  const html = emailWrapper(`
+    <h1>Time to submit your EOD</h1>
+    <p class="subtitle">A quick reflection on your day</p>
+
+    <p>Hi ${escapeHtml((user.name || "there").split(" ")[0])},</p>
+    <p>Take a few minutes to share what you accomplished today and plan for tomorrow.</p>
+
+    <div class="cta">
+      <a href="${APP_URL}" class="btn">Submit EOD Report</a>
     </div>
-  </div>
-</body>
-</html>
-`
+  `, `${escapeHtml(organization.name)}<br><a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(user.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 
   return sendEmail(
     [user.email],
-    `⏰ Time to submit your EOD report - ${organization.name}`,
+    `Time to submit your EOD report - ${organization.name}`,
     html
   )
 }
@@ -483,60 +381,24 @@ export async function sendPasswordResetEmail(
 ) {
   const resetLink = `${APP_URL}?resetToken=${resetToken.token}`
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 30px; text-align: center; }
-    .header h1 { margin: 0; font-size: 24px; }
-    .content { padding: 30px; }
-    .reset-box { background: #fef2f2; border: 2px dashed #dc2626; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
-    .button { display: inline-block; background: #dc2626; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 10px 0; }
-    .button:hover { background: #b91c1c; }
-    .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; margin: 20px 0; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-    .expires { color: #dc2626; font-size: 14px; margin-top: 10px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <div class="header">
-        <h1>Password Reset Request</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9;">Taskspace</p>
-      </div>
+  const html = emailWrapper(`
+    <h1>Reset your password</h1>
+    <p class="subtitle">You requested a password change</p>
 
-      <div class="content">
-        <p>Hi ${escapeHtml((userName || "there").split(" ")[0])},</p>
-        <p>We received a request to reset your password for your account. Click the button below to create a new password:</p>
+    <p>Hi ${escapeHtml((userName || "there").split(" ")[0])},</p>
+    <p>We received a request to reset your password. Click the button below to create a new one.</p>
 
-        <div class="reset-box">
-          <a href="${resetLink}" class="button">Reset Password</a>
-          <p class="expires">This link expires in 1 hour</p>
-        </div>
-
-        <div class="warning">
-          <strong>Security Notice:</strong><br/>
-          If you didn't request a password reset, please ignore this email. Your password will remain unchanged.
-        </div>
-
-        <p style="color: #6b7280; font-size: 14px;">For security reasons, this link can only be used once and will expire after 1 hour.</p>
-      </div>
-
-      <div class="footer">
-        <p>Taskspace - Team Productivity Platform</p>
-        <p style="margin-top: 10px;">If the button doesn't work, copy and paste this link:<br/>
-        <a href="${resetLink}" style="color: #dc2626; word-break: break-all;">${resetLink}</a></p>
-      </div>
+    <div class="cta">
+      <a href="${resetLink}" class="btn">Reset Password</a>
     </div>
-  </div>
-</body>
-</html>
-`
+
+    <div class="callout-amber">
+      <p style="margin: 0; font-size: 13px; color: #92400e;"><strong>Security notice:</strong> If you didn't request this, ignore this email. Your password will remain unchanged.</p>
+    </div>
+
+    <p class="expires">This link expires in 1 hour and can only be used once</p>
+    <p class="link-fallback">Or copy this link: ${resetLink}</p>
+  `)
 
   return sendEmail(
     [resetToken.email],
@@ -549,65 +411,25 @@ export async function sendPasswordResetEmail(
 export async function sendWelcomeEmail(user: TeamMember, organization: Organization) {
   const dashboardLink = `${APP_URL}/dashboard`
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 30px; text-align: center; }
-    .header h1 { margin: 0; font-size: 28px; }
-    .content { padding: 30px; }
-    .welcome-box { background: #eff6ff; border: 2px solid #3b82f6; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
-    .button { display: inline-block; background: #3b82f6; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 10px 0; }
-    .features { background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0; }
-    .feature-item { padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
-    .feature-item:last-child { border-bottom: none; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <div class="header">
-        <h1>🎉 Welcome to TaskSpace!</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9;">Your team's productivity platform</p>
-      </div>
+  const html = emailWrapper(`
+    <h1>Welcome to ${escapeHtml(organization.name)}</h1>
+    <p class="subtitle">You're all set up on Taskspace</p>
 
-      <div class="content">
-        <p>Hi ${escapeHtml((user.name || "there").split(" ")[0])},</p>
-        <p>Welcome to <strong>${escapeHtml(organization.name)}</strong> on TaskSpace! We're excited to have you on board.</p>
+    <p>Hi ${escapeHtml((user.name || "there").split(" ")[0])},</p>
+    <p>Your account is ready. Here's what you can do:</p>
 
-        <div class="welcome-box">
-          <p style="margin: 0 0 15px 0;">Get started with your dashboard:</p>
-          <a href="${dashboardLink}" class="button">Go to Dashboard</a>
-        </div>
-
-        <div class="features">
-          <h3 style="margin-top: 0;">What you can do:</h3>
-          <div class="feature-item"><strong>📝 Submit EOD Reports</strong> - Share your daily progress</div>
-          <div class="feature-item"><strong>🎯 Track Quarterly Rocks</strong> - Focus on what matters most</div>
-          <div class="feature-item"><strong>✅ Manage Tasks</strong> - Stay organized and on track</div>
-          <div class="feature-item"><strong>📊 View Scorecards</strong> - Monitor key metrics</div>
-          <div class="feature-item"><strong>🤝 Join L10 Meetings</strong> - Collaborate with your team</div>
-        </div>
-
-        <p>Need help getting started? Check out our <a href="${APP_URL}/help" style="color: #3b82f6;">help center</a> or reach out to your team admin.</p>
-      </div>
-
-      <div class="footer">
-        <p>${escapeHtml(organization.name)} - Powered by TaskSpace</p>
-        <p style="margin-top: 10px; font-size: 11px;">
-          <a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(user.email)}" style="color: #6b7280;">Unsubscribe from notifications</a>
-        </p>
-      </div>
+    <div class="callout">
+      <p style="margin: 0 0 4px 0; font-size: 14px;"><strong>Submit EOD Reports</strong> &mdash; Share your daily progress</p>
+      <p style="margin: 0 0 4px 0; font-size: 14px;"><strong>Track Quarterly Rocks</strong> &mdash; Focus on what matters</p>
+      <p style="margin: 0 0 4px 0; font-size: 14px;"><strong>Manage Tasks</strong> &mdash; Stay organized</p>
+      <p style="margin: 0 0 4px 0; font-size: 14px;"><strong>View Scorecards</strong> &mdash; Monitor key metrics</p>
+      <p style="margin: 0; font-size: 14px;"><strong>Join Meetings</strong> &mdash; Collaborate with your team</p>
     </div>
-  </div>
-</body>
-</html>
-`
+
+    <div class="cta">
+      <a href="${dashboardLink}" class="btn">Go to Dashboard</a>
+    </div>
+  `, `${escapeHtml(organization.name)} &middot; Powered by Taskspace<br><a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(user.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 
   return sendEmail(
     [user.email],
@@ -631,62 +453,28 @@ export async function sendRockAssignedEmail(
     day: "numeric"
   })
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; }
-    .header h1 { margin: 0; font-size: 24px; }
-    .content { padding: 30px; }
-    .rock-box { background: #f0fdf4; border: 2px solid #10b981; border-radius: 8px; padding: 20px; margin: 20px 0; }
-    .rock-title { font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 10px; }
-    .rock-details { color: #6b7280; margin: 10px 0; }
-    .button { display: inline-block; background: #10b981; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 10px 0; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <div class="header">
-        <h1>🎯 New Rock Assigned</h1>
-      </div>
+  const html = emailWrapper(`
+    <h1>New rock assigned</h1>
+    <p class="subtitle">${escapeHtml(assignedBy.name)} assigned you a quarterly rock</p>
 
-      <div class="content">
-        <p>Hi ${escapeHtml((assignedTo.name || "there").split(" ")[0])},</p>
-        <p><strong>${escapeHtml(assignedBy.name)}</strong> has assigned you a new quarterly rock:</p>
+    <p>Hi ${escapeHtml((assignedTo.name || "there").split(" ")[0])},</p>
 
-        <div class="rock-box">
-          <div class="rock-title">${escapeHtml(rock.title)}</div>
-          ${rock.description ? `<p>${escapeHtml(rock.description)}</p>` : ''}
-          <div class="rock-details">
-            <strong>Due Date:</strong> ${dueDate}
-          </div>
-          <a href="${rockLink}" class="button">View Rock Details</a>
-        </div>
-
-        <p style="color: #6b7280; font-size: 14px;">This rock is part of your quarterly goals. Regular check-ins will help you stay on track.</p>
-      </div>
-
-      <div class="footer">
-        <p>${escapeHtml(organization.name)}</p>
-        <p style="margin-top: 10px; font-size: 11px;">
-          <a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(assignedTo.email)}" style="color: #6b7280;">Unsubscribe from notifications</a>
-        </p>
-      </div>
+    <div class="callout">
+      <p style="margin: 0; font-size: 16px; font-weight: 600; color: #0f172a;">${escapeHtml(rock.title)}</p>
+      ${rock.description ? `<p style="margin: 8px 0 0 0; font-size: 14px; color: #374151;">${escapeHtml(rock.description)}</p>` : ''}
+      <p style="margin: 12px 0 0 0; font-size: 13px; color: #64748b;"><strong>Due:</strong> ${dueDate}</p>
     </div>
-  </div>
-</body>
-</html>
-`
+
+    <div class="cta">
+      <a href="${rockLink}" class="btn">View Rock</a>
+    </div>
+
+    <p class="note">Regular check-ins will help you stay on track with this rock.</p>
+  `, `${escapeHtml(organization.name)}<br><a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(assignedTo.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 
   return sendEmail(
     [assignedTo.email],
-    `🎯 New Rock Assigned: ${escapeHtml(rock.title)}`,
+    `New Rock: ${escapeHtml(rock.title)}`,
     html
   )
 }
@@ -708,57 +496,26 @@ export async function sendTaskAssignedEmail(
       })
     : null
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 30px; text-align: center; }
-    .header h1 { margin: 0; font-size: 24px; }
-    .content { padding: 30px; }
-    .task-box { background: #fffbeb; border: 2px solid #f59e0b; border-radius: 8px; padding: 20px; margin: 20px 0; }
-    .task-title { font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 10px; }
-    .button { display: inline-block; background: #f59e0b; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 10px 0; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <div class="header">
-        <h1>✅ New Task Assigned</h1>
-      </div>
+  const html = emailWrapper(`
+    <h1>New task assigned</h1>
+    <p class="subtitle">${escapeHtml(assignedBy.name)} assigned you a task</p>
 
-      <div class="content">
-        <p>Hi ${escapeHtml((assignedTo.name || "there").split(" ")[0])},</p>
-        <p><strong>${escapeHtml(assignedBy.name)}</strong> has assigned you a new task:</p>
+    <p>Hi ${escapeHtml((assignedTo.name || "there").split(" ")[0])},</p>
 
-        <div class="task-box">
-          <div class="task-title">${escapeHtml(task.title)}</div>
-          ${task.description ? `<p>${escapeHtml(task.description)}</p>` : ''}
-          ${dueDate ? `<p><strong>Due Date:</strong> ${dueDate}</p>` : ''}
-          <a href="${taskLink}" class="button">View Task</a>
-        </div>
-      </div>
-
-      <div class="footer">
-        <p>${escapeHtml(organization.name)}</p>
-        <p style="margin-top: 10px; font-size: 11px;">
-          <a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(assignedTo.email)}" style="color: #6b7280;">Unsubscribe from notifications</a>
-        </p>
-      </div>
+    <div class="callout">
+      <p style="margin: 0; font-size: 16px; font-weight: 600; color: #0f172a;">${escapeHtml(task.title)}</p>
+      ${task.description ? `<p style="margin: 8px 0 0 0; font-size: 14px; color: #374151;">${escapeHtml(task.description)}</p>` : ''}
+      ${dueDate ? `<p style="margin: 12px 0 0 0; font-size: 13px; color: #64748b;"><strong>Due:</strong> ${dueDate}</p>` : ''}
     </div>
-  </div>
-</body>
-</html>
-`
+
+    <div class="cta">
+      <a href="${taskLink}" class="btn">View Task</a>
+    </div>
+  `, `${escapeHtml(organization.name)}<br><a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(assignedTo.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 
   return sendEmail(
     [assignedTo.email],
-    `✅ New Task: ${escapeHtml(task.title)}`,
+    `New Task: ${escapeHtml(task.title)}`,
     html
   )
 }
@@ -778,59 +535,28 @@ export async function sendRockDeadlineEmail(
     day: "numeric"
   })
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 30px; text-align: center; }
-    .header h1 { margin: 0; font-size: 24px; }
-    .content { padding: 30px; }
-    .warning-box { background: #fef2f2; border: 2px solid #dc2626; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
-    .deadline-badge { display: inline-block; background: #dc2626; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 18px; margin: 10px 0; }
-    .button { display: inline-block; background: #dc2626; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 10px 0; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <div class="header">
-        <h1>⚠️ Rock Deadline Approaching</h1>
-      </div>
+  const html = emailWrapper(`
+    <h1>Rock deadline approaching</h1>
+    <p class="subtitle">${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} remaining</p>
 
-      <div class="content">
-        <p>Hi ${escapeHtml((owner.name || "there").split(" ")[0])},</p>
-        <p>Your quarterly rock deadline is coming up soon:</p>
+    <p>Hi ${escapeHtml((owner.name || "there").split(" ")[0])},</p>
+    <p>Your quarterly rock is due soon:</p>
 
-        <div class="warning-box">
-          <h2 style="margin-top: 0; color: #dc2626;">${escapeHtml(rock.title)}</h2>
-          <div class="deadline-badge">${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} remaining</div>
-          <p style="margin-bottom: 0;"><strong>Due:</strong> ${dueDate}</p>
-          <a href="${rockLink}" class="button">Review Progress</a>
-        </div>
-
-        <p>Make sure you're on track to complete this rock on time. If you're facing any blockers, consider escalating to your team lead.</p>
-      </div>
-
-      <div class="footer">
-        <p>${escapeHtml(organization.name)}</p>
-        <p style="margin-top: 10px; font-size: 11px;">
-          <a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(owner.email)}" style="color: #6b7280;">Unsubscribe from notifications</a>
-        </p>
-      </div>
+    <div class="callout-warning">
+      <p style="margin: 0; font-size: 16px; font-weight: 600; color: #0f172a;">${escapeHtml(rock.title)}</p>
+      <p style="margin: 8px 0 0 0; font-size: 13px; color: #64748b;"><strong>Due:</strong> ${dueDate}</p>
     </div>
-  </div>
-</body>
-</html>
-`
+
+    <div class="cta">
+      <a href="${rockLink}" class="btn">Review Progress</a>
+    </div>
+
+    <p class="note">If you're facing blockers, consider escalating to your team lead.</p>
+  `, `${escapeHtml(organization.name)}<br><a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(owner.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 
   return sendEmail(
     [owner.email],
-    `⚠️ Rock deadline in ${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'}: ${escapeHtml(rock.title)}`,
+    `Rock deadline in ${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'}: ${escapeHtml(rock.title)}`,
     html
   )
 }
