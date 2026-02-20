@@ -24,7 +24,10 @@ type GridLayoutProps = {
   cols: number
   rowHeight: number
   width: number
+  compactType?: "vertical" | "horizontal" | null
   onLayoutChange?: (layout: RGLLayout[]) => void
+  onDragStart?: () => void
+  onResizeStart?: () => void
   isDraggable?: boolean
   isResizable?: boolean
   draggableHandle?: string
@@ -78,7 +81,7 @@ import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 // Bump this whenever DEFAULT_LAYOUT or rowHeight changes.
 // Stale localStorage with a different version is discarded on load.
-const LAYOUT_VERSION = 4
+const LAYOUT_VERSION = 5
 
 export interface DashboardWidget {
  id: string
@@ -217,13 +220,10 @@ export function CustomizableLayout({
   return () => observer.disconnect()
  }, [])
 
- // Track whether the grid has settled after mount to ignore initial onLayoutChange
- const hasSettledRef = useRef(false)
-
- // Reset settled flag when entering edit mode so the first onLayoutChange is skipped
+ // Reset interaction tracking when entering edit mode
  useEffect(() => {
   if (isEditing) {
-   hasSettledRef.current = false
+   userInteractedRef.current = false
   }
  }, [isEditing])
 
@@ -261,14 +261,23 @@ export function CustomizableLayout({
   })
  }, [enabledWidgets, enabledLayout])
 
+ // Track user-initiated interactions (drag/resize) vs automatic compaction
+ const userInteractedRef = useRef(false)
+
+ const handleDragStart = useCallback(() => {
+  userInteractedRef.current = true
+ }, [])
+
+ const handleResizeStart = useCallback(() => {
+  userInteractedRef.current = true
+ }, [])
+
  const handleLayoutChange = useCallback((newLayout: RGLLayout[]) => {
   if (!isEditing) return
-  // react-grid-layout fires onLayoutChange on mount — skip that initial event
-  // to prevent overwriting the layout with potentially collapsed widths
-  if (!hasSettledRef.current) {
-   hasSettledRef.current = true
-   return
-  }
+  // Only update layout state when user has actually dragged or resized.
+  // This prevents react-grid-layout's initial compaction from collapsing widths.
+  if (!userInteractedRef.current) return
+  userInteractedRef.current = false
   onLayoutChange(newLayout as unknown as LayoutItem[])
  }, [isEditing, onLayoutChange])
 
@@ -344,7 +353,10 @@ export function CustomizableLayout({
       cols={4}
       rowHeight={40}
       width={containerWidth}
+      compactType="vertical"
       onLayoutChange={handleLayoutChange}
+      onDragStart={handleDragStart}
+      onResizeStart={handleResizeStart}
       isDraggable
       isResizable
       draggableHandle=".widget-drag-handle"
@@ -613,14 +625,14 @@ export function useDashboardLayout(
        i: widgetId,
        x: 0,
        y: maxY,
-       w: widgetDef.minW || 2,
-       h: widgetDef.minH || 2,
+       w: initialLayout.find((l) => l.i === widgetId)?.w || widgetDef.minW || 2,
+       h: initialLayout.find((l) => l.i === widgetId)?.h || widgetDef.minH || 2,
       },
      ]
     })
    }
   }
- }, [initialWidgets])
+ }, [initialWidgets, initialLayout])
 
  const handleLayoutChange = useCallback((newLayout: LayoutItem[]) => {
   setLayout(newLayout)
