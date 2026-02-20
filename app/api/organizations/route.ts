@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import { withAuth, withUserAuth } from "@/lib/api/middleware"
 import { isOwner } from "@/lib/auth/middleware"
 import { generateId, slugify } from "@/lib/auth/password"
@@ -41,13 +42,16 @@ export const POST = withUserAuth(async (request: NextRequest, auth) => {
     const now = new Date().toISOString()
     const orgId = generateId()
 
-    // Generate unique slug
-    let slug = slugify(name)
-    let existingOrg = await db.organizations.findBySlug(slug)
+    // Generate unique slug (single query instead of loop)
+    const baseSlug = slugify(name)
+    const { rows: existingSlugs } = await sql<{ slug: string }>`
+      SELECT slug FROM organizations WHERE slug = ${baseSlug} OR slug LIKE ${baseSlug + '-%'}
+    `
+    const slugSet = new Set(existingSlugs.map(r => r.slug))
+    let slug = baseSlug
     let counter = 1
-    while (existingOrg) {
-      slug = `${slugify(name)}-${counter}`
-      existingOrg = await db.organizations.findBySlug(slug)
+    while (slugSet.has(slug)) {
+      slug = `${baseSlug}-${counter}`
       counter++
     }
 

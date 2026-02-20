@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import { generateId, hashPassword } from "@/lib/auth/password"
 import { randomBytes } from "crypto"
+import { twoFactorVerifySetupSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
@@ -38,14 +39,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const code = body?.code as string
-
-    if (!code || typeof code !== "string" || !/^\d{6}$/.test(code)) {
+    const parsed = twoFactorVerifySetupSchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Please enter a valid 6-digit code" },
+        { success: false, error: parsed.error.errors[0]?.message || "Invalid code" },
         { status: 400 }
       )
     }
+    const { code } = parsed.data
 
     // Fetch the user's pending TOTP secret
     const user = await db.users.findById(auth.user.id)

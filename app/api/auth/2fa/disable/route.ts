@@ -3,6 +3,7 @@ import { getUserAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import { verifyPassword } from "@/lib/auth/password"
+import { twoFactorDisableSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
@@ -36,14 +37,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const password = body?.password as string
-
-    if (!password || typeof password !== "string") {
+    const parsed = twoFactorDisableSchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Password is required to disable 2FA" },
+        { success: false, error: parsed.error.errors[0]?.message || "Password is required" },
         { status: 400 }
       )
     }
+    const { password } = parsed.data
 
     // Verify password
     const user = await db.users.findById(auth.user.id)

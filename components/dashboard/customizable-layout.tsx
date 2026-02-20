@@ -317,7 +317,7 @@ export function CustomizableLayout({
         <Save className="h-4 w-4 mr-1" />
         Save Layout
        </Button>
-       <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+       <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} aria-label="Exit edit mode">
         <X className="h-4 w-4" />
        </Button>
       </>

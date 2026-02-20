@@ -226,13 +226,13 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
             description={
               rocks.length === 0
                 ? "Set quarterly goals to track your most important priorities"
-                : "Select a different quarter or view all rocks"
+                : `You have ${rocks.length} rock${rocks.length === 1 ? "" : "s"} in other quarters`
             }
             size="sm"
             action={
               rocks.length === 0
                 ? { label: "Go to Rocks", onClick: () => setCurrentPage("rocks") }
-                : undefined
+                : { label: "View All", onClick: () => setSelectedQuarter("all") }
             }
           />
         ) : (

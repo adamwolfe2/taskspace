@@ -412,6 +412,9 @@ export const db = {
       return rows[0] ? parseUser(rows[0]) : null
     },
     async delete(id: string): Promise<boolean> {
+      // Clean up related data before deleting user entity
+      await sql`DELETE FROM api_keys WHERE created_by = ${id}`
+      await sql`DELETE FROM totp_backup_codes WHERE user_id = ${id}`
       const { rowCount } = await sql`DELETE FROM users WHERE id = ${id}`
       return (rowCount ?? 0) > 0
     },

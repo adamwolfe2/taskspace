@@ -5,6 +5,7 @@ import { sql } from "@/lib/db/sql"
 import { verifyPassword, generateId, generateToken, getExpirationDate } from "@/lib/auth/password"
 import { logger, logError, logAuthEvent } from "@/lib/logger"
 import { check2faRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
+import { twoFactorVerifySchema } from "@/lib/validation/schemas"
 import type { Session, ApiResponse, AuthResponse } from "@/lib/types"
 
 /**
@@ -27,25 +28,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { userId, code, organizationId } = body as {
-      userId?: string
-      code?: string
-      organizationId?: string
-    }
-
-    if (!userId || typeof userId !== "string") {
+    const parsed = twoFactorVerifySchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid request" },
+        { success: false, error: parsed.error.errors[0]?.message || "Invalid request" },
         { status: 400 }
       )
     }
-
-    if (!code || typeof code !== "string" || code.length < 6 || code.length > 8) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Please enter a valid code" },
-        { status: 400 }
-      )
-    }
+    const { userId, code, organizationId } = parsed.data
 
     const user = await db.users.findById(userId)
     if (!user || !user.totpEnabled || !user.totpSecret) {

@@ -131,7 +131,11 @@ export function TaskDetailModal({
         setSubtasks(result.data)
       }
     } catch {
-      // Error loading subtasks
+      toast({
+        title: "Couldn't load subtasks",
+        description: "Subtasks may not be visible. Try reopening.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoadingSubtasks(false)
     }
@@ -357,7 +361,19 @@ export function TaskDetailModal({
           )}
 
           {/* Subtasks section */}
-          {!isLoadingSubtasks && (
+          {isLoadingSubtasks ? (
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium text-slate-700 mb-3">Subtasks</h4>
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="h-4 w-4 rounded bg-slate-100 animate-pulse" />
+                    <div className="h-4 flex-1 rounded bg-slate-100 animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
             <div className="border-t pt-4">
               <h4 className="text-sm font-medium text-slate-700 mb-3">Subtasks</h4>
               <TaskSubtasks

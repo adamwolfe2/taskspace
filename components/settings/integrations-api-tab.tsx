@@ -620,6 +620,7 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
                       size="sm"
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       onClick={() => setApiKeyToDelete(apiKey)}
+                      aria-label="Revoke API key"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

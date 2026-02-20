@@ -65,6 +65,21 @@ export const resetPasswordSchema = z.object({
   password: passwordSchema,
 })
 
+// 2FA schemas
+export const twoFactorVerifySchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+  code: z.string().min(6, "Code must be at least 6 characters").max(8, "Code must be at most 8 characters"),
+  organizationId: z.string().optional(),
+})
+
+export const twoFactorDisableSchema = z.object({
+  password: z.string().min(1, "Password is required"),
+})
+
+export const twoFactorVerifySetupSchema = z.object({
+  code: z.string().regex(/^\d{6}$/, "Please enter a valid 6-digit code"),
+})
+
 export const apiKeyCreateSchema = z.object({
   name: z.string().min(1).max(100),
   scopes: z.array(z.string()).min(1).default(["read"]),
