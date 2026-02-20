@@ -185,23 +185,24 @@ Rules:
       const rocksArray = Array.isArray(parsed) ? parsed : (parsed.rocks || [])
       const metricsArray = Array.isArray(parsed) ? [] : (parsed.metrics || [])
 
-      // Validate rocks structure
-      parsedRocks = rocksArray.map((rock: Record<string, unknown>) => ({
-        title: String(rock.title || "Untitled Rock"),
-        description: String(rock.description || ""),
+      // Validate rocks structure (cap lengths to prevent oversized AI output from reaching DB)
+      parsedRocks = rocksArray.slice(0, 50).map((rock: Record<string, unknown>) => ({
+        title: String(rock.title || "Untitled Rock").slice(0, 500),
+        description: String(rock.description || "").slice(0, 2000),
         milestones: Array.isArray(rock.milestones)
-          ? (rock.milestones as unknown[]).map((m) => String(m))
+          ? (rock.milestones as unknown[]).slice(0, 100).map((m) => String(m).slice(0, 200))
           : [],
-        suggestedQuarter: rock.suggestedQuarter ? String(rock.suggestedQuarter) : undefined,
-        assigneeName: rock.assigneeName ? String(rock.assigneeName) : undefined,
+        suggestedQuarter: rock.suggestedQuarter ? String(rock.suggestedQuarter).slice(0, 20) : undefined,
+        assigneeName: rock.assigneeName ? String(rock.assigneeName).slice(0, 100) : undefined,
       }))
 
       // Validate metrics structure
       parsedMetrics = metricsArray
+        .slice(0, 50)
         .filter((m: Record<string, unknown>) => m.assigneeName && m.metricName && typeof m.weeklyGoal === "number")
         .map((metric: Record<string, unknown>) => ({
-          assigneeName: String(metric.assigneeName),
-          metricName: String(metric.metricName),
+          assigneeName: String(metric.assigneeName).slice(0, 100),
+          metricName: String(metric.metricName).slice(0, 200),
           weeklyGoal: Number(metric.weeklyGoal),
         }))
     } catch (parseError) {

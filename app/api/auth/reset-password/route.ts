@@ -163,6 +163,15 @@ export async function POST(request: NextRequest) {
 // GET endpoint to verify token is valid
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit token verification (prevents token enumeration via brute-force)
+    const rateLimitResult = checkPasswordResetRateLimit(request)
+    if (!rateLimitResult.success) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Too many attempts. Please wait a few minutes and try again." },
+        { status: 429 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const token = searchParams.get("token")
 
