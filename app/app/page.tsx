@@ -411,6 +411,7 @@ function AppContent() {
             createProject={teamData.createProject}
             updateProject={teamData.updateProject}
             deleteProject={teamData.deleteProject}
+            updateTask={teamData.updateTask}
           />
         )
       case "clients":

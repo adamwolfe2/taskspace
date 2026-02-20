@@ -13,12 +13,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Search, FolderKanban, MoreHorizontal, Pencil, Trash2, Calendar, Users, CheckCircle2, X, ArrowUpDown, RefreshCw, UserPlus } from "lucide-react"
+import { Plus, Search, FolderKanban, MoreHorizontal, Pencil, Trash2, Calendar, Users, CheckCircle2, X, ArrowUpDown, RefreshCw, UserPlus, LayoutList, Kanban } from "lucide-react"
 import { format, parseISO } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
+import { ProjectKanbanBoard } from "@/components/projects/project-kanban-board"
 
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -34,6 +35,7 @@ interface ProjectsPageProps {
   createProject: (project: Partial<Project>) => Promise<Project>
   updateProject: (id: string, updates: Partial<Project>) => Promise<Project>
   deleteProject: (id: string) => Promise<void>
+  updateTask: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
 }
 
 
@@ -57,6 +59,7 @@ export function ProjectsPage({
   createProject,
   updateProject,
   deleteProject,
+  updateTask,
 }: ProjectsPageProps) {
   const { toast } = useToast()
   const { getStatusStyle, getPriorityStyle } = useBrandStatusStyles()
@@ -71,6 +74,7 @@ export function ProjectsPage({
   const [detailProject, setDetailProject] = useState<Project | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
+  const [tasksView, setTasksView] = useState<"list" | "kanban">("list")
 
   // Project members state
   const [projectMembers, setProjectMembers] = useState<ProjectMember[]>([])
@@ -753,8 +757,38 @@ export function ProjectsPage({
 
                   {/* Linked Tasks */}
                   <div>
-                    <h4 className="text-sm font-medium mb-2">Linked Tasks ({projectTasks.length})</h4>
-                    {projectTasks.length > 0 ? (
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium">Linked Tasks ({projectTasks.length})</h4>
+                      {projectTasks.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-6 w-6 ${tasksView === "list" ? "bg-accent" : ""}`}
+                            onClick={() => setTasksView("list")}
+                            aria-label="List view"
+                          >
+                            <LayoutList className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-6 w-6 ${tasksView === "kanban" ? "bg-accent" : ""}`}
+                            onClick={() => setTasksView("kanban")}
+                            aria-label="Kanban view"
+                          >
+                            <Kanban className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    {tasksView === "kanban" ? (
+                      <ProjectKanbanBoard
+                        projectId={detailProject.id}
+                        tasks={projectTasks}
+                        onTaskStatusChange={(taskId, newStatus) => updateTask(taskId, { status: newStatus })}
+                      />
+                    ) : projectTasks.length > 0 ? (
                       <div className="space-y-1">
                         {projectTasks.map(task => (
                           <div key={task.id} className="flex items-center gap-2 text-sm py-1">
