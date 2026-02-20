@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Target, Search, Calendar } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
+import { useApp } from "@/lib/contexts/app-context"
 
 interface RocksPageProps {
   currentUser: TeamMember
@@ -23,6 +24,7 @@ interface RocksPageProps {
 }
 
 export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter, onFilterConsumed }: RocksPageProps) {
+  const { setCurrentPage } = useApp()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [ownerFilter, setOwnerFilter] = useState<string>(initialOwnerFilter || "all")
@@ -185,6 +187,10 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                 title="No quarterly rocks yet"
                 description="Rocks are your 3-7 most important goals for the quarter — the big bets that move the needle. Create rocks from the dashboard or AI Command Center to start tracking progress."
                 size="md"
+                action={{
+                  label: "Go to Dashboard",
+                  onClick: () => setCurrentPage("dashboard"),
+                }}
               />
             ) : (
               <EmptyState

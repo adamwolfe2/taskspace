@@ -22,7 +22,8 @@ import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
 import { Card, CardContent } from "@/components/ui/card"
-import { AlertCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { AlertCircle, Settings } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { WelcomeCard } from "@/components/dashboard/welcome-card"
@@ -75,7 +76,7 @@ export function DashboardPage({
  const eodCardRef = useRef<HTMLDivElement>(null)
  const tasksRef = useRef<HTMLDivElement>(null)
  const rocksRef = useRef<HTMLDivElement>(null)
- const { currentOrganization } = useApp()
+ const { currentOrganization, setCurrentPage } = useApp()
  const { isFeatureEnabled, enabledFeatures } = useWorkspaceFeatures()
  const { currentWorkspaceId } = useWorkspaces()
  const { toast } = useToast()
@@ -460,10 +461,18 @@ export function DashboardPage({
     <Card>
      <CardContent className="flex flex-col items-center justify-center py-10 sm:py-16 px-4">
       <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
-      <h3 className="text-base sm:text-lg font-semibold mb-2">Dashboard Empty</h3>
-      <p className="text-xs sm:text-sm text-muted-foreground text-center max-w-md">
-       No dashboard widgets are available. Contact your workspace admin to enable features.
+      <h3 className="text-base sm:text-lg font-semibold mb-2">Customize your dashboard</h3>
+      <p className="text-xs sm:text-sm text-muted-foreground text-center max-w-md mb-4">
+       Enable features like tasks, rocks, and EOD reports to populate your dashboard with useful widgets.
       </p>
+      <Button
+       onClick={() => setCurrentPage("settings")}
+       size="sm"
+       className="gap-1.5"
+      >
+       <Settings className="h-4 w-4" />
+       Go to Settings
+      </Button>
      </CardContent>
     </Card>
    )}
