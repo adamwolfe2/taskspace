@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withAdmin, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
-import { generateId } from "@/lib/auth/password"
+import { generateId, generateInviteToken, getExpirationDate } from "@/lib/auth/password"
 import { z } from "zod"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
-import type { Rock, AssignedTask, OrganizationMember, ApiResponse } from "@/lib/types"
+import type { Rock, AssignedTask, OrganizationMember, Invitation, ApiResponse } from "@/lib/types"
+import { sendInvitationEmail } from "@/lib/email"
 import { logger, logError } from "@/lib/logger"
 
 const memberInputSchema = z.object({
@@ -71,6 +72,7 @@ interface BuildResult {
     members: number
     tasks: number
   }
+  invitesSent: number
   errors: string[]
 }
 
@@ -100,6 +102,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     const result: BuildResult = {
       created: { members: 0, clients: 0, projects: 0, rocks: 0, tasks: 0 },
       skipped: { members: 0, tasks: 0 },
+      invitesSent: 0,
       errors: [],
     }
 
@@ -158,6 +161,37 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         await db.members.create(member)
         emailToMember.set(emailLower, { memberId, userId: null, name: memberInput.name })
         result.created.members++
+
+        // Send invitation email — skip if already has a pending invite
+        try {
+          const existingInvites = await db.invitations.findPendingByEmail(emailLower)
+          const alreadyInvited = existingInvites.some(i => i.organizationId === auth.organization.id)
+          if (!alreadyInvited) {
+            const invitation: Invitation = {
+              id: generateId(),
+              organizationId: auth.organization.id,
+              email: emailLower,
+              role: member.role === "admin" ? "admin" : "member",
+              department: member.department,
+              token: generateInviteToken(),
+              expiresAt: getExpirationDate(24 * 7),
+              createdAt: now,
+              invitedBy: auth.user.id,
+              status: "pending",
+              workspaceId: workspaceId,
+            }
+            await db.invitations.create(invitation)
+            await db.members.update(memberId, { status: "invited" })
+            const emailResult = await sendInvitationEmail(invitation, auth.organization, auth.user.name)
+            if (emailResult.success) {
+              result.invitesSent++
+            } else {
+              logError(logger, `Failed to send invite to ${emailLower}`, emailResult.error)
+            }
+          }
+        } catch (inviteErr) {
+          logError(logger, `Failed to invite member ${memberInput.email}`, inviteErr)
+        }
       } catch (err) {
         logError(logger, `Failed to create member ${memberInput.email}`, err)
         result.errors.push(`Could not create member: ${memberInput.email}`)
@@ -349,7 +383,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     return NextResponse.json<ApiResponse<BuildResult>>({
       success: true,
       data: result,
-      message: `Workspace built — ${total} items created`,
+      message: `Workspace built — ${total} items created, ${result.invitesSent} invite${result.invitesSent === 1 ? "" : "s"} sent`,
     })
   } catch (error) {
     if (error instanceof ValidationError) {

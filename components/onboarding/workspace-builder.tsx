@@ -29,6 +29,7 @@ type InputMode = "ai" | "json"
 interface BuildResult {
   created: { members: number; clients: number; projects: number; rocks: number; tasks: number }
   skipped: { members: number; tasks: number }
+  invitesSent: number
   errors: string[]
 }
 
@@ -421,6 +422,12 @@ export function WorkspaceBuilder({ onClose }: WorkspaceBuilderProps) {
                   ) : null
                 )}
               </div>
+
+              {buildResult.invitesSent > 0 && (
+                <p className="text-sm text-slate-600">
+                  · {buildResult.invitesSent} invite email{buildResult.invitesSent === 1 ? "" : "s"} sent
+                </p>
+              )}
 
               {(buildResult.skipped.members > 0 || buildResult.errors.length > 0) && (
                 <div className="text-xs text-slate-500 space-y-1">
