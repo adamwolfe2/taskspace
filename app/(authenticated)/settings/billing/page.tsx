@@ -31,7 +31,7 @@ interface BillingData {
     cancelAtPeriodEnd?: boolean
     trialEnd?: string
   } | null
-  stripeCustomerId?: string
+  hasStripeAccount?: boolean
   invoices?: InvoiceRecord[]
 }
 
@@ -385,7 +385,7 @@ function BillingSettingsContent() {
                   </div>
                 )}
 
-                {data.stripeCustomerId && (
+                {data.hasStripeAccount && (
                   <div className="flex items-center justify-between border-t border-gray-100 pt-4">
                     <div className="flex items-center gap-3">
                       <CreditCardIcon className="h-5 w-5 text-gray-400" />
@@ -566,7 +566,7 @@ function BillingSettingsContent() {
                     </tbody>
                   </table>
                 </div>
-                {data.stripeCustomerId && (
+                {data.hasStripeAccount && (
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <button
                       onClick={openCustomerPortal}

@@ -28,5 +28,11 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.tsmcp-server/node_modules
+next-env.d.ts
+
+# mcp server
+mcp-server/node_modules
 mcp-server/dist
+
+# OS files
+.DS_Store

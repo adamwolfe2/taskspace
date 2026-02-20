@@ -41,7 +41,10 @@ function CheckoutSuccessContent() {
       try {
         const response = await fetch("/api/billing/claim-subscription", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
           body: JSON.stringify({ sessionId }),
         })
 
@@ -147,13 +150,13 @@ function CheckoutSuccessContent() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
-                href={sessionId ? `/app?page=register&checkout_session=${sessionId}` : "/app?page=register"}
+                href={sessionId ? `/app?page=register&checkout_session=${encodeURIComponent(sessionId)}` : "/app?page=register"}
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
               >
                 Create Account <ArrowRightIcon className="h-4 w-4" />
               </Link>
               <Link
-                href={sessionId ? `/app?checkout_session=${sessionId}` : "/app"}
+                href={sessionId ? `/app?checkout_session=${encodeURIComponent(sessionId)}` : "/app"}
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-6 py-3 text-sm font-semibold text-black hover:bg-gray-50 transition-colors"
               >
                 Sign In

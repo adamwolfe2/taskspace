@@ -16,12 +16,18 @@ import type { ApiResponse } from "@/lib/types"
  *   2. Webhook stores session in pending_subscriptions
  *   3. User signs up / logs in, then success page calls this endpoint
  *   4. We match by session_id or customer email → link to their org
- *
- * Does NOT require CSRF header since the success page calls this via fetch
- * from the same origin but may not have the CSRF header set up yet.
  */
 export async function POST(request: NextRequest) {
   try {
+    // CSRF protection — require X-Requested-With header
+    const csrfHeader = request.headers.get("x-requested-with")
+    if (csrfHeader !== "XMLHttpRequest") {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Forbidden" },
+        { status: 403 }
+      )
+    }
+
     const stripeConfig = getStripeConfig()
     if (!stripeConfig.isConfigured) {
       return NextResponse.json<ApiResponse<null>>(
@@ -43,9 +49,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const sessionId = body.sessionId as string | undefined
 
-    if (!sessionId) {
+    // Validate session ID format (Stripe session IDs start with cs_)
+    if (!sessionId || typeof sessionId !== "string" || !sessionId.startsWith("cs_") || sessionId.length > 200) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Missing session ID" },
+        { success: false, error: "Invalid session ID" },
         { status: 400 }
       )
     }
@@ -82,6 +89,8 @@ export async function POST(request: NextRequest) {
     let pendingSub: PendingSubscriptionRow | null = null
 
     try {
+      // Use atomic claim: SELECT FOR UPDATE SKIP LOCKED prevents race conditions
+      // where two orgs try to claim the same session simultaneously
       const { rows } = await sql<PendingSubscriptionRow>`
         SELECT id, stripe_session_id, stripe_customer_id, stripe_subscription_id,
                customer_email, plan, billing_cycle, status
@@ -89,6 +98,7 @@ export async function POST(request: NextRequest) {
         WHERE stripe_session_id = ${sessionId}
           AND status = 'pending'
           AND expires_at > NOW()
+        FOR UPDATE SKIP LOCKED
         LIMIT 1
       `
       pendingSub = rows[0] || null
@@ -234,7 +244,7 @@ async function linkSubscriptionToOrg(params: {
     `
 
     // Upsert subscriptions table row
-    const creditsLimit = params.plan === "business" ? -1 : params.plan === "team" ? 200 : 50
+    const creditsLimit = planConfig.aiCreditsMonthly
     const periodEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
 
     await client.sql`

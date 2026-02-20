@@ -39,14 +39,15 @@ export const AI_CREDIT_PRICE_IDS = {
 
 // Stripe Payment Links (direct checkout URLs for marketing pages)
 // All subscription links include 14-day free trial (card required upfront, $0 due today)
+// Stripe Payment Links — configure via environment variables, no hardcoded fallbacks
 export const STRIPE_PAYMENT_LINKS: Record<string, { monthly: string; yearly: string }> = {
   team: {
-    monthly: process.env.NEXT_PUBLIC_STRIPE_LINK_TEAM_MONTHLY || "https://buy.stripe.com/3cI9ANf0P5SK3CC7wPcjS06",
-    yearly: process.env.NEXT_PUBLIC_STRIPE_LINK_TEAM_YEARLY || "https://buy.stripe.com/3cI6oB7yn3KCa10eZhcjS05",
+    monthly: process.env.NEXT_PUBLIC_STRIPE_LINK_TEAM_MONTHLY || "",
+    yearly: process.env.NEXT_PUBLIC_STRIPE_LINK_TEAM_YEARLY || "",
   },
   business: {
-    monthly: process.env.NEXT_PUBLIC_STRIPE_LINK_BUSINESS_MONTHLY || "https://buy.stripe.com/eVqcMZ3i7ftk2ycR9cjS04",
-    yearly: process.env.NEXT_PUBLIC_STRIPE_LINK_BUSINESS_YEARLY || "https://buy.stripe.com/7sY4gtcSHbd41uucR9cjS03",
+    monthly: process.env.NEXT_PUBLIC_STRIPE_LINK_BUSINESS_MONTHLY || "",
+    yearly: process.env.NEXT_PUBLIC_STRIPE_LINK_BUSINESS_YEARLY || "",
   },
 }
 

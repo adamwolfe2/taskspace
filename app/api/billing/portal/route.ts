@@ -32,7 +32,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     }
 
     // Create customer portal session
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get("origin") || ""
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
     const session = await createCustomerPortalSession({
       customerId: org.stripeCustomerId,
       returnUrl: `${baseUrl}/settings/billing`,

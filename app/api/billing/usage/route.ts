@@ -32,7 +32,7 @@ interface BillingUsageResponse {
     cancelAtPeriodEnd?: boolean
     trialEnd?: string
   } | null
-  stripeCustomerId?: string
+  hasStripeAccount?: boolean
   invoices?: InvoiceRecord[]
 }
 
@@ -109,9 +109,9 @@ export const GET = withAuth(async (request, auth) => {
           billingCycle: org.subscription.billingCycle || undefined,
           currentPeriodEnd: org.subscription.currentPeriodEnd || undefined,
           cancelAtPeriodEnd: org.subscription.cancelAtPeriodEnd || undefined,
-          trialEnd: org.subscription.trialEnd || org.subscription.currentPeriodEnd || undefined,
+          trialEnd: org.subscription.trialEnd || (org.subscription.status === "trialing" ? org.subscription.currentPeriodEnd : undefined) || undefined,
         } : null,
-        stripeCustomerId: isAdminOrOwner ? org.stripeCustomerId : undefined,
+        hasStripeAccount: isAdminOrOwner ? !!org.stripeCustomerId : undefined,
         invoices: isAdminOrOwner ? invoices : undefined,
       },
     })

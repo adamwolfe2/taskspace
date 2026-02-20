@@ -6,8 +6,7 @@ import { constructWebhookEvent, getPlanFromPriceId } from "@/lib/integrations/st
 import { STRIPE_EVENTS, PLAN_FEATURES } from "@/lib/integrations/stripe-config"
 import { auditLogger } from "@/lib/audit/logger"
 import { logger, logError } from "@/lib/logger"
-import { isEmailConfigured } from "@/lib/integrations/email"
-import { sendBillingAlertEmail } from "@/lib/integrations/email"
+import { isEmailConfigured, sendBillingAlertEmail } from "@/lib/integrations/email"
 
 /**
  * POST /api/billing/webhook
@@ -35,7 +34,8 @@ export async function POST(request: NextRequest) {
     // Log the event
     logger.info({ eventId: event.id, eventType: event.type }, "Stripe webhook received")
 
-    // Check for idempotency - ensure this event hasn't been processed before
+    // Check for idempotency — ensure this event hasn't been processed before
+    let idempotencyTableExists = true
     try {
       const { rows: existingEvents } = await sql<{ event_id: string }>`
         SELECT event_id FROM processed_webhook_events WHERE event_id = ${event.id}
@@ -45,28 +45,13 @@ export async function POST(request: NextRequest) {
         logger.info({ eventId: event.id, eventType: event.type }, "Webhook event already processed, skipping")
         return NextResponse.json({ received: true, duplicate: true })
       }
-
-      // Record this event as processed (before processing to prevent duplicate processing)
-      await sql`
-        INSERT INTO processed_webhook_events (event_id, event_type, stripe_customer_id, organization_id, metadata)
-        VALUES (
-          ${event.id},
-          ${event.type},
-          ${event.data.object.customer || null},
-          ${event.data.object.metadata?.organizationId || null},
-          ${JSON.stringify(event.data.object.metadata || {})}
-        )
-        ON CONFLICT (event_id) DO NOTHING
-      `
     } catch (error) {
       // If the table doesn't exist yet, log and continue (graceful degradation)
-      // This allows webhooks to work even before migration is run
-      logError(logger, "Failed to check/record webhook idempotency (table may not exist yet)", error)
+      idempotencyTableExists = false
+      logError(logger, "Failed to check webhook idempotency (table may not exist yet)", error)
     }
 
-    // Handle different event types with proper error handling
-    // Return 200 to Stripe even if processing fails to prevent infinite retries
-    // Log errors for manual investigation
+    // Process the event — return 500 on failure so Stripe retries
     try {
       switch (event.type) {
         case STRIPE_EVENTS.CHECKOUT_COMPLETED: {
@@ -103,27 +88,33 @@ export async function POST(request: NextRequest) {
         default:
           logger.info({ eventType: event.type }, "Unhandled event type")
       }
-    } catch (processingError) {
-      // Log the error but return 200 to Stripe to prevent infinite retries
-      logError(logger, `Webhook processing failed for event ${event.id}`, processingError)
 
-      // Update the processed event with error information for manual investigation
-      try {
-        await sql`
-          UPDATE processed_webhook_events
-          SET metadata = jsonb_set(
-            metadata,
-            '{processing_error}',
-            ${JSON.stringify({
-              error: processingError instanceof Error ? processingError.message : String(processingError),
-              timestamp: new Date().toISOString()
-            })}
-          )
-          WHERE event_id = ${event.id}
-        `
-      } catch {
-        // Silently fail if update fails
+      // Record successful processing AFTER the handler completes
+      // This ensures failed events can be retried by Stripe
+      if (idempotencyTableExists) {
+        try {
+          await sql`
+            INSERT INTO processed_webhook_events (event_id, event_type, stripe_customer_id, organization_id, metadata)
+            VALUES (
+              ${event.id},
+              ${event.type},
+              ${event.data.object.customer || null},
+              ${event.data.object.metadata?.organizationId || null},
+              ${JSON.stringify(event.data.object.metadata || {})}
+            )
+            ON CONFLICT (event_id) DO NOTHING
+          `
+        } catch (recordError) {
+          logError(logger, "Failed to record processed webhook event", recordError)
+        }
       }
+    } catch (processingError) {
+      // Log the error and return 500 so Stripe retries this event
+      logError(logger, `Webhook processing failed for event ${event.id}`, processingError)
+      return NextResponse.json(
+        { error: "Processing failed, will retry" },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ received: true })
@@ -146,6 +137,7 @@ interface StripeWebhookObject {
   status?: string
   items?: { data: { id: string; price: { id: string } }[] }
   current_period_end?: number
+  trial_end?: number
   cancel_at_period_end?: boolean
   amount_paid?: number
   amount_due?: number
@@ -275,8 +267,15 @@ async function handleSubscriptionUpdated(subscription: StripeWebhookObject) {
     // Find organization within transaction
     let orgId: string | null = null
     if (organizationId) {
-      orgId = organizationId
-    } else {
+      // Verify the org exists before trusting metadata
+      const { rows: metaOrgResults } = await client.sql<{ id: string }>`
+        SELECT id FROM organizations WHERE id = ${organizationId} LIMIT 1
+      `
+      if (metaOrgResults.length > 0) {
+        orgId = metaOrgResults[0].id
+      }
+    }
+    if (!orgId) {
       // Try to find org by customer ID
       const { rows: orgResults } = await client.sql<{ id: string }>`
         SELECT id FROM organizations WHERE stripe_customer_id = ${subscription.customer} LIMIT 1
@@ -288,7 +287,7 @@ async function handleSubscriptionUpdated(subscription: StripeWebhookObject) {
         // Update the pending_subscriptions record with the subscription ID for later claim.
         logger.info({ customerId: subscription.customer }, "Subscription updated: No org found, may be pending Payment Link claim")
         try {
-          await sql`
+          await client.sql`
             UPDATE pending_subscriptions
             SET stripe_subscription_id = ${subscription.id}
             WHERE stripe_customer_id = ${subscription.customer}
@@ -313,14 +312,18 @@ async function handleSubscriptionUpdated(subscription: StripeWebhookObject) {
     const planConfig = PLAN_FEATURES[plan] || PLAN_FEATURES.team
 
     // Update organization subscription within transaction
+    const isRecoveredToActive = subscription.status === "active"
+    const maxUsers = planConfig.maxSeats ?? 3
     const subscriptionData = {
       plan: plan as "free" | "team" | "business",
       status: subscription.status as "active" | "trialing" | "past_due" | "canceled",
       billingCycle: billingCycle as "monthly" | "yearly" | null,
       currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : new Date().toISOString(),
       cancelAtPeriodEnd: (subscription.cancel_at_period_end as boolean) ?? false,
-      maxUsers: planConfig.maxSeats ?? 3, // Default to 3 if null
+      maxUsers,
       features: planConfig.features,
+      // Reset dunning state when subscription recovers to active
+      ...(isRecoveredToActive ? { paymentFailureCount: 0, firstFailedAt: null, lastFailedAt: null } : {}),
     }
 
     await client.sql`
@@ -333,7 +336,7 @@ async function handleSubscriptionUpdated(subscription: StripeWebhookObject) {
     `
 
     // Upsert subscriptions table row for AI credit tracking
-    const creditsLimit = plan === "business" ? -1 : plan === "team" ? 200 : 50
+    const creditsLimit = planConfig.aiCreditsMonthly
     const periodEnd = subscription.current_period_end
       ? new Date((subscription.current_period_end as number) * 1000).toISOString()
       : null
@@ -345,7 +348,7 @@ async function handleSubscriptionUpdated(subscription: StripeWebhookObject) {
       ) VALUES (
         gen_random_uuid()::text,
         ${orgId}, ${subscription.customer}, ${subscription.id},
-        ${plan}, ${subscriptionData.maxUsers || 3}, ${creditsLimit},
+        ${plan}, ${maxUsers}, ${creditsLimit},
         ${subscription.status || 'active'}, ${periodEnd}
       )
       ON CONFLICT (organization_id) DO UPDATE SET
@@ -647,10 +650,13 @@ async function handleTrialWillEnd(subscription: StripeWebhookObject) {
   }
 
   // Update subscription with trial_end timestamp
+  // Prefer trial_end field over current_period_end (they can differ)
   try {
-    const trialEnd = subscription.current_period_end
-      ? new Date(subscription.current_period_end * 1000).toISOString()
-      : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+    const trialEnd = subscription.trial_end
+      ? new Date(subscription.trial_end * 1000).toISOString()
+      : subscription.current_period_end
+        ? new Date(subscription.current_period_end * 1000).toISOString()
+        : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
 
     await sql`
       UPDATE organizations
