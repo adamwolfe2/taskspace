@@ -125,7 +125,7 @@ function AppContent() {
   useKeyboardShortcuts([
     { key: "d", meta: true, shift: true, handler: () => setCurrentPage("dashboard") },
     { key: "t", meta: true, shift: true, handler: () => setCurrentPage("tasks") },
-    { key: "r", meta: true, shift: true, handler: () => setCurrentPage("rocks") },
+    { key: "g", meta: true, shift: true, handler: () => setCurrentPage("rocks") },
     { key: "h", meta: true, shift: true, handler: () => setCurrentPage("history") },
     { key: "s", meta: true, shift: true, handler: () => setCurrentPage("settings") },
     { key: "m", meta: true, shift: true, handler: () => setCurrentPage("calendar") },

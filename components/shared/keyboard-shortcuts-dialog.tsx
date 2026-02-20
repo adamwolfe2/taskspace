@@ -26,7 +26,7 @@ const shortcutGroups: ShortcutGroup[] = [
  { keys: ["⌘", "K"], description: "Open command palette" },
  { keys: ["⌘", "⇧", "D"], description: "Go to Dashboard" },
  { keys: ["⌘", "⇧", "T"], description: "Go to Tasks" },
- { keys: ["⌘", "⇧", "R"], description: "Go to Rocks" },
+ { keys: ["⌘", "⇧", "G"], description: "Go to Rocks" },
  { keys: ["⌘", "⇧", "H"], description: "Go to History" },
  { keys: ["⌘", "⇧", "S"], description: "Go to Settings" },
  { keys: ["⌘", "⇧", "M"], description: "Go to Calendar" },

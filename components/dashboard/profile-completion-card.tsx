@@ -31,7 +31,12 @@ export function ProfileCompletionCard() {
   const [jobTitle, setJobTitle] = useState("")
   const [timezone, setTimezone] = useState("")
   const [saving, setSaving] = useState(false)
-  const [completed, setCompleted] = useState(false)
+  const [completed, setCompleted] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("profile-completion-done") === "true"
+    }
+    return false
+  })
 
   // Don't show if profile is already complete or card was completed this session
   if (!currentUser || completed) return null
@@ -56,6 +61,7 @@ export function ProfileCompletionCard() {
       const data = await res.json()
       if (data.success) {
         setCompleted(true)
+        sessionStorage.setItem("profile-completion-done", "true")
         refreshSession()
         toast({ title: "Profile updated", description: "Welcome to TaskSpace!" })
       }
