@@ -14,6 +14,7 @@ import { Target, Search, Calendar } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { useApp } from "@/lib/contexts/app-context"
+import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
 
 interface RocksPageProps {
   currentUser: TeamMember
@@ -21,13 +22,15 @@ interface RocksPageProps {
   rocks: Rock[]
   initialOwnerFilter?: string // Pre-set owner filter (e.g., from manager drill-down)
   onFilterConsumed?: () => void  // Callback to clear the filter after consuming it
+  updateRock?: (id: string, updates: Partial<Rock>) => Promise<Rock>
 }
 
-export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter, onFilterConsumed }: RocksPageProps) {
+export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter, onFilterConsumed, updateRock }: RocksPageProps) {
   const { setCurrentPage } = useApp()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [ownerFilter, setOwnerFilter] = useState<string>(initialOwnerFilter || "all")
+  const [selectedRock, setSelectedRock] = useState<Rock | null>(null)
 
   // Apply initial filter from navigation (e.g., manager dashboard drill-down)
   useEffect(() => {
@@ -218,7 +221,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                   const statusConfig = getStatusConfig(rock.status)
 
                   return (
-                    <div key={rock.id} className="border border-slate-200 rounded-lg p-3 space-y-2.5">
+                    <div key={rock.id} className="border border-slate-200 rounded-lg p-3 space-y-2.5 cursor-pointer hover:border-slate-300 transition-colors" onClick={() => setSelectedRock(rock)}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <p className="font-medium text-slate-900 text-sm leading-snug">{rock.title}</p>
@@ -286,7 +289,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                       const statusConfig = getStatusConfig(rock.status)
 
                       return (
-                        <TableRow key={rock.id} className="border-slate-100 hover:bg-slate-50/50">
+                        <TableRow key={rock.id} className="border-slate-100 hover:bg-slate-50/50 cursor-pointer" onClick={() => setSelectedRock(rock)}>
                           {isAdmin && (
                             <TableCell>
                               <div className="flex items-center gap-2">
@@ -345,6 +348,15 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
         </div>
       </div>
     </div>
+
+    {selectedRock && updateRock && (
+      <RockDetailModal
+        open={!!selectedRock}
+        onOpenChange={(open) => { if (!open) setSelectedRock(null) }}
+        rock={selectedRock}
+        onUpdateRock={updateRock}
+      />
+    )}
     </FeatureGate>
   )
 }
