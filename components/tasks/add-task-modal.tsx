@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { Rock, TaskRecurrence, TaskTemplate, Project } from "@/lib/types"
+import type { AssignedTask, Rock, TaskRecurrence, TaskTemplate, Project } from "@/lib/types"
 import {
   Dialog,
   DialogContent,
@@ -36,9 +36,11 @@ interface AddTaskModalProps {
   }) => void
   userRocks: Rock[]
   projects?: Project[]
+  initialTask?: AssignedTask
 }
 
-export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects = [] }: AddTaskModalProps) {
+export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects = [], initialTask }: AddTaskModalProps) {
+  const isEditing = !!initialTask
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [rockId, setRockId] = useState<string | null>(null)
@@ -58,6 +60,40 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
   const themedColors = useThemedIconColors()
+
+  // Pre-fill fields when editing an existing task
+  useEffect(() => {
+    if (open && initialTask) {
+      setTitle(initialTask.title)
+      setDescription(initialTask.description || "")
+      setRockId(initialTask.rockId || null)
+      setProjectId(initialTask.projectId || null)
+      setPriority(initialTask.priority as "high" | "medium" | "normal")
+      setDueDate(initialTask.dueDate || "")
+      if (initialTask.recurrence) {
+        setIsRecurring(true)
+        setRecurrenceType(initialTask.recurrence.type)
+        setRecurrenceInterval(initialTask.recurrence.interval)
+      } else {
+        setIsRecurring(false)
+        setRecurrenceType("weekly")
+        setRecurrenceInterval(1)
+      }
+    } else if (!open) {
+      // Reset when closed
+      setTitle("")
+      setDescription("")
+      setRockId(null)
+      setProjectId(null)
+      setPriority("normal")
+      setDueDate("")
+      setIsRecurring(false)
+      setRecurrenceType("weekly")
+      setRecurrenceInterval(1)
+      setSaveAsTemplate(false)
+      setTemplateName("")
+    }
+  }, [open, initialTask])
 
   // Load templates when modal opens
   useEffect(() => {
@@ -175,17 +211,6 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
         recurrence,
       })
 
-      setTitle("")
-      setDescription("")
-      setRockId(null)
-      setProjectId(null)
-      setPriority("normal")
-      setDueDate("")
-      setIsRecurring(false)
-      setRecurrenceType("weekly")
-      setRecurrenceInterval(1)
-      setSaveAsTemplate(false)
-      setTemplateName("")
       onOpenChange(false)
     } catch {
       toast({
@@ -202,8 +227,8 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Task</DialogTitle>
-          <DialogDescription>Create a personal task or to-do</DialogDescription>
+          <DialogTitle>{isEditing ? "Edit Task" : "Add New Task"}</DialogTitle>
+          <DialogDescription>{isEditing ? "Update your task details" : "Create a personal task or to-do"}</DialogDescription>
         </DialogHeader>
 
         {/* Template Picker */}
@@ -353,8 +378,8 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
             )}
           </div>
 
-          {/* Save as Template */}
-          <div className="space-y-3 pt-2 border-t">
+          {/* Save as Template — only shown when creating new tasks */}
+          {!isEditing && <div className="space-y-3 pt-2 border-t">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bookmark className="h-4 w-4" style={{ color: themedColors.secondary }} />
@@ -394,7 +419,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
                 </Button>
               </div>
             )}
-          </div>
+          </div>}
         </div>
 
         <DialogFooter>
@@ -405,10 +430,10 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Adding...
+                {isEditing ? "Saving..." : "Adding..."}
               </>
             ) : (
-              "Add Task"
+              isEditing ? "Save Changes" : "Add Task"
             )}
           </Button>
         </DialogFooter>

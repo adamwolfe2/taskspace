@@ -53,14 +53,14 @@ export function TasksPage({
   onClearFilter,
 }: TasksPageProps) {
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
-  const [_editingTask, setEditingTask] = useState<AssignedTask | null>(null)
+  const [editingTask, setEditingTask] = useState<AssignedTask | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list")
   const [viewingUserId, setViewingUserId] = useState<string | null>(initialAssigneeFilter || null)
   const [viewingUserName, setViewingUserName] = useState<string | null>(filterUserName || null)
   const [aiPrioritizing, setAiPrioritizing] = useState(false)
-  const [_aiPrioritized, setAiPrioritized] = useState<Array<{ taskId: string; rank: number; reasoning: string }> | null>(null)
+  const [aiPrioritized, setAiPrioritized] = useState<Array<{ taskId: string; rank: number; reasoning: string }> | null>(null)
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
   const [isBulkProcessing, setIsBulkProcessing] = useState(false)
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
@@ -104,6 +104,11 @@ export function TasksPage({
     }
   }
 
+  // Clear AI prioritization when filters change (ranking no longer applies)
+  useEffect(() => {
+    setAiPrioritized(null)
+  }, [searchQuery, priorityFilter])
+
   // Apply initial filter from navigation (e.g., manager dashboard drill-down)
   useEffect(() => {
     if (initialAssigneeFilter) {
@@ -141,7 +146,14 @@ export function TasksPage({
   }, [userTasks, searchQuery, priorityFilter])
 
   const assignedByAdmin = filteredTasks.filter((t) => t.type === "assigned" && t.status !== "completed")
-  const personalTasks = filteredTasks.filter((t) => t.type === "personal" && t.status !== "completed")
+  const personalTasksUnsorted = filteredTasks.filter((t) => t.type === "personal" && t.status !== "completed")
+  const personalTasks = aiPrioritized
+    ? [...personalTasksUnsorted].sort((a, b) => {
+        const rankA = aiPrioritized.find((p) => p.taskId === a.id)?.rank ?? 999
+        const rankB = aiPrioritized.find((p) => p.taskId === b.id)?.rank ?? 999
+        return rankA - rankB
+      })
+    : personalTasksUnsorted
   const completedTasks = filteredTasks.filter((t) => t.status === "completed")
 
   const userRocks = rocks.filter((r) => r.userId === effectiveUserId)
@@ -220,26 +232,40 @@ export function TasksPage({
     recurrence?: AssignedTask["recurrence"]
   }) => {
     try {
-      await createTask({
-        title: taskData.title,
-        description: taskData.description,
-        assigneeId: effectiveUserId,
-        rockId: taskData.rockId,
-        projectId: taskData.projectId,
-        priority: taskData.priority,
-        dueDate: taskData.dueDate,
-        recurrence: taskData.recurrence,
-      })
-      toast({
-        title: "Task created",
-        description: taskData.recurrence
-          ? `Recurring task created (${taskData.recurrence.type})`
-          : "Your personal task has been added",
-      })
+      if (editingTask) {
+        await updateTask(editingTask.id, {
+          title: taskData.title,
+          description: taskData.description,
+          rockId: taskData.rockId,
+          projectId: taskData.projectId,
+          priority: taskData.priority,
+          dueDate: taskData.dueDate,
+          recurrence: taskData.recurrence,
+        })
+        setEditingTask(null)
+        toast({ title: "Task updated", description: "Your changes have been saved" })
+      } else {
+        await createTask({
+          title: taskData.title,
+          description: taskData.description,
+          assigneeId: effectiveUserId,
+          rockId: taskData.rockId,
+          projectId: taskData.projectId,
+          priority: taskData.priority,
+          dueDate: taskData.dueDate,
+          recurrence: taskData.recurrence,
+        })
+        toast({
+          title: "Task created",
+          description: taskData.recurrence
+            ? `Recurring task created (${taskData.recurrence.type})`
+            : "Your personal task has been added",
+        })
+      }
     } catch (err: unknown) {
       toast({
         title: "Error",
-        description: getErrorMessage(err, "Failed to create task"),
+        description: getErrorMessage(err, editingTask ? "Failed to update task" : "Failed to create task"),
         variant: "destructive",
       })
     }
@@ -705,10 +731,14 @@ export function TasksPage({
 
       <AddTaskModal
         open={showAddTaskModal}
-        onOpenChange={setShowAddTaskModal}
+        onOpenChange={(open) => {
+          setShowAddTaskModal(open)
+          if (!open) setEditingTask(null)
+        }}
         onSubmit={handleAddTask}
         userRocks={userRocks}
         projects={projects}
+        initialTask={editingTask ?? undefined}
       />
 
       {/* Bulk Action Bar */}

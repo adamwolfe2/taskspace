@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserInitials } from "@/components/shared/user-initials"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Search, AlertCircle, ChevronDown, ChevronUp, Pencil, Trash2, Loader2, FileText } from "lucide-react"
+import { Search, AlertCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2, FileText } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { EditEODModal } from "@/components/dashboard/edit-eod-modal"
@@ -16,6 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 // Grace period for editing reports (24 hours in milliseconds)
 const EDIT_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000
+const REPORTS_PER_PAGE = 25
 
 interface HistoryPageProps {
   currentUser: TeamMember
@@ -31,6 +32,7 @@ interface HistoryPageProps {
 export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updateEODReport, deleteEODReport, initialUserFilter, onFilterConsumed }: HistoryPageProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [userFilter, setUserFilter] = useState<string>(initialUserFilter || "all")
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Apply initial filter from navigation (e.g., manager dashboard drill-down)
   useEffect(() => {
@@ -39,6 +41,11 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
       onFilterConsumed?.()
     }
   }, [initialUserFilter, onFilterConsumed])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, userFilter])
   const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set())
   const [editingReport, setEditingReport] = useState<EODReport | null>(null)
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
@@ -107,6 +114,14 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
     })
     .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
 
+  const totalPages = Math.ceil(filteredReports.length / REPORTS_PER_PAGE)
+  const paginatedReports = filteredReports.slice(
+    (currentPage - 1) * REPORTS_PER_PAGE,
+    currentPage * REPORTS_PER_PAGE
+  )
+  const showingFrom = filteredReports.length === 0 ? 0 : (currentPage - 1) * REPORTS_PER_PAGE + 1
+  const showingTo = Math.min(currentPage * REPORTS_PER_PAGE, filteredReports.length)
+
   const getRockForId = (rockId: string | null) => {
     if (!rockId) return null
     return rocks.find((r) => r.id === rockId)
@@ -172,7 +187,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
             )}
           </div>
         ) : (
-          filteredReports.map((report) => {
+          paginatedReports.map((report) => {
             const user = teamMembers.find((m) => m.userId === report.userId)
             const isExpanded = expandedReports.has(report.id)
 
@@ -336,6 +351,40 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
           })
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white rounded-xl shadow-card px-5 py-3">
+          <p className="text-sm text-slate-500">
+            Showing {showingFrom}–{showingTo} of {filteredReports.length} reports
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="border-slate-200"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <span className="text-sm text-slate-600 px-2">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="border-slate-200"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Edit EOD Modal */}
       {editingReport && updateEODReport && (
