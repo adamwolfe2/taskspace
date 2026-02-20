@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db/sql"
+import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
 /**
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
   } catch (error) {
     // Silently log error - analytics failures should not affect user experience
-    console.error("[Web Vitals] Failed to store metric:", error)
+    logger.debug({ error: error instanceof Error ? error.message : String(error) }, "Web Vitals: failed to store metric")
 
     // Return 200 even on error to prevent client-side retries
     return NextResponse.json<ApiResponse<{ received: boolean }>>({

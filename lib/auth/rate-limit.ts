@@ -309,6 +309,20 @@ export function checkPasswordResetEmailRateLimit(email: string): RateLimitResult
 }
 
 /**
+ * Check rate limit for 2FA verification attempts (5 attempts per 15 min per IP)
+ */
+const MAX_ATTEMPTS_2FA = 5
+
+export function check2faRateLimit(request: Request): RateLimitResult {
+  const ip = getClientIP(request)
+  const result = checkRateLimitSync(`2fa:${ip}`, MAX_ATTEMPTS_2FA)
+  checkRateLimitDb(`2fa:${ip}`, MAX_ATTEMPTS_2FA).catch(err =>
+    logger.debug({ error: err?.message, ip }, "Rate limit DB update failed (non-critical)")
+  )
+  return result
+}
+
+/**
  * Reset rate limit for an IP after successful login
  */
 export async function resetLoginRateLimit(request: Request): Promise<void> {

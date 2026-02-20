@@ -367,7 +367,9 @@ export function EODSubmissionCard({
         <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
           <Calendar className="h-5 w-5" style={{ color: themedColors.secondary }} />
           <div className="flex-1">
-            <Label className="text-xs font-medium text-slate-600">Report Date</Label>
+            <Label className="text-xs font-medium text-slate-600">
+              Report Date <span className="font-normal text-slate-400">({orgTimezone.replace(/_/g, " ")})</span>
+            </Label>
             <Select
               value={reportDate}
               onValueChange={(value) => {

@@ -8,6 +8,7 @@ import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, DailyDigest, TeamMember, Organization } from "@/lib/types"
 import { Resend } from "resend"
 import { logger, logError } from "@/lib/logger"
+import { CONFIG } from "@/lib/config"
 import * as Sentry from "@sentry/nextjs"
 
 // This endpoint is designed to be called by Vercel Cron
@@ -42,7 +43,7 @@ function verifyCronSecret(request: NextRequest): boolean {
  * Digests run 1 hour after EOD reminders
  */
 function isDigestTime(org: Organization): boolean {
-  const timezone = org.settings?.timezone || "America/New_York"
+  const timezone = org.settings?.timezone || CONFIG.organization.defaultTimezone
 
   try {
     const now = new Date()
@@ -133,7 +134,7 @@ export async function GET(request: NextRequest) {
     const results: { orgId: string; orgName: string; success: boolean; skipped?: string; error?: string }[] = []
 
     for (const org of organizations) {
-      const timezone = org.settings?.timezone || "America/New_York"
+      const timezone = org.settings?.timezone || CONFIG.organization.defaultTimezone
 
       // Check if it's digest time for this organization
       if (!isDigestTime(org)) {

@@ -282,6 +282,16 @@ function handlePostgresError(error: { code: string; message: string }): ApiError
       return Errors.invalidInput("field", "Invalid data format")
     case "42P01": // undefined_table
       return Errors.database("Database table not found")
+    case "42601": // syntax_error
+      return Errors.database("Database query error")
+    case "40001": // serialization_failure
+      return Errors.database("Transaction conflict, please retry")
+    case "08006": // connection_failure
+    case "08001": // sqlclient_unable_to_establish_sqlconnection
+    case "08004": // sqlserver_rejected_establishment_of_sqlconnection
+      return Errors.database("Database connection error")
+    case "57014": // query_canceled (timeout)
+      return Errors.database("Request timed out")
     default:
       return Errors.database()
   }

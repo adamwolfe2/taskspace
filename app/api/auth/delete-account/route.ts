@@ -74,8 +74,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       message: "Your account has been permanently deleted",
     })
 
-    // Clear auth cookie
-    response.cookies.set("auth-token", "", {
+    // Clear session cookie
+    response.cookies.set("session_token", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

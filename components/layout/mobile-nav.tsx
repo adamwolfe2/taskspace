@@ -87,7 +87,7 @@ export function MobileNav() {
               className={cn(
                 "flex flex-col items-center justify-center flex-1 min-w-0 h-14 gap-1 rounded-xl transition-all duration-200 active:scale-95",
                 isActive
-                  ? "text-red-600 bg-red-50"
+                  ? "text-primary bg-primary/10"
                   : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               )}
               onClick={() => setCurrentPage(item.id)}
@@ -96,7 +96,7 @@ export function MobileNav() {
                 <item.icon className={cn("h-6 w-6 transition-transform", isActive && "scale-110")} />
                 {/* Active indicator dot */}
                 {isActive && (
-                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-red-600" />
+                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
                 )}
               </div>
               <span className={cn(
@@ -124,7 +124,7 @@ export function MobileNav() {
               <div className="relative">
                 <MoreHorizontal className={cn("h-6 w-6", isMoreActive && "scale-110")} />
                 {isMoreActive && (
-                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-red-600" />
+                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
                 )}
               </div>
               <span className={cn(

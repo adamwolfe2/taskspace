@@ -3,6 +3,8 @@
  * Validates required environment variables at startup to prevent silent failures
  */
 
+import { PRODUCT_CONFIG } from "@/lib/config"
+
 type EnvVarConfig = {
   required: boolean
   description: string
@@ -181,6 +183,19 @@ const PUSH_VARS: FeatureEnvVars = {
   },
 }
 
+// Cron / scheduled jobs
+const CRON_VARS: FeatureEnvVars = {
+  name: "Cron Jobs",
+  description: "Scheduled job authentication",
+  vars: {
+    CRON_SECRET: {
+      required: false,
+      description: "Secret token to authenticate cron job requests",
+      example: "cron_secret_...",
+    },
+  },
+}
+
 // Application URLs
 const APP_VARS: FeatureEnvVars = {
   name: "Application",
@@ -208,6 +223,7 @@ const ALL_FEATURES: FeatureEnvVars[] = [
   AI_VARS,
   GOOGLE_VARS,
   PUSH_VARS,
+  CRON_VARS,
   APP_VARS,
 ]
 
@@ -368,7 +384,7 @@ export const env = {
     return process.env.RESEND_API_KEY
   },
   get EMAIL_FROM() {
-    return process.env.EMAIL_FROM || "Taskspace <team@trytaskspace.com>"
+    return process.env.EMAIL_FROM || `Taskspace <${PRODUCT_CONFIG.supportEmail}>`
   },
   get emailConfigured() {
     return !!this.RESEND_API_KEY
@@ -402,6 +418,14 @@ export const env = {
   },
   get pushConfigured() {
     return !!(this.VAPID_PUBLIC_KEY && this.VAPID_PRIVATE_KEY)
+  },
+
+  // Cron
+  get CRON_SECRET() {
+    return process.env.CRON_SECRET
+  },
+  get cronConfigured() {
+    return !!this.CRON_SECRET
   },
 }
 

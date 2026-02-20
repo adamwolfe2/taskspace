@@ -12,6 +12,7 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createScorecardEntrySchema } from "@/lib/validation/schemas"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { logger } from "@/lib/logger"
+import { CONFIG } from "@/lib/config"
 
 export const POST = withAuth(async (request, auth) => {
   try {
@@ -45,7 +46,7 @@ export const POST = withAuth(async (request, auth) => {
     }
 
     // Use current week if not specified — use org timezone to avoid UTC date shift
-    const orgTimezone = auth.organization.settings?.timezone || "America/New_York"
+    const orgTimezone = auth.organization.settings?.timezone || CONFIG.organization.defaultTimezone
     const todayStr = getTodayInTimezone(orgTimezone)
     const entryWeekStart = weekStart || getWeekStart(undefined, todayStr)
 

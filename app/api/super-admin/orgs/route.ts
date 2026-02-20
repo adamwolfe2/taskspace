@@ -5,6 +5,7 @@ import { withTransaction } from "@/lib/db/transactions"
 import { generateId, slugify } from "@/lib/auth/password"
 import type { ApiResponse } from "@/lib/types"
 import { logError, logger } from "@/lib/logger"
+import { CONFIG } from "@/lib/config"
 
 /**
  * POST /api/super-admin/orgs
@@ -38,7 +39,7 @@ export const POST = withSuperAdmin(async (request: NextRequest, auth) => {
     }
 
     const settingsJson = JSON.stringify({
-      timezone: "America/New_York",
+      timezone: CONFIG.organization.defaultTimezone,
       weekStartDay: 1,
       eodReminderTime: "17:00",
       enableEmailNotifications: true,

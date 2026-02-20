@@ -15,6 +15,7 @@ import {
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { registerSchema } from "@/lib/validation/schemas"
 import { logger, logAuthEvent, formatError } from "@/lib/logger"
+import { CONFIG } from "@/lib/config"
 import { sendVerificationEmail } from "@/lib/email"
 import type { User, Organization, OrganizationMember, Session, EmailVerificationToken, ApiResponse, AuthResponse } from "@/lib/types"
 
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
         updatedAt: now,
         ownerId: userId,
         settings: {
-          timezone: "America/New_York",
+          timezone: CONFIG.organization.defaultTimezone,
           weekStartDay: 1,
           eodReminderTime: "17:00",
           enableEmailNotifications: true,

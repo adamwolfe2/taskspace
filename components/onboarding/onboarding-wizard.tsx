@@ -556,6 +556,9 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                       )}
                     >
                       {step.name}
+                      {step.optional && !isCompleted && (
+                        <span className="text-slate-300 font-normal"> (optional)</span>
+                      )}
                     </span>
                     <span
                       className={cn(

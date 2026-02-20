@@ -13,6 +13,7 @@ import { sendSlackMessage, buildFullEODReportMessage, isSlackConfigured } from "
 import { asanaClient } from "@/lib/integrations/asana"
 import { getActiveMetricForUser, upsertWeeklyMetricEntry } from "@/lib/metrics"
 import { getTodayInTimezone, isValidEODDate, formatDateForDisplay } from "@/lib/utils/date-utils"
+import { CONFIG } from "@/lib/config"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
 import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
@@ -95,7 +96,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 
     // OPTIMIZED: Default to last 90 days to reduce data transfer
     // This significantly reduces Vercel Postgres bandwidth usage
-    const orgTimezone = auth.organization.settings?.timezone || "America/New_York"
+    const orgTimezone = auth.organization.settings?.timezone || CONFIG.organization.defaultTimezone
     const todayStr = getTodayInTimezone(orgTimezone)
     const todayDate = new Date(todayStr + "T12:00:00Z")
     const defaultStartDate = format(subDays(todayDate, 90), "yyyy-MM-dd")

@@ -4,6 +4,7 @@ import { sendMissingEODReminder, isEmailConfigured } from "@/lib/integrations/em
 import { sendSlackMessage, buildEODReminderMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import type { ApiResponse, TeamMember, Organization } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { CONFIG } from "@/lib/config"
 import * as Sentry from "@sentry/nextjs"
 
 // This endpoint is designed to be called by Vercel Cron
@@ -38,7 +39,7 @@ function verifyCronSecret(request: NextRequest): boolean {
  * Uses the organization's eodReminderTime setting if available
  */
 function isReminderTime(org: Organization): boolean {
-  const timezone = org.settings?.timezone || "America/New_York"
+  const timezone = org.settings?.timezone || CONFIG.organization.defaultTimezone
   const reminderTime = org.settings?.eodReminderTime || "17:00"
 
   try {
@@ -118,7 +119,7 @@ export async function GET(request: NextRequest) {
     const results: { orgId: string; orgName: string; timezone: string; reminders: number; skipped: string; errors: string[] }[] = []
 
     for (const org of organizations) {
-      const timezone = org.settings?.timezone || "America/New_York"
+      const timezone = org.settings?.timezone || CONFIG.organization.defaultTimezone
 
       // Check if it's reminder time for this organization
       if (!isReminderTime(org)) {

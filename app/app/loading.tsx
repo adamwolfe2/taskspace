@@ -4,7 +4,7 @@ export default function AppLoading() {
   return (
     <div className="min-h-screen flex bg-background">
       {/* Sidebar placeholder */}
-      <div className="hidden md:flex flex-col w-64 border-r p-4 space-y-4">
+      <div className="hidden md:flex flex-col md:w-52 lg:w-64 border-r p-4 space-y-4">
         <Skeleton className="h-8 w-32" />
         <div className="space-y-2">
           <Skeleton className="h-8 w-full rounded-lg" />

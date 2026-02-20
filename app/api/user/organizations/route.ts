@@ -7,6 +7,7 @@ import type { ApiResponse, UserOrganizationItem } from "@/lib/types"
 import { validateBody } from "@/lib/validation/middleware"
 import { userCreateOrganizationSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
+import { CONFIG } from "@/lib/config"
 
 /**
  * GET /api/user/organizations
@@ -84,7 +85,7 @@ export const POST = withAuth(async (request, auth) => {
 
     // Build organization data
     const settingsJson = JSON.stringify({
-      timezone: "America/New_York",
+      timezone: CONFIG.organization.defaultTimezone,
       weekStartDay: 1,
       eodReminderTime: "17:00",
       enableEmailNotifications: true,
@@ -141,7 +142,7 @@ export const POST = withAuth(async (request, auth) => {
       updatedAt: now,
       ownerId: auth.user.id,
       settings: {
-        timezone: "America/New_York",
+        timezone: CONFIG.organization.defaultTimezone,
         weekStartDay: 1 as 0 | 1 | 2 | 3 | 4 | 5 | 6,
         eodReminderTime: "17:00",
         enableEmailNotifications: true,

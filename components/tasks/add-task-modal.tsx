@@ -200,7 +200,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Task</DialogTitle>
           <DialogDescription>Create a personal task or to-do</DialogDescription>
@@ -259,7 +259,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
           <div>
             <Label htmlFor="rock">Related Rock</Label>
             <Select value={rockId || "none"} onValueChange={(v) => setRockId(v === "none" ? null : v)}>
-              <SelectTrigger>
+              <SelectTrigger id="rock">
                 <SelectValue placeholder="Select a rock (optional)" />
               </SelectTrigger>
               <SelectContent>
@@ -276,7 +276,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
           <div>
             <Label htmlFor="project">Project</Label>
             <Select value={projectId || "none"} onValueChange={(v) => setProjectId(v === "none" ? null : v)}>
-              <SelectTrigger>
+              <SelectTrigger id="project">
                 <SelectValue placeholder="Select a project (optional)" />
               </SelectTrigger>
               <SelectContent>
@@ -294,7 +294,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
             <div>
               <Label htmlFor="priority">Priority</Label>
               <Select value={priority} onValueChange={(v) => setPriority(v as "high" | "medium" | "normal")}>
-                <SelectTrigger>
+                <SelectTrigger id="priority">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -327,8 +327,9 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
 
             {isRecurring && (
               <div className="flex items-center gap-2 pl-6">
-                <span className="text-sm text-slate-600">Repeat every</span>
+                <label htmlFor="recurrence-interval" className="text-sm text-slate-600">Repeat every</label>
                 <Input
+                  id="recurrence-interval"
                   type="number"
                   min={1}
                   max={30}
@@ -337,7 +338,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
                   className="w-16 text-center"
                 />
                 <Select value={recurrenceType} onValueChange={(v) => setRecurrenceType(v as "daily" | "weekly" | "monthly")}>
-                  <SelectTrigger className="w-28">
+                  <SelectTrigger id="recurrence-type" aria-label="Recurrence frequency" className="w-28">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -368,6 +369,8 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
             {saveAsTemplate && (
               <div className="flex items-center gap-2 pl-6">
                 <Input
+                  id="template-name"
+                  aria-label="Template name"
                   placeholder="Template name..."
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}

@@ -13,6 +13,7 @@ import { ForgotPasswordPage } from "@/components/auth/forgot-password-page"
 import { ResetPasswordPage } from "@/components/auth/reset-password-page"
 import { AcceptInvitationPage } from "@/components/auth/accept-invitation-page"
 import { DashboardPage } from "@/components/pages/dashboard-page"
+import { DemoRestricted } from "@/components/shared/demo-restricted"
 import { HistoryPage } from "@/components/pages/history-page"
 import { RocksPage } from "@/components/pages/rocks-page"
 import { TasksPage } from "@/components/pages/tasks-page"
@@ -300,7 +301,7 @@ function AppContent() {
           />
         )
       case "admin":
-        if (isDemoMode) return <DashboardPage {...dashboardProps} />
+        if (isDemoMode) return <DemoRestricted featureName="Admin Dashboard" />
         return isAdmin ? (
           <AdminPage
             teamMembers={teamData.teamMembers}
@@ -320,7 +321,7 @@ function AppContent() {
           <DashboardPage {...dashboardProps} />
         )
       case "admin-team":
-        if (isDemoMode) return <DashboardPage {...dashboardProps} />
+        if (isDemoMode) return <DemoRestricted featureName="Team Management" />
         return isAdmin ? (
           <AdminTeamPage
             teamMembers={teamData.teamMembers}
@@ -332,14 +333,14 @@ function AppContent() {
           <DashboardPage {...dashboardProps} />
         )
       case "admin-database":
-        if (isDemoMode) return <DashboardPage {...dashboardProps} />
+        if (isDemoMode) return <DemoRestricted featureName="Database Management" />
         return isAdmin ? (
           <AdminDatabasePage />
         ) : (
           <DashboardPage {...dashboardProps} />
         )
       case "admin-api":
-        if (isDemoMode) return <DashboardPage {...dashboardProps} />
+        if (isDemoMode) return <DemoRestricted featureName="API Management" />
         return isAdmin ? (
           <AdminApiPage />
         ) : (
@@ -378,7 +379,7 @@ function AppContent() {
           />
         )
       case "settings":
-        if (isDemoMode) return <DashboardPage {...dashboardProps} />
+        if (isDemoMode) return <DemoRestricted featureName="Settings" />
         return <SettingsPage />
       case "org-chart":
         return <OrgChartPage />
@@ -444,7 +445,7 @@ function AppContent() {
       <div className="flex">
         <aside
           data-sidebar="desktop"
-          className="hidden md:block w-64 border-r border-border min-h-[calc(100vh-4rem)] bg-card"
+          className="hidden md:block md:w-52 lg:w-64 border-r border-border min-h-[calc(100vh-4rem)] bg-card"
           aria-label="Main navigation"
         >
           <SidebarNav />

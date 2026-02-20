@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import { verifyPassword, generateId, generateToken, getExpirationDate } from "@/lib/auth/password"
 import { logger, logError, logAuthEvent } from "@/lib/logger"
+import { check2faRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { Session, ApiResponse, AuthResponse } from "@/lib/types"
 
 /**
@@ -16,6 +17,15 @@ import type { Session, ApiResponse, AuthResponse } from "@/lib/types"
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 5 attempts per 15 minutes per IP
+    const rateLimit = check2faRateLimit(request)
+    if (!rateLimit.success) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Too many verification attempts. Please wait a few minutes." },
+        { status: 429, headers: getRateLimitHeaders(rateLimit, 5) }
+      )
+    }
+
     const body = await request.json()
     const { userId, code, organizationId } = body as {
       userId?: string

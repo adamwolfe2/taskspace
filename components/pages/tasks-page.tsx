@@ -713,7 +713,7 @@ export function TasksPage({
 
       {/* Bulk Action Bar */}
       {selectedTasks.size > 0 && !isViewingOtherUser && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-lg md:bottom-0 bottom-16" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">

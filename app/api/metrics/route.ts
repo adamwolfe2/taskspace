@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
+import { CONFIG } from "@/lib/config"
 import { db } from "@/lib/db"
 import {
   getActiveMetricForUser,
@@ -44,7 +45,7 @@ export const GET = withAuth(async (request, auth) => {
     const getWeeklyMetricTotal = async (userId: string, orgId: string): Promise<number> => {
       const { sql } = await import("@vercel/postgres")
       // Get current week (Friday to Thursday) using org timezone
-      const orgTimezone = auth.organization.settings?.timezone || "America/New_York"
+      const orgTimezone = auth.organization.settings?.timezone || CONFIG.organization.defaultTimezone
       const todayStr = getTodayInTimezone(orgTimezone)
       const today = new Date(todayStr + "T12:00:00Z")
       const dayOfWeek = today.getDay()

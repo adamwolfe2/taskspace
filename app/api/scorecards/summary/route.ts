@@ -8,6 +8,7 @@ import { NextResponse } from "next/server"
 import { isAdmin } from "@/lib/auth/middleware"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
+import { CONFIG } from "@/lib/config"
 import {
   getScorecardSummary,
   getScorecardStats,
@@ -56,7 +57,7 @@ export const GET = withAuth(async (request, auth) => {
     const canEdit = isAdmin(auth) || workspaceRole === "admin" || workspaceRole === "owner"
 
     // Use org timezone to avoid UTC date shift when defaulting to current week
-    const orgTimezone = auth.organization.settings?.timezone || "America/New_York"
+    const orgTimezone = auth.organization.settings?.timezone || CONFIG.organization.defaultTimezone
     const todayStr = getTodayInTimezone(orgTimezone)
     const week = weekStart || getWeekStart(undefined, todayStr)
 
