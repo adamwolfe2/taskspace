@@ -121,7 +121,7 @@
   --chart-5: 139 154 127;           /* Sage green */
 
   /* Clean radius */
-  --radius: 0.25rem;
+  --radius: 0.375rem;
 
   /* Sidebar */
   --sidebar: 255 255 255;
@@ -225,14 +225,16 @@
   /* Elevated card shadow - crisp and professional */
   .shadow-card {
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.04),
-      0 1px 3px rgb(0 0 0 / 0.06);
+      0 0 0 1px rgb(0 0 0 / 0.03),
+      0 1px 2px rgb(0 0 0 / 0.04),
+      0 3px 8px rgb(0 0 0 / 0.06);
   }
 
   .shadow-card-hover {
     box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.04),
-      0 2px 6px rgb(0 0 0 / 0.08);
+      0 0 0 1px rgb(0 0 0 / 0.03),
+      0 2px 4px rgb(0 0 0 / 0.04),
+      0 6px 16px rgb(0 0 0 / 0.08);
   }
 
   /* Elevated shadow - crisp */
