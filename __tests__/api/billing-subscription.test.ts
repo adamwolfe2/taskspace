@@ -356,7 +356,7 @@ describe("PATCH /api/billing/subscription", () => {
     expect(data.data.portalUrl).toBe("https://billing.stripe.com/p/session_123")
     expect(mockCreateCustomerPortalSession).toHaveBeenCalledWith({
       customerId: "cus_123456",
-      returnUrl: "http://localhost:3000/settings",
+      returnUrl: "/settings",
     })
   })
 

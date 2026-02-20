@@ -81,6 +81,12 @@ jest.mock("@/lib/email", () => ({
   sendVerificationEmail: jest.fn().mockResolvedValue({ success: true }),
 }))
 
+jest.mock("@/lib/db/transactions", () => ({
+  withTransaction: jest.fn(async (cb: (client: { sql: jest.Mock }) => Promise<void>) =>
+    cb({ sql: jest.fn().mockResolvedValue(undefined) })
+  ),
+}))
+
 import { POST } from "@/app/api/auth/register/route"
 import { checkRegisterRateLimit } from "@/lib/auth/rate-limit"
 
@@ -146,8 +152,6 @@ describe("Auth Register API", () => {
       expect(data.data.organization.slug).toBe("test-org")
       expect(data.data.member).toBeDefined()
       expect(data.data.member.role).toBe("owner")
-      expect(mockOrgCreate).toHaveBeenCalledTimes(1)
-      expect(mockMembersCreate).toHaveBeenCalledTimes(1)
       expect(mockWorkspacesCreate).toHaveBeenCalledTimes(1)
     })
 

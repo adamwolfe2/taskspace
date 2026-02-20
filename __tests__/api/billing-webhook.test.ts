@@ -88,7 +88,7 @@ import { POST } from "@/app/api/billing/webhook/route"
 
 describe("POST /api/billing/webhook", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
   })
 
   function createRequest(signature: string | null, body: any = {}): NextRequest {
@@ -249,6 +249,7 @@ describe("POST /api/billing/webhook", () => {
       return callback(mockClient)
     })
     mockClient.sql
+      .mockResolvedValueOnce({ rows: [{ id: "org-1" }] }) // SELECT organization
       .mockResolvedValueOnce({}) // UPDATE organizations
       .mockResolvedValueOnce({}) // UPSERT subscriptions
     mockAuditLoggerLog.mockResolvedValue(undefined)
@@ -383,16 +384,16 @@ describe("POST /api/billing/webhook", () => {
 
     mockConstructWebhookEvent.mockResolvedValue(event)
     mockSql
-      .mockResolvedValueOnce({ rows: [] }) // No duplicate
-      .mockResolvedValueOnce({}) // Insert processed event
-      .mockResolvedValueOnce({
+      .mockResolvedValueOnce({ rows: [] }) // No duplicate (idempotency check)
+      .mockResolvedValueOnce({             // SELECT admin users (inside handler, before INSERT)
         rows: [
           { email: "admin@example.com", name: "Admin User" },
         ],
-      }) // SELECT admin users
-      .mockResolvedValueOnce({
+      })
+      .mockResolvedValueOnce({             // SELECT organization name (inside handler)
         rows: [{ name: "Test Org" }],
-      }) // SELECT organization name
+      })
+      .mockResolvedValueOnce({})           // INSERT processed event (after handler completes)
     mockWithTransaction.mockImplementation(async (callback) => {
       return callback(mockClient)
     })
@@ -419,10 +420,10 @@ describe("POST /api/billing/webhook", () => {
     expect(data.received).toBe(true)
     expect(mockSendBillingAlertEmail).toHaveBeenCalledWith({
       to: ["admin@example.com"],
-      subject: "Payment Failed for Test Org Subscription",
+      subject: "Action needed: Payment failed for Test Org",
       alertType: "payment_failed",
       organizationName: "Test Org",
-      message: expect.stringContaining("payment attempt has failed"),
+      message: expect.stringContaining("couldn't process the payment"),
       details: expect.stringContaining("USD $29.99"),
       invoiceUrl: "https://invoice.stripe.com/i/failed",
     })
@@ -477,12 +478,12 @@ describe("POST /api/billing/webhook", () => {
     const response = await POST(request)
     const data = await response.json()
 
-    // Should return 200 to prevent Stripe retries
-    expect(response.status).toBe(200)
-    expect(data.received).toBe(true)
+    // Route returns 500 on processing errors so Stripe can retry the event
+    expect(response.status).toBe(500)
+    expect(data.error).toBeDefined()
   })
 
-  it("should gracefully handle missing idempotency table", async () => {
+  it("should return 500 when idempotency table is missing", async () => {
     const event = {
       id: "evt_no_table",
       type: "checkout.session.completed",
@@ -496,16 +497,15 @@ describe("POST /api/billing/webhook", () => {
 
     mockConstructWebhookEvent.mockResolvedValue(event)
     mockSql.mockRejectedValueOnce(new Error("Table does not exist"))
-    mockOrgUpdate.mockResolvedValue(undefined)
-    mockAuditLoggerLog.mockResolvedValue(undefined)
 
     const request = createRequest("valid_signature", event)
 
     const response = await POST(request)
     const data = await response.json()
 
-    expect(response.status).toBe(200)
-    expect(data.received).toBe(true)
+    // Route fails fast (500) when idempotency table is missing to prevent duplicate processing
+    expect(response.status).toBe(500)
+    expect(data.error).toBe("Webhook infrastructure not ready")
   })
 
   it("should gracefully handle missing billing history table", async () => {

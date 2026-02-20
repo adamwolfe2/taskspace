@@ -9,6 +9,8 @@ import { NextRequest } from "next/server"
 const mockUsersFindByEmail = jest.fn()
 const mockUsersUpdate = jest.fn()
 const mockMembersFindByUserId = jest.fn()
+const mockMembersFindByEmail = jest.fn()
+const mockMembersLinkUserId = jest.fn()
 const mockOrgFindById = jest.fn()
 const mockSessionsCreate = jest.fn()
 const mockSessionsDeleteByToken = jest.fn()
@@ -22,6 +24,8 @@ jest.mock("@/lib/db", () => ({
     },
     members: {
       findByUserId: (...args: unknown[]) => mockMembersFindByUserId(...args),
+      findByEmail: (...args: unknown[]) => mockMembersFindByEmail(...args),
+      linkUserId: (...args: unknown[]) => mockMembersLinkUserId(...args),
     },
     organizations: {
       findById: (...args: unknown[]) => mockOrgFindById(...args),
@@ -106,6 +110,8 @@ describe("Auth Login API", () => {
     const { validateBody } = require("@/lib/validation/middleware")
     validateBody.mockImplementation(async (request: any) => request.json())
     mockMembersFindByUserId.mockResolvedValue([mockMembership])
+    mockMembersFindByEmail.mockResolvedValue([])
+    mockMembersLinkUserId.mockResolvedValue(undefined)
     mockOrgFindById.mockResolvedValue(mockOrg)
   })
 
