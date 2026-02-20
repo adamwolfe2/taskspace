@@ -243,6 +243,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && title.trim() && dueDate && handleSubmit()}
               placeholder="What do you need to do?"
+              autoFocus
             />
           </div>
 

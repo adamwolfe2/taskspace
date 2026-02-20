@@ -74,6 +74,10 @@ export function TaskComments({ comments, currentUser, onAddComment, compact = fa
         </h4>
       </div>
 
+      {comments.length === 0 && (
+        <p className="text-xs text-slate-400 italic">No notes yet. Add one below.</p>
+      )}
+
       {/* Comments list */}
       {comments.length > 0 && (
         <div className="space-y-3 max-h-60 overflow-y-auto">

@@ -450,11 +450,17 @@ export function AIEODSubmission({
 Tomorrow: finalize project proposal, sync with team on sprint goals`}
                 value={textDump}
                 onChange={(e) => setTextDump(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && textDump.trim()) {
+                    e.preventDefault()
+                    handleParse()
+                  }
+                }}
                 rows={12}
                 className="bg-white border-slate-200 font-mono text-sm"
               />
               <p className="text-xs text-slate-500">
-                Include tasks, blockers, challenges, and tomorrow's priorities. The AI will match them to your {currentQuarter} rocks.
+                Include tasks, blockers, challenges, and tomorrow's priorities. <kbd className="px-1 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono">Cmd+Enter</kbd> to parse.
               </p>
             </div>
 

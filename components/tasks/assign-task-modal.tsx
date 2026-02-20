@@ -145,6 +145,7 @@ export function AssignTaskModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What needs to be done?"
+              autoFocus
             />
           </div>
 
