@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Network,
   Mail,
+  BookOpen,
 } from "lucide-react"
 
 const fadeInUp = {
@@ -124,6 +125,45 @@ export default function HelpPage() {
                 </Link>
               </motion.div>
             ))}
+          </motion.div>
+
+          {/* Blog resources */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+            className="mb-12"
+          >
+            <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-6">
+              <BookOpen className="w-5 h-5 text-black" />
+              <h2 className="text-xl font-semibold text-black">Learn EOS fundamentals</h2>
+            </motion.div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { title: "How to Run Rocks in Your Startup", href: "/blog/how-to-run-rocks-in-your-startup" },
+                { title: "The Level 10 Meeting Template", href: "/blog/eos-level-10-meeting-template" },
+                { title: "The EOS Weekly Scorecard Guide", href: "/blog/eos-scorecard-guide" },
+                { title: "EOD Reports for Remote Teams", href: "/blog/eod-reports-for-remote-teams" },
+                { title: "Workspace Setup Guide for Remote Teams", href: "/blog/workspace-setup-guide-for-remote-teams" },
+                { title: "Quarterly Planning Session Guide", href: "/blog/quarterly-planning-guide" },
+              ].map((post) => (
+                <motion.div key={post.href} variants={fadeInUp}>
+                  <Link
+                    href={post.href}
+                    className="flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all text-sm font-medium text-black"
+                  >
+                    <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    {post.title}
+                    <ArrowRight className="w-3.5 h-3.5 text-gray-400 ml-auto flex-shrink-0" />
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+            <motion.div variants={fadeInUp} className="mt-4 text-center">
+              <Link href="/blog" className="text-sm text-gray-500 hover:text-black transition-colors">
+                View all blog posts →
+              </Link>
+            </motion.div>
           </motion.div>
 
           {/* Contact CTA */}
