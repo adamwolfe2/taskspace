@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { format, parseISO } from "date-fns"
 import {
   CheckCircle2,
@@ -384,8 +384,10 @@ function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
 
 export default function PublicEODWeeklyReportPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const slug = params.slug as string
   const date = params.date as string
+  const token = searchParams.get("token")
 
   const [data, setData] = useState<WeeklyReport | null>(null)
   const [loading, setLoading] = useState(true)
@@ -398,7 +400,10 @@ export default function PublicEODWeeklyReportPage() {
     if (showRefreshIndicator) setIsRefreshing(true)
 
     try {
-      const response = await fetch(`/api/public/eod/${slug}/week/${date}`)
+      const url = token
+        ? `/api/public/eod/${slug}/week/${date}?token=${token}`
+        : `/api/public/eod/${slug}/week/${date}`
+      const response = await fetch(url)
       const result = await response.json()
 
       if (!response.ok) {
@@ -415,7 +420,7 @@ export default function PublicEODWeeklyReportPage() {
       setLoading(false)
       setIsRefreshing(false)
     }
-  }, [slug, date])
+  }, [slug, date, token])
 
   // Initial load
   useEffect(() => {

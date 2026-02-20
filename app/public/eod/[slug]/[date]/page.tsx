@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { format, parseISO } from "date-fns"
 import { formatInTimeZone } from "date-fns-tz"
 import {
@@ -273,8 +273,10 @@ function ReportCard({ report, timezone }: { report: PublicEODReport; timezone: s
 
 export default function PublicEODDailyReportPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const slug = params.slug as string
   const date = params.date as string
+  const token = searchParams.get("token")
 
   const [data, setData] = useState<PublicDailyReport | null>(null)
   const [loading, setLoading] = useState(true)
@@ -287,7 +289,10 @@ export default function PublicEODDailyReportPage() {
     if (showRefreshIndicator) setIsRefreshing(true)
 
     try {
-      const response = await fetch(`/api/public/eod/${slug}/${date}`)
+      const url = token
+        ? `/api/public/eod/${slug}/${date}?token=${token}`
+        : `/api/public/eod/${slug}/${date}`
+      const response = await fetch(url)
       const result = await response.json()
 
       if (!response.ok) {
@@ -304,7 +309,7 @@ export default function PublicEODDailyReportPage() {
       setLoading(false)
       setIsRefreshing(false)
     }
-  }, [slug, date])
+  }, [slug, date, token])
 
   // Initial load
   useEffect(() => {
