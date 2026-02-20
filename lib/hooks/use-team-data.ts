@@ -93,7 +93,7 @@ export function useTeamData() {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      refreshInterval: CONFIG.polling.standard, // 60s background polling
+      refreshInterval: 30_000, // 30s background polling
       dedupingInterval: 5000,
       onError: (err) => {
         Sentry.captureException(err)
@@ -201,10 +201,14 @@ export function useTeamData() {
     if (isDemoMode) { showDemoToast(); return { id, ...updates } as Rock }
     try {
       setCrudError(null)
+      // Optimistic: apply update immediately so status/progress feels instant
+      mutate((prev) => prev ? { ...prev, rocks: prev.rocks.map((r) => (r.id === id ? { ...r, ...updates } : r)) } : prev, { revalidate: false })
       const updatedRock = await api.rocks.update(id, updates)
+      // Reconcile with authoritative server data
       mutate((prev) => prev ? { ...prev, rocks: prev.rocks.map((r) => (r.id === id ? updatedRock : r)) } : prev, { revalidate: false })
       return updatedRock
     } catch (err: unknown) {
+      mutate() // Rollback: re-fetch from server
       setCrudError(getErrorMessage(err))
       throw err
     }
@@ -214,9 +218,11 @@ export function useTeamData() {
     if (isDemoMode) { showDemoToast(); return }
     try {
       setCrudError(null)
-      await api.rocks.delete(id)
+      // Optimistic: remove from list immediately
       mutate((prev) => prev ? { ...prev, rocks: prev.rocks.filter((r) => r.id !== id) } : prev, { revalidate: false })
+      await api.rocks.delete(id)
     } catch (err: unknown) {
+      mutate() // Rollback: re-fetch from server
       setCrudError(getErrorMessage(err))
       throw err
     }
@@ -233,12 +239,19 @@ export function useTeamData() {
       setCrudError(getErrorMessage(err))
       throw err
     }
+    const tempId = `tmp-${Date.now()}`
     try {
       setCrudError(null)
+      // Optimistic: add placeholder task so the item appears instantly
+      const optimisticTask = { ...task, id: tempId, workspaceId: currentWorkspaceId, createdAt: new Date().toISOString() } as AssignedTask
+      mutate((prev) => prev ? { ...prev, tasks: [...prev.tasks, optimisticTask] } : prev, { revalidate: false })
       const newTask = await api.tasks.create({ ...task, workspaceId: currentWorkspaceId } as Parameters<typeof api.tasks.create>[0])
-      mutate((prev) => prev ? { ...prev, tasks: [...prev.tasks, newTask] } : prev, { revalidate: false })
+      // Replace placeholder with real server task
+      mutate((prev) => prev ? { ...prev, tasks: prev.tasks.map((t) => (t.id === tempId ? newTask : t)) } : prev, { revalidate: false })
       return newTask
     } catch (err: unknown) {
+      // Remove placeholder on failure
+      mutate((prev) => prev ? { ...prev, tasks: prev.tasks.filter((t) => t.id !== tempId) } : prev, { revalidate: false })
       setCrudError(getErrorMessage(err))
       throw err
     }
@@ -248,10 +261,14 @@ export function useTeamData() {
     if (isDemoMode) { showDemoToast(); return { id, ...updates } as AssignedTask }
     try {
       setCrudError(null)
+      // Optimistic: apply update immediately so UI feels instant
+      mutate((prev) => prev ? { ...prev, tasks: prev.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)) } : prev, { revalidate: false })
       const updatedTask = await api.tasks.update(id, updates)
+      // Reconcile with authoritative server data
       mutate((prev) => prev ? { ...prev, tasks: prev.tasks.map((t) => (t.id === id ? updatedTask : t)) } : prev, { revalidate: false })
       return updatedTask
     } catch (err: unknown) {
+      mutate() // Rollback: re-fetch from server to restore correct state
       setCrudError(getErrorMessage(err))
       throw err
     }
@@ -261,9 +278,11 @@ export function useTeamData() {
     if (isDemoMode) { showDemoToast(); return }
     try {
       setCrudError(null)
-      await api.tasks.delete(id)
+      // Optimistic: remove from list immediately
       mutate((prev) => prev ? { ...prev, tasks: prev.tasks.filter((t) => t.id !== id) } : prev, { revalidate: false })
+      await api.tasks.delete(id)
     } catch (err: unknown) {
+      mutate() // Rollback: re-fetch from server
       setCrudError(getErrorMessage(err))
       throw err
     }
