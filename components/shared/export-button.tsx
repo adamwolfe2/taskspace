@@ -39,7 +39,15 @@ export function ExportButton({ type, filters, variant = "outline", size = "sm" }
       })
 
       if (!response.ok) {
-        throw new Error("Export failed")
+        const errorData = await response.json().catch(() => null)
+        if (response.status === 404 && errorData?.error) {
+          toast({
+            title: "Nothing to export",
+            description: errorData.error,
+          })
+          return
+        }
+        throw new Error(errorData?.error || "Export failed")
       }
 
       // Get the filename from the content-disposition header

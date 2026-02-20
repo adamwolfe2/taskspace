@@ -242,6 +242,12 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
         return
       }
 
+      if (!data.data?.brand) {
+        setScrapeError("Could not extract brand details from this website. You can set up manually.")
+        setIsScraping(false)
+        return
+      }
+
       const brand: ScrapedBrand = data.data.brand
       setScrapedBrand(brand)
       setHasScraped(true)

@@ -154,6 +154,11 @@ function AppContent() {
       const verifyEmail = params.get("verifyEmail")
       const page = params.get("page")
 
+      // Clear sensitive tokens from URL immediately to prevent exposure in browser history
+      if (invite || reset || verifyEmail || page) {
+        window.history.replaceState({}, "", window.location.pathname)
+      }
+
       if (invite) {
         setInviteToken(invite)
       }
@@ -167,8 +172,6 @@ function AppContent() {
           .then(res => res.json())
           .then(data => {
             if (data.success) {
-              // Clean URL and refresh to pick up verified state
-              window.history.replaceState({}, "", window.location.pathname)
               window.location.reload()
             }
           })
@@ -177,8 +180,6 @@ function AppContent() {
           })
       }
       if (page) {
-        // Clean the URL immediately to prevent stale params from persisting
-        window.history.replaceState({}, "", window.location.pathname)
         // Only apply page param for unauthenticated users who aren't still loading
         // (prevents ?page=register from overriding a valid session during load)
         if (!isAuthenticated && !isLoading) {

@@ -240,6 +240,13 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
         )
     }
 
+    if (data.length === 0) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "No data to export. Try adjusting your filters or adding data first." },
+        { status: 404 }
+      )
+    }
+
     if (format === "json") {
       return new NextResponse(JSON.stringify(data, null, 2), {
         headers: {
