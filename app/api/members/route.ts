@@ -179,7 +179,7 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
 
     // Check permissions - admins can update members, users can only update themselves
     // Compare both the member.id and member.userId to auth.member.id and auth.user.id
-    const isSelf = member.id === auth.member.id || member.userId === auth.user.id
+    const isSelf = member.id === auth.member.id || (!!member.userId && member.userId === auth.user.id)
     if (!isSelf && !isAdmin(auth)) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "You can only update your own profile" },
@@ -293,8 +293,8 @@ export const DELETE = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
-    // Cannot remove yourself
-    if (memberId === auth.user.id) {
+    // Cannot remove yourself — check both user ID and member record ID
+    if (memberId === auth.user.id || memberId === auth.member.id) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "You cannot remove yourself from the organization" },
         { status: 400 }
@@ -305,6 +305,14 @@ export const DELETE = withAdmin(async (request: NextRequest, auth) => {
     let member = await db.members.findByOrgAndId(auth.organization.id, memberId)
     if (!member) {
       member = await db.members.findByOrgAndUser(auth.organization.id, memberId)
+    }
+
+    // Final self-removal check after lookup (catches any case the pre-flight missed)
+    if (member && (member.id === auth.member.id || member.userId === auth.user.id)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "You cannot remove yourself from the organization" },
+        { status: 400 }
+      )
     }
 
     if (!member) {

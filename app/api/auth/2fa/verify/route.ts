@@ -65,10 +65,15 @@ export async function POST(request: NextRequest) {
       for (const bc of backupCodes) {
         const matches = await verifyPassword(code, bc.code_hash as string)
         if (matches) {
-          // Mark backup code as used
-          await sql`UPDATE totp_backup_codes SET used_at = NOW() WHERE id = ${bc.id as string}`
-          isValid = true
-          usedBackupCode = true
+          // CAS update: only mark used if not already consumed by a concurrent request
+          const { rowCount } = await sql`
+            UPDATE totp_backup_codes SET used_at = NOW()
+            WHERE id = ${bc.id as string} AND used_at IS NULL
+          `
+          if (rowCount && rowCount > 0) {
+            isValid = true
+            usedBackupCode = true
+          }
           break
         }
       }

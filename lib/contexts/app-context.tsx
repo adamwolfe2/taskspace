@@ -219,6 +219,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setCurrentUser(teamMember)
       setCurrentOrganization(authData.organization)
       setEmailVerified(authData.user?.emailVerified ?? true)
+      setIsSuperAdmin(authData.user?.isSuperAdmin ?? false)
       setCurrentPage("dashboard")
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Login failed"))
