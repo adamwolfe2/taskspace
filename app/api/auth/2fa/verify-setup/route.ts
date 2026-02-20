@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { verifySync, NobleCryptoPlugin, ScureBase32Plugin } from "otplib"
 import { getUserAuthContext } from "@/lib/auth/middleware"
 import { db } from "@/lib/db"
-import { sql } from "@/lib/db/sql"
 import { generateId, hashPassword } from "@/lib/auth/password"
+import { withTransaction } from "@/lib/db/transactions"
 import { randomBytes } from "crypto"
 import { twoFactorVerifySetupSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
@@ -68,26 +68,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate 10 backup codes
+    // Generate 10 backup codes (before transaction to avoid bcrypt inside tx)
     const backupCodes: string[] = []
+    const hashedBackupCodes: string[] = []
     for (let i = 0; i < 10; i++) {
       const code = randomBytes(4).toString("hex") // 8-char hex codes
       backupCodes.push(code)
+      hashedBackupCodes.push(await hashPassword(code))
     }
 
-    // Delete any existing backup codes and insert new ones
-    await sql`DELETE FROM totp_backup_codes WHERE user_id = ${user.id}`
+    // Atomically: delete old backup codes, insert new ones, enable 2FA
+    await withTransaction(async (client) => {
+      await client.sql`DELETE FROM totp_backup_codes WHERE user_id = ${user.id}`
 
-    for (const backupCode of backupCodes) {
-      const hashedCode = await hashPassword(backupCode)
-      await sql`
-        INSERT INTO totp_backup_codes (id, user_id, code_hash, created_at)
-        VALUES (${generateId()}, ${user.id}, ${hashedCode}, NOW())
+      for (let i = 0; i < backupCodes.length; i++) {
+        await client.sql`
+          INSERT INTO totp_backup_codes (id, user_id, code_hash, created_at)
+          VALUES (${generateId()}, ${user.id}, ${hashedBackupCodes[i]}, NOW())
+        `
+      }
+
+      await client.sql`
+        UPDATE users SET totp_enabled = true, updated_at = NOW() WHERE id = ${user.id}
       `
-    }
-
-    // Enable 2FA
-    await db.users.update(user.id, { totpEnabled: true })
+    })
 
     logger.info({ userId: user.id }, "2FA enabled successfully")
 

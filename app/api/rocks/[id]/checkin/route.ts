@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
-
+import { isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { getRockById, createRockCheckin, getWeekStart } from "@/lib/db/rocks"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -40,8 +40,8 @@ export const POST = withAuth(async (request, auth, context?) => {
       )
     }
 
-    // Check workspace access if workspace-scoped
-    if (rock.workspaceId) {
+    // Check workspace access if workspace-scoped (admins bypass this check)
+    if (!isAdmin(auth) && rock.workspaceId) {
       const hasAccess = await userHasWorkspaceAccess(auth.user.id, rock.workspaceId)
       if (!hasAccess) {
         return NextResponse.json(

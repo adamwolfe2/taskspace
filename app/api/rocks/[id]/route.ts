@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
 import type { RouteContext } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import {
   getRockById,
@@ -43,8 +44,8 @@ export const GET = withAuth(async (request: NextRequest, auth, context?: RouteCo
       )
     }
 
-    // Check workspace access if workspace-scoped
-    if (rock.workspaceId) {
+    // Check workspace access if workspace-scoped (admins bypass this check)
+    if (!isAdmin(auth) && rock.workspaceId) {
       const hasAccess = await userHasWorkspaceAccess(auth.user.id, rock.workspaceId)
       if (!hasAccess) {
         return NextResponse.json(

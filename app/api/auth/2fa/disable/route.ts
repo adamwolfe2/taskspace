@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import { verifyPassword } from "@/lib/auth/password"
 import { twoFactorDisableSchema } from "@/lib/validation/schemas"
+import { check2faRateLimit } from "@/lib/auth/rate-limit"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
@@ -18,6 +19,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Forbidden" },
         { status: 403 }
+      )
+    }
+
+    // Rate limit 2FA disable attempts (prevents brute-forcing password to disable 2FA)
+    const rateLimitResult = check2faRateLimit(request)
+    if (!rateLimitResult.success) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Too many attempts. Please try again later." },
+        { status: 429 }
       )
     }
 

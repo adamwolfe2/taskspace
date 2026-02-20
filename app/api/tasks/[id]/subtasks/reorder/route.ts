@@ -69,9 +69,16 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
       }
     }
 
-    // Verify all subtask IDs belong to this task
+    // Verify all subtask IDs belong to this task and that all subtasks are included
     const existingSubtasks = await taskSubtasks.getByTaskId(taskId)
     const existingIds = new Set(existingSubtasks.map((s) => s.id))
+
+    if (subtaskIds.length !== existingIds.size) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "All subtask IDs must be included in the reorder request" },
+        { status: 400 }
+      )
+    }
 
     for (const subtaskId of subtaskIds) {
       if (!existingIds.has(subtaskId)) {
