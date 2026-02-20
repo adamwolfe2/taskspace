@@ -128,7 +128,7 @@ export const GET = withUserAuth(async (request: NextRequest, auth) => {
             member: activeMembership,
             teamMember,
             token: sessionToken,
-            isSuperAdmin: auth.user.isSuperAdmin || false,
+            isSuperAdmin: auth.user.isSuperAdmin ?? false,
           },
         })
       }

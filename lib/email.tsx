@@ -169,7 +169,7 @@ export async function sendInvitationEmail(
 
     <p class="note">If you didn't expect this invitation, you can safely ignore this email.</p>
     <p class="link-fallback">Or copy this link: ${inviteLink}</p>
-  `, `${escapeHtml(organization.name)} &middot; Powered by Taskspace`)
+  `, `${escapeHtml(organization.name)} &middot; Powered by Taskspace<br><a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(invitation.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 
   return sendEmail(
     [invitation.email],
