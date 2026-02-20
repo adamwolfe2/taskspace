@@ -342,7 +342,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
                     {onUpdateRock && (
                       <button
                         onClick={() => setSelectedRock(rock)}
-                        className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-0.5"
+                        className="text-xs text-primary hover:text-slate-700 font-medium flex items-center gap-0.5"
                       >
                         Details <ChevronRight className="h-3 w-3" />
                       </button>

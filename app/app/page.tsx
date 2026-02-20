@@ -490,7 +490,7 @@ function AppContent() {
         <>
           <button
             onClick={() => setShowMobileQuickTask(true)}
-            className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-40 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center md:hidden"
+            className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-40 bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-center md:hidden"
             aria-label="Add new task"
           >
             <Plus className="h-6 w-6" />

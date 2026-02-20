@@ -277,7 +277,7 @@ export function AssignedTasksSection({
               <p className="text-xs text-slate-400 text-center mt-2">
                 <button
                   onClick={() => setCurrentPage("settings")}
-                  className="text-blue-500 hover:underline"
+                  className="text-primary hover:underline"
                 >
                   Connect Asana
                 </button>{" "}

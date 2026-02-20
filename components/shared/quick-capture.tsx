@@ -433,7 +433,7 @@ export function FloatingQuickCapture({
  size="icon"
  className={cn(
  "fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-40",
- "bg-blue-600 hover:bg-blue-700 text-white",
+ "bg-slate-900 hover:bg-slate-800 text-white",
  "md:hidden",
  className
  )}
