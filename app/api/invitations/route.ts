@@ -260,6 +260,14 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
+    // Cannot resend an invitation that was already accepted or cancelled
+    if (invitation.status === "accepted") {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "This invitation has already been accepted" },
+        { status: 409 }
+      )
+    }
+
     // Generate a new token and extend the expiration
     const newToken = generateInviteToken()
     const newExpiresAt = getExpirationDate(24 * 7) // 7 days

@@ -60,8 +60,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user) {
-      // Return generic error to prevent email enumeration
-      // Don't reveal whether email exists, is invited, or is unknown
+      // SECURITY: Always do a dummy bcrypt to make timing identical whether the
+      // email exists or not, preventing email enumeration via response timing.
+      await verifyPassword(password, "$2b$12$LiXXhXpW5N.h7a0oXqF2XuqnNUBNkAMGEKL8UtLmfpjpMpPFBWkNO")
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Invalid email or password" },
         { status: 401 }

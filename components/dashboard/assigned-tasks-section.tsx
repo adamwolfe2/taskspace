@@ -318,6 +318,12 @@ export function AssignedTasksSection({
                               setTogglingTaskId(task.id)
                               try {
                                 await onToggleTask(task.id)
+                              } catch {
+                                toast({
+                                  title: "Failed to update task",
+                                  description: "Please try again.",
+                                  variant: "destructive",
+                                })
                               } finally {
                                 setTogglingTaskId(null)
                               }

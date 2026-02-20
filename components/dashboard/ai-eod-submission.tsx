@@ -219,7 +219,7 @@ export function AIEODSubmission({
 
     // Parse metric value
     const parsedMetricValue = metricValueToday.trim() !== ""
-      ? parseInt(metricValueToday, 10)
+      ? parseFloat(metricValueToday)
       : null
     const validMetricValue = parsedMetricValue !== null && !isNaN(parsedMetricValue)
       ? parsedMetricValue

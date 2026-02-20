@@ -17,6 +17,7 @@ import { registerSchema } from "@/lib/validation/schemas"
 import { logger, logAuthEvent, formatError } from "@/lib/logger"
 import { CONFIG } from "@/lib/config"
 import { sendVerificationEmail } from "@/lib/email"
+import { withTransaction } from "@/lib/db/transactions"
 import type { User, Organization, OrganizationMember, Session, EmailVerificationToken, ApiResponse, AuthResponse } from "@/lib/types"
 
 export async function POST(request: NextRequest) {
@@ -116,22 +117,40 @@ export async function POST(request: NextRequest) {
         },
       }
 
-      await db.organizations.create(organization)
+      // Create org + member atomically — if member creation fails, the org
+      // is rolled back so the user can retry without getting stuck.
+      await withTransaction(async (client) => {
+        await client.sql`
+          INSERT INTO organizations (id, name, slug, owner_id, settings, subscription, created_at, updated_at)
+          VALUES (
+            ${organization!.id}, ${organization!.name}, ${organization!.slug}, ${userId},
+            ${JSON.stringify(organization!.settings)}, ${JSON.stringify(organization!.subscription)},
+            ${now}, ${now}
+          )
+        `
 
-      // Create member record for owner
-      member = {
-        id: generateId(),
-        organizationId: orgId,
-        userId,
-        email,
-        name,
-        role: "owner",
-        department: "Leadership",
-        joinedAt: now,
-        status: "active",
-      }
+        const memberId = generateId()
+        await client.sql`
+          INSERT INTO organization_members
+            (id, organization_id, user_id, email, name, role, department, joined_at, status)
+          VALUES (
+            ${memberId}, ${orgId}, ${userId}, ${email.toLowerCase()},
+            ${name}, ${"owner"}, ${"Leadership"}, ${now}, ${"active"}
+          )
+        `
 
-      await db.members.create(member)
+        member = {
+          id: memberId,
+          organizationId: orgId,
+          userId,
+          email,
+          name,
+          role: "owner",
+          department: "Leadership",
+          joinedAt: now,
+          status: "active",
+        }
+      })
 
       // Try to create default workspace
       // If this fails, registration still succeeds - workspace can be created via ensure-default endpoint
