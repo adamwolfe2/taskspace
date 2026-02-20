@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, Target, ClipboardList, FileText, Settings, Sparkles } from "lucide-react"
+import { X, Target, ClipboardList, FileText, Settings, Sparkles, Wand2 } from "lucide-react"
 import { useApp } from "@/lib/contexts/app-context"
 import { cn } from "@/lib/utils"
+import { WorkspaceBuilder } from "@/components/onboarding/workspace-builder"
 
 interface WelcomeCardProps {
   userName: string
@@ -13,13 +14,15 @@ interface WelcomeCardProps {
   hasRocks: boolean
   hasTasks: boolean
   hasEodReports: boolean
+  isAdmin?: boolean
 }
 
 const DISMISS_KEY = "taskspace_welcome_dismissed"
 
-export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodReports }: WelcomeCardProps) {
+export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodReports, isAdmin }: WelcomeCardProps) {
   const { setCurrentPage } = useApp()
   const [dismissed, setDismissed] = useState(true) // Start hidden to prevent flash
+  const [showBuilder, setShowBuilder] = useState(false)
 
   useEffect(() => {
     try {
@@ -146,6 +149,20 @@ export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodRepor
           })}
         </div>
 
+        {isAdmin && (
+          <div className="mt-3 pt-3 border-t border-slate-200">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowBuilder(true)}
+              className="w-full gap-2 text-xs"
+            >
+              <Wand2 className="w-3.5 h-3.5" />
+              Set Up Workspace with AI
+            </Button>
+          </div>
+        )}
+
         <div className="mt-3 flex items-center justify-between">
           <button
             onClick={() => setCurrentPage("settings")}
@@ -162,6 +179,10 @@ export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodRepor
           </button>
         </div>
       </CardContent>
+
+      {showBuilder && (
+        <WorkspaceBuilder onClose={() => setShowBuilder(false)} />
+      )}
     </Card>
   )
 }

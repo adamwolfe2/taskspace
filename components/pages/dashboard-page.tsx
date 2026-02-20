@@ -433,6 +433,7 @@ export function DashboardPage({
     hasRocks={userRocks.length > 0}
     hasTasks={userTasks.length > 0}
     hasEodReports={eodReports.some((r) => r.userId === effectiveUserId)}
+    isAdmin={currentUser.role === "admin" || currentUser.role === "owner"}
    />
 
    {hasAnyFeature ? (
