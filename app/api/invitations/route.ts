@@ -237,6 +237,76 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
   }
 })
 
+// PATCH /api/invitations - Resend an invitation
+export const PATCH = withAdmin(async (request: NextRequest, auth) => {
+  try {
+    const body = await request.json()
+    const invitationId = body.id as string | undefined
+
+    if (!invitationId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Invitation ID is required" },
+        { status: 400 }
+      )
+    }
+
+    const invitations = await db.invitations.findByOrganizationId(auth.organization.id)
+    const invitation = invitations.find(i => i.id === invitationId)
+
+    if (!invitation) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Invitation not found" },
+        { status: 404 }
+      )
+    }
+
+    // Generate a new token and extend the expiration
+    const newToken = generateInviteToken()
+    const newExpiresAt = getExpirationDate(24 * 7) // 7 days
+
+    await db.invitations.update(invitationId, {
+      token: newToken,
+      expiresAt: newExpiresAt,
+      status: "pending",
+    })
+
+    // Re-fetch the updated invitation with the new token
+    const updatedInvitation: Invitation = {
+      ...invitation,
+      token: newToken,
+      expiresAt: newExpiresAt,
+      status: "pending",
+    }
+
+    // Send the invitation email
+    const emailResult = await sendInvitationEmail(updatedInvitation, auth.organization, auth.user.name)
+
+    if (!emailResult.success) {
+      logError(logger, "Failed to resend invitation email", emailResult.error)
+    }
+
+    // Build the invite link so admin can copy it manually if email fails
+    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"}/app?invite=${newToken}`
+
+    return NextResponse.json<ApiResponse<{ emailSent: boolean; inviteLink: string }>>({
+      success: true,
+      data: {
+        emailSent: emailResult.success,
+        inviteLink,
+      },
+      message: emailResult.success
+        ? "Invitation resent successfully"
+        : `Email failed to send. Share this link manually: ${inviteLink}`,
+    })
+  } catch (error) {
+    logError(logger, "Resend invitation error", error)
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: "Failed to resend invitation" },
+      { status: 500 }
+    )
+  }
+})
+
 // DELETE /api/invitations - Cancel an invitation
 export const DELETE = withAdmin(async (request: NextRequest, auth) => {
   try {

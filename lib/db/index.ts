@@ -952,7 +952,9 @@ export const db = {
     async update(id: string, updates: Partial<Invitation>): Promise<Invitation | null> {
       const { rows } = await sql`
         UPDATE invitations SET
-          status = COALESCE(${updates.status || null}, status)
+          status = COALESCE(${updates.status || null}, status),
+          token = COALESCE(${updates.token || null}, token),
+          expires_at = COALESCE(${updates.expiresAt || null}, expires_at)
         WHERE id = ${id}
         RETURNING *
       `

@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Loader2, Mail, UserPlus, Copy, Trash2, AlertTriangle } from "lucide-react"
+import { Loader2, Mail, UserPlus, Copy, Trash2, AlertTriangle, RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import { api } from "@/lib/api/client"
@@ -59,6 +59,7 @@ export function TeamManagementTab() {
   const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
   const [invitationToCancel, setInvitationToCancel] = useState<SafeInvitation | Invitation | null>(null)
   const [isCancellingInvitation, setIsCancellingInvitation] = useState(false)
+  const [resendingInvitationId, setResendingInvitationId] = useState<string | null>(null)
 
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
 
@@ -221,6 +222,50 @@ export function TeamManagementTab() {
     }
   }
 
+  const resendInvitation = async (invitationId: string) => {
+    setResendingInvitationId(invitationId)
+    try {
+      const response = await fetch("/api/invitations", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ id: invitationId }),
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to resend invitation")
+      }
+
+      if (data.data?.emailSent) {
+        toast({
+          title: "Invitation resent",
+          description: "A new invitation email has been sent.",
+        })
+      } else {
+        // Email failed — copy the link to clipboard
+        const inviteLink = data.data?.inviteLink
+        if (inviteLink) {
+          await navigator.clipboard.writeText(inviteLink)
+          toast({
+            title: "Email failed — link copied",
+            description: "The email couldn't be sent, but the invite link has been copied to your clipboard. Share it manually.",
+          })
+        }
+      }
+    } catch (err: unknown) {
+      toast({
+        title: "Error",
+        description: getErrorMessage(err, "Failed to resend invitation"),
+        variant: "destructive",
+      })
+    } finally {
+      setResendingInvitationId(null)
+    }
+  }
+
   const teamCount = teamMembers.length + pendingInvitations.length
 
   return (
@@ -353,6 +398,19 @@ export function TeamManagementTab() {
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => resendInvitation(inv.id)}
+                        disabled={resendingInvitationId === inv.id}
+                        title="Resend invitation"
+                      >
+                        {resendingInvitationId === inv.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                      </Button>
                       {"token" in inv && inv.token && (
                         <Button
                           variant="ghost"

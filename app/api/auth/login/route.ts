@@ -60,6 +60,32 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user) {
+      // Check if this email has a pending/invited draft member (no user account yet)
+      try {
+        const { sql: sqlModule } = await import("@/lib/db/sql")
+        const { rows: draftRows } = await sqlModule`
+          SELECT om.status, o.name as org_name
+          FROM organization_members om
+          JOIN organizations o ON o.id = om.organization_id
+          WHERE LOWER(om.email) = LOWER(${email})
+            AND om.user_id IS NULL
+          LIMIT 1
+        `
+
+        if (draftRows.length > 0) {
+          const orgName = draftRows[0].org_name
+          return NextResponse.json<ApiResponse<null>>(
+            {
+              success: false,
+              error: `Your account hasn't been set up yet. Please check your email for an invitation from ${orgName}, or ask your admin to resend the invitation link.`,
+            },
+            { status: 401 }
+          )
+        }
+      } catch {
+        // Non-critical — fall through to generic error
+      }
+
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Invalid email or password" },
         { status: 401 }
