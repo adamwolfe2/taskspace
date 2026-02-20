@@ -21,18 +21,7 @@ const emptyContent: JSONContent = {
   type: "doc",
   content: [
     {
-      type: "heading",
-      attrs: { level: 1 },
-      content: [{ type: "text", text: "Workspace Notes" }],
-    },
-    {
       type: "paragraph",
-      content: [
-        {
-          type: "text",
-          text: "Start typing here. Use '/' for commands like headings, lists, and more.",
-        },
-      ],
     },
   ],
 }

@@ -56,9 +56,8 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
       // Workspace failed but org exists - user can still proceed
       // The ensure-default endpoint will create a workspace on next login
       toast({
-        title: "Workspace setup incomplete",
-        description: "Your organization was created but workspace setup had an issue. It will be set up automatically.",
-        variant: "destructive",
+        title: "Almost there!",
+        description: "Your organization was created. Workspace details will finalize automatically on next login.",
       })
       // Still try to refresh session and proceed
       await refreshSession().catch(() => {})

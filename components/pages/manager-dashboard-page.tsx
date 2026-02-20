@@ -190,8 +190,8 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
         <Users className="h-12 w-12 text-slate-300 mb-4" />
         <h2 className="text-xl font-semibold text-slate-900 mb-2">No Direct Reports</h2>
         <p className="text-slate-500 text-center max-w-md mb-4">
-          You don't have any team members assigned to you as direct reports yet. Contact your
-          administrator to set up your team.
+          You don't have any team members assigned to you as direct reports yet.
+          Set up your org chart in the Organization Chart page to assign reporting structure.
         </p>
         <Button onClick={fetchDashboard} variant="outline">
           <RefreshCw className="h-4 w-4 mr-2" />
