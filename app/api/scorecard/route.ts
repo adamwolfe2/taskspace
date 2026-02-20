@@ -164,7 +164,7 @@ export const PATCH = withAuth(async (request, auth) => {
       )
     }
 
-    const metricId = metricResult.rows[0].id
+    const metricId = metricResult.rows[0]?.id
 
     // Upsert the weekly metric entry
     await sql`

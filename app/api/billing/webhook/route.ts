@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
     logger.info({ eventId: event.id, eventType: event.type }, "Stripe webhook received")
 
     // Check for idempotency — ensure this event hasn't been processed before
-    let idempotencyTableExists = true
     try {
       const { rows: existingEvents } = await sql<{ event_id: string }>`
         SELECT event_id FROM processed_webhook_events WHERE event_id = ${event.id}
@@ -46,9 +45,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true, duplicate: true })
       }
     } catch (error) {
-      // If the table doesn't exist yet, log and continue (graceful degradation)
-      idempotencyTableExists = false
-      logError(logger, "Failed to check webhook idempotency (table may not exist yet)", error)
+      // Idempotency table is required — fail fast to prevent duplicate processing
+      logError(logger, "Idempotency table 'processed_webhook_events' missing or inaccessible", error)
+      return NextResponse.json(
+        { error: "Webhook infrastructure not ready" },
+        { status: 500 }
+      )
     }
 
     // Process the event — return 500 on failure so Stripe retries
@@ -80,6 +82,11 @@ export async function POST(request: NextRequest) {
           break
         }
 
+        case STRIPE_EVENTS.INVOICE_PAYMENT_ACTION_REQUIRED: {
+          await handleInvoicePaymentActionRequired(event.data.object)
+          break
+        }
+
         case STRIPE_EVENTS.SUBSCRIPTION_TRIAL_WILL_END: {
           await handleTrialWillEnd(event.data.object)
           break
@@ -91,22 +98,20 @@ export async function POST(request: NextRequest) {
 
       // Record successful processing AFTER the handler completes
       // This ensures failed events can be retried by Stripe
-      if (idempotencyTableExists) {
-        try {
-          await sql`
-            INSERT INTO processed_webhook_events (event_id, event_type, stripe_customer_id, organization_id, metadata)
-            VALUES (
-              ${event.id},
-              ${event.type},
-              ${event.data.object.customer || null},
-              ${event.data.object.metadata?.organizationId || null},
-              ${JSON.stringify(event.data.object.metadata || {})}
-            )
-            ON CONFLICT (event_id) DO NOTHING
-          `
-        } catch (recordError) {
-          logError(logger, "Failed to record processed webhook event", recordError)
-        }
+      try {
+        await sql`
+          INSERT INTO processed_webhook_events (event_id, event_type, stripe_customer_id, organization_id, metadata)
+          VALUES (
+            ${event.id},
+            ${event.type},
+            ${event.data.object.customer || null},
+            ${event.data.object.metadata?.organizationId || null},
+            ${JSON.stringify(event.data.object.metadata || {})}
+          )
+          ON CONFLICT (event_id) DO NOTHING
+        `
+      } catch (recordError) {
+        logError(logger, "Failed to record processed webhook event", recordError)
       }
     } catch (processingError) {
       // Log the error and return 500 so Stripe retries this event
@@ -318,7 +323,7 @@ async function handleSubscriptionUpdated(subscription: StripeWebhookObject) {
       plan: plan as "free" | "team" | "business",
       status: subscription.status as "active" | "trialing" | "past_due" | "canceled",
       billingCycle: billingCycle as "monthly" | "yearly" | null,
-      currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : new Date().toISOString(),
+      currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null,
       cancelAtPeriodEnd: (subscription.cancel_at_period_end as boolean) ?? false,
       maxUsers,
       features: planConfig.features,
@@ -386,24 +391,36 @@ async function handleSubscriptionDeleted(subscription: StripeWebhookObject) {
 
     // Find organization within transaction
     let orgId: string | null = null
+    let orgSubscriptionId: string | null = null
     if (organizationId) {
-      const { rows: orgResults } = await client.sql<{ id: string }>`
-        SELECT id FROM organizations WHERE id = ${organizationId} LIMIT 1
+      const { rows: orgResults } = await client.sql<{ id: string; stripe_subscription_id: string | null }>`
+        SELECT id, stripe_subscription_id FROM organizations WHERE id = ${organizationId} LIMIT 1
       `
       if (orgResults.length > 0) {
         orgId = orgResults[0].id
+        orgSubscriptionId = orgResults[0].stripe_subscription_id
       }
     } else {
-      const { rows: orgResults } = await client.sql<{ id: string }>`
-        SELECT id FROM organizations WHERE stripe_customer_id = ${subscription.customer} LIMIT 1
+      const { rows: orgResults } = await client.sql<{ id: string; stripe_subscription_id: string | null }>`
+        SELECT id, stripe_subscription_id FROM organizations WHERE stripe_customer_id = ${subscription.customer} LIMIT 1
       `
       if (orgResults.length > 0) {
         orgId = orgResults[0].id
+        orgSubscriptionId = orgResults[0].stripe_subscription_id
       }
     }
 
     if (!orgId) {
       logger.error("Subscription deleted: Cannot find organization")
+      return
+    }
+
+    // Verify the deleted subscription matches the org's current subscription
+    if (orgSubscriptionId && orgSubscriptionId !== subscription.id) {
+      logger.warn(
+        { orgId, expected: orgSubscriptionId, received: subscription.id },
+        "Subscription deleted event does not match org's current subscription, skipping downgrade"
+      )
       return
     }
 
@@ -625,6 +642,62 @@ async function handleInvoicePaymentFailed(invoice: StripeWebhookObject) {
 }
 
 /**
+ * Handle 3D Secure / payment action required (invoice.payment_action_required)
+ * Notifies org admins that their payment requires additional authentication.
+ */
+async function handleInvoicePaymentActionRequired(invoice: StripeWebhookObject) {
+  if (!invoice.customer) return
+
+  const org = await db.organizations.findByStripeCustomerId(invoice.customer)
+  if (!org) return
+
+  logger.info({ orgId: org.id }, "Payment action required for org (3D Secure or similar)")
+
+  await auditLogger.log({
+    organizationId: org.id,
+    userId: null,
+    action: "subscription.payment_action_required",
+    severity: "warning",
+    resourceType: "subscription",
+    resourceId: invoice.subscription || invoice.id,
+    metadata: { invoiceId: invoice.id, amount: invoice.amount_due },
+  })
+
+  if (isEmailConfigured()) {
+    try {
+      const { rows: adminUsers } = await sql`
+        SELECT u.email, u.name
+        FROM users u
+        JOIN organization_members om ON om.user_id = u.id
+        WHERE om.organization_id = ${org.id}
+          AND (om.role = 'admin' OR om.role = 'owner')
+          AND u.email IS NOT NULL
+      `
+
+      if (adminUsers.length > 0) {
+        const adminEmails = adminUsers.map(u => u.email as string)
+        const amount = invoice.amount_due ? (invoice.amount_due / 100).toFixed(2) : "0.00"
+        const currency = (invoice.currency || "usd").toUpperCase()
+
+        await sendBillingAlertEmail({
+          to: adminEmails,
+          subject: `Action needed: Verify your payment for ${org.name}`,
+          alertType: "payment_failed",
+          organizationName: org.name,
+          message: "Your payment requires additional verification (e.g., 3D Secure).",
+          details: `Amount: ${currency} $${amount}. Please complete the verification to keep your subscription active.`,
+          invoiceUrl: invoice.hosted_invoice_url as string | undefined,
+        })
+
+        logger.info({ orgId: org.id, adminCount: adminEmails.length }, "Payment action required email sent")
+      }
+    } catch (emailError) {
+      logError(logger, "Failed to send payment action required email", emailError)
+    }
+  }
+}
+
+/**
  * Handle trial ending in 3 days (customer.subscription.trial_will_end)
  * Sends a reminder email to org admins so they can add a payment method.
  */
@@ -656,7 +729,7 @@ async function handleTrialWillEnd(subscription: StripeWebhookObject) {
       ? new Date(subscription.trial_end * 1000).toISOString()
       : subscription.current_period_end
         ? new Date(subscription.current_period_end * 1000).toISOString()
-        : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+        : null
 
     await sql`
       UPDATE organizations

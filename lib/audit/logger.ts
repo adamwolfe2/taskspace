@@ -78,6 +78,7 @@ export type AuditAction =
   | "subscription.updated"
   | "subscription.canceled"
   | "subscription.payment_failed"
+  | "subscription.payment_action_required"
   | "subscription.payment_succeeded"
   | "subscription.seats_updated"
   | "subscription.claimed"

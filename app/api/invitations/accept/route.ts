@@ -509,7 +509,9 @@ export async function GET(request: NextRequest) {
 
     if (isTokenExpired(invitation.expiresAt)) {
       // Mark as expired in DB so it's cleaned up
-      await db.invitations.update(invitation.id, { status: "expired" }).catch(() => {})
+      await db.invitations.update(invitation.id, { status: "expired" }).catch((error) => {
+        logError(logger, "Failed to expire invitation", error)
+      })
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "This invitation has expired" },
         { status: 400 }

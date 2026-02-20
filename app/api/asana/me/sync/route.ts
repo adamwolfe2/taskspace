@@ -75,6 +75,12 @@ export const POST = withAuth(async (request, auth) => {
         WHERE organization_id = ${auth.organization.id} AND user_id = ${auth.user.id}
       `
 
+      if (!memberRows.length) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Asana not configured. Please ask your admin to set up Asana integration or connect your personal Asana account in Settings." },
+          { status: 400 }
+        )
+      }
       const member = memberRows[0]
       if (member?.asana_pat) {
         // Decrypt the token from database
@@ -337,6 +343,15 @@ export const GET = withAuth(async (request, auth) => {
       WHERE organization_id = ${auth.organization.id} AND user_id = ${auth.user.id}
     `
 
+    if (!rows.length) {
+      return NextResponse.json<ApiResponse<{
+        lastSyncAt: string | null
+        tasksSyncedFromAsana: number
+      }>>({
+        success: true,
+        data: { lastSyncAt: null, tasksSyncedFromAsana: 0 },
+      })
+    }
     const member = rows[0]
 
     // Count tasks synced from Asana

@@ -37,38 +37,62 @@ function CheckoutSuccessContent() {
       return
     }
 
-    async function claimSubscription() {
-      try {
-        const response = await fetch("/api/billing/claim-subscription", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-          },
-          body: JSON.stringify({ sessionId }),
-        })
+    let cancelled = false
+    const MAX_ATTEMPTS = 10
+    const POLL_INTERVAL_MS = 3000
 
-        const result = await response.json()
+    async function attemptClaim(): Promise<boolean> {
+      const response = await fetch("/api/billing/claim-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ sessionId }),
+      })
 
-        if (response.status === 401) {
-          // Not authenticated — they need to sign up / log in first
-          setStatus("pending_auth")
-          return
+      const result = await response.json()
+
+      if (response.status === 401) {
+        setStatus("pending_auth")
+        return true // Stop polling
+      }
+
+      if (result.success) {
+        setStatus(result.data?.alreadyLinked ? "already_claimed" : "claimed")
+        return true // Stop polling
+      }
+
+      // If the error indicates a transient issue, keep polling
+      return false
+    }
+
+    async function pollClaim() {
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        if (cancelled) return
+
+        try {
+          const done = await attemptClaim()
+          if (done) return
+        } catch {
+          // Network error — keep trying
         }
 
-        if (result.success) {
-          setStatus(result.data?.alreadyLinked ? "already_claimed" : "claimed")
-        } else {
-          setErrorMessage(result.error || "Something went wrong")
-          setStatus("error")
+        if (attempt < MAX_ATTEMPTS - 1) {
+          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS))
         }
-      } catch {
-        setErrorMessage("Unable to verify your subscription. Please try again.")
+      }
+
+      // All attempts exhausted
+      if (!cancelled) {
+        setErrorMessage("Unable to verify your subscription. It may take a moment — please check your dashboard.")
         setStatus("error")
       }
     }
 
-    claimSubscription()
+    pollClaim()
+
+    return () => { cancelled = true }
   }, [sessionId])
 
   return (

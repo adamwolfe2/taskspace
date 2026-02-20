@@ -245,6 +245,7 @@ function BillingSettingsContent() {
   const isActive = data.subscription?.status === "active" || data.subscription?.status === "trialing"
   const isTrial = data.subscription?.status === "trialing"
   const isPastDue = data.subscription?.status === "past_due"
+  const isCanceled = data.subscription?.status === "canceled"
   const isCanceling = data.subscription?.cancelAtPeriodEnd
 
   return (
@@ -294,6 +295,25 @@ function BillingSettingsContent() {
           </div>
         )}
 
+        {/* Canceled subscription notice */}
+        {isCanceled && currentPlan === "free" && (
+          <div className="mb-6 rounded-lg bg-gray-50 border border-gray-200 p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <XCircleIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-gray-800">Your subscription was canceled</p>
+                <p className="text-sm text-gray-600">You&apos;re on the Free plan. Upgrade anytime to restore paid features.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowUpgrade(true)}
+              className="text-sm font-medium text-blue-600 hover:text-blue-700 whitespace-nowrap"
+            >
+              Resubscribe →
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Billing & Usage</h1>
@@ -334,6 +354,7 @@ function BillingSettingsContent() {
                       <p className="font-medium text-gray-900">
                         {isTrial ? "Free Trial" :
                          isPastDue ? "Payment Past Due" :
+                         isCanceled ? "Subscription Canceled" :
                          isActive ? "Active Subscription" :
                          isCanceling ? "Canceling at Period End" :
                          "No Active Subscription"}

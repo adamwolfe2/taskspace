@@ -180,6 +180,7 @@ export const STRIPE_EVENTS = {
   SUBSCRIPTION_TRIAL_WILL_END: "customer.subscription.trial_will_end",
   INVOICE_PAID: "invoice.paid",
   INVOICE_PAYMENT_FAILED: "invoice.payment_failed",
+  INVOICE_PAYMENT_ACTION_REQUIRED: "invoice.payment_action_required",
   CUSTOMER_CREATED: "customer.created",
   CUSTOMER_UPDATED: "customer.updated",
 } as const

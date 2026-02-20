@@ -12,6 +12,8 @@ import type { ApiResponse } from '@/lib/types'
 import type {
   ProcessChunkRequest,
   ProcessChunkResponse,
+  LogLevel,
+  ImportStage,
 } from '@/lib/migrations/types'
 import { extract, normalize, map, load, calculateProgress } from '@/lib/migrations/pipeline'
 import { logger } from '@/lib/logger'
@@ -87,12 +89,12 @@ export const POST = withAuth(
         level: string,
         stage: string,
         message: string,
-        metadata?: any
+        metadata?: Record<string, unknown>
       ) => {
         await db.migrations.importLogs.create({
           importJobId: jobId,
-          level: level as any,
-          stage: stage as any,
+          level: level as LogLevel,
+          stage: stage as ImportStage,
           message,
           metadata,
         })

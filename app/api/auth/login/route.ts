@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // SECURITY: Check account lockout status
     const ACCOUNT_LOCKOUT_DURATION_MS = 30 * 60 * 1000 // 30 minutes
-    const MAX_FAILED_ATTEMPTS = 10
+    const MAX_FAILED_ATTEMPTS = 5
 
     if (user.lockedAt) {
       const lockDuration = Date.now() - new Date(user.lockedAt).getTime()

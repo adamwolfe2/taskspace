@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
         const stripeModule = await import("stripe")
         const Stripe = stripeModule.default as unknown as new (key: string, opts: { apiVersion: string }) => {
           checkout: { sessions: { retrieve: (id: string, opts: { expand: string[] }) => Promise<{
-            id: string; customer: string | { id: string } | null; subscription: string | { id: string } | null;
+            id: string; customer: string | { id: string } | null; subscription: string | { id: string; status?: string } | null;
             customer_details: { email: string | null } | null; metadata: Record<string, string>;
             payment_status: string; status: string | null
           }> } }
@@ -137,6 +137,9 @@ export async function POST(request: NextRequest) {
         const subscriptionId = typeof session.subscription === "string"
           ? session.subscription
           : (session.subscription as { id: string } | null)?.id || null
+        const subscriptionStatus = typeof session.subscription === "object" && session.subscription
+          ? (session.subscription as { status?: string }).status
+          : undefined
 
         if (!customerId) {
           return NextResponse.json<ApiResponse<null>>(
@@ -153,6 +156,27 @@ export async function POST(request: NextRequest) {
           )
         }
 
+        // SECURITY: Check if this subscription is already linked to another org
+        if (subscriptionId) {
+          try {
+            const { rows: existingOrgs } = await sql<{ id: string }>`
+              SELECT id FROM organizations
+              WHERE stripe_subscription_id = ${subscriptionId}
+                AND id != ${org.id}
+              LIMIT 1
+            `
+            if (existingOrgs.length > 0) {
+              logger.warn({ subscriptionId, orgId: org.id, existingOrgId: existingOrgs[0].id }, "Subscription already claimed by another org")
+              return NextResponse.json<ApiResponse<null>>(
+                { success: false, error: "This subscription is already linked to another account" },
+                { status: 409 }
+              )
+            }
+          } catch (error) {
+            logError(logger, "Failed to check for existing subscription claim", error)
+          }
+        }
+
         // Link the subscription to the org
         await linkSubscriptionToOrg({
           organizationId: org.id,
@@ -161,6 +185,7 @@ export async function POST(request: NextRequest) {
           plan: session.metadata?.plan || "team",
           billingCycle: session.metadata?.billingCycle || "monthly",
           sessionId,
+          stripeStatus: subscriptionStatus,
         })
 
         return NextResponse.json<ApiResponse<{ alreadyLinked: boolean }>>(
@@ -218,14 +243,21 @@ async function linkSubscriptionToOrg(params: {
   plan: string
   billingCycle: string | null
   sessionId: string
+  stripeStatus?: string
 }) {
   const planConfig = PLAN_FEATURES[params.plan] || PLAN_FEATURES.team
+
+  // Use the actual Stripe subscription status if provided, default to "trialing"
+  const validStatuses = ["active", "trialing", "past_due", "canceled"] as const
+  const resolvedStatus = params.stripeStatus && validStatuses.includes(params.stripeStatus as typeof validStatuses[number])
+    ? (params.stripeStatus as typeof validStatuses[number])
+    : "trialing"
 
   await withTransaction(async (client) => {
     // Update organization with Stripe data
     const subscriptionData = {
       plan: params.plan as "free" | "team" | "business",
-      status: "trialing" as const,
+      status: resolvedStatus,
       billingCycle: (params.billingCycle || "monthly") as "monthly" | "yearly" | null,
       currentPeriodEnd: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14-day trial
       cancelAtPeriodEnd: false,
@@ -255,7 +287,7 @@ async function linkSubscriptionToOrg(params: {
         gen_random_uuid()::text,
         ${params.organizationId}, ${params.stripeCustomerId}, ${params.stripeSubscriptionId},
         ${params.plan}, ${subscriptionData.maxUsers || 3}, ${creditsLimit},
-        'trialing', ${periodEnd}
+        ${resolvedStatus}, ${periodEnd}
       )
       ON CONFLICT (organization_id) DO UPDATE SET
         stripe_customer_id = EXCLUDED.stripe_customer_id,
