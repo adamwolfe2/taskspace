@@ -68,6 +68,20 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
 
     const { data: workspace } = await workspaceResponse.json()
 
+    // Step 2.5: Set starter workspace features (curated for new users)
+    // Non-blocking — defaults to all features if this fails
+    try {
+      const { STARTER_WORKSPACE_FEATURES } = await import("@/lib/types/workspace-features")
+      await fetch(`/api/workspaces/${workspace.id}/features`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        credentials: "include",
+        body: JSON.stringify({ features: STARTER_WORKSPACE_FEATURES }),
+      })
+    } catch {
+      // Non-critical — workspace will work with default (all) features
+    }
+
     // Step 3: Send team invitations (non-blocking)
     if (data.teamInvites.length > 0) {
       const results = await Promise.allSettled(

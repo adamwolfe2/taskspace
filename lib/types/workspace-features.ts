@@ -106,6 +106,52 @@ export const DEFAULT_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
   },
 }
 
+/**
+ * Curated starter features for new workspaces created during onboarding.
+ * Shows only essential features to avoid overwhelming new users.
+ * Users can enable more features from Settings > Workspace Features.
+ */
+export const STARTER_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
+  core: {
+    tasks: true,
+    rocks: true,
+    eodReports: true,
+    scorecard: false,
+    meetings: false,
+    ids: false,
+    orgChart: false,
+    notes: false,
+    vto: false,
+    peopleAnalyzer: false,
+    projects: false,
+    clients: false,
+  },
+  productivity: {
+    focusBlocks: false,
+    dailyEnergy: false,
+    streakTracking: true,
+    weeklyReviews: false,
+    achievements: true,
+  },
+  integrations: {
+    asana: false,
+    googleCalendar: false,
+    slack: false,
+    webhooks: false,
+  },
+  advanced: {
+    aiCommandCenter: true,
+    analytics: false,
+    managerDashboard: false,
+    apiAccess: false,
+  },
+  admin: {
+    teamManagement: true,
+    databaseManagement: false,
+    branding: true,
+  },
+}
+
 // ============================================
 // FEATURE METADATA
 // ============================================
