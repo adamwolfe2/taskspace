@@ -17,9 +17,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const post = getPost(slug)
   if (!post) return {}
+  const baseUrl = "https://trytaskspace.com"
   return {
     title: `${post.title} — Taskspace Blog`,
     description: post.description,
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      type: "article",
+      url: `${baseUrl}/blog/${slug}`,
+      publishedTime: post.date ? post.date + "T12:00:00Z" : undefined,
+      authors: ["Taskspace"],
+      images: post.image
+        ? [{ url: `${baseUrl}${post.image}`, width: 1200, height: 630, alt: post.title }]
+        : [{ url: `${baseUrl}/og-default.png`, width: 1200, height: 630, alt: "Taskspace Blog" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.description,
+    },
   }
 }
 

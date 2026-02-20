@@ -32,7 +32,10 @@ function parseFrontmatter(raw: string): { data: Record<string, string>; body: st
 function markdownToHtml(md: string): string {
   const lines = md.split("\n")
   const out: string[] = []
-  let inList = false
+  let inUl = false
+  let inOl = false
+  let inTable = false
+  let tableHeaderDone = false
   let inCode = false
   let codeBuffer: string[] = []
 
@@ -43,9 +46,20 @@ function markdownToHtml(md: string): string {
       .replace(/\*([^*]+)\*/g, "<em>$1</em>")
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary underline">$1</a>')
 
+  const closeOpenBlocks = () => {
+    if (inUl) { out.push("</ul>"); inUl = false }
+    if (inOl) { out.push("</ol>"); inOl = false }
+    if (inTable) { out.push("</tbody></table>"); inTable = false; tableHeaderDone = false }
+  }
+
+  const isTableRow = (l: string) => l.trim().startsWith("|") && l.trim().endsWith("|")
+  const isTableSep = (l: string) => /^\|[-| :]+\|$/.test(l.trim())
+
   for (const line of lines) {
+    // Code fences
     if (line.startsWith("```")) {
       if (!inCode) {
+        closeOpenBlocks()
         inCode = true
         codeBuffer = []
       } else {
@@ -54,39 +68,84 @@ function markdownToHtml(md: string): string {
       }
       continue
     }
-
     if (inCode) {
       codeBuffer.push(line.replace(/</g, "&lt;").replace(/>/g, "&gt;"))
       continue
     }
 
-    const isList = line.startsWith("- ") || line.startsWith("* ")
-
-    if (!isList && inList) {
-      out.push("</ul>")
-      inList = false
+    // Horizontal rule
+    if (/^[-*_]{3,}$/.test(line.trim())) {
+      closeOpenBlocks()
+      out.push('<hr class="my-8 border-slate-200" />')
+      continue
     }
 
+    // Table rows
+    if (isTableRow(line)) {
+      if (isTableSep(line)) {
+        // Separator row — skip (header is already emitted)
+        continue
+      }
+      const cells = line.trim().slice(1, -1).split("|").map(c => c.trim())
+      if (!inTable) {
+        closeOpenBlocks()
+        inTable = true
+        tableHeaderDone = false
+        out.push('<div class="overflow-x-auto my-6"><table class="w-full text-sm border-collapse border border-slate-200">')
+        out.push("<thead><tr>")
+        cells.forEach(c => out.push(`<th class="border border-slate-200 bg-slate-50 px-4 py-2 text-left font-semibold text-slate-900">${inline(c)}</th>`))
+        out.push("</tr></thead><tbody>")
+        tableHeaderDone = true
+      } else {
+        out.push('<tr class="even:bg-slate-50">')
+        cells.forEach(c => out.push(`<td class="border border-slate-200 px-4 py-2 text-slate-700">${inline(c)}</td>`))
+        out.push("</tr>")
+      }
+      continue
+    }
+
+    // Ordered list
+    const olMatch = line.match(/^(\d+)\.\s(.*)/)
+    if (olMatch) {
+      if (inUl) { out.push("</ul>"); inUl = false }
+      if (inTable) { out.push("</tbody></table></div>"); inTable = false; tableHeaderDone = false }
+      if (!inOl) {
+        out.push('<ol class="list-decimal list-inside space-y-1 my-4 text-slate-700">')
+        inOl = true
+      }
+      out.push(`<li>${inline(olMatch[2])}</li>`)
+      continue
+    }
+
+    // Unordered list
+    const isUl = line.startsWith("- ") || line.startsWith("* ")
+    if (!isUl && inUl) { out.push("</ul>"); inUl = false }
+    if (!olMatch && inOl) { out.push("</ol>"); inOl = false }
+    if (!isTableRow(line) && inTable) { out.push("</tbody></table></div>"); inTable = false; tableHeaderDone = false }
+
     if (line.startsWith("# ")) {
+      closeOpenBlocks()
       out.push(`<h1 class="text-3xl font-bold text-slate-900 mt-10 mb-4">${inline(line.slice(2))}</h1>`)
     } else if (line.startsWith("## ")) {
+      closeOpenBlocks()
       out.push(`<h2 class="text-2xl font-bold text-slate-900 mt-8 mb-3">${inline(line.slice(3))}</h2>`)
     } else if (line.startsWith("### ")) {
+      closeOpenBlocks()
       out.push(`<h3 class="text-xl font-semibold text-slate-900 mt-6 mb-2">${inline(line.slice(4))}</h3>`)
-    } else if (isList) {
-      if (!inList) {
+    } else if (isUl) {
+      if (!inUl) {
         out.push('<ul class="list-disc list-inside space-y-1 my-4 text-slate-700">')
-        inList = true
+        inUl = true
       }
       out.push(`<li>${inline(line.slice(2))}</li>`)
     } else if (line.trim() === "") {
-      // paragraph break
+      // paragraph break — blocks already closed above
     } else {
       out.push(`<p class="text-slate-700 leading-relaxed my-4">${inline(line)}</p>`)
     }
   }
 
-  if (inList) out.push("</ul>")
+  closeOpenBlocks()
   return out.join("\n")
 }
 
