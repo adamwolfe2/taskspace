@@ -441,9 +441,16 @@ export function PeopleAnalyzerPage() {
               <Skeleton className="h-12 w-full" />
             </div>
           ) : assessments.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No assessments yet. Click &quot;Add Assessment&quot; to get
-              started.
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <UserCheck className="h-10 w-10 text-slate-300 mb-4" />
+              <h3 className="font-semibold text-slate-900 mb-2">No assessments yet</h3>
+              <p className="text-sm text-slate-500 max-w-sm mb-4">
+                The People Analyzer evaluates team members on three criteria: <strong>Gets It</strong> (understands the role), <strong>Wants It</strong> (is motivated), and <strong>Has Capacity</strong> (can handle the workload). GWC helps identify if each person is in the right seat.
+              </p>
+              <Button size="sm" onClick={() => handleOpenDialog()}>
+                <Plus className="h-4 w-4 mr-1" />
+                Add first assessment
+              </Button>
             </div>
           ) : (
             <Table>
