@@ -25,6 +25,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
+import { WelcomeCard } from "@/components/dashboard/welcome-card"
 import { FocusTimer } from "@/components/shared/focus-timer"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import {
@@ -419,6 +420,15 @@ export function DashboardPage({
    {/* Alerts & Dialogs — always outside grid */}
    <NoWorkspaceAlert />
    <KeyboardShortcutsDialog />
+
+   {/* Welcome card for new users */}
+   <WelcomeCard
+    userName={currentUser.name || ""}
+    orgName={currentOrganization?.name}
+    hasRocks={userRocks.length > 0}
+    hasTasks={userTasks.length > 0}
+    hasEodReports={eodReports.some((r) => r.userId === effectiveUserId)}
+   />
 
    {hasAnyFeature ? (
     <>
