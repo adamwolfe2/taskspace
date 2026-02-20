@@ -104,6 +104,10 @@ export function MegaMenu() {
             <Link href="/pricing" className="text-sm font-medium text-gray-700 hover:text-black transition-colors">
               Pricing
             </Link>
+
+            <Link href="/blog" className="text-sm font-medium text-gray-700 hover:text-black transition-colors">
+              Blog
+            </Link>
           </div>
 
           {/* Right CTAs */}
@@ -352,6 +356,13 @@ export function MegaMenu() {
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Contact
+                      </Link>
+                      <Link
+                        href="/blog"
+                        className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-black transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Blog
                       </Link>
                       <Link
                         href="/help"

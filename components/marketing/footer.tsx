@@ -97,6 +97,11 @@ export function MarketingFooter() {
                 </Link>
               </li>
               <li>
+                <Link href="/blog" className="text-sm text-gray-600 hover:text-black transition-colors">
+                  Blog
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className="text-sm text-gray-600 hover:text-black transition-colors">
                   Company
                 </Link>
