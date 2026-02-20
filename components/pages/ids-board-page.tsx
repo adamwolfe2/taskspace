@@ -8,7 +8,7 @@ import { IdsBoardItemDialog } from "@/components/ids-board/ids-board-item-dialog
 import { FeatureGate } from "@/components/shared/feature-gate"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AlertCircle, Plus, RefreshCw, Search } from "lucide-react"
+import { AlertCircle, Plus, RefreshCw } from "lucide-react"
 import type { IdsBoardItem, IdsBoardColumn } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
@@ -126,7 +126,7 @@ function IdsBoardContent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Search className="h-6 w-6 text-amber-500" />
+            <AlertCircle className="h-6 w-6 text-amber-500" />
             IDS Board
           </h1>
           <p className="text-muted-foreground text-sm mt-1">

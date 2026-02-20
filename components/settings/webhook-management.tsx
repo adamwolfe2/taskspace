@@ -303,8 +303,8 @@ export function WebhookManagement() {
             <div className="text-center py-8 text-muted-foreground">
               <Webhook className="h-10 w-10 mx-auto mb-3 opacity-50" />
               <p className="text-sm font-medium">No webhooks configured</p>
-              <p className="text-xs mt-1">
-                Add a webhook to send real-time event notifications to your services.
+              <p className="text-xs mt-1 max-w-xs mx-auto">
+                Add a webhook to receive real-time event notifications in your services. Fires on events like <span className="font-mono">eod_submitted</span>, <span className="font-mono">rock_updated</span>, <span className="font-mono">task_completed</span>, and more.
               </p>
             </div>
           ) : (
