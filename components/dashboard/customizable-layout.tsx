@@ -78,7 +78,7 @@ import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 // Bump this whenever DEFAULT_LAYOUT or rowHeight changes.
 // Stale localStorage with a different version is discarded on load.
-const LAYOUT_VERSION = 3
+const LAYOUT_VERSION = 4
 
 export interface DashboardWidget {
  id: string
@@ -217,11 +217,37 @@ export function CustomizableLayout({
   return () => observer.disconnect()
  }, [])
 
+ // Track whether the grid has settled after mount to ignore initial onLayoutChange
+ const hasSettledRef = useRef(false)
+
+ // Reset settled flag when entering edit mode so the first onLayoutChange is skipped
+ useEffect(() => {
+  if (isEditing) {
+   hasSettledRef.current = false
+  }
+ }, [isEditing])
+
  // Filter to only enabled widgets
  const enabledWidgets = widgets.filter((w) => w.enabled)
- const enabledLayout = layout.filter((l) =>
-  enabledWidgets.some((w) => w.id === l.i)
- )
+
+ // Merge min/max constraints from widget definitions into layout items
+ // so react-grid-layout respects them and doesn't collapse widths
+ const enabledLayout = useMemo(() => {
+  const widgetMap = new Map(widgets.map((w) => [w.id, w]))
+  return layout
+   .filter((l) => enabledWidgets.some((w) => w.id === l.i))
+   .map((l) => {
+    const widget = widgetMap.get(l.i)
+    if (!widget) return l
+    return {
+     ...l,
+     minW: widget.minW ?? l.minW,
+     minH: widget.minH ?? l.minH,
+     maxW: widget.maxW ?? l.maxW,
+     maxH: widget.maxH ?? l.maxH,
+    }
+   })
+ }, [layout, widgets, enabledWidgets])
 
  // Sort widgets by layout position (y then x) for CSS Grid flow order
  const sortedWidgets = useMemo(() => {
@@ -236,9 +262,14 @@ export function CustomizableLayout({
  }, [enabledWidgets, enabledLayout])
 
  const handleLayoutChange = useCallback((newLayout: RGLLayout[]) => {
-  if (isEditing) {
-   onLayoutChange(newLayout as unknown as LayoutItem[])
+  if (!isEditing) return
+  // react-grid-layout fires onLayoutChange on mount — skip that initial event
+  // to prevent overwriting the layout with potentially collapsed widths
+  if (!hasSettledRef.current) {
+   hasSettledRef.current = true
+   return
   }
+  onLayoutChange(newLayout as unknown as LayoutItem[])
  }, [isEditing, onLayoutChange])
 
  const handleSave = () => {
