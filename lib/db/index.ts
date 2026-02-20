@@ -430,19 +430,19 @@ export const db = {
   // Organizations
   organizations: {
     async findAll(): Promise<Organization[]> {
-      const { rows } = await sql`SELECT * FROM organizations ORDER BY created_at DESC LIMIT 1000`
+      const { rows } = await sql`SELECT * FROM organizations WHERE archived_at IS NULL ORDER BY created_at DESC LIMIT 1000`
       return rows.map(parseOrganization)
     },
     async findById(id: string): Promise<Organization | null> {
-      const { rows } = await sql`SELECT * FROM organizations WHERE id = ${id}`
+      const { rows } = await sql`SELECT * FROM organizations WHERE id = ${id} AND archived_at IS NULL`
       return rows[0] ? parseOrganization(rows[0]) : null
     },
     async findBySlug(slug: string): Promise<Organization | null> {
-      const { rows } = await sql`SELECT * FROM organizations WHERE slug = ${slug}`
+      const { rows } = await sql`SELECT * FROM organizations WHERE slug = ${slug} AND archived_at IS NULL`
       return rows[0] ? parseOrganization(rows[0]) : null
     },
     async findByOwnerId(ownerId: string): Promise<Organization[]> {
-      const { rows } = await sql`SELECT * FROM organizations WHERE owner_id = ${ownerId}`
+      const { rows } = await sql`SELECT * FROM organizations WHERE owner_id = ${ownerId} AND archived_at IS NULL`
       return rows.map(parseOrganization)
     },
     async findByIds(ids: string[]): Promise<Organization[]> {
@@ -451,7 +451,7 @@ export const db = {
       const idArray = `{${ids.join(',')}}`
       const { rows } = await sql`
         SELECT * FROM organizations
-        WHERE id = ANY(${idArray}::text[])
+        WHERE id = ANY(${idArray}::text[]) AND archived_at IS NULL
       `
       return rows.map(parseOrganization)
     },
@@ -493,7 +493,8 @@ export const db = {
       return rows[0] ? parseOrganization(rows[0]) : null
     },
     async delete(id: string): Promise<boolean> {
-      const { rowCount } = await sql`DELETE FROM organizations WHERE id = ${id}`
+      // SOFT DELETE: archive instead of hard-deleting to prevent data loss
+      const { rowCount } = await sql`UPDATE organizations SET archived_at = NOW() WHERE id = ${id} AND archived_at IS NULL`
       return (rowCount ?? 0) > 0
     },
     async findByStripeCustomerId(customerId: string): Promise<Organization | null> {

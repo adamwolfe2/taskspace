@@ -15,14 +15,18 @@ const deleteAccountSchema = z.object({
   }),
 })
 
-// POST /api/auth/delete-account - Delete the current user's account
+// POST /api/auth/delete-account
+//
+// SAFETY: This route NEVER calls db.users.delete().
+// The user entity is shared across all organizations.
+// Instead, this removes the user from the CURRENT organization only.
+// If the user has no remaining org memberships, we delete the user entity.
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
     // Validate request body
     const { password } = await validateBody(request, deleteAccountSchema)
 
     // Get the user with password hash from database
-    // Note: auth.user may not include passwordHash for security, so we query directly
     const user = await db.users.findById(auth.user.id)
     if (!user) {
       return NextResponse.json<ApiResponse<null>>(
@@ -31,7 +35,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    // Verify password using passwordHash from database
+    // Verify password
     const isValidPassword = await verifyPassword(password, user.passwordHash)
     if (!isValidPassword) {
       return NextResponse.json<ApiResponse<null>>(
@@ -40,41 +44,51 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    // Prevent sole owner from deleting account — they must delete the workspace first
+    // If sole owner with other members, block — they need to transfer ownership first
     if (auth.member.role === "owner") {
-      const members = await db.members.findByOrganizationId(auth.organization.id)
-      const ownerCount = members.filter(m => m.role === "owner").length
-      if (ownerCount <= 1) {
+      const orgMembers = await db.members.findByOrganizationId(auth.organization.id)
+      const ownerCount = orgMembers.filter(m => m.role === "owner").length
+      if (ownerCount <= 1 && orgMembers.length > 1) {
         return NextResponse.json<ApiResponse<null>>(
           {
             success: false,
-            error: "You are the only owner of this organization. Go to Settings → Workspace to delete the workspace first, or transfer ownership.",
+            error: "You are the only owner and other members exist. Transfer ownership or remove members first.",
           },
           { status: 400 }
         )
       }
     }
 
-    // Log the deletion for audit purposes
+    // Log the action
     logger.info({
       userId: auth.user.id,
       email: auth.user.email,
       organizationId: auth.organization.id,
-    }, "User account deletion initiated")
+    }, "User leaving organization via delete account flow")
 
-    // Delete the user account (this should cascade to delete related data)
-    await db.users.delete(auth.user.id)
-
-    // Delete the member record from the organization
+    // Remove user from CURRENT organization only
     await db.members.delete(auth.member.id, auth.organization.id)
+
+    // Delete sessions for this org
+    await db.sessions.deleteByUserAndOrg(auth.user.id, auth.organization.id)
+
+    // Check if user has any remaining org memberships
+    const remainingMemberships = await db.members.findByUserId(auth.user.id)
+
+    if (remainingMemberships.length === 0) {
+      // No remaining orgs — safe to delete user entity entirely
+      logger.info({ userId: auth.user.id }, "User has no remaining memberships, deleting user entity")
+      await db.users.delete(auth.user.id)
+    }
 
     // Clear the session cookie
     const response = NextResponse.json<ApiResponse<null>>({
       success: true,
-      message: "Your account has been permanently deleted",
+      message: remainingMemberships.length > 0
+        ? "You have been removed from this organization."
+        : "Your account has been permanently deleted.",
     })
 
-    // Clear session cookie
     response.cookies.set("session_token", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -85,7 +99,6 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     return response
   } catch (error) {
-    // Handle validation errors
     if (error instanceof ValidationError) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: error.message },
@@ -95,7 +108,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     logError(logger, "Delete account error", error)
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Failed to delete account" },
+      { success: false, error: "Failed to process request" },
       { status: 500 }
     )
   }
