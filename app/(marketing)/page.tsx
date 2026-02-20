@@ -89,6 +89,11 @@ function HeroSection() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
+            <Link href="/demo">
+              <Button size="lg" variant="outline" className="px-8 h-12 text-base">
+                Try demo
+              </Button>
+            </Link>
           </motion.div>
 
           <motion.p
@@ -672,9 +677,9 @@ function CTASection() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/pricing">
+          <Link href="/demo">
             <Button size="lg" variant="outline" className="border-gray-300 text-black hover:bg-gray-100 text-base px-8 h-12">
-              View pricing
+              Try demo
             </Button>
           </Link>
         </div>
