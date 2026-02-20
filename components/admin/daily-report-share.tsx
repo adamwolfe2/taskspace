@@ -75,7 +75,10 @@ export function DailyReportShare({
     try {
       const res = await fetch("/api/organizations/public-eod-token", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
         body: JSON.stringify({ action: "generate" }),
       })
       const data = await res.json()
