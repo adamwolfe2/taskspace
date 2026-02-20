@@ -96,7 +96,6 @@ export default async function BlogPostPage({ params }: Props) {
       {/* Article body */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <article
-          className="prose-custom"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
