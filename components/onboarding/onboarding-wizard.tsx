@@ -91,10 +91,10 @@ interface PersistedOnboardingState {
 }
 
 const STEPS = [
-  { id: 1, name: "Website", optional: true },
-  { id: 2, name: "Organization", optional: false },
-  { id: 3, name: "Team", optional: true },
-  { id: 4, name: "Goals", optional: true },
+  { id: 1, name: "Website", subtitle: "Auto-detect your brand", optional: true },
+  { id: 2, name: "Organization", subtitle: "Name and colors", optional: false },
+  { id: 3, name: "Team", subtitle: "Invite your people", optional: true },
+  { id: 4, name: "Goals", subtitle: "Set quarterly priorities", optional: true },
 ]
 
 function loadPersistedState(): PersistedOnboardingState | null {
@@ -496,7 +496,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
         {/* Header with step indicator text */}
         <div className="text-center mb-6 sm:mb-8">
           <p className="text-sm font-medium text-slate-500 mb-1">
-            Step {currentStep} of {STEPS.length}
+            Step {currentStep} of {STEPS.length} &middot; About 3 minutes total
           </p>
           <h1 className="text-lg sm:text-xl font-semibold text-slate-700">
             {STEPS[currentStep - 1].name}
@@ -541,6 +541,16 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                       )}
                     >
                       {step.name}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[10px] hidden lg:block whitespace-nowrap",
+                        isActive && "text-slate-500",
+                        isCompleted && "text-emerald-500",
+                        !isActive && !isCompleted && "text-slate-300"
+                      )}
+                    >
+                      {step.subtitle}
                     </span>
                   </div>
                   {index < STEPS.length - 1 && (
@@ -1199,7 +1209,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
 
         {/* Bottom helper text */}
         <p className="text-center text-xs text-slate-400 mt-4">
-          All settings can be changed later. Need help?{" "}
+          Everything here can be changed later in Settings. Need help?{" "}
           <a href="mailto:team@trytaskspace.com" className="underline hover:text-slate-600">
             Contact support
           </a>
