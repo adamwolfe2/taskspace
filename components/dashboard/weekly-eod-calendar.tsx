@@ -216,7 +216,7 @@ export function WeeklyEODCalendar({
  className={cn(
  "flex-1 flex flex-col items-center p-2 sm:p-3 rounded-lg transition-all relative min-w-0 min-h-[72px] sm:min-h-[88px]",
  showAsSelected
- ? "bg-gradient-to-br from-slate-500 to-slate-600 text-white ring-2 ring-slate-400 ring-offset-1 sm:ring-offset-2"
+ ? "bg-slate-600 text-white ring-2 ring-slate-400 ring-offset-1 sm:ring-offset-2"
  : day.isFuture
  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
  : day.hasSubmission

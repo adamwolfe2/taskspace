@@ -135,7 +135,7 @@ export function ChatInterface({ employees, onMentionClick }: ChatInterfaceProps)
         isExpanded ? "w-full max-w-[480px]" : "w-full max-w-[400px]"
       )}
     >
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
         {/* Expanded chat history */}
         {isExpanded && messages.length > 0 && (
           <div className="border-b border-slate-100">

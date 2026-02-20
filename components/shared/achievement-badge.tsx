@@ -257,7 +257,7 @@ export function AchievementUnlockedBanner({
  return (
  <div
  className={cn(
- "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-4 bg-primary text-white rounded-lg shadow-2xl animate-slide-up",
+ "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-4 bg-primary text-white rounded-lg shadow-lg animate-slide-up",
  className
  )}
  >

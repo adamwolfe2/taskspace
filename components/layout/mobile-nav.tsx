@@ -152,7 +152,7 @@ export function MobileNav() {
                     aria-label={item.label}
                     aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      "flex flex-col items-center justify-center h-20 gap-2 rounded-2xl border transition-all duration-200 active:scale-95",
+                      "flex flex-col items-center justify-center h-20 gap-2 rounded-lg border transition-all duration-200 active:scale-95",
                       isActive
                         ? "border-red-200 bg-red-50 text-red-600"
                         : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
