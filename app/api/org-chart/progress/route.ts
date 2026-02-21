@@ -6,20 +6,20 @@ import { orgChartProgressSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 
 // GET - Fetch all rock progress or for a specific employee
-export const GET = withAuth(async (request, _auth) => {
+export const GET = withAuth(async (request, auth) => {
   try {
     const { searchParams } = new URL(request.url)
     const employeeName = searchParams.get("employeeName")
 
     if (employeeName) {
-      const progress = await db.orgChartRockProgress.findByEmployee(employeeName)
+      const progress = await db.orgChartRockProgress.findByEmployee(auth.organization.id, employeeName)
       return NextResponse.json({
         success: true,
         progress,
       })
     }
 
-    const progress = await db.orgChartRockProgress.findAll()
+    const progress = await db.orgChartRockProgress.findAll(auth.organization.id)
     return NextResponse.json({
       success: true,
       progress,
@@ -39,6 +39,7 @@ export const POST = withAuth(async (request, auth) => {
     const { employeeName, rockIndex, bulletIndex, completed, updatedBy } = await validateBody(request, orgChartProgressSchema)
 
     await db.orgChartRockProgress.upsert(
+      auth.organization.id,
       employeeName,
       rockIndex,
       bulletIndex,
@@ -60,7 +61,7 @@ export const POST = withAuth(async (request, auth) => {
 })
 
 // DELETE - Delete progress for an employee (when rocks are changed)
-export const DELETE = withAuth(async (request, _auth) => {
+export const DELETE = withAuth(async (request, auth) => {
   try {
     const { searchParams } = new URL(request.url)
     const employeeName = searchParams.get("employeeName")
@@ -72,7 +73,7 @@ export const DELETE = withAuth(async (request, _auth) => {
       )
     }
 
-    await db.orgChartRockProgress.deleteByEmployee(employeeName)
+    await db.orgChartRockProgress.deleteByEmployee(auth.organization.id, employeeName)
 
     return NextResponse.json({
       success: true,

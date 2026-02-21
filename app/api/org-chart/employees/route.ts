@@ -37,7 +37,21 @@ export const GET = withAuth(async (request, auth) => {
       )
     }
 
-    // Validate workspace access (unless org admin)
+    // SECURITY: Always validate workspace belongs to authenticated org first.
+    // This must run before the admin bypass to prevent cross-org data access
+    // by admins who supply a workspace ID from a different organization.
+    const { rows: wsRows } = await sql`
+      SELECT id FROM workspaces
+      WHERE id = ${workspaceId} AND organization_id = ${auth.organization.id}
+    `
+    if (wsRows.length === 0) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
+    // Validate workspace membership (skip for org admins who can see all workspaces in their org)
     if (!isAdmin(auth)) {
       const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
       if (!hasAccess) {
