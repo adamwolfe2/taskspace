@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 import { withAdmin } from "@/lib/api/middleware"
 import { generateId, generateInviteToken, getExpirationDate } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
-import { inviteMemberSchema } from "@/lib/validation/schemas"
+import { inviteMemberSchema, resendInvitationSchema } from "@/lib/validation/schemas"
 import { sendInvitationEmail } from "@/lib/email"
 import { canAddUser, buildFeatureGateContext } from "@/lib/billing/feature-gates"
 import { getUserWorkspaces } from "@/lib/db/workspaces"
@@ -240,15 +240,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 // PATCH /api/invitations - Resend an invitation
 export const PATCH = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const invitationId = body.id as string | undefined
-
-    if (!invitationId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invitation ID is required" },
-        { status: 400 }
-      )
-    }
+    const { id: invitationId } = await validateBody(request, resendInvitationSchema)
 
     const invitations = await db.invitations.findByOrganizationId(auth.organization.id)
     const invitation = invitations.find(i => i.id === invitationId)
@@ -307,6 +299,12 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
         : `Email failed to send. Share this link manually: ${inviteLink}`,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Resend invitation error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to resend invitation" },

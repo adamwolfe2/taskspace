@@ -51,6 +51,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
         t.completed_at as occurred_at
       FROM assigned_tasks t
       WHERE t.workspace_id = ${workspaceId}
+        AND t.organization_id = ${auth.organization.id}
         AND t.status = 'completed'
         AND t.completed_at IS NOT NULL
         AND t.completed_at >= NOW() - INTERVAL '7 days'
@@ -66,6 +67,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       FROM eod_reports e
       JOIN organization_members om ON om.user_id = e.user_id AND om.organization_id = e.organization_id
       WHERE e.workspace_id = ${workspaceId}
+        AND e.organization_id = ${auth.organization.id}
         AND e.submitted_at >= NOW() - INTERVAL '7 days'
 
       UNION ALL
@@ -79,6 +81,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       FROM rocks r
       JOIN organization_members om ON om.user_id = r.user_id AND om.organization_id = r.organization_id
       WHERE r.workspace_id = ${workspaceId}
+        AND r.organization_id = ${auth.organization.id}
         AND r.updated_at >= NOW() - INTERVAL '7 days'
         AND r.updated_at > r.created_at
 

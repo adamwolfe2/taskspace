@@ -204,6 +204,10 @@ export const inviteMemberSchema = z.object({
   name: z.string().min(2).max(100).optional(), // Optional pre-filled name
 })
 
+export const resendInvitationSchema = z.object({
+  id: z.string().min(1, "Invitation ID is required"),
+})
+
 export const bulkInviteSchema = z.object({
   emails: z.array(emailSchema).min(1).max(50),
   role: z.enum(["admin", "member"]).default("member"),
