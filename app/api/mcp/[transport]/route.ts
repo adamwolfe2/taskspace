@@ -108,6 +108,11 @@ async function getAuthContext(): Promise<AuthContext | null> {
       if (apiKey.startsWith("aims_")) {
         const key = await db.apiKeys.findByKey(apiKey)
         if (key) {
+          // Reject expired API keys (same check as withAuth middleware)
+          if (key.expiresAt && new Date(key.expiresAt) < new Date()) {
+            logger.warn({ apiKeyId: key.id }, "MCP: Rejected expired API key")
+            return null
+          }
           await db.apiKeys.updateLastUsed(key.id)
           return {
             organizationId: key.organizationId,

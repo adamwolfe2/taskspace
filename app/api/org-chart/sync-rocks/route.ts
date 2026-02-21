@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { validateBody } from "@/lib/validation/middleware"
 import { orgChartSyncRocksSchema } from "@/lib/validation/schemas"
@@ -48,6 +49,17 @@ export const POST = withAdmin(async (request, auth) => {
     const { workspaceId } = await validateBody(request, orgChartSyncRocksSchema)
 
     const orgId = auth.organization.id
+
+    // SECURITY: Validate workspace belongs to this organization
+    const { rows: wsRows } = await sql`
+      SELECT id FROM workspaces WHERE id = ${workspaceId} AND organization_id = ${orgId}
+    `
+    if (wsRows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
     const currentQuarter = getCurrentQuarter()
 
     // Get all team members with their user info
@@ -221,6 +233,18 @@ export const GET = withAuth(async (request, auth) => {
     }
 
     const orgId = auth.organization.id
+
+    // SECURITY: Validate workspace belongs to this organization
+    const { rows: wsRowsGet } = await sql`
+      SELECT id FROM workspaces WHERE id = ${workspaceId} AND organization_id = ${orgId}
+    `
+    if (wsRowsGet.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
     const currentQuarter = getCurrentQuarter()
 
     // Get team members

@@ -106,6 +106,19 @@ export const POST = withAuth(async (request, auth) => {
     // Employee data should be fetched server-side based on authenticated user's organization
     const { message, workspaceId } = await validateBody(request, orgChartChatSchema)
 
+    // SECURITY: Validate workspace belongs to authenticated org before any data fetch.
+    // Prevents a user from supplying a workspace ID from a different organization.
+    const { rows: wsRows } = await sql`
+      SELECT id FROM workspaces
+      WHERE id = ${workspaceId} AND organization_id = ${auth.organization.id}
+    `
+    if (wsRows.length === 0) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
     // Fetch employees from the database based on authenticated user's organization
     // Primary source: ma_employees database table with workspace filtering
     const dbEmployees = await db.maEmployees.findByWorkspace(workspaceId)

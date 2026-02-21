@@ -132,6 +132,17 @@ export const POST = withAdmin(async (request, auth) => {
       )
     }
 
+    // SECURITY: Validate workspace belongs to this organization
+    const { rows: wsRows } = await sql`
+      SELECT id FROM workspaces WHERE id = ${workspaceId} AND organization_id = ${auth.organization.id}
+    `
+    if (wsRows.length === 0) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
     // Check file size (5MB max)
     const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB in bytes
     if (file.size > MAX_FILE_SIZE) {
