@@ -37,6 +37,7 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
+  Loader2,
 } from "lucide-react"
 import {
   Tooltip,
@@ -426,7 +427,7 @@ export function WorkspaceScorecardPage() {
               disabled={aiInsightsLoading}
             >
               {aiInsightsLoading ? (
-                <><span className="animate-spin mr-1">...</span> Analyzing</>
+                <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Analyzing</>
               ) : (
                 "AI Insights"
               )}
