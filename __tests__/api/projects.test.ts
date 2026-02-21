@@ -23,6 +23,8 @@ const mockValidateBody = jest.fn()
 
 jest.mock("@/lib/auth/middleware", () => ({
   getAuthContext: mockGetAuthContext,
+  isAdmin: (ctx: { member: { role: string } }) =>
+    ctx.member.role === "owner" || ctx.member.role === "admin",
 }))
 
 jest.mock("@/lib/api/middleware", () => ({
@@ -623,6 +625,24 @@ describe("Projects API", () => {
       expect(response.status).toBe(500)
       expect(data.success).toBe(false)
       expect(data.error).toBe("Failed to delete project")
+    })
+
+    it("should return 403 when non-owner/non-admin tries to delete another user's project", async () => {
+      // Project owned by someone else, requester is a regular member
+      mockProjectsFindById.mockResolvedValue({ ...mockProject, ownerId: "other-user", createdBy: "other-user" })
+
+      const memberAuth = { ...mockAuth, member: { id: "member-1", role: "member" } }
+      const request = new NextRequest(
+        "http://localhost:3000/api/projects?id=project-1",
+        { method: "DELETE" }
+      )
+
+      const response = await DELETE(request, memberAuth as any)
+      const data = await response.json()
+
+      expect(response.status).toBe(403)
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Only project owners and admins can delete projects")
     })
   })
 })
