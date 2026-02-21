@@ -3080,18 +3080,25 @@ export const db = {
       email?: string | null
       workspaceId?: string | null
     }[]): Promise<number> {
-      let count = 0
-      for (const emp of employees) {
-        await sql`
-          INSERT INTO ma_employees (first_name, last_name, supervisor, department, job_title, responsibilities, notes, email, workspace_id)
-          VALUES (${emp.firstName}, ${emp.lastName}, ${emp.supervisor || null},
-                  ${emp.department || null}, ${emp.jobTitle || null},
-                  ${emp.responsibilities || null}, ${emp.notes || null}, ${emp.email || null},
-                  ${emp.workspaceId || null})
-        `
-        count++
-      }
-      return count
+      if (employees.length === 0) return 0
+
+      // Batch insert using UNNEST to avoid N round-trips
+      const result = await (sql.query as (q: string, p: unknown[]) => Promise<{ rowCount: number | null }>)(
+        `INSERT INTO ma_employees (first_name, last_name, supervisor, department, job_title, responsibilities, notes, email, workspace_id)
+         SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[], $4::text[], $5::text[], $6::text[], $7::text[], $8::text[], $9::text[])`,
+        [
+          employees.map(e => e.firstName),
+          employees.map(e => e.lastName),
+          employees.map(e => e.supervisor ?? null),
+          employees.map(e => e.department ?? null),
+          employees.map(e => e.jobTitle ?? null),
+          employees.map(e => e.responsibilities ?? null),
+          employees.map(e => e.notes ?? null),
+          employees.map(e => e.email ?? null),
+          employees.map(e => e.workspaceId ?? null),
+        ]
+      )
+      return result.rowCount ?? 0
     },
     async update(id: string, updates: {
       firstName?: string
