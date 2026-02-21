@@ -71,12 +71,23 @@ export async function createMentions(
 ): Promise<Mention[]> {
   if (mentions.length === 0) return []
 
-  const results: Mention[] = []
-  for (const m of mentions) {
-    const mention = await createMention(m)
-    results.push(mention)
-  }
-  return results
+  // Batch insert all mentions in a single UNNEST query
+  const result = await (
+    sql.query as (q: string, p: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+  )(
+    `INSERT INTO mentions (id, workspace_id, source_type, source_id, mentioned_user_id, mentioned_by)
+     SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[], $4::text[], $5::text[], $6::text[])
+     RETURNING *`,
+    [
+      mentions.map(() => "mn_" + generateId()),
+      mentions.map((m) => m.workspaceId),
+      mentions.map((m) => m.sourceType),
+      mentions.map((m) => m.sourceId),
+      mentions.map((m) => m.mentionedUserId),
+      mentions.map((m) => m.mentionedBy),
+    ]
+  )
+  return result.rows.map(parseMention)
 }
 
 export async function getMentionsForUser(

@@ -81,12 +81,14 @@ export async function POST(request: NextRequest) {
     await withTransaction(async (client) => {
       await client.sql`DELETE FROM totp_backup_codes WHERE user_id = ${user.id}`
 
-      for (let i = 0; i < backupCodes.length; i++) {
-        await client.sql`
-          INSERT INTO totp_backup_codes (id, user_id, code_hash, created_at)
-          VALUES (${generateId()}, ${user.id}, ${hashedBackupCodes[i]}, NOW())
-        `
-      }
+      // Batch insert all backup codes in a single UNNEST query
+      const backupCodeIds = hashedBackupCodes.map(() => generateId())
+      // @ts-expect-error - client.query has union type with incompatible signatures
+      await client.query(
+        `INSERT INTO totp_backup_codes (id, user_id, code_hash, created_at)
+         SELECT unnest($1::text[]), $2::text, unnest($3::text[]), NOW()`,
+        [backupCodeIds, user.id, hashedBackupCodes]
+      )
 
       await client.sql`
         UPDATE users SET totp_enabled = true, updated_at = NOW() WHERE id = ${user.id}

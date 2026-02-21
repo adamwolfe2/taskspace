@@ -225,20 +225,21 @@ async function processAsanaTasks(
 
   // Check for tasks in TaskSpace that no longer exist in Asana (deleted)
   // Only delete if it was an incomplete task that got deleted
+  const toDeleteIds: string[] = []
   for (const [gid, existingTask] of existingTasksByGid) {
     if (!asanaTaskGids.has(gid) && existingTask.status !== "completed") {
-      try {
-        // Task was deleted in Asana, delete it in TaskSpace
-        await sql`
-          DELETE FROM assigned_tasks
-          WHERE id = ${existingTask.id}
-        `
-        result.tasksDeleted++
-        logger.info({ taskId: existingTask.id, asanaGid: gid }, "Deleted TaskSpace task because it was deleted in Asana")
-      } catch (err) {
-        logError(logger, `Failed to delete task ${existingTask.id}`, err)
-        result.errors.push(`Failed to delete task that was removed from Asana`)
-      }
+      toDeleteIds.push(existingTask.id)
+    }
+  }
+  if (toDeleteIds.length > 0) {
+    try {
+      const deleteIdArray = `{${toDeleteIds.join(",")}}`
+      await sql`DELETE FROM assigned_tasks WHERE id = ANY(${deleteIdArray}::text[])`
+      result.tasksDeleted += toDeleteIds.length
+      logger.info({ count: toDeleteIds.length }, "Deleted TaskSpace tasks removed from Asana")
+    } catch (err) {
+      logError(logger, "Failed to batch-delete Asana-removed tasks", err)
+      result.errors.push(`Failed to delete ${toDeleteIds.length} task(s) removed from Asana`)
     }
   }
 

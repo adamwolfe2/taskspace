@@ -229,36 +229,44 @@ export const POST = withAdmin(async (request, auth) => {
       })
     }
 
-    // Insert all members
-    for (const member of memberRecords) {
-      // Find manager_id based on supervisor email
-      const managerId = member.supervisorEmail
-        ? emailToMemberId.get(member.supervisorEmail.toLowerCase()) || null
-        : null
+    // Batch insert all members in two queries instead of 2*N individual inserts
+    if (memberRecords.length > 0) {
+      // Resolve manager IDs for all rows up front
+      const managerIds = memberRecords.map((m) =>
+        m.supervisorEmail
+          ? emailToMemberId.get(m.supervisorEmail.toLowerCase()) || null
+          : null
+      )
 
-      await sql`
-        INSERT INTO organization_members (
-          id, organization_id, name, email, job_title, department,
-          manager_id, status, join_date, notes
-        )
-        VALUES (
-          ${member.id},
-          ${auth.organization.id},
-          ${member.name},
-          ${member.email},
-          ${member.jobTitle},
-          ${member.department},
-          ${managerId},
-          'active',
-          NOW(),
-          ${member.notes}
-        )
-      `
+      // @ts-expect-error - sql.query has union type with incompatible signatures
+      await sql.query(
+        `INSERT INTO organization_members (
+           id, organization_id, name, email, job_title, department,
+           manager_id, status, join_date, notes
+         )
+         SELECT * FROM UNNEST(
+           $1::text[], $2::text[], $3::text[], $4::text[], $5::text[],
+           $6::text[], $7::text[], $8::text[], $9::timestamptz[], $10::text[]
+         )`,
+        [
+          memberRecords.map((m) => m.id),
+          memberRecords.map(() => auth.organization.id),
+          memberRecords.map((m) => m.name),
+          memberRecords.map((m) => m.email),
+          memberRecords.map((m) => m.jobTitle),
+          memberRecords.map((m) => m.department),
+          managerIds,
+          memberRecords.map(() => "active"),
+          memberRecords.map(() => new Date().toISOString()),
+          memberRecords.map((m) => m.notes),
+        ]
+      )
 
-      // Associate member with workspace
+      // Batch associate all members with workspace
+      const memberIdArray = `{${memberRecords.map((m) => m.id).join(",")}}`
       await sql`
         INSERT INTO workspace_members (workspace_id, member_id)
-        VALUES (${workspaceId}, ${member.id})
+        SELECT ${workspaceId}, unnest(${memberIdArray}::text[])
         ON CONFLICT (workspace_id, member_id) DO NOTHING
       `
     }
