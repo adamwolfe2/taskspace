@@ -79,15 +79,15 @@ export function EnhancedTeamTable({
     const configs = {
       owner: {
         label: "Owner",
-        className: "bg-purple-100 text-purple-700 border-purple-200",
+        className: "bg-slate-800 text-white border-slate-800",
       },
       admin: {
         label: "Admin",
-        className: "bg-blue-100 text-blue-700 border-blue-200",
+        className: "bg-slate-100 text-slate-700 border-slate-200",
       },
       manager: {
         label: "Manager",
-        className: "bg-emerald-100 text-emerald-700 border-emerald-200",
+        className: "bg-slate-100 text-slate-700 border-slate-200",
       },
       member: {
         label: "Member",
@@ -159,9 +159,9 @@ export function EnhancedTeamTable({
             {filteredMembers.length}
           </p>
         </div>
-        <div className="p-3 rounded-lg border border-emerald-200 bg-emerald-50">
-          <p className="text-xs text-emerald-700 font-medium">Active</p>
-          <p className="text-2xl font-bold text-emerald-700 mt-1">
+        <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
+          <p className="text-xs text-slate-700 font-medium">Active</p>
+          <p className="text-2xl font-bold text-slate-700 mt-1">
             {
               filteredMembers.filter((m) => {
                 if (!m.lastActive) return false
@@ -174,15 +174,15 @@ export function EnhancedTeamTable({
             }
           </p>
         </div>
-        <div className="p-3 rounded-lg border border-blue-200 bg-blue-50">
-          <p className="text-xs text-blue-700 font-medium">Admins</p>
-          <p className="text-2xl font-bold text-blue-700 mt-1">
+        <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
+          <p className="text-xs text-slate-700 font-medium">Admins</p>
+          <p className="text-2xl font-bold text-slate-700 mt-1">
             {filteredMembers.filter((m) => m.role === "admin" || m.role === "owner").length}
           </p>
         </div>
-        <div className="p-3 rounded-lg border border-purple-200 bg-purple-50">
-          <p className="text-xs text-purple-700 font-medium">Departments</p>
-          <p className="text-2xl font-bold text-purple-700 mt-1">
+        <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
+          <p className="text-xs text-slate-700 font-medium">Departments</p>
+          <p className="text-2xl font-bold text-slate-700 mt-1">
             {departments.length}
           </p>
         </div>

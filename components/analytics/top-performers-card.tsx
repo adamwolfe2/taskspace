@@ -70,8 +70,8 @@ export function TopPerformersCard({ performers }: TopPerformersCardProps) {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-amber-50 p-2">
-            <Trophy className="h-5 w-5 text-amber-600" />
+          <div className="rounded-lg bg-slate-50 p-2">
+            <Trophy className="h-5 w-5 text-slate-600" />
           </div>
           <div>
             <CardTitle>Top Performers</CardTitle>

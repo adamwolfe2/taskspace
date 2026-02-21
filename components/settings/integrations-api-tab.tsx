@@ -670,7 +670,7 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
                         <Button
                           key={key.id}
                           size="sm"
-                          className="gap-2 bg-purple-600 hover:bg-purple-700 text-white"
+                          className="gap-2"
                           onClick={() => {
                             window.open(`/api/mcp/bundle?keyId=${key.id}`, "_blank")
                             toast({

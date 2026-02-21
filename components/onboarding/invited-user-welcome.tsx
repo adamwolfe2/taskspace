@@ -461,7 +461,7 @@ export function InvitedUserWelcome() {
                     </Button>
                     <Button
                       onClick={handleGoToDashboard}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 order-1 sm:order-2"
+                      className="gap-2 order-1 sm:order-2"
                     >
                       <Sparkles className="w-4 h-4" />
                       Go to Dashboard
