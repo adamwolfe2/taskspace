@@ -379,7 +379,7 @@ export async function sendPasswordResetEmail(
   resetToken: PasswordResetToken,
   userName: string
 ) {
-  const resetLink = `${APP_URL}?resetToken=${resetToken.token}`
+  const resetLink = `${APP_URL}/app?resetToken=${resetToken.token}`
 
   const html = emailWrapper(`
     <h1>Reset your password</h1>
