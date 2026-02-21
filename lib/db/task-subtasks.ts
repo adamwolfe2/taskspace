@@ -265,18 +265,22 @@ export async function reorderSubtasks(
   taskId: string,
   subtaskIds: string[]
 ): Promise<TaskSubtask[]> {
-  // Start a transaction
   const client = await sql.connect()
 
   try {
-    // Update each subtask's order_index based on array position
-    for (let i = 0; i < subtaskIds.length; i++) {
-      await client.sql`
-        UPDATE task_subtasks
-        SET order_index = ${i}, updated_at = NOW()
-        WHERE id = ${subtaskIds[i]} AND task_id = ${taskId}
-      `
-    }
+    await client.sql`BEGIN`
+
+    // Batch update all order indexes in one query using UNNEST WITH ORDINALITY.
+    // The ordinality value is 1-based, so subtract 1 for 0-based order_index.
+    const idArray = `{${subtaskIds.join(",")}}`
+    await client.sql`
+      UPDATE task_subtasks
+      SET order_index = ord.idx - 1,
+          updated_at = NOW()
+      FROM unnest(${idArray}::text[]) WITH ORDINALITY AS ord(id, idx)
+      WHERE task_subtasks.id = ord.id
+        AND task_subtasks.task_id = ${taskId}
+    `
 
     // Update parent task timestamp
     await client.sql`
@@ -292,9 +296,11 @@ export async function reorderSubtasks(
       ORDER BY order_index ASC
     `
 
+    await client.sql`COMMIT`
     client.release()
     return rows.map(parseSubtask)
   } catch (error) {
+    await client.sql`ROLLBACK`
     client.release()
     throw error
   }

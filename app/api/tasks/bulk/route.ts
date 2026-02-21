@@ -13,7 +13,6 @@ import { NextRequest } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
-import { withTransaction } from "@/lib/db/transactions"
 import { logTaskEvent } from "@/lib/audit/logger"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { Errors, successResponse } from "@/lib/api/errors"
@@ -192,39 +191,26 @@ async function bulkComplete(
   organizationId: string,
   _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
-  let processed = 0
-  let skipped = 0
-  const errors: string[] = []
+  // Pre-filter to only tasks not already completed
+  const eligibleIds = taskIds.filter((id) => taskMap.get(id)?.status !== "completed")
+  const alreadyDone = taskIds.length - eligibleIds.length
+
+  if (eligibleIds.length === 0) {
+    return { processed: 0, skipped: alreadyDone, errors: [] }
+  }
+
   const completedAt = new Date().toISOString()
+  const eligibleIdArray = `{${eligibleIds.join(",")}}`
+  const { rowCount } = await sql`
+    UPDATE assigned_tasks
+    SET status = 'completed', completed_at = ${completedAt}, updated_at = NOW()
+    WHERE id = ANY(${eligibleIdArray}::text[])
+      AND organization_id = ${organizationId}
+      AND status != 'completed'
+  `
 
-  await withTransaction(async (client) => {
-    for (const id of taskIds) {
-      const task = taskMap.get(id)
-      if (!task) {
-        skipped++
-        continue
-      }
-
-      if (task.status === "completed") {
-        skipped++
-        continue
-      }
-
-      try {
-        await client.sql`
-          UPDATE assigned_tasks
-          SET status = 'completed', completed_at = ${completedAt}, updated_at = NOW()
-          WHERE id = ${id} AND organization_id = ${organizationId}
-        `
-        processed++
-      } catch {
-        errors.push(`Failed to complete task ${id}`)
-        skipped++
-      }
-    }
-  })
-
-  return { processed, skipped, errors }
+  const processed = rowCount ?? 0
+  return { processed, skipped: taskIds.length - processed, errors: [] }
 }
 
 async function bulkDelete(
@@ -232,24 +218,15 @@ async function bulkDelete(
   organizationId: string,
   _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
-  let processed = 0
-  const errors: string[] = []
+  const taskIdArray = `{${taskIds.join(",")}}`
+  const { rowCount } = await sql`
+    DELETE FROM assigned_tasks
+    WHERE id = ANY(${taskIdArray}::text[])
+      AND organization_id = ${organizationId}
+  `
 
-  await withTransaction(async (client) => {
-    for (const id of taskIds) {
-      try {
-        await client.sql`
-          DELETE FROM assigned_tasks
-          WHERE id = ${id} AND organization_id = ${organizationId}
-        `
-        processed++
-      } catch {
-        errors.push(`Failed to delete task ${id}`)
-      }
-    }
-  })
-
-  return { processed, skipped: taskIds.length - processed, errors }
+  const processed = rowCount ?? 0
+  return { processed, skipped: taskIds.length - processed, errors: [] }
 }
 
 async function bulkReassign(
@@ -259,10 +236,6 @@ async function bulkReassign(
   organizationId: string,
   _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
-  let processed = 0
-  let skipped = 0
-  const errors: string[] = []
-
   // Verify new assignee exists (targeted query instead of full member list)
   const { rows: assigneeRows } = await sql<{ id: string; name: string }>`
     SELECT id, name FROM organization_members
@@ -275,29 +248,18 @@ async function bulkReassign(
     return { processed: 0, skipped: taskIds.length, errors: ["Invalid assignee"] }
   }
 
-  await withTransaction(async (client) => {
-    for (const id of taskIds) {
-      const task = taskMap.get(id)
-      if (!task) {
-        skipped++
-        continue
-      }
+  const eligibleIds = taskIds.filter((id) => taskMap.has(id))
+  const eligibleIdArray = `{${eligibleIds.join(",")}}`
 
-      try {
-        await client.sql`
-          UPDATE assigned_tasks
-          SET assignee_id = ${newAssigneeId}, assignee_name = ${assignee.name}, updated_at = NOW()
-          WHERE id = ${id} AND organization_id = ${organizationId}
-        `
-        processed++
-      } catch {
-        errors.push(`Failed to reassign task ${id}`)
-        skipped++
-      }
-    }
-  })
+  const { rowCount } = await sql`
+    UPDATE assigned_tasks
+    SET assignee_id = ${newAssigneeId}, assignee_name = ${assignee.name}, updated_at = NOW()
+    WHERE id = ANY(${eligibleIdArray}::text[])
+      AND organization_id = ${organizationId}
+  `
 
-  return { processed, skipped, errors }
+  const processed = rowCount ?? 0
+  return { processed, skipped: taskIds.length - processed, errors: [] }
 }
 
 async function bulkChangePriority(
@@ -307,33 +269,18 @@ async function bulkChangePriority(
   organizationId: string,
   _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
-  let processed = 0
-  let skipped = 0
-  const errors: string[] = []
+  const eligibleIds = taskIds.filter((id) => taskMap.has(id))
+  const eligibleIdArray = `{${eligibleIds.join(",")}}`
 
-  await withTransaction(async (client) => {
-    for (const id of taskIds) {
-      const task = taskMap.get(id)
-      if (!task) {
-        skipped++
-        continue
-      }
+  const { rowCount } = await sql`
+    UPDATE assigned_tasks
+    SET priority = ${priority}, updated_at = NOW()
+    WHERE id = ANY(${eligibleIdArray}::text[])
+      AND organization_id = ${organizationId}
+  `
 
-      try {
-        await client.sql`
-          UPDATE assigned_tasks
-          SET priority = ${priority}, updated_at = NOW()
-          WHERE id = ${id} AND organization_id = ${organizationId}
-        `
-        processed++
-      } catch {
-        errors.push(`Failed to change priority for task ${id}`)
-        skipped++
-      }
-    }
-  })
-
-  return { processed, skipped, errors }
+  const processed = rowCount ?? 0
+  return { processed, skipped: taskIds.length - processed, errors: [] }
 }
 
 async function bulkChangeDueDate(
@@ -343,31 +290,16 @@ async function bulkChangeDueDate(
   organizationId: string,
   _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
-  let processed = 0
-  let skipped = 0
-  const errors: string[] = []
+  const eligibleIds = taskIds.filter((id) => taskMap.has(id))
+  const eligibleIdArray = `{${eligibleIds.join(",")}}`
 
-  await withTransaction(async (client) => {
-    for (const id of taskIds) {
-      const task = taskMap.get(id)
-      if (!task) {
-        skipped++
-        continue
-      }
+  const { rowCount } = await sql`
+    UPDATE assigned_tasks
+    SET due_date = ${dueDate}, updated_at = NOW()
+    WHERE id = ANY(${eligibleIdArray}::text[])
+      AND organization_id = ${organizationId}
+  `
 
-      try {
-        await client.sql`
-          UPDATE assigned_tasks
-          SET due_date = ${dueDate}, updated_at = NOW()
-          WHERE id = ${id} AND organization_id = ${organizationId}
-        `
-        processed++
-      } catch {
-        errors.push(`Failed to change due date for task ${id}`)
-        skipped++
-      }
-    }
-  })
-
-  return { processed, skipped, errors }
+  const processed = rowCount ?? 0
+  return { processed, skipped: taskIds.length - processed, errors: [] }
 }
