@@ -10,6 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
+import { timingSafeEqual } from "crypto"
 import { sql } from "@/lib/db/sql"
 import { logger, logError } from "@/lib/logger"
 import { enforceIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
@@ -160,7 +161,10 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const providedToken = searchParams.get("token")
     if (settings?.publicEodToken) {
-      if (providedToken !== settings.publicEodToken) {
+      const tokenMatch = providedToken !== null &&
+        providedToken.length === settings.publicEodToken.length &&
+        timingSafeEqual(Buffer.from(providedToken), Buffer.from(settings.publicEodToken))
+      if (!tokenMatch) {
         const response = NextResponse.json(
           { success: false, error: "Invalid or missing access token" },
           { status: 403 }
