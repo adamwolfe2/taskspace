@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { withAuth, type RouteContext } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary, type RouteContext } from "@/lib/api/middleware"
 import { peopleAssessments } from "@/lib/db/people-assessments"
 import { validateBody } from "@/lib/validation/middleware"
 import { peopleAssessmentUpdateSchema } from "@/lib/validation/schemas"
@@ -22,7 +22,16 @@ export const PUT = withAuth(async (request, auth, context) => {
       )
     }
 
-    const updated = await peopleAssessments.update(id, body)
+    // SECURITY: Verify assessment belongs to authenticated organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(existing.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Assessment not found" },
+        { status: 404 }
+      )
+    }
+
+    const updated = await peopleAssessments.update(id, body, existing.workspaceId)
 
     return NextResponse.json<ApiResponse<PeopleAssessment | null>>({
       success: true,
@@ -42,7 +51,25 @@ export const DELETE = withAuth(async (request, auth, context) => {
   try {
     const params = await (context as RouteContext).params
     const id = params.id
-    const deleted = await peopleAssessments.delete(id)
+
+    // SECURITY: Fetch first to verify org ownership before deleting
+    const existing = await peopleAssessments.get(id)
+    if (!existing) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Assessment not found" },
+        { status: 404 }
+      )
+    }
+
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(existing.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Assessment not found" },
+        { status: 404 }
+      )
+    }
+
+    const deleted = await peopleAssessments.delete(id, existing.workspaceId)
 
     if (!deleted) {
       return NextResponse.json<ApiResponse<null>>(
