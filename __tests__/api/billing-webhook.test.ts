@@ -173,7 +173,8 @@ describe("POST /api/billing/webhook", () => {
 
     mockConstructWebhookEvent.mockResolvedValue(event)
     mockSql
-      .mockResolvedValueOnce({ rows: [] }) // No duplicate
+      .mockResolvedValueOnce({ rows: [] }) // No duplicate (idempotency check)
+      .mockResolvedValueOnce({ rows: [{ id: "org-1" }] }) // Org verification check
       .mockResolvedValueOnce({}) // Insert processed event
     mockOrgUpdate.mockResolvedValue(undefined)
     mockAuditLoggerLog.mockResolvedValue(undefined)

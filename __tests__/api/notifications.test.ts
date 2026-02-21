@@ -160,7 +160,7 @@ describe("PATCH /api/notifications", () => {
     expect(res.status).toBe(200)
     expect(data.success).toBe(true)
     expect(data.data).toEqual(updatedNotification)
-    expect(mockMarkAsRead).toHaveBeenCalledWith("n-1", "user-1")
+    expect(mockMarkAsRead).toHaveBeenCalledWith("n-1", "user-1", "org-1")
   })
 
   it("should mark all notifications as read when markAllRead=true", async () => {
@@ -314,7 +314,7 @@ describe("DELETE /api/notifications", () => {
     expect(res.status).toBe(200)
     expect(data.success).toBe(true)
     expect(data.message).toBe("Notification deleted")
-    expect(mockDeleteNotification).toHaveBeenCalledWith("n-1", "user-1")
+    expect(mockDeleteNotification).toHaveBeenCalledWith("n-1", "user-1", "org-1")
   })
 
   it("should return 400 when no id provided", async () => {

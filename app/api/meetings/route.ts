@@ -92,6 +92,15 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
     const { workspaceId, title, scheduledAt, attendees } = await validateBody(request, createMeetingSchema)
 
+    // SECURITY: Verify workspace belongs to user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
     // Check workspace access and role
     const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
     if (!hasAccess) {
