@@ -66,9 +66,13 @@ export function EODSubmissionCard({
     if (t.assigneeId !== userId || t.status !== "completed" || !t.completedAt) {
       return false
     }
-    // Use local timezone for date comparison to match how reportDate is formatted
-    const completedAt = new Date(t.completedAt)
-    const completedDate = `${completedAt.getFullYear()}-${String(completedAt.getMonth() + 1).padStart(2, '0')}-${String(completedAt.getDate()).padStart(2, '0')}`
+    // Use org timezone for date comparison to match how reportDate is formatted
+    const completedDate = new Intl.DateTimeFormat("en-CA", {
+      timeZone: orgTimezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(t.completedAt))
     return completedDate === reportDate
   })
 
@@ -148,11 +152,11 @@ export function EODSubmissionCard({
         const response = await fetch("/api/metrics")
         if (response.ok) {
           const data = await response.json()
-          if (data.success && data.data.metric) {
+          if (data.success && data.data?.metric) {
             setActiveMetric(data.data.metric)
           }
           // If it's Thursday, also get the weekly total so far
-          if (isThursdaySubmission && data.success && data.data.weeklyTotal !== undefined) {
+          if (isThursdaySubmission && data.success && data.data?.weeklyTotal !== undefined) {
             setWeeklyMetricTotal(data.data.weeklyTotal)
           }
         }
