@@ -104,12 +104,33 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     const effectiveStartDate = startDate || defaultStartDate
     const effectiveEndDate = endDate || defaultEndDate
 
+    // Validate date format (YYYY-MM-DD) before parsing
+    const dateFormatRegex = /^\d{4}-\d{2}-\d{2}$/
+    if (startDate && !dateFormatRegex.test(startDate)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Invalid startDate format. Use YYYY-MM-DD." },
+        { status: 400 }
+      )
+    }
+    if (endDate && !dateFormatRegex.test(endDate)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Invalid endDate format. Use YYYY-MM-DD." },
+        { status: 400 }
+      )
+    }
+    if (date && !dateFormatRegex.test(date)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Invalid date format. Use YYYY-MM-DD." },
+        { status: 400 }
+      )
+    }
+
     // Cap date range to 365 days to prevent excessive data queries
     if (!date) {
       const start = new Date(effectiveStartDate)
       const end = new Date(effectiveEndDate)
       const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-      if (diffDays > 365) {
+      if (isNaN(diffDays) || diffDays > 365) {
         return NextResponse.json<ApiResponse<null>>(
           { success: false, error: "Date range cannot exceed 365 days" },
           { status: 400 }

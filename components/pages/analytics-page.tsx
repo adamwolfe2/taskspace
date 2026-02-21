@@ -60,8 +60,11 @@ interface AnalyticsData {
 async function analyticsFetcher([, workspaceId, dateRange]: [string, string, string]): Promise<AnalyticsData> {
   const params = new URLSearchParams({ dateRange, workspaceId })
   const response = await fetch(`/api/analytics?${params.toString()}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch analytics (${response.status})`)
+  }
   const result = await response.json()
-  if (!response.ok || !result.success) {
+  if (!result.success) {
     throw new Error(result.error || "Failed to fetch analytics")
   }
   return result.data
