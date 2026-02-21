@@ -16,6 +16,7 @@ import { sql } from "@/lib/db/sql"
 import { db } from "@/lib/db"
 import { headers } from "next/headers"
 import { logger, logError } from "@/lib/logger"
+import { getTodayInTimezone } from "@/lib/utils/date-utils"
 
 // Database row types for SQL query results
 interface MemberRow {
@@ -94,6 +95,7 @@ interface EscalationEntry {
 interface AuthContext {
   organizationId: string
   workspaceId: string | null
+  timezone: string
 }
 
 // Get organization + workspace from API key in Authorization header
@@ -114,9 +116,11 @@ async function getAuthContext(): Promise<AuthContext | null> {
             return null
           }
           await db.apiKeys.updateLastUsed(key.id)
+          const org = await db.organizations.findById(key.organizationId)
           return {
             organizationId: key.organizationId,
             workspaceId: key.workspaceId,
+            timezone: org?.settings?.timezone || "America/New_York",
           }
         }
       }
@@ -124,9 +128,11 @@ async function getAuthContext(): Promise<AuthContext | null> {
 
     // Fall back to environment variable for demo/development
     if (process.env.MCP_DEFAULT_ORG_ID) {
+      const org = await db.organizations.findById(process.env.MCP_DEFAULT_ORG_ID)
       return {
         organizationId: process.env.MCP_DEFAULT_ORG_ID,
         workspaceId: process.env.MCP_DEFAULT_WORKSPACE_ID || null,
+        timezone: org?.settings?.timezone || "America/New_York",
       }
     }
 
@@ -392,7 +398,7 @@ const handler = createMcpHandler(
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
-        const checkDate = date || new Date().toISOString().split("T")[0]
+        const checkDate = date || getTodayInTimezone(auth.timezone)
 
         const [members, reports] = await Promise.all([
           queryMembers(auth.organizationId, auth.workspaceId),
@@ -484,7 +490,7 @@ const handler = createMcpHandler(
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
-        const today = new Date().toISOString().split("T")[0]
+        const today = getTodayInTimezone(auth.timezone)
 
         const [members, reports, rocks, tasks] = await Promise.all([
           queryMembers(auth.organizationId, auth.workspaceId),
@@ -742,7 +748,7 @@ ${overdueTasks.length > 2 ? "⚠️ HIGH - Multiple overdue tasks" :
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
-        const reportDate = date || new Date().toISOString().split("T")[0]
+        const reportDate = date || getTodayInTimezone(auth.timezone)
 
         // Find the member
         const members = await queryMembers(auth.organizationId, auth.workspaceId)
@@ -873,7 +879,7 @@ ${eodData.tomorrowFocus || "Not specified"}
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
-        const reportDate = date || new Date().toISOString().split("T")[0]
+        const reportDate = date || getTodayInTimezone(auth.timezone)
 
         // Get all members and their EOD reports (workspace-scoped when available)
         const [members, reportsResult] = await Promise.all([
@@ -1269,7 +1275,7 @@ ${highCapacity.slice(0, 3).map((w, i) => `  ${i + 1}. ${w.name} - ${w.pendingTas
           return { content: [{ type: "text", text: "Authentication required" }] }
         }
 
-        const reportDate = date || new Date().toISOString().split("T")[0]
+        const reportDate = date || getTodayInTimezone(auth.timezone)
 
         // Get all data (workspace-scoped when available)
         const [members, reportsResult, tasksResult, rocksResult] = await Promise.all([

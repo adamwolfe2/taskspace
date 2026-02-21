@@ -597,20 +597,20 @@ export const sectionTypeSchema = z.enum(["segue", "scorecard", "rocks", "headlin
 
 export const createMeetingSchema = z.object({
   workspaceId: z.string().min(1, "Workspace ID is required"),
-  title: z.string().max(200).optional(),
+  title: z.string().max(200).trim().optional(),
   scheduledAt: z.string().min(1, "Scheduled date/time is required"),
   attendees: z.array(z.string()).optional().default([]),
 })
 
 export const updateMeetingSchema = z.object({
-  notes: z.string().max(10000).optional(),
+  notes: z.string().max(10000).trim().optional(),
   attendees: z.array(z.string()).optional(),
-  title: z.string().max(200).optional(),
+  title: z.string().max(200).trim().optional(),
 })
 
 export const endMeetingSchema = z.object({
   rating: z.number().int().min(1).max(10).optional(),
-  notes: z.string().max(5000).optional(),
+  notes: z.string().max(5000).trim().optional(),
 })
 
 export const updateMeetingSectionSchema = z.object({
@@ -1204,28 +1204,28 @@ export const clientStatusSchema = z.enum(["active", "inactive", "prospect", "arc
 export const createClientSchema = z.object({
   name: z.string().min(1, "Client name is required").max(255).trim(),
   workspaceId: z.string().min(1, "Workspace ID is required"),
-  description: z.string().max(2000).optional(),
-  contactName: z.string().max(255).optional(),
+  description: z.string().max(2000).trim().optional(),
+  contactName: z.string().max(255).trim().optional(),
   contactEmail: z.string().email("Invalid email").optional().or(z.literal("")),
-  contactPhone: z.string().max(100).optional(),
+  contactPhone: z.string().max(100).trim().optional(),
   website: z.string().url("Invalid URL").max(500).optional().or(z.literal("")),
-  industry: z.string().max(255).optional(),
+  industry: z.string().max(255).trim().optional(),
   status: clientStatusSchema.optional(),
-  notes: z.string().max(5000).optional(),
+  notes: z.string().max(5000).trim().optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
 })
 
 export const updateClientSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(255).trim().optional(),
-  description: z.string().max(2000).optional().nullable(),
-  contactName: z.string().max(255).optional().nullable(),
+  description: z.string().max(2000).trim().optional().nullable(),
+  contactName: z.string().max(255).trim().optional().nullable(),
   contactEmail: z.string().email().optional().nullable().or(z.literal("")),
-  contactPhone: z.string().max(100).optional().nullable(),
+  contactPhone: z.string().max(100).trim().optional().nullable(),
   website: z.string().url().max(500).optional().nullable().or(z.literal("")),
-  industry: z.string().max(255).optional().nullable(),
+  industry: z.string().max(255).trim().optional().nullable(),
   status: clientStatusSchema.optional(),
-  notes: z.string().max(5000).optional().nullable(),
+  notes: z.string().max(5000).trim().optional().nullable(),
   tags: z.array(z.string().max(50)).max(20).optional(),
 })
 
@@ -1240,7 +1240,7 @@ export const createProjectSchema = z.object({
   name: z.string().min(1, "Project name is required").max(255).trim(),
   workspaceId: z.string().min(1, "Workspace ID is required"),
   clientId: z.string().optional().nullable(),
-  description: z.string().max(5000).optional(),
+  description: z.string().max(5000).trim().optional(),
   status: projectStatusSchema.optional(),
   priority: projectPrioritySchema.optional(),
   startDate: z.string().optional().nullable(),
@@ -1253,7 +1253,7 @@ export const updateProjectSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(255).trim().optional(),
   clientId: z.string().optional().nullable(),
-  description: z.string().max(5000).optional().nullable(),
+  description: z.string().max(5000).trim().optional().nullable(),
   status: projectStatusSchema.optional(),
   priority: projectPrioritySchema.optional(),
   startDate: z.string().optional().nullable(),

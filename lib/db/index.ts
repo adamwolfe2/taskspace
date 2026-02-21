@@ -748,10 +748,10 @@ export const db = {
     },
     async create(member: OrganizationMember): Promise<OrganizationMember> {
       await sql`
-        INSERT INTO organization_members (id, organization_id, user_id, email, name, role, department, weekly_measurable, joined_at, invited_by, status)
+        INSERT INTO organization_members (id, organization_id, user_id, email, name, role, department, weekly_measurable, joined_at, invited_by, status, updated_at)
         VALUES (${member.id}, ${member.organizationId}, ${member.userId}, ${member.email}, ${member.name}, ${member.role},
                 ${member.department}, ${member.weeklyMeasurable || null}, ${member.joinedAt},
-                ${member.invitedBy || null}, ${member.status})
+                ${member.invitedBy || null}, ${member.status}, NOW())
       `
       return member
     },
@@ -768,7 +768,8 @@ export const db = {
           eod_reminder_time = COALESCE(${updates.eodReminderTime || null}, eod_reminder_time),
           manager_id = COALESCE(${updates.managerId || null}, manager_id),
           job_title = COALESCE(${updates.jobTitle || null}, job_title),
-          notification_preferences = COALESCE(${updates.notificationPreferences ? JSON.stringify(updates.notificationPreferences) : null}::jsonb, notification_preferences)
+          notification_preferences = COALESCE(${updates.notificationPreferences ? JSON.stringify(updates.notificationPreferences) : null}::jsonb, notification_preferences),
+          updated_at = NOW()
         WHERE id = ${id}
         RETURNING *
       `

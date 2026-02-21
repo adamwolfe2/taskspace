@@ -9,6 +9,8 @@ import type { ApiResponse, EODInsight } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { z } from "zod"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { CONFIG } from "@/lib/config"
 
 const parseEodSchema = z.object({
   eodReportId: z.string().min(1, "EOD Report ID is required"),
@@ -225,8 +227,9 @@ export const PUT = withAuth(async (request: NextRequest, auth) => {
 
     const { date } = await validateBody(request, batchParseEodSchema)
 
-    // Default to today
-    const targetDate = date || new Date().toISOString().split("T")[0]
+    // Default to today in org timezone
+    const orgTimezone = auth.organization.settings.timezone || CONFIG.organization.defaultTimezone
+    const targetDate = date || getTodayInTimezone(orgTimezone)
 
     // OPTIMIZED: Fetch only reports for the target date instead of all reports
     const dateReports = await db.eodReports.findByOrganizationAndDate(auth.organization.id, targetDate)

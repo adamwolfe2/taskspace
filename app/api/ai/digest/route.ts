@@ -9,6 +9,8 @@ import type { ApiResponse, DailyDigest, TeamMember } from "@/lib/types"
 import { validateBody } from "@/lib/validation/middleware"
 import { aiDigestSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
+import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { CONFIG } from "@/lib/config"
 
 // POST /api/ai/digest - Generate a daily digest from EOD reports
 export const POST = withAdmin(async (request: NextRequest, auth) => {
@@ -43,8 +45,9 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 
     const { date } = await validateBody(request, aiDigestSchema)
 
-    // Default to today
-    const targetDate = date || new Date().toISOString().split("T")[0]
+    // Default to today in org timezone
+    const orgTimezone = auth.organization.settings.timezone || CONFIG.organization.defaultTimezone
+    const targetDate = date || getTodayInTimezone(orgTimezone)
 
     // Check if digest already exists for this date
     const existingDigest = await db.dailyDigests.findByDate(auth.organization.id, targetDate)
