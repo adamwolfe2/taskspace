@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import { withAdmin } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
@@ -44,6 +45,19 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         { success: false, error: "Expiry date must be in the future" },
         { status: 400 }
       )
+    }
+
+    // SECURITY: If workspaceId is provided, validate it belongs to this org
+    if (workspaceId) {
+      const { rows: wsRows } = await sql`
+        SELECT id FROM workspaces WHERE id = ${workspaceId} AND organization_id = ${auth.organization.id}
+      `
+      if (wsRows.length === 0) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Workspace not found" },
+          { status: 404 }
+        )
+      }
     }
 
     // Generate a secure API key
