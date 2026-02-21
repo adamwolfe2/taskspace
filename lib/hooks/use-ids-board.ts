@@ -183,10 +183,12 @@ export function useIdsBoard() {
       )
 
       try {
-        await fetch(`/api/ids-board/${itemId}`, {
+        const res = await fetch(`/api/ids-board/${itemId}`, {
           method: "DELETE",
           headers: { "X-Requested-With": "XMLHttpRequest" }
         })
+        const result = await res.json().catch(() => ({ success: false }))
+        if (!result.success) throw new Error(result.error || "Delete failed")
         mutate()
       } catch {
         mutate() // Rollback optimistic update
