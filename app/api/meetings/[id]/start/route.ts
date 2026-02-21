@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
@@ -27,6 +27,15 @@ export const POST = withAuth(async (request, auth, context?) => {
     const meetingData = await meetings.getById(id)
 
     if (!meetingData) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Meeting not found" },
+        { status: 404 }
+      )
+    }
+
+    // SECURITY: Verify meeting's workspace belongs to authenticated organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(meetingData.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Meeting not found" },
         { status: 404 }
