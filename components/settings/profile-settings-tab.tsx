@@ -157,7 +157,7 @@ export function ProfileSettingsTab() {
         }),
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => ({ success: false, error: null }))
       if (!data.success) {
         throw new Error(data.error || "Failed to save profile")
       }
@@ -231,7 +231,7 @@ export function ProfileSettingsTab() {
         }),
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => ({ success: false, error: null }))
       if (!data.success) {
         throw new Error(data.error || "Failed to change password")
       }
@@ -292,7 +292,7 @@ export function ProfileSettingsTab() {
         }),
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => ({ success: false, error: null }))
       if (!data.success) {
         throw new Error(data.error || "Failed to delete account")
       }
