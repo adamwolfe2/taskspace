@@ -1852,8 +1852,14 @@ export const db = {
       `
       return notification
     },
-    async markAsRead(id: string, userId?: string): Promise<Notification | null> {
-      const { rows } = userId
+    async markAsRead(id: string, userId?: string, orgId?: string): Promise<Notification | null> {
+      const { rows } = (userId && orgId)
+        ? await sql`
+            UPDATE notifications SET read = TRUE, read_at = NOW()
+            WHERE id = ${id} AND user_id = ${userId} AND organization_id = ${orgId}
+            RETURNING *
+          `
+        : userId
         ? await sql`
             UPDATE notifications SET read = TRUE, read_at = NOW() WHERE id = ${id} AND user_id = ${userId}
             RETURNING *
@@ -1887,8 +1893,10 @@ export const db = {
       `
       return rowCount ?? 0
     },
-    async delete(id: string, userId?: string): Promise<boolean> {
-      const { rowCount } = userId
+    async delete(id: string, userId?: string, orgId?: string): Promise<boolean> {
+      const { rowCount } = (userId && orgId)
+        ? await sql`DELETE FROM notifications WHERE id = ${id} AND user_id = ${userId} AND organization_id = ${orgId}`
+        : userId
         ? await sql`DELETE FROM notifications WHERE id = ${id} AND user_id = ${userId}`
         : await sql`DELETE FROM notifications WHERE id = ${id}`
       return (rowCount ?? 0) > 0
