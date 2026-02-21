@@ -605,14 +605,15 @@ const handler = createMcpHandler(
               FROM eod_reports er
               WHERE er.user_id = ${member.user_id}
               AND er.workspace_id = ${wsId}
-              AND er.report_date >= CURRENT_DATE - INTERVAL '${days} days'
+              AND er.report_date >= CURRENT_DATE - ${days} * INTERVAL '1 day'
               ORDER BY er.report_date DESC
             `
             : sql`
               SELECT er.*
               FROM eod_reports er
+              JOIN organization_members om ON er.user_id = om.user_id AND om.organization_id = ${auth.organizationId}
               WHERE er.user_id = ${member.user_id}
-              AND er.report_date >= CURRENT_DATE - INTERVAL '${days} days'
+              AND er.report_date >= CURRENT_DATE - ${days} * INTERVAL '1 day'
               ORDER BY er.report_date DESC
             `,
           wsId
@@ -627,6 +628,7 @@ const handler = createMcpHandler(
               SELECT t.*
               FROM assigned_tasks t
               WHERE t.assignee_id = ${member.user_id}
+              AND t.organization_id = ${auth.organizationId}
               ORDER BY t.created_at DESC
             `,
           wsId
@@ -641,6 +643,7 @@ const handler = createMcpHandler(
               SELECT r.*
               FROM rocks r
               WHERE r.owner_id = ${member.user_id}
+              AND r.organization_id = ${auth.organizationId}
               ORDER BY r.created_at DESC
             `,
         ])
@@ -763,6 +766,7 @@ ${overdueTasks.length > 2 ? "⚠️ HIGH - Multiple overdue tasks" :
           : await sql`
             SELECT er.*
             FROM eod_reports er
+            JOIN organization_members om ON er.user_id = om.user_id AND om.organization_id = ${auth.organizationId}
             WHERE er.user_id = ${member.user_id}
             AND er.report_date = ${reportDate}
           `
@@ -787,6 +791,7 @@ ${overdueTasks.length > 2 ? "⚠️ HIGH - Multiple overdue tasks" :
             SELECT t.*
             FROM assigned_tasks t
             WHERE t.assignee_id = ${member.user_id}
+            AND t.organization_id = ${auth.organizationId}
             AND t.status = 'completed'
             AND DATE(t.completed_at) = ${reportDate}
           `
