@@ -224,25 +224,18 @@ export async function getMetricsByWorkspace(workspaceId: string): Promise<Scorec
 }
 
 /**
- * Get a single metric by ID (optionally workspace-scoped)
+ * Get a single metric by ID, scoped to an organization via workspace JOIN.
+ * Requires organizationId to prevent cross-org metric access.
  */
-export async function getMetricById(metricId: string, workspaceId?: string): Promise<ScorecardMetric | null> {
-  const { rows } = workspaceId
-    ? await sql`
-        SELECT sm.*, u.name as owner_name
-        FROM scorecard_metrics sm
-        LEFT JOIN users u ON u.id = sm.owner_id
-        WHERE sm.id = ${metricId}
-          AND sm.workspace_id = ${workspaceId}
-          AND sm.deleted_at IS NULL
-      `
-    : await sql`
-        SELECT sm.*, u.name as owner_name
-        FROM scorecard_metrics sm
-        LEFT JOIN users u ON u.id = sm.owner_id
-        WHERE sm.id = ${metricId}
-          AND sm.deleted_at IS NULL
-      `
+export async function getMetricById(metricId: string, organizationId: string): Promise<ScorecardMetric | null> {
+  const { rows } = await sql`
+      SELECT sm.*, u.name as owner_name
+      FROM scorecard_metrics sm
+      JOIN workspaces w ON w.id = sm.workspace_id AND w.organization_id = ${organizationId}
+      LEFT JOIN users u ON u.id = sm.owner_id
+      WHERE sm.id = ${metricId}
+        AND sm.deleted_at IS NULL
+    `
   if (rows.length === 0) return null
   return parseMetric(rows[0])
 }
@@ -278,8 +271,14 @@ export async function createMetric(params: CreateMetricParams): Promise<Scorecar
     RETURNING *
   `
 
-  // Fetch with owner name
-  return (await getMetricById(id))!
+  // Fetch back with owner name (internal — no org check needed, id was just created)
+  const { rows: created } = await sql`
+    SELECT sm.*, u.name as owner_name
+    FROM scorecard_metrics sm
+    LEFT JOIN users u ON u.id = sm.owner_id
+    WHERE sm.id = ${id}
+  `
+  return parseMetric(created[0])
 }
 
 /**
@@ -289,8 +288,12 @@ export async function updateMetric(
   metricId: string,
   updates: UpdateMetricParams
 ): Promise<ScorecardMetric | null> {
-  const metric = await getMetricById(metricId)
-  if (!metric) return null
+  // Fetch current values for merge (internal read — org was verified by caller)
+  const { rows: current } = await sql`
+    SELECT * FROM scorecard_metrics WHERE id = ${metricId} AND deleted_at IS NULL
+  `
+  if (current.length === 0) return null
+  const metric = parseMetric(current[0])
 
   const { rows } = await sql`
     UPDATE scorecard_metrics
@@ -310,7 +313,15 @@ export async function updateMetric(
   `
 
   if (rows.length === 0) return null
-  return getMetricById(metricId)
+
+  // Fetch back with owner name (internal — org was verified by caller)
+  const { rows: updated } = await sql`
+    SELECT sm.*, u.name as owner_name
+    FROM scorecard_metrics sm
+    LEFT JOIN users u ON u.id = sm.owner_id
+    WHERE sm.id = ${metricId}
+  `
+  return updated.length > 0 ? parseMetric(updated[0]) : null
 }
 
 /**
@@ -364,10 +375,16 @@ export async function upsertEntry(params: UpsertEntryParams): Promise<ScorecardE
   const id = "se_" + generateId()
   const { metricId, value, weekStart, notes = null, enteredBy = null } = params
 
-  // Fetch metric's target to calculate on-track status
-  const metric = await getMetricById(metricId)
-  const status = metric
-    ? calculateMetricStatus(value, metric.targetValue, metric.targetDirection)
+  // Fetch metric's target to calculate on-track status (internal — org verified by caller)
+  const { rows: metricRows } = await sql`
+    SELECT target_value, target_direction FROM scorecard_metrics WHERE id = ${metricId}
+  `
+  const status = metricRows.length > 0
+    ? calculateMetricStatus(
+        value,
+        metricRows[0].target_value as number | undefined,
+        metricRows[0].target_direction as ScorecardMetric["targetDirection"]
+      )
     : "gray"
 
   const { rows } = await sql`

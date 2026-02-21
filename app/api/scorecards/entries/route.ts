@@ -19,7 +19,7 @@ export const POST = withAuth(async (request, auth) => {
     const { metricId, value, weekStart, notes } = await validateBody(request, createScorecardEntrySchema)
 
     // Get the metric to verify access
-    const metric = await getMetricById(metricId)
+    const metric = await getMetricById(metricId, auth.organization.id)
     if (!metric) {
       return NextResponse.json(
         { success: false, error: "Metric not found" },

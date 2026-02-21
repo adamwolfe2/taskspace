@@ -1849,22 +1849,12 @@ export const db = {
       `
       return notification
     },
-    async markAsRead(id: string, userId?: string, orgId?: string): Promise<Notification | null> {
-      const { rows } = (userId && orgId)
-        ? await sql`
-            UPDATE notifications SET read = TRUE, read_at = NOW()
-            WHERE id = ${id} AND user_id = ${userId} AND organization_id = ${orgId}
-            RETURNING *
-          `
-        : userId
-        ? await sql`
-            UPDATE notifications SET read = TRUE, read_at = NOW() WHERE id = ${id} AND user_id = ${userId}
-            RETURNING *
-          `
-        : await sql`
-            UPDATE notifications SET read = TRUE, read_at = NOW() WHERE id = ${id}
-            RETURNING *
-          `
+    async markAsRead(id: string, userId: string, orgId: string): Promise<Notification | null> {
+      const { rows } = await sql`
+          UPDATE notifications SET read = TRUE, read_at = NOW()
+          WHERE id = ${id} AND user_id = ${userId} AND organization_id = ${orgId}
+          RETURNING *
+        `
       if (!rows[0]) return null
       const row = rows[0]
       return {
@@ -1890,12 +1880,10 @@ export const db = {
       `
       return rowCount ?? 0
     },
-    async delete(id: string, userId?: string, orgId?: string): Promise<boolean> {
-      const { rowCount } = (userId && orgId)
-        ? await sql`DELETE FROM notifications WHERE id = ${id} AND user_id = ${userId} AND organization_id = ${orgId}`
-        : userId
-        ? await sql`DELETE FROM notifications WHERE id = ${id} AND user_id = ${userId}`
-        : await sql`DELETE FROM notifications WHERE id = ${id}`
+    async delete(id: string, userId: string, orgId: string): Promise<boolean> {
+      const { rowCount } = await sql`
+        DELETE FROM notifications WHERE id = ${id} AND user_id = ${userId} AND organization_id = ${orgId}
+      `
       return (rowCount ?? 0) > 0
     },
     async deleteOld(days: number = 30): Promise<number> {

@@ -26,7 +26,7 @@ export const GET = withAuth(async (request, auth, context?) => {
       )
     }
     const { id } = await context.params
-    const metric = await getMetricById(id)
+    const metric = await getMetricById(id, auth.organization.id)
 
     if (!metric) {
       return NextResponse.json(
@@ -78,7 +78,7 @@ export const PATCH = withAuth(async (request, auth, context?) => {
       )
     }
     const { id } = await context.params
-    const metric = await getMetricById(id)
+    const metric = await getMetricById(id, auth.organization.id)
 
     if (!metric) {
       return NextResponse.json(
@@ -175,7 +175,7 @@ export const DELETE = withAuth(async (request, auth, context?) => {
       )
     }
     const { id } = await context.params
-    const metric = await getMetricById(id)
+    const metric = await getMetricById(id, auth.organization.id)
 
     if (!metric) {
       return NextResponse.json(
