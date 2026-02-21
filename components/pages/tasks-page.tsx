@@ -414,19 +414,13 @@ export function TasksPage({
   }
 
   const handleKanbanStatusChange = async (taskId: string, newStatus: AssignedTask["status"]) => {
+    if (newStatus === "completed") {
+      // Delegate to handleCompleteTask so recurring task logic fires correctly
+      await handleCompleteTask(taskId)
+      return
+    }
     try {
-      const updates: Partial<AssignedTask> = { status: newStatus }
-      if (newStatus === "completed") {
-        updates.completedAt = new Date().toISOString()
-      }
-      await updateTask(taskId, updates)
-
-      if (newStatus === "completed") {
-        toast({
-          title: "Task completed!",
-          description: "Added to today's EOD report",
-        })
-      }
+      await updateTask(taskId, { status: newStatus })
     } catch (err: unknown) {
       toast({
         title: "Error",

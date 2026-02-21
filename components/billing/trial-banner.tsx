@@ -19,8 +19,31 @@ export function TrialBanner() {
   const subscription = currentOrganization?.subscription
   if (!subscription) return null
 
-  // Only show for free plan users
-  if (subscription.plan !== "free") return null
+  // Paid plan with past-due or canceled status — show payment failure warning
+  if (subscription.plan !== "free") {
+    if (subscription.status === "past_due" || subscription.status === "canceled") {
+      return (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-2.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm text-red-800">
+            <Clock className="h-4 w-4 flex-shrink-0 text-red-500" />
+            <span>
+              {subscription.status === "past_due"
+                ? "Payment failed — please update your billing details to avoid service interruption."
+                : "Your subscription has been canceled. Upgrade to restore full access."}
+              {" "}
+              <a
+                href="/settings/billing"
+                className="font-semibold underline hover:no-underline inline-flex items-center gap-1"
+              >
+                Manage billing <ArrowRight className="h-3 w-3" />
+              </a>
+            </span>
+          </div>
+        </div>
+      )
+    }
+    return null
+  }
 
   const daysRemaining = getTrialDaysRemaining(subscription as { plan: "free"; currentPeriodEnd?: string })
   const expired = isTrialExpired(subscription as { plan: "free"; currentPeriodEnd?: string }, currentOrganization?.isInternal)

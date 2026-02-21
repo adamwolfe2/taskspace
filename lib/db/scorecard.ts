@@ -330,20 +330,55 @@ export async function deleteMetric(metricId: string): Promise<boolean> {
 // ============================================
 
 /**
- * Create or update a weekly entry for a metric
+ * Calculate the green/yellow/red status for a metric entry based on value vs target.
+ * Green = meets or beats target; yellow = within 10% of target; red = further off.
+ */
+function calculateMetricStatus(
+  value: number,
+  targetValue: number | undefined,
+  targetDirection: ScorecardMetric["targetDirection"]
+): ScorecardEntry["status"] {
+  if (targetValue === undefined || targetValue === null) return "gray"
+
+  switch (targetDirection) {
+    case "above": // higher is better (e.g. revenue, calls)
+      if (value >= targetValue) return "green"
+      if (targetValue > 0 && value >= targetValue * 0.9) return "yellow"
+      return "red"
+    case "below": // lower is better (e.g. errors, cost)
+      if (value <= targetValue) return "green"
+      if (targetValue > 0 && value <= targetValue * 1.1) return "yellow"
+      return "red"
+    case "exact": // must equal target
+      if (value === targetValue) return "green"
+      if (targetValue !== 0 && Math.abs(value - targetValue) / Math.abs(targetValue) <= 0.1) return "yellow"
+      return "red"
+  }
+}
+
+/**
+ * Create or update a weekly entry for a metric.
+ * Automatically calculates green/yellow/red status based on the metric's target.
  */
 export async function upsertEntry(params: UpsertEntryParams): Promise<ScorecardEntry> {
   const id = "se_" + generateId()
   const { metricId, value, weekStart, notes = null, enteredBy = null } = params
 
+  // Fetch metric's target to calculate on-track status
+  const metric = await getMetricById(metricId)
+  const status = metric
+    ? calculateMetricStatus(value, metric.targetValue, metric.targetDirection)
+    : "gray"
+
   const { rows } = await sql`
-    INSERT INTO scorecard_entries (id, metric_id, value, week_start, notes, entered_by)
-    VALUES (${id}, ${metricId}, ${value}, ${weekStart}::date, ${notes}, ${enteredBy})
+    INSERT INTO scorecard_entries (id, metric_id, value, week_start, notes, entered_by, status)
+    VALUES (${id}, ${metricId}, ${value}, ${weekStart}::date, ${notes}, ${enteredBy}, ${status})
     ON CONFLICT (metric_id, week_start)
     DO UPDATE SET
       value = ${value},
       notes = ${notes},
       entered_by = ${enteredBy},
+      status = ${status},
       updated_at = NOW()
     RETURNING *
   `

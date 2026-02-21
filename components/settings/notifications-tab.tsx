@@ -120,6 +120,28 @@ export function NotificationsTab({ teamMembers, setTeamMembers }: NotificationsT
   const handleSaveOrganization = async () => {
     if (!isOwner) return
 
+    // Validate Slack webhook URL format
+    const trimmedSlack = slackWebhookUrl.trim()
+    if (slackIntegration && trimmedSlack && !/^https:\/\/hooks\.slack\.com\/services\//.test(trimmedSlack)) {
+      toast({ title: "Invalid URL", description: "Slack webhook URL must start with https://hooks.slack.com/services/", variant: "destructive" })
+      return
+    }
+
+    // Validate Team Tools URL — reject javascript: and other dangerous schemes
+    const trimmedTools = teamToolsUrl.trim()
+    if (trimmedTools) {
+      try {
+        const parsed = new URL(trimmedTools)
+        if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+          toast({ title: "Invalid URL", description: "Team Tools URL must be a valid https:// URL", variant: "destructive" })
+          return
+        }
+      } catch {
+        toast({ title: "Invalid URL", description: "Team Tools URL is not a valid URL", variant: "destructive" })
+        return
+      }
+    }
+
     try {
       setIsLoading(true)
       const updated = await api.organizations.update({
@@ -131,8 +153,8 @@ export function NotificationsTab({ teamMembers, setTeamMembers }: NotificationsT
           eodReminderTime: currentOrganization?.settings.eodReminderTime || "17:00",
           enableEmailNotifications: emailNotifications,
           enableSlackIntegration: slackIntegration,
-          slackWebhookUrl: slackIntegration ? slackWebhookUrl : undefined,
-          teamToolsUrl: teamToolsUrl.trim() || undefined,
+          slackWebhookUrl: slackIntegration ? trimmedSlack || undefined : undefined,
+          teamToolsUrl: trimmedTools || undefined,
           customBranding: currentOrganization?.settings.customBranding,
         },
       })
