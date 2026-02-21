@@ -317,7 +317,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="priority">Priority</Label>
               <Select value={priority} onValueChange={(v) => setPriority(v as "high" | "medium" | "normal")}>

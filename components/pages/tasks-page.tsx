@@ -479,8 +479,8 @@ export function TasksPage({
               disabled={aiPrioritizing || userTasks.filter((t) => t.status !== "completed").length === 0}
               className="min-h-[44px]"
             >
-              {aiPrioritizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              AI Prioritize
+              {aiPrioritizing ? <Loader2 className="h-4 w-4 animate-spin sm:mr-2" /> : <Sparkles className="h-4 w-4 sm:mr-2" />}
+              <span className="hidden sm:inline">AI Prioritize</span>
             </Button>
             <Button onClick={() => setShowAddTaskModal(true)} className="flex-1 sm:flex-initial min-h-[44px]">
               <Plus className="mr-2 h-4 w-4" />
@@ -737,33 +737,33 @@ export function TasksPage({
 
       {/* Bulk Action Bar */}
       {selectedTasks.size > 0 && !isViewingOtherUser && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-lg md:bottom-0 bottom-16" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between gap-4">
+        <div className="fixed left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-lg bulk-action-bar-offset">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
                   {selectedTasks.size}
                 </div>
-                <span className="font-medium text-slate-900">
+                <span className="font-medium text-slate-900 text-sm sm:text-base">
                   {selectedTasks.size} task{selectedTasks.size > 1 ? "s" : ""} selected
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleClearSelection}
-                  className="gap-2"
+                  className="gap-1 sm:gap-2 h-9 px-2 sm:px-3"
                   disabled={isBulkProcessing}
                 >
                   <X className="h-4 w-4" />
-                  Clear Selection
+                  <span className="hidden sm:inline">Clear</span>
                 </Button>
                 <Button
                   variant="default"
                   size="sm"
                   onClick={handleBulkComplete}
-                  className="gap-2"
+                  className="gap-1 sm:gap-2 h-9 px-2 sm:px-3"
                   disabled={isBulkProcessing}
                 >
                   {isBulkProcessing ? (
@@ -771,13 +771,13 @@ export function TasksPage({
                   ) : (
                     <CheckSquare className="h-4 w-4" />
                   )}
-                  {isBulkProcessing ? "Processing..." : "Mark Complete"}
+                  <span className="hidden sm:inline">{isBulkProcessing ? "Processing..." : "Complete"}</span>
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={handleBulkDelete}
-                  className="gap-2"
+                  className="gap-1 sm:gap-2 h-9 px-2 sm:px-3"
                   disabled={isBulkProcessing}
                 >
                   {isBulkProcessing ? (
@@ -785,7 +785,7 @@ export function TasksPage({
                   ) : (
                     <Trash2 className="h-4 w-4" />
                   )}
-                  Delete
+                  <span className="hidden sm:inline">Delete</span>
                 </Button>
               </div>
             </div>

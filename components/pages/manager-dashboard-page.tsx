@@ -168,12 +168,12 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
         {/* Skeleton loading state */}
         <div className="space-y-6">
           <Skeleton className="h-8 w-1/4" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-24 rounded-xl" />
             ))}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Skeleton key={i} className="h-48 rounded-xl" />
             ))}
@@ -257,7 +257,7 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         <Card className="relative overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
@@ -527,7 +527,7 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
             </p>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {filteredReports.map((report, index) => (
               <div
                 key={report.id}
@@ -565,7 +565,7 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
           <CardTitle className="text-base">Team Progress Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
             <div>
               <p className="text-sm text-slate-500 mb-2">Avg Task Completion</p>
               <Progress value={teamSummary.avgTaskCompletionRate} className="h-2" />

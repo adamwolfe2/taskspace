@@ -189,11 +189,11 @@ export function EnhancedTeamTable({
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border border-border overflow-hidden">
-        <Table>
+      <div className="rounded-lg border border-border overflow-x-auto">
+        <Table className="min-w-[600px]">
           <TableHeader className="bg-muted/50">
             <TableRow>
-              <TableHead className="w-[300px]">Member</TableHead>
+              <TableHead className="w-[200px] lg:w-[300px]">Member</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Status</TableHead>

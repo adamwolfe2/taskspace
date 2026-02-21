@@ -268,7 +268,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Manage Rocks</DialogTitle>
           <DialogDescription>Add, edit, or remove rocks for team members</DialogDescription>
@@ -295,15 +295,15 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
           {/* Rocks List */}
           {selectedUser && !showForm && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <h3 className="font-semibold">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h3 className="font-semibold text-sm sm:text-base truncate">
                     {selectedUser.name}'s Rocks ({userRocks.length}{quarterFilter !== "all" ? ` of ${allUserRocks.length}` : ""})
                   </h3>
                   {availableQuarters.length > 0 && (
                     <Select value={quarterFilter} onValueChange={setQuarterFilter}>
-                      <SelectTrigger className="w-[140px] h-8">
-                        <SelectValue placeholder="Filter quarter" />
+                      <SelectTrigger className="w-[120px] h-8 flex-shrink-0">
+                        <SelectValue placeholder="Quarter" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Quarters</SelectItem>
@@ -316,8 +316,8 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
                     </Select>
                   )}
                 </div>
-                <Button onClick={handleAddNew} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button onClick={handleAddNew} size="sm" className="self-start sm:self-auto flex-shrink-0">
+                  <Plus className="h-4 w-4 mr-1" />
                   Add Rock
                 </Button>
               </div>
