@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { verifyUnsubscribeToken } from '@/lib/integrations/email'
 import type { ApiResponse, NotificationPreferences } from '@/lib/types'
 
-// GET /api/unsubscribe?email=user@example.com
+// GET /api/unsubscribe?email=user@example.com&token=<hmac>
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const email = searchParams.get('email')
+  const token = searchParams.get('token')
 
   if (!email) {
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: 'Email parameter required' },
       { status: 400 }
+    )
+  }
+
+  // Validate the signed token to prevent malicious unsubscribes
+  if (!verifyUnsubscribeToken(email, token)) {
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: 'Invalid or missing unsubscribe token' },
+      { status: 403 }
     )
   }
 

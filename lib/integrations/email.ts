@@ -4,6 +4,7 @@
  */
 
 import { Resend } from "resend"
+import { createHmac } from "crypto"
 import type { EODReport, DailyDigest, TeamMember, AIGeneratedTask } from "../types"
 import { logger, logError } from "../logger"
 
@@ -22,6 +23,38 @@ export function isEmailConfigured(): boolean {
 
 const FROM_EMAIL = process.env.EMAIL_FROM || "Taskspace <team@trytaskspace.com>"
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"
+
+/**
+ * Generate a signed HMAC token for one-click unsubscribe links.
+ * Prevents anyone who knows a user's email from unsubscribing them.
+ */
+function generateUnsubscribeToken(email: string): string {
+  const secret = process.env.AUTH_SECRET
+  if (!secret) return ""
+  return createHmac("sha256", secret).update(email.toLowerCase()).digest("hex").slice(0, 32)
+}
+
+/**
+ * Build a signed unsubscribe URL for email footers.
+ */
+function buildUnsubscribeUrl(email: string): string {
+  const token = generateUnsubscribeToken(email)
+  const params = new URLSearchParams({ email })
+  if (token) params.set("token", token)
+  return `${APP_URL}/api/unsubscribe?${params.toString()}`
+}
+
+/**
+ * Verify a token from an unsubscribe link. Exported for use in the unsubscribe route.
+ * Returns true if the token is valid, or if AUTH_SECRET is not configured (graceful degradation).
+ */
+export function verifyUnsubscribeToken(email: string, token: string | null): boolean {
+  const secret = process.env.AUTH_SECRET
+  if (!secret) return true // Graceful degradation: no secret configured
+  if (!token) return false
+  const expected = createHmac("sha256", secret).update(email.toLowerCase()).digest("hex").slice(0, 32)
+  return token === expected
+}
 
 interface EmailResult {
   success: boolean
@@ -532,7 +565,8 @@ export async function sendDailyEODLinkEmail(
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
       Sent from Taskspace • ${escapeHtml(organizationName)}<br>
-      <a href="${APP_URL}/app?page=settings" style="color: #9ca3af; text-decoration: underline;">Manage notification preferences</a>
+      <a href="${buildUnsubscribeUrl(member.email)}" style="color: #9ca3af; text-decoration: underline;">Unsubscribe from email notifications</a> &nbsp;·&nbsp;
+      <a href="${APP_URL}/app?page=settings" style="color: #9ca3af; text-decoration: underline;">Manage preferences</a>
     </p>
   </div>
 </body>
@@ -613,7 +647,8 @@ export async function sendMissingEODReminder(
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
       Sent from Taskspace • ${escapeHtml(organizationName)}<br>
-      <a href="${APP_URL}/app?page=settings" style="color: #9ca3af; text-decoration: underline;">Manage notification preferences</a>
+      <a href="${buildUnsubscribeUrl(member.email)}" style="color: #9ca3af; text-decoration: underline;">Unsubscribe from email notifications</a> &nbsp;·&nbsp;
+      <a href="${APP_URL}/app?page=settings" style="color: #9ca3af; text-decoration: underline;">Manage preferences</a>
     </p>
   </div>
 </body>
