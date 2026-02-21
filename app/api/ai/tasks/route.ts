@@ -192,7 +192,7 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
 })
 
 // DELETE /api/ai/tasks - Delete an AI-generated task
-export const DELETE = withAdmin(async (request: NextRequest, _auth) => {
+export const DELETE = withAdmin(async (request: NextRequest, auth) => {
   try {
     const { searchParams } = new URL(request.url)
     const taskId = searchParams.get("taskId")
@@ -201,6 +201,16 @@ export const DELETE = withAdmin(async (request: NextRequest, _auth) => {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Task ID is required" },
         { status: 400 }
+      )
+    }
+
+    // Verify the task belongs to this organization before deleting
+    const tasks = await db.aiGeneratedTasks.findByOrganizationId(auth.organization.id)
+    const task = tasks.find(t => t.id === taskId)
+    if (!task) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Task not found" },
+        { status: 404 }
       )
     }
 

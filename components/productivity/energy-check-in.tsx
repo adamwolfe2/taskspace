@@ -5,6 +5,7 @@ import { Battery, BatteryLow, BatteryMedium, BatteryFull, Zap, Check } from "luc
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/hooks/use-toast"
 import {
   Dialog,
   DialogContent,
@@ -57,6 +58,7 @@ export function EnergyCheckIn({
   date,
   className,
 }: EnergyCheckInProps) {
+  const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [selectedEnergy, setSelectedEnergy] = useState<EnergyLevel | null>(
     currentEnergy?.energyLevel || null
@@ -91,6 +93,12 @@ export function EnergyCheckIn({
         notes: notes || undefined,
       })
       setIsOpen(false)
+    } catch (err) {
+      toast({
+        title: "Failed to save",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsSaving(false)
     }

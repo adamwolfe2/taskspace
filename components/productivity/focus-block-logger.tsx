@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { getCategoryInfo, formatDuration } from "@/lib/productivity/calculations"
+import { useToast } from "@/hooks/use-toast"
 import type { FocusBlock, FocusBlockCategory, FocusBlockInput } from "@/lib/types"
 
 interface FocusBlockLoggerProps {
@@ -52,6 +53,7 @@ export function FocusBlockLogger({
   recentBlocks = [],
   className,
 }: FocusBlockLoggerProps) {
+  const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [startTime, setStartTime] = useState("")
   const [endTime, setEndTime] = useState("")
@@ -120,11 +122,17 @@ export function FocusBlockLogger({
         interruptions,
         notes: notes || undefined,
       })
-      setIsOpen(false)
-      // Reset form
+      // Reset form before closing
       setNotes("")
       setInterruptions(0)
       setQuality(3)
+      setIsOpen(false)
+    } catch (err) {
+      toast({
+        title: "Failed to save",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsSaving(false)
     }

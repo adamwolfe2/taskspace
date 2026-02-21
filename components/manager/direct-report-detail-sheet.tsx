@@ -290,7 +290,7 @@ export function DirectReportDetailSheet({
                     <p className="text-xs text-slate-500">30-Day Rate</p>
                   </div>
                 </div>
-                {report.eodStatus.lastSubmittedDate && (
+                {report.eodStatus.lastSubmittedDate && report.eodStatus.lastSubmittedDate.trim() && (
                   <p className="text-xs text-slate-400 mt-3 text-center">
                     Last EOD:{" "}
                     {formatDistanceToNow(parseISO(report.eodStatus.lastSubmittedDate), {

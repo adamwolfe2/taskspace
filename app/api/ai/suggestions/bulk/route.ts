@@ -93,11 +93,12 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
               ? { type: result.createdEntity.type, id: result.createdEntity.id }
               : undefined,
           })
-        } catch {
+        } catch (err) {
+          logError(logger, `Bulk approve failed for suggestion ${id}`, err)
           results.push({
             suggestionId: id,
             success: false,
-            error: "Unknown error",
+            error: err instanceof Error ? err.message : "Unknown error",
           })
         }
       }

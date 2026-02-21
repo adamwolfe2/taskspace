@@ -7,6 +7,7 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createMeetingTodoSchema, updateMeetingTodoSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import { isTerminalState } from "@/lib/api/meetings"
+import { sql } from "@/lib/db/sql"
 import type { ApiResponse } from "@/lib/types"
 
 // GET /api/meetings/[id]/todos - Get todos for a meeting
@@ -202,7 +203,7 @@ export const PATCH = withAuth(async (request, auth, context?) => {
         })
       } else {
         // Un-complete a todo (scoped to this meeting for workspace isolation)
-        const { rows } = await (await import("@/lib/db/sql")).sql`
+        const { rows } = await sql`
           UPDATE meeting_todos
           SET completed = FALSE, completed_at = NULL
           WHERE id = ${todoId} AND meeting_id = ${id}
