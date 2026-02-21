@@ -220,7 +220,7 @@ export function NotificationCenter() {
       case "invitation":
         return <UserPlus className="h-4 w-4 text-purple-500" />
       case "mention":
-        return <AtSign className="h-4 w-4 text-indigo-500" />
+        return <AtSign className="h-4 w-4 text-slate-500" />
       case "meeting_starting":
         return <Video className="h-4 w-4 text-teal-500" />
       case "issue_created":

@@ -92,7 +92,7 @@ function ActionLabel({ action }: { action: string }) {
     digest: { label: "Daily Digest", color: "bg-green-100 text-green-800" },
     query: { label: "AI Query", color: "bg-amber-100 text-amber-800" },
     meeting_prep: { label: "Meeting Prep", color: "bg-pink-100 text-pink-800" },
-    meeting_notes: { label: "Meeting Notes", color: "bg-indigo-100 text-indigo-800" },
+    meeting_notes: { label: "Meeting Notes", color: "bg-slate-100 text-slate-700" },
     scorecard_insights: { label: "Scorecard", color: "bg-cyan-100 text-cyan-800" },
     manager_insights: { label: "Manager Insights", color: "bg-orange-100 text-orange-800" },
     prioritize: { label: "Prioritize", color: "bg-teal-100 text-teal-800" },

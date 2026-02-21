@@ -582,17 +582,17 @@ export function EODSubmissionCard({
 
         {/* Thursday Weekly Deliverable Confirmation - prominent section for EOW reporting */}
         {isThursdaySubmission && activeMetric && (
-          <div className="space-y-3 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+          <div className="space-y-3 p-4 bg-slate-50 border-2 border-slate-200 rounded-lg">
             <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-purple-600" />
-              <Label className="text-sm font-bold text-purple-900">
+              <Calendar className="h-5 w-5 text-slate-600" />
+              <Label className="text-sm font-bold text-slate-900">
                 Weekly Deliverable Confirmation (Due Today)
               </Label>
             </div>
-            <p className="text-sm text-purple-700">
+            <p className="text-sm text-slate-700">
               It's Thursday! Please confirm your weekly {activeMetric.metricName.toLowerCase()} total for the scorecard.
             </p>
-            <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-purple-200">
+            <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-slate-200">
               <div className="flex-1">
                 <Label htmlFor="weeklyConfirm" className="text-xs font-medium text-slate-600 mb-1 block">
                   Final Weekly Total for {activeMetric.metricName}
@@ -604,16 +604,16 @@ export function EODSubmissionCard({
                   placeholder={weeklyMetricTotal !== null ? String(weeklyMetricTotal) : "0"}
                   value={weeklyMetricConfirmed}
                   onChange={(e) => setWeeklyMetricConfirmed(e.target.value)}
-                  className="w-32 bg-white border-purple-300 focus:border-purple-500 text-lg font-semibold"
+                  className="w-32 bg-white border-slate-300 focus:border-primary text-lg font-semibold"
                 />
               </div>
               <div className="text-right">
                 <p className="text-xs text-slate-500">Weekly Goal</p>
-                <p className="text-xl font-bold text-purple-700">{activeMetric.weeklyGoal}</p>
+                <p className="text-xl font-bold text-slate-700">{activeMetric.weeklyGoal}</p>
               </div>
             </div>
             {weeklyMetricTotal !== null && (
-              <p className="text-xs text-purple-600">
+              <p className="text-xs text-slate-600">
                 <CheckCircle2 className="h-3 w-3 inline mr-1" />
                 Running total from this week's reports: <span className="font-semibold">{weeklyMetricTotal}</span>
                 {weeklyMetricTotal >= activeMetric.weeklyGoal
@@ -639,7 +639,7 @@ export function EODSubmissionCard({
                 placeholder="0"
                 value={metricValueToday}
                 onChange={(e) => setMetricValueToday(e.target.value)}
-                className="w-24 bg-white border-slate-200 focus:border-purple-300"
+                className="w-24 bg-white border-slate-200 focus:border-primary/50"
               />
               <span className="text-sm text-slate-500">
                 Weekly goal: <span className="font-medium text-slate-700">{activeMetric.weeklyGoal}</span>

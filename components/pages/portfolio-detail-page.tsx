@@ -379,7 +379,7 @@ export function PortfolioDetailPage() {
         <Card>
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2 mb-1">
-              <CheckSquare className="h-4 w-4 text-indigo-500" />
+              <CheckSquare className="h-4 w-4 text-slate-500" />
               <span className="text-xs text-slate-500">Active Tasks</span>
             </div>
             <div className="flex items-end justify-between">

@@ -101,7 +101,7 @@ export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-purple-500" />
+              <BarChart3 className="h-5 w-5 text-slate-500" />
               Weekly Report Share Link
             </CardTitle>
             <CardDescription>
@@ -141,14 +141,14 @@ export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
         </div>
 
         {/* Week Info */}
-        <div className="flex items-center gap-4 py-3 px-4 bg-purple-50 rounded-lg">
+        <div className="flex items-center gap-4 py-3 px-4 bg-slate-50 rounded-lg">
           <div className="flex items-center gap-2">
-            <Share2 className="h-4 w-4 text-purple-500" />
+            <Share2 className="h-4 w-4 text-slate-500" />
             <span className="text-sm text-slate-600">
               Week ending <strong>Thursday, {format(selectedThursday, "MMMM d")}</strong>
             </span>
           </div>
-          <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+          <Badge variant="secondary" className="bg-slate-100 text-slate-700">
             7-day summary
           </Badge>
         </div>

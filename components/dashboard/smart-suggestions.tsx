@@ -225,7 +225,7 @@ export function SmartSuggestions({
  description: `You've completed ${completedThisWeek} tasks this week!`,
  reason: "Keep up the great work",
  icon: Brain,
- color: "text-purple-600",
+ color: "text-slate-600",
  })
  }
 
@@ -285,7 +285,7 @@ export function SmartSuggestions({
  <Card className={cn("", className)}>
  <CardHeader className="pb-3">
  <CardTitle className="text-base flex items-center gap-2">
- <Sparkles className="h-5 w-5 text-purple-600" />
+ <Sparkles className="h-5 w-5 text-slate-600" />
  Smart Suggestions
  </CardTitle>
  </CardHeader>
@@ -370,7 +370,7 @@ export function SuggestionBadge({
  "cursor-pointer",
  criticalCount > 0
  ? "bg-red-50 text-red-700 border-red-200  "
- : "bg-purple-50 text-purple-700 border-purple-200  ",
+ : "bg-slate-50 text-slate-700 border-slate-200  ",
  className
  )}
  onClick={onClick}

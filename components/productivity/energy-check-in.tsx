@@ -30,7 +30,7 @@ const energyLevels: { value: EnergyLevel; label: string; icon: React.ReactNode; 
   { value: "low", label: "Low", icon: <BatteryLow className="h-5 w-5" />, color: "text-red-500", bgColor: "bg-red-50 border-red-200 hover:bg-red-100" },
   { value: "medium", label: "Medium", icon: <BatteryMedium className="h-5 w-5" />, color: "text-amber-500", bgColor: "bg-amber-50 border-amber-200 hover:bg-amber-100" },
   { value: "high", label: "High", icon: <BatteryFull className="h-5 w-5" />, color: "text-emerald-500", bgColor: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100" },
-  { value: "peak", label: "Peak", icon: <Zap className="h-5 w-5" />, color: "text-violet-500", bgColor: "bg-violet-50 border-violet-200 hover:bg-violet-100" },
+  { value: "peak", label: "Peak", icon: <Zap className="h-5 w-5" />, color: "text-slate-600", bgColor: "bg-slate-50 border-slate-200 hover:bg-slate-100" },
 ]
 
 const moodOptions: { value: MoodEmoji; label: string }[] = [

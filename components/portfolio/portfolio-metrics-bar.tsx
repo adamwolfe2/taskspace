@@ -81,7 +81,7 @@ export function PortfolioMetricsBar({ orgs, trends }: PortfolioMetricsBarProps) 
         ? `${velocityDelta > 0 ? "+" : ""}${velocityDelta}% vs last wk`
         : "Same as last wk",
       icon: CheckSquare,
-      iconColor: "text-indigo-500",
+      iconColor: "text-slate-500",
       sparkData: taskSparkline,
       sparkColor: "#6366f1",
       valueColor: "text-slate-900",

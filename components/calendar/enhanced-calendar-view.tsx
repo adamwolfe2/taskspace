@@ -288,7 +288,7 @@ export function EnhancedCalendarView({
                   {dayData?.rocks.slice(0, 1).map((rock) => (
                     <div
                       key={rock.id}
-                      className="text-[10px] md:text-xs truncate px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-200 flex items-center gap-1"
+                      className="text-[10px] md:text-xs truncate px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1"
                     >
                       <Target className="h-2.5 w-2.5 flex-shrink-0" />
                       <span className="truncate">{rock.title}</span>

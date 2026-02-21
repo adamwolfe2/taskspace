@@ -266,7 +266,7 @@ export function CalendarView({ tasks, rocks, eodReports, currentUser: _currentUs
                 {selectedDayData.rocks.map((rock) => (
                   <div
                     key={rock.id}
-                    className="text-sm p-2 rounded bg-white border border-purple-200 flex items-center justify-between"
+                    className="text-sm p-2 rounded bg-white border border-slate-200 flex items-center justify-between"
                   >
                     <span>{rock.title}</span>
                     <span className="text-xs text-slate-500">{rock.progress}%</span>
