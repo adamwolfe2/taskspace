@@ -393,7 +393,7 @@ export function formatConsolidatedDigestHTML(digest: ConsolidatedDigest): string
         <div class="stat-label">Team Members</div>
       </div>
       <div class="stat">
-        <div class="stat-value">${Math.round((digest.totalReports / digest.totalMembers) * 100)}%</div>
+        <div class="stat-value">${digest.totalMembers > 0 ? Math.round((digest.totalReports / digest.totalMembers) * 100) : 0}%</div>
         <div class="stat-label">Completion</div>
       </div>
     </div>`

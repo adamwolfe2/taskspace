@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
         await db.cronExecutions.recordExecution("daily-digest", org.id, today, currentHour)
       } catch (error) {
         // If we get a unique constraint violation, it means this job already ran for this org/hour
-        if (error instanceof Error && error.message.includes("unique")) {
+        if ((error as { code?: string }).code === "23505") {
           logger.info({ orgName: org.name, today, hour: currentHour }, "Digest already processed this hour (duplicate run)")
           results.push({ orgId: org.id, orgName: org.name, success: true, skipped: "Already processed this hour" })
           continue
@@ -329,16 +329,17 @@ export async function GET(request: NextRequest) {
 
         results.push({ orgId: org.id, orgName: org.name, success: true })
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
         logError(logger, `Failed for org ${org.name}`, error)
         Sentry.captureMessage("Cron daily-digest partially failed", {
           level: "warning",
-          extra: { orgId: org.id, orgName: org.name, error: "Unknown error" },
+          extra: { orgId: org.id, orgName: org.name, error: errorMessage },
         })
         results.push({
           orgId: org.id,
           orgName: org.name,
           success: false,
-          error: "Unknown error",
+          error: errorMessage,
         })
       }
     }

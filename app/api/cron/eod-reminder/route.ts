@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
           await db.cronExecutions.recordExecution("eod-reminder", org.id, today, currentHour)
         } catch (error) {
           // If we get a unique constraint violation, it means reminders already sent this hour
-          if (error instanceof Error && error.message.includes("unique")) {
+          if ((error as { code?: string }).code === "23505") {
             logger.info({ orgName: org.name, today, hour: currentHour }, "Reminders already sent this hour (duplicate run)")
             results.push({
               orgId: org.id,

@@ -10,8 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { withAuth } from "@/lib/api/middleware"
-import { isAdmin } from "@/lib/auth/middleware"
+import { withAdmin } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
@@ -158,15 +157,8 @@ function queryRecentAll(startISO: string) {
   `
 }
 
-export const GET = withAuth(async (request: NextRequest, auth) => {
+export const GET = withAdmin(async (request: NextRequest, auth) => {
   try {
-    if (!isAdmin(auth)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const days = Math.min(parseInt(searchParams.get("days") || "30"), 90)
     const isSuperAdmin = auth.user.isSuperAdmin === true
