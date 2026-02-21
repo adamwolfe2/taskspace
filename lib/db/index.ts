@@ -992,6 +992,7 @@ export const db = {
         SELECT * FROM password_reset_tokens
         WHERE LOWER(email) = LOWER(${email}) AND used_at IS NULL
         ORDER BY created_at DESC
+        LIMIT 10
       `
       return rows.map(parsePasswordResetToken)
     },
@@ -2398,6 +2399,7 @@ export const db = {
         SELECT * FROM api_keys
         WHERE organization_id = ${orgId}
         ORDER BY created_at DESC
+        LIMIT 200
       `
       return rows.map(parseApiKey)
     },
@@ -2440,6 +2442,7 @@ export const db = {
         WHERE organization_id = ${orgId}
         AND (is_shared = TRUE OR created_by = ${userId || ''})
         ORDER BY created_at DESC
+        LIMIT 500
       `
       return rows.map(row => ({
         id: row.id as string,
