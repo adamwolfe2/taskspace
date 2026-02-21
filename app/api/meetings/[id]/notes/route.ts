@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
 
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
+import { verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { meetings } from "@/lib/db/meetings"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { updateMeetingNotesSchema } from "@/lib/validation/schemas"
@@ -22,6 +23,15 @@ export const GET = withAuth(async (request, auth, context?) => {
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Meeting not found" },
+        { status: 404 }
+      )
+    }
+
+    // SECURITY: Verify workspace belongs to the authenticated user's organization
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(meeting.workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Meeting not found" },
         { status: 404 }
@@ -72,6 +82,15 @@ export const POST = withAuth(async (request, auth, context?) => {
     const meeting = await meetings.getById(id)
 
     if (!meeting) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Meeting not found" },
+        { status: 404 }
+      )
+    }
+
+    // SECURITY: Verify workspace belongs to the authenticated user's organization
+    const isValidWorkspaceForPost = await verifyWorkspaceOrgBoundary(meeting.workspaceId, auth.organization.id)
+    if (!isValidWorkspaceForPost) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Meeting not found" },
         { status: 404 }

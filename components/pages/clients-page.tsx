@@ -137,7 +137,7 @@ export function ClientsPage({
   }
 
   const handleSubmit = async () => {
-    if (!formName.trim()) return
+    if (!formName.trim() || isSubmitting) return
     setIsSubmitting(true)
     try {
       if (editingClient) {
@@ -324,7 +324,7 @@ export function ClientsPage({
         )}
 
         {/* Create/Edit Modal */}
-        <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <Dialog open={showCreateModal} onOpenChange={(open) => { setShowCreateModal(open); if (!open) { resetForm(); setEditingClient(null) } }}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>{editingClient ? "Edit Client" : "New Client"}</DialogTitle>
@@ -457,7 +457,7 @@ export function ClientsPage({
                         <Phone className="h-3.5 w-3.5 text-muted-foreground" /> {detailClient.contactPhone}
                       </p>
                     )}
-                    {detailClient.website && (
+                    {detailClient.website && /^https?:\/\//i.test(detailClient.website) && (
                       <p className="text-sm flex items-center gap-1.5">
                         <Globe className="h-3.5 w-3.5 text-muted-foreground" />
                         <a href={detailClient.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{detailClient.website}</a>

@@ -197,7 +197,7 @@ export function TeamManagementTab() {
         method: "DELETE",
         headers: { "X-Requested-With": "XMLHttpRequest" },
       })
-      const data = await response.json()
+      const data = await response.json().catch(() => ({ success: false, error: "Server error" }))
 
       if (!data.success) {
         throw new Error(data.error || "Failed to cancel invitation")

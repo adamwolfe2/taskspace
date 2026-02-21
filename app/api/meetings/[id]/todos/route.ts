@@ -186,7 +186,7 @@ export const PATCH = withAuth(async (request, auth, context?) => {
 
     if (body.completed !== undefined) {
       if (body.completed) {
-        const updatedTodo = await meetings.completeTodo(todoId)
+        const updatedTodo = await meetings.completeTodo(todoId, id)
         if (!updatedTodo) {
           return NextResponse.json<ApiResponse<null>>(
             { success: false, error: "Todo not found" },

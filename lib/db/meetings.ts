@@ -1000,11 +1000,11 @@ export async function getMeetingTodos(meetingId: string): Promise<MeetingTodo[]>
 /**
  * Complete a todo
  */
-export async function completeMeetingTodo(todoId: string): Promise<MeetingTodo | null> {
+export async function completeMeetingTodo(todoId: string, meetingId: string): Promise<MeetingTodo | null> {
   const { rows } = await sql`
     UPDATE meeting_todos
     SET completed = TRUE, completed_at = NOW()
-    WHERE id = ${todoId}
+    WHERE id = ${todoId} AND meeting_id = ${meetingId}
     RETURNING *
   `
 
