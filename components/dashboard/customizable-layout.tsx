@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react"
+import { useState, useCallback, useRef, useEffect, useMemo, useLayoutEffect } from "react"
 import dynamic from "next/dynamic"
 
 // react-grid-layout references `Element` at module level which breaks SSR.
@@ -204,8 +204,11 @@ export function CustomizableLayout({
  const [showSettings, setShowSettings] = useState(false)
  const containerRef = useRef<HTMLDivElement>(null)
  const [containerWidth, setContainerWidth] = useState(0)
- // Ref so the ResizeObserver callback can read editing state without stale closure
+ // Ref so the ResizeObserver callback can read editing state without stale closure.
+ // Kept in sync with the isEditing prop DURING RENDER (not in an effect) so the
+ // guard is always current before any browser callbacks (ResizeObserver) can fire.
  const isEditingRef = useRef(false)
+ isEditingRef.current = isEditing
  const themedColors = useThemedIconColors()
 
  // Measure container width for react-grid-layout.
@@ -226,16 +229,14 @@ export function CustomizableLayout({
   return () => observer.disconnect()
  }, [])
 
- // Snapshot the real DOM width the moment we enter edit mode (before RGL
- // absolutely-positions children and potentially shrinks the container).
- // Also reset interaction tracking.
- useEffect(() => {
-  isEditingRef.current = isEditing
-  if (isEditing) {
+ // Snapshot the real DOM width the moment we enter edit mode.
+ // useLayoutEffect fires synchronously after DOM mutations but BEFORE the browser
+ // paints and BEFORE ResizeObserver callbacks run, so containerWidth is correct
+ // before RGL ever sees it and the ResizeObserver guard (isEditingRef) is already set.
+ useLayoutEffect(() => {
+  if (isEditing && containerRef.current) {
    userInteractedRef.current = false
-   if (containerRef.current) {
-    setContainerWidth(containerRef.current.clientWidth)
-   }
+   setContainerWidth(containerRef.current.clientWidth)
   }
  }, [isEditing])
 
