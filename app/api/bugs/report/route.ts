@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { bugReportSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 
 /**
@@ -8,16 +10,7 @@ import type { ApiResponse } from "@/lib/types"
  */
 export const POST = withAuth(async (request, auth) => {
   try {
-    const body = await request.json()
-    const { description, page, url, userAgent, timestamp } = body
-
-    // Validate
-    if (!description || description.trim().length < 10) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Description must be at least 10 characters" },
-        { status: 400 }
-      )
-    }
+    const { description, page, url, userAgent, timestamp } = await validateBody(request, bugReportSchema)
 
     // Build GitHub issue body
     const issueBody = `
@@ -92,6 +85,12 @@ ${description}
       message: "Bug report submitted successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     console.error("Bug report error:", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to submit bug report" },

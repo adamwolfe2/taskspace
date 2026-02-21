@@ -3,6 +3,8 @@ import { withSuperAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { withTransaction } from "@/lib/db/transactions"
 import { generateId, slugify } from "@/lib/auth/password"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createOrgSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logError, logger } from "@/lib/logger"
 import { CONFIG } from "@/lib/config"
@@ -15,15 +17,7 @@ import { CONFIG } from "@/lib/config"
  */
 export const POST = withSuperAdmin(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { name, logoUrl } = body
-
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Organization name is required" },
-        { status: 400 }
-      )
-    }
+    const { name, logoUrl } = await validateBody(request, createOrgSchema)
 
     const now = new Date().toISOString()
     const orgId = generateId()
@@ -97,6 +91,12 @@ export const POST = withSuperAdmin(async (request: NextRequest, auth) => {
       message: "Organization created successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Super admin create org error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create organization" },

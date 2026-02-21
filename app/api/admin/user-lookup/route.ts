@@ -6,17 +6,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { withDangerousAdmin } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { adminEmailLookupSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 
 export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
-  const { email } = await request.json()
-
-  if (!email || typeof email !== "string") {
-    return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Email is required" },
-      { status: 400 }
-    )
-  }
+  try {
+  const { email } = await validateBody(request, adminEmailLookupSchema)
 
   // Look up user by email (case-insensitive)
   const { rows: userRows } = await sql`
@@ -94,4 +90,13 @@ export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
       orgLockedUsersCount: parseInt(lockedCountRows[0]?.count || "0", 10),
     },
   })
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+    throw error
+  }
 })

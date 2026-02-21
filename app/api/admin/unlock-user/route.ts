@@ -6,17 +6,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { withDangerousAdmin } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import { logger } from "@/lib/logger"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { adminEmailLookupSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 
 export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
-  const { email } = await request.json()
-
-  if (!email || typeof email !== "string") {
-    return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Email is required" },
-      { status: 400 }
-    )
-  }
+  try {
+  const { email } = await validateBody(request, adminEmailLookupSchema)
 
   // Find and unlock the user
   const { rows, rowCount } = await sql`
@@ -44,4 +40,13 @@ export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
     data: { userId: user.id, email: user.email, name: user.name },
     message: `Account unlocked for ${user.name} (${user.email}). They can now log in.`,
   })
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
+    throw error
+  }
 })

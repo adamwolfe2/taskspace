@@ -1317,3 +1317,24 @@ export type UpdateClientInput = z.infer<typeof updateClientSchema>
 export type CreateProjectInput = z.infer<typeof createProjectSchema>
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>
 export type ProjectMemberInput = z.infer<typeof projectMemberSchema>
+
+// ============================================
+// ADMIN / SUPER-ADMIN SCHEMAS
+// ============================================
+
+export const adminEmailLookupSchema = z.object({
+  email: emailSchema,
+})
+
+export const bugReportSchema = z.object({
+  description: z.string().min(10, "Description must be at least 10 characters").max(5000).trim(),
+  page: z.string().max(500).trim().optional(),
+  url: z.string().max(1000).trim().optional(),
+  userAgent: z.string().max(500).trim().optional(),
+  timestamp: z.string().max(100).optional(),
+})
+
+export const createOrgSchema = z.object({
+  name: z.string().min(1, "Organization name is required").max(255).trim(),
+  logoUrl: z.string().url("Invalid logo URL").max(1000).optional().or(z.literal("")),
+})
