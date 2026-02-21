@@ -177,6 +177,15 @@ async function handleCheckoutCompleted(session: StripeWebhookObject) {
 
   if (organizationId) {
     // Flow 1: In-app checkout — org is known
+    // Verify org exists before trusting metadata (defense against forged checkout sessions)
+    const { rows: orgCheckRows } = await sql<{ id: string }>`
+      SELECT id FROM organizations WHERE id = ${organizationId} LIMIT 1
+    `
+    if (orgCheckRows.length === 0) {
+      logger.error({ organizationId }, "Checkout completed: org from metadata not found, skipping")
+      return
+    }
+
     logger.info({ organizationId, plan, billingCycle }, "Checkout completed for org")
 
     if (session.customer) {

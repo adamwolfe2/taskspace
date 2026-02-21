@@ -293,7 +293,7 @@ export function getTrialDaysRemaining(subscription?: { plan: PlanTier; currentPe
   const expiryDate = new Date(subscription.currentPeriodEnd)
   const today = new Date()
   const diffTime = expiryDate.getTime() - today.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
   return Math.max(0, diffDays)
 }

@@ -156,12 +156,12 @@ export async function checkAICredits(organizationId: string): Promise<{
     }
   } catch (error) {
     logger.error({ error, organizationId }, "Failed to check AI credits")
-    // Fail open - allow the request if we can't check
+    // Fail closed — deny AI access when we can't verify credits to prevent billing bypass
     return {
-      hasCredits: true,
+      hasCredits: false,
       creditsUsed: 0,
-      creditsLimit: 100,
-      remainingCredits: 100,
+      creditsLimit: 0,
+      remainingCredits: 0,
     }
   }
 }
