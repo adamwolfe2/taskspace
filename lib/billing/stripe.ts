@@ -167,32 +167,73 @@ export async function checkAICredits(organizationId: string): Promise<{
 }
 
 /**
- * Record AI usage for an organization
+ * Record AI usage for an organization.
+ *
+ * Uses a conditional INSERT via CTE to atomically check the monthly credit
+ * limit before recording usage. This eliminates the TOCTOU race condition
+ * between checkAICredits() and recordAIUsage() where two concurrent requests
+ * could both pass the limit check and both get recorded, causing overage.
+ *
+ * The INSERT only proceeds if the current month's total + new credits stay
+ * within the plan limit. Unlimited plans (-1) always insert.
  */
 export async function recordAIUsage(usage: AIUsageRecord): Promise<void> {
   try {
-    await sql`
-      INSERT INTO ai_usage (
-        organization_id, user_id, action, model,
-        input_tokens, output_tokens, credits_used, metadata
-      ) VALUES (
-        ${usage.organizationId},
-        ${usage.userId},
-        ${usage.action},
-        ${usage.model},
-        ${usage.inputTokens},
-        ${usage.outputTokens},
-        ${usage.creditsUsed},
-        ${JSON.stringify(usage.metadata || {})}::jsonb
-      )
+    // Fetch the org's plan limit for the atomic guard
+    const { rows: planRows } = await sql`
+      SELECT subscription->>'plan' as plan FROM organizations WHERE id = ${usage.organizationId}
     `
+    const plan = (planRows[0]?.plan as string) || "free"
+    const planConfig = PLANS[plan] || PLANS.free
+    const limit = planConfig.aiCreditsMonthly // -1 = unlimited
+
+    if (limit === -1) {
+      // Unlimited plan — unconditional insert
+      await sql`
+        INSERT INTO ai_usage (
+          organization_id, user_id, action, model,
+          input_tokens, output_tokens, credits_used, metadata
+        ) VALUES (
+          ${usage.organizationId}, ${usage.userId}, ${usage.action}, ${usage.model},
+          ${usage.inputTokens}, ${usage.outputTokens}, ${usage.creditsUsed},
+          ${JSON.stringify(usage.metadata || {})}::jsonb
+        )
+      `
+    } else {
+      // ATOMIC: CTE checks current usage and only inserts if still within limit.
+      // This is a single Postgres statement — no race window between check and write.
+      const { rowCount } = await sql`
+        WITH current_month_usage AS (
+          SELECT COALESCE(SUM(credits_used), 0) AS used
+          FROM ai_usage
+          WHERE organization_id = ${usage.organizationId}
+            AND created_at >= date_trunc('month', CURRENT_DATE)
+        )
+        INSERT INTO ai_usage (
+          organization_id, user_id, action, model,
+          input_tokens, output_tokens, credits_used, metadata
+        )
+        SELECT
+          ${usage.organizationId}, ${usage.userId}, ${usage.action}, ${usage.model},
+          ${usage.inputTokens}, ${usage.outputTokens}, ${usage.creditsUsed},
+          ${JSON.stringify(usage.metadata || {})}::jsonb
+        FROM current_month_usage
+        WHERE used + ${usage.creditsUsed} <= ${limit}
+      `
+
+      if ((rowCount ?? 0) === 0) {
+        // Concurrent requests caused overage — the AI call already completed
+        // but we refuse to record more than the plan allows.
+        logger.warn(
+          { organizationId: usage.organizationId, action: usage.action, creditsUsed: usage.creditsUsed, limit },
+          "AI credit overage blocked by atomic guard — concurrent request exceeded monthly limit"
+        )
+        return
+      }
+    }
 
     logger.debug(
-      {
-        organizationId: usage.organizationId,
-        action: usage.action,
-        creditsUsed: usage.creditsUsed,
-      },
+      { organizationId: usage.organizationId, action: usage.action, creditsUsed: usage.creditsUsed },
       "AI usage recorded"
     )
   } catch (error) {
