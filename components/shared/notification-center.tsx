@@ -159,6 +159,8 @@ export function NotificationCenter() {
       if (response.ok) {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })))
         setUnreadCount(0)
+        // Re-fetch count from server to reconcile any in-flight polling requests
+        fetchUnreadCount()
       }
     } catch {
       // Error marking all as read

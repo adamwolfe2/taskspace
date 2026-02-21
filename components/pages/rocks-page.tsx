@@ -216,7 +216,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
               {/* Mobile card layout */}
               <div className="md:hidden space-y-3">
                 {displayRocks.map((rock) => {
-                  const owner = teamMembers.find((m) => m.userId === rock.userId)
+                  const owner = rock.userId ? teamMembers.find((m) => m.userId === rock.userId) : (rock.ownerEmail ? teamMembers.find((m) => m.email?.toLowerCase() === rock.ownerEmail?.toLowerCase()) : undefined)
                   const daysLeft = getDaysUntil(rock.dueDate)
                   const statusConfig = getStatusConfig(rock.status)
 
@@ -284,7 +284,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                   </TableHeader>
                   <TableBody>
                     {displayRocks.map((rock) => {
-                      const owner = teamMembers.find((m) => m.userId === rock.userId)
+                      const owner = rock.userId ? teamMembers.find((m) => m.userId === rock.userId) : (rock.ownerEmail ? teamMembers.find((m) => m.email?.toLowerCase() === rock.ownerEmail?.toLowerCase()) : undefined)
                       const daysLeft = getDaysUntil(rock.dueDate)
                       const statusConfig = getStatusConfig(rock.status)
 
