@@ -225,6 +225,12 @@ async function createEntityFromSuggestion(
       }
 
       if (rockData.rockId) {
+        // SECURITY: Verify rock belongs to this organization before updating
+        const rock = await db.rocks.findById(rockData.rockId)
+        if (!rock || rock.organizationId !== organizationId) {
+          return null
+        }
+
         await db.rocks.update(rockData.rockId, {
           progress: rockData.progress,
           status: rockData.status as "on-track" | "at-risk" | "blocked" | "completed" | undefined,
