@@ -998,32 +998,35 @@ export const aiPrioritizeSchema = z.object({
     dueDate: z.string().optional(),
     assigneeName: z.string().optional(),
     rockTitle: z.string().optional(),
-  })).default([]),
+  })).max(100, "Cannot prioritize more than 100 tasks at once").default([]),
   rocks: z.array(z.object({
     title: z.string(),
     progress: z.number(),
     status: z.string(),
-  })).default([]),
+  })).max(50, "Cannot prioritize more than 50 rocks at once").default([]),
 })
 
 export const aiMeetingNotesSchema = z.object({
   workspaceId: z.string().min(1, "Workspace ID is required"),
-  meetingData: z.record(z.unknown()),
+  meetingData: z.record(z.unknown()).refine(
+    (d) => JSON.stringify(d).length <= 100_000,
+    { message: "Meeting data payload is too large (max 100KB)" }
+  ),
 })
 
 export const aiManagerInsightsSchema = z.object({
   workspaceId: z.string().min(1, "Workspace ID is required"),
-  directReports: z.array(z.record(z.unknown())).optional(),
-  rocks: z.array(z.record(z.unknown())).optional(),
-  tasks: z.array(z.record(z.unknown())).optional(),
-  eodReports: z.array(z.record(z.unknown())).optional(),
+  directReports: z.array(z.record(z.unknown())).max(50).optional(),
+  rocks: z.array(z.record(z.unknown())).max(100).optional(),
+  tasks: z.array(z.record(z.unknown())).max(200).optional(),
+  eodReports: z.array(z.record(z.unknown())).max(200).optional(),
 })
 
 export const aiMeetingPrepSchema = z.object({
   workspaceId: z.string().min(1, "Workspace ID is required"),
-  rocks: z.array(z.record(z.unknown())).optional(),
-  tasks: z.array(z.record(z.unknown())).optional(),
-  issues: z.array(z.record(z.unknown())).optional(),
+  rocks: z.array(z.record(z.unknown())).max(50).optional(),
+  tasks: z.array(z.record(z.unknown())).max(100).optional(),
+  issues: z.array(z.record(z.unknown())).max(100).optional(),
 })
 
 export const aiScorecardInsightsSchema = z.object({
