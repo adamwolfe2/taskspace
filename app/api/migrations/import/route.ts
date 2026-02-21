@@ -142,6 +142,9 @@ async function validateImportJob(
 
     // Fetch and parse file
     const response = await fetch(fileUrl)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch import file: HTTP ${response.status}`)
+    }
     const raw = await response.json()
 
     // Validate structure
