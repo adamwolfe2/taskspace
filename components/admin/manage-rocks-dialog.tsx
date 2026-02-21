@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Pencil, Trash2, Plus, X, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -29,6 +30,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
   const [quarterFilter, setQuarterFilter] = useState<string>("all")
   const [isLoading, setIsLoading] = useState(false)
   const [deletingRockId, setDeletingRockId] = useState<string | null>(null)
+  const [rockToDelete, setRockToDelete] = useState<string | null>(null)
   const currentQuarter = `Q${Math.floor(new Date().getMonth() / 3) + 1} ${new Date().getFullYear()}`
   const [formData, setFormData] = useState({
     title: "",
@@ -264,6 +266,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
     : allUserRocks.filter((r) => r.quarter === quarterFilter)
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -356,7 +359,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteRock(rock.id)}
+                              onClick={() => setRockToDelete(rock.id)}
                               disabled={deletingRockId !== null}
                               className="text-destructive hover:text-destructive"
                             >
@@ -554,5 +557,31 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
         </div>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={!!rockToDelete} onOpenChange={(open) => { if (!open) setRockToDelete(null) }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Rock?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently delete the rock and all its milestones. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => {
+              if (rockToDelete) {
+                handleDeleteRock(rockToDelete)
+                setRockToDelete(null)
+              }
+            }}
+          >
+            Delete Rock
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 }

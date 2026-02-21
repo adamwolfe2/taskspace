@@ -120,7 +120,7 @@ export function WorkspaceBuilder({ onClose }: WorkspaceBuilderProps) {
     try {
       const res = await fetch("/api/ai/parse-workspace", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ text: textInput.trim() }),
       })
       const data = await res.json()
@@ -172,7 +172,7 @@ export function WorkspaceBuilder({ onClose }: WorkspaceBuilderProps) {
     try {
       const res = await fetch("/api/onboarding/build", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ workspaceId, payload }),
       })
       const data = await res.json()
