@@ -67,9 +67,9 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     const { eodReportId } = await validateBody(request, parseEodSchema)
 
-    // Get the EOD report
+    // Get the EOD report — verify it belongs to the authenticated org (prevent IDOR)
     const eodReport = await db.eodReports.findById(eodReportId)
-    if (!eodReport) {
+    if (!eodReport || eodReport.organizationId !== auth.organization.id) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "EOD Report not found" },
         { status: 404 }
