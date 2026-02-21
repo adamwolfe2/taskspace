@@ -15,7 +15,7 @@ interface SearchResult {
 // GET /api/search?q=...
 export const GET = withAuth(async (request: NextRequest, auth) => {
   const q = request.nextUrl.searchParams.get("q")?.trim()
-  if (!q || q.length < 2) {
+  if (!q || q.length < 2 || q.length > 200) {
     return successResponse<SearchResult[]>([])
   }
 
