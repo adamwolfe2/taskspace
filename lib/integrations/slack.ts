@@ -173,6 +173,14 @@ export async function sendSlackMessage(
 }
 
 /**
+ * Escape user-controlled strings for Slack mrkdwn context.
+ * Prevents injection of special Slack sequences like <!here>, <!channel>, <URL|text>.
+ */
+function escapeMrkdwn(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+}
+
+/**
  * Build a task assignment notification for Slack
  */
 export function buildTaskAssignmentMessage(
@@ -204,7 +212,7 @@ export function buildTaskAssignmentMessage(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*${taskTitle}*`,
+        text: `*${escapeMrkdwn(taskTitle)}*`,
       },
     },
     {
@@ -212,7 +220,7 @@ export function buildTaskAssignmentMessage(
       fields: [
         {
           type: "mrkdwn",
-          text: `*Assigned To:*\n${assigneeName}`,
+          text: `*Assigned To:*\n${escapeMrkdwn(assigneeName)}`,
         },
         {
           type: "mrkdwn",
@@ -220,11 +228,11 @@ export function buildTaskAssignmentMessage(
         },
         {
           type: "mrkdwn",
-          text: `*Due Date:*\n${dueDate || "No due date"}`,
+          text: `*Due Date:*\n${dueDate ? escapeMrkdwn(dueDate) : "No due date"}`,
         },
         {
           type: "mrkdwn",
-          text: `*Assigned By:*\n${assignedByName}`,
+          text: `*Assigned By:*\n${escapeMrkdwn(assignedByName)}`,
         },
       ],
     },
@@ -235,7 +243,7 @@ export function buildTaskAssignmentMessage(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Description:*\n${taskDescription}`,
+        text: `*Description:*\n${escapeMrkdwn(taskDescription)}`,
       },
     })
   }
@@ -246,14 +254,14 @@ export function buildTaskAssignmentMessage(
       elements: [
         {
           type: "mrkdwn",
-          text: `💡 _${context}_`,
+          text: `💡 _${escapeMrkdwn(context)}_`,
         },
       ],
     })
   }
 
   return {
-    text: `New task assigned to ${assigneeName}: ${taskTitle}`,
+    text: `New task assigned to ${escapeMrkdwn(assigneeName)}: ${escapeMrkdwn(taskTitle)}`,
     blocks,
   }
 }
@@ -345,20 +353,20 @@ export function buildEscalationMessage(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*From:* ${memberName}\n*Date:* ${date}`,
+        text: `*From:* ${escapeMrkdwn(memberName)}\n*Date:* ${escapeMrkdwn(date)}`,
       },
     },
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `> ${escalationNote}`,
+        text: `> ${escapeMrkdwn(escalationNote)}`,
       },
     },
   ]
 
   return {
-    text: `Escalation from ${memberName}: ${escalationNote}`,
+    text: `Escalation from ${escapeMrkdwn(memberName)}: ${escapeMrkdwn(escalationNote)}`,
     blocks,
   }
 }
@@ -392,7 +400,7 @@ export function buildBlockerAlertMessage(
       fields: [
         {
           type: "mrkdwn",
-          text: `*Team Member:*\n${memberName}`,
+          text: `*Team Member:*\n${escapeMrkdwn(memberName)}`,
         },
         {
           type: "mrkdwn",
@@ -404,7 +412,7 @@ export function buildBlockerAlertMessage(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Blocker:*\n${blockerText}`,
+        text: `*Blocker:*\n${escapeMrkdwn(blockerText)}`,
       },
     },
   ]
@@ -455,11 +463,11 @@ export function buildFullEODReportMessage(
       fields: [
         {
           type: "mrkdwn",
-          text: `*Team Member:*\n${memberName}`,
+          text: `*Team Member:*\n${escapeMrkdwn(memberName)}`,
         },
         {
           type: "mrkdwn",
-          text: `*Department:*\n${department}`,
+          text: `*Department:*\n${escapeMrkdwn(department)}`,
         },
       ],
     },
@@ -484,8 +492,8 @@ export function buildFullEODReportMessage(
   }
 
   for (const [rockTitle, rockTasks] of Object.entries(tasksByRock)) {
-    let taskText = rockTitle !== "General" ? `*${rockTitle}:*\n` : ""
-    taskText += rockTasks.map(t => `• ${t.text}`).join("\n")
+    let taskText = rockTitle !== "General" ? `*${escapeMrkdwn(rockTitle)}:*\n` : ""
+    taskText += rockTasks.map(t => `• ${escapeMrkdwn(t.text)}`).join("\n")
     blocks.push({
       type: "section",
       text: {
@@ -503,7 +511,7 @@ export function buildFullEODReportMessage(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*⚠️ Challenges:*\n${challenges}`,
+          text: `*⚠️ Challenges:*\n${escapeMrkdwn(challenges)}`,
         },
       }
     )
@@ -531,8 +539,8 @@ export function buildFullEODReportMessage(
     }
 
     for (const [rockTitle, rockPriorities] of Object.entries(prioritiesByRock)) {
-      let priorityText = rockTitle !== "General" ? `*${rockTitle}:*\n` : ""
-      priorityText += rockPriorities.map(p => `• ${p.text}`).join("\n")
+      let priorityText = rockTitle !== "General" ? `*${escapeMrkdwn(rockTitle)}:*\n` : ""
+      priorityText += rockPriorities.map(p => `• ${escapeMrkdwn(p.text)}`).join("\n")
       blocks.push({
         type: "section",
         text: {
@@ -551,14 +559,14 @@ export function buildFullEODReportMessage(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*🚨 ESCALATION:*\n> ${escalationNote}`,
+          text: `*🚨 ESCALATION:*\n> ${escapeMrkdwn(escalationNote)}`,
         },
       }
     )
   }
 
   return {
-    text: `EOD Report from ${memberName} (${date})`,
+    text: `EOD Report from ${escapeMrkdwn(memberName)} (${escapeMrkdwn(date)})`,
     blocks,
   }
 }
@@ -629,7 +637,7 @@ export function buildConsolidatedDigestMessage(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*👤 ${adminDigest.memberName}* (Your Report)`,
+        text: `*👤 ${escapeMrkdwn(adminDigest.memberName)}* (Your Report)`,
       },
     })
 
@@ -639,7 +647,7 @@ export function buildConsolidatedDigestMessage(
         const filledBlocks = Math.round(rock.progress / 10)
         const emptyBlocks = 10 - filledBlocks
         const progressBar = `${"█".repeat(filledBlocks)}${"░".repeat(emptyBlocks)}`
-        rockText += `• *${rock.title}* - ${rock.progress}% \`${progressBar}\`\n`
+        rockText += `• *${escapeMrkdwn(rock.title)}* - ${rock.progress}% \`${progressBar}\`\n`
         if (rock.taskCount > 0) {
           rockText += `  _${rock.taskCount} task${rock.taskCount > 1 ? "s" : ""} completed_\n`
         }
@@ -683,12 +691,12 @@ export function buildConsolidatedDigestMessage(
         continue // Skip members without reports in the team summary
       }
 
-      let memberText = `*${member.memberName}*${member.department ? ` (${member.department})` : ""}\n`
+      let memberText = `*${escapeMrkdwn(member.memberName)}*${member.department ? ` (${escapeMrkdwn(member.department)})` : ""}\n`
 
       if (member.rocks.length > 0) {
         for (const rock of member.rocks.slice(0, 2)) { // Show top 2 rocks
           const emoji = rock.progress >= 75 ? "🟢" : rock.progress >= 50 ? "🟡" : rock.progress >= 25 ? "🟠" : "🔴"
-          memberText += `${emoji} ${rock.title}: ${rock.progress}%`
+          memberText += `${emoji} ${escapeMrkdwn(rock.title)}: ${rock.progress}%`
           if (rock.taskCount > 0) {
             memberText += ` (${rock.taskCount} tasks)`
           }
@@ -720,7 +728,7 @@ export function buildConsolidatedDigestMessage(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*⚠️ Missing EOD Reports*\n${missingMembers.join(", ")}`,
+        text: `*⚠️ Missing EOD Reports*\n${missingMembers.map(escapeMrkdwn).join(", ")}`,
       },
     })
   }
@@ -758,7 +766,7 @@ export function buildEODReminderMessage(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: missingMemberNames.map(name => `• ${name}`).join("\n"),
+        text: missingMemberNames.map(name => `• ${escapeMrkdwn(name)}`).join("\n"),
       },
     },
     {

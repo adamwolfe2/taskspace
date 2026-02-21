@@ -531,7 +531,8 @@ export async function sendDailyEODLinkEmail(
     </p>
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from Taskspace • ${escapeHtml(organizationName)}
+      Sent from Taskspace • ${escapeHtml(organizationName)}<br>
+      <a href="${APP_URL}/app?page=settings" style="color: #9ca3af; text-decoration: underline;">Manage notification preferences</a>
     </p>
   </div>
 </body>
@@ -611,7 +612,8 @@ export async function sendMissingEODReminder(
     </div>
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from Taskspace • ${escapeHtml(organizationName)}
+      Sent from Taskspace • ${escapeHtml(organizationName)}<br>
+      <a href="${APP_URL}/app?page=settings" style="color: #9ca3af; text-decoration: underline;">Manage notification preferences</a>
     </p>
   </div>
 </body>

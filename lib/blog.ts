@@ -44,7 +44,11 @@ function markdownToHtml(md: string): string {
       .replace(/`([^`]+)`/g, "<code>$1</code>")
       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
       .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary underline">$1</a>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, url) => {
+        // Only allow http/https/relative URLs to prevent javascript: XSS
+        const safeUrl = /^https?:\/\//i.test(url) || url.startsWith("/") ? url.replace(/"/g, "%22") : "#"
+        return `<a href="${safeUrl}" class="text-primary underline">${text}</a>`
+      })
 
   const closeOpenBlocks = () => {
     if (inUl) { out.push("</ul>"); inUl = false }
