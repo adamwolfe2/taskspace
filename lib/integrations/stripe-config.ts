@@ -183,4 +183,5 @@ export const STRIPE_EVENTS = {
   INVOICE_PAYMENT_ACTION_REQUIRED: "invoice.payment_action_required",
   CUSTOMER_CREATED: "customer.created",
   CUSTOMER_UPDATED: "customer.updated",
+  CHARGE_REFUNDED: "charge.refunded",
 } as const

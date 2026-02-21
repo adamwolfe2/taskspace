@@ -92,6 +92,11 @@ export async function POST(request: NextRequest) {
           break
         }
 
+        case STRIPE_EVENTS.CHARGE_REFUNDED: {
+          await handleChargeRefunded(event.data.object)
+          break
+        }
+
         default:
           logger.info({ eventType: event.type }, "Unhandled event type")
       }
@@ -790,6 +795,77 @@ async function handleTrialWillEnd(subscription: StripeWebhookObject) {
       }
     } catch (emailError) {
       logError(logger, "Failed to send trial ending email", emailError)
+    }
+  }
+}
+
+/**
+ * Handle charge.refunded
+ * Records the refund in the audit log for financial reconciliation visibility.
+ * Subscription state changes are handled by subscription lifecycle events.
+ */
+async function handleChargeRefunded(charge: StripeWebhookObject) {
+  const customerId = charge.customer
+  if (!customerId) {
+    logger.warn({ chargeId: charge.id }, "charge.refunded: no customer ID")
+    return
+  }
+
+  // Find the org associated with this Stripe customer
+  const { rows: orgRows } = await sql<{ id: string; name: string }>`
+    SELECT id, name FROM organizations WHERE stripe_customer_id = ${customerId} LIMIT 1
+  `
+
+  const orgId = orgRows[0]?.id
+  const orgName = orgRows[0]?.name
+
+  const amountRefunded = typeof charge.amount_refunded === "number" ? charge.amount_refunded : 0
+  const currency = typeof charge.currency === "string" ? charge.currency.toUpperCase() : "USD"
+  const formattedAmount = `${(amountRefunded / 100).toFixed(2)} ${currency}`
+
+  logger.info(
+    { chargeId: charge.id, customerId, orgId, orgName, amountRefunded, currency },
+    "charge.refunded received"
+  )
+
+  if (orgId) {
+    try {
+      await auditLogger.log({
+        organizationId: orgId,
+        userId: null,
+        action: "subscription.charge_refunded",
+        resourceType: "subscription",
+        resourceId: charge.id,
+        metadata: { amountRefunded, currency, chargeId: charge.id },
+        severity: "warning",
+      })
+    } catch (auditError) {
+      logError(logger, "Failed to log charge.refunded to audit trail", auditError)
+    }
+
+    // Alert admins about the refund for financial reconciliation
+    if (isEmailConfigured()) {
+      try {
+        const { rows: adminUsers } = await sql`
+          SELECT u.email FROM users u
+          JOIN organization_members om ON om.user_id = u.id
+          WHERE om.organization_id = ${orgId}
+            AND (om.role = 'admin' OR om.role = 'owner')
+            AND u.email IS NOT NULL
+        `
+        if (adminUsers.length > 0) {
+          await sendBillingAlertEmail({
+            to: adminUsers.map(u => u.email as string),
+            subject: `Refund processed: ${formattedAmount}`,
+            alertType: "subscription_updated",
+            organizationName: orgName || "Your Organization",
+            message: `A refund of ${formattedAmount} has been processed for your account.`,
+            details: `Charge ID: ${charge.id}. If you did not request this refund or have questions, please contact support.`,
+          })
+        }
+      } catch (emailError) {
+        logError(logger, "Failed to send charge.refunded notification email", emailError)
+      }
     }
   }
 }
