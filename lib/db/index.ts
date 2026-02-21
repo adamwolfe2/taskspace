@@ -369,10 +369,6 @@ function parseAchievement(row: Record<string, unknown>): Achievement {
 export const db = {
   // Users
   users: {
-    async findAll(): Promise<User[]> {
-      const { rows } = await sql`SELECT * FROM users`
-      return rows.map(parseUser)
-    },
     async findById(id: string): Promise<User | null> {
       const { rows } = await sql`SELECT * FROM users WHERE id = ${id}`
       return rows[0] ? parseUser(rows[0]) : null
