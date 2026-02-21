@@ -162,8 +162,8 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
     }
   }
 
-  // Approve task
-  const handleApproveTask = async (taskId: string, updates?: Partial<AIGeneratedTask>) => {
+  // Approve task (silent=true suppresses the individual toast, used for approve-all)
+  const handleApproveTask = async (taskId: string, updates?: Partial<AIGeneratedTask>, silent = false) => {
     if (isDemoMode) {
       toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
       return
@@ -183,16 +183,20 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
       // Remove from pending list
       setPendingTasks((prev) => prev.filter((t) => t.id !== taskId))
 
-      toast({
-        title: "Task approved",
-        description: "Task has been added to the assignee's list",
-      })
+      if (!silent) {
+        toast({
+          title: "Task approved",
+          description: "Task has been added to the assignee's list",
+        })
+      }
     } catch (err: unknown) {
-      toast({
-        title: "Error",
-        description: getErrorMessage(err),
-        variant: "destructive",
-      })
+      if (!silent) {
+        toast({
+          title: "Error",
+          description: getErrorMessage(err),
+          variant: "destructive",
+        })
+      }
     }
   }
 
@@ -230,11 +234,14 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
     }
   }
 
-  // Approve all tasks
+  // Approve all tasks in parallel; show a single summary toast
   const handleApproveAllTasks = async () => {
-    for (const task of pendingTasks) {
-      await handleApproveTask(task.id)
-    }
+    const taskIds = pendingTasks.map((t) => t.id)
+    await Promise.all(taskIds.map((id) => handleApproveTask(id, undefined, true)))
+    toast({
+      title: "All tasks approved",
+      description: `${taskIds.length} task${taskIds.length !== 1 ? "s" : ""} added to assignees' lists`,
+    })
   }
 
   // Generate digest

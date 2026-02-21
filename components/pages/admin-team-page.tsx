@@ -92,7 +92,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         const response = await fetch(`/api/metrics?memberId=${editingMember.id}`)
         if (response.ok) {
           const data = await response.json()
-          if (data.success && data.data.metric) {
+          if (data.success && data.data?.metric) {
             setMetricData({
               metricName: data.data.metric.metricName || "",
               weeklyGoal: String(data.data.metric.weeklyGoal || ""),
@@ -185,7 +185,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
               weeklyGoal: goalNumber,
             }),
           })
-          const metricResult = await metricResponse.json()
+          const metricResult = await metricResponse.json().catch(() => ({ success: false, error: null }))
           if (!metricResult.success) {
             throw new Error(metricResult.error || "Failed to save weekly metric")
           }
