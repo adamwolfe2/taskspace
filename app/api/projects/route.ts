@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
+import { isAdmin } from "@/lib/auth/middleware"
 import { verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess, getWorkspaceById } from "@/lib/db/workspaces"
 import { isWorkspaceFeatureEnabled } from "@/lib/auth/workspace-features"
@@ -264,6 +265,17 @@ export const DELETE = withAuth(async (request, auth) => {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Project not found" },
         { status: 404 }
+      )
+    }
+
+    // Only admins, project owners, and project creators may delete
+    const canDelete = isAdmin(auth)
+      || existing.ownerId === auth.user.id
+      || existing.createdBy === auth.user.id
+    if (!canDelete) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Only project owners and admins can delete projects" },
+        { status: 403 }
       )
     }
 

@@ -453,7 +453,6 @@ async function handleSubscriptionDeleted(subscription: StripeWebhookObject) {
         plan = 'free',
         seat_count = ${freeSubscriptionData.maxUsers},
         ai_credits_limit = 50,
-        ai_credits_used = 0,
         status = 'canceled',
         current_period_end = NULL,
         updated_at = NOW()

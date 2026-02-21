@@ -68,7 +68,7 @@ export function CalendarPage({ currentUser, assignedTasks, rocks, eodReports }: 
           })),
         }),
       })
-      const result = await response.json()
+      const result = await response.json().catch(() => ({ success: false, error: null }))
       if (result.success) {
         setMeetingPrep(result.data)
       } else {

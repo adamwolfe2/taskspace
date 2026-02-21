@@ -38,6 +38,14 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     // Validate request body
     const { name, scopes, workspaceId, expiresAt } = await validateBody(request, apiKeyCreateSchema)
 
+    // Validate expiry date is in the future
+    if (expiresAt && new Date(expiresAt) <= new Date()) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Expiry date must be in the future" },
+        { status: 400 }
+      )
+    }
+
     // Generate a secure API key
     const keyValue = `aims_${generateId()}_${generateId()}`
 
