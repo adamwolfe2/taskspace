@@ -213,25 +213,38 @@ class RecurringTaskProcessor {
 
     this.isRunning = true
     let processed = 0
+    const BATCH_SIZE = 100
 
     try {
       const today = formatDateString(new Date())
 
-      // Find all active recurring tasks due today or earlier
-      const dueTasks = await sql`
-        SELECT * FROM recurring_task_templates
-        WHERE is_active = true
-          AND next_run_date <= ${today}
-        ORDER BY next_run_date ASC
-        LIMIT 100
-      `
+      // Process in batches: each template updates next_run_date to a future date
+      // so it won't be fetched again in subsequent batches.
+      // This handles backlogs > 100 tasks without silently leaving them unprocessed.
+      let hasMore = true
+      while (hasMore) {
+        const dueTasks = await sql`
+          SELECT * FROM recurring_task_templates
+          WHERE is_active = true
+            AND next_run_date <= ${today}
+          ORDER BY next_run_date ASC
+          LIMIT ${BATCH_SIZE}
+        `
 
-      for (const template of dueTasks.rows) {
-        try {
-          await this.processTemplate(template as RecurringTaskTemplate)
-          processed++
-        } catch (error) {
-          logError(logger, `Error processing recurring task ${template.id}`, error)
+        if (dueTasks.rows.length === 0) break
+
+        for (const template of dueTasks.rows) {
+          try {
+            await this.processTemplate(template as RecurringTaskTemplate)
+            processed++
+          } catch (error) {
+            logError(logger, `Error processing recurring task ${template.id}`, error)
+          }
+        }
+
+        // Fewer results than batch size means we've processed all due tasks
+        if (dueTasks.rows.length < BATCH_SIZE) {
+          hasMore = false
         }
       }
     } finally {
