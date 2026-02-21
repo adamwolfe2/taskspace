@@ -5,18 +5,16 @@ import { useApp } from '@/lib/contexts/app-context'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Clock, X } from 'lucide-react'
+import { CONFIG } from '@/lib/config'
 
 /**
  * Session Timeout Warning Component
  *
  * Monitors user activity and warns when session is about to expire.
  * Prevents data loss by prompting users to save work before timeout.
- *
- * Default session duration: 24 hours (adjust based on your auth config)
- * Warning shows: 5 minutes before expiration
  */
 
-const SESSION_DURATION_MS = 24 * 60 * 60 * 1000 // 24 hours
+const SESSION_DURATION_MS = CONFIG.auth.sessionDurationDays * 24 * 60 * 60 * 1000
 const WARNING_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutes before expiration
 const ACTIVITY_CHECK_INTERVAL_MS = 60 * 1000 // Check every minute
 
