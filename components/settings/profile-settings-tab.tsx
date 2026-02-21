@@ -317,7 +317,7 @@ export function ProfileSettingsTab() {
     }
   }
 
-  const canDeleteAccount = deleteConfirmText === "delete my account" && deletePassword.length > 0
+  const canDeleteAccount = deleteConfirmText === "delete my account" && deletePassword.trim().length > 0
 
   return (
     <div className="space-y-4">
