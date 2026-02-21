@@ -3712,7 +3712,7 @@ export const db = {
       `
       return { id: rows[0].id as string }
     },
-    async findByUser(userId: string): Promise<Array<{
+    async findByUser(userId: string, sourceOrganizationId?: string): Promise<Array<{
       id: string
       sourceOrganizationId: string
       sourceOrganizationName: string
@@ -3724,17 +3724,30 @@ export const db = {
       status: string
       createdAt: string
     }>> {
-      const { rows } = await sql`
-        SELECT
-          cwt.*,
-          so.name as source_org_name,
-          to_org.name as target_org_name
-        FROM cross_workspace_tasks cwt
-        JOIN organizations so ON cwt.source_organization_id = so.id
-        JOIN organizations to_org ON cwt.target_organization_id = to_org.id
-        WHERE cwt.assigned_by_user_id = ${userId}
-        ORDER BY cwt.created_at DESC
-      `
+      const { rows } = sourceOrganizationId
+        ? await sql`
+          SELECT
+            cwt.*,
+            so.name as source_org_name,
+            to_org.name as target_org_name
+          FROM cross_workspace_tasks cwt
+          JOIN organizations so ON cwt.source_organization_id = so.id
+          JOIN organizations to_org ON cwt.target_organization_id = to_org.id
+          WHERE cwt.assigned_by_user_id = ${userId}
+            AND cwt.source_organization_id = ${sourceOrganizationId}
+          ORDER BY cwt.created_at DESC
+        `
+        : await sql`
+          SELECT
+            cwt.*,
+            so.name as source_org_name,
+            to_org.name as target_org_name
+          FROM cross_workspace_tasks cwt
+          JOIN organizations so ON cwt.source_organization_id = so.id
+          JOIN organizations to_org ON cwt.target_organization_id = to_org.id
+          WHERE cwt.assigned_by_user_id = ${userId}
+          ORDER BY cwt.created_at DESC
+        `
       return rows.map(row => ({
         id: row.id as string,
         sourceOrganizationId: row.source_organization_id as string,

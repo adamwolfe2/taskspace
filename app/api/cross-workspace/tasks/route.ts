@@ -10,8 +10,9 @@ import type { ApiResponse } from "@/lib/types"
 // GET /api/cross-workspace/tasks - Get all cross-workspace tasks for the user
 export const GET = withAuth(async (request, auth) => {
   try {
-    // Get all cross-workspace tasks assigned by this user
-    const tasks = await db.crossWorkspaceTasks.findByUser(auth.user.id)
+    // Get cross-workspace tasks assigned by this user from the current org
+    // SECURITY: Scoped to auth.organization.id to prevent cross-org data leakage
+    const tasks = await db.crossWorkspaceTasks.findByUser(auth.user.id, auth.organization.id)
 
     return NextResponse.json<ApiResponse<{ tasks: typeof tasks; totalCount: number }>>({
       success: true,
