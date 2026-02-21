@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { generateSecret, generateURI } from "otplib"
 import QRCode from "qrcode"
 import { getUserAuthContext } from "@/lib/auth/middleware"
+import { check2faRateLimit } from "@/lib/auth/rate-limit"
 import { db } from "@/lib/db"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
@@ -18,6 +19,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Forbidden" },
         { status: 403 }
+      )
+    }
+
+    // Rate limit 2FA setup attempts
+    const rateLimitResult = check2faRateLimit(request)
+    if (!rateLimitResult.success) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Too many attempts. Please try again later." },
+        { status: 429 }
       )
     }
 
