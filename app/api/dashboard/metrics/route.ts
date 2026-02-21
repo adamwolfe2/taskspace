@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { userHasWorkspaceAccess, getWorkspaceById } from "@/lib/db/workspaces"
+import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { CONFIG } from "@/lib/config"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -59,10 +61,10 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
       workspaceName = workspace.name
     }
 
-    // Get today's date in the organization's timezone (simplified - using UTC)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const todayStr = today.toISOString().split("T")[0]
+    // Get today's date in the organization's timezone
+    const orgTimezone = auth.organization.settings.timezone || CONFIG.organization.defaultTimezone
+    const todayStr = getTodayInTimezone(orgTimezone)
+    const today = new Date(todayStr + "T00:00:00Z")
 
     // Get start of week (Sunday)
     const startOfWeek = new Date(today)

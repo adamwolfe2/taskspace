@@ -13,20 +13,14 @@ import { NextRequest, NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { generateToken } from "@/lib/auth/password"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { publicEodTokenActionSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse, OrganizationSettings } from "@/lib/types"
 
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const action = body?.action
-
-    if (action !== "generate" && action !== "clear") {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "action must be 'generate' or 'clear'" },
-        { status: 400 }
-      )
-    }
+    const { action } = await validateBody(request, publicEodTokenActionSchema)
 
     const org = await db.organizations.findById(auth.organization.id)
     if (!org) {
@@ -52,6 +46,12 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       data: { publicEodToken: newToken },
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Public EOD token update error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update public EOD token" },

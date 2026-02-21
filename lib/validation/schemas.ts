@@ -1338,3 +1338,11 @@ export const createOrgSchema = z.object({
   name: z.string().min(1, "Organization name is required").max(255).trim(),
   logoUrl: z.string().url("Invalid logo URL").max(1000).optional().or(z.literal("")),
 })
+
+export const publicEodTokenActionSchema = z.object({
+  action: z.enum(["generate", "clear"], { message: "action must be 'generate' or 'clear'" }),
+})
+
+export const consolidateAccountSchema = z.object({
+  oldUserEmail: emailSchema,
+})

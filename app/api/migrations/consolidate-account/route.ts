@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { withDangerousAdmin } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { consolidateAccountSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -18,15 +20,7 @@ import { logger, logError } from "@/lib/logger"
  */
 export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { oldUserEmail } = body
-
-    if (!oldUserEmail) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "oldUserEmail is required" },
-        { status: 400 }
-      )
-    }
+    const { oldUserEmail } = await validateBody(request, consolidateAccountSchema)
 
     const newUserId = auth.user.id
     const newUserEmail = auth.user.email
@@ -206,6 +200,12 @@ export const POST = withDangerousAdmin(async (request: NextRequest, auth) => {
       message: `Successfully consolidated ${oldUserEmail} into ${newUserEmail}`,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Account consolidation failed", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Account consolidation failed" },
