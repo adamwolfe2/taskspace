@@ -489,7 +489,7 @@ export const updateScorecardEntrySchema = z.object({
 export const workspaceTypeSchema = z.enum(["leadership", "department", "team", "project"])
 
 export const createWorkspaceSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
   type: workspaceTypeSchema.default("team"),
   description: z.string().max(500).optional(),
   isDefault: z.boolean().default(false),
@@ -502,7 +502,7 @@ export const createWorkspaceSchema = z.object({
 })
 
 export const updateWorkspaceSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
+  name: z.string().trim().min(2).max(100).optional(),
   type: workspaceTypeSchema.optional(),
   description: z.string().max(500).optional(),
   isDefault: z.boolean().optional(),

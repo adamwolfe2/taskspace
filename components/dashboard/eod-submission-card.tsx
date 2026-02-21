@@ -560,6 +560,7 @@ export function EODSubmissionCard({
             value={challenges}
             onChange={(e) => setChallenges(e.target.value)}
             rows={3}
+            maxLength={5000}
             className="bg-white border-slate-200 focus:border-blue-300"
           />
         </div>
@@ -759,6 +760,7 @@ export function EODSubmissionCard({
               value={escalationNote}
               onChange={(e) => setEscalationNote(e.target.value)}
               rows={2}
+              maxLength={2000}
               className="bg-white border-amber-200 focus:border-amber-300"
             />
           )}

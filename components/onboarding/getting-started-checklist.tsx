@@ -132,16 +132,21 @@ export function GettingStartedChecklist({ onNavigate }: GettingStartedChecklistP
       // Auto-dismiss after celebration
       const timer = setTimeout(async () => {
         try {
-          await fetch("/api/onboarding", {
+          const res = await fetch("/api/onboarding", {
             method: "PUT",
             headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
             body: JSON.stringify({ completed: true }),
           })
+          // Only hide if the completion was persisted successfully
+          if (res.ok) {
+            setCelebrating(false)
+            setHidden(true)
+          } else {
+            setCelebrating(false)
+          }
         } catch {
-          // ignore
+          setCelebrating(false)
         }
-        setCelebrating(false)
-        setHidden(true)
       }, 4000)
       return () => clearTimeout(timer)
     }

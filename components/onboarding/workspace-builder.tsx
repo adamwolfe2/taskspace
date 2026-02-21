@@ -123,7 +123,7 @@ export function WorkspaceBuilder({ onClose }: WorkspaceBuilderProps) {
         headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ text: textInput.trim() }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({ success: false, error: "Server error" }))
       if (!data.success) throw new Error(data.error || "Parse failed")
       setPayload(data.data)
       setStep("preview")
@@ -175,7 +175,7 @@ export function WorkspaceBuilder({ onClose }: WorkspaceBuilderProps) {
         headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ workspaceId, payload }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({ success: false, error: "Server error" }))
       if (!data.success) throw new Error(data.error || "Build failed")
       setBuildResult(data.data)
       setStep("done")

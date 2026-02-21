@@ -305,7 +305,7 @@ export function useCreateWorkspace() {
       body: JSON.stringify(params),
     })
 
-    const json = await res.json()
+    const json = await res.json().catch(() => ({ success: false, error: "Server error" }))
     if (!json.success) {
       throw new Error(json.error || "Failed to create workspace")
     }
@@ -354,7 +354,7 @@ export function useUpdateWorkspace() {
       body: JSON.stringify(params),
     })
 
-    const json = await res.json()
+    const json = await res.json().catch(() => ({ success: false, error: "Server error" }))
     if (!json.success) {
       throw new Error(json.error || "Failed to update workspace")
     }
@@ -382,7 +382,7 @@ export function useDeleteWorkspace() {
       credentials: "include",
     })
 
-    const json = await res.json()
+    const json = await res.json().catch(() => ({ success: false, error: "Server error" }))
     if (!json.success) {
       throw new Error(json.error || "Failed to delete workspace")
     }
