@@ -15,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { timingSafeEqual } from "crypto"
+import { timingSafeEqual, createHash } from "crypto"
 import { sql } from "@/lib/db/sql"
 import { logger, logError } from "@/lib/logger"
 import { enforceIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
@@ -138,9 +138,10 @@ export async function GET(
       response.headers.set("X-Robots-Tag", "noindex, nofollow")
       return response
     }
+    // Hash both tokens before comparison so timingSafeEqual can't leak token length
+    const hashToken = (t: string) => createHash("sha256").update(t).digest()
     const tokenMatch = providedToken !== null &&
-      providedToken.length === settings.publicEodToken.length &&
-      timingSafeEqual(Buffer.from(providedToken), Buffer.from(settings.publicEodToken))
+      timingSafeEqual(hashToken(providedToken), hashToken(settings.publicEodToken))
     if (!tokenMatch) {
       const response = NextResponse.json(
         { success: false, error: "Invalid or missing access token" },

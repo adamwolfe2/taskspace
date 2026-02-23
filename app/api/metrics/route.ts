@@ -11,6 +11,7 @@ import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { isAdmin } from "@/lib/auth/middleware"
 import { CONFIG } from "@/lib/config"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import {
   getActiveMetricForUser,
   setTeamMemberMetric,
@@ -43,7 +44,6 @@ export const GET = withAuth(async (request, auth) => {
 
     // Helper to calculate weekly total from EOD reports
     const getWeeklyMetricTotal = async (userId: string, orgId: string): Promise<number> => {
-      const { sql } = await import("@vercel/postgres")
       // Get current week (Friday to Thursday) using org timezone
       const orgTimezone = auth.organization.settings?.timezone || CONFIG.organization.defaultTimezone
       const todayStr = getTodayInTimezone(orgTimezone)
@@ -70,7 +70,7 @@ export const GET = withAuth(async (request, auth) => {
     if (memberId) {
       // Admin getting metric for specific member
       // Need to look up by member ID directly
-      const { rows } = await import("@vercel/postgres").then(m => m.sql`
+      const { rows } = await sql`
         SELECT tmm.id, tmm.team_member_id, tmm.metric_name, tmm.weekly_goal, tmm.is_active,
                tmm.created_at, tmm.updated_at
         FROM team_member_metrics tmm
@@ -79,7 +79,7 @@ export const GET = withAuth(async (request, auth) => {
         AND om.organization_id = ${auth.organization.id}
         AND tmm.is_active = true
         LIMIT 1
-      `)
+      `
 
       if (rows.length > 0) {
         const row = rows[0]

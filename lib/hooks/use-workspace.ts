@@ -312,8 +312,13 @@ export function useCreateWorkspace() {
 
     const newWorkspace = json.data
 
-    // Refresh workspaces list to include the new workspace
-    await refresh()
+    // Refresh workspaces list to include the new workspace.
+    // Don't fail workspace creation if the refresh request itself errors.
+    try {
+      await refresh()
+    } catch {
+      // Workspace was created successfully; list will sync on next poll
+    }
 
     // Automatically switch to the newly created workspace
     switchWorkspace(newWorkspace.id)
