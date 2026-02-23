@@ -52,11 +52,7 @@ export const POST = withAdmin(async (request, _auth) => {
   } catch (error) {
     logError(logger, "Error seeding MA employees", error)
     return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to seed employees",
-        details: error instanceof Error ? error.message : "Unknown error"
-      },
+      { success: false, error: "Failed to seed employees" },
       { status: 500 }
     )
   }
