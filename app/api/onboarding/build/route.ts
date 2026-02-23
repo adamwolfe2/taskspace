@@ -50,7 +50,7 @@ const taskInputSchema = z.object({
 })
 
 const buildWorkspaceSchema = z.object({
-  workspaceId: z.string().uuid(),
+  workspaceId: z.string().min(1),
   payload: z.object({
     members: z.array(memberInputSchema).optional().default([]),
     clients: z.array(clientInputSchema).optional().default([]),

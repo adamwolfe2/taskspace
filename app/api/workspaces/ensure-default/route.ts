@@ -147,7 +147,7 @@ export const POST = withAuth(async (request, auth) => {
     // Create default workspace for organization
     logger.info("Creating default workspace")
     const now = new Date().toISOString()
-    const defaultWorkspaceId = generateId()
+    const defaultWorkspaceId = crypto.randomUUID()
     const defaultWorkspace = {
       id: defaultWorkspaceId,
       organizationId: auth.organization.id,
