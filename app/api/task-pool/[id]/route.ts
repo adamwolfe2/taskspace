@@ -17,6 +17,7 @@ export const PATCH = withAuth(async (request, auth, context) => {
 
     const { action, workspaceId } = await validateBody(request, claimTaskPoolItemSchema)
 
+    // Verify workspaceId belongs to the org and user has access
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
     if (!isValidWorkspace) {
       return NextResponse.json<ApiResponse<null>>(
@@ -30,6 +31,21 @@ export const PATCH = withAuth(async (request, auth, context) => {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Access denied to this workspace" },
         { status: 403 }
+      )
+    }
+
+    // Fetch task and verify it belongs to this specific workspace (prevents cross-workspace access)
+    const existing = await taskPool.findById(itemId, auth.organization.id)
+    if (!existing) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Task not found" },
+        { status: 404 }
+      )
+    }
+    if (existing.workspaceId !== workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Task not found" },
+        { status: 404 }
       )
     }
 
@@ -56,14 +72,6 @@ export const PATCH = withAuth(async (request, auth, context) => {
     }
 
     // unclaim
-    const existing = await taskPool.findById(itemId, auth.organization.id)
-    if (!existing) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Task not found" },
-        { status: 404 }
-      )
-    }
-
     const canUnclaim = existing.claimedById === auth.member.id || isAdmin(auth)
     if (!canUnclaim) {
       return NextResponse.json<ApiResponse<null>>(
@@ -116,25 +124,34 @@ export const DELETE = withAuth(async (request, auth, context) => {
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
 
-    if (workspaceId) {
-      const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
-      if (!isValidWorkspace) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "Workspace not found" },
-          { status: 404 }
-        )
-      }
+    if (!workspaceId) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "workspaceId is required" },
+        { status: 400 }
+      )
     }
 
-    const deleted = await taskPool.delete(itemId, auth.organization.id)
-    if (!deleted) {
+    // Verify workspace belongs to the org
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
+    // Verify task belongs to this specific workspace (prevents cross-workspace delete)
+    const existing = await taskPool.findById(itemId, auth.organization.id)
+    if (!existing || existing.workspaceId !== workspaceId) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Task not found" },
         { status: 404 }
       )
     }
 
-    logger.info(`Task pool item deleted: ${itemId}`)
+    await taskPool.delete(itemId, auth.organization.id)
+
+    logger.info(`Task pool item deleted: ${itemId} from workspace ${workspaceId}`)
 
     return NextResponse.json<ApiResponse<null>>({
       success: true,
