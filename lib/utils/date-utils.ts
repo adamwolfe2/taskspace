@@ -130,12 +130,11 @@ export function isValidEODDate(dateString: string, timezone: string = "America/L
     }
   }
 
-  // Allow submissions for the past 7 days (1 week) to support backfilling missed reports
-  // This gives users flexibility while preventing very old or erroneous submissions
-  if (diffDays < -7) {
+  // Allow submissions for the past 14 days to support backfilling missed reports
+  if (diffDays < -14) {
     return {
       valid: false,
-      reason: `EOD reports can only be submitted for the past 7 days. Please contact an admin if you need to submit for ${dateString}.`,
+      reason: `EOD reports can only be submitted for the past 14 days. Please contact an admin if you need to submit for ${dateString}.`,
       suggestedDate: todayInTz,
     }
   }
@@ -192,13 +191,13 @@ export function formatShortDate(dateStr: string): string {
 }
 
 /**
- * Get valid date options for EOD submission (today, yesterday, 2 days ago)
+ * Get valid date options for EOD submission (today through 14 days ago)
  */
 export function getValidDateOptions(todayInOrgTz: string): { value: string; label: string; isToday: boolean }[] {
   const today = new Date(todayInOrgTz + "T12:00:00")
   const options = []
 
-  for (let i = 0; i <= 2; i++) {
+  for (let i = 0; i <= 13; i++) {
     const date = new Date(today)
     date.setDate(today.getDate() - i)
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`

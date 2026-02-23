@@ -51,6 +51,19 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       }
     }
 
+    // Validate workspaceId belongs to this org (prevents cross-org workspace spoofing)
+    if (workspaceId) {
+      const { getWorkspacesByOrg } = await import("@/lib/db/workspaces")
+      const orgWorkspaces = await getWorkspacesByOrg(auth.organization.id)
+      const validWorkspace = orgWorkspaces.find((w) => w.id === workspaceId)
+      if (!validWorkspace) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Invalid workspace" },
+          { status: 400 }
+        )
+      }
+    }
+
     // Check for existing pending invitation
     const existingInvitations = await db.invitations.findPendingByEmail(email)
     const existingOrgInvite = existingInvitations.find(i => i.organizationId === auth.organization.id)

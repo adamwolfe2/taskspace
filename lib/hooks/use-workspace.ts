@@ -119,7 +119,7 @@ const fetcher = async (url: string) => {
 // ============================================
 
 export function useWorkspaces() {
-  const { currentWorkspaceId, currentWorkspace, setCurrentWorkspace, setCurrentWorkspaceId: _setCurrentWorkspaceId, clearWorkspace } =
+  const { currentWorkspaceId, currentWorkspace, _hasHydrated, setCurrentWorkspace, setCurrentWorkspaceId: _setCurrentWorkspaceId, clearWorkspace } =
     useWorkspaceStore()
 
   const hasInitialized = useRef(false)
@@ -143,6 +143,7 @@ export function useWorkspaces() {
 
   // Auto-select default workspace on initial load
   useEffect(() => {
+    if (!_hasHydrated) return // Wait for store hydration before using persisted workspaceId
     if (hasInitialized.current) return
     if (isLoading) return
 
@@ -190,7 +191,7 @@ export function useWorkspaces() {
       // Fallback to first workspace
       setCurrentWorkspace(workspaces[0])
     }
-  }, [workspaces, isLoading, currentWorkspaceId, setCurrentWorkspace, mutate])
+  }, [workspaces, isLoading, currentWorkspaceId, setCurrentWorkspace, mutate, _hasHydrated])
 
   // Sync current workspace data when workspaces list updates
   useEffect(() => {

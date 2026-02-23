@@ -36,37 +36,33 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
     let workspaces = await getUserWorkspaces(auth.user.id, auth.organization.id)
 
-    // Auto-heal: if user is an org member but has no workspace memberships, add them to default workspace
-    if (workspaces.length === 0) {
-      try {
-        const { getDefaultWorkspace, addWorkspaceMember: addToWorkspace, getWorkspacesByOrg } = await import("@/lib/db/workspaces")
+    // Auto-heal: ensure org member is in ALL org workspaces they should have access to
+    try {
+      const { getWorkspacesByOrg } = await import("@/lib/db/workspaces")
+      const allOrgWorkspaces = await getWorkspacesByOrg(auth.organization.id)
 
-        // Find default workspace for this org
-        let targetWorkspace = await getDefaultWorkspace(auth.organization.id)
+      if (allOrgWorkspaces.length > 0) {
+        const userWorkspaceIds = new Set(workspaces.map((w) => w.id))
+        const missingWorkspaces = allOrgWorkspaces.filter((w) => !userWorkspaceIds.has(w.id))
 
-        // If no default workspace, try any workspace in the org
-        if (!targetWorkspace) {
-          const orgWorkspaces = await getWorkspacesByOrg(auth.organization.id)
-          targetWorkspace = orgWorkspaces[0] || null
-        }
-
-        if (targetWorkspace) {
-          // Determine role based on org membership
+        if (missingWorkspaces.length > 0) {
           const memberRole = auth.member.role === "owner" || auth.member.role === "admin" ? "admin" : "member"
-          await addToWorkspace(targetWorkspace.id, auth.user.id, memberRole)
+          await Promise.allSettled(
+            missingWorkspaces.map((w) => addWorkspaceMember(w.id, auth.user.id, memberRole))
+          )
 
-          // Re-fetch workspaces now that user has been added
+          // Re-fetch workspaces now that user has been added to missing ones
           workspaces = await getUserWorkspaces(auth.user.id, auth.organization.id)
 
           logger.info({
             userId: auth.user.id,
             organizationId: auth.organization.id,
-            workspaceId: targetWorkspace.id,
-          }, "Auto-healed: added org member to default workspace")
+            addedToWorkspaces: missingWorkspaces.map((w) => w.id),
+          }, "Auto-healed: added org member to missing workspaces")
         }
-      } catch (healError) {
-        logError(logger, "Auto-heal workspace membership failed (non-fatal)", healError)
       }
+    } catch (healError) {
+      logError(logger, "Auto-heal workspace membership failed (non-fatal)", healError)
     }
 
     // Auto-heal: check for orphaned data with NULL workspace_id and migrate it
@@ -229,6 +225,21 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 
     // Add the creator as a workspace admin
     await addWorkspaceMember(workspace.id, auth.user.id, "admin")
+
+    // Add all other active org members to the new workspace so they have immediate access
+    try {
+      const allOrgMembers = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+      const otherActiveMembers = allOrgMembers.filter(
+        (m) => m.status === "active" && m.userId && m.userId !== auth.user.id
+      )
+      await Promise.allSettled(
+        otherActiveMembers.map((m) =>
+          addWorkspaceMember(workspace.id, m.userId!, "member")
+        )
+      )
+    } catch (err) {
+      logError(logger, "Failed to add org members to new workspace (non-fatal)", err)
+    }
 
     return NextResponse.json<ApiResponse<Workspace>>({
       success: true,
