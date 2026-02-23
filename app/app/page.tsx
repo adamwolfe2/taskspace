@@ -102,6 +102,10 @@ const PortfolioDetailPage = dynamic(
   () => import("@/components/pages/portfolio-detail-page").then(mod => ({ default: mod.PortfolioDetailPage })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
+const TaskPoolPage = dynamic(
+  () => import("@/components/pages/task-pool-page").then(mod => ({ default: mod.TaskPoolPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
 
 import { Loader2, Plus } from "lucide-react"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
@@ -391,6 +395,8 @@ function AppContent() {
         return <SettingsPage />
       case "org-chart":
         return <OrgChartPage />
+      case "taskPool":
+        return <TaskPoolPage />
       case "ids-board":
         return <IdsBoardPage />
       case "notes":

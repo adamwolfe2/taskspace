@@ -19,6 +19,7 @@ import type {
   Client,
   Project,
   ProjectMember,
+  TaskPoolItem,
 } from "@/lib/types"
 
 /** Branding settings for an organization */
@@ -869,6 +870,48 @@ export const api = {
 
     async removeMember(projectId: string, userId: string) {
       const response = await fetchWithRetry(`${API_BASE}/projects/members?projectId=${projectId}&userId=${userId}`, {
+        method: "DELETE",
+      })
+      return handleResponse<null>(response)
+    },
+  },
+
+  // Task Pool
+  taskPool: {
+    async list(workspaceId: string) {
+      const response = await fetchWithRetry(`${API_BASE}/task-pool?workspaceId=${workspaceId}`)
+      return handleResponse<TaskPoolItem[]>(response)
+    },
+
+    async create(data: { title: string; description?: string; priority?: TaskPoolItem["priority"]; workspaceId: string }) {
+      const response = await fetchWithRetry(`${API_BASE}/task-pool`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      return handleResponse<TaskPoolItem>(response)
+    },
+
+    async claim(id: string, workspaceId: string) {
+      const response = await fetchWithRetry(`${API_BASE}/task-pool/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "claim", workspaceId }),
+      })
+      return handleResponse<TaskPoolItem>(response)
+    },
+
+    async unclaim(id: string, workspaceId: string) {
+      const response = await fetchWithRetry(`${API_BASE}/task-pool/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "unclaim", workspaceId }),
+      })
+      return handleResponse<TaskPoolItem>(response)
+    },
+
+    async delete(id: string, workspaceId: string) {
+      const response = await fetchWithRetry(`${API_BASE}/task-pool/${id}?workspaceId=${workspaceId}`, {
         method: "DELETE",
       })
       return handleResponse<null>(response)

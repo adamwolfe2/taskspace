@@ -370,6 +370,7 @@ export type PageType =
   | "history"
   | "rocks"
   | "tasks"
+  | "taskPool"
   | "admin"
   | "admin-team"
   | "admin-tasks"
@@ -390,6 +391,28 @@ export type PageType =
   | "people-analyzer"
   | "portfolio"
   | "portfolio-detail"
+
+// ============================================
+// TASK POOL TYPES
+// ============================================
+
+export interface TaskPoolItem {
+  id: string
+  organizationId: string
+  workspaceId: string
+  title: string
+  description?: string | null
+  priority: "high" | "medium" | "normal"
+  createdById: string
+  createdByName: string
+  claimedById?: string | null
+  claimedByName?: string | null
+  claimedAt?: string | null
+  claimedDate?: string | null
+  isClaimedToday: boolean // computed server-side
+  createdAt: string
+  updatedAt: string
+}
 
 // ============================================
 // IDS BOARD TYPES

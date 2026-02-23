@@ -28,6 +28,7 @@ import {
   Network,
   BookOpen,
   UserCheck,
+  Users2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -48,6 +49,7 @@ export function MobileNav() {
   // Secondary nav items (in "More" menu)
   const secondaryItems: { id: PageType; label: string; icon: typeof LayoutDashboard; adminOnly?: boolean }[] = [
     { id: "history", label: "EOD History", icon: History },
+    { id: "taskPool", label: "Task Pool", icon: Users2 },
     { id: "ids-board", label: "IDS Board", icon: Search },
     { id: "notes", label: "Notes", icon: FileText },
     { id: "org-chart", label: "Org Chart", icon: Network },

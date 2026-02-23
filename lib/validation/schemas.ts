@@ -1346,3 +1346,19 @@ export const publicEodTokenActionSchema = z.object({
 export const consolidateAccountSchema = z.object({
   oldUserEmail: emailSchema,
 })
+
+// ============================================
+// TASK POOL SCHEMAS
+// ============================================
+
+export const createTaskPoolItemSchema = z.object({
+  title: z.string().min(1, "Title required").max(500),
+  description: z.string().max(2000).optional(),
+  priority: z.enum(["high", "medium", "normal"]).default("normal"),
+  workspaceId: z.string().min(1, "Workspace required"),
+})
+
+export const claimTaskPoolItemSchema = z.object({
+  action: z.enum(["claim", "unclaim"]),
+  workspaceId: z.string().min(1, "Workspace required"),
+})
