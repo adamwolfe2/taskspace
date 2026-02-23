@@ -308,13 +308,14 @@ export function initGlobalErrorHandler(): () => void {
 
       // Dynamically import toast to avoid circular dependencies
       import("@/hooks/use-toast").then(({ toast }) => {
-        // For 401s, show a session expiration message
+        // For 401s, show a session expiration message then reload to re-auth
         if (error.status === 401) {
           toast({
             variant: "destructive",
             title: "Session Expired",
             description: "Please log in again to continue.",
           })
+          setTimeout(() => { window.location.reload() }, 1500)
           return
         }
 

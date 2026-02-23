@@ -122,7 +122,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
       const data = await api.auth.getSession()
 
-      if (data.member && data.organization) {
+      if (data.user && data.member && data.organization) {
         const teamMember: TeamMember = {
           id: data.member.id,
           userId: data.user.id,
@@ -185,7 +185,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // At this point, data is guaranteed to be AuthResponse
       const authData = data as import("../types").AuthResponse
 
-      if (!authData.organization || !authData.member) {
+      if (!authData.user || !authData.organization || !authData.member) {
         // User needs to create an organization - store user info for onboarding wizard
         const partialUser: TeamMember = {
           id: authData.user?.id || "",
@@ -236,7 +236,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const data = await api.auth.verify2FA(userId, code)
 
-      if (!data.organization || !data.member) {
+      if (!data.user || !data.organization || !data.member) {
         const partialUser: TeamMember = {
           id: data.user?.id || "",
           userId: data.user?.id || "",
