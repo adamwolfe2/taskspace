@@ -407,6 +407,13 @@ export function WorkspaceFeaturesTab() {
                   (currentFeatures[category as keyof WorkspaceFeatureToggles] as Record<string, boolean>)?.[name] ??
                   true
 
+                // "Disabled by workspace admin" is not a blocking reason — the admin controls it.
+                // Only plan gating and dependency failures should lock the toggle.
+                const blockingReason =
+                  config?.reason && config.reason !== "Disabled by workspace admin"
+                    ? config.reason
+                    : undefined
+
                 return (
                   <FeatureToggle
                     key={featureKey}
@@ -414,8 +421,8 @@ export function WorkspaceFeaturesTab() {
                     description={metadata.description}
                     icon={metadata.icon}
                     enabled={enabled}
-                    disabled={!!config?.reason && !enabled}
-                    reason={config?.reason}
+                    disabled={!!blockingReason && !enabled}
+                    reason={blockingReason}
                     impact={metadata.impact}
                     onChange={(newEnabled) => handleToggleFeature(featureKey as WorkspaceFeatureKey, newEnabled)}
                   />
