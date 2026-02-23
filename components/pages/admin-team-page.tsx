@@ -26,6 +26,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { ManageRocksDialog } from "@/components/admin/manage-rocks-dialog"
 import { AuditLogTab } from "@/components/admin/audit-log-tab"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
@@ -82,6 +83,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
   const [migrateEmail, setMigrateEmail] = useState("")
   const [isMigrating, setIsMigrating] = useState(false)
   const { toast } = useToast()
+  const { currentWorkspaceId } = useWorkspaces()
 
   // Load metric data when editing a member
   useEffect(() => {
@@ -232,6 +234,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         email: inviteData.email,
         role: inviteData.role,
         department: inviteData.department,
+        workspaceId: currentWorkspaceId || undefined,
       })
       setInvitations([...invitations, invitation])
       toast({
@@ -434,6 +437,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         email: member.email,
         role: member.role === "owner" ? "admin" : member.role,
         department: member.department,
+        workspaceId: currentWorkspaceId || undefined,
       })
       setInvitations([...invitations, invitation])
       // Update member status in local state

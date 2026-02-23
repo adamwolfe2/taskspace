@@ -37,7 +37,7 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
     // Validate request body
-    const { email, role, department } = await validateBody(request, inviteMemberSchema)
+    const { email, role, department, workspaceId } = await validateBody(request, inviteMemberSchema)
 
     // Pre-flight checks (can do outside transaction)
     const existingUser = await db.users.findByEmail(email)
@@ -156,7 +156,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       await client.sql`
         INSERT INTO invitations (id, organization_id, email, role, department, token, expires_at, created_at, invited_by, status, workspace_id)
         VALUES (${invitationId}, ${auth.organization.id}, ${email.toLowerCase()}, ${invitationRole}, ${invitationDepartment},
-                ${invitationToken}, ${invitationExpiresAt}, ${now}, ${auth.user.id}, ${"pending"}, ${null})
+                ${invitationToken}, ${invitationExpiresAt}, ${now}, ${auth.user.id}, ${"pending"}, ${workspaceId || null})
       `
 
       const invitation: Invitation = {

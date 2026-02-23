@@ -414,29 +414,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Add user to workspace (critical for access — try multiple fallbacks)
+    // Add user to all workspaces in the org (org members get access to all workspaces)
     try {
-      let targetWorkspaceId = result.workspaceId
+      const orgWorkspaces = await getWorkspacesByOrg(organization.id)
 
-      if (!targetWorkspaceId) {
-        const defaultWorkspace = await getDefaultWorkspace(organization.id)
-        targetWorkspaceId = defaultWorkspace?.id || null
-      }
-
-      // Fallback: if no default workspace, try any workspace in the org
-      if (!targetWorkspaceId) {
-        const orgWorkspaces = await getWorkspacesByOrg(organization.id)
-        targetWorkspaceId = orgWorkspaces[0]?.id || null
-      }
-
-      if (targetWorkspaceId) {
-        await addWorkspaceMember(targetWorkspaceId, result.user.id, "member")
-        logger.info(`Added user ${result.user.id} to workspace ${targetWorkspaceId}`)
+      if (orgWorkspaces.length > 0) {
+        await Promise.all(
+          orgWorkspaces.map((ws) =>
+            addWorkspaceMember(ws.id, result.user.id, "member").catch((err) =>
+              logError(logger, `Failed to add user to workspace ${ws.id}`, err)
+            )
+          )
+        )
+        logger.info(`Added user ${result.user.id} to ${orgWorkspaces.length} workspace(s) in org ${organization.id}`)
       } else {
-        logger.warn(`No workspace found for org ${organization.id} — user ${result.user.id} has no workspace membership`)
+        logger.warn(`No workspaces found for org ${organization.id} — user ${result.user.id} has no workspace membership`)
       }
     } catch (error) {
-      logError(logger, "Failed to add user to workspace", error)
+      logError(logger, "Failed to add user to workspaces", error)
     }
 
     // Return response without password hash
