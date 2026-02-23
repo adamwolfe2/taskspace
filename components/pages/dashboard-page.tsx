@@ -76,6 +76,7 @@ export function DashboardPage({
  const eodCardRef = useRef<HTMLDivElement>(null)
  const tasksRef = useRef<HTMLDivElement>(null)
  const rocksRef = useRef<HTMLDivElement>(null)
+ const openTaskModalRef = useRef<(() => void) | null>(null)
  const { currentOrganization, setCurrentPage } = useApp()
  const { isFeatureEnabled, enabledFeatures } = useWorkspaceFeatures()
  const { currentWorkspaceId } = useWorkspaces()
@@ -256,7 +257,10 @@ export function DashboardPage({
       </div>
       {hasTasksFeature && (
        <QuickActionsBar
-        onAddTask={() => tasksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+        onAddTask={() => {
+         tasksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+         setTimeout(() => openTaskModalRef.current?.(), 300)
+        }}
        />
       )}
      </div>
@@ -316,6 +320,8 @@ export function DashboardPage({
         onAddTask={handleAddTask}
         onUpdateTask={updateTask}
         onDeleteTask={deleteTask}
+        onRefresh={onRefresh}
+        onRegisterAddModal={(opener) => { openTaskModalRef.current = opener }}
        />
       </ErrorBoundary>
      </div>

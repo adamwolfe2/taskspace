@@ -16,6 +16,7 @@ interface InvitationDetails {
   role: string
   department: string
   existingUser: boolean
+  logoUrl?: string
 }
 
 interface AcceptInvitationPageProps {
@@ -42,6 +43,7 @@ export function AcceptInvitationPage({ token }: AcceptInvitationPageProps) {
           role: data.role,
           department: data.department,
           existingUser: data.existingUser,
+          logoUrl: data.logoUrl,
         })
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Invalid or expired invitation")
@@ -148,9 +150,17 @@ export function AcceptInvitationPage({ token }: AcceptInvitationPageProps) {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="bg-primary rounded-xl p-3">
-              <Users className="h-8 w-8 text-primary-foreground" />
-            </div>
+            {invitation?.logoUrl ? (
+              <img
+                src={invitation.logoUrl}
+                alt={invitation.organizationName}
+                className="h-16 w-16 rounded-xl object-contain"
+              />
+            ) : (
+              <div className="bg-primary rounded-xl p-3">
+                <Users className="h-8 w-8 text-primary-foreground" />
+              </div>
+            )}
           </div>
           <CardTitle className="text-2xl font-bold">
             Join {invitation?.organizationName}

@@ -161,7 +161,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 export const PATCH = withAuth(async (request: NextRequest, auth) => {
   try {
     // Validate request body
-    const { memberId, department, weeklyMeasurable, role, jobTitle, timezone, eodReminderTime, notificationPreferences } =
+    const { memberId, name, avatar, department, weeklyMeasurable, role, jobTitle, timezone, eodReminderTime, notificationPreferences } =
       await validateBody(request, updateMemberSchema)
 
     // Get the member record - try organization_members.id first, then user_id
@@ -211,15 +211,24 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     }
 
     const updates: Partial<OrganizationMember> = {}
-    if (department !== undefined) updates.department = department
+    if (name !== undefined) updates.name = name
+    if (department !== undefined) updates.department = department ?? undefined
     if (weeklyMeasurable !== undefined) updates.weeklyMeasurable = weeklyMeasurable
-    if (jobTitle !== undefined) updates.jobTitle = jobTitle
+    if (jobTitle !== undefined) updates.jobTitle = jobTitle ?? undefined
     if (role !== undefined && isAdmin(auth)) updates.role = role
     if (timezone !== undefined) updates.timezone = timezone
     if (eodReminderTime !== undefined) updates.eodReminderTime = eodReminderTime
     if (notificationPreferences !== undefined) updates.notificationPreferences = notificationPreferences
 
     await db.members.update(member.id, updates)
+
+    // Update user-level fields (name, avatar) if the member has a linked user account
+    if (member.userId && (name !== undefined || avatar !== undefined)) {
+      const userUpdates: Partial<import("@/lib/types").User> = {}
+      if (name !== undefined) userUpdates.name = name
+      if (avatar !== undefined) userUpdates.avatar = avatar ?? undefined
+      await db.users.update(member.userId, userUpdates)
+    }
 
     if (role && role !== member.role) {
       audit(auth, request, "member.role_changed", {

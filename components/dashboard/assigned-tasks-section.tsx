@@ -68,6 +68,8 @@ interface AssignedTasksSectionProps {
   }) => Promise<void>
   onUpdateTask?: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
   onDeleteTask?: (id: string) => Promise<void>
+  onRefresh?: () => Promise<void>
+  onRegisterAddModal?: (opener: () => void) => void
 }
 
 export function AssignedTasksSection({
@@ -79,6 +81,8 @@ export function AssignedTasksSection({
   onAddTask,
   onUpdateTask,
   onDeleteTask,
+  onRefresh,
+  onRegisterAddModal,
 }: AssignedTasksSectionProps) {
   const { toast } = useToast()
   const { setCurrentPage } = useApp()
@@ -95,6 +99,24 @@ export function AssignedTasksSection({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [togglingTaskId, setTogglingTaskId] = useState<string | null>(null)
   const [isExpanded, setIsExpanded] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // Register the modal opener so parent can trigger it externally
+  useEffect(() => {
+    onRegisterAddModal?.(() => setShowAddTaskModal(true))
+  }, [onRegisterAddModal])
+
+  const handleRefresh = async () => {
+    if (!onRefresh) return
+    setIsRefreshing(true)
+    try {
+      await onRefresh()
+    } catch {
+      toast({ title: "Refresh failed", description: "Failed to sync tasks", variant: "destructive" })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   // Sort tasks: platform-assigned (manual) first, then Asana tasks
   const sortBySource = (a: AssignedTask, b: AssignedTask) => {
@@ -228,6 +250,19 @@ export function AssignedTasksSection({
             <span className="text-sm text-slate-500">({tasks.length})</span>
           </div>
           <div className="flex items-center gap-3">
+            {onRefresh && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="h-8 w-8 p-0"
+                aria-label="Refresh tasks"
+                title="Refresh tasks"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              </Button>
+            )}
             {!isCheckingConnection && asanaConnected && (
               <Button
                 variant="outline"

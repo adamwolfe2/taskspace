@@ -187,10 +187,12 @@ export const createMemberSchema = z.object({
 
 export const updateMemberSchema = z.object({
   memberId: z.string().min(1, "Member ID is required"), // Organization member ID (hex string, not UUID)
+  name: z.string().min(1).max(100).optional(),
+  avatar: z.string().nullable().optional(),
   role: z.enum(["admin", "member", "owner"]).optional(),
-  department: z.string().min(1).max(100).optional(),
+  department: z.string().min(1).max(100).nullable().optional(),
   weeklyMeasurable: z.string().max(500).optional(),
-  jobTitle: z.string().max(100).optional(),
+  jobTitle: z.string().max(100).nullable().optional(),
   timezone: z.string().optional(),
   eodReminderTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   notificationPreferences: notificationPreferencesSchema.optional(),

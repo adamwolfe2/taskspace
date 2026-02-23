@@ -96,14 +96,14 @@ function emailWrapper(content: string, footerText?: string): string {
     h1 { font-size: 22px; font-weight: 600; color: #0f172a; margin: 0 0 8px 0; line-height: 1.3; }
     .subtitle { font-size: 14px; color: #64748b; margin: 0 0 24px 0; }
     p { font-size: 15px; color: #374151; margin: 0 0 16px 0; }
-    .btn { display: inline-block; background: #0f172a; color: #ffffff; padding: 12px 28px; text-decoration: none; font-weight: 500; font-size: 14px; }
+    .btn { display: inline-block; background: #0f172a; padding: 12px 28px; text-decoration: none; font-weight: 500; font-size: 14px; }
     .btn-outline { display: inline-block; background: transparent; color: #0f172a; padding: 11px 27px; text-decoration: none; font-weight: 500; font-size: 14px; border: 1px solid #0f172a; }
-    .btn-danger { display: inline-block; background: #dc2626; color: #ffffff; padding: 12px 28px; text-decoration: none; font-weight: 500; font-size: 14px; }
+    .btn-danger { display: inline-block; background: #dc2626; padding: 12px 28px; text-decoration: none; font-weight: 500; font-size: 14px; }
     .cta { text-align: center; margin: 28px 0; }
-    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+    .detail-row { padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
     .detail-row:last-child { border-bottom: none; }
-    .detail-label { font-size: 13px; color: #64748b; }
-    .detail-value { font-size: 13px; font-weight: 600; color: #1f2937; }
+    .detail-label { display: inline-block; min-width: 110px; font-size: 13px; color: #64748b; }
+    .detail-value { display: inline-block; font-size: 13px; font-weight: 600; color: #1f2937; }
     .note { font-size: 13px; color: #64748b; margin: 24px 0 0 0; }
     .divider { border: none; border-top: 1px solid #f1f5f9; margin: 24px 0; }
     .footer { text-align: center; padding: 20px 32px; font-size: 12px; color: #94a3b8; }
@@ -147,7 +147,7 @@ export async function sendInvitationEmail(
     <p>${escapeHtml(inviterName)} has invited you to join <strong>${escapeHtml(organization.name)}</strong> on Taskspace.</p>
 
     <div class="cta">
-      <a href="${inviteLink}" class="btn">Accept Invitation</a>
+      <a href="${inviteLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Accept Invitation</a>
     </div>
 
     <hr class="divider">
@@ -193,7 +193,7 @@ export async function sendVerificationEmail(
     <p>Thanks for signing up. Please verify your email address to activate your account.</p>
 
     <div class="cta">
-      <a href="${verifyLink}" class="btn">Verify Email</a>
+      <a href="${verifyLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Verify Email</a>
     </div>
 
     <p class="expires">This link expires in 24 hours</p>
@@ -363,7 +363,7 @@ export async function sendEODReminder(user: TeamMember, organization: Organizati
     <p>Take a few minutes to share what you accomplished today and plan for tomorrow.</p>
 
     <div class="cta">
-      <a href="${APP_URL}" class="btn">Submit EOD Report</a>
+      <a href="${APP_URL}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Submit EOD Report</a>
     </div>
   `, `${escapeHtml(organization.name)}<br><a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(user.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 
@@ -389,7 +389,7 @@ export async function sendPasswordResetEmail(
     <p>We received a request to reset your password. Click the button below to create a new one.</p>
 
     <div class="cta">
-      <a href="${resetLink}" class="btn">Reset Password</a>
+      <a href="${resetLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Reset Password</a>
     </div>
 
     <div class="callout-amber">
@@ -427,7 +427,7 @@ export async function sendWelcomeEmail(user: TeamMember, organization: Organizat
     </div>
 
     <div class="cta">
-      <a href="${dashboardLink}" class="btn">Go to Dashboard</a>
+      <a href="${dashboardLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Go to Dashboard</a>
     </div>
   `, `${escapeHtml(organization.name)} &middot; Powered by Taskspace<br><a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(user.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 
@@ -466,7 +466,7 @@ export async function sendRockAssignedEmail(
     </div>
 
     <div class="cta">
-      <a href="${rockLink}" class="btn">View Rock</a>
+      <a href="${rockLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">View Rock</a>
     </div>
 
     <p class="note">Regular check-ins will help you stay on track with this rock.</p>
@@ -509,7 +509,7 @@ export async function sendTaskAssignedEmail(
     </div>
 
     <div class="cta">
-      <a href="${taskLink}" class="btn">View Task</a>
+      <a href="${taskLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">View Task</a>
     </div>
   `, `${escapeHtml(organization.name)}<br><a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(assignedTo.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 
@@ -548,7 +548,7 @@ export async function sendRockDeadlineEmail(
     </div>
 
     <div class="cta">
-      <a href="${rockLink}" class="btn">Review Progress</a>
+      <a href="${rockLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Review Progress</a>
     </div>
 
     <p class="note">If you're facing blockers, consider escalating to your team lead.</p>

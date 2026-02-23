@@ -171,10 +171,11 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
                 size="sm"
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="gap-1.5 text-xs"
+                className="h-8 w-8 p-0"
+                aria-label="Refresh rocks"
+                title="Refresh rocks"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-                {isRefreshing ? "Syncing..." : "Refresh"}
               </Button>
             )}
             {rocks.length > 0 && (

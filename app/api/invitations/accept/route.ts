@@ -59,6 +59,65 @@ export async function POST(request: NextRequest) {
 
       // Check status after acquiring lock (another request may have changed it)
       if (lockedInvitation.status !== "pending") {
+        if (lockedInvitation.status === "accepted") {
+          // Idempotency: the invite was already accepted (e.g. server succeeded but client
+          // got a network error on the first attempt). If the user was created successfully
+          // and is an active member, create a fresh session and return success.
+          const { rows: recoveryUserRows } = await client.sql<{ id: string; email: string; name: string; avatar: string | null }>`
+            SELECT id, email, name, avatar FROM users WHERE LOWER(email) = LOWER(${lockedInvitation.email})
+          `
+          if (recoveryUserRows.length > 0) {
+            const recoveryUser = recoveryUserRows[0]
+            const { rows: recoveryMemberRows } = await client.sql<{
+              id: string; role: string; department: string; joined_at: string;
+              invited_by: string | null; status: string; weekly_measurable: string | null;
+              timezone: string | null; eod_reminder_time: string | null;
+              manager_id: string | null; job_title: string | null;
+            }>`
+              SELECT * FROM organization_members
+              WHERE organization_id = ${lockedInvitation.organization_id}
+                AND user_id = ${recoveryUser.id}
+                AND status = 'active'
+            `
+            if (recoveryMemberRows.length > 0) {
+              const rm = recoveryMemberRows[0]
+              const recoveryMember: OrganizationMember = {
+                id: rm.id, organizationId: lockedInvitation.organization_id,
+                userId: recoveryUser.id, email: lockedInvitation.email,
+                name: recoveryUser.name,
+                role: rm.role as "owner" | "admin" | "member",
+                department: rm.department,
+                joinedAt: new Date(rm.joined_at).toISOString(),
+                invitedBy: rm.invited_by || undefined,
+                status: "active",
+                weeklyMeasurable: rm.weekly_measurable || undefined,
+                timezone: rm.timezone || undefined,
+                eodReminderTime: rm.eod_reminder_time || undefined,
+                managerId: rm.manager_id || undefined,
+                jobTitle: rm.job_title || undefined,
+              }
+              const sessionToken = generateToken()
+              const sessionId = generateId()
+              const sessionExpiresAt = getExpirationDate(24 * 7)
+              const now = new Date().toISOString()
+              await client.sql`
+                INSERT INTO sessions (id, user_id, organization_id, token, expires_at, created_at, last_active_at)
+                VALUES (${sessionId}, ${recoveryUser.id}, ${lockedInvitation.organization_id}, ${sessionToken}, ${sessionExpiresAt}, ${now}, ${now})
+              `
+              throw new Error("RECOVERY_SUCCESS:" + JSON.stringify({
+                userId: recoveryUser.id,
+                userEmail: recoveryUser.email,
+                userName: recoveryUser.name,
+                userAvatar: recoveryUser.avatar,
+                member: recoveryMember,
+                sessionToken,
+                sessionExpiresAt,
+                workspaceId: lockedInvitation.workspace_id,
+                organizationId: lockedInvitation.organization_id,
+              }))
+            }
+          }
+        }
         throw new Error("This invitation has already been used or expired")
       }
 
@@ -418,6 +477,52 @@ export async function POST(request: NextRequest) {
 
     // Handle business logic errors from transaction
     if (error instanceof Error) {
+      if (error.message.startsWith("RECOVERY_SUCCESS:")) {
+        try {
+          const recoveryData = JSON.parse(error.message.substring("RECOVERY_SUCCESS:".length))
+          const organization = await db.organizations.findById(recoveryData.organizationId)
+          if (!organization) {
+            return NextResponse.json<ApiResponse<null>>(
+              { success: false, error: "Organization not found" },
+              { status: 404 }
+            )
+          }
+          const safeUser = {
+            id: recoveryData.userId,
+            email: recoveryData.userEmail,
+            name: recoveryData.userName,
+            avatar: recoveryData.userAvatar,
+            emailVerified: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }
+          const response = NextResponse.json<ApiResponse<AuthResponse>>({
+            success: true,
+            data: {
+              user: safeUser,
+              organization,
+              member: recoveryData.member,
+              token: recoveryData.sessionToken,
+              expiresAt: recoveryData.sessionExpiresAt,
+            },
+            message: "Joined organization successfully",
+          })
+          response.cookies.set("session_token", recoveryData.sessionToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            expires: new Date(recoveryData.sessionExpiresAt),
+            path: "/",
+          })
+          return response
+        } catch (parseError) {
+          logError(logger, "Failed to parse RECOVERY_SUCCESS data", parseError)
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, error: "Failed to recover session. Please try logging in." },
+            { status: 500 }
+          )
+        }
+      }
       if (error.message.startsWith("NEEDS_REGISTRATION:")) {
         // BUG FIX: Wrap JSON.parse in try-catch to prevent crashes from malformed data
         try {
@@ -473,8 +578,8 @@ export async function POST(request: NextRequest) {
 // GET /api/invitations/accept - Get invitation details
 export async function GET(request: NextRequest) {
   try {
-    // Rate limit: 5 token lookups per 15 min per IP (strict to prevent enumeration)
-    const rl = checkIpRateLimit(request, { endpoint: "invitation-lookup", maxRequests: 5 })
+    // Rate limit: 20 token lookups per 15 min per IP
+    const rl = checkIpRateLimit(request, { endpoint: "invitation-lookup", maxRequests: 20 })
     if (!rl.allowed) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Too many attempts. Please try again later." },
@@ -535,6 +640,7 @@ export async function GET(request: NextRequest) {
       role: string
       department: string
       existingUser: boolean
+      logoUrl?: string
     }>>({
       success: true,
       data: {
@@ -543,6 +649,7 @@ export async function GET(request: NextRequest) {
         role: invitation.role,
         department: invitation.department,
         existingUser: !!existingUser,
+        logoUrl: organization.logoUrl,
       },
     })
   } catch (error) {
