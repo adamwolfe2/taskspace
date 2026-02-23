@@ -519,28 +519,14 @@ export async function POST(request: NextRequest) {
         }
       }
       if (error.message.startsWith("NEEDS_REGISTRATION:")) {
-        // BUG FIX: Wrap JSON.parse in try-catch to prevent crashes from malformed data
-        try {
-          const data = JSON.parse(error.message.substring("NEEDS_REGISTRATION:".length))
-          return NextResponse.json<ApiResponse<{ needsRegistration: true; email: string; organizationName: string }>>(
-            {
-              success: true,
-              data: {
-                needsRegistration: true,
-                email: data.email,
-                organizationName: data.organizationName,
-              },
-              message: "Please complete your registration",
-            },
-            { status: 200 }
-          )
-        } catch (parseError) {
-          logError(logger, "Failed to parse NEEDS_REGISTRATION data", parseError)
-          return NextResponse.json<ApiResponse<null>>(
-            { success: false, error: "Invalid invitation data format" },
-            { status: 500 }
-          )
-        }
+        // This path is reached if a new user hits POST without providing name/password.
+        // The frontend prevents this by showing name/password fields for new users, so this
+        // is a safety net for direct API calls. Return a clear error (not success: true,
+        // which would crash the client trying to access data.user).
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Please provide your name and password to complete registration" },
+          { status: 422 }
+        )
       }
       if (error.message.includes("already been used or expired")) {
         return NextResponse.json<ApiResponse<null>>(
@@ -602,7 +588,7 @@ export async function GET(request: NextRequest) {
 
     if (invitation.status !== "pending") {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "This invitation has already been used" },
+        { success: false, error: "This invitation has already been accepted. Please log in to access your account." },
         { status: 400 }
       )
     }
