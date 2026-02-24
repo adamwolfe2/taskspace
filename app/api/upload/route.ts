@@ -78,18 +78,19 @@ export const POST = withAuth(async (request, auth) => {
       data: attachment,
     })
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
     logError(logger, "File upload error", error)
 
-    // Check if Vercel Blob is not configured
-    if (error instanceof Error && error.message.includes("BLOB_READ_WRITE_TOKEN")) {
+    // Blob not configured or token missing
+    if (message.includes("BLOB_READ_WRITE_TOKEN") || message.includes("No credentials") || message.includes("Unauthorized") || message.includes("credentials")) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "File storage is not configured. Please set up Vercel Blob." },
+        { success: false, error: "File storage is not configured. Please set BLOB_READ_WRITE_TOKEN in Vercel environment variables and redeploy." },
         { status: 500 }
       )
     }
 
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Failed to upload file" },
+      { success: false, error: `Upload error: ${message}` },
       { status: 500 }
     )
   }
