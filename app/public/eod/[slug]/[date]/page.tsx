@@ -61,6 +61,7 @@ interface PublicEODReport {
 interface PublicDailyReport {
   organizationName: string
   organizationLogo?: string
+  accentColor?: string | null
   date: string
   displayDate: string
   timezone: string
@@ -433,26 +434,35 @@ export default function PublicEODDailyReportPage() {
         </div>
 
         {/* Submission Progress */}
-        {data.submissionStats.percentage < 100 && (
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-amber-100 rounded-full flex items-center justify-center">
-                <Clock className="h-5 w-5 text-amber-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-amber-800">
-                  Waiting for {data.submissionStats.total - data.submissionStats.submitted} more report{data.submissionStats.total - data.submissionStats.submitted > 1 ? "s" : ""}
-                </p>
-                <div className="mt-2 h-2 bg-amber-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-amber-500 rounded-full transition-all duration-500"
-                    style={{ width: `${data.submissionStats.percentage}%` }}
-                  />
+        {data.submissionStats.percentage < 100 && (() => {
+          const accent = data.accentColor || "#f59e0b"
+          return (
+            <div
+              className="mb-6 p-4 rounded-xl border"
+              style={{ backgroundColor: `${accent}12`, borderColor: `${accent}35` }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="h-10 w-10 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${accent}20` }}
+                >
+                  <Clock className="h-5 w-5" style={{ color: accent }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-800">
+                    Waiting for {data.submissionStats.total - data.submissionStats.submitted} more report{data.submissionStats.total - data.submissionStats.submitted > 1 ? "s" : ""}
+                  </p>
+                  <div className="mt-2 h-2 rounded-full overflow-hidden" style={{ backgroundColor: `${accent}25` }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${data.submissionStats.percentage}%`, backgroundColor: accent }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* View Toggle */}
         {data.reports.length > 0 && (

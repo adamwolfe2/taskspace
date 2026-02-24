@@ -65,6 +65,7 @@ interface PublicEODReport {
 interface PublicDailyReport {
   organizationName: string
   organizationLogo?: string
+  accentColor?: string | null
   date: string
   displayDate: string
   timezone: string
@@ -152,6 +153,16 @@ export async function GET(
     }
 
     logger.info({ orgSlug: slug, date }, "Public EOD accessed")
+
+    // Get accent color from the org's default workspace (or first workspace)
+    const { rows: wsRows } = await sql`
+      SELECT accent_color
+      FROM workspaces
+      WHERE organization_id = ${orgId}
+      ORDER BY is_default DESC, created_at ASC
+      LIMIT 1
+    `
+    const accentColor = wsRows.length > 0 ? (wsRows[0].accent_color as string | null) : null
 
     // Get all active members (join with users to get name if missing in members)
     const { rows: members } = await sql`
@@ -335,6 +346,7 @@ export async function GET(
     const dailyReport: PublicDailyReport = {
       organizationName: orgName,
       organizationLogo: orgLogo,
+      accentColor,
       date,
       displayDate,
       timezone,

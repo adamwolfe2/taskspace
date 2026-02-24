@@ -27,9 +27,6 @@ import {
   ChevronDown,
   Plus,
   Check,
-  Crown,
-  Shield,
-  Users,
   Loader2,
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -131,17 +128,6 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
     }
   }
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case "owner":
-        return <Crown className="h-3 w-3 text-amber-500" />
-      case "admin":
-        return <Shield className="h-3 w-3 text-blue-500" />
-      default:
-        return <Users className="h-3 w-3 text-slate-400" />
-    }
-  }
-
   // Support both logoUrl (direct) and settings.customBranding.logo (nested) paths
   const currentOrgLogo = currentOrganization?.logoUrl || currentOrganization?.settings?.customBranding?.logo
   const currentOrgColor = currentOrganization?.primaryColor || currentOrganization?.settings?.customBranding?.primaryColor || "#dc2626"
@@ -226,20 +212,6 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
                   </span>
                   {org.isCurrent && (
                     <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  {getRoleIcon(org.role)}
-                  <span className="text-xs text-slate-500 capitalize">
-                    {org.role}
-                  </span>
-                  {org.subscriptionTier && (
-                    <>
-                      <span className="text-slate-300">·</span>
-                      <span className="text-xs text-slate-500">
-                        {org.subscriptionTier}
-                      </span>
-                    </>
                   )}
                 </div>
               </div>
