@@ -14,6 +14,7 @@ const ALLOWED_TYPES = [
   "image/png",
   "image/gif",
   "image/webp",
+  "image/svg+xml",  // SVG logos/favicons
   "image/x-icon",   // Added for favicon uploads
   "application/pdf",
   "application/msword",

@@ -208,12 +208,8 @@ export function WorkspaceBrandingSettings() {
         body: formData,
       })
 
-      if (!response.ok) {
-        throw new Error("Upload failed")
-      }
-
-      const data = await response.json()
-      if (!data.success || !data.data?.url) {
+      const data = await response.json().catch(() => ({ success: false, error: "Server error" }))
+      if (!response.ok || !data.success || !data.data?.url) {
         throw new Error(data.error || "Upload failed")
       }
 
@@ -225,10 +221,10 @@ export function WorkspaceBrandingSettings() {
         title: "Logo uploaded",
         description: "Your logo has been uploaded successfully",
       })
-    } catch {
+    } catch (err) {
       toast({
         title: "Upload failed",
-        description: "Failed to upload logo. Please try again.",
+        description: err instanceof Error ? err.message : "Failed to upload logo. Please try again.",
         variant: "destructive",
       })
     } finally {
