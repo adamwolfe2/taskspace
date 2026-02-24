@@ -14,6 +14,7 @@ import { asanaClient } from "@/lib/integrations/asana"
 import { getActiveMetricForUser, upsertWeeklyMetricEntry } from "@/lib/metrics"
 import { getTodayInTimezone, isValidEODDate, formatDateForDisplay } from "@/lib/utils/date-utils"
 import { isTrialExpired } from "@/lib/billing/feature-gates"
+import { audit } from "@/lib/audit"
 import { CONFIG } from "@/lib/config"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
@@ -335,6 +336,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
         submittedAt: now,
       })
 
+      audit(auth, request, "eod.updated", {
+        resourceType: "eod_report",
+        resourceId: existingReport.id,
+        newValues: { date: existingReport.date, tasksCount: mergedTasks.length, needsEscalation: mergedEscalation },
+      })
+
       // Fire webhook for update
       dispatchWebhook(auth.organization.id, "eod.submitted", {
         reportId: existingReport.id,
@@ -370,6 +377,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     }
 
     await db.eodReports.create(report)
+
+    audit(auth, request, "eod.submitted", {
+      resourceType: "eod_report",
+      resourceId: report.id,
+      newValues: { date: report.date, tasksCount: tasks.length, needsEscalation: report.needsEscalation },
+    })
 
     // Fire webhook for new submission (best-effort, non-blocking)
     dispatchWebhook(auth.organization.id, "eod.submitted", {

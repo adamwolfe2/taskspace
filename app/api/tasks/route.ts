@@ -13,6 +13,7 @@ import type { AssignedTask, ApiResponse, Notification } from "@/lib/types"
 import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
 import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { logger, logError } from "@/lib/logger"
+import { audit } from "@/lib/audit"
 import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { isTrialExpired } from "@/lib/billing/feature-gates"
@@ -282,6 +283,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     }
 
     await db.assignedTasks.create(task)
+
+    audit(auth, request, "task.created", {
+      resourceType: "task",
+      resourceId: task.id,
+      newValues: { title: task.title, assigneeId: task.assigneeId, priority: task.priority, dueDate: task.dueDate },
+    })
 
     // Fire webhook (best-effort, non-blocking)
     dispatchWebhook(auth.organization.id, "task.created", {

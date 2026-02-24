@@ -12,6 +12,8 @@ import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { logger, logError } from "@/lib/logger"
 import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
 import { sendNotification } from "@/lib/db/notifications"
+import { audit } from "@/lib/audit"
+import { isTrialExpired } from "@/lib/billing/feature-gates"
 
 // GET /api/rocks - Get rocks
 export const GET = withAuth(async (request: NextRequest, auth) => {
@@ -156,6 +158,14 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       }
     }
 
+    // Block rock creation if trial has expired
+    if (isTrialExpired(auth.organization.subscription, auth.organization.isInternal)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Your trial has expired. Please upgrade your plan to continue creating rocks." },
+        { status: 402 }
+      )
+    }
+
     // Determine which user the rock belongs to
     let targetUserId: string | undefined = auth.user.id
     let ownerEmail: string | undefined = undefined
@@ -228,6 +238,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     }
 
     await db.rocks.create(rock)
+
+    audit(auth, request, "rock.created", {
+      resourceType: "rock",
+      resourceId: rock.id,
+      newValues: { title: rock.title, quarter: rock.quarter, userId: rock.userId },
+    })
 
     // Fire webhook (best-effort, non-blocking)
     dispatchWebhook(auth.organization.id, "rock.created", {

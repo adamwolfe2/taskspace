@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
-import { withAdmin } from "@/lib/api/middleware"
+import { withAdmin, withOwner } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { apiKeyCreateSchema } from "@/lib/validation/schemas"
@@ -33,8 +33,8 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
   }
 })
 
-// POST /api/auth/api-key - Create a new API key
-export const POST = withAdmin(async (request: NextRequest, auth) => {
+// POST /api/auth/api-key - Create a new API key (owner-only: keys are long-lived org credentials)
+export const POST = withOwner(async (request: NextRequest, auth) => {
   try {
     // Validate request body
     const { name, scopes, workspaceId, expiresAt } = await validateBody(request, apiKeyCreateSchema)

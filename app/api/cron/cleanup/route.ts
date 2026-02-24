@@ -20,6 +20,7 @@ function verifyCronSecret(request: NextRequest): boolean {
       logger.error("CRON_SECRET not configured — denying cleanup cron request")
       return false
     }
+    logger.warn("CRON_SECRET not configured — allowing cleanup cron in development mode")
     return true
   }
   return request.headers.get("authorization") === `Bearer ${cronSecret}`

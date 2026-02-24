@@ -1578,12 +1578,13 @@ export const db = {
       return rows.map(parseEODReport)
     },
     async findByUserAndDate(userId: string, orgId: string, date: string): Promise<EODReport | null> {
-      // Returns the most recent report for backward compatibility
+      // Returns the most recent report; FOR UPDATE prevents concurrent upsert race conditions
       const { rows } = await sql`
         SELECT * FROM eod_reports
         WHERE user_id = ${userId} AND organization_id = ${orgId} AND date = ${date}
         ORDER BY submitted_at DESC
         LIMIT 1
+        FOR UPDATE SKIP LOCKED
       `
       return rows[0] ? parseEODReport(rows[0]) : null
     },
