@@ -89,6 +89,14 @@ export const POST = withAuth(async (request, auth) => {
       )
     }
 
+    // Private store used with public access
+    if (message.includes("private store") || message.includes("public access")) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "File storage is misconfigured: the Vercel Blob store must be set to Public. Go to Vercel → Storage → your Blob store → Settings and enable public access, then redeploy." },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: `Upload error: ${message}` },
       { status: 500 }
