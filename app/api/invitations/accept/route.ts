@@ -423,21 +423,27 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Add user to all workspaces in the org (org members get access to all workspaces)
+    // Add user to workspace(s):
+    // - If the invitation specifies a workspace, add only to that workspace
+    // - Otherwise (org-wide invite), add to all workspaces in the org
     try {
-      const orgWorkspaces = await getWorkspacesByOrg(organization.id)
-
-      if (orgWorkspaces.length > 0) {
-        await Promise.all(
-          orgWorkspaces.map((ws) =>
-            addWorkspaceMember(ws.id, result.user.id, "member").catch((err) =>
-              logError(logger, `Failed to add user to workspace ${ws.id}`, err)
+      if (result.workspaceId) {
+        await addWorkspaceMember(result.workspaceId, result.user.id, "member")
+        logger.info(`Added user ${result.user.id} to invited workspace ${result.workspaceId}`)
+      } else {
+        const orgWorkspaces = await getWorkspacesByOrg(organization.id)
+        if (orgWorkspaces.length > 0) {
+          await Promise.all(
+            orgWorkspaces.map((ws) =>
+              addWorkspaceMember(ws.id, result.user.id, "member").catch((err) =>
+                logError(logger, `Failed to add user to workspace ${ws.id}`, err)
+              )
             )
           )
-        )
-        logger.info(`Added user ${result.user.id} to ${orgWorkspaces.length} workspace(s) in org ${organization.id}`)
-      } else {
-        logger.warn(`No workspaces found for org ${organization.id} — user ${result.user.id} has no workspace membership`)
+          logger.info(`Added user ${result.user.id} to ${orgWorkspaces.length} workspace(s) in org ${organization.id}`)
+        } else {
+          logger.warn(`No workspaces found for org ${organization.id} — user ${result.user.id} has no workspace membership`)
+        }
       }
     } catch (error) {
       logError(logger, "Failed to add user to workspaces", error)
