@@ -1,42 +1,13 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
+import { DemoEODForm } from "@/components/marketing/demo-eod-form"
+import { DemoRocks } from "@/components/marketing/demo-rocks"
+import { DemoScorecard } from "@/components/marketing/demo-scorecard"
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 
 const COMPANY_DEMO = "Horizon Labs"
-const DATE_DEMO = "Wed, Jan 15 · Q1 2026"
-
-const EOD_MEMBERS = [
-  { name: "Adam Wolfe",       initials: "AW", role: "VP Product Eng.",    tasks: 3, kind: "submitted" as const },
-  { name: "Sarah Chen",       initials: "SC", role: "Eng. Manager",       tasks: 4, kind: "submitted" as const },
-  { name: "Marcus Williams",  initials: "MW", role: "Design Director",    tasks: 3, kind: "submitted" as const },
-  { name: "Priya Patel",      initials: "PP", role: "Program Manager",    tasks: 2, kind: "submitted" as const },
-  { name: "Elena Rodriguez",  initials: "ER", role: "Data Science Lead",  tasks: 0, kind: "typing"    as const },
-  { name: "James O'Brien",    initials: "JO", role: "QA Lead",            tasks: 0, kind: "pending"   as const },
-]
-
-const EOD_INSIGHTS = [
-  "2 blockers flagged across the team",
-  "Rock #1 (XR SDK) on track — 75% complete",
-  "Crash rate improved 40% this sprint",
-  "Team velocity 91 pts vs. target 85 ↑",
-]
-
-const ROCKS = [
-  { title: "Launch Horizon XR 2.0 SDK",       owner: "A. Wolfe",     progress: 67, status: "on-track" as const },
-  { title: "Reduce app crash rate < 0.1%",    owner: "S. Chen",      progress: 82, status: "on-track" as const },
-  { title: "Redesign Settings — iOS 20",      owner: "M. Williams",  progress: 31, status: "at-risk"  as const },
-  { title: "Ship Horizon AI Phase 3",         owner: "E. Rodriguez", progress: 55, status: "on-track" as const },
-]
-
-const SCORECARD = [
-  { metric: "App Crash Rate",        value: "0.08%",   target: "< 0.1%",  good: true  },
-  { metric: "Sprint Velocity",       value: "91 pts",  target: "85 pts",  good: true  },
-  { metric: "Code Review SLA",       value: "22 hrs",  target: "< 24 hrs",good: true  },
-  { metric: "Test Coverage",         value: "87%",     target: "> 90%",   good: false },
-  { metric: "CSAT Score",            value: "4.6 / 5", target: "4.5 / 5", good: true  },
-]
 
 const AI_QA = [
   {
@@ -105,9 +76,7 @@ const TOTAL_SLIDES = 9
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
-type EODPhase   = "collecting" | "parsing" | "insights"
-type RocksPhase = "entering" | "filling" | "cycling"
-type AIPhase    = "question" | "typing" | "done"
+type AIPhase = "question" | "typing" | "done"
 
 // ─── SHARED ──────────────────────────────────────────────────────────────────
 
@@ -135,259 +104,7 @@ function Slide({ children }: { children: React.ReactNode }) {
   )
 }
 
-function DemoChrome({
-  title,
-  subtitle,
-  children,
-  dotsCount,
-  activeDot,
-}: {
-  title: string
-  subtitle?: string
-  children: React.ReactNode
-  dotsCount?: number
-  activeDot?: number
-}) {
-  return (
-    <div className="border border-black bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] hidden sm:block">
-      <div className="border-b border-black px-4 py-2.5 flex items-center justify-between bg-black">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-white/30" />
-          <span className="font-mono text-[10px] text-white/70 uppercase tracking-widest">{title}</span>
-        </div>
-        {subtitle && <span className="font-mono text-[10px] text-white/40">{subtitle}</span>}
-      </div>
-      <div className="p-4">{children}</div>
-      {dotsCount !== undefined && (
-        <div className="border-t border-black/10 py-2 flex justify-center gap-1.5">
-          {Array.from({ length: dotsCount }).map((_, i) => (
-            <div
-              key={i}
-              className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-              style={{ backgroundColor: i === activeDot ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.15)" }}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── DEMO 1: EOD REPORT + AI PARSING ─────────────────────────────────────────
-
-function EODDemo() {
-  const [visibleCount, setVisibleCount]     = useState(0)
-  const [phase, setPhase]                   = useState<EODPhase>("collecting")
-  const [visibleInsights, setVisibleInsights] = useState(0)
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([])
-
-  const clear = () => timers.current.forEach(clearTimeout)
-
-  const run = useCallback(() => {
-    clear()
-    setVisibleCount(0)
-    setVisibleInsights(0)
-    setPhase("collecting")
-    const t: ReturnType<typeof setTimeout>[] = []
-
-    EOD_MEMBERS.forEach((_, i) => {
-      t.push(setTimeout(() => setVisibleCount(i + 1), 500 + i * 480))
-    })
-
-    const afterMembers = 500 + EOD_MEMBERS.length * 480
-    t.push(setTimeout(() => setPhase("parsing"), afterMembers + 400))
-
-    EOD_INSIGHTS.forEach((_, i) => {
-      t.push(setTimeout(() => {
-        setPhase("insights")
-        setVisibleInsights(i + 1)
-      }, afterMembers + 1600 + i * 650))
-    })
-
-    const total = afterMembers + 1600 + EOD_INSIGHTS.length * 650 + 3200
-    t.push(setTimeout(run, total))
-    timers.current = t
-  }, [])
-
-  useEffect(() => { run(); return clear }, [run])
-
-  const submitted = EOD_MEMBERS.filter((m) => m.kind === "submitted").length
-  const dotIdx = phase === "collecting" ? 0 : phase === "parsing" ? 1 : 2
-
-  return (
-    <DemoChrome title={`EOD Reports — ${COMPANY_DEMO}`} subtitle={DATE_DEMO} dotsCount={3} activeDot={dotIdx}>
-      {/* Submission bar */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="font-mono text-[10px] text-black/40 uppercase tracking-widest">Submissions</span>
-        <span className="font-mono text-[10px] text-black/60">
-          {Math.min(visibleCount, submitted)} / {EOD_MEMBERS.length} submitted
-        </span>
-      </div>
-      <div className="h-1.5 border border-black/10 bg-black/5 mb-4 overflow-hidden">
-        <div
-          className="h-full bg-black transition-all duration-500"
-          style={{ width: `${Math.min(visibleCount, submitted) / EOD_MEMBERS.length * 100}%` }}
-        />
-      </div>
-
-      {/* Member list */}
-      <div className="space-y-2">
-        {EOD_MEMBERS.map((m, i) => {
-          const visible = i < visibleCount
-          return (
-            <div
-              key={m.name}
-              className="flex items-center gap-3 transition-all duration-300"
-              style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(4px)" }}
-            >
-              <div className="w-7 h-7 border border-black bg-black/5 flex items-center justify-center flex-shrink-0">
-                <span className="font-mono text-[9px] font-bold">{m.initials}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[11px] font-medium truncate">{m.name}</span>
-                  <span
-                    className="font-mono text-[9px] uppercase tracking-wider ml-2"
-                    style={{
-                      color: m.kind === "submitted"
-                        ? "rgba(0,0,0,0.7)"
-                        : m.kind === "typing"
-                        ? "rgba(0,0,0,0.4)"
-                        : "rgba(0,0,0,0.2)",
-                    }}
-                  >
-                    {m.kind === "submitted" ? `${m.tasks} tasks ✓` : m.kind === "typing" ? "typing…" : "pending"}
-                  </span>
-                </div>
-                <div className="font-mono text-[9px] text-black/35">{m.role}</div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* AI section */}
-      {phase !== "collecting" && (
-        <div className="mt-4 pt-4 border-t border-black/10">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-5 h-5 bg-black flex items-center justify-center flex-shrink-0">
-              <span className="font-mono text-[7px] text-white font-bold">AI</span>
-            </div>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-black/40">
-              {phase === "parsing" ? "Analyzing reports…" : "Insights ready"}
-            </span>
-            {phase === "parsing" && (
-              <span className="inline-block w-0.5 h-3 bg-black animate-pulse" />
-            )}
-          </div>
-          <div className="space-y-1.5">
-            {EOD_INSIGHTS.slice(0, visibleInsights).map((insight, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-2"
-                style={{ animation: "tsiFadeIn 0.3s ease both" }}
-              >
-                <span className="font-mono text-[9px] text-black/30 mt-0.5">→</span>
-                <span className="font-mono text-[10px] text-black/70">{insight}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </DemoChrome>
-  )
-}
-
-// ─── DEMO 2: ROCKS DASHBOARD ─────────────────────────────────────────────────
-
-function RocksDemo() {
-  const [visible, setVisible]         = useState(0)
-  const [progress, setProgress]       = useState<number[]>(ROCKS.map(() => 0))
-  const [highlighted, setHighlighted] = useState<number | null>(null)
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([])
-
-  const clear = () => timers.current.forEach(clearTimeout)
-
-  const run = useCallback(() => {
-    clear()
-    setVisible(0)
-    setProgress(ROCKS.map(() => 0))
-    setHighlighted(null)
-    const t: ReturnType<typeof setTimeout>[] = []
-
-    ROCKS.forEach((_, i) => {
-      t.push(setTimeout(() => setVisible(i + 1), 300 + i * 340))
-    })
-
-    const afterEnter = 300 + ROCKS.length * 340
-    t.push(setTimeout(() => setProgress(ROCKS.map((r) => r.progress)), afterEnter + 300))
-
-    const cycleStart = afterEnter + 1100
-    ROCKS.forEach((_, i) => {
-      t.push(setTimeout(() => setHighlighted(i), cycleStart + i * 950))
-    })
-
-    const total = cycleStart + ROCKS.length * 950 + 1500
-    t.push(setTimeout(run, total))
-    timers.current = t
-  }, [])
-
-  useEffect(() => { run(); return clear }, [run])
-
-  return (
-    <DemoChrome
-      title="Quarterly Rocks — Q1 2026"
-      subtitle={COMPANY_DEMO}
-      dotsCount={ROCKS.length}
-      activeDot={highlighted ?? 0}
-    >
-      <div className="space-y-3">
-        {ROCKS.map((rock, i) => {
-          const isVisible    = i < visible
-          const isHighlit    = highlighted === i
-          const isAtRisk     = rock.status === "at-risk"
-          return (
-            <div
-              key={rock.title}
-              className="p-2 -mx-2 transition-all duration-300"
-              style={{
-                opacity:          isVisible ? 1 : 0,
-                transform:        isVisible ? "translateY(0)" : "translateY(6px)",
-                backgroundColor:  isHighlit ? "rgba(0,0,0,0.035)" : "transparent",
-              }}
-            >
-              <div className="flex items-center justify-between mb-1.5 gap-2">
-                <span className="font-mono text-[11px] font-medium text-black/85 leading-tight">{rock.title}</span>
-                <span
-                  className="font-mono text-[9px] uppercase tracking-wider border px-1.5 py-0.5 flex-shrink-0"
-                  style={{
-                    borderColor: isAtRisk ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)",
-                    color:       isAtRisk ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.4)",
-                    background:  isAtRisk ? "rgba(0,0,0,0.06)" : "transparent",
-                  }}
-                >
-                  {isAtRisk ? "at risk" : "on track"}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-1.5 border border-black/10 bg-black/5 overflow-hidden">
-                  <div
-                    className="h-full bg-black transition-all duration-700"
-                    style={{ width: `${progress[i]}%` }}
-                  />
-                </div>
-                <span className="font-mono text-[9px] text-black/40 w-7 text-right">{progress[i]}%</span>
-              </div>
-              <div className="font-mono text-[9px] text-black/30 mt-1">{rock.owner}</div>
-            </div>
-          )
-        })}
-      </div>
-    </DemoChrome>
-  )
-}
-
-// ─── DEMO 3: AI MANAGER CHAT ──────────────────────────────────────────────────
+// ─── DEMO: AI MANAGER CHAT ────────────────────────────────────────────────────
 
 function AIDemo() {
   const [pairIdx, setPairIdx]       = useState(0)
@@ -431,20 +148,39 @@ function AIDemo() {
   useEffect(() => { runPair(0); return clearAll }, [runPair])
 
   return (
-    <DemoChrome title="AI Brain Dump — Manager View" subtitle={COMPANY_DEMO} dotsCount={AI_QA.length} activeDot={pairIdx}>
+    <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 max-w-3xl mx-auto hidden sm:block">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h3 className="text-[15px] font-semibold text-slate-900">AI Command Center</h3>
+          <p className="text-sm text-slate-500">{COMPANY_DEMO} · Ask anything</p>
+        </div>
+        <div className="flex gap-1.5 items-center">
+          {AI_QA.map((_, i) => (
+            <div
+              key={i}
+              className="rounded-full transition-all duration-300"
+              style={{
+                width: i === pairIdx ? "20px" : "8px",
+                height: "8px",
+                backgroundColor: i === pairIdx ? "#1e293b" : "#cbd5e1",
+              }}
+            />
+          ))}
+        </div>
+      </div>
       <div className="space-y-4 min-h-[210px]">
         {/* Previous pairs grayed */}
         {AI_QA.slice(0, pairIdx).map((qa, i) => (
           <div key={i} className="opacity-25 space-y-2">
             <div className="flex gap-2">
-              <span className="font-mono text-[9px] text-black/50 uppercase flex-shrink-0 mt-0.5">You</span>
-              <span className="font-mono text-[10px] text-black/60">{qa.q}</span>
+              <span className="font-mono text-[9px] text-slate-500 uppercase flex-shrink-0 mt-0.5">You</span>
+              <span className="font-mono text-[10px] text-slate-600">{qa.q}</span>
             </div>
             <div className="flex gap-2">
-              <div className="w-5 h-5 bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-5 h-5 bg-slate-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="font-mono text-[7px] text-white font-bold">TS</span>
               </div>
-              <span className="font-mono text-[10px] text-black/60 leading-relaxed">{qa.a}</span>
+              <span className="font-mono text-[10px] text-slate-600 leading-relaxed">{qa.a}</span>
             </div>
           </div>
         ))}
@@ -452,96 +188,27 @@ function AIDemo() {
         {/* Current pair */}
         <div className="space-y-2">
           <div className="flex gap-2">
-            <span className="font-mono text-[9px] text-black/50 uppercase flex-shrink-0 mt-0.5">You</span>
-            <span className="font-mono text-[11px] text-black">{AI_QA[pairIdx].q}</span>
+            <span className="font-mono text-[9px] text-slate-500 uppercase flex-shrink-0 mt-0.5">You</span>
+            <span className="font-mono text-[11px] text-slate-900">{AI_QA[pairIdx].q}</span>
           </div>
           <div className="flex gap-2" style={{ animation: "tsiFadeIn 0.25s ease both" }}>
-            <div className="w-5 h-5 bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="w-5 h-5 bg-slate-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="font-mono text-[7px] text-white font-bold">TS</span>
             </div>
             {aiPhase === "question" ? (
-              <span className="font-mono text-[10px] text-black/30 animate-pulse">thinking…</span>
+              <span className="font-mono text-[10px] text-slate-400 animate-pulse">thinking…</span>
             ) : (
-              <span className="font-mono text-[10px] text-black/75 leading-relaxed">
+              <span className="font-mono text-[10px] text-slate-700 leading-relaxed">
                 {typed}
                 {aiPhase === "typing" && (
-                  <span className="inline-block w-0.5 h-3 bg-black align-middle ml-0.5 animate-pulse" />
+                  <span className="inline-block w-0.5 h-3 bg-slate-700 align-middle ml-0.5 animate-pulse" />
                 )}
               </span>
             )}
           </div>
         </div>
       </div>
-    </DemoChrome>
-  )
-}
-
-// ─── DEMO 4: SCORECARD ───────────────────────────────────────────────────────
-
-function ScorecardDemo() {
-  const [visible, setVisible]     = useState(0)
-  const [highlighted, setHighlit] = useState<number | null>(null)
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([])
-
-  const clear = () => timers.current.forEach(clearTimeout)
-
-  const run = useCallback(() => {
-    clear()
-    setVisible(0)
-    setHighlit(null)
-    const t: ReturnType<typeof setTimeout>[] = []
-
-    SCORECARD.forEach((_, i) => {
-      t.push(setTimeout(() => setVisible(i + 1), 400 + i * 320))
-    })
-
-    const afterEnter = 400 + SCORECARD.length * 320 + 400
-    SCORECARD.forEach((_, i) => {
-      t.push(setTimeout(() => setHighlit(i), afterEnter + i * 850))
-    })
-    t.push(setTimeout(run, afterEnter + SCORECARD.length * 850 + 1500))
-    timers.current = t
-  }, [])
-
-  useEffect(() => { run(); return clear }, [run])
-
-  return (
-    <DemoChrome title="Weekly Scorecard — Jan 13, 2026" subtitle={COMPANY_DEMO} dotsCount={SCORECARD.length} activeDot={highlighted ?? 0}>
-      <div>
-        <div className="grid grid-cols-4 border-b border-black/10 pb-2 mb-2">
-          {["Metric", "Value", "Target", "Status"].map((h) => (
-            <span key={h} className="font-mono text-[9px] uppercase tracking-widest text-black/30">{h}</span>
-          ))}
-        </div>
-        <div className="space-y-0">
-          {SCORECARD.map((row, i) => {
-            const isVis  = i < visible
-            const isHit  = highlighted === i
-            return (
-              <div
-                key={row.metric}
-                className="grid grid-cols-4 py-2 border-b border-black/5 transition-all duration-300"
-                style={{
-                  opacity:         isVis ? 1 : 0,
-                  transform:       isVis ? "translateX(0)" : "translateX(-8px)",
-                  backgroundColor: isHit ? "rgba(0,0,0,0.035)" : "transparent",
-                }}
-              >
-                <span className="font-mono text-[10px] text-black/75">{row.metric}</span>
-                <span className="font-mono text-[10px] font-medium">{row.value}</span>
-                <span className="font-mono text-[10px] text-black/40">{row.target}</span>
-                <span
-                  className="font-mono text-[9px] uppercase tracking-wider"
-                  style={{ color: row.good ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }}
-                >
-                  {row.good ? "✓ good" : "↓ below"}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </DemoChrome>
+    </div>
   )
 }
 
@@ -569,7 +236,7 @@ function S1() {
             </p>
           </div>
         </div>
-        <EODDemo />
+        <DemoEODForm />
       </div>
     </Slide>
   )
@@ -710,7 +377,7 @@ function S5() {
             ))}
           </div>
         </div>
-        <EODDemo />
+        <DemoEODForm />
       </div>
     </Slide>
   )
@@ -746,7 +413,7 @@ function S6() {
             ))}
           </div>
         </div>
-        <RocksDemo />
+        <DemoRocks />
       </div>
     </Slide>
   )
@@ -755,7 +422,7 @@ function S6() {
 function S7() {
   return (
     <Slide>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 sm:gap-16 items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 sm:gap-16 items-start">
         <div>
           <Label>AI Intelligence</Label>
           <h2
@@ -764,14 +431,11 @@ function S7() {
           >
             Stop digging through<br />reports. Just ask.
           </h2>
-          <p className="font-mono text-[14px] text-black/55 leading-relaxed mb-6 max-w-sm">
+          <p className="font-mono text-[14px] text-black/55 leading-relaxed mb-8 max-w-sm">
             Every EOD, every rock, every scorecard — the AI has read all of it.
             Ask about blockers, team health, or who's falling behind. Get a straight answer in seconds.
           </p>
-          <div className="border border-black p-5 bg-white">
-            <div className="font-mono text-[10px] text-black/40 uppercase tracking-widest mb-3">Weekly scorecard — real data</div>
-            <ScorecardDemo />
-          </div>
+          <DemoScorecard />
         </div>
         <AIDemo />
       </div>
