@@ -24,11 +24,10 @@ const EOD_INSIGHTS = [
 ]
 
 const ROCKS = [
-  { title: "Launch Horizon XR 2.0 SDK",       owner: "A. Wolfe",     progress: 75, status: "on-track" as const },
-  { title: "Reduce app crash rate < 0.1%",    owner: "S. Chen",      progress: 60, status: "on-track" as const },
-  { title: "Redesign Settings — iOS 20",      owner: "M. Williams",  progress: 40, status: "at-risk"  as const },
-  { title: "Ship Horizon AI Phase 3",         owner: "E. Rodriguez", progress: 85, status: "on-track" as const },
-  { title: "Complete Q1 security audit",      owner: "J. O'Brien",   progress: 90, status: "on-track" as const },
+  { title: "Launch Horizon XR 2.0 SDK",       owner: "A. Wolfe",     progress: 67, status: "on-track" as const },
+  { title: "Reduce app crash rate < 0.1%",    owner: "S. Chen",      progress: 82, status: "on-track" as const },
+  { title: "Redesign Settings — iOS 20",      owner: "M. Williams",  progress: 31, status: "at-risk"  as const },
+  { title: "Ship Horizon AI Phase 3",         owner: "E. Rodriguez", progress: 55, status: "on-track" as const },
 ]
 
 const SCORECARD = [
@@ -42,63 +41,63 @@ const SCORECARD = [
 const AI_QA = [
   {
     q: "Who is behind on their rocks this week?",
-    a: "Marcus Williams is 15% behind on the Settings redesign. He cited Figma access delays in Wednesday's EOD — needs escalation before the sprint ends.",
+    a: "Marcus Williams is 15% behind on 'Redesign Settings — iOS 20' (expected 46%, currently 31%). Two blockers flagged in his last 3 EODs. Recommend addressing in today's L10.",
   },
   {
-    q: "What blockers came up in today's reports?",
-    a: "Two blockers: build times up 30% after the Xcode update (Sarah Chen), and GPU cluster at 94% capacity blocking Elena's ML training run.",
+    q: "Which company had the most blocked tasks this week?",
+    a: "Horizon Labs — 4 blockers across 3 team members, primarily in Engineering. No blockers at Meridian or Apex this week.",
   },
   {
     q: "How is the team tracking against Q1 goals?",
-    a: "4 of 5 rocks are on track. Average team progress is 70% with 5 weeks remaining. The security audit (James) is furthest ahead at 90%.",
+    a: "3 of 4 rocks are on track. Average progress is 59% with 6 weeks remaining. The Settings redesign (Marcus) is the only at-risk item — intervention needed now.",
   },
 ]
 
 const STATS = [
-  { n: "15h",  label: "per week founders spend chasing status updates across companies" },
-  { n: "83%",  label: "of quarterly rocks fail without a daily accountability mechanism" },
-  { n: "4.2",  label: "disconnected tools used per company on average — none talking to each other" },
-  { n: "$18K", label: "annual per-manager cost of status meetings and coordination overhead" },
+  { n: "15h",  label: "per week lost chasing status updates — across every company you run" },
+  { n: "83%",  label: "of quarterly rocks silently die — because no one's watching daily" },
+  { n: "4.2",  label: "disconnected tools per company — each one creating a new blind spot" },
+  { n: "$18K", label: "wasted per manager per year just keeping everyone aligned" },
 ]
 
 const PROBLEMS = [
   {
     title: "You're the bottleneck",
-    body: "Every team waits for your input because no one can see the full picture but you. You didn't start multiple companies to be everyone's project manager.",
+    body: "Your teams can't move without you because only you can see the full picture. You're not a CEO anymore — you're a dispatcher.",
   },
   {
     title: "Rocks get set and forgotten",
-    body: "They're a priority on day one. By week three, nobody's tracking them. By week ten, you're in a review scrambling to explain why the quarter missed.",
+    body: "Set on day one. Forgotten by week three. Discovered dead at the quarterly review — when it's already too late to recover.",
   },
   {
     title: "No unified view exists",
-    body: "Three Trello boards, four spreadsheets, two Notion docs. Context-switching between tools costs you 40% of your leadership bandwidth every day.",
+    body: "Three Trello boards. Four spreadsheets. Two Notion docs. No one tool shows you everything — so you see nothing clearly.",
   },
 ]
 
 const PROCESS = [
-  { n: "01", title: "Set Your Rocks",       body: "Define 90-day priorities across every team. Break goals into milestones. Assign owners with clear accountability." },
-  { n: "02", title: "Daily EOD Reports",    body: "Team submits brief end-of-day reports. AI parses them, organizes tasks, and surfaces blockers automatically." },
-  { n: "03", title: "Weekly Scorecard",     body: "Key metrics tracked automatically. Trend lines surface problems early — before they become rocks falling." },
-  { n: "04", title: "Level 10 Meetings",   body: "Data-driven agendas pre-filled from your rocks and scorecard. IDS issues tracked to resolution in-meeting." },
+  { n: "01", title: "Set Your Rocks",       body: "Define 90-day priorities across every team and company. Assign owners. The system tracks them daily from here." },
+  { n: "02", title: "Daily EOD Reports",    body: "Team does a 2-minute brain dump. AI reads it, buckets it by rock, flags blockers, and builds your morning briefing." },
+  { n: "03", title: "Weekly Scorecard",     body: "Metrics tracked automatically every week. Red flags surface at week 2 — not week 10 when it's too late." },
+  { n: "04", title: "Level 10 Meetings",   body: "Your L10 agenda builds itself from real data. Walk in knowing exactly what to IDS — no prep required." },
 ]
 
 const DIFFS = [
   {
     title: "Get 15 hours back every week",
-    body: "No more status meetings, no more Slack chases. Every morning you see exactly what every team did, what's blocked, and what needs your attention.",
+    body: "No more status meetings. No more Slack chases. Every morning: a clean briefing on every team, every company. Done in 90 seconds.",
   },
   {
     title: "Rocks stop falling",
-    body: "Daily EODs feed your rocks dashboard automatically. At-risk flags appear at week 2 — when you can still course-correct, not week 10 when it's too late.",
+    body: "Daily EODs feed your rocks dashboard automatically. At-risk signals fire at week 2 — while there's still time to fix it.",
   },
   {
     title: "Scale without adding headcount",
-    body: "Most founders hire an ops manager per company. Taskspace is one platform for all of them — full visibility without a $100K+ salary per entity.",
+    body: "Most founders hire an ops manager per company. Taskspace replaces that need — full visibility across all entities without a $100K+ salary each.",
   },
   {
     title: "Teams actually adopt it",
-    body: "2-minute AI-assisted EODs. Teams say it helps them stay organized, not just you. High adoption because it makes their lives easier too.",
+    body: "2-minute AI-assisted EODs. Teams say it helps THEM stay organized — not just you. That's why adoption actually sticks.",
   },
 ]
 
@@ -560,13 +559,15 @@ function S1() {
           >
             Stop drowning<br />in status updates.
           </h1>
-          <p className="font-mono text-xs text-black/55 leading-relaxed mb-8 max-w-sm">
+          <p className="font-mono text-[15px] text-black/55 leading-relaxed mb-8 max-w-sm">
             Get real-time visibility into every team, every company, every day —
             without the Slack messages, status meetings, and spreadsheet chaos.
           </p>
-          <p className="font-mono text-[10px] text-black/30 uppercase tracking-widest">
-            trytaskspace.com · live in under two minutes
-          </p>
+          <div className="border-t border-black/10 pt-4">
+            <p className="font-mono text-[11px] text-black/40 uppercase tracking-[0.15em]">
+              trytaskspace.com · live in 2 minutes · no credit card
+            </p>
+          </div>
         </div>
         <EODDemo />
       </div>
@@ -580,26 +581,32 @@ function S2() {
       <div className="max-w-2xl">
         <Label>The cost of the chaos</Label>
         <h2
-          className="font-serif font-normal text-black leading-[1.05] mb-12"
+          className="font-serif font-normal text-black leading-[1.05] mb-4"
           style={{ fontSize: "clamp(32px, 4vw, 56px)" }}
         >
           Every founder we talk to<br />says the same thing.
         </h2>
+        <p className="font-serif italic text-black/35 mb-10" style={{ fontSize: "clamp(16px, 2vw, 22px)" }}>
+          "I have no idea what's actually getting done."
+        </p>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 border border-black">
         {STATS.map((s, i) => (
           <div
             key={i}
-            className="p-6 sm:p-8"
-            style={{ borderRight: i < STATS.length - 1 ? "1px solid black" : undefined }}
+            className="p-6 sm:p-8 transition-all duration-200 hover:bg-white cursor-default"
+            style={{
+              borderRight: i < STATS.length - 1 ? "1px solid black" : undefined,
+              borderTop: "2px solid black",
+            }}
           >
             <div
               className="font-serif font-normal text-black mb-3"
-              style={{ fontSize: "clamp(28px, 3vw, 44px)" }}
+              style={{ fontSize: "clamp(36px, 3.5vw, 52px)" }}
             >
               {s.n}
             </div>
-            <div className="font-mono text-[10px] text-black/50 leading-relaxed">{s.label}</div>
+            <div className="font-mono text-[13px] text-black/55 leading-relaxed">{s.label}</div>
           </div>
         ))}
       </div>
@@ -618,7 +625,7 @@ function S3() {
         >
           You started multiple companies<br />because you're a builder.
         </h2>
-        <p className="font-serif font-normal text-black/40" style={{ fontSize: "clamp(22px, 2.5vw, 36px)" }}>
+        <p className="font-serif font-normal text-black/25" style={{ fontSize: "clamp(22px, 2.5vw, 36px)" }}>
           Not a babysitter.
         </p>
       </div>
@@ -626,19 +633,16 @@ function S3() {
         {PROBLEMS.map((p, i) => (
           <div
             key={i}
-            className="p-8"
+            className="p-8 transition-all duration-200 hover:bg-white"
             style={{ borderRight: i < PROBLEMS.length - 1 ? "1px solid black" : undefined }}
           >
-            <div
-              className="font-serif font-normal text-black/20 mb-4"
-              style={{ fontSize: "clamp(28px, 3vw, 44px)" }}
-            >
+            <div className="font-mono text-[11px] font-bold text-black/20 mb-4 tracking-widest">
               0{i + 1}
             </div>
-            <div className="font-mono text-[11px] font-medium text-black mb-3 uppercase tracking-wide">
+            <div className="font-mono text-[13px] font-medium text-black mb-3 uppercase tracking-wide">
               {p.title}
             </div>
-            <div className="font-mono text-[10px] text-black/50 leading-relaxed">{p.body}</div>
+            <div className="font-mono text-[13px] text-black/55 leading-relaxed">{p.body}</div>
           </div>
         ))}
       </div>
@@ -652,27 +656,25 @@ function S4() {
       <div className="max-w-xl mb-12">
         <Label>How it works</Label>
         <h2
-          className="font-serif font-normal text-black leading-[1.05]"
+          className="font-serif font-normal text-black leading-[1.05] mb-3"
           style={{ fontSize: "clamp(30px, 3.5vw, 50px)" }}
         >
           Four phases.<br />One system.
         </h2>
+        <p className="font-mono text-[13px] text-black/35">Set once. Runs daily. Surfaces everything that matters.</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-4 border border-black">
         {PROCESS.map((step, i) => (
           <div
             key={i}
-            className="p-7"
+            className="p-7 transition-all duration-200 hover:bg-white"
             style={{ borderRight: i < PROCESS.length - 1 ? "1px solid black" : undefined }}
           >
-            <div
-              className="font-serif font-normal text-black/15 mb-5"
-              style={{ fontSize: "clamp(32px, 3.5vw, 48px)" }}
-            >
+            <div className="font-mono text-[11px] font-bold text-black/20 mb-4 tracking-widest">
               {step.n}
             </div>
-            <div className="font-mono text-[11px] font-medium text-black mb-3">{step.title}</div>
-            <div className="font-mono text-[10px] text-black/50 leading-relaxed">{step.body}</div>
+            <div className="font-mono text-[13px] font-medium text-black mb-3">{step.title}</div>
+            <div className="font-mono text-[13px] text-black/55 leading-relaxed">{step.body}</div>
           </div>
         ))}
       </div>
@@ -692,17 +694,17 @@ function S5() {
           >
             AI that reads your<br />team so you don't have to.
           </h2>
-          <div className="space-y-5">
+          <div className="space-y-7">
             {[
-              { step: "01", title: "Team submits raw EOD", body: "No forms, no templates. Just a brain dump of what they did." },
-              { step: "02", title: "AI organizes & parses", body: "Tasks bucketed by rock, blockers flagged, tone scored." },
-              { step: "03", title: "Insights surfaced instantly", body: "Manager sees a clean dashboard — not 14 Slack messages to decode." },
+              { step: "01", title: "Team submits raw EOD", body: "No forms, no templates. Your team pastes whatever they did. Messy is fine — AI handles the rest." },
+              { step: "02", title: "AI organizes & parses",   body: "AI reads the dump, maps every task to a rock, flags blockers, and scores team sentiment." },
+              { step: "03", title: "Insights surfaced instantly", body: "You see a clean morning briefing — not 14 Slack messages. Every team. Every company. 90 seconds." },
             ].map((item) => (
-              <div key={item.step} className="flex gap-4 border-l-2 border-black/10 pl-4">
+              <div key={item.step} className="flex gap-4 border-l-2 border-black/15 pl-4">
                 <div>
                   <div className="font-mono text-[10px] uppercase tracking-widest text-black/30 mb-1">{item.step}</div>
-                  <div className="font-mono text-[11px] font-medium text-black mb-1">{item.title}</div>
-                  <div className="font-mono text-[10px] text-black/50 leading-relaxed">{item.body}</div>
+                  <div className="font-mono text-[13px] font-semibold text-black mb-2">{item.title}</div>
+                  <div className="font-mono text-[13px] text-black/55 leading-relaxed">{item.body}</div>
                 </div>
               </div>
             ))}
@@ -726,20 +728,20 @@ function S6() {
           >
             Every rock. Every team.<br />One dashboard.
           </h2>
-          <p className="font-mono text-xs text-black/55 leading-relaxed mb-6 max-w-sm">
+          <p className="font-mono text-[14px] text-black/55 leading-relaxed mb-6 max-w-sm">
             90-day goals broken into milestones, tracked daily, with automated
-            risk signals before they become surprises in your L10.
+            risk signals before they become surprises that blow up your L10.
           </p>
           <div className="space-y-3">
             {[
-              "Milestone-based progress tracking",
-              "At-risk flags before the quarter ends",
-              "Owner accountability with audit trail",
-              "Cross-company view for portfolio founders",
+              "See % complete on every rock, every day — not just at quarter-end",
+              "Red flags appear at week 2, when you can still course-correct",
+              "Every rock has one owner. No hiding. No excuses.",
+              "See all rocks across all companies in one scroll",
             ].map((feat) => (
               <div key={feat} className="flex items-start gap-3">
-                <span className="font-mono text-[10px] text-black/30 mt-0.5">—</span>
-                <span className="font-mono text-[10px] text-black/60">{feat}</span>
+                <span className="font-mono text-[13px] text-black/40 mt-0.5">→</span>
+                <span className="font-mono text-[13px] text-black/65">{feat}</span>
               </div>
             ))}
           </div>
@@ -755,16 +757,16 @@ function S7() {
     <Slide>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 sm:gap-16 items-center">
         <div>
-          <Label>Manager intelligence</Label>
+          <Label>AI Intelligence</Label>
           <h2
             className="font-serif font-normal text-black leading-[1.05] mb-6"
             style={{ fontSize: "clamp(30px, 3.5vw, 50px)" }}
           >
-            Ask anything.<br />Get real answers.
+            Stop digging through<br />reports. Just ask.
           </h2>
-          <p className="font-mono text-xs text-black/55 leading-relaxed mb-6 max-w-sm">
-            The AI has read every EOD, every rock update, every scorecard entry.
-            Ask it about blockers, progress gaps, or team health — in plain language.
+          <p className="font-mono text-[14px] text-black/55 leading-relaxed mb-6 max-w-sm">
+            Every EOD, every rock, every scorecard — the AI has read all of it.
+            Ask about blockers, team health, or who's falling behind. Get a straight answer in seconds.
           </p>
           <div className="border border-black p-5 bg-white">
             <div className="font-mono text-[10px] text-black/40 uppercase tracking-widest mb-3">Weekly scorecard — real data</div>
@@ -796,14 +798,14 @@ function S8() {
           return (
             <div
               key={i}
-              className="p-8"
+              className="p-9 transition-all duration-200 hover:bg-white"
               style={{
                 borderBottom: !isBottom ? "1px solid black" : undefined,
                 borderRight:  isRight   ? "1px solid black" : undefined,
               }}
             >
-              <div className="font-mono text-[11px] font-medium text-black mb-3">{d.title}</div>
-              <div className="font-mono text-[10px] text-black/50 leading-relaxed">{d.body}</div>
+              <div className="font-mono text-[15px] font-semibold text-black mb-3">{d.title}</div>
+              <div className="font-mono text-[13px] text-black/55 leading-relaxed">{d.body}</div>
             </div>
           )
         })}
@@ -831,15 +833,15 @@ function S9() {
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/35 mb-5">Without Taskspace</div>
             <div className="space-y-3">
               {[
-                "Keep juggling spreadsheets, Slack threads, and Notion docs",
-                "Keep playing phone tag with team leads every week",
-                "Keep being the single point of failure for every company",
-                "Keep wondering what's actually getting done",
-                "Discover rocks are at 20% in week 10 — not week 2",
+                "Juggling spreadsheets, Slack threads, and Notion docs forever",
+                "Playing phone tag with team leads. Every. Week.",
+                "Being the single point of failure across every company you run",
+                "Never actually knowing what's getting done",
+                "Finding out rocks are dead at week 10 — not week 2",
               ].map((item) => (
                 <div key={item} className="flex items-start gap-3">
                   <span className="font-mono text-[11px] text-black/25 mt-0.5 flex-shrink-0">✕</span>
-                  <span className="font-mono text-[10px] text-black/50 leading-relaxed">{item}</span>
+                  <span className="font-mono text-[13px] text-black/55 leading-relaxed">{item}</span>
                 </div>
               ))}
             </div>
@@ -850,15 +852,15 @@ function S9() {
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40 mb-5">With Taskspace</div>
             <div className="space-y-3">
               {[
-                "Every morning: full visibility across every team and company",
-                "15+ hours per week back — no status meetings required",
-                "At-risk rocks flagged at week 2, not week 10",
-                "Teams onboarded in one L10 meeting",
-                "Full portfolio clarity by day 3",
+                "Every morning: a full briefing on every team, every company",
+                "15+ hours per week back. Status meetings: gone.",
+                "At-risk rocks surface at week 2 — while you can still save the quarter",
+                "Teams fully onboarded in one L10 meeting",
+                "Full portfolio clarity. Day 3. Every time.",
               ].map((item) => (
                 <div key={item} className="flex items-start gap-3">
                   <span className="font-mono text-[11px] text-white/50 mt-0.5 flex-shrink-0">→</span>
-                  <span className="font-mono text-[10px] text-white/80 leading-relaxed">{item}</span>
+                  <span className="font-mono text-[13px] text-white/85 leading-relaxed">{item}</span>
                 </div>
               ))}
             </div>
@@ -866,24 +868,25 @@ function S9() {
         </div>
 
         {/* CTA */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8">
           <div>
-            <div className="border border-black px-8 py-4 bg-black inline-block mb-2">
-              <span className="font-mono text-[11px] text-white uppercase tracking-widest">trytaskspace.com — Start Free</span>
+            <div className="border border-black px-8 py-4 bg-black inline-block mb-2 transition-transform duration-200 hover:scale-[1.02] hover:shadow-lg cursor-pointer">
+              <span className="font-mono text-[11px] text-white uppercase tracking-widest">Start Free — No Credit Card</span>
             </div>
             <p className="font-mono text-[10px] text-black/30 uppercase tracking-widest">
-              No credit card · Live in under two minutes
+              trytaskspace.com · Live in under two minutes
             </p>
           </div>
-          <div className="hidden sm:block border-l border-black/15 pl-6">
-            <div className="font-serif font-normal text-black/60 leading-snug" style={{ fontSize: "clamp(14px, 1.5vw, 18px)", maxWidth: "280px" }}>
+          <div className="hidden sm:block border-l-[3px] border-black pl-6">
+            <div className="font-serif font-normal text-black leading-snug mb-1" style={{ fontSize: "clamp(16px, 1.8vw, 20px)", maxWidth: "310px" }}>
               "Let's get your most chaotic company set up right now — before this call ends."
             </div>
+            <div className="font-mono text-[10px] text-black/35 uppercase tracking-widest">— Your Taskspace onboarding call</div>
           </div>
         </div>
 
         {/* Pricing strip */}
-        <div className="grid grid-cols-3 border border-black mt-10 max-w-lg">
+        <div className="grid grid-cols-3 border border-black mt-8 max-w-lg">
           {[
             { plan: "Free",     price: "$0",  note: "Up to 3 users · 1 workspace",  featured: false },
             { plan: "Team",     price: "$9",  note: "Per user/mo · 3 workspaces",   featured: true  },
@@ -891,12 +894,15 @@ function S9() {
           ].map((tier, i) => (
             <div
               key={tier.plan}
-              className="py-5 px-4"
+              className="py-5 px-4 relative"
               style={{
                 borderRight:     i < 2 ? "1px solid black" : undefined,
-                backgroundColor: tier.featured ? "rgba(0,0,0,0.04)" : "transparent",
+                backgroundColor: tier.featured ? "rgba(0,0,0,0.05)" : "transparent",
               }}
             >
+              {tier.featured && (
+                <div className="font-mono text-[8px] uppercase tracking-widest text-black/50 mb-1">★ Most Popular</div>
+              )}
               <div className="font-mono text-[9px] uppercase tracking-widest mb-1 text-black/35">{tier.plan}</div>
               <div className="font-serif font-normal text-black mb-0.5" style={{ fontSize: "clamp(18px, 2vw, 26px)" }}>{tier.price}</div>
               <div className="font-mono text-[9px] text-black/30 leading-relaxed">{tier.note}</div>
@@ -968,7 +974,7 @@ export default function DeckPage() {
 
       {/* Slide counter — top right */}
       <div className="fixed top-4 right-5 z-50">
-        <span className="font-mono text-[10px] text-black/30">
+        <span className="font-mono text-[13px] text-black/35">
           {String(slide + 1).padStart(2, "0")}&thinsp;/&thinsp;{String(TOTAL_SLIDES).padStart(2, "0")}
         </span>
       </div>
@@ -977,10 +983,10 @@ export default function DeckPage() {
       {slide > 0 && (
         <button
           onClick={() => goTo(slide - 1)}
-          className="fixed left-3 top-1/2 -translate-y-1/2 z-50 w-9 h-9 border border-black bg-white/90 flex items-center justify-center hover:bg-white transition-colors hidden sm:flex"
+          className="fixed left-4 top-1/2 -translate-y-1/2 z-50 w-11 h-11 border-2 border-black bg-white/95 flex items-center justify-center hover:bg-white transition-colors hidden sm:flex shadow-sm"
           aria-label="Previous slide"
         >
-          <span className="font-mono text-sm leading-none">←</span>
+          <span className="font-mono text-base leading-none">←</span>
         </button>
       )}
 
@@ -988,10 +994,10 @@ export default function DeckPage() {
       {slide < TOTAL_SLIDES - 1 && (
         <button
           onClick={() => goTo(slide + 1)}
-          className="fixed right-3 top-1/2 -translate-y-1/2 z-50 w-9 h-9 border border-black bg-white/90 flex items-center justify-center hover:bg-white transition-colors hidden sm:flex"
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 w-11 h-11 border-2 border-black bg-white/95 flex items-center justify-center hover:bg-white transition-colors hidden sm:flex shadow-sm"
           aria-label="Next slide"
         >
-          <span className="font-mono text-sm leading-none">→</span>
+          <span className="font-mono text-base leading-none">→</span>
         </button>
       )}
 
@@ -1003,10 +1009,10 @@ export default function DeckPage() {
             onClick={() => goTo(i)}
             className="transition-all duration-200"
             style={{
-              width: i === slide ? "20px" : "6px",
-              height: "6px",
+              width: i === slide ? "22px" : "8px",
+              height: "8px",
               backgroundColor: i === slide ? "black" : "rgba(0,0,0,0.2)",
-              borderRadius: "3px",
+              borderRadius: "4px",
             }}
             aria-label={`Slide ${i + 1}`}
           />
