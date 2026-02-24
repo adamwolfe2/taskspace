@@ -151,7 +151,7 @@ export function NotificationPreferencesCard({ memberId, initialPreferences }: No
           {eventTypes.map((eventType) => {
             const { key, label, description } = eventType
             const noInApp = 'noInApp' in eventType ? eventType.noInApp : false
-            const prefs = preferences[key as keyof NotificationPreferences]
+            const prefs = preferences[key as keyof NotificationPreferences] ?? defaultPreferences[key as keyof NotificationPreferences]
             return (
               <div key={key} className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center">
                 <div>

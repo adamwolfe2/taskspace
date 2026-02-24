@@ -11,14 +11,14 @@ import { formatDistanceToNow } from "date-fns"
 interface AuditEntry {
   id: string
   action: string
-  actor_id: string | null
-  actor_type: string | null
-  resource_type: string | null
-  resource_id: string | null
+  actorId: string | null
+  actorType: string | null
+  resourceType: string | null
+  resourceId: string | null
   details: Record<string, unknown> | null
-  ip_address: string | null
+  ipAddress: string | null
   severity: "info" | "warning" | "error" | "critical"
-  created_at: string
+  createdAt: string
 }
 
 const SEVERITY_ICON = {
@@ -66,7 +66,7 @@ export function AuditLogTab() {
       } else {
         setEntries(logs)
       }
-      setHasMore(data.data?.hasMore ?? logs.length === limit)
+      setHasMore(data.data?.pagination?.hasMore ?? logs.length === limit)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load audit log")
     } finally {
@@ -166,15 +166,15 @@ export function AuditLogTab() {
                       </div>
                     </TableCell>
                     <TableCell className="py-2 hidden md:table-cell text-muted-foreground">
-                      {entry.resource_type && (
-                        <span>{entry.resource_type}</span>
+                      {entry.resourceType && (
+                        <span>{entry.resourceType}</span>
                       )}
                     </TableCell>
                     <TableCell className="py-2 hidden lg:table-cell text-xs text-muted-foreground font-mono">
-                      {entry.ip_address || "—"}
+                      {entry.ipAddress || "—"}
                     </TableCell>
                     <TableCell className="py-2 text-right text-xs text-muted-foreground whitespace-nowrap">
-                      {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })}
                     </TableCell>
                   </TableRow>
                 ))}

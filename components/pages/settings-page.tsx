@@ -22,7 +22,7 @@ import { WorkspaceBrandingSettings } from "@/components/settings/workspace-brand
 import { ProfileSettingsTab } from "@/components/settings/profile-settings-tab"
 import { AIInbox } from "@/components/ai/ai-inbox"
 import { AIBudgetControls } from "@/components/ai/ai-budget-controls"
-import { ErrorBoundary } from "@/components/shared/error-boundary"
+import { ErrorBoundary, CompactErrorBoundary } from "@/components/shared/error-boundary"
 
 export function SettingsPage() {
   const { currentUser, currentOrganization } = useApp()
@@ -154,73 +154,95 @@ export function SettingsPage() {
 
         {/* Profile Tab - User profile settings */}
         <TabsContent value="profile" className="space-y-4">
-          <ProfileSettingsTab />
+          <CompactErrorBoundary section="Profile">
+            <ProfileSettingsTab />
+          </CompactErrorBoundary>
         </TabsContent>
 
         {/* General Tab - Organization details + branding */}
         <TabsContent value="general" className="space-y-4">
-          <OrganizationSettingsTab />
+          <CompactErrorBoundary section="General">
+            <OrganizationSettingsTab />
+          </CompactErrorBoundary>
         </TabsContent>
 
         {/* Workspace Tab - Workspace members & settings */}
         {isAdmin && (
           <TabsContent value="workspace" className="space-y-4">
-            <WorkspaceSettingsTab teamMembers={teamMembers} />
+            <CompactErrorBoundary section="Workspace">
+              <WorkspaceSettingsTab teamMembers={teamMembers} />
+            </CompactErrorBoundary>
           </TabsContent>
         )}
 
         {/* Features Tab - Workspace feature toggles */}
         {isAdmin && (
           <TabsContent value="features" className="space-y-4">
-            <WorkspaceFeaturesTab />
+            <CompactErrorBoundary section="Features">
+              <WorkspaceFeaturesTab />
+            </CompactErrorBoundary>
           </TabsContent>
         )}
 
         {/* Branding Tab - Workspace colors and logo */}
         {isAdmin && (
           <TabsContent value="branding" className="space-y-4">
-            <WorkspaceBrandingSettings />
+            <CompactErrorBoundary section="Branding">
+              <WorkspaceBrandingSettings />
+            </CompactErrorBoundary>
           </TabsContent>
         )}
 
         {/* Team Tab - Invitations + team limits */}
         {isAdmin && (
           <TabsContent value="team" className="space-y-4">
-            <TeamManagementTab />
+            <CompactErrorBoundary section="Team">
+              <TeamManagementTab />
+            </CompactErrorBoundary>
           </TabsContent>
         )}
 
         {/* Notifications Tab - Personal + org-wide notifications */}
         <TabsContent value="notifications" className="space-y-4">
-          <NotificationsTab teamMembers={teamMembers} setTeamMembers={setTeamMembers} />
+          <CompactErrorBoundary section="Notifications">
+            <NotificationsTab teamMembers={teamMembers} setTeamMembers={setTeamMembers} />
+          </CompactErrorBoundary>
         </TabsContent>
 
         {/* Integrations Tab - Email, API keys, MCP, Asana, Google Calendar */}
         {isAdmin && (
           <TabsContent value="integrations" className="space-y-4">
-            <IntegrationsApiTab teamMembers={teamMembers} />
+            <CompactErrorBoundary section="Integrations">
+              <IntegrationsApiTab teamMembers={teamMembers} />
+            </CompactErrorBoundary>
           </TabsContent>
         )}
 
         {/* AI Command Center Tab */}
         {isAdmin && currentOrganization && (
           <TabsContent value="ai" className="space-y-4">
-            <AIBudgetControls organizationId={currentOrganization.id} />
-            <AIInbox organizationId={currentOrganization.id} teamMembers={teamMembers} />
+            <CompactErrorBoundary section="AI">
+              <AIBudgetControls organizationId={currentOrganization.id} />
+              <AIInbox organizationId={currentOrganization.id} teamMembers={teamMembers} />
+            </CompactErrorBoundary>
           </TabsContent>
         )}
 
         {/* Data & Export Tab */}
         {isAdmin && (
           <TabsContent value="data" className="space-y-4">
-            <DataExportTab />
+            <CompactErrorBoundary section="Import & Export">
+              <DataExportTab />
+            </CompactErrorBoundary>
           </TabsContent>
         )}
 
         {/* Billing Tab */}
         {isOwner && (
           <TabsContent value="billing" className="space-y-4">
-            <BillingSettings />
+            <CompactErrorBoundary section="Billing">
+              <BillingSettings />
+            </CompactErrorBoundary>
           </TabsContent>
         )}
       </Tabs>
