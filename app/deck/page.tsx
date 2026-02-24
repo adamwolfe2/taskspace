@@ -55,24 +55,24 @@ const AI_QA = [
 ]
 
 const STATS = [
-  { n: "68%",  label: "of multi-company founders cite visibility as their #1 bottleneck" },
-  { n: "4.5h", label: "lost per manager per week chasing status updates" },
-  { n: "73%",  label: "of EOS teams abandon the system within 12 months" },
-  { n: "$18K", label: "annual per-manager cost of manual reporting overhead" },
+  { n: "15h",  label: "per week founders spend chasing status updates across companies" },
+  { n: "83%",  label: "of quarterly rocks fail without a daily accountability mechanism" },
+  { n: "4.2",  label: "disconnected tools used per company on average — none talking to each other" },
+  { n: "$18K", label: "annual per-manager cost of status meetings and coordination overhead" },
 ]
 
 const PROBLEMS = [
   {
-    title: "Fragmented tools",
-    body: "Rocks in Notion, EODs in Slack, scorecards in Sheets, meetings in Docs. Nothing talks to anything else — and nothing is ever current.",
+    title: "You're the bottleneck",
+    body: "Every team waits for your input because no one can see the full picture but you. You didn't start multiple companies to be everyone's project manager.",
   },
   {
-    title: "No real-time visibility",
-    body: "By the time you know a rock is at risk, it's too late to course-correct. Status updates are stale before they're read.",
+    title: "Rocks get set and forgotten",
+    body: "They're a priority on day one. By week three, nobody's tracking them. By week ten, you're in a review scrambling to explain why the quarter missed.",
   },
   {
-    title: "Manual everything",
-    body: "Managers spend hours synthesizing EODs, building scorecards, prepping L10 agendas. That's operational overhead — not leadership.",
+    title: "No unified view exists",
+    body: "Three Trello boards, four spreadsheets, two Notion docs. Context-switching between tools costs you 40% of your leadership bandwidth every day.",
   },
 ]
 
@@ -85,20 +85,20 @@ const PROCESS = [
 
 const DIFFS = [
   {
-    title: "Built for EOS. Not bolted on.",
-    body: "Rocks, L10 meetings, IDS, VTO, Scorecard — every piece of the EOS framework ships natively. No workarounds, no missing pieces.",
+    title: "Get 15 hours back every week",
+    body: "No more status meetings, no more Slack chases. Every morning you see exactly what every team did, what's blocked, and what needs your attention.",
   },
   {
-    title: "AI that understands operations",
-    body: "Not a chatbot. Our AI reads raw EOD dumps, flags at-risk rocks, and surfaces the blockers you need to act on — without prompting.",
+    title: "Rocks stop falling",
+    body: "Daily EODs feed your rocks dashboard automatically. At-risk flags appear at week 2 — when you can still course-correct, not week 10 when it's too late.",
   },
   {
-    title: "Multi-company from day one",
-    body: "One login, unlimited workspaces. Run Acme Corp, Beta Ventures, and Gamma Labs each with full isolation and separate dashboards.",
+    title: "Scale without adding headcount",
+    body: "Most founders hire an ops manager per company. Taskspace is one platform for all of them — full visibility without a $100K+ salary per entity.",
   },
   {
-    title: "Under two minutes to live",
-    body: "Paste your website — AI detects your brand. Invite your team. Set your rocks. EOS-ready before your next standup.",
+    title: "Teams actually adopt it",
+    body: "2-minute AI-assisted EODs. Teams say it helps them stay organized, not just you. High adoption because it makes their lives easier too.",
   },
 ]
 
@@ -553,19 +553,19 @@ function S1() {
     <Slide>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 sm:gap-16 items-center">
         <div>
-          <Label>AI operational infrastructure</Label>
+          <Label>For multi-company founders running on EOS</Label>
           <h1
             className="font-serif font-normal text-black leading-[1.05] mb-6"
             style={{ fontSize: "clamp(36px, 4.5vw, 64px)" }}
           >
-            Run all your teams<br />in true parallel.
+            Stop drowning<br />in status updates.
           </h1>
           <p className="font-mono text-xs text-black/55 leading-relaxed mb-8 max-w-sm">
-            TaskSpace automates EOD reports, cadence metrics, and keeps every team
-            accountable — across every company you run on EOS.
+            Get real-time visibility into every team, every company, every day —
+            without the Slack messages, status meetings, and spreadsheet chaos.
           </p>
           <p className="font-mono text-[10px] text-black/30 uppercase tracking-widest">
-            trytaskspace.com · AI workspace setup in under two minutes
+            trytaskspace.com · live in under two minutes
           </p>
         </div>
         <EODDemo />
@@ -578,12 +578,12 @@ function S2() {
   return (
     <Slide>
       <div className="max-w-2xl">
-        <Label>The problem</Label>
+        <Label>The cost of the chaos</Label>
         <h2
           className="font-serif font-normal text-black leading-[1.05] mb-12"
           style={{ fontSize: "clamp(32px, 4vw, 56px)" }}
         >
-          Multi-company operations<br />are broken by default.
+          Every founder we talk to<br />says the same thing.
         </h2>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 border border-black">
@@ -610,14 +610,17 @@ function S2() {
 function S3() {
   return (
     <Slide>
-      <div className="max-w-xl mb-12">
-        <Label>Why it happens</Label>
+      <div className="max-w-2xl mb-12">
+        <Label>Why this keeps happening</Label>
         <h2
-          className="font-serif font-normal text-black leading-[1.05]"
+          className="font-serif font-normal text-black leading-[1.05] mb-3"
           style={{ fontSize: "clamp(30px, 3.5vw, 50px)" }}
         >
-          Three structural problems<br />every EOS team faces.
+          You started multiple companies<br />because you're a builder.
         </h2>
+        <p className="font-serif font-normal text-black/40" style={{ fontSize: "clamp(22px, 2.5vw, 36px)" }}>
+          Not a babysitter.
+        </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 border border-black">
         {PROBLEMS.map((p, i) => (
@@ -778,12 +781,12 @@ function S8() {
   return (
     <Slide>
       <div className="max-w-xl mb-12">
-        <Label>Why TaskSpace</Label>
+        <Label>What you actually get</Label>
         <h2
           className="font-serif font-normal text-black leading-[1.05]"
           style={{ fontSize: "clamp(30px, 3.5vw, 50px)" }}
         >
-          Four reasons teams<br />don't go back.
+          Four outcomes founders<br />feel within the first week.
         </h2>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 border border-black">
@@ -812,29 +815,75 @@ function S8() {
 function S9() {
   return (
     <Slide>
-      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center">
-        <Label>Let's get you set up</Label>
+      <div className="min-h-[70vh] flex flex-col justify-center">
+        <Label>The choice in front of you</Label>
         <h2
-          className="font-serif font-normal text-black leading-[1.04] mb-6 max-w-3xl"
-          style={{ fontSize: "clamp(36px, 5vw, 72px)" }}
+          className="font-serif font-normal text-black leading-[1.04] mb-12"
+          style={{ fontSize: "clamp(36px, 5vw, 68px)" }}
         >
-          Your whole team running on EOS — right now, while we're here.
+          Stop managing.<br />Start scaling.
         </h2>
-        <p className="font-mono text-xs text-black/50 leading-relaxed mb-10 max-w-lg">
-          We'll have your workspace live in the next two minutes. Invite your team,
-          set your first rocks, and you're running on EOS before this call ends.
-        </p>
 
-        {/* Live setup CTA */}
-        <div className="border border-black px-10 py-4 bg-black mb-3">
-          <span className="font-mono text-[11px] text-white uppercase tracking-widest">trytaskspace.com — Start Free</span>
+        {/* Two paths */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 border border-black mb-10">
+          {/* Path A — the hard way */}
+          <div className="p-8 border-b sm:border-b-0 sm:border-r border-black">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/35 mb-5">Without Taskspace</div>
+            <div className="space-y-3">
+              {[
+                "Keep juggling spreadsheets, Slack threads, and Notion docs",
+                "Keep playing phone tag with team leads every week",
+                "Keep being the single point of failure for every company",
+                "Keep wondering what's actually getting done",
+                "Discover rocks are at 20% in week 10 — not week 2",
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-3">
+                  <span className="font-mono text-[11px] text-black/25 mt-0.5 flex-shrink-0">✕</span>
+                  <span className="font-mono text-[10px] text-black/50 leading-relaxed">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Path B — Taskspace */}
+          <div className="p-8 bg-black">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40 mb-5">With Taskspace</div>
+            <div className="space-y-3">
+              {[
+                "Every morning: full visibility across every team and company",
+                "15+ hours per week back — no status meetings required",
+                "At-risk rocks flagged at week 2, not week 10",
+                "Teams onboarded in one L10 meeting",
+                "Full portfolio clarity by day 3",
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-3">
+                  <span className="font-mono text-[11px] text-white/50 mt-0.5 flex-shrink-0">→</span>
+                  <span className="font-mono text-[10px] text-white/80 leading-relaxed">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-        <p className="font-mono text-[10px] text-black/30 uppercase tracking-widest mb-14">
-          No credit card required · Live in under two minutes
-        </p>
 
-        {/* Pricing grid */}
-        <div className="grid grid-cols-3 border border-black w-full max-w-xl">
+        {/* CTA */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+          <div>
+            <div className="border border-black px-8 py-4 bg-black inline-block mb-2">
+              <span className="font-mono text-[11px] text-white uppercase tracking-widest">trytaskspace.com — Start Free</span>
+            </div>
+            <p className="font-mono text-[10px] text-black/30 uppercase tracking-widest">
+              No credit card · Live in under two minutes
+            </p>
+          </div>
+          <div className="hidden sm:block border-l border-black/15 pl-6">
+            <div className="font-serif font-normal text-black/60 leading-snug" style={{ fontSize: "clamp(14px, 1.5vw, 18px)", maxWidth: "280px" }}>
+              "Let's get your most chaotic company set up right now — before this call ends."
+            </div>
+          </div>
+        </div>
+
+        {/* Pricing strip */}
+        <div className="grid grid-cols-3 border border-black mt-10 max-w-lg">
           {[
             { plan: "Free",     price: "$0",  note: "Up to 3 users · 1 workspace",  featured: false },
             { plan: "Team",     price: "$9",  note: "Per user/mo · 3 workspaces",   featured: true  },
@@ -842,37 +891,18 @@ function S9() {
           ].map((tier, i) => (
             <div
               key={tier.plan}
-              className="py-6 px-5"
+              className="py-5 px-4"
               style={{
                 borderRight:     i < 2 ? "1px solid black" : undefined,
-                backgroundColor: tier.featured ? "black" : "transparent",
+                backgroundColor: tier.featured ? "rgba(0,0,0,0.04)" : "transparent",
               }}
             >
-              <div
-                className="font-mono text-[10px] uppercase tracking-widest mb-2"
-                style={{ color: tier.featured ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)" }}
-              >
-                {tier.plan}
-              </div>
-              <div
-                className="font-serif font-normal mb-1"
-                style={{ fontSize: "clamp(22px, 2.5vw, 32px)", color: tier.featured ? "white" : "black" }}
-              >
-                {tier.price}
-              </div>
-              <div
-                className="font-mono text-[9px] leading-relaxed"
-                style={{ color: tier.featured ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.35)" }}
-              >
-                {tier.note}
-              </div>
+              <div className="font-mono text-[9px] uppercase tracking-widest mb-1 text-black/35">{tier.plan}</div>
+              <div className="font-serif font-normal text-black mb-0.5" style={{ fontSize: "clamp(18px, 2vw, 26px)" }}>{tier.price}</div>
+              <div className="font-mono text-[9px] text-black/30 leading-relaxed">{tier.note}</div>
             </div>
           ))}
         </div>
-
-        <p className="font-mono text-[10px] text-black/25 mt-6 uppercase tracking-widest">
-          14-day free trial on paid plans · Cancel anytime · SSO/SAML on Business
-        </p>
       </div>
     </Slide>
   )
