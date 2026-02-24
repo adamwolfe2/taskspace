@@ -414,6 +414,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Super admin joining: permanently mark this org as enterprise/internal
+    // so all members of the org get full features, not just the super admin
+    const superAdminEmail = process.env.SUPER_ADMIN_EMAIL?.toLowerCase()
+    if (superAdminEmail && result.invitationEmail.toLowerCase() === superAdminEmail) {
+      await db.organizations.update(result.organizationId, { isInternal: true }).catch((e) => {
+        logError(logger, "Failed to mark org as internal for super admin join", e)
+      })
+    }
+
     // Add user to all workspaces in the org (org members get access to all workspaces)
     try {
       const orgWorkspaces = await getWorkspacesByOrg(organization.id)

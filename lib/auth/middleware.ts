@@ -94,7 +94,7 @@ async function getSessionAuthContext(request: NextRequest): Promise<AuthContext 
       return null
     }
 
-    const organization = await db.organizations.findById(session.organizationId)
+    let organization = await db.organizations.findById(session.organizationId)
     if (!organization) {
       return null
     }
@@ -116,6 +116,16 @@ async function getSessionAuthContext(request: NextRequest): Promise<AuthContext 
         lastActiveAt: new Date().toISOString(),
         expiresAt: newExpiresAt,
       })
+    }
+
+    // Super admin bypass: if the logged-in user is the platform super admin,
+    // the org they're operating in gets full enterprise features. We also persist
+    // this to the DB so teammates in that org see enterprise features too.
+    const superAdminEmail = process.env.SUPER_ADMIN_EMAIL?.toLowerCase()
+    if (superAdminEmail && user.email.toLowerCase() === superAdminEmail && !organization.isInternal) {
+      // Persist in background — don't block the request
+      db.organizations.update(organization.id, { isInternal: true }).catch(() => {})
+      organization = { ...organization, isInternal: true }
     }
 
     return {
