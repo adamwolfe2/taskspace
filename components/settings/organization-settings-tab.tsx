@@ -41,11 +41,11 @@ export function OrganizationSettingsTab() {
     currentOrganization?.settings.eodReminderTime || "17:00"
   )
   const [orgLogo, setOrgLogo] = useState<string | undefined>(
-    currentOrganization?.settings.customBranding?.logo
+    currentOrganization?.logoUrl || undefined
   )
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
 
-  // Handle logo file selection
+  // Handle logo file selection — upload to Vercel Blob, store URL
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -60,11 +60,11 @@ export function OrganizationSettingsTab() {
       return
     }
 
-    // Validate file size (max 500KB for base64)
-    if (file.size > 500 * 1024) {
+    // Validate file size (10MB — matches server limit)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Logo must be less than 500KB",
+        description: "Logo must be less than 10MB",
         variant: "destructive",
       })
       return
@@ -72,23 +72,28 @@ export function OrganizationSettingsTab() {
 
     setIsUploadingLogo(true)
     try {
-      // Convert to base64
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string
-        setOrgLogo(base64)
-        setIsUploadingLogo(false)
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = await response.json().catch(() => ({ success: false, error: "Server error" }))
+
+      if (!response.ok || !data.success || !data.data?.url) {
+        throw new Error(data.error || "Upload failed")
       }
-      reader.onerror = () => {
-        toast({
-          title: "Error",
-          description: "Failed to read image file",
-          variant: "destructive",
-        })
-        setIsUploadingLogo(false)
-      }
-      reader.readAsDataURL(file)
-    } catch {
+
+      setOrgLogo(data.data.url)
+    } catch (err) {
+      toast({
+        title: "Upload failed",
+        description: err instanceof Error ? err.message : "Failed to upload logo",
+        variant: "destructive",
+      })
+    } finally {
       setIsUploadingLogo(false)
     }
   }
@@ -107,6 +112,7 @@ export function OrganizationSettingsTab() {
       setIsLoading(true)
       const updated = await api.organizations.update({
         name: orgName,
+        logoUrl: orgLogo,
         settings: {
           ...currentOrganization?.settings,
           timezone,
@@ -116,9 +122,6 @@ export function OrganizationSettingsTab() {
           enableSlackIntegration: currentOrganization?.settings.enableSlackIntegration ?? false,
           slackWebhookUrl: currentOrganization?.settings.slackWebhookUrl,
           teamToolsUrl: currentOrganization?.settings.teamToolsUrl,
-          customBranding: {
-            logo: orgLogo,
-          },
         },
       })
 

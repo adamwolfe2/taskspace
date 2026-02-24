@@ -132,12 +132,16 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     }
 
     // Validate request body
-    const { name, settings, subscription } = await validateBody(request, updateOrganizationSchema)
+    const { name, logoUrl, settings, subscription } = await validateBody(request, updateOrganizationSchema)
 
     const updates: Partial<Organization> = {}
 
     if (name) {
       updates.name = name.trim()
+    }
+
+    if (logoUrl !== undefined) {
+      updates.logoUrl = logoUrl ?? undefined
     }
 
     if (settings) {

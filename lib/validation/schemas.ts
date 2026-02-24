@@ -103,6 +103,7 @@ const weekStartDaySchema = z.union([
 
 export const updateOrganizationSchema = z.object({
   name: z.string().min(2).max(100).optional(),
+  logoUrl: z.string().url().nullable().optional(),
   settings: z.object({
     timezone: z.string().optional(),
     weekStartDay: weekStartDaySchema.optional(),
