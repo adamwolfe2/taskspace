@@ -123,6 +123,10 @@ async function getSessionAuthContext(request: NextRequest): Promise<AuthContext 
     // this to the DB so teammates in that org see enterprise features too.
     const superAdminEmail = process.env.SUPER_ADMIN_EMAIL?.toLowerCase()
     if (superAdminEmail && user.email.toLowerCase() === superAdminEmail && !organization.isInternal) {
+      logger.warn(
+        { userId: user.id, orgId: organization.id, orgSlug: organization.slug },
+        "Super admin bypass: marking org as internal"
+      )
       // Persist in background — don't block the request
       db.organizations.update(organization.id, { isInternal: true }).catch(() => {})
       organization = { ...organization, isInternal: true }

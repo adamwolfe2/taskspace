@@ -215,7 +215,7 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     if (department !== undefined) updates.department = department ?? undefined
     if (weeklyMeasurable !== undefined) updates.weeklyMeasurable = weeklyMeasurable
     if (jobTitle !== undefined) updates.jobTitle = jobTitle ?? undefined
-    if (role !== undefined && isAdmin(auth)) updates.role = role
+    if (role !== undefined && auth.member.role === "owner") updates.role = role
     if (timezone !== undefined) updates.timezone = timezone
     if (eodReminderTime !== undefined) updates.eodReminderTime = eodReminderTime
     if (notificationPreferences !== undefined) updates.notificationPreferences = notificationPreferences
