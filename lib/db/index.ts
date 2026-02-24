@@ -485,7 +485,7 @@ export const db = {
           billing_email = COALESCE(${updates.billingEmail ?? null}, billing_email),
           stripe_customer_id = COALESCE(${updates.stripeCustomerId ?? null}, stripe_customer_id),
           stripe_subscription_id = ${updates.stripeSubscriptionId !== undefined ? updates.stripeSubscriptionId : null},
-          is_internal = CASE WHEN ${updates.isInternal ?? null} IS NOT NULL THEN ${updates.isInternal ?? false} ELSE is_internal END,
+          is_internal = CASE WHEN ${updates.isInternal !== undefined} THEN ${updates.isInternal ?? false} ELSE is_internal END,
           updated_at = ${now}
         WHERE id = ${id}
         RETURNING *
