@@ -564,16 +564,8 @@ function S1() {
             TaskSpace automates EOD reports, cadence metrics, and keeps every team
             accountable — across every company you run on EOS.
           </p>
-          <div className="flex items-center gap-4">
-            <div className="border border-black px-5 py-2.5 bg-black">
-              <span className="font-mono text-[11px] text-white uppercase tracking-widest">Start Free Trial</span>
-            </div>
-            <div className="border border-black px-5 py-2.5">
-              <span className="font-mono text-[11px] uppercase tracking-widest">Try Demo</span>
-            </div>
-          </div>
-          <p className="font-mono text-[10px] text-black/30 mt-4 uppercase tracking-widest">
-            AI workspace setup in under two minutes · Free forever for small teams
+          <p className="font-mono text-[10px] text-black/30 uppercase tracking-widest">
+            trytaskspace.com · AI workspace setup in under two minutes
           </p>
         </div>
         <EODDemo />
@@ -821,44 +813,38 @@ function S9() {
   return (
     <Slide>
       <div className="min-h-[70vh] flex flex-col items-center justify-center text-center">
-        <Label>Get started today</Label>
+        <Label>Let's get you set up</Label>
         <h2
-          className="font-serif font-normal text-black leading-[1.04] mb-8 max-w-3xl"
+          className="font-serif font-normal text-black leading-[1.04] mb-6 max-w-3xl"
           style={{ fontSize: "clamp(36px, 5vw, 72px)" }}
         >
-          Your whole team running on EOS in under two minutes.
+          Your whole team running on EOS — right now, while we're here.
         </h2>
         <p className="font-mono text-xs text-black/50 leading-relaxed mb-10 max-w-lg">
-          Free forever for small teams. $9/user/month on Team. $19/user/month on Business.
-          14-day free trial on all paid plans — no credit card required.
+          We'll have your workspace live in the next two minutes. Invite your team,
+          set your first rocks, and you're running on EOS before this call ends.
         </p>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <a
-            href="https://trytaskspace.com"
-            className="border border-black px-8 py-3.5 bg-black hover:bg-black/85 transition-colors"
-          >
-            <span className="font-mono text-[11px] text-white uppercase tracking-widest">Start Free at trytaskspace.com</span>
-          </a>
-          <a
-            href="https://cal.com"
-            className="border border-black px-8 py-3.5 hover:bg-black/5 transition-colors"
-          >
-            <span className="font-mono text-[11px] uppercase tracking-widest">Book a Demo Call</span>
-          </a>
+
+        {/* Live setup CTA */}
+        <div className="border border-black px-10 py-4 bg-black mb-3">
+          <span className="font-mono text-[11px] text-white uppercase tracking-widest">trytaskspace.com — Start Free</span>
         </div>
+        <p className="font-mono text-[10px] text-black/30 uppercase tracking-widest mb-14">
+          No credit card required · Live in under two minutes
+        </p>
 
         {/* Pricing grid */}
-        <div className="grid grid-cols-3 border border-black mt-14 w-full max-w-xl">
+        <div className="grid grid-cols-3 border border-black w-full max-w-xl">
           {[
-            { plan: "Free", price: "$0", note: "Up to 3 users · 1 workspace" },
-            { plan: "Team", price: "$9", note: "Per user/mo · 3 workspaces", featured: true },
-            { plan: "Business", price: "$19", note: "Per user/mo · Unlimited" },
+            { plan: "Free",     price: "$0",  note: "Up to 3 users · 1 workspace",  featured: false },
+            { plan: "Team",     price: "$9",  note: "Per user/mo · 3 workspaces",   featured: true  },
+            { plan: "Business", price: "$19", note: "Per user/mo · Unlimited",      featured: false },
           ].map((tier, i) => (
             <div
               key={tier.plan}
-              className="py-6 px-4"
+              className="py-6 px-5"
               style={{
-                borderRight: i < 2 ? "1px solid black" : undefined,
+                borderRight:     i < 2 ? "1px solid black" : undefined,
                 backgroundColor: tier.featured ? "black" : "transparent",
               }}
             >
@@ -884,8 +870,8 @@ function S9() {
           ))}
         </div>
 
-        <p className="font-mono text-[10px] text-black/25 mt-8 uppercase tracking-widest">
-          Cancel anytime · SOC 2 compliant · SSO/SAML on Business
+        <p className="font-mono text-[10px] text-black/25 mt-6 uppercase tracking-widest">
+          14-day free trial on paid plans · Cancel anytime · SSO/SAML on Business
         </p>
       </div>
     </Slide>
