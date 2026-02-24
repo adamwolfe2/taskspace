@@ -289,6 +289,9 @@ export async function deleteWorkspace(id: string): Promise<boolean> {
     throw new Error("Cannot delete the default workspace")
   }
 
+  // Explicitly remove workspace members (no FK cascade defined on this table)
+  await sql`DELETE FROM workspace_members WHERE workspace_id = ${id}`
+
   const { rowCount } = await sql`
     DELETE FROM workspaces WHERE id = ${id}
   `

@@ -275,7 +275,7 @@ export function isApproachingLimit(used: number, limit: number | null): boolean 
 /**
  * Check if trial has expired
  */
-export function isTrialExpired(subscription?: { plan: PlanTier; currentPeriodEnd?: string } | null, isInternal?: boolean): boolean {
+export function isTrialExpired(subscription?: { plan: PlanTier; currentPeriodEnd?: string | null } | null, isInternal?: boolean): boolean {
   if (isInternal) return false
   if (!subscription || subscription.plan !== "free") return false
   if (!subscription.currentPeriodEnd) return false

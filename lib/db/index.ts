@@ -1975,6 +1975,7 @@ export const db = {
         SELECT * FROM admin_brain_dumps
         WHERE organization_id = ${orgId}
         ORDER BY created_at DESC
+        LIMIT 500
       `
       return rows.map(row => ({
         id: row.id as string,
@@ -2041,6 +2042,7 @@ export const db = {
         SELECT * FROM eod_insights
         WHERE organization_id = ${orgId}
         ORDER BY processed_at DESC
+        LIMIT 500
       `
       return rows.map(row => ({
         id: row.id as string,
@@ -2149,6 +2151,7 @@ export const db = {
         SELECT * FROM ai_generated_tasks
         WHERE organization_id = ${orgId}
         ORDER BY created_at DESC
+        LIMIT 1000
       `
       return rows.map(row => ({
         id: row.id as string,
@@ -2508,6 +2511,7 @@ export const db = {
         SELECT * FROM push_subscriptions
         WHERE organization_id = ${orgId}
         ORDER BY created_at DESC
+        LIMIT 10000
       `
       return rows.map(row => ({
         id: row.id as string,
@@ -3919,7 +3923,7 @@ export const db = {
     },
     async findByOrganizationId(orgId: string): Promise<Record<string, unknown>[]> {
       const { rows } = await sql`
-        SELECT * FROM workspaces WHERE organization_id = ${orgId} ORDER BY is_default DESC, name ASC
+        SELECT * FROM workspaces WHERE organization_id = ${orgId} ORDER BY is_default DESC, name ASC LIMIT 500
       `
       return rows
     },

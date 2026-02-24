@@ -2,6 +2,11 @@ import { withSentryConfig } from "@sentry/nextjs"
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    // Cap incoming request body size to 10MB to prevent memory exhaustion DoS
+    serverBodySizeLimit: '10mb',
+  },
+
   // Remove console.logs in production for security and performance
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {

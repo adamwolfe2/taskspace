@@ -12,7 +12,7 @@ import type { ApiResponse } from "@/lib/types"
 export const POST = withAuth(async (request, auth) => {
   try {
     // Rate limit: 20 manager insights requests per user per hour
-    const rateCheck = aiRateLimit(auth.user.id, 'manager-insights')
+    const rateCheck = aiRateLimit(auth.user.id, 'manager-insights', undefined, undefined, auth.organization.id, auth.organization.subscription.plan)
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { success: false, error: "Rate limit exceeded. Try again later." },

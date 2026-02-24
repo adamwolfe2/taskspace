@@ -53,14 +53,27 @@ export const RATE_LIMITS = {
 } as const
 
 /**
+ * Org-level AI rate limits (requests/hour across all users in the org)
+ * Prevents a large org from burning through API quota at scale.
+ */
+export const ORG_AI_RATE_LIMITS: Record<string, number> = {
+  free: 100,
+  team: 500,
+  business: 2000,
+}
+
+/**
  * Check rate limit for an AI endpoint.
  *
- * Uses in-memory sliding window to track requests per user per endpoint.
+ * Uses in-memory sliding window to track requests per user per endpoint,
+ * plus an org-level cap to prevent large orgs from burning through quota.
  *
  * @param userId - The authenticated user's ID
  * @param endpoint - A short identifier for the endpoint (e.g. "brain-dump", "query")
  * @param maxRequests - Maximum requests allowed in the window (default: 20)
  * @param windowMs - Window size in milliseconds (default: 1 hour)
+ * @param orgId - Optional org ID for org-level rate limiting
+ * @param plan - Subscription plan for org-level cap ("free" | "team" | "business")
  * @returns Rate limit result with allowed status, remaining count, and retry-after
  */
 export function aiRateLimit(
@@ -68,10 +81,32 @@ export function aiRateLimit(
   endpoint: string,
   maxRequests: number = RATE_LIMITS.ai.maxRequests,
   windowMs: number = RATE_LIMITS.ai.windowMs,
+  orgId?: string,
+  plan: string = "free",
 ): AIRateLimitResult {
   const now = Date.now()
   cleanupStaleEntries(now)
 
+  // Check org-level cap first (prevents large orgs from overwhelming quota)
+  if (orgId) {
+    const orgMax = ORG_AI_RATE_LIMITS[plan] ?? ORG_AI_RATE_LIMITS.free
+    const orgKey = `org:${orgId}:${endpoint}`
+    const orgEntry = rateLimitStore.get(orgKey)
+    const windowStart = now - windowMs
+
+    if (orgEntry) {
+      orgEntry.timestamps = orgEntry.timestamps.filter(t => t > windowStart)
+      if (orgEntry.timestamps.length >= orgMax) {
+        const retryAfter = Math.ceil((orgEntry.timestamps[0] + windowMs - now) / 1000)
+        return { allowed: false, remaining: 0, retryAfter: Math.max(retryAfter, 1) }
+      }
+      orgEntry.timestamps.push(now)
+    } else {
+      rateLimitStore.set(orgKey, { timestamps: [now] })
+    }
+  }
+
+  // Check user-level cap
   const key = `${userId}:${endpoint}`
   const entry = rateLimitStore.get(key)
 

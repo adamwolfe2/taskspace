@@ -14,7 +14,7 @@ import { logger, logError } from "@/lib/logger"
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
     // Rate limit: 20 AI queries per user per hour
-    const rateCheck = aiRateLimit(auth.user.id, 'query')
+    const rateCheck = aiRateLimit(auth.user.id, 'query', undefined, undefined, auth.organization.id, auth.organization.subscription.plan)
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { success: false, error: "Rate limit exceeded. Try again later." },

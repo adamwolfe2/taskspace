@@ -16,7 +16,7 @@ import { CONFIG } from "@/lib/config"
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
     // Rate limit: 20 digest generations per user per hour
-    const rateCheck = aiRateLimit(auth.user.id, 'digest')
+    const rateCheck = aiRateLimit(auth.user.id, 'digest', undefined, undefined, auth.organization.id, auth.organization.subscription.plan)
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { success: false, error: "Rate limit exceeded. Try again later." },

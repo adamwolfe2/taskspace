@@ -15,6 +15,7 @@ import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { logger, logError } from "@/lib/logger"
 import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { isTrialExpired } from "@/lib/billing/feature-gates"
 import { CONFIG } from "@/lib/config"
 
 // GET /api/tasks - Get tasks
@@ -144,6 +145,14 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
           { status: 404 }
         )
       }
+    }
+
+    // Block task creation if trial has expired
+    if (isTrialExpired(auth.organization.subscription, auth.organization.isInternal)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Your trial has expired. Please upgrade your plan to continue creating tasks." },
+        { status: 402 }
+      )
     }
 
     // Determine assignee

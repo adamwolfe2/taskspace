@@ -13,6 +13,7 @@ import { sendSlackMessage, buildFullEODReportMessage, isSlackConfigured } from "
 import { asanaClient } from "@/lib/integrations/asana"
 import { getActiveMetricForUser, upsertWeeklyMetricEntry } from "@/lib/metrics"
 import { getTodayInTimezone, isValidEODDate, formatDateForDisplay } from "@/lib/utils/date-utils"
+import { isTrialExpired } from "@/lib/billing/feature-gates"
 import { CONFIG } from "@/lib/config"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import type { EODReport, EODInsight, ApiResponse, TeamMember, Notification } from "@/lib/types"
@@ -242,6 +243,14 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
           { status: 404 }
         )
       }
+    }
+
+    // Block submission if trial has expired
+    if (isTrialExpired(auth.organization.subscription, auth.organization.isInternal)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Your trial has expired. Please upgrade your plan to continue submitting reports." },
+        { status: 402 }
+      )
     }
 
     // Get the organization's timezone (default to PST)
