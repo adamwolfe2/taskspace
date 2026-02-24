@@ -52,9 +52,10 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         { status: error.statusCode }
       )
     }
+    const message = error instanceof Error ? error.message : String(error)
     logError(logger, "Public EOD token update error", error)
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Failed to update public EOD token" },
+      { success: false, error: `Failed to update public EOD token: ${message}` },
       { status: 500 }
     )
   }

@@ -82,8 +82,8 @@ export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
       if (!data.success) throw new Error(data.error || "Failed")
       setToken(data.data.publicEodToken)
       toast({ title: "Access token generated", description: "Your public weekly EOD link is now active." })
-    } catch {
-      toast({ title: "Failed to generate token", variant: "destructive" })
+    } catch (err) {
+      toast({ title: "Failed to generate token", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" })
     } finally {
       setIsGenerating(false)
     }
