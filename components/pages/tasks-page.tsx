@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { KanbanBoard } from "@/components/tasks/kanban-board"
-import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2, CheckSquare, X, Trash2, AlertTriangle } from "lucide-react"
+import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2, CheckSquare, X, Trash2, AlertTriangle, Flag } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { isPast, startOfDay } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
@@ -386,6 +387,20 @@ export function TasksPage({
           variant: "destructive",
         })
       }
+    } finally {
+      setIsBulkProcessing(false)
+    }
+  }
+
+  const handleBulkPriority = async (priority: "high" | "normal" | "low") => {
+    const taskIds = Array.from(selectedTasks)
+    setIsBulkProcessing(true)
+    try {
+      await Promise.all(taskIds.map((id) => updateTask(id, { priority })))
+      setSelectedTasks(new Set())
+      toast({ title: "Priority updated", description: `${taskIds.length} task${taskIds.length > 1 ? "s" : ""} set to ${priority}` })
+    } catch {
+      toast({ title: "Error", description: "Some tasks could not be updated", variant: "destructive" })
     } finally {
       setIsBulkProcessing(false)
     }
@@ -790,6 +805,19 @@ export function TasksPage({
                   <X className="h-4 w-4" />
                   <span className="hidden sm:inline">Clear</span>
                 </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1 sm:gap-2 h-9 px-2 sm:px-3" disabled={isBulkProcessing}>
+                      <Flag className="h-4 w-4" />
+                      <span className="hidden sm:inline">Priority</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleBulkPriority("high")}>🔴 High</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleBulkPriority("normal")}>🟡 Normal</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleBulkPriority("low")}>🟢 Low</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   variant="default"
                   size="sm"

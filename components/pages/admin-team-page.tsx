@@ -65,6 +65,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     department: "General",
     role: "member" as "admin" | "member",
   })
+  const [memberSearch, setMemberSearch] = useState("")
   const [bulkInviteDialogOpen, setBulkInviteDialogOpen] = useState(false)
   const [bulkInviteData, setBulkInviteData] = useState({
     emails: "",
@@ -377,6 +378,18 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
   }
 
   const pendingInvitations = invitations.filter((i) => i.status === "pending")
+
+  const filteredMembers = memberSearch.trim()
+    ? teamMembers.filter((m) => {
+        const q = memberSearch.toLowerCase()
+        return (
+          m.name.toLowerCase().includes(q) ||
+          m.email?.toLowerCase().includes(q) ||
+          m.department?.toLowerCase().includes(q) ||
+          m.role?.toLowerCase().includes(q)
+        )
+      })
+    : teamMembers
 
   // Create a draft team member (before invitation)
   const handleCreateDraftMember = async () => {
@@ -900,9 +913,18 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
               <CardDescription>View and manage all team members including pending ones</CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Member search */}
+              <div className="mb-4">
+                <Input
+                  placeholder="Search by name, email, department, or role..."
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  className="max-w-sm h-8 text-sm"
+                />
+              </div>
               {/* Desktop: Table view */}
               <div className="hidden sm:block overflow-x-auto">
-                {teamMembers.length === 0 ? (
+                {filteredMembers.length === 0 ? (
                   <div className="py-12 text-center">
                     <p className="text-sm text-muted-foreground">No team members yet. Invite your first team member to get started.</p>
                   </div>
@@ -918,7 +940,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {teamMembers.map((member) => (
+                    {filteredMembers.map((member) => (
                       <TableRow key={member.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -1015,12 +1037,12 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
               {/* Mobile: Card stack view */}
               <div className="sm:hidden space-y-3">
-                {teamMembers.length === 0 ? (
+                {filteredMembers.length === 0 ? (
                   <div className="py-12 text-center">
                     <p className="text-sm text-muted-foreground">No team members yet. Invite your first team member to get started.</p>
                   </div>
                 ) : (
-                  teamMembers.map((member) => (
+                  filteredMembers.map((member) => (
                     <div
                       key={member.id}
                       className="bg-white border border-slate-200 rounded-xl p-4 space-y-3"
