@@ -111,6 +111,16 @@ export function calculateUserStats(userId: string, rocks: Rock[], tasks: Assigne
   const totalTasks = userTasks.length
   const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const overdueTasks = userTasks.filter((t) => {
+    if (t.status === "completed") return false
+    if (!t.dueDate) return false
+    const due = new Date(t.dueDate)
+    due.setHours(0, 0, 0, 0)
+    return due < today
+  }).length
+
   const averageRockProgress =
     userRocks.length > 0 ? Math.round(userRocks.reduce((sum, rock) => sum + rock.progress, 0) / userRocks.length) : 0
 
@@ -125,6 +135,7 @@ export function calculateUserStats(userId: string, rocks: Rock[], tasks: Assigne
     completedTasks,
     totalTasks,
     taskCompletionRate,
+    overdueTasks,
     activeRocks: userRocks.length,
     averageRockProgress,
     rocksOnTrack,

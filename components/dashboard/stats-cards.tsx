@@ -9,6 +9,7 @@ interface StatsCardsProps {
     completedTasks: number
     totalTasks: number
     taskCompletionRate: number
+    overdueTasks?: number
     activeRocks: number
     averageRockProgress: number
     eodStreak: number
@@ -32,12 +33,16 @@ export function StatsCards({ stats }: StatsCardsProps) {
         value: Math.round(safeCompletionRate - 50), // Compare to 50% baseline
         isPositive: safeCompletionRate >= 50
       } : undefined,
-      subtitle: `${Math.round(safeCompletionRate)}% completion rate`,
+      subtitle: (() => {
+        const overdue = stats.overdueTasks ?? 0
+        if (overdue > 0) return `${overdue} overdue • ${Math.round(safeCompletionRate)}% done`
+        return `${Math.round(safeCompletionRate)}% completion rate`
+      })(),
       icon: CheckCircle2,
       iconBg: "",
-      iconBgStyle: { backgroundColor: themedColors.primaryAlpha10 },
+      iconBgStyle: { backgroundColor: (stats.overdueTasks ?? 0) > 0 ? "rgba(239,68,68,0.1)" : themedColors.primaryAlpha10 },
       iconColor: "",
-      iconColorStyle: { color: themedColors.primary },
+      iconColorStyle: { color: (stats.overdueTasks ?? 0) > 0 ? "#ef4444" : themedColors.primary },
     },
     {
       title: "Active Rocks",
