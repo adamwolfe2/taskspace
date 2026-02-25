@@ -92,10 +92,22 @@ export const POST = withAdmin(async (request, auth) => {
       failed: [],
     }
 
+    // Load existing rocks for this user+workspace to prevent duplicates
+    const existingRocks = rockUserId
+      ? await db.rocks.findByUserId(rockUserId, auth.organization.id, workspaceId)
+      : []
+    const existingTitles = new Set(existingRocks.map((r) => r.title.toLowerCase().trim()))
+
     for (const rockInput of rocks) {
       try {
         if (!rockInput.title || rockInput.title.trim().length < 2) {
           result.failed.push({ title: rockInput.title || "Untitled", error: "Title is required" })
+          continue
+        }
+
+        // Skip if a rock with this exact title already exists for this user+workspace
+        if (existingTitles.has(rockInput.title.toLowerCase().trim())) {
+          result.failed.push({ title: rockInput.title, error: "Rock with this title already exists — skipped" })
           continue
         }
 
@@ -134,6 +146,7 @@ export const POST = withAdmin(async (request, auth) => {
         }
 
         result.created.push(rock)
+        existingTitles.add(rockInput.title.toLowerCase().trim())
       } catch (err) {
         logError(logger, `Failed to create rock "${rockInput.title}"`, err)
         result.failed.push({
