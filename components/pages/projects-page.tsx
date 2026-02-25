@@ -507,11 +507,11 @@ export function ProjectsPage({
               <div className="space-y-4">
                 <div>
                   <Label>Name *</Label>
-                  <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Project name" />
+                  <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Project name" maxLength={200} />
                 </div>
                 <div>
                   <Label>Description</Label>
-                  <Textarea value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Brief description" rows={2} />
+                  <Textarea value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Brief description" rows={2} maxLength={1000} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>

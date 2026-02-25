@@ -32,6 +32,7 @@ export function useWorkspaceNotes() {
     {
       refreshInterval: 30000,
       revalidateOnFocus: false,
+      dedupingInterval: 10000,
     }
   )
 
@@ -54,8 +55,7 @@ export function useWorkspaceNotes() {
         })
 
         if (res.ok) {
-          const result = await res.json()
-          mutate({ success: true, data: result.data }, { revalidate: false })
+          await mutate()
         } else {
           toast({ title: "Save failed", description: "Notes could not be saved. Please try again.", variant: "destructive" })
         }

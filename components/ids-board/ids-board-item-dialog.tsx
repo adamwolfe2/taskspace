@@ -8,6 +8,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -51,6 +61,7 @@ export function IdsBoardItemDialog({
   const [columnName, setColumnName] = useState<IdsBoardColumn>(defaultColumn)
   const [itemType, setItemType] = useState<IdsBoardItemType>("custom")
   const [assignedTo, setAssignedTo] = useState<string>("")
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     if (item) {
@@ -85,6 +96,7 @@ export function IdsBoardItemDialog({
   const isEditing = !!item
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
@@ -172,10 +184,7 @@ export function IdsBoardItemDialog({
                 type="button"
                 variant="destructive"
                 size="sm"
-                onClick={() => {
-                  onDelete()
-                  onOpenChange(false)
-                }}
+                onClick={() => setShowDeleteConfirm(true)}
               >
                 Delete
               </Button>
@@ -192,5 +201,29 @@ export function IdsBoardItemDialog({
         </form>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete this item?</AlertDialogTitle>
+          <AlertDialogDescription>
+            &ldquo;{title}&rdquo; will be permanently removed from the IDS board. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => {
+              onDelete?.()
+              onOpenChange(false)
+            }}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 }

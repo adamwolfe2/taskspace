@@ -225,6 +225,7 @@ export function VTOPage() {
 
   const addCoreValue = () => {
     if (!vtoData) return
+    if (vtoData.coreValues.some((v) => !v.trim())) return
     const newData = { ...vtoData, coreValues: [...vtoData.coreValues, ""] }
     setVtoData(newData)
     debouncedSave(newData)
@@ -302,6 +303,7 @@ export function VTOPage() {
 
   const addOneYearGoal = () => {
     if (!vtoData) return
+    if ((vtoData.oneYearPlan.goals || []).some((g) => !g.trim())) return
     const newData = {
       ...vtoData,
       oneYearPlan: {
@@ -335,6 +337,7 @@ export function VTOPage() {
 
   const addQuarterlyRock = () => {
     if (!vtoData) return
+    if (vtoData.quarterlyRocks.some((r) => !r.trim())) return
     const newData = { ...vtoData, quarterlyRocks: [...vtoData.quarterlyRocks, ""] }
     setVtoData(newData)
     debouncedSave(newData)
@@ -359,6 +362,7 @@ export function VTOPage() {
 
   const addIssue = () => {
     if (!vtoData) return
+    if (vtoData.issuesList.some((i) => !i.trim())) return
     const newData = { ...vtoData, issuesList: [...vtoData.issuesList, ""] }
     setVtoData(newData)
     debouncedSave(newData)

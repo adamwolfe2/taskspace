@@ -31,7 +31,7 @@ export function useIdsBoard() {
   } = useSWR<ApiResponse<IdsBoardItem[]>>(
     !isDemoMode && workspaceId ? `/api/ids-board?workspaceId=${workspaceId}` : null,
     fetcher,
-    { refreshInterval: 3000 }
+    { refreshInterval: 30000, dedupingInterval: 10000 }
   )
 
   const items = isDemoMode ? DEMO_IDS_ITEMS : (data?.data || [])

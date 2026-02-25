@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -68,6 +68,7 @@ export function AIEODSubmission({
   const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
   const todayInOrgTz = getTodayInTimezone(orgTimezone)
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [textDump, setTextDump] = useState("")
   const [isParsing, setIsParsing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -190,9 +191,10 @@ export function AIEODSubmission({
 
       setShowPreview(true)
 
+      const dateLabel = selectedDate === todayInOrgTz ? "today" : selectedDate
       toast({
         title: "Parsed Successfully",
-        description: `Found ${parsed.tasks.length} tasks organized by your rocks`,
+        description: `Found ${parsed.tasks.length} task${parsed.tasks.length !== 1 ? "s" : ""} for ${dateLabel}`,
       })
     } catch (error) {
       toast({
@@ -367,6 +369,7 @@ export function AIEODSubmission({
   const resetToInput = () => {
     setShowPreview(false)
     setParsedData(null)
+    setTimeout(() => textareaRef.current?.focus(), 50)
   }
 
   // Group tasks by rock for display
@@ -442,6 +445,7 @@ export function AIEODSubmission({
                 Paste Your Daily Tasks
               </Label>
               <Textarea
+                ref={textareaRef}
                 id="textDump"
                 placeholder={`Paste everything you accomplished today. Example:
 
@@ -651,9 +655,15 @@ Tomorrow: finalize project proposal, sync with team on sprint goals`}
                   <Input
                     type="number"
                     min="0"
+                    step="any"
                     placeholder="0"
                     value={metricValueToday}
-                    onChange={(e) => setMetricValueToday(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      if (val === "" || (!isNaN(Number(val)) && Number(val) >= 0)) {
+                        setMetricValueToday(val)
+                      }
+                    }}
                     className="w-24 bg-white border-slate-200"
                   />
                   <span className="text-sm text-slate-500">

@@ -21,7 +21,7 @@ export function useTaskPool() {
   const { data, error, isLoading, mutate } = useSWR<ApiResponse<TaskPoolItem[]>>(
     !isDemoMode && workspaceId ? `/api/task-pool?workspaceId=${workspaceId}` : null,
     fetcher,
-    { refreshInterval: 10_000 }
+    { refreshInterval: 30_000, dedupingInterval: 10000 }
   )
 
   const tasks: TaskPoolItem[] = data?.data || []

@@ -73,6 +73,7 @@ export function DashboardPage({
  onRefresh,
 }: DashboardPageProps) {
  const [selectedEodDate, setSelectedEodDate] = useState<string | null>(null)
+ const [updatingRockId, setUpdatingRockId] = useState<string | null>(null)
  const eodCardRef = useRef<HTMLDivElement>(null)
  const tasksRef = useRef<HTMLDivElement>(null)
  const rocksRef = useRef<HTMLDivElement>(null)
@@ -146,10 +147,12 @@ export function DashboardPage({
  }
 
  const handleViewTask = (_taskId: string) => {
-   tasksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  setCurrentPage("tasks")
  }
 
  const handleUpdateProgress = async (rockId: string, progress: number) => {
+  if (updatingRockId === rockId) return
+  setUpdatingRockId(rockId)
   try {
    await updateRock(rockId, { progress })
   } catch {
@@ -158,6 +161,8 @@ export function DashboardPage({
     description: "Failed to update rock progress",
     variant: "destructive",
    })
+  } finally {
+   setUpdatingRockId(null)
   }
  }
 
