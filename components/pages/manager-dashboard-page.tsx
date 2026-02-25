@@ -59,6 +59,7 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
   const [searchQuery, setSearchQuery] = useState("")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [filterStatus, setFilterStatus] = useState<"all" | "needs_attention" | "on_track">("all")
+  const [sortBy, setSortBy] = useState<"name" | "overdue" | "rock-progress" | "streak">("overdue")
   const [isRefreshing, setIsRefreshing] = useState(false)
   const { data: aiInsights, isLoading: aiInsightsLoading, fetchInsights: fetchAiInsights } = useManagerAiInsights()
 
@@ -151,8 +152,17 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
       )
     }
 
-    return reports
-  }, [dashboard, searchQuery, filterStatus])
+    // Sort
+    return [...reports].sort((a, b) => {
+      switch (sortBy) {
+        case "name": return a.name.localeCompare(b.name)
+        case "overdue": return b.metrics.overdueTasks - a.metrics.overdueTasks
+        case "rock-progress": return b.metrics.avgRockProgress - a.metrics.avgRockProgress
+        case "streak": return b.metrics.eodStreakDays - a.metrics.eodStreakDays
+        default: return 0
+      }
+    })
+  }, [dashboard, searchQuery, filterStatus, sortBy])
 
   // Critical alerts (top 5)
   const criticalAlerts = useMemo(() => {
@@ -492,6 +502,17 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
                 <SelectItem value="all">All Members</SelectItem>
                 <SelectItem value="needs_attention">Needs Attention</SelectItem>
                 <SelectItem value="on_track">On Track</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="overdue">Most Overdue</SelectItem>
+                <SelectItem value="rock-progress">Rock Progress</SelectItem>
+                <SelectItem value="streak">EOD Streak</SelectItem>
+                <SelectItem value="name">Name A–Z</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex items-center border rounded-lg p-0.5">
