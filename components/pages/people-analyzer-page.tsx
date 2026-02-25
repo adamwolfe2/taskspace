@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,7 @@ import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 import { useToast } from "@/hooks/use-toast";
 import { useApp } from "@/lib/contexts/app-context";
 import { DEMO_PEOPLE_ASSESSMENTS, DEMO_READONLY_MESSAGE } from "@/lib/demo-data";
-import { Users, Plus, Check, X, UserCheck, Loader2, Download } from "lucide-react";
+import { Users, Plus, Check, X, UserCheck, Loader2, Download, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -84,6 +84,8 @@ export function PeopleAnalyzerPage() {
     useState<PeopleAnalyzerSummary | null>(null);
 
   const [assessmentToDelete, setAssessmentToDelete] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [rprsFilter, setRprsFilter] = useState<"all" | "right" | "wrong" | "unsure">("all");
 
   const [formData, setFormData] = useState<AssessmentFormData>({
     employeeName: "",
@@ -333,6 +335,18 @@ export function PeopleAnalyzerPage() {
     return assessment.getsIt && assessment.wantsIt && assessment.hasCapacity;
   };
 
+  const filteredAssessments = useMemo(() => {
+    let result = assessments
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter((a) => a.employeeName.toLowerCase().includes(q))
+    }
+    if (rprsFilter !== "all") {
+      result = result.filter((a) => a.rightPersonRightSeat === rprsFilter)
+    }
+    return result
+  }, [assessments, searchQuery, rprsFilter])
+
   if (!currentWorkspace) {
     return (
       <div className="container mx-auto py-8">
@@ -464,7 +478,33 @@ export function PeopleAnalyzerPage() {
       {/* Assessments Table */}
       <Card>
         <CardHeader>
-          <CardTitle>GWC Assessment Summary</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle>GWC Assessment Summary</CardTitle>
+            {assessments.length > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Search by name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8 h-9 w-48 text-sm"
+                  />
+                </div>
+                <Select value={rprsFilter} onValueChange={(v) => setRprsFilter(v as typeof rprsFilter)}>
+                  <SelectTrigger className="h-9 w-40 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="right">Right Seat</SelectItem>
+                    <SelectItem value="unsure">Unsure</SelectItem>
+                    <SelectItem value="wrong">Wrong</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -485,6 +525,14 @@ export function PeopleAnalyzerPage() {
                 Add first assessment
               </Button>
             </div>
+          ) : filteredAssessments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Search className="h-8 w-8 text-slate-300 mb-3" />
+              <p className="text-sm text-slate-500">No assessments match your filters.</p>
+              <Button variant="ghost" size="sm" className="mt-2" onClick={() => { setSearchQuery(""); setRprsFilter("all") }}>
+                Clear filters
+              </Button>
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -499,7 +547,7 @@ export function PeopleAnalyzerPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {assessments.map((assessment) => (
+                {filteredAssessments.map((assessment) => (
                   <TableRow key={assessment.employeeId}>
                     <TableCell className="font-medium">
                       {assessment.employeeName}
