@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { TaskComments } from "./task-comments"
 import { TaskSubtasks } from "./task-subtasks"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
-import { Calendar, User, Target, AlertCircle, Clock, CheckCircle2, FolderKanban, Copy, Check, Pencil, X } from "lucide-react"
+import { Calendar, User, Target, AlertCircle, Clock, CheckCircle2, FolderKanban, Copy, Check, Pencil, X, PlayCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 import { cn } from "@/lib/utils"
@@ -81,6 +81,7 @@ export function TaskDetailModal({
   const themedColors = useThemedIconColors()
 
   const isCompleted = task.status === "completed"
+  const isInProgress = task.status === "in-progress"
   const dueDateStatus = getDueDateStatus(task.dueDate, isCompleted)
 
   const priorityConfig = {
@@ -286,6 +287,20 @@ export function TaskDetailModal({
         title: isCompleted ? "Task reopened" : "Task completed!",
         description: isCompleted ? "Task marked as pending" : "Great job!",
       })
+      onOpenChange(false)
+    } catch (err: unknown) {
+      toast({
+        title: "Update failed",
+        description: err instanceof Error ? err.message : "Please try again",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleSetInProgress = async () => {
+    try {
+      await onUpdateTask(task.id, { status: "in-progress" })
+      toast({ title: "Task in progress", description: "Task marked as in progress" })
       onOpenChange(false)
     } catch (err: unknown) {
       toast({
@@ -518,6 +533,12 @@ export function TaskDetailModal({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
+          {!isCompleted && !isInProgress && (
+            <Button variant="outline" onClick={handleSetInProgress} className="gap-1.5">
+              <PlayCircle className="h-4 w-4 text-blue-500" />
+              Start Working
+            </Button>
+          )}
           <Button
             onClick={handleCompleteTask}
             variant={isCompleted ? "outline" : "default"}
