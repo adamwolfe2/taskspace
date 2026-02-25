@@ -61,6 +61,7 @@ export function useProductivityDashboard(userId?: string) {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
       refreshInterval: CONFIG.polling.standard,
+      dedupingInterval: 10000,
     }
   )
 
@@ -83,6 +84,7 @@ export function useFocusScore(userId?: string) {
 
   const { data, error, isLoading, mutate } = useSWR<FocusScore>(url, fetcher, {
     revalidateOnFocus: false,
+    dedupingInterval: 10000,
   })
 
   return {
@@ -104,6 +106,7 @@ export function useStreak(userId?: string) {
 
   const { data, error, isLoading, mutate } = useSWR<UserStreak>(url, fetcher, {
     revalidateOnFocus: false,
+    dedupingInterval: 10000,
   })
 
   return {
@@ -170,6 +173,7 @@ export function useTodayFocusBlocks(userId?: string) {
     fetcher,
     {
       revalidateOnFocus: false,
+      dedupingInterval: 10000,
     }
   )
 
@@ -198,6 +202,7 @@ export function useTodayEnergy(userId?: string) {
     fetcher,
     {
       revalidateOnFocus: false,
+      dedupingInterval: 10000,
     }
   )
 
