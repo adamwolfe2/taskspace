@@ -159,6 +159,25 @@ export function AdminPage({
   const totalRocksAtRisk = rocks.filter((r) => r.status === "at-risk").length
   const totalRocksBlocked = rocks.filter((r) => r.status === "blocked").length
 
+  // Weekly task velocity
+  const now = new Date()
+  const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7)
+  const twoWeeksAgo = new Date(now); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
+  const weeklyTasksDone = assignedTasks.filter((t) => t.completedAt && new Date(t.completedAt) >= weekAgo).length
+  const prevWeekTasksDone = assignedTasks.filter((t) => t.completedAt && new Date(t.completedAt) >= twoWeeksAgo && new Date(t.completedAt) < weekAgo).length
+  const velocityDelta = weeklyTasksDone - prevWeekTasksDone
+
+  // Recently completed rocks (this quarter, updatedAt in last 30 days)
+  const thirtyDaysAgo = new Date(now); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  const currentQuarterStr = (() => {
+    const q = Math.floor(now.getMonth() / 3) + 1
+    return `Q${q} ${now.getFullYear()}`
+  })()
+  const recentlyCompletedRocks = rocks
+    .filter((r) => r.status === "completed" && (r.quarter === currentQuarterStr || !r.quarter) && new Date(r.updatedAt) >= thirtyDaysAgo)
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 5)
+
   // Team mood from last 7 days of EOD reports
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
@@ -285,7 +304,7 @@ export function AdminPage({
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Daily Reporting</CardTitle>
@@ -378,6 +397,29 @@ export function AdminPage({
               {teamGrade}
             </div>
             <p className="text-xs text-muted-foreground">Avg score: {avgAccountabilityScore}/100</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Task Velocity</CardTitle>
+            {velocityDelta > 0 ? (
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
+            ) : velocityDelta < 0 ? (
+              <TrendingDown className="h-4 w-4 text-destructive" />
+            ) : (
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            )}
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{weeklyTasksDone}</div>
+            <p className="text-xs text-muted-foreground">
+              {velocityDelta === 0
+                ? "Same as last week"
+                : velocityDelta > 0
+                ? `+${velocityDelta} vs last week`
+                : `${velocityDelta} vs last week`}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -478,6 +520,40 @@ export function AdminPage({
                       <div className="text-xs text-slate-500">
                         <span className="font-semibold text-slate-700">{rock.progress}%</span> actual
                       </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent Rock Wins */}
+      {recentlyCompletedRocks.length > 0 && (
+        <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50/40 to-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              🎉 Recent Rock Completions
+            </CardTitle>
+            <CardDescription>Rocks completed this quarter — celebrate team wins</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {recentlyCompletedRocks.map((rock) => {
+                const owner = rock.userId
+                  ? teamMembers.find((m) => m.userId === rock.userId)
+                  : undefined
+                const daysAgo = Math.floor((now.getTime() - new Date(rock.updatedAt).getTime()) / (1000 * 60 * 60 * 24))
+                return (
+                  <div key={rock.id} className="flex items-center justify-between gap-3 p-2.5 bg-white rounded-lg border border-emerald-100">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="text-emerald-600 flex-shrink-0">✓</span>
+                      <p className="text-sm font-medium text-slate-800 truncate">{rock.title}</p>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0 text-xs text-slate-500">
+                      {owner && <span className="hidden sm:inline">{owner.name.split(" ")[0]}</span>}
+                      <span>{daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : `${daysAgo}d ago`}</span>
                     </div>
                   </div>
                 )
