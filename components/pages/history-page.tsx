@@ -226,6 +226,31 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
         </div>
       </div>
 
+      {/* Summary strip */}
+      {filteredReports.length > 0 && (() => {
+        const escalationCount = filteredReports.filter((r) => r.needsEscalation).length
+        const uniqueSubmitters = new Set(filteredReports.map((r) => r.userId)).size
+        const moodReports = filteredReports.filter((r) => r.mood)
+        const positiveMood = moodReports.filter((r) => r.mood === "positive").length
+        const moodPct = moodReports.length > 0 ? Math.round((positiveMood / moodReports.length) * 100) : null
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "Reports", value: filteredReports.length, sub: `page ${currentPage} of ${totalPages}` },
+              { label: "Submitters", value: uniqueSubmitters, sub: "unique team members" },
+              { label: "Escalations", value: escalationCount, sub: escalationCount > 0 ? "need attention" : "all clear", accent: escalationCount > 0 },
+              { label: "Positive Mood", value: moodPct !== null ? `${moodPct}%` : "—", sub: moodReports.length > 0 ? `${moodReports.length} with mood` : "no mood data" },
+            ].map((s) => (
+              <div key={s.label} className={`bg-white rounded-lg border p-3 ${s.accent ? "border-red-200 bg-red-50/30" : "border-slate-100"}`}>
+                <p className="text-xs text-slate-500">{s.label}</p>
+                <p className={`text-xl font-bold ${s.accent ? "text-red-600" : "text-slate-900"}`}>{s.value}</p>
+                <p className="text-xs text-slate-400">{s.sub}</p>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
+
       <div className="space-y-4">
         {filteredReports.length === 0 ? (
           <div className="bg-white rounded-xl shadow-card">
