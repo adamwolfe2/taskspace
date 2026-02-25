@@ -396,6 +396,7 @@ function AppContent() {
             onFilterConsumed={clearPageFilter}
             updateRock={teamData.updateRock}
             createRock={teamData.createRock}
+            deleteRock={teamData.deleteRock}
           />
         )
       case "tasks":

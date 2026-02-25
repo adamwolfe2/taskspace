@@ -35,9 +35,10 @@ interface RocksPageProps {
   onFilterConsumed?: () => void  // Callback to clear the filter after consuming it
   updateRock?: (id: string, updates: Partial<Rock>) => Promise<Rock>
   createRock?: (rock: Partial<Rock>) => Promise<Rock>
+  deleteRock?: (id: string) => Promise<void>
 }
 
-export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter, onFilterConsumed, updateRock, createRock }: RocksPageProps) {
+export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter, onFilterConsumed, updateRock, createRock, deleteRock }: RocksPageProps) {
   const { setCurrentPage } = useApp()
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaces()
@@ -685,6 +686,8 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
         onOpenChange={(open) => { if (!open) setSelectedRock(null) }}
         rock={selectedRock}
         onUpdateRock={updateRock}
+        onDeleteRock={deleteRock}
+        isAdmin={isAdmin}
       />
     )}
 

@@ -26,7 +26,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RockMilestoneManager } from "./rock-milestone-manager"
 import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
-import { Target, Calendar, AlertCircle, CheckCircle2, Clock, Pencil, Save, X, FolderKanban, Copy, Check } from "lucide-react"
+import { Target, Calendar, AlertCircle, CheckCircle2, Clock, Pencil, Save, X, FolderKanban, Copy, Check, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
@@ -57,10 +57,12 @@ interface RockDetailModalProps {
   onOpenChange: (open: boolean) => void
   rock: Rock
   onUpdateRock: (id: string, updates: Partial<Rock>) => Promise<Rock>
+  onDeleteRock?: (id: string) => Promise<void>
   projects?: Project[]
+  isAdmin?: boolean
 }
 
-export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projects }: RockDetailModalProps) {
+export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, onDeleteRock, projects, isAdmin }: RockDetailModalProps) {
   const themedColors = useThemedIconColors()
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(rock.title)
@@ -70,6 +72,8 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
   const [isSaving, setIsSaving] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [showCompletePrompt, setShowCompletePrompt] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const { toast } = useToast()
   const { getStatusStyle } = useBrandStatusStyles()
 
@@ -191,6 +195,17 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {isAdmin && onDeleteRock && !isEditing && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-slate-400 hover:text-red-600"
+                  title="Delete rock"
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -329,6 +344,38 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
         </div>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Rock?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently delete &ldquo;{rock.title}&rdquo; and all its milestones. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={async () => {
+              if (!onDeleteRock) return
+              setIsDeleting(true)
+              try {
+                await onDeleteRock(rock.id)
+                onOpenChange(false)
+                toast({ title: "Rock deleted" })
+              } catch {
+                toast({ title: "Failed to delete rock", variant: "destructive" })
+              } finally {
+                setIsDeleting(false)
+              }
+            }}
+          >
+            {isDeleting ? "Deleting..." : "Delete Rock"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
 
     <AlertDialog open={showCompletePrompt} onOpenChange={setShowCompletePrompt}>
       <AlertDialogContent>
