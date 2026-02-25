@@ -143,6 +143,26 @@ export function AdminPage({
   const todaySubmitterIds = new Set(todayReports.map((r) => r.userId))
   const missingSubmitters = activeMembers.filter((m) => m.userId && !todaySubmitterIds.has(m.userId))
 
+  // Members who haven't submitted EOD in 3+ days
+  const membersLongAbsent = activeMembers
+    .filter((m) => m.userId)
+    .map((m) => {
+      const uid = m.userId!
+      const lastReport = eodReports
+        .filter((r) => r.userId === uid)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+      const daysSince = lastReport
+        ? Math.floor((now.getTime() - new Date(lastReport.date).getTime()) / (1000 * 60 * 60 * 24))
+        : null
+      return { member: m, lastDate: lastReport?.date || null, daysSince }
+    })
+    .filter(({ daysSince }) => daysSince === null || daysSince >= 3)
+    .sort((a, b) => {
+      const aD = a.daysSince ?? 9999
+      const bD = b.daysSince ?? 9999
+      return bD - aD
+    })
+
   // Calculate stats for all active team members (all roles)
   const teamStats = activeMembers.map((member) => {
     const uid = member.userId || member.id
@@ -568,6 +588,41 @@ export function AdminPage({
                   <UserInitials name={m.name} size="sm" />
                   <span>{m.name}</span>
                 </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Members absent from EOD for 3+ days */}
+      {membersLongAbsent.length > 0 && (
+        <Card className="border-orange-200 bg-orange-50/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Bell className="h-5 w-5 text-orange-500" />
+              EOD Absent 3+ Days ({membersLongAbsent.length})
+            </CardTitle>
+            <CardDescription>
+              These members haven&apos;t submitted an EOD report in 3 or more days — consider following up.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1.5">
+              {membersLongAbsent.map(({ member, lastDate, daysSince }) => (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between gap-3 p-2.5 bg-white rounded-lg border border-orange-100 cursor-pointer hover:border-orange-200"
+                  onClick={() => setSelectedMemberProfile(member)}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <UserInitials name={member.name} size="sm" />
+                    <p className="text-sm font-medium text-slate-800">{member.name}</p>
+                  </div>
+                  <span className="text-xs text-orange-600 font-medium flex-shrink-0">
+                    {daysSince === null ? "No reports" : `${daysSince}d ago`}
+                    {lastDate && ` (${lastDate})`}
+                  </span>
+                </div>
               ))}
             </div>
           </CardContent>
