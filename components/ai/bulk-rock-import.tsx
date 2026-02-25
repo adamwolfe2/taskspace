@@ -44,6 +44,14 @@ interface ParsedMetric {
   weeklyGoal: number
 }
 
+interface ParsedTask {
+  title: string
+  description?: string
+  priority: string
+  dueDate?: string
+  rockTitle?: string
+}
+
 interface BulkRockImportProps {
   teamMembers: TeamMember[]
 }
@@ -53,6 +61,7 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
   const [rawText, setRawText] = useState("")
   const [parsedRocks, setParsedRocks] = useState<ParsedRock[]>([])
   const [parsedMetrics, setParsedMetrics] = useState<ParsedMetric[]>([])
+  const [parsedTasks, setParsedTasks] = useState<ParsedTask[]>([])
   const [isParsing, setIsParsing] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -84,6 +93,7 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
 
       setParsedRocks(data.data.rocks)
       setParsedMetrics(data.data.metrics || [])
+      setParsedTasks(data.data.tasks || [])
 
       if (data.data.rocks.length === 0 && (data.data.metrics?.length || 0) === 0) {
         setError("No rocks or metrics found in the text. Please check the formatting and try again.")
@@ -91,9 +101,12 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
         const metricsMsg = data.data.metrics?.length > 0
           ? ` and ${data.data.metrics.length} metric(s)`
           : ""
+        const tasksMsg = data.data.tasks?.length > 0
+          ? ` and ${data.data.tasks.length} task(s)`
+          : ""
         toast({
           title: "Content parsed",
-          description: `Found ${data.data.rocks.length} rock(s)${metricsMsg}`,
+          description: `Found ${data.data.rocks.length} rock(s)${tasksMsg}${metricsMsg}`,
         })
         // Expand first rock by default
         if (data.data.rocks.length > 0) {
@@ -134,7 +147,14 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
             milestones: rock.milestones,
             quarter: rock.suggestedQuarter,
           })),
-          metrics: parsedMetrics, // Pass parsed metrics to the API
+          metrics: parsedMetrics,
+          tasks: parsedTasks.map((task) => ({
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            dueDate: task.dueDate,
+            rockTitle: task.rockTitle,
+          })),
         }),
       })
 
@@ -157,16 +177,20 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
       const metricsSetMsg = data.data.metricsSet > 0
         ? ` and ${data.data.metricsSet} metric(s) set`
         : ""
+      const tasksCreatedMsg = data.data.tasksCreated > 0
+        ? `, ${data.data.tasksCreated} task(s) created`
+        : ""
 
       toast({
-        title: "Rocks created!",
-        description: `Created ${data.data.created.length} rock(s) for ${selectedMember?.name || "team member"}${metricsSetMsg}`,
+        title: "Import complete!",
+        description: `Created ${data.data.created.length} rock(s)${tasksCreatedMsg} for ${selectedMember?.name || "team member"}${metricsSetMsg}`,
       })
 
       // Reset form
       setRawText("")
       setParsedRocks([])
       setParsedMetrics([])
+      setParsedTasks([])
       setExpandedRock(null)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred")
@@ -445,6 +469,50 @@ Rock 2: Launch New Product
                 )}
               </Card>
             ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Parsed Tasks Preview */}
+      {parsedTasks.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5" />
+              Tasks to Create ({parsedTasks.length})
+            </CardTitle>
+            <CardDescription>
+              These tasks will be created and linked to their rocks
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {parsedTasks.map((task, index) => (
+                <div
+                  key={index}
+                  className="flex items-start justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-blue-900 truncate">{task.title}</p>
+                    {task.rockTitle && (
+                      <p className="text-xs text-blue-600 mt-0.5">→ {task.rockTitle}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="outline" className={`text-xs bg-white border-blue-300 ${
+                      task.priority === "urgent" ? "text-red-600 border-red-300" :
+                      task.priority === "high" ? "text-orange-600 border-orange-300" :
+                      "text-blue-700"
+                    }`}>
+                      {task.priority}
+                    </Badge>
+                    {task.dueDate && (
+                      <span className="text-xs text-blue-600">{task.dueDate}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}

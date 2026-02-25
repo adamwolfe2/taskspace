@@ -4,7 +4,7 @@ import { withAdmin, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { generateId } from "@/lib/auth/password"
 import { setTeamMemberMetric } from "@/lib/metrics"
 import { aiRateLimit, RATE_LIMITS } from "@/lib/api/rate-limit"
-import type { Rock, ApiResponse } from "@/lib/types"
+import type { Rock, AssignedTask, ApiResponse } from "@/lib/types"
 import { validateBody } from "@/lib/validation/middleware"
 import { bulkRockCreateSchema } from "@/lib/validation/schemas"
 import { logger, logError } from "@/lib/logger"
@@ -13,6 +13,7 @@ interface BulkCreateResponse {
   created: Rock[]
   failed: Array<{ title: string; error: string }>
   metricsSet?: number
+  tasksCreated?: number
 }
 
 /**
@@ -30,7 +31,7 @@ export const POST = withAdmin(async (request, auth) => {
       )
     }
 
-    const { rocks, userId, metrics, workspaceId } = await validateBody(request, bulkRockCreateSchema)
+    const { rocks, userId, metrics, tasks, workspaceId } = await validateBody(request, bulkRockCreateSchema)
 
     // Validate workspace if provided
     if (workspaceId) {
@@ -142,6 +143,62 @@ export const POST = withAdmin(async (request, auth) => {
       }
     }
 
+    // Create tasks if provided
+    let tasksCreatedCount = 0
+    if (tasks && tasks.length > 0 && rockUserId) {
+      // Build a title -> id map from the rocks we just created
+      const rockTitleMap = new Map(result.created.map((r) => [r.title.toLowerCase(), r]))
+
+      // Fetch assignee name once
+      const assigneeMember = await db.members.findWithUsersByOrganizationId(auth.organization.id)
+        .then((members) => members.find((m) => m.userId === rockUserId || m.id === rockUserId))
+
+      const assigneeName = assigneeMember?.name || targetMember.name || "Unknown"
+      const now = new Date().toISOString()
+
+      for (const taskInput of tasks) {
+        try {
+          // Match rock by title (case-insensitive)
+          const matchedRock = taskInput.rockTitle
+            ? rockTitleMap.get(taskInput.rockTitle.toLowerCase())
+            : undefined
+
+          // Map "urgent" -> "high" since AssignedTask doesn't have urgent
+          const priorityMap: Record<string, "high" | "medium" | "normal" | "low"> = {
+            urgent: "high", high: "high", medium: "medium", normal: "normal", low: "low",
+          }
+          const task: AssignedTask = {
+            id: generateId(),
+            organizationId: auth.organization.id,
+            workspaceId: workspaceId || undefined,
+            title: taskInput.title,
+            description: taskInput.description || "",
+            assigneeId: rockUserId,
+            assigneeName,
+            assignedById: auth.user.id,
+            assignedByName: auth.user.name || "Admin",
+            type: "assigned",
+            rockId: matchedRock?.id || null,
+            rockTitle: matchedRock?.title || null,
+            priority: priorityMap[taskInput.priority] || "medium",
+            dueDate: taskInput.dueDate || null,
+            status: "pending",
+            completedAt: null,
+            addedToEOD: false,
+            eodReportId: null,
+            createdAt: now,
+            updatedAt: now,
+          }
+          await db.assignedTasks.create(task)
+          tasksCreatedCount++
+        } catch (err) {
+          logError(logger, `Failed to create task "${taskInput.title}"`, err)
+        }
+      }
+    }
+
+    result.tasksCreated = tasksCreatedCount
+
     // Process metrics if provided
     let metricsSetCount = 0
     if (metrics && Array.isArray(metrics) && metrics.length > 0) {
@@ -178,6 +235,7 @@ export const POST = withAdmin(async (request, auth) => {
       : undefined
 
     const metricsMessage = metricsSetCount > 0 ? `, ${metricsSetCount} metric(s) set` : ""
+    const tasksMessage = tasksCreatedCount > 0 ? `, ${tasksCreatedCount} task(s) created` : ""
 
     return NextResponse.json<ApiResponse<BulkCreateResponse>>({
       success: successCount > 0,
@@ -185,8 +243,8 @@ export const POST = withAdmin(async (request, auth) => {
       error: errorMessage,
       message:
         failCount === 0
-          ? `Successfully created ${successCount} rock(s)${metricsMessage}`
-          : `Created ${successCount} rock(s), ${failCount} failed${metricsMessage}`,
+          ? `Successfully created ${successCount} rock(s)${tasksMessage}${metricsMessage}`
+          : `Created ${successCount} rock(s), ${failCount} failed${tasksMessage}${metricsMessage}`,
     })
   } catch (error) {
     logError(logger, "Bulk rock create error", error)

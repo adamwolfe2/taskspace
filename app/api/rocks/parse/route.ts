@@ -22,9 +22,18 @@ interface ParsedMetric {
   weeklyGoal: number
 }
 
+interface ParsedTask {
+  title: string
+  description?: string
+  priority: "low" | "medium" | "high" | "urgent"
+  dueDate?: string
+  rockTitle?: string
+}
+
 interface ParseRocksResponse {
   rocks: ParsedRock[]
   metrics: ParsedMetric[]
+  tasks: ParsedTask[]
   rawResponse: string
 }
 
@@ -63,6 +72,43 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     }
 
     const { text } = await validateBody(request, rockParseSchema)
+
+    // If input is already structured JSON (rocks + optional tasks), bypass AI entirely
+    try {
+      const trimmed = text.trim()
+      if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+        const structured = JSON.parse(trimmed)
+        const rocksArray = Array.isArray(structured) ? structured : (structured.rocks || [])
+        if (Array.isArray(rocksArray) && rocksArray.length > 0) {
+          const rocks: ParsedRock[] = rocksArray.slice(0, 50).map((r: Record<string, unknown>) => ({
+            title: String(r.title || "Untitled Rock").slice(0, 500),
+            description: String(r.description || "").slice(0, 2000),
+            milestones: Array.isArray(r.milestones)
+              ? (r.milestones as unknown[]).slice(0, 100).map((m) => String(m).slice(0, 200))
+              : [],
+            suggestedQuarter: r.quarter ? String(r.quarter).slice(0, 20) : undefined,
+            assigneeName: r.ownerEmail ? String(r.ownerEmail).slice(0, 100) : undefined,
+          }))
+          const tasksArray = Array.isArray(structured.tasks) ? structured.tasks : []
+          const validPriorities = new Set(["low", "medium", "high", "urgent"])
+          const tasks: ParsedTask[] = tasksArray.slice(0, 200).map((t: Record<string, unknown>) => ({
+            title: String(t.title || "Untitled Task").slice(0, 500),
+            description: t.description ? String(t.description).slice(0, 2000) : undefined,
+            priority: validPriorities.has(String(t.priority)) ? String(t.priority) as ParsedTask["priority"] : "medium",
+            dueDate: t.dueDate ? String(t.dueDate) : undefined,
+            rockTitle: t.rockTitle ? String(t.rockTitle).slice(0, 500) : undefined,
+          }))
+          const taskMsg = tasks.length > 0 ? ` and ${tasks.length} task(s)` : ""
+          return NextResponse.json<ApiResponse<ParseRocksResponse>>({
+            success: true,
+            data: { rocks, metrics: [], tasks, rawResponse: "" },
+            message: `Imported ${rocks.length} rock(s)${taskMsg} from JSON`,
+          })
+        }
+      }
+    } catch {
+      // Not valid JSON — fall through to AI parsing
+    }
 
     const apiKey = process.env.ANTHROPIC_API_KEY!
 
@@ -225,6 +271,7 @@ Rules:
       data: {
         rocks: parsedRocks,
         metrics: parsedMetrics,
+        tasks: [],
         rawResponse: responseText,
       },
       message: `Successfully parsed ${parsedRocks.length} rock(s)${metricsMessage}`,

@@ -1128,6 +1128,13 @@ export const bulkRockCreateSchema = z.object({
     metricName: z.string(),
     weeklyGoal: z.number(),
   })).optional(),
+  tasks: z.array(z.object({
+    title: z.string().min(1).max(500),
+    description: z.string().max(5000).optional(),
+    priority: z.string().optional().default("medium"),
+    dueDate: z.string().optional(),
+    rockTitle: z.string().optional(),
+  })).optional(),
   workspaceId: z.string().optional(),
 })
 
