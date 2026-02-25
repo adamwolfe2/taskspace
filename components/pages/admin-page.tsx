@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button"
 import { UserInitials } from "@/components/shared/user-initials"
 import { getRelativeDate, getTodayInTimezone } from "@/lib/utils/date-utils"
 import { calculateUserStats, calculateAccountabilityScore, isRockBehindSchedule } from "@/lib/utils/stats-calculator"
-import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Copy, Check, FileText, Bell } from "lucide-react"
+import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Copy, Check, FileText, Bell, UserCheck } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
 import { EODInsightsCard } from "@/components/ai/eod-insights-card"
 import { DailyReportShare } from "@/components/admin/daily-report-share"
@@ -46,6 +47,7 @@ export function AdminPage({
   const [summaryCopied, setSummaryCopied] = useState(false)
   const [selectedMemberProfile, setSelectedMemberProfile] = useState<TeamMember | null>(null)
   const [nudgingSending, setNudgingSending] = useState(false)
+  const [reassigningTaskId, setReassigningTaskId] = useState<string | null>(null)
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
 
@@ -68,6 +70,19 @@ export function AdminPage({
       setNudgingSending(false)
     }
   }
+  const handleReassignTask = async (taskId: string, newAssigneeId: string) => {
+    const member = activeMembers.find((m) => (m.userId || m.id) === newAssigneeId)
+    if (!member) return
+    try {
+      const updated = await api.tasks.update(taskId, { assigneeId: newAssigneeId, assigneeName: member.name })
+      setAssignedTasks(assignedTasks.map((t) => (t.id === taskId ? updated : t)))
+      toast({ title: "Task reassigned", description: `Task reassigned to ${member.name}` })
+    } catch {
+      toast({ title: "Failed to reassign task", variant: "destructive" })
+    }
+    setReassigningTaskId(null)
+  }
+
   const { data: insights, fetchInsights } = useAdminAiInsights()
 
   // Fetch AI insights on mount
@@ -126,6 +141,22 @@ export function AdminPage({
   const totalRocksBlocked = rocks.filter((r) => r.status === "blocked").length
 
   const pendingAssignedTasks = assignedTasks.filter((t) => t.status === "pending" && t.type === "assigned")
+
+  const todayStart = (() => { const d = new Date(); d.setHours(0,0,0,0); return d })()
+  const taskLoadByMember = activeMembers
+    .map((member) => {
+      const uid = member.userId || member.id
+      const memberPending = assignedTasks.filter((t) => t.assigneeId === uid && t.status === "pending")
+      const memberOverdue = memberPending.filter((t) => {
+        if (!t.dueDate) return false
+        const due = new Date(t.dueDate)
+        due.setHours(0, 0, 0, 0)
+        return due < todayStart
+      })
+      return { member, pending: memberPending.length, overdue: memberOverdue.length }
+    })
+    .sort((a, b) => b.pending - a.pending)
+  const maxPendingLoad = Math.max(...taskLoadByMember.map((t) => t.pending), 1)
 
   const handleCopyTeamSummary = async () => {
     const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
@@ -436,20 +467,101 @@ export function AdminPage({
               {showPendingTasks && (
                 <div className="mt-4 space-y-2">
                   {pendingAssignedTasks.map((task) => (
-                    <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg text-sm">
-                      <div className="flex-1">
-                        <p className="font-medium">{task.title}</p>
+                    <div key={task.id} className="flex items-start justify-between p-3 border rounded-lg text-sm gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{task.title}</p>
                         <p className="text-muted-foreground text-xs">
                           {task.assigneeName} • {task.rockTitle || "No rock"}
                         </p>
+                        {reassigningTaskId === task.id && (
+                          <div className="mt-2 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <Select
+                              defaultOpen
+                              onValueChange={(v) => handleReassignTask(task.id, v)}
+                              onOpenChange={(open) => { if (!open) setReassigningTaskId(null) }}
+                            >
+                              <SelectTrigger className="h-7 text-xs w-48">
+                                <SelectValue placeholder="Pick new assignee…" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {activeMembers.filter((m) => (m.userId || m.id) !== task.assigneeId).map((m) => (
+                                  <SelectItem key={m.id} value={m.userId || m.id}>
+                                    {m.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         <Badge variant={task.priority === "high" ? "destructive" : "default"}>{task.priority}</Badge>
                         <span className="text-xs text-muted-foreground">{task.dueDate}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600"
+                          title="Reassign task"
+                          onClick={() => setReassigningTaskId(reassigningTaskId === task.id ? null : task.id)}
+                        >
+                          <UserCheck className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Task Load by Member */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Task Load by Member
+          </CardTitle>
+          <CardDescription>Pending assigned tasks per team member — red bars indicate overdue items</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {taskLoadByMember.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">No team members found</p>
+          ) : (
+            <div className="space-y-2.5">
+              {taskLoadByMember.map(({ member, pending, overdue }) => {
+                const barWidth = pending === 0 ? 2 : Math.round((pending / maxPendingLoad) * 100)
+                return (
+                  <div key={member.id} className="flex items-center gap-3">
+                    <div className="w-24 text-sm truncate flex-shrink-0 text-slate-700 font-medium">
+                      {member.name.split(" ")[0]}
+                    </div>
+                    <div className="flex-1 h-5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          pending === 0 ? "bg-slate-200" : overdue > 0 ? "bg-red-400" : "bg-blue-400"
+                        }`}
+                        style={{ width: `${barWidth}%` }}
+                      />
+                    </div>
+                    <div className="w-20 text-xs text-right flex-shrink-0">
+                      {pending === 0 ? (
+                        <span className="text-slate-400">—</span>
+                      ) : (
+                        <>
+                          <span className="font-semibold text-slate-700">{pending}</span>
+                          {overdue > 0 && (
+                            <span className="text-red-600 ml-1">({overdue} late)</span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+              {taskLoadByMember.every((t) => t.pending === 0) && (
+                <p className="text-center text-emerald-600 text-sm font-medium py-2">All caught up — no pending tasks!</p>
               )}
             </div>
           )}
