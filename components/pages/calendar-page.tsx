@@ -11,6 +11,7 @@ import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
 import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
 import { DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 
 interface CalendarPageProps {
   currentUser: TeamMember
@@ -134,23 +135,25 @@ export function CalendarPage({ currentUser, assignedTasks, rocks, eodReports }: 
         </Card>
       )}
 
-      {hasNoData ? (
-        <div className="bg-card rounded-xl border border-border shadow-sm">
-          <EmptyState
-            icon={Calendar}
-            title="Your calendar is empty"
-            description="Once you create tasks, set quarterly rocks, or submit EOD reports, they'll appear here on your calendar. Start by adding a task or submitting your first EOD report!"
-            size="lg"
+      <ErrorBoundary title="Calendar unavailable">
+        {hasNoData ? (
+          <div className="bg-card rounded-xl border border-border shadow-sm">
+            <EmptyState
+              icon={Calendar}
+              title="Your calendar is empty"
+              description="Once you create tasks, set quarterly rocks, or submit EOD reports, they'll appear here on your calendar. Start by adding a task or submitting your first EOD report!"
+              size="lg"
+            />
+          </div>
+        ) : (
+          <EnhancedCalendarView
+            tasks={userTasks}
+            rocks={userRocks}
+            eodReports={userEODReports}
+            currentUser={currentUser}
           />
-        </div>
-      ) : (
-        <EnhancedCalendarView
-          tasks={userTasks}
-          rocks={userRocks}
-          eodReports={userEODReports}
-          currentUser={currentUser}
-        />
-      )}
+        )}
+      </ErrorBoundary>
     </div>
   )
 }

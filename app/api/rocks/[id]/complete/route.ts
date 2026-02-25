@@ -12,8 +12,10 @@ import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspace
 import { getRockById, completeRock, reopenRock } from "@/lib/db/rocks"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { completeRockSchema } from "@/lib/validation/schemas"
-import { logger } from "@/lib/logger"
+import { logger, logError } from "@/lib/logger"
 import { checkAchievements } from "@/lib/achievements/check-achievements"
+import { sendNotification } from "@/lib/db/notifications"
+import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
 import type { ApiResponse } from "@/lib/types"
 
 export const POST = withAuth(async (request, auth, context?) => {
@@ -105,6 +107,27 @@ export const POST = withAuth(async (request, auth, context?) => {
 
       // Check achievements (fire-and-forget)
       checkAchievements(auth.user.id, auth.organization.id).catch(() => {})
+
+      // Notify rock owner if someone else completed it (fire-and-forget)
+      if (updatedRock?.userId && updatedRock.userId !== auth.user.id) {
+        sendNotification({
+          organizationId: auth.organization.id,
+          workspaceId: rock.workspaceId || undefined,
+          userId: updatedRock.userId,
+          type: "rock_updated",
+          title: "Rock marked complete",
+          message: `"${updatedRock.title}" was marked complete.`,
+          link: "/rocks",
+        }).catch((err) => logError(logger, "Rock completion notification failed", err))
+      }
+
+      // Fire webhook (fire-and-forget)
+      dispatchWebhook(auth.organization.id, "rock.completed", {
+        rockId: id,
+        title: updatedRock?.title || rock.title,
+        status: "completed",
+        workspaceId: rock.workspaceId,
+      }).catch((err) => logError(logger, "Rock completion webhook failed", err))
     }
 
     return NextResponse.json({
