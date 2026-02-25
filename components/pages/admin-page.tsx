@@ -209,6 +209,15 @@ export function AdminPage({
   const totalMoodReports = recentMoodReports.length
   const moodPct = (count: number) => totalMoodReports > 0 ? Math.round((count / totalMoodReports) * 100) : 0
 
+  // Team members with no rocks assigned this quarter
+  const membersWithCurrentQuarterRock = new Set(
+    rocks.filter((r) => r.quarter === currentQuarterStr).map((r) => r.userId).filter(Boolean)
+  )
+  const membersWithoutRocks = activeMembers.filter((m) => {
+    const uid = m.userId || m.id
+    return !membersWithCurrentQuarterRock.has(uid)
+  })
+
   const pendingAssignedTasks = assignedTasks.filter((t) => t.status === "pending" && t.type === "assigned")
 
   const todayStart = (() => { const d = new Date(); d.setHours(0,0,0,0); return d })()
@@ -472,6 +481,35 @@ export function AdminPage({
                   </div>
                 )
               })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Members Without Rocks This Quarter */}
+      {membersWithoutRocks.length > 0 && (
+        <Card className="border-amber-200 bg-amber-50/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <UserCheck className="h-5 w-5 text-amber-600" />
+              No Rocks Assigned — {currentQuarterStr} ({membersWithoutRocks.length})
+            </CardTitle>
+            <CardDescription>
+              These team members have no rocks set for the current quarter. Every member should own 3–7 rocks.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {membersWithoutRocks.map((m) => (
+                <button
+                  key={m.id}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-amber-200 rounded-lg text-sm text-slate-700 hover:border-amber-400 transition-colors"
+                  onClick={() => setSelectedMemberProfile(m)}
+                >
+                  <UserInitials name={m.name} size="sm" />
+                  <span>{m.name}</span>
+                </button>
+              ))}
             </div>
           </CardContent>
         </Card>
