@@ -181,6 +181,7 @@ export function HeadlinesSection({
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddHeadline()
               }}
+              maxLength={300}
             />
             <Button onClick={handleAddHeadline} disabled={!newHeadline.trim()} aria-label="Add headline">
               <Plus className="h-4 w-4" />

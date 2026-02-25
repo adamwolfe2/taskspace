@@ -70,7 +70,7 @@ function CollapsibleSection({ title, isOpen, onToggle, children }: CollapsibleSe
 
 export function VTOPage() {
   const { currentWorkspaceId } = useWorkspaces()
-  const { isDemoMode } = useApp()
+  const { isDemoMode, setCurrentPage } = useApp()
   const { toast } = useToast()
   const [vtoData, setVtoData] = useState<VTOData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -181,6 +181,7 @@ export function VTOPage() {
   // Debounced auto-save
   const debouncedSave = useCallback(
     (data: VTOData) => {
+      if (isDemoMode) return
       setHasUnsavedChanges(true)
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
@@ -189,7 +190,7 @@ export function VTOPage() {
         saveVTO(data)
       }, 1500)
     },
-    [saveVTO]
+    [isDemoMode, saveVTO]
   )
 
   // Cleanup debounce timeout on unmount
@@ -494,6 +495,7 @@ export function VTOPage() {
                 placeholder="Enter a core value..."
                 className="flex-1"
                 rows={1}
+                maxLength={200}
               />
               <Button
                 variant="ghost"
@@ -525,6 +527,7 @@ export function VTOPage() {
               onChange={(e) => updateCoreFocus("purpose", e.target.value)}
               placeholder="Why does your company exist?"
               rows={2}
+              maxLength={1000}
             />
           </div>
           <div>
@@ -534,6 +537,7 @@ export function VTOPage() {
               onChange={(e) => updateCoreFocus("niche", e.target.value)}
               placeholder="What is your sweet spot?"
               rows={2}
+              maxLength={1000}
             />
           </div>
         </div>
@@ -550,6 +554,7 @@ export function VTOPage() {
           onChange={(e) => updateTenYearTarget(e.target.value)}
           placeholder="What does your company look like in 10 years?"
           rows={3}
+          maxLength={2000}
         />
       </CollapsibleSection>
 
@@ -567,6 +572,7 @@ export function VTOPage() {
               onChange={(e) => updateMarketingStrategy("targetMarket", e.target.value)}
               placeholder="Who is your ideal customer?"
               rows={2}
+              maxLength={1000}
             />
           </div>
           <div>
@@ -576,6 +582,7 @@ export function VTOPage() {
               onChange={(e) => updateMarketingStrategy("threeUniques", e.target.value)}
               placeholder="What makes you unique?"
               rows={2}
+              maxLength={1000}
             />
           </div>
           <div>
@@ -585,6 +592,7 @@ export function VTOPage() {
               onChange={(e) => updateMarketingStrategy("provenProcess", e.target.value)}
               placeholder="What is your unique process?"
               rows={2}
+              maxLength={1000}
             />
           </div>
           <div>
@@ -594,6 +602,7 @@ export function VTOPage() {
               onChange={(e) => updateMarketingStrategy("guarantee", e.target.value)}
               placeholder="What guarantee do you offer?"
               rows={2}
+              maxLength={1000}
             />
           </div>
         </div>
@@ -614,6 +623,7 @@ export function VTOPage() {
                 onChange={(e) => updateThreeYearPicture("revenue", e.target.value)}
                 placeholder="$X million"
                 rows={1}
+                maxLength={100}
               />
             </div>
             <div>
@@ -623,6 +633,7 @@ export function VTOPage() {
                 onChange={(e) => updateThreeYearPicture("profit", e.target.value)}
                 placeholder="$X million"
                 rows={1}
+                maxLength={100}
               />
             </div>
           </div>
@@ -633,6 +644,7 @@ export function VTOPage() {
               onChange={(e) => updateThreeYearPicture("description", e.target.value)}
               placeholder="Describe what your business looks like in 3 years..."
               rows={4}
+              maxLength={2000}
             />
           </div>
         </div>
@@ -653,6 +665,7 @@ export function VTOPage() {
                 onChange={(e) => updateOneYearPlan("revenue", e.target.value)}
                 placeholder="$X million"
                 rows={1}
+                maxLength={100}
               />
             </div>
             <div>
@@ -662,6 +675,7 @@ export function VTOPage() {
                 onChange={(e) => updateOneYearPlan("profit", e.target.value)}
                 placeholder="$X million"
                 rows={1}
+                maxLength={100}
               />
             </div>
           </div>
@@ -676,6 +690,7 @@ export function VTOPage() {
                     placeholder="Enter a goal..."
                     className="flex-1"
                     rows={1}
+                    maxLength={500}
                   />
                   <Button
                     variant="ghost"
@@ -703,7 +718,15 @@ export function VTOPage() {
       >
         <div className="space-y-3">
           <p className="text-sm text-slate-500">
-            These are your top priorities for the quarter. See the Rocks page for detailed tracking.
+            These are your top priorities for the quarter.{" "}
+            <button
+              type="button"
+              onClick={() => setCurrentPage("rocks")}
+              className="underline hover:text-slate-700"
+            >
+              See the Rocks page
+            </button>{" "}
+            for detailed tracking.
           </p>
           {vtoData.quarterlyRocks.map((rock, index) => (
             <div key={index} className="flex gap-2">
@@ -713,6 +736,7 @@ export function VTOPage() {
                 placeholder="Enter a quarterly rock..."
                 className="flex-1"
                 rows={1}
+                maxLength={500}
               />
               <Button
                 variant="ghost"
@@ -748,6 +772,7 @@ export function VTOPage() {
                 placeholder="Enter an issue..."
                 className="flex-1"
                 rows={1}
+                maxLength={500}
               />
               <Button
                 variant="ghost"
