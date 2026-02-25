@@ -49,6 +49,14 @@ function getCurrentQuarter(): string {
   return `Q${quarter} ${year}`
 }
 
+// Get a time-appropriate greeting
+function getTimeGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return "Good morning"
+  if (hour < 17) return "Good afternoon"
+  return "Good evening"
+}
+
 interface DashboardPageProps {
  currentUser: TeamMember
  rocks: Rock[]
@@ -118,6 +126,16 @@ export function DashboardPage({
  const hasSubmittedEODToday = eodReports.some(
   (r) => r.userId === effectiveUserId && r.date === today
  )
+
+ const dueTodayCount = userTasks.filter((t) => {
+  if (t.status === "completed" || !t.dueDate) return false
+  return t.dueDate === today
+ }).length
+
+ const completedTodayCount = userTasks.filter((t) => {
+  if (t.status !== "completed" || !t.completedAt) return false
+  return t.completedAt.startsWith(today)
+ }).length
 
  const handleSelectEodDate = (date: string) => {
   setSelectedEodDate(date)
@@ -261,9 +279,18 @@ export function DashboardPage({
      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4">
       <div className="min-w-0">
        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-        Welcome back, {(currentUser.name || "there").split(" ")[0]}
+        {getTimeGreeting()}, {(currentUser.name || "there").split(" ")[0]}!
        </h1>
-       <p className="text-sm sm:text-base text-slate-500 mt-1">Here&apos;s your overview for today</p>
+       <p className="text-sm sm:text-base text-slate-500 mt-1">
+        {(() => {
+         const parts: string[] = []
+         if (completedTodayCount > 0) parts.push(`${completedTodayCount} completed today`)
+         if (dueTodayCount > 0) parts.push(`${dueTodayCount} due today`)
+         if ((stats.overdueTasks ?? 0) > 0) parts.push(`${stats.overdueTasks} overdue`)
+         if (stats.eodStreak > 0) parts.push(`🔥 ${stats.eodStreak}-day streak`)
+         return parts.length > 0 ? parts.join(" · ") : "Here's your overview for today"
+        })()}
+       </p>
       </div>
       {hasTasksFeature && (
        <QuickActionsBar
