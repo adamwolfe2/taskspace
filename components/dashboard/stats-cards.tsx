@@ -8,6 +8,7 @@ interface StatsCardsProps {
   stats: {
     completedTasks: number
     totalTasks: number
+    inProgressTasks?: number
     taskCompletionRate: number
     overdueTasks?: number
     activeRocks: number
@@ -35,7 +36,11 @@ export function StatsCards({ stats }: StatsCardsProps) {
       } : undefined,
       subtitle: (() => {
         const overdue = stats.overdueTasks ?? 0
-        if (overdue > 0) return `${overdue} overdue • ${Math.round(safeCompletionRate)}% done`
+        const inProgress = stats.inProgressTasks ?? 0
+        const parts: string[] = []
+        if (overdue > 0) parts.push(`${overdue} overdue`)
+        if (inProgress > 0) parts.push(`${inProgress} in progress`)
+        if (parts.length > 0) return `${parts.join(" • ")} • ${Math.round(safeCompletionRate)}% done`
         return `${Math.round(safeCompletionRate)}% completion rate`
       })(),
       icon: CheckCircle2,

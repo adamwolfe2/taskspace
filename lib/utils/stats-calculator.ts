@@ -108,6 +108,7 @@ export function calculateUserStats(userId: string, rocks: Rock[], tasks: Assigne
   const userEODReports = eodReports.filter((e) => e.userId === userId)
 
   const completedTasks = userTasks.filter((t) => t.status === "completed").length
+  const inProgressTasks = userTasks.filter((t) => t.status === "in-progress").length
   const totalTasks = userTasks.length
   const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
@@ -134,6 +135,7 @@ export function calculateUserStats(userId: string, rocks: Rock[], tasks: Assigne
   return {
     completedTasks,
     totalTasks,
+    inProgressTasks,
     taskCompletionRate,
     overdueTasks,
     activeRocks: userRocks.length,
