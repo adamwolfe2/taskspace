@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { UserInitials } from "@/components/shared/user-initials"
-import { getRelativeDate, getTodayInTimezone } from "@/lib/utils/date-utils"
+import { getRelativeDate, getTodayInTimezone, getDaysUntil } from "@/lib/utils/date-utils"
 import { calculateUserStats, calculateAccountabilityScore, isRockBehindSchedule } from "@/lib/utils/stats-calculator"
 import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Copy, Check, FileText, Bell, UserCheck } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
@@ -486,6 +486,69 @@ export function AdminPage({
           </CardContent>
         </Card>
       )}
+
+      {/* At-Risk & Blocked Rocks Detail */}
+      {(totalRocksAtRisk + totalRocksBlocked) > 0 && (() => {
+        const atRiskAndBlockedRocks = rocks
+          .filter((r) => r.status === "at-risk" || r.status === "blocked")
+          .sort((a, b) => {
+            if (a.status === "blocked" && b.status !== "blocked") return -1
+            if (b.status === "blocked" && a.status !== "blocked") return 1
+            return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+          })
+        return (
+          <Card className="border-red-200 bg-red-50/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+                At-Risk &amp; Blocked Rocks ({totalRocksAtRisk + totalRocksBlocked})
+              </CardTitle>
+              <CardDescription>
+                {totalRocksBlocked > 0 && `${totalRocksBlocked} blocked`}
+                {totalRocksBlocked > 0 && totalRocksAtRisk > 0 && " · "}
+                {totalRocksAtRisk > 0 && `${totalRocksAtRisk} at risk`}
+                {" — "}review with owners at next Level 10
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {atRiskAndBlockedRocks.map((rock) => {
+                  const owner = rock.userId
+                    ? teamMembers.find((m) => m.userId === rock.userId)
+                    : undefined
+                  const daysLeft = getDaysUntil(rock.dueDate)
+                  const isBlocked = rock.status === "blocked"
+                  return (
+                    <div
+                      key={rock.id}
+                      className={`flex items-center justify-between gap-3 p-2.5 bg-white rounded-lg border ${isBlocked ? "border-red-200" : "border-amber-200"}`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Badge
+                          variant="outline"
+                          className={isBlocked
+                            ? "text-red-600 border-red-200 bg-red-50 flex-shrink-0 text-xs"
+                            : "text-amber-600 border-amber-200 bg-amber-50 flex-shrink-0 text-xs"}
+                        >
+                          {isBlocked ? "Blocked" : "At Risk"}
+                        </Badge>
+                        <p className="text-sm font-medium text-slate-800 truncate">{rock.title}</p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0 text-xs text-slate-500">
+                        {owner && <span className="hidden sm:inline">{owner.name.split(" ")[0]}</span>}
+                        <span className="font-semibold text-slate-700">{rock.progress}%</span>
+                        <span className={daysLeft < 14 ? "text-red-600 font-medium" : ""}>
+                          {daysLeft > 0 ? `${daysLeft}d left` : daysLeft === 0 ? "Due today" : `${Math.abs(daysLeft)}d overdue`}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )
+      })()}
 
       {/* Daily Report Share Link */}
       {organization && (
