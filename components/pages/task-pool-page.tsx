@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useTaskPool } from "@/lib/hooks/use-task-pool"
 import { useApp } from "@/lib/contexts/app-context"
 import { Button } from "@/components/ui/button"
@@ -22,9 +22,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Plus, Trash2, RefreshCw, Users2 } from "lucide-react"
+import { Plus, Trash2, RefreshCw, Users2, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { TaskPoolItem } from "@/lib/types"
+
+const PRIORITY_ORDER: Record<TaskPoolItem["priority"], number> = { high: 0, medium: 1, normal: 2 }
 
 const PRIORITY_CONFIG: Record<
   TaskPoolItem["priority"],
@@ -230,13 +232,24 @@ export function TaskPoolPage() {
   const { currentUser } = useApp()
   const { tasks, isLoading, addTask, claim, unclaim, deleteTask, refresh } = useTaskPool()
   const [addOpen, setAddOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   const isAdmin =
     currentUser?.role === "admin" || currentUser?.role === "owner"
   const currentMemberId = currentUser?.id || ""
 
-  const available = tasks.filter((t) => !t.isClaimedToday)
-  const claimedToday = tasks.filter((t) => t.isClaimedToday)
+  const available = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    return tasks
+      .filter((t) => !t.isClaimedToday)
+      .filter((t) => !q || t.title.toLowerCase().includes(q) || (t.description || "").toLowerCase().includes(q))
+      .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
+  }, [tasks, searchQuery])
+
+  const claimedToday = useMemo(
+    () => tasks.filter((t) => t.isClaimedToday),
+    [tasks]
+  )
 
   if (isLoading) {
     return (
@@ -255,7 +268,7 @@ export function TaskPoolPage() {
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Users2 className="h-5 w-5 text-slate-500" />
           <div>
@@ -271,6 +284,19 @@ export function TaskPoolPage() {
           Add Task
         </Button>
       </div>
+
+      {/* Search */}
+      {tasks.length > 0 && (
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="Search tasks…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9 bg-slate-50 border-slate-200"
+          />
+        </div>
+      )}
 
       {/* Available section */}
       <section className="mb-8">
