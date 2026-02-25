@@ -206,10 +206,30 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
     return configs[status]
   }
 
+  // Rocks due within 7 days (not completed)
+  const dueSoonRocks = baseRocks.filter((r) => {
+    if (r.status === "completed" || !r.dueDate) return false
+    const daysLeft = getDaysUntil(r.dueDate)
+    return daysLeft >= 0 && daysLeft <= 7
+  })
+
   return (
     <FeatureGate feature="core.rocks">
       <div className="space-y-6">
       <NoWorkspaceAlert />
+      {dueSoonRocks.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+            <span className="text-sm font-medium text-amber-800">
+              {dueSoonRocks.length} rock{dueSoonRocks.length > 1 ? "s" : ""} due within 7 days:
+            </span>
+            <span className="text-sm text-amber-700 truncate">
+              {dueSoonRocks.slice(0, 3).map((r) => r.title).join(", ")}{dueSoonRocks.length > 3 ? ` +${dueSoonRocks.length - 3} more` : ""}
+            </span>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Rock Progress</h1>
