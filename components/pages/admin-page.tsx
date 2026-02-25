@@ -17,6 +17,8 @@ import { EODInsightsCard } from "@/components/ai/eod-insights-card"
 import { DailyReportShare } from "@/components/admin/daily-report-share"
 import { WeeklyReportShare } from "@/components/admin/weekly-report-share"
 import { TeamMemberProfileModal } from "@/components/admin/team-member-profile-modal"
+import { StandupGenerator } from "@/components/admin/standup-generator"
+import { TeamActivityHeatmap } from "@/components/admin/team-activity-heatmap"
 import { useToast } from "@/hooks/use-toast"
 import { useAdminAiInsights } from "@/lib/hooks/use-ai-insights"
 
@@ -386,6 +388,28 @@ export function AdminPage({
       {organization && (
         <WeeklyReportShare organization={organization as Organization} />
       )}
+
+      {/* Standup Generator */}
+      <StandupGenerator
+        eodReports={eodReports}
+        teamMembers={teamMembers}
+      />
+
+      {/* Team Activity Heatmap */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Team Activity (Last 7 Days)</CardTitle>
+          <CardDescription>EOD submissions and task completions per day</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TeamActivityHeatmap
+            teamMembers={teamMembers.filter((m) => m.status === "active")}
+            eodReports={eodReports}
+            tasks={assignedTasks}
+            days={7}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
