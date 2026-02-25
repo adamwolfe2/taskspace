@@ -10,7 +10,7 @@ import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Target, Search, Calendar, AlertTriangle, Activity, List, Map } from "lucide-react"
+import { Target, Search, Calendar, AlertTriangle, Activity, List, Map, LayoutGrid } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { isRockBehindSchedule } from "@/lib/utils/stats-calculator"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -19,6 +19,7 @@ import { useApp } from "@/lib/contexts/app-context"
 import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
 import { RockCheckinDialog } from "@/components/rocks/rock-checkin-dialog"
 import { RockRoadmap } from "@/components/rocks/rock-roadmap"
+import { RocksKanbanBoard } from "@/components/rocks/rocks-kanban-board"
 
 interface RocksPageProps {
   currentUser: TeamMember
@@ -50,7 +51,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
   })
 
   const [checkinRock, setCheckinRock] = useState<Rock | null>(null)
-  const [pageView, setPageView] = useState<"table" | "roadmap">("table")
+  const [pageView, setPageView] = useState<"table" | "roadmap" | "kanban">("table")
 
   const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
   // Use users.id (not org_members.id) for filtering rocks
@@ -135,8 +136,19 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
               onClick={() => setPageView("table")}
               className="h-7 px-2"
               aria-label="Table view"
+              title="Table view"
             >
               <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={pageView === "kanban" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setPageView("kanban")}
+              className="h-7 px-2"
+              aria-label="Kanban view"
+              title="Kanban view"
+            >
+              <LayoutGrid className="h-4 w-4" />
             </Button>
             <Button
               variant={pageView === "roadmap" ? "secondary" : "ghost"}
@@ -144,6 +156,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
               onClick={() => setPageView("roadmap")}
               className="h-7 px-2"
               aria-label="Roadmap view"
+              title="Roadmap view"
             >
               <Map className="h-4 w-4" />
             </Button>
@@ -215,6 +228,18 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
           rocks={displayRocks}
           dependencies={[]}
           teamMembers={teamMembers}
+          onRockClick={(rock) => setSelectedRock(rock)}
+        />
+      )}
+
+      {/* Kanban view */}
+      {pageView === "kanban" && updateRock && (
+        <RocksKanbanBoard
+          rocks={displayRocks}
+          onRockStatusChange={async (rockId, newStatus) => {
+            const rock = displayRocks.find((r) => r.id === rockId)
+            if (rock) await updateRock(rockId, { status: newStatus })
+          }}
           onRockClick={(rock) => setSelectedRock(rock)}
         />
       )}
