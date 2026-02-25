@@ -13,7 +13,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Target, Search, Calendar, AlertTriangle, Activity, List, Map, LayoutGrid, GanttChart, Plus, Loader2 } from "lucide-react"
+import { Target, Search, Calendar, AlertTriangle, Activity, List, Map, LayoutGrid, GanttChart, Plus, Loader2, Clock } from "lucide-react"
+import { formatDistanceToNow, parseISO, differenceInDays } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
@@ -564,6 +565,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                       <TableHead className="text-slate-500 font-medium">Quarter</TableHead>
                       <TableHead className="text-slate-500 font-medium">Status</TableHead>
                       <TableHead className="text-slate-500 font-medium">Progress</TableHead>
+                      <TableHead className="text-slate-500 font-medium">Last Updated</TableHead>
                       <TableHead className="text-slate-500 font-medium">Due Date</TableHead>
                       <TableHead className="text-slate-500 font-medium">Days Left</TableHead>
                       <TableHead className="text-slate-500 font-medium w-24"></TableHead>
@@ -695,6 +697,18 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                                 )}
                               </div>
                             )}
+                          </TableCell>
+                          <TableCell>
+                            {rock.updatedAt ? (() => {
+                              const daysSince = differenceInDays(new Date(), parseISO(rock.updatedAt))
+                              const isStale = daysSince >= 7 && rock.status !== "completed"
+                              return (
+                                <div className={`flex items-center gap-1 text-xs ${isStale ? "text-amber-600 font-medium" : "text-slate-400"}`}>
+                                  {isStale && <Clock className="h-3 w-3 flex-shrink-0" />}
+                                  {formatDistanceToNow(parseISO(rock.updatedAt), { addSuffix: true })}
+                                </div>
+                              )
+                            })() : <span className="text-slate-300 text-xs">—</span>}
                           </TableCell>
                           <TableCell className="text-sm text-slate-600">{formatDate(rock.dueDate)}</TableCell>
                           <TableCell>
