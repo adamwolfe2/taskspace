@@ -54,6 +54,8 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
   const [sortBy, setSortBy] = useState<string>("status")
   const [checkinRock, setCheckinRock] = useState<Rock | null>(null)
   const [pageView, setPageView] = useState<"table" | "roadmap" | "kanban" | "timeline">("table")
+  const [inlineEditRockId, setInlineEditRockId] = useState<string | null>(null)
+  const [inlineEditValue, setInlineEditValue] = useState<string>("")
 
   const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
   // Use users.id (not org_members.id) for filtering rocks
@@ -507,17 +509,52 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <div className="w-32">
-                                <ProgressBar value={rock.progress} status={rock.status} size="sm" />
+                          <TableCell
+                            onClick={(e) => {
+                              if (!updateRock || rock.status === "completed") return
+                              e.stopPropagation()
+                              setInlineEditRockId(rock.id)
+                              setInlineEditValue(String(rock.progress))
+                            }}
+                          >
+                            {inlineEditRockId === rock.id ? (
+                              <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  value={inlineEditValue}
+                                  onChange={(e) => setInlineEditValue(e.target.value)}
+                                  className="h-7 w-16 text-xs text-center p-1"
+                                  autoFocus
+                                  onKeyDown={async (e) => {
+                                    if (e.key === "Enter") {
+                                      const val = Math.max(0, Math.min(100, parseInt(inlineEditValue) || 0))
+                                      if (updateRock) await updateRock(rock.id, { progress: val })
+                                      setInlineEditRockId(null)
+                                    }
+                                    if (e.key === "Escape") setInlineEditRockId(null)
+                                  }}
+                                  onBlur={async () => {
+                                    const val = Math.max(0, Math.min(100, parseInt(inlineEditValue) || 0))
+                                    if (updateRock) await updateRock(rock.id, { progress: val })
+                                    setInlineEditRockId(null)
+                                  }}
+                                />
+                                <span className="text-xs text-slate-400">%</span>
                               </div>
-                              {rock.milestones && rock.milestones.length > 0 && (
-                                <span className="text-xs text-slate-500">
-                                  {rock.milestones.filter((m) => m.completed).length}/{rock.milestones.length} milestones
-                                </span>
-                              )}
-                            </div>
+                            ) : (
+                              <div className={`space-y-1 ${updateRock && rock.status !== "completed" ? "cursor-text hover:opacity-80" : ""}`} title={updateRock && rock.status !== "completed" ? "Click to edit progress" : undefined}>
+                                <div className="w-32">
+                                  <ProgressBar value={rock.progress} status={rock.status} size="sm" />
+                                </div>
+                                {rock.milestones && rock.milestones.length > 0 && (
+                                  <span className="text-xs text-slate-500">
+                                    {rock.milestones.filter((m) => m.completed).length}/{rock.milestones.length} milestones
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="text-sm text-slate-600">{formatDate(rock.dueDate)}</TableCell>
                           <TableCell>
