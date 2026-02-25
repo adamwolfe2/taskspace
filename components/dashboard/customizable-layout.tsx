@@ -85,7 +85,7 @@ const LAYOUT_VERSION = 6
 
 export interface DashboardWidget {
  id: string
- type: "welcome" | "eod_status" | "action_hub" | "rocks" | "tasks" | "stats" | "productivity" | "eod_calendar" | "eod_submission" | "focus" | "activity"
+ type: "welcome" | "eod_status" | "action_hub" | "rocks" | "tasks" | "stats" | "productivity" | "eod_calendar" | "eod_submission" | "focus" | "activity" | "focus_of_day" | "smart_suggestions"
  title: string
  enabled: boolean
  minW?: number
@@ -137,6 +137,8 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
  { id: "eod_submission", type: "eod_submission", title: "EOD Submission", enabled: true, minW: 2, minH: 6, maxH: 16 },
  { id: "focus", type: "focus", title: "Focus Timer", enabled: true, minW: 1, minH: 5, maxH: 10 },
  { id: "activity", type: "activity", title: "Activity Feed", enabled: true, minW: 2, minH: 4, maxH: 10 },
+ { id: "focus_of_day", type: "focus_of_day", title: "Focus of the Day", enabled: false, minW: 2, minH: 4, maxH: 10 },
+ { id: "smart_suggestions", type: "smart_suggestions", title: "Smart Suggestions", enabled: false, minW: 2, minH: 5, maxH: 14 },
 ]
 
 // Default bento layout — 4 columns, rowHeight=40px
@@ -168,6 +170,8 @@ function getWidgetIcon(type: DashboardWidget["type"]) {
   case "eod_submission": return FileEdit
   case "focus": return Clock
   case "activity": return Activity
+  case "focus_of_day": return Target
+  case "smart_suggestions": return Sparkles
   default: return LayoutGrid
  }
 }
@@ -185,6 +189,8 @@ function getWidgetDescription(type: DashboardWidget["type"]) {
   case "eod_submission": return "AI and manual EOD report submission"
   case "focus": return "Pomodoro timer for deep work sessions"
   case "activity": return "Recent activity feed"
+  case "focus_of_day": return "Today's top priorities — overdue tasks and rock deadlines"
+  case "smart_suggestions": return "Smart recommendations based on your tasks, rocks, and patterns"
   default: return ""
  }
 }

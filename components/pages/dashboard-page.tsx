@@ -27,6 +27,8 @@ import { AlertCircle, Settings, Sparkles } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { WelcomeCard } from "@/components/dashboard/welcome-card"
+import { FocusOfTheDay } from "@/components/dashboard/focus-of-the-day"
+import { SmartSuggestions } from "@/components/dashboard/smart-suggestions"
 import { FocusTimer } from "@/components/shared/focus-timer"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import {
@@ -420,6 +422,33 @@ export function DashboardPage({
 
    case "activity":
     return <ActivityFeed />
+
+   case "focus_of_day":
+    return (
+     <ErrorBoundary title="Focus of the Day unavailable">
+      <FocusOfTheDay
+       tasks={userTasks}
+       rocks={userRocks}
+       onToggleTask={handleToggleTask}
+       onViewTask={handleViewTask}
+      />
+     </ErrorBoundary>
+    )
+
+   case "smart_suggestions":
+    return (
+     <ErrorBoundary title="Smart Suggestions unavailable">
+      <SmartSuggestions
+       tasks={userTasks}
+       rocks={userRocks}
+       eodReports={eodReports}
+       onTaskClick={handleViewTask}
+       onRockClick={() => {
+        rocksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+       }}
+      />
+     </ErrorBoundary>
+    )
 
    default:
     return null
