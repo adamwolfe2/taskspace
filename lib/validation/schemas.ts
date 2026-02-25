@@ -376,6 +376,7 @@ export const updateEODReportSchema = z.object({
   tomorrowPriorities: z.array(eodPrioritySchema).optional(),
   needsEscalation: z.boolean().optional(),
   escalationNote: z.string().max(2000).nullable().optional(),
+  mood: z.enum(["positive", "neutral", "negative"]).nullable().optional(),
 })
 
 // ============================================

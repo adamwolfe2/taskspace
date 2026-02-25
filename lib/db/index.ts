@@ -1651,6 +1651,7 @@ export const db = {
             needs_escalation = COALESCE(${updates.needsEscalation ?? null}, needs_escalation),
             escalation_note = COALESCE(${sanitizedEscalationNote}, escalation_note),
             metric_value_today = COALESCE(${updates.metricValueToday ?? null}, metric_value_today),
+            mood = COALESCE(${updates.mood !== undefined ? (updates.mood || null) : null}, mood),
             date = COALESCE(${updates.date || null}, date),
             submitted_at = COALESCE(${updates.submittedAt || null}, submitted_at)
           WHERE id = ${id}

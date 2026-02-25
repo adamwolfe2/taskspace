@@ -689,6 +689,7 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
 
     const updatedReport = await db.eodReports.update(id, {
       ...updates,
+      mood: updates.mood ?? undefined,
       date: newDate || report.date,
       submittedAt: new Date().toISOString(),
     })

@@ -68,6 +68,7 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
   const [tomorrowPriorities, setTomorrowPriorities] = useState<EODPriority[]>([])
   const [needsEscalation, setNeedsEscalation] = useState(false)
   const [escalationNote, setEscalationNote] = useState("")
+  const [mood, setMood] = useState<EODReport["mood"]>(undefined)
   const [attachments, setAttachments] = useState<FileAttachment[]>([])
   const [reportDate, setReportDate] = useState<string>("")
   const [isSaving, setIsSaving] = useState(false)
@@ -89,6 +90,7 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
       )
       setNeedsEscalation(report.needsEscalation)
       setEscalationNote(report.escalationNote || "")
+      setMood(report.mood)
       setAttachments(report.attachments || [])
       setReportDate(report.date)
     }
@@ -189,6 +191,7 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
         tomorrowPriorities: filteredPriorities,
         needsEscalation,
         escalationNote: needsEscalation ? escalationNote.trim() : null,
+        mood,
         attachments: attachments.length > 0 ? attachments : undefined,
         date: reportDate, // Include date change
       })
@@ -419,6 +422,32 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
                 className="bg-white border-amber-200 focus:border-amber-300"
               />
             )}
+          </div>
+
+          {/* Mood */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold text-slate-700">How were you feeling? <span className="text-xs font-normal text-slate-400">(optional)</span></Label>
+            <div className="flex gap-3">
+              {([
+                { value: "positive" as const, emoji: "😊", label: "Positive" },
+                { value: "neutral" as const, emoji: "😐", label: "Neutral" },
+                { value: "negative" as const, emoji: "😔", label: "Negative" },
+              ]).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setMood(mood === opt.value ? undefined : opt.value)}
+                  className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-lg border-2 text-xs font-medium transition-all ${
+                    mood === opt.value
+                      ? "border-slate-400 bg-slate-50 text-slate-800"
+                      : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="text-lg">{opt.emoji}</span>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
