@@ -86,8 +86,12 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
         if (!matchesTitle && !matchesDescription) return false
       }
 
-      // Status filter
-      if (statusFilter !== "all" && rock.status !== statusFilter) return false
+      // Status filter — "behind-pace" is a virtual filter
+      if (statusFilter === "behind-pace") {
+        if (!isRockBehindSchedule(rock)) return false
+      } else if (statusFilter !== "all" && rock.status !== statusFilter) {
+        return false
+      }
 
       // Owner filter (admin or manager drill-down)
       if ((isAdmin || hasManagerFilter) && ownerFilter !== "all" && rock.userId !== ownerFilter) return false
@@ -156,6 +160,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
               <SelectItem value="at-risk">At Risk</SelectItem>
               <SelectItem value="blocked">Blocked</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="behind-pace">⚠ Behind Pace</SelectItem>
             </SelectContent>
           </Select>
           {(isAdmin || hasManagerFilter) && (

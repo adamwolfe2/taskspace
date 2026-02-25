@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { UserInitials } from "@/components/shared/user-initials"
 import { getRelativeDate, getTodayInTimezone } from "@/lib/utils/date-utils"
 import { calculateUserStats, calculateAccountabilityScore, isRockBehindSchedule } from "@/lib/utils/stats-calculator"
-import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame } from "lucide-react"
+import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Copy, Check, FileText } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
 import { EODInsightsCard } from "@/components/ai/eod-insights-card"
@@ -40,6 +40,7 @@ export function AdminPage({
 }: AdminPageProps) {
   const [showAssignTaskModal, setShowAssignTaskModal] = useState(false)
   const [showPendingTasks, setShowPendingTasks] = useState(false)
+  const [summaryCopied, setSummaryCopied] = useState(false)
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
   const { data: insights, fetchInsights } = useAdminAiInsights()
@@ -96,6 +97,43 @@ export function AdminPage({
 
   const pendingAssignedTasks = assignedTasks.filter((t) => t.status === "pending" && t.type === "assigned")
 
+  const handleCopyTeamSummary = async () => {
+    const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+    const avgScore = teamStats.length > 0
+      ? Math.round(teamStats.reduce((s, t) => s + t.accountability.score, 0) / teamStats.length)
+      : 0
+    const rocksOnTrackCount = rocks.filter((r) => r.status === "on-track").length
+    const rocksCompleted = rocks.filter((r) => r.status === "completed").length
+
+    const memberLines = [...teamStats]
+      .sort((a, b) => b.accountability.score - a.accountability.score)
+      .map(({ member, accountability, stats }) =>
+        `  ${member.name} — Score: ${accountability.score} (${accountability.grade}) | Rocks: ${stats.activeRocks} active | EOD: ${accountability.breakdown.eodConsistency}% (4wk)`
+      )
+      .join("\n")
+
+    const summary = [
+      `📊 Team Accountability Summary — ${today}`,
+      "",
+      `Team avg score: ${avgScore}/100`,
+      `EOD reporting today: ${todayReports.length}/${activeMembers.length} (${reportingRate}%)`,
+      `Rocks: ${rocksOnTrackCount} on track, ${totalRocksAtRisk} at risk, ${totalRocksBlocked} blocked, ${rocksCompleted} completed`,
+      rocksBehinSchedule > 0 ? `⚠️ Behind schedule: ${rocksBehinSchedule} rocks behind expected pace` : "",
+      "",
+      "Individual Scores:",
+      memberLines,
+    ].filter(Boolean).join("\n")
+
+    try {
+      await navigator.clipboard.writeText(summary)
+      setSummaryCopied(true)
+      setTimeout(() => setSummaryCopied(false), 2500)
+      toast({ title: "Summary copied!", description: "Paste it into Slack, email, or your notes." })
+    } catch {
+      toast({ title: "Could not copy", variant: "destructive" })
+    }
+  }
+
   const handleAssignTask = async (taskData: {
     assigneeId: string
     assigneeName: string
@@ -137,9 +175,18 @@ export function AdminPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Team performance overview</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Team performance overview</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleCopyTeamSummary} className="flex-shrink-0">
+          {summaryCopied ? (
+            <><Check className="h-4 w-4 mr-2 text-emerald-500" />Copied!</>
+          ) : (
+            <><FileText className="h-4 w-4 mr-2" />Copy Summary</>
+          )}
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

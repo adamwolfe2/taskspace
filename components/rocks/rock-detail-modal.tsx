@@ -83,13 +83,21 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
 
   const handleSave = async () => {
     setIsSaving(true)
+    const wasCompleted = rock.status !== "completed" && status === "completed"
     try {
       await onUpdateRock(rock.id, { title, description, status, projectId })
       setIsEditing(false)
-      toast({
-        title: "Rock updated",
-        description: "Your changes have been saved",
-      })
+      if (wasCompleted) {
+        toast({
+          title: "🎉 Rock Completed!",
+          description: `"${title}" has been marked complete. Outstanding work!`,
+        })
+      } else {
+        toast({
+          title: "Rock updated",
+          description: "Your changes have been saved",
+        })
+      }
     } catch (err: unknown) {
       toast({
         title: "Update failed",
