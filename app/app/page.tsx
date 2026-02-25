@@ -180,6 +180,9 @@ function AppContent() {
   // Capture ?p= from URL before auth resolves (so we can restore after login)
   const pendingPageFromUrl = useRef<string | null>(null)
   const hasConsumedUrlPage = useRef(false)
+  // Capture ?page= for unauthenticated page routing (e.g. ?page=register)
+  const pendingAuthPage = useRef<string | null>(null)
+  const hasConsumedAuthPage = useRef(false)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const p = new URLSearchParams(window.location.search).get("p")
@@ -189,7 +192,7 @@ function AppContent() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // After auth resolves, navigate to the page from URL (once)
+  // After auth resolves, navigate to the page from URL (once, authenticated users)
   useEffect(() => {
     if (!isLoading && isAuthenticated && !hasConsumedUrlPage.current) {
       hasConsumedUrlPage.current = true
@@ -197,6 +200,15 @@ function AppContent() {
         setCurrentPage(pendingPageFromUrl.current as PageType)
         pendingPageFromUrl.current = null
       }
+    }
+  }, [isLoading, isAuthenticated, setCurrentPage])
+
+  // After auth resolves, apply ?page= for unauthenticated users (once)
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && !hasConsumedAuthPage.current && pendingAuthPage.current) {
+      hasConsumedAuthPage.current = true
+      setCurrentPage(pendingAuthPage.current as PageType)
+      pendingAuthPage.current = null
     }
   }, [isLoading, isAuthenticated, setCurrentPage])
 
@@ -283,8 +295,8 @@ function AppContent() {
           .then(data => { if (data.success) window.location.reload() })
           .catch(() => { /* silently fail — user can resend from banner */ })
       }
-      if (page && !isAuthenticated && !isLoading) {
-        setCurrentPage(page as PageType)
+      if (page) {
+        pendingAuthPage.current = page
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
