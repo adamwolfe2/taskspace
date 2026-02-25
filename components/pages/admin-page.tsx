@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { UserInitials } from "@/components/shared/user-initials"
 import { getRelativeDate, getTodayInTimezone, getDaysUntil } from "@/lib/utils/date-utils"
 import { calculateUserStats, calculateAccountabilityScore, isRockBehindSchedule } from "@/lib/utils/stats-calculator"
-import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Copy, Check, FileText, Bell, UserCheck } from "lucide-react"
+import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Copy, Check, FileText, Bell, UserCheck, Clock } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
@@ -208,6 +208,12 @@ export function AdminPage({
   }
   const totalMoodReports = recentMoodReports.length
   const moodPct = (count: number) => totalMoodReports > 0 ? Math.round((count / totalMoodReports) * 100) : 0
+
+  // Stale rocks: active but not updated in 7+ days
+  const staleRocks = rocks
+    .filter((r) => r.status !== "completed" && new Date(r.updatedAt) < sevenDaysAgo)
+    .sort((a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime())
+    .slice(0, 6)
 
   // Team members with no rocks assigned this quarter
   const membersWithCurrentQuarterRock = new Set(
@@ -574,6 +580,39 @@ export function AdminPage({
                         <span className="font-semibold text-slate-700">{rock.progress}%</span> actual
                       </div>
                     </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Stale Rocks: No check-in in 7+ days */}
+      {staleRocks.length > 0 && (
+        <Card className="border-slate-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Clock className="h-5 w-5 text-slate-500" />
+              No Check-in in 7+ Days ({staleRocks.length})
+            </CardTitle>
+            <CardDescription>
+              EOS rocks should be reviewed weekly. These rocks haven&apos;t been updated in over a week.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {staleRocks.map((rock) => {
+                const owner = rock.userId ? teamMembers.find((m) => m.userId === rock.userId) : undefined
+                const daysSince = Math.floor((now.getTime() - new Date(rock.updatedAt).getTime()) / (1000 * 60 * 60 * 24))
+                return (
+                  <div key={rock.id} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                    <Clock className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-800 truncate">{rock.title}</p>
+                      {owner && <p className="text-xs text-slate-500">{owner.name}</p>}
+                    </div>
+                    <span className="text-xs text-slate-500 flex-shrink-0">{daysSince}d ago</span>
                   </div>
                 )
               })}
