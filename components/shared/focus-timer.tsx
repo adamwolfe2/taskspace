@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
  Select,
@@ -69,6 +70,7 @@ export function FocusTimer({
  const [selectedRockId, setSelectedRockId] = useState<string>("")
  const [soundEnabled, setSoundEnabled] = useState(true)
  const [showCompleteDialog, setShowCompleteDialog] = useState(false)
+ const [customMinutes, setCustomMinutes] = useState("30")
 
  const intervalRef = useRef<NodeJS.Timeout | null>(null)
  const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -189,7 +191,15 @@ export function FocusTimer({
  // Change session type
  const handleSessionTypeChange = (type: "pomodoro" | "custom" | "deep_work") => {
  setSessionType(type)
- const duration = type === "deep_work" ? DEEP_WORK_DURATION : POMODORO_FOCUS
+ let duration: number
+ if (type === "deep_work") {
+   duration = DEEP_WORK_DURATION
+ } else if (type === "custom") {
+   const mins = Math.max(1, Math.min(120, parseInt(customMinutes) || 30))
+   duration = mins * 60
+ } else {
+   duration = POMODORO_FOCUS
+ }
  setTimeRemaining(duration)
  setTotalTime(duration)
  setTimerState("idle")
@@ -311,7 +321,35 @@ export function FocusTimer({
  >
  Deep Work
  </Button>
+ <Button
+ variant={sessionType === "custom" ? "default" : "outline"}
+ size="sm"
+ onClick={() => handleSessionTypeChange("custom")}
+ className="flex-1"
+ >
+ Custom
+ </Button>
  </div>
+
+ {sessionType === "custom" && (
+ <div className="flex items-center gap-2">
+   <Input
+     type="number"
+     min={1}
+     max={120}
+     value={customMinutes}
+     onChange={(e) => {
+       setCustomMinutes(e.target.value)
+       const mins = Math.max(1, Math.min(120, parseInt(e.target.value) || 30))
+       const duration = mins * 60
+       setTimeRemaining(duration)
+       setTotalTime(duration)
+     }}
+     className="h-9 w-20 text-center"
+   />
+   <span className="text-sm text-slate-500">minutes</span>
+ </div>
+ )}
 
  {/* Task/Rock Selection */}
  <div className="space-y-2">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -58,6 +58,7 @@ export function SmartSuggestions({
  className,
 }: SmartSuggestionsProps) {
  const { getPriorityStyle: getBrandPriorityStyle } = useBrandStatusStyles()
+ const [showAll, setShowAll] = useState(false)
  const suggestions = useMemo(() => {
  const result: Suggestion[] = []
  const today = startOfDay(new Date())
@@ -290,7 +291,7 @@ export function SmartSuggestions({
  </CardTitle>
  </CardHeader>
  <CardContent className="space-y-2">
- {suggestions.slice(0, 5).map((suggestion, index) => {
+ {(showAll ? suggestions : suggestions.slice(0, 5)).map((suggestion, index) => {
  const Icon = suggestion.icon
  return (
  <TooltipProvider key={suggestion.id}>
@@ -336,9 +337,14 @@ export function SmartSuggestions({
  })}
 
  {suggestions.length > 5 && (
- <Button variant="ghost" size="sm" className="w-full text-xs">
- View all {suggestions.length} suggestions
- <ArrowRight className="h-3.5 w-3.5 ml-1" />
+ <Button
+   variant="ghost"
+   size="sm"
+   className="w-full text-xs"
+   onClick={() => setShowAll((v) => !v)}
+ >
+   {showAll ? "Show fewer" : `View all ${suggestions.length} suggestions`}
+   <ArrowRight className={`h-3.5 w-3.5 ml-1 transition-transform ${showAll ? "rotate-90" : ""}`} />
  </Button>
  )}
  </CardContent>

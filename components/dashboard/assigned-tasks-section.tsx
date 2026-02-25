@@ -276,7 +276,10 @@ export function AssignedTasksSection({
               </Button>
             )}
             {tasks.length > 0 && (
-              <button className="text-sm text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage("tasks")}
+                className="text-sm text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1"
+              >
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </button>
             )}
