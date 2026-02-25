@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, User, Pencil, Trash2, AlertCircle, Clock, MessageSquare, Repeat, AlarmClock } from "lucide-react"
+import { Calendar, User, Pencil, Trash2, AlertCircle, Clock, MessageSquare, Repeat, AlarmClock, Copy, PlayCircle } from "lucide-react"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay, addDays } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
@@ -19,6 +19,7 @@ interface TaskCardProps {
   onEdit?: (task: AssignedTask) => void
   onDelete?: (taskId: string) => void
   onUpdateTask?: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
+  onDuplicate?: (task: AssignedTask) => void
   rocks: Rock[]
   currentUser?: TeamMember
   isSelected?: boolean
@@ -64,11 +65,12 @@ function getDueDateStatus(dueDate: string | null, isCompleted: boolean) {
   return null
 }
 
-export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, rocks: _rocks, currentUser, isSelected, onToggleSelection, showSelectionCheckbox }: TaskCardProps) {
+export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, onDuplicate, rocks: _rocks, currentUser, isSelected, onToggleSelection, showSelectionCheckbox }: TaskCardProps) {
   const [showDetail, setShowDetail] = useState(false)
   const [showFullDescription, setShowFullDescription] = useState(false)
   const { getStatusStyle, getPriorityStyle } = useBrandStatusStyles()
   const isCompleted = task.status === "completed"
+  const isInProgress = task.status === "in-progress"
   const isPersonal = task.type === "personal"
   const dueDateStatus = getDueDateStatus(task.dueDate, isCompleted)
   const commentCount = task.comments?.length || 0
@@ -124,23 +126,33 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
             </h3>
             {isPersonal && !isCompleted && (
               <div className="flex items-center gap-1 flex-shrink-0">
-                {onUpdateTask && task.dueDate && (
+                {(onUpdateTask || onDuplicate) && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 touch-target" aria-label="Snooze task">
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 touch-target" aria-label="Task actions">
                         <AlarmClock className="h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 1).toISOString().split("T")[0] })}>
-                        Snooze 1 day
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 3).toISOString().split("T")[0] })}>
-                        Snooze 3 days
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 7).toISOString().split("T")[0] })}>
-                        Snooze 1 week
-                      </DropdownMenuItem>
+                      {onDuplicate && (
+                        <DropdownMenuItem onClick={() => onDuplicate(task)}>
+                          <Copy className="h-3.5 w-3.5 mr-2" />
+                          Duplicate task
+                        </DropdownMenuItem>
+                      )}
+                      {onUpdateTask && task.dueDate && (
+                        <>
+                          <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 1).toISOString().split("T")[0] })}>
+                            Snooze 1 day
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 3).toISOString().split("T")[0] })}>
+                            Snooze 3 days
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 7).toISOString().split("T")[0] })}>
+                            Snooze 1 week
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
@@ -187,6 +199,12 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
           )}
 
           <div className="flex flex-wrap items-center gap-2 text-sm">
+            {isInProgress && (
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                <PlayCircle className="h-3 w-3" />
+                In Progress
+              </div>
+            )}
             <Badge variant="outline" style={getPriorityStyle(task.priority)}>
               {priority.emoji} {priority.label}
             </Badge>

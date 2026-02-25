@@ -474,6 +474,37 @@ export function TasksPage({
     }
   }
 
+  const handleDuplicateTask = async (task: AssignedTask) => {
+    try {
+      await createTask({
+        title: `${task.title} (copy)`,
+        description: task.description,
+        assigneeId: task.assigneeId,
+        rockId: task.rockId,
+        projectId: task.projectId,
+        priority: task.priority,
+        dueDate: task.dueDate,
+      })
+      toast({ title: "Task duplicated", description: "A copy has been created" })
+    } catch (err: unknown) {
+      toast({ title: "Error", description: getErrorMessage(err, "Failed to duplicate task"), variant: "destructive" })
+    }
+  }
+
+  const handleBulkSetDueDate = async (date: string) => {
+    const taskIds = Array.from(selectedTasks)
+    setIsBulkProcessing(true)
+    try {
+      await Promise.all(taskIds.map((id) => updateTask(id, { dueDate: date })))
+      setSelectedTasks(new Set())
+      toast({ title: "Due date set", description: `${taskIds.length} task${taskIds.length > 1 ? "s" : ""} updated` })
+    } catch {
+      toast({ title: "Error", description: "Some tasks could not be updated", variant: "destructive" })
+    } finally {
+      setIsBulkProcessing(false)
+    }
+  }
+
   const handleKanbanStatusChange = async (taskId: string, newStatus: AssignedTask["status"]) => {
     if (newStatus === "completed") {
       // Delegate to handleCompleteTask so recurring task logic fires correctly
@@ -748,6 +779,7 @@ export function TasksPage({
                       onEdit={handleEditTask}
                       onDelete={handleDeleteTask}
                       onUpdateTask={updateTask}
+                      onDuplicate={!isViewingOtherUser ? handleDuplicateTask : undefined}
                       rocks={rocks}
                       currentUser={currentUser}
                       isSelected={selectedTasks.has(task.id)}
@@ -867,6 +899,23 @@ export function TasksPage({
                     <DropdownMenuItem onClick={() => handleBulkPriority("high")}>🔴 High</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleBulkPriority("normal")}>🟡 Normal</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleBulkPriority("low")}>🟢 Low</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1 sm:gap-2 h-9 px-2 sm:px-3" disabled={isBulkProcessing}>
+                      <Calendar className="h-4 w-4" />
+                      <span className="hidden sm:inline">Due Date</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="p-2">
+                    <div className="text-xs text-slate-500 mb-2 px-1">Set due date for selected tasks</div>
+                    <Input
+                      type="date"
+                      className="h-8 text-xs"
+                      min={new Date().toISOString().split("T")[0]}
+                      onChange={(e) => { if (e.target.value) handleBulkSetDueDate(e.target.value) }}
+                    />
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Button
