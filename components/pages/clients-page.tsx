@@ -479,7 +479,7 @@ export function ClientsPage({
                     {clientProjects.length > 0 ? (
                       <div className="space-y-2">
                         {clientProjects.map(project => (
-                          <div key={project.id} className="flex items-center justify-between text-sm p-2 rounded-md bg-muted/50">
+                          <div key={project.id} className="flex items-center justify-between text-sm px-3 py-2.5 rounded-md bg-muted/50">
                             <span>{project.name}</span>
                             <Badge variant="outline" className="text-xs">{project.status}</Badge>
                           </div>

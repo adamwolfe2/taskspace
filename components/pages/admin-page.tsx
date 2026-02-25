@@ -70,7 +70,7 @@ export function AdminPage({
 
   // Calculate stats for all active team members (all roles)
   const teamStats = activeMembers.map((member) => {
-    const stats = calculateUserStats(member.id, rocks, assignedTasks, eodReports)
+    const stats = calculateUserStats(member.userId || member.id, rocks, assignedTasks, eodReports)
     return { member, stats }
   })
 
