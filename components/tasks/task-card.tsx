@@ -6,11 +6,12 @@ import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, User, Pencil, Trash2, AlertCircle, Clock, MessageSquare, Repeat } from "lucide-react"
-import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
+import { Calendar, User, Pencil, Trash2, AlertCircle, Clock, MessageSquare, Repeat, AlarmClock } from "lucide-react"
+import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay, addDays } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { TaskDetailModal } from "./task-detail-modal"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface TaskCardProps {
   task: AssignedTask
@@ -123,6 +124,26 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
             </h3>
             {isPersonal && !isCompleted && (
               <div className="flex items-center gap-1 flex-shrink-0">
+                {onUpdateTask && task.dueDate && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 touch-target" aria-label="Snooze task">
+                        <AlarmClock className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 1).toISOString().split("T")[0] })}>
+                        Snooze 1 day
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 3).toISOString().split("T")[0] })}>
+                        Snooze 3 days
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 7).toISOString().split("T")[0] })}>
+                        Snooze 1 week
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
                 {onEdit && (
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0 touch-target" onClick={() => onEdit(task)} aria-label="Edit task">
                     <Pencil className="h-3 w-3" />

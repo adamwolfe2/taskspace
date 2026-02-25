@@ -10,7 +10,7 @@ import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Target, Search, Calendar, AlertTriangle, Activity, List, Map, LayoutGrid } from "lucide-react"
+import { Target, Search, Calendar, AlertTriangle, Activity, List, Map, LayoutGrid, GanttChart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { isRockBehindSchedule } from "@/lib/utils/stats-calculator"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -20,6 +20,7 @@ import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
 import { RockCheckinDialog } from "@/components/rocks/rock-checkin-dialog"
 import { RockRoadmap } from "@/components/rocks/rock-roadmap"
 import { RocksKanbanBoard } from "@/components/rocks/rocks-kanban-board"
+import { RocksTimelineView } from "@/components/rocks/rocks-timeline-view"
 
 interface RocksPageProps {
   currentUser: TeamMember
@@ -51,7 +52,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
   })
 
   const [checkinRock, setCheckinRock] = useState<Rock | null>(null)
-  const [pageView, setPageView] = useState<"table" | "roadmap" | "kanban">("table")
+  const [pageView, setPageView] = useState<"table" | "roadmap" | "kanban" | "timeline">("table")
 
   const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
   // Use users.id (not org_members.id) for filtering rocks
@@ -160,6 +161,16 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
             >
               <Map className="h-4 w-4" />
             </Button>
+            <Button
+              variant={pageView === "timeline" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setPageView("timeline")}
+              className="h-7 px-2"
+              aria-label="Timeline view"
+              title="Timeline view"
+            >
+              <GanttChart className="h-4 w-4" />
+            </Button>
           </div>
           <ExportButton type="rocks" />
         </div>
@@ -221,6 +232,47 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
           )}
         </div>
       </div>
+
+      {/* Quarter Stats Summary Bar */}
+      {baseRocks.length > 0 && (() => {
+        const quarterRocks = quarterFilter !== "all"
+          ? baseRocks.filter((r) => r.quarter === quarterFilter)
+          : baseRocks
+        const total = quarterRocks.length
+        if (total === 0) return null
+        const counts = {
+          "on-track": quarterRocks.filter((r) => r.status === "on-track").length,
+          "at-risk": quarterRocks.filter((r) => r.status === "at-risk").length,
+          blocked: quarterRocks.filter((r) => r.status === "blocked").length,
+          completed: quarterRocks.filter((r) => r.status === "completed").length,
+        }
+        const avgProgress = Math.round(quarterRocks.reduce((sum, r) => sum + r.progress, 0) / total)
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {(["on-track", "at-risk", "blocked", "completed"] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(statusFilter === s ? "all" : s)}
+                className={`text-left rounded-xl border px-3 py-2.5 transition-all ${statusFilter === s ? "ring-2 ring-slate-400" : "hover:shadow-sm"} ${getStatusConfig(s).bgColor}`}
+              >
+                <div className={`text-lg font-bold ${getStatusConfig(s).textColor}`}>{counts[s]}</div>
+                <div className={`text-xs ${getStatusConfig(s).textColor} opacity-80`}>{getStatusConfig(s).label}</div>
+              </button>
+            ))}
+            <div className="text-left rounded-xl border bg-slate-50 px-3 py-2.5">
+              <div className="text-lg font-bold text-slate-700">{avgProgress}%</div>
+              <div className="text-xs text-slate-500">Avg Progress</div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Timeline view */}
+      {pageView === "timeline" && (
+        <div className="bg-white rounded-xl shadow-card p-3 sm:p-5">
+          <RocksTimelineView rocks={displayRocks} quarter={quarterFilter !== "all" ? quarterFilter : undefined} />
+        </div>
+      )}
 
       {/* Roadmap view */}
       {pageView === "roadmap" && (
