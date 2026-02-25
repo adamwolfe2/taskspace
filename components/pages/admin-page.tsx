@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { UserInitials } from "@/components/shared/user-initials"
 import { getRelativeDate, getTodayInTimezone } from "@/lib/utils/date-utils"
-import { calculateUserStats } from "@/lib/utils/stats-calculator"
+import { calculateUserStats, calculateAccountabilityScore, isRockBehindSchedule } from "@/lib/utils/stats-calculator"
 import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
@@ -70,9 +70,13 @@ export function AdminPage({
 
   // Calculate stats for all active team members (all roles)
   const teamStats = activeMembers.map((member) => {
-    const stats = calculateUserStats(member.userId || member.id, rocks, assignedTasks, eodReports)
-    return { member, stats }
+    const uid = member.userId || member.id
+    const stats = calculateUserStats(uid, rocks, assignedTasks, eodReports)
+    const accountability = calculateAccountabilityScore(uid, rocks, assignedTasks, eodReports)
+    return { member, stats, accountability }
   })
+
+  const rocksBehinSchedule = rocks.filter((r) => isRockBehindSchedule(r)).length
 
   const avgRockProgress = teamStats.length > 0
     ? teamStats.reduce((sum, t) => sum + t.stats.averageRockProgress, 0) / teamStats.length
@@ -129,7 +133,7 @@ export function AdminPage({
         <p className="text-muted-foreground mt-1">Team performance overview</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Daily Reporting</CardTitle>
@@ -164,6 +168,19 @@ export function AdminPage({
             <div className="text-2xl font-bold">{totalRocksAtRisk + totalRocksBlocked}</div>
             <p className="text-xs text-muted-foreground">
               {totalRocksAtRisk} at risk, {totalRocksBlocked} blocked
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Behind Schedule</CardTitle>
+            <TrendingDown className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{rocksBehinSchedule}</div>
+            <p className="text-xs text-muted-foreground">
+              {rocksBehinSchedule === 0 ? "All rocks on pace" : "rocks behind expected pace"}
             </p>
           </CardContent>
         </Card>
@@ -279,52 +296,64 @@ export function AdminPage({
       <Card>
         <CardHeader>
           <CardTitle>Team Performance</CardTitle>
-          <CardDescription>Individual member statistics</CardDescription>
+          <CardDescription>Accountability scores ranked by overall performance</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {teamStats
-              .sort((a, b) => b.stats.averageRockProgress - a.stats.averageRockProgress)
-              .map(({ member, stats }) => (
-                <div key={member.id} className="border border-border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <UserInitials name={member.name} />
-                      <div>
-                        <p className="font-medium">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">{member.department}</p>
+              .sort((a, b) => b.accountability.score - a.accountability.score)
+              .map(({ member, stats, accountability }) => {
+                const scoreBg =
+                  accountability.score >= 80
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                    : accountability.score >= 60
+                    ? "bg-amber-100 text-amber-800 border-amber-200"
+                    : "bg-red-100 text-red-800 border-red-200"
+
+                return (
+                  <div key={member.id} className="border border-border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <UserInitials name={member.name} />
+                        <div>
+                          <p className="font-medium">{member.name}</p>
+                          <p className="text-xs text-muted-foreground">{member.department}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-sm font-bold ${scoreBg}`}>
+                          <span className="text-base font-black">{accountability.grade}</span>
+                          <span>{accountability.score}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {stats.averageRockProgress >= 70 ? (
-                        <TrendingUp className="h-4 w-4 text-success" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4 text-warning" />
-                      )}
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Active Rocks</p>
+                        <p className="font-semibold">{stats.activeRocks}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Avg Progress</p>
+                        <p className="font-semibold">{stats.averageRockProgress}%</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Tasks</p>
+                        <p className="font-semibold">
+                          {stats.completedTasks}/{stats.totalTasks}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">EOD Streak</p>
+                        <p className="font-semibold">{stats.eodStreak}d</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">EOD (4wk)</p>
+                        <p className="font-semibold">{accountability.breakdown.eodConsistency}%</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Active Rocks</p>
-                      <p className="font-semibold">{stats.activeRocks}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Avg Progress</p>
-                      <p className="font-semibold">{stats.averageRockProgress}%</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Tasks</p>
-                      <p className="font-semibold">
-                        {stats.completedTasks}/{stats.totalTasks}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">EOD Streak</p>
-                      <p className="font-semibold">{stats.eodStreak}/7</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
           </div>
         </CardContent>
       </Card>

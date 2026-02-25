@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Target } from "lucide-react"
 import type { IdsBoardItem, IdsBoardColumn, IdsBoardItemType, TeamMember } from "@/lib/types"
 
 interface IdsBoardItemDialogProps {
@@ -45,6 +46,7 @@ interface IdsBoardItemDialogProps {
     assignedTo?: string
   }) => void
   onDelete?: () => void
+  onConvertToRock?: () => void
 }
 
 export function IdsBoardItemDialog({
@@ -55,6 +57,7 @@ export function IdsBoardItemDialog({
   teamMembers = [],
   onSave,
   onDelete,
+  onConvertToRock,
 }: IdsBoardItemDialogProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -179,16 +182,33 @@ export function IdsBoardItemDialog({
           )}
 
           <DialogFooter className="flex justify-between">
-            {isEditing && onDelete && (
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                Delete
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {isEditing && onDelete && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  Delete
+                </Button>
+              )}
+              {isEditing && onConvertToRock && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onConvertToRock()
+                    onOpenChange(false)
+                  }}
+                  className="text-primary border-primary/30 hover:bg-primary/5"
+                >
+                  <Target className="h-3.5 w-3.5 mr-1.5" />
+                  Convert to Rock
+                </Button>
+              )}
+            </div>
             <div className="flex gap-2 ml-auto">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel

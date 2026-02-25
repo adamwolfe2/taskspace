@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react"
 import { useIdsBoard } from "@/lib/hooks/use-ids-board"
 import { useTeamData } from "@/lib/hooks/use-team-data"
+import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
 import { IdsBoardKanban } from "@/components/ids-board/ids-board-kanban"
 import { IdsBoardItemDialog } from "@/components/ids-board/ids-board-item-dialog"
 import { FeatureGate } from "@/components/shared/feature-gate"
@@ -12,10 +13,12 @@ import { AlertCircle, Plus, RefreshCw } from "lucide-react"
 import type { IdsBoardItem, IdsBoardColumn } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
+import { api } from "@/lib/api/client"
 
 function IdsBoardContent() {
   const { columns, isLoading, error, createItem, updateItem, moveItem, deleteItem, refresh } = useIdsBoard()
   const { teamMembers } = useTeamData()
+  const { currentWorkspaceId } = useWorkspaceStore()
   const { toast } = useToast()
 
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -75,6 +78,25 @@ function IdsBoardContent() {
       toast({ title: "Failed to delete item", variant: "destructive" })
     }
   }, [editingItem, deleteItem, toast])
+
+  const handleConvertToRock = useCallback(async () => {
+    if (!editingItem) return
+    try {
+      await api.rocks.create({
+        title: editingItem.title,
+        description: editingItem.description || undefined,
+        userId: editingItem.assignedTo || undefined,
+        workspaceId: currentWorkspaceId || undefined,
+      })
+      await deleteItem(editingItem.id)
+      toast({
+        title: "Converted to Rock",
+        description: `"${editingItem.title}" is now a Rock. Visit the Rocks page to set a due date and track progress.`,
+      })
+    } catch {
+      toast({ title: "Failed to convert to Rock", variant: "destructive" })
+    }
+  }, [editingItem, currentWorkspaceId, deleteItem, toast])
 
   const handleMoveItem = useCallback(
     async (itemId: string, columnName: IdsBoardColumn, orderIndex: number) => {
@@ -171,6 +193,7 @@ function IdsBoardContent() {
         teamMembers={teamMembers}
         onSave={handleSave}
         onDelete={editingItem ? handleDelete : undefined}
+        onConvertToRock={editingItem ? handleConvertToRock : undefined}
       />
     </div>
   )

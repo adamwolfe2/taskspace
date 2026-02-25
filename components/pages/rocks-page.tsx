@@ -10,7 +10,8 @@ import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Target, Search, Calendar } from "lucide-react"
+import { Target, Search, Calendar, AlertTriangle } from "lucide-react"
+import { isRockBehindSchedule } from "@/lib/utils/stats-calculator"
 import { EmptyState } from "@/components/shared/empty-state"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { useApp } from "@/lib/contexts/app-context"
@@ -229,9 +230,17 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                             <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{rock.description}</p>
                           )}
                         </div>
-                        <span className={`status-pill flex-shrink-0 text-xs ${statusConfig.bgColor} ${statusConfig.textColor}`}>
-                          {statusConfig.label}
-                        </span>
+                        <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                          <span className={`status-pill text-xs ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+                            {statusConfig.label}
+                          </span>
+                          {isRockBehindSchedule(rock) && (
+                            <span className="inline-flex items-center gap-0.5 text-xs text-orange-600 font-medium">
+                              <AlertTriangle className="h-3 w-3" />
+                              Behind
+                            </span>
+                          )}
+                        </div>
                       </div>
                       {isAdmin && owner && (
                         <div className="flex items-center gap-1.5">
@@ -314,9 +323,17 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                             )}
                           </TableCell>
                           <TableCell>
-                            <span className={`status-pill ${statusConfig.bgColor} ${statusConfig.textColor}`}>
-                              {statusConfig.label}
-                            </span>
+                            <div className="flex flex-col gap-1">
+                              <span className={`status-pill ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+                                {statusConfig.label}
+                              </span>
+                              {isRockBehindSchedule(rock) && (
+                                <span className="inline-flex items-center gap-0.5 text-xs text-orange-600 font-medium">
+                                  <AlertTriangle className="h-3 w-3" />
+                                  Behind pace
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="w-32">
