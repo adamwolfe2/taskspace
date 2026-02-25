@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react"
 import { useIdsBoard } from "@/lib/hooks/use-ids-board"
 import { useTeamData } from "@/lib/hooks/use-team-data"
 import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
+import { useApp } from "@/lib/contexts/app-context"
 import { IdsBoardKanban } from "@/components/ids-board/ids-board-kanban"
 import { IdsBoardItemDialog } from "@/components/ids-board/ids-board-item-dialog"
 import { FeatureGate } from "@/components/shared/feature-gate"
@@ -21,6 +22,7 @@ function IdsBoardContent() {
   const { columns, isLoading, error, createItem, updateItem, moveItem, deleteItem, refresh } = useIdsBoard()
   const { teamMembers } = useTeamData()
   const { currentWorkspaceId } = useWorkspaceStore()
+  const { currentUser } = useApp()
   const { toast } = useToast()
 
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -101,6 +103,30 @@ function IdsBoardContent() {
       toast({ title: "Failed to convert to Rock", variant: "destructive" })
     }
   }, [editingItem, currentWorkspaceId, deleteItem, toast])
+
+  const handleConvertToTask = useCallback(async () => {
+    if (!editingItem) return
+    const assigneeId = editingItem.assignedTo || currentUser?.userId || currentUser?.id
+    if (!assigneeId) {
+      toast({ title: "Cannot create task", description: "No assignee found", variant: "destructive" })
+      return
+    }
+    try {
+      await api.tasks.create({
+        title: editingItem.title,
+        description: editingItem.description || undefined,
+        assigneeId,
+        workspaceId: currentWorkspaceId || undefined,
+      })
+      await deleteItem(editingItem.id)
+      toast({
+        title: "Converted to Task",
+        description: `"${editingItem.title}" is now a Task. Visit the Tasks page to set a due date and priority.`,
+      })
+    } catch {
+      toast({ title: "Failed to convert to Task", variant: "destructive" })
+    }
+  }, [editingItem, currentUser, currentWorkspaceId, deleteItem, toast])
 
   const handleMoveItem = useCallback(
     async (itemId: string, columnName: IdsBoardColumn, orderIndex: number) => {
@@ -250,6 +276,7 @@ function IdsBoardContent() {
         onSave={handleSave}
         onDelete={editingItem ? handleDelete : undefined}
         onConvertToRock={editingItem ? handleConvertToRock : undefined}
+        onConvertToTask={editingItem ? handleConvertToTask : undefined}
       />
     </div>
   )

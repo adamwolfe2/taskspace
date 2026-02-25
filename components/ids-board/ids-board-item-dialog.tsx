@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Target } from "lucide-react"
+import { Target, ClipboardList } from "lucide-react"
 import type { IdsBoardItem, IdsBoardColumn, IdsBoardItemType, TeamMember } from "@/lib/types"
 
 interface IdsBoardItemDialogProps {
@@ -47,6 +47,7 @@ interface IdsBoardItemDialogProps {
   }) => void
   onDelete?: () => void
   onConvertToRock?: () => void
+  onConvertToTask?: () => void
 }
 
 export function IdsBoardItemDialog({
@@ -58,6 +59,7 @@ export function IdsBoardItemDialog({
   onSave,
   onDelete,
   onConvertToRock,
+  onConvertToTask,
 }: IdsBoardItemDialogProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -206,6 +208,21 @@ export function IdsBoardItemDialog({
                 >
                   <Target className="h-3.5 w-3.5 mr-1.5" />
                   Convert to Rock
+                </Button>
+              )}
+              {isEditing && onConvertToTask && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onConvertToTask()
+                    onOpenChange(false)
+                  }}
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                >
+                  <ClipboardList className="h-3.5 w-3.5 mr-1.5" />
+                  Convert to Task
                 </Button>
               )}
             </div>
