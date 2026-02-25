@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { UserInitials } from "@/components/shared/user-initials"
 import { getRelativeDate, getTodayInTimezone } from "@/lib/utils/date-utils"
 import { calculateUserStats, calculateAccountabilityScore, isRockBehindSchedule } from "@/lib/utils/stats-calculator"
-import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Copy, Check, FileText } from "lucide-react"
+import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Copy, Check, FileText, Bell } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
 import { EODInsightsCard } from "@/components/ai/eod-insights-card"
@@ -43,8 +43,29 @@ export function AdminPage({
   const [showPendingTasks, setShowPendingTasks] = useState(false)
   const [summaryCopied, setSummaryCopied] = useState(false)
   const [selectedMemberProfile, setSelectedMemberProfile] = useState<TeamMember | null>(null)
+  const [nudgingSending, setNudgingSending] = useState(false)
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
+
+  const sendEodNudge = async () => {
+    setNudgingSending(true)
+    try {
+      const url = currentWorkspaceId
+        ? `/api/admin/eod-reminder?workspaceId=${currentWorkspaceId}`
+        : "/api/admin/eod-reminder"
+      const res = await fetch(url, { method: "POST" })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to send")
+      toast({
+        title: data.data?.notifiedCount === 0 ? "All caught up!" : "Nudge sent",
+        description: data.message,
+      })
+    } catch {
+      toast({ title: "Failed to send nudge", description: "Please try again.", variant: "destructive" })
+    } finally {
+      setNudgingSending(false)
+    }
+  }
   const { data: insights, fetchInsights } = useAdminAiInsights()
 
   // Fetch AI insights on mount
@@ -208,6 +229,18 @@ export function AdminPage({
               {todayReports.length}/{activeMembers.length} submitted today
             </p>
             <Progress value={reportingRate} className="mt-2" />
+            {reportingRate < 100 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3 w-full text-xs h-7"
+                onClick={sendEodNudge}
+                disabled={nudgingSending}
+              >
+                <Bell className="h-3 w-3 mr-1" />
+                {nudgingSending ? "Sending..." : "Nudge Team"}
+              </Button>
+            )}
           </CardContent>
         </Card>
 
