@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { KanbanBoard } from "@/components/tasks/kanban-board"
-import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2, CheckSquare, X, Trash2, AlertTriangle, Flag, ArrowUpDown, Calendar } from "lucide-react"
+import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2, CheckSquare, X, Trash2, AlertTriangle, Flag, ArrowUpDown, Calendar, PlayCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { isPast, startOfDay } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -68,6 +68,7 @@ export function TasksPage({
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
   const [overdueOnly, setOverdueOnly] = useState(false)
   const [dueTodayOnly, setDueTodayOnly] = useState(false)
+  const [inProgressOnly, setInProgressOnly] = useState(false)
   const [sortBy, setSortBy] = useState<"default" | "due-date" | "priority" | "title">("default")
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
@@ -155,6 +156,7 @@ export function TasksPage({
         const today = startOfDay(new Date())
         if (due.getTime() !== today.getTime()) return false
       }
+      if (inProgressOnly && task.status !== "in-progress") return false
       return true
     })
     if (sortBy === "due-date") {
@@ -172,7 +174,7 @@ export function TasksPage({
       return [...filtered].sort((a, b) => a.title.localeCompare(b.title))
     }
     return filtered
-  }, [userTasks, searchQuery, priorityFilter, overdueOnly, dueTodayOnly, sortBy])
+  }, [userTasks, searchQuery, priorityFilter, overdueOnly, dueTodayOnly, inProgressOnly, sortBy])
 
   const overdueCount = useMemo(() => {
     return userTasks.filter((t) => {
@@ -190,6 +192,10 @@ export function TasksPage({
       const today = startOfDay(new Date())
       return due.getTime() === today.getTime()
     }).length
+  }, [userTasks])
+
+  const inProgressCount = useMemo(() => {
+    return userTasks.filter((t) => t.status === "in-progress").length
   }, [userTasks])
 
   const assignedByAdmin = filteredTasks.filter((t) => t.type === "assigned" && t.status !== "completed")
@@ -505,6 +511,20 @@ export function TasksPage({
     }
   }
 
+  const handleBulkSetInProgress = async () => {
+    const taskIds = Array.from(selectedTasks)
+    setIsBulkProcessing(true)
+    try {
+      await Promise.all(taskIds.map((id) => updateTask(id, { status: "in-progress" })))
+      setSelectedTasks(new Set())
+      toast({ title: "Tasks started", description: `${taskIds.length} task${taskIds.length > 1 ? "s" : ""} marked as in progress` })
+    } catch {
+      toast({ title: "Error", description: "Some tasks could not be updated", variant: "destructive" })
+    } finally {
+      setIsBulkProcessing(false)
+    }
+  }
+
   const handleKanbanStatusChange = async (taskId: string, newStatus: AssignedTask["status"]) => {
     if (newStatus === "completed") {
       // Delegate to handleCompleteTask so recurring task logic fires correctly
@@ -609,7 +629,7 @@ export function TasksPage({
             <Button
               variant={dueTodayOnly ? "default" : "outline"}
               size="sm"
-              onClick={() => { setDueTodayOnly(!dueTodayOnly); setOverdueOnly(false) }}
+              onClick={() => { setDueTodayOnly(!dueTodayOnly); setOverdueOnly(false); setInProgressOnly(false) }}
               className={`flex-shrink-0 gap-1.5 min-h-[44px] ${dueTodayOnly ? "bg-amber-500 hover:bg-amber-600 border-amber-500" : "border-amber-200 text-amber-600 hover:bg-amber-50"}`}
             >
               <Calendar className="h-4 w-4" />
@@ -621,12 +641,24 @@ export function TasksPage({
             <Button
               variant={overdueOnly ? "default" : "outline"}
               size="sm"
-              onClick={() => { setOverdueOnly(!overdueOnly); setDueTodayOnly(false) }}
+              onClick={() => { setOverdueOnly(!overdueOnly); setDueTodayOnly(false); setInProgressOnly(false) }}
               className={`flex-shrink-0 gap-1.5 min-h-[44px] ${overdueOnly ? "bg-red-600 hover:bg-red-700 border-red-600" : "border-red-200 text-red-600 hover:bg-red-50"}`}
             >
               <AlertTriangle className="h-4 w-4" />
               <span className="hidden sm:inline">Overdue</span>
               <span className={`text-xs font-bold ${overdueOnly ? "text-white" : "text-red-600"}`}>({overdueCount})</span>
+            </Button>
+          )}
+          {inProgressCount > 0 && (
+            <Button
+              variant={inProgressOnly ? "default" : "outline"}
+              size="sm"
+              onClick={() => { setInProgressOnly(!inProgressOnly); setOverdueOnly(false); setDueTodayOnly(false) }}
+              className={`flex-shrink-0 gap-1.5 min-h-[44px] ${inProgressOnly ? "bg-blue-600 hover:bg-blue-700 border-blue-600" : "border-blue-200 text-blue-600 hover:bg-blue-50"}`}
+            >
+              <PlayCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">In Progress</span>
+              <span className={`text-xs font-bold ${inProgressOnly ? "text-white" : "text-blue-600"}`}>({inProgressCount})</span>
             </Button>
           )}
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
@@ -901,6 +933,20 @@ export function TasksPage({
                     <DropdownMenuItem onClick={() => handleBulkPriority("low")}>🟢 Low</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkSetInProgress}
+                  className="gap-1 sm:gap-2 h-9 px-2 sm:px-3 border-blue-200 text-blue-600 hover:bg-blue-50"
+                  disabled={isBulkProcessing}
+                >
+                  {isBulkProcessing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <PlayCircle className="h-4 w-4" />
+                  )}
+                  <span className="hidden sm:inline">Start</span>
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-1 sm:gap-2 h-9 px-2 sm:px-3" disabled={isBulkProcessing}>
