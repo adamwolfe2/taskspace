@@ -10,7 +10,7 @@ import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Target, Search, Calendar, AlertTriangle, Activity } from "lucide-react"
+import { Target, Search, Calendar, AlertTriangle, Activity, List, Map } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { isRockBehindSchedule } from "@/lib/utils/stats-calculator"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -18,6 +18,7 @@ import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { useApp } from "@/lib/contexts/app-context"
 import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
 import { RockCheckinDialog } from "@/components/rocks/rock-checkin-dialog"
+import { RockRoadmap } from "@/components/rocks/rock-roadmap"
 
 interface RocksPageProps {
   currentUser: TeamMember
@@ -49,6 +50,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
   })
 
   const [checkinRock, setCheckinRock] = useState<Rock | null>(null)
+  const [pageView, setPageView] = useState<"table" | "roadmap">("table")
 
   const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
   // Use users.id (not org_members.id) for filtering rocks
@@ -125,7 +127,29 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
             {isAdmin ? "View all team rocks" : "Track your quarterly goals"}
           </p>
         </div>
-        <ExportButton type="rocks" />
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center border rounded-lg p-0.5 bg-slate-50">
+            <Button
+              variant={pageView === "table" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setPageView("table")}
+              className="h-7 px-2"
+              aria-label="Table view"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={pageView === "roadmap" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setPageView("roadmap")}
+              className="h-7 px-2"
+              aria-label="Roadmap view"
+            >
+              <Map className="h-4 w-4" />
+            </Button>
+          </div>
+          <ExportButton type="rocks" />
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -185,6 +209,17 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
         </div>
       </div>
 
+      {/* Roadmap view */}
+      {pageView === "roadmap" && (
+        <RockRoadmap
+          rocks={displayRocks}
+          dependencies={[]}
+          teamMembers={teamMembers}
+          onRockClick={(rock) => setSelectedRock(rock)}
+        />
+      )}
+
+      {pageView === "table" && (
       <div className="bg-white rounded-xl shadow-card overflow-hidden">
         <div className="px-3 sm:px-5 py-3 sm:py-4 border-b border-slate-100 flex items-center gap-2">
           <Target className="h-5 w-5 text-slate-500 flex-shrink-0" />
@@ -419,6 +454,8 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
           )}
         </div>
       </div>
+      )}
+
     </div>
 
     {selectedRock && updateRock && (
