@@ -140,6 +140,22 @@ export function AdminPage({
   const totalRocksAtRisk = rocks.filter((r) => r.status === "at-risk").length
   const totalRocksBlocked = rocks.filter((r) => r.status === "blocked").length
 
+  // Team mood from last 7 days of EOD reports
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  const recentMoodReports = eodReports.filter((r) => {
+    if (!r.mood) return false
+    return new Date(r.date) >= sevenDaysAgo && teamMemberUserIds.has(r.userId)
+  })
+  const moodCounts = { positive: 0, neutral: 0, negative: 0 }
+  for (const r of recentMoodReports) {
+    if (r.mood === "positive") moodCounts.positive++
+    else if (r.mood === "neutral") moodCounts.neutral++
+    else if (r.mood === "negative") moodCounts.negative++
+  }
+  const totalMoodReports = recentMoodReports.length
+  const moodPct = (count: number) => totalMoodReports > 0 ? Math.round((count / totalMoodReports) * 100) : 0
+
   const pendingAssignedTasks = assignedTasks.filter((t) => t.status === "pending" && t.type === "assigned")
 
   const todayStart = (() => { const d = new Date(); d.setHours(0,0,0,0); return d })()
@@ -361,6 +377,33 @@ export function AdminPage({
                   </div>
                 )
               })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Team Mood (Last 7 Days) */}
+      {totalMoodReports > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              Team Mood — Last 7 Days
+            </CardTitle>
+            <CardDescription>Based on {totalMoodReports} EOD report{totalMoodReports !== 1 ? "s" : ""} with mood data</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-3">
+              {([
+                { key: "positive", emoji: "😊", label: "Positive", count: moodCounts.positive, bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
+                { key: "neutral", emoji: "😐", label: "Neutral", count: moodCounts.neutral, bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
+                { key: "negative", emoji: "😔", label: "Negative", count: moodCounts.negative, bg: "bg-red-50", border: "border-red-200", text: "text-red-700" },
+              ] as const).map((m) => (
+                <div key={m.key} className={`flex flex-col items-center gap-1 p-3 rounded-lg border ${m.bg} ${m.border}`}>
+                  <span className="text-2xl">{m.emoji}</span>
+                  <span className={`text-xl font-bold ${m.text}`}>{moodPct(m.count)}%</span>
+                  <span className="text-xs text-slate-500">{m.label} ({m.count})</span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
