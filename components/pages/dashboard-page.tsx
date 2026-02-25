@@ -23,7 +23,7 @@ import { useApp } from "@/lib/contexts/app-context"
 import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { AlertCircle, Settings } from "lucide-react"
+import { AlertCircle, Settings, Sparkles } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { WelcomeCard } from "@/components/dashboard/welcome-card"
@@ -368,10 +368,11 @@ export function DashboardPage({
       <ErrorBoundary title="EOD submission unavailable">
        <Tabs defaultValue="ai" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-3 sm:mb-4">
-         <TabsTrigger value="ai" className="text-xs sm:text-sm min-h-[44px]">
-          ✨ AI Text Dump
+         <TabsTrigger value="ai" className="flex items-center gap-1.5 text-xs sm:text-sm">
+          <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+          AI Text Dump
          </TabsTrigger>
-         <TabsTrigger value="manual" className="text-xs sm:text-sm min-h-[44px]">
+         <TabsTrigger value="manual" className="text-xs sm:text-sm">
           Manual Entry
          </TabsTrigger>
         </TabsList>
