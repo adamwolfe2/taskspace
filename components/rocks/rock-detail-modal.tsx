@@ -9,6 +9,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -57,6 +67,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
   const [status, setStatus] = useState(rock.status)
   const [projectId, setProjectId] = useState<string | null>(rock.projectId || null)
   const [isSaving, setIsSaving] = useState(false)
+  const [showCompletePrompt, setShowCompletePrompt] = useState(false)
   const { toast } = useToast()
   const { getStatusStyle } = useBrandStatusStyles()
 
@@ -116,6 +127,10 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
 
     try {
       await onUpdateRock(rockId, { milestones, progress })
+      // Prompt to complete the rock when all milestones are checked off
+      if (totalCount > 0 && completedCount === totalCount && rock.status !== "completed") {
+        setShowCompletePrompt(true)
+      }
     } catch (err: unknown) {
       toast({
         title: "Update failed",
@@ -135,6 +150,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -293,5 +309,32 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
         </div>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showCompletePrompt} onOpenChange={setShowCompletePrompt}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>🎉 All milestones complete!</AlertDialogTitle>
+          <AlertDialogDescription>
+            You&apos;ve checked off every milestone for &ldquo;{rock.title}&rdquo;. Would you like to mark this rock as Completed?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Not yet</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={async () => {
+              try {
+                await onUpdateRock(rock.id, { status: "completed", progress: 100 })
+                toast({ title: "🎉 Rock Completed!", description: `"${rock.title}" is done. Outstanding work!` })
+              } catch {
+                toast({ title: "Update failed", variant: "destructive" })
+              }
+            }}
+          >
+            Mark as Completed
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 }

@@ -79,6 +79,11 @@ export function AdminPage({
 
   const rocksBehinSchedule = rocks.filter((r) => isRockBehindSchedule(r)).length
 
+  const avgAccountabilityScore = teamStats.length > 0
+    ? Math.round(teamStats.reduce((s, t) => s + t.accountability.score, 0) / teamStats.length)
+    : 0
+  const teamGrade = avgAccountabilityScore >= 90 ? "A" : avgAccountabilityScore >= 80 ? "B" : avgAccountabilityScore >= 70 ? "C" : avgAccountabilityScore >= 60 ? "D" : "F"
+
   // Top performers (grade A or B)
   const topPerformers = [...teamStats]
     .sort((a, b) => b.accountability.score - a.accountability.score)
@@ -189,7 +194,7 @@ export function AdminPage({
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Daily Reporting</CardTitle>
@@ -238,6 +243,19 @@ export function AdminPage({
             <p className="text-xs text-muted-foreground">
               {rocksBehinSchedule === 0 ? "All rocks on pace" : "rocks behind expected pace"}
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className={avgAccountabilityScore >= 80 ? "border-emerald-200" : avgAccountabilityScore >= 60 ? "border-amber-200" : "border-red-200"}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Team Grade</CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-black ${avgAccountabilityScore >= 80 ? "text-emerald-600" : avgAccountabilityScore >= 60 ? "text-amber-600" : "text-red-600"}`}>
+              {teamGrade}
+            </div>
+            <p className="text-xs text-muted-foreground">Avg score: {avgAccountabilityScore}/100</p>
           </CardContent>
         </Card>
       </div>
