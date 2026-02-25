@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -8,10 +9,14 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import { UserInitials } from "@/components/shared/user-initials"
 import type { TeamMember, Rock, AssignedTask, EODReport } from "@/lib/types"
 import { calculateAccountabilityScore, calculateUserStats } from "@/lib/utils/stats-calculator"
-import { Target, CheckSquare, FileText, Flame, TrendingUp, TrendingDown, Award } from "lucide-react"
+import { Target, CheckSquare, FileText, Flame, TrendingUp, TrendingDown, Award, Send, MessageCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
 
 interface TeamMemberProfileModalProps {
   open: boolean
@@ -30,6 +35,39 @@ export function TeamMemberProfileModal({
   tasks,
   eodReports,
 }: TeamMemberProfileModalProps) {
+  const { toast } = useToast()
+  const { currentWorkspaceId } = useWorkspaceStore()
+  const [showNoteForm, setShowNoteForm] = useState(false)
+  const [noteText, setNoteText] = useState("")
+  const [sendingNote, setSendingNote] = useState(false)
+
+  const handleSendNote = async () => {
+    if (!noteText.trim() || !member.userId) return
+    setSendingNote(true)
+    try {
+      const res = await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({
+          userId: member.userId,
+          type: "general",
+          title: "Note from your manager",
+          message: noteText.trim(),
+          workspaceId: currentWorkspaceId,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to send note")
+      toast({ title: "Note sent", description: `${member.name} will see it in their notifications` })
+      setNoteText("")
+      setShowNoteForm(false)
+    } catch {
+      toast({ title: "Failed to send note", description: "Please try again", variant: "destructive" })
+    } finally {
+      setSendingNote(false)
+    }
+  }
+
   const uid = member.userId || member.id
   const accountability = calculateAccountabilityScore(uid, rocks, tasks, eodReports)
   const stats = calculateUserStats(uid, rocks, tasks, eodReports)
@@ -208,6 +246,42 @@ export function TeamMemberProfileModal({
             <div className="text-center py-4 text-slate-500 text-sm">
               <TrendingDown className="h-6 w-6 mx-auto mb-1.5 opacity-40" />
               No active rocks or pending tasks
+            </div>
+          )}
+
+          {/* Send Note */}
+          {member.userId && (
+            <div className="border-t pt-4">
+              {showNoteForm ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-slate-600 flex items-center gap-1.5">
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    Send a note to {member.name}
+                  </p>
+                  <Textarea
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    placeholder="e.g. Great work on the Q1 rock! Let's sync this week."
+                    rows={3}
+                    autoFocus
+                    className="text-sm resize-none"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { setShowNoteForm(false); setNoteText("") }}>
+                      Cancel
+                    </Button>
+                    <Button size="sm" className="h-7 text-xs gap-1" onClick={handleSendNote} disabled={!noteText.trim() || sendingNote}>
+                      <Send className="h-3 w-3" />
+                      {sendingNote ? "Sending…" : "Send Note"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs" onClick={() => setShowNoteForm(true)}>
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  Send Note to {member.name}
+                </Button>
+              )}
             </div>
           )}
         </div>
