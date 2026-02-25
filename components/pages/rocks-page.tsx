@@ -51,6 +51,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
     return `Q${quarter} ${now.getFullYear()}`
   })
 
+  const [sortBy, setSortBy] = useState<string>("status")
   const [checkinRock, setCheckinRock] = useState<Rock | null>(null)
   const [pageView, setPageView] = useState<"table" | "roadmap" | "kanban" | "timeline">("table")
 
@@ -105,8 +106,24 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
       if ((isAdmin || hasManagerFilter) && ownerFilter !== "all" && rock.userId !== ownerFilter) return false
 
       return true
+    }).sort((a, b) => {
+      switch (sortBy) {
+        case "progress-desc": return b.progress - a.progress
+        case "progress-asc": return a.progress - b.progress
+        case "due-date": {
+          if (!a.dueDate) return 1
+          if (!b.dueDate) return -1
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+        }
+        case "title": return a.title.localeCompare(b.title)
+        case "status": {
+          const order = { blocked: 0, "at-risk": 1, "on-track": 2, completed: 3 }
+          return (order[a.status as keyof typeof order] ?? 4) - (order[b.status as keyof typeof order] ?? 4)
+        }
+        default: return 0
+      }
     })
-  }, [baseRocks, searchQuery, statusFilter, ownerFilter, quarterFilter, isAdmin, hasManagerFilter])
+  }, [baseRocks, searchQuery, statusFilter, ownerFilter, quarterFilter, isAdmin, hasManagerFilter, sortBy])
 
   const getStatusConfig = (status: Rock["status"]) => {
     const configs = {
@@ -230,6 +247,18 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
               </SelectContent>
             </Select>
           )}
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-full sm:w-40 bg-slate-50 border-slate-200">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="status">Status (priority)</SelectItem>
+              <SelectItem value="progress-desc">Progress (high→low)</SelectItem>
+              <SelectItem value="progress-asc">Progress (low→high)</SelectItem>
+              <SelectItem value="due-date">Due Date</SelectItem>
+              <SelectItem value="title">Title (A→Z)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
