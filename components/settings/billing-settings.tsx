@@ -84,9 +84,11 @@ type BillingCycle = "monthly" | "yearly"
 interface SubscriptionInfo {
   plan: PlanKey
   status: "active" | "trialing" | "past_due" | "canceled" | "incomplete"
-  currentPeriodEnd: string
+  currentPeriodEnd: string | null
   cancelAtPeriodEnd: boolean
   billingCycle?: BillingCycle
+  maxSeats: number | null
+  usedSeats: number
 }
 
 export function BillingSettings() {
@@ -394,6 +396,37 @@ export function BillingSettings() {
               </div>
             )}
           </div>
+
+          {/* Seat usage bar */}
+          {subscription && (
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between text-sm mb-1.5">
+                <span className="text-slate-600 font-medium">Team seats</span>
+                <span className="text-slate-900 font-semibold">
+                  {subscription.usedSeats}
+                  {subscription.maxSeats !== null ? ` / ${subscription.maxSeats}` : " / ∞"}
+                </span>
+              </div>
+              {subscription.maxSeats !== null && (
+                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all",
+                      subscription.usedSeats >= subscription.maxSeats
+                        ? "bg-red-500"
+                        : subscription.usedSeats / subscription.maxSeats >= 0.8
+                        ? "bg-amber-400"
+                        : "bg-emerald-500"
+                    )}
+                    style={{ width: `${Math.min(100, (subscription.usedSeats / subscription.maxSeats) * 100)}%` }}
+                  />
+                </div>
+              )}
+              {subscription.maxSeats !== null && subscription.usedSeats >= subscription.maxSeats && (
+                <p className="text-xs text-red-600 mt-1">Seat limit reached — upgrade to add more members.</p>
+              )}
+            </div>
+          )}
 
           {currentPlan !== "free" && !isAdmin && (
             <p className="mt-2 text-sm text-slate-500">
