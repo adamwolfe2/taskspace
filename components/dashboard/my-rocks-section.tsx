@@ -3,10 +3,11 @@
 import { useState, useMemo } from "react"
 import type { Rock, Project } from "@/lib/types"
 import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
-import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight, RefreshCw, ChevronDown, ChevronUp, Minus, Plus } from "lucide-react"
+import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight, RefreshCw, ChevronDown, ChevronUp, Minus, Plus, TrendingUp } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { useApp } from "@/lib/contexts/app-context"
 import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
+import { RockCheckinDialog } from "@/components/rocks/rock-checkin-dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -84,6 +85,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
   const { setCurrentPage } = useApp()
   const [_draggedRock, setDraggedRock] = useState<string | null>(null)
   const [selectedRock, setSelectedRock] = useState<Rock | null>(null)
+  const [checkinRock, setCheckinRock] = useState<Rock | null>(null)
   const [selectedQuarter, setSelectedQuarter] = useState<string>("all")
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isExpanded, setIsExpanded] = useState(true)
@@ -353,14 +355,26 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
                         return null
                       })()}
                     </div>
-                    {onUpdateRock && (
-                      <button
-                        onClick={() => setSelectedRock(rock)}
-                        className="text-xs text-primary hover:text-slate-700 font-medium flex items-center gap-0.5"
-                      >
-                        Details <ChevronRight className="h-3 w-3" />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {rock.status !== "completed" && (
+                        <button
+                          onClick={() => setCheckinRock(rock)}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-0.5"
+                          title="Weekly check-in"
+                        >
+                          <TrendingUp className="h-3 w-3" />
+                          Check In
+                        </button>
+                      )}
+                      {onUpdateRock && (
+                        <button
+                          onClick={() => setSelectedRock(rock)}
+                          className="text-xs text-primary hover:text-slate-700 font-medium flex items-center gap-0.5"
+                        >
+                          Details <ChevronRight className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )
@@ -378,6 +392,19 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
           rock={selectedRock}
           onUpdateRock={onUpdateRock}
           projects={projects}
+        />
+      )}
+
+      {/* Quick Check-in Dialog */}
+      {checkinRock && (
+        <RockCheckinDialog
+          open={!!checkinRock}
+          onOpenChange={(open) => !open && setCheckinRock(null)}
+          rockId={checkinRock.id}
+          rockTitle={checkinRock.title}
+          currentProgress={checkinRock.progress}
+          currentConfidence={(checkinRock.status === "on-track" ? "on_track" : checkinRock.status === "at-risk" ? "at_risk" : checkinRock.status === "blocked" ? "off_track" : "on_track") as "on_track" | "at_risk" | "off_track"}
+          onCheckinComplete={onRefresh}
         />
       )}
     </div>
