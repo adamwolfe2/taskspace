@@ -57,8 +57,23 @@ export function AdminPage({
   })
   const [showAcknowledged, setShowAcknowledged] = useState(false)
   const [showMissingSubmitters, setShowMissingSubmitters] = useState(false)
+  const [rockStatusOverrides, setRockStatusOverrides] = useState<Record<string, Rock["status"]>>({})
+  const [updatingRockId, setUpdatingRockId] = useState<string | null>(null)
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
+
+  const handleRockStatusUpdate = async (rockId: string, newStatus: Rock["status"]) => {
+    setUpdatingRockId(rockId)
+    try {
+      await api.rocks.update(rockId, { status: newStatus })
+      setRockStatusOverrides((prev) => ({ ...prev, [rockId]: newStatus }))
+      toast({ title: "Rock status updated", description: `Status changed to ${newStatus.replace("-", " ")}` })
+    } catch {
+      toast({ title: "Failed to update rock status", variant: "destructive" })
+    } finally {
+      setUpdatingRockId(null)
+    }
+  }
 
   const handleAcknowledgeEscalation = (reportId: string) => {
     const next = new Set(acknowledgedEscalations)
@@ -566,48 +581,63 @@ export function AdminPage({
       {/* At-Risk & Blocked Rocks Detail */}
       {(totalRocksAtRisk + totalRocksBlocked) > 0 && (() => {
         const atRiskAndBlockedRocks = rocks
-          .filter((r) => r.status === "at-risk" || r.status === "blocked")
+          .filter((r) => {
+            const effectiveStatus = rockStatusOverrides[r.id] ?? r.status
+            return effectiveStatus === "at-risk" || effectiveStatus === "blocked"
+          })
           .sort((a, b) => {
-            if (a.status === "blocked" && b.status !== "blocked") return -1
-            if (b.status === "blocked" && a.status !== "blocked") return 1
+            const sA = rockStatusOverrides[a.id] ?? a.status
+            const sB = rockStatusOverrides[b.id] ?? b.status
+            if (sA === "blocked" && sB !== "blocked") return -1
+            if (sB === "blocked" && sA !== "blocked") return 1
             return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
           })
+        if (atRiskAndBlockedRocks.length === 0) return null
         return (
           <Card className="border-red-200 bg-red-50/20">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <AlertCircle className="h-5 w-5 text-red-500" />
-                At-Risk &amp; Blocked Rocks ({totalRocksAtRisk + totalRocksBlocked})
+                At-Risk &amp; Blocked Rocks ({atRiskAndBlockedRocks.length})
               </CardTitle>
               <CardDescription>
-                {totalRocksBlocked > 0 && `${totalRocksBlocked} blocked`}
-                {totalRocksBlocked > 0 && totalRocksAtRisk > 0 && " · "}
-                {totalRocksAtRisk > 0 && `${totalRocksAtRisk} at risk`}
-                {" — "}review with owners at next Level 10
+                Review with owners at next Level 10 — click status to update inline
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 {atRiskAndBlockedRocks.map((rock) => {
+                  const effectiveStatus = rockStatusOverrides[rock.id] ?? rock.status
                   const owner = rock.userId
                     ? teamMembers.find((m) => m.userId === rock.userId)
                     : undefined
                   const daysLeft = getDaysUntil(rock.dueDate)
-                  const isBlocked = rock.status === "blocked"
+                  const isBlocked = effectiveStatus === "blocked"
+                  const isUpdating = updatingRockId === rock.id
                   return (
                     <div
                       key={rock.id}
                       className={`flex items-center justify-between gap-3 p-2.5 bg-white rounded-lg border ${isBlocked ? "border-red-200" : "border-amber-200"}`}
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <Badge
-                          variant="outline"
-                          className={isBlocked
-                            ? "text-red-600 border-red-200 bg-red-50 flex-shrink-0 text-xs"
-                            : "text-amber-600 border-amber-200 bg-amber-50 flex-shrink-0 text-xs"}
+                        <Select
+                          value={effectiveStatus}
+                          onValueChange={(v) => handleRockStatusUpdate(rock.id, v as Rock["status"])}
+                          disabled={isUpdating}
                         >
-                          {isBlocked ? "Blocked" : "At Risk"}
-                        </Badge>
+                          <SelectTrigger
+                            className={`h-6 w-auto text-xs border px-2 py-0 flex-shrink-0 ${isBlocked
+                              ? "text-red-600 border-red-200 bg-red-50"
+                              : "text-amber-600 border-amber-200 bg-amber-50"}`}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="on-track">On Track</SelectItem>
+                            <SelectItem value="at-risk">At Risk</SelectItem>
+                            <SelectItem value="blocked">Blocked</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <p className="text-sm font-medium text-slate-800 truncate">{rock.title}</p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0 text-xs text-slate-500">
