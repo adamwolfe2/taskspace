@@ -395,6 +395,7 @@ function AppContent() {
             initialOwnerFilter={pageFilter?.userId}
             onFilterConsumed={clearPageFilter}
             updateRock={teamData.updateRock}
+            createRock={teamData.createRock}
           />
         )
       case "tasks":

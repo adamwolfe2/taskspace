@@ -9,9 +9,14 @@ import { UserInitials } from "@/components/shared/user-initials"
 import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Target, Search, Calendar, AlertTriangle, Activity, List, Map, LayoutGrid, GanttChart } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Target, Search, Calendar, AlertTriangle, Activity, List, Map, LayoutGrid, GanttChart, Plus, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { isRockBehindSchedule } from "@/lib/utils/stats-calculator"
 import { EmptyState } from "@/components/shared/empty-state"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
@@ -29,10 +34,13 @@ interface RocksPageProps {
   initialOwnerFilter?: string // Pre-set owner filter (e.g., from manager drill-down)
   onFilterConsumed?: () => void  // Callback to clear the filter after consuming it
   updateRock?: (id: string, updates: Partial<Rock>) => Promise<Rock>
+  createRock?: (rock: Partial<Rock>) => Promise<Rock>
 }
 
-export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter, onFilterConsumed, updateRock }: RocksPageProps) {
+export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter, onFilterConsumed, updateRock, createRock }: RocksPageProps) {
   const { setCurrentPage } = useApp()
+  const { toast } = useToast()
+  const { currentWorkspaceId } = useWorkspaces()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [ownerFilter, setOwnerFilter] = useState<string>(initialOwnerFilter || "all")
@@ -56,6 +64,63 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
   const [pageView, setPageView] = useState<"table" | "roadmap" | "kanban" | "timeline">("table")
   const [inlineEditRockId, setInlineEditRockId] = useState<string | null>(null)
   const [inlineEditValue, setInlineEditValue] = useState<string>("")
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createForm, setCreateForm] = useState({
+    title: "",
+    description: "",
+    dueDate: "",
+    status: "on-track" as Rock["status"],
+    ownerId: "",
+  })
+  const [isCreating, setIsCreating] = useState(false)
+
+  // Default due date to end of current quarter
+  const getDefaultDueDate = () => {
+    const now = new Date()
+    const quarter = Math.floor(now.getMonth() / 3)
+    const endMonth = (quarter + 1) * 3 // 3, 6, 9, 12
+    const lastDay = new Date(now.getFullYear(), endMonth, 0)
+    return lastDay.toISOString().split("T")[0]
+  }
+
+  // Compute quarter string from due date
+  const getQuarterFromDate = (dateStr: string) => {
+    if (!dateStr) return undefined
+    const d = new Date(dateStr)
+    const q = Math.floor(d.getMonth() / 3) + 1
+    return `Q${q} ${d.getFullYear()}`
+  }
+
+  const handleCreateRock = async () => {
+    if (!createForm.title.trim()) {
+      toast({ title: "Title is required", variant: "destructive" })
+      return
+    }
+    if (!createForm.dueDate) {
+      toast({ title: "Due date is required", variant: "destructive" })
+      return
+    }
+    if (!createRock) return
+    setIsCreating(true)
+    try {
+      const effectiveOwner = createForm.ownerId || currentUser.userId || currentUser.id
+      await createRock({
+        title: createForm.title.trim(),
+        description: createForm.description.trim() || undefined,
+        dueDate: createForm.dueDate,
+        status: createForm.status,
+        userId: effectiveOwner,
+        quarter: getQuarterFromDate(createForm.dueDate),
+      })
+      toast({ title: "Rock created", description: `"${createForm.title.trim()}" has been added.` })
+      setCreateDialogOpen(false)
+      setCreateForm({ title: "", description: "", dueDate: "", status: "on-track", ownerId: "" })
+    } catch {
+      toast({ title: "Failed to create rock", variant: "destructive" })
+    } finally {
+      setIsCreating(false)
+    }
+  }
 
   const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
   // Use users.id (not org_members.id) for filtering rocks
@@ -192,6 +257,19 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
             </Button>
           </div>
           <ExportButton type="rocks" />
+          {createRock && (
+            <Button
+              size="sm"
+              onClick={() => {
+                setCreateForm({ title: "", description: "", dueDate: getDefaultDueDate(), status: "on-track", ownerId: "" })
+                setCreateDialogOpen(true)
+              }}
+              className="min-h-[36px]"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">New Rock</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -620,6 +698,77 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
         onCheckinComplete={() => setCheckinRock(null)}
       />
     )}
+
+    {/* Create Rock Dialog */}
+    <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create Rock</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={(e) => { e.preventDefault(); handleCreateRock() }}>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Title <span className="text-red-500">*</span></Label>
+              <Input
+                placeholder="e.g. Launch new feature by Q2"
+                value={createForm.title}
+                onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea
+                placeholder="What does success look like?"
+                value={createForm.description}
+                onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Due Date <span className="text-red-500">*</span></Label>
+                <Input
+                  type="date"
+                  value={createForm.dueDate}
+                  onChange={(e) => setCreateForm({ ...createForm, dueDate: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={createForm.status} onValueChange={(v) => setCreateForm({ ...createForm, status: v as Rock["status"] })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="on-track">On Track</SelectItem>
+                    <SelectItem value="at-risk">At Risk</SelectItem>
+                    <SelectItem value="blocked">Blocked</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {isAdmin && teamMembers.length > 0 && (
+              <div className="space-y-2">
+                <Label>Owner</Label>
+                <Select value={createForm.ownerId || currentUser.userId || currentUser.id} onValueChange={(v) => setCreateForm({ ...createForm, ownerId: v })}>
+                  <SelectTrigger><SelectValue placeholder="Assign owner" /></SelectTrigger>
+                  <SelectContent>
+                    {teamMembers.map((m) => (
+                      <SelectItem key={m.userId || m.id} value={m.userId || m.id}>{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          <DialogFooter className="mt-4">
+            <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Creating...</> : "Create Rock"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
     </FeatureGate>
   )
 }
