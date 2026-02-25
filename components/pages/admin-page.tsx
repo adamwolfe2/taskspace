@@ -16,6 +16,7 @@ import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
 import { EODInsightsCard } from "@/components/ai/eod-insights-card"
 import { DailyReportShare } from "@/components/admin/daily-report-share"
 import { WeeklyReportShare } from "@/components/admin/weekly-report-share"
+import { TeamMemberProfileModal } from "@/components/admin/team-member-profile-modal"
 import { useToast } from "@/hooks/use-toast"
 import { useAdminAiInsights } from "@/lib/hooks/use-ai-insights"
 
@@ -41,6 +42,7 @@ export function AdminPage({
   const [showAssignTaskModal, setShowAssignTaskModal] = useState(false)
   const [showPendingTasks, setShowPendingTasks] = useState(false)
   const [summaryCopied, setSummaryCopied] = useState(false)
+  const [selectedMemberProfile, setSelectedMemberProfile] = useState<TeamMember | null>(null)
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
   const { data: insights, fetchInsights } = useAdminAiInsights()
@@ -448,7 +450,7 @@ export function AdminPage({
       <Card>
         <CardHeader>
           <CardTitle>Team Performance</CardTitle>
-          <CardDescription>Accountability scores ranked by overall performance</CardDescription>
+          <CardDescription>Accountability scores ranked by overall performance · Click a member to see their profile</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -463,7 +465,7 @@ export function AdminPage({
                     : "bg-red-100 text-red-800 border-red-200"
 
                 return (
-                  <div key={member.id} className="border border-border rounded-lg p-4">
+                  <div key={member.id} className="border border-border rounded-lg p-4 cursor-pointer hover:border-slate-300 hover:shadow-sm transition-all" onClick={() => setSelectedMemberProfile(member)}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <UserInitials name={member.name} />
@@ -518,6 +520,17 @@ export function AdminPage({
         allRocks={rocks}
         currentUserId={currentUser.id}
       />
+
+      {selectedMemberProfile && (
+        <TeamMemberProfileModal
+          open={!!selectedMemberProfile}
+          onOpenChange={(open) => { if (!open) setSelectedMemberProfile(null) }}
+          member={selectedMemberProfile}
+          rocks={rocks}
+          tasks={assignedTasks}
+          eodReports={eodReports}
+        />
+      )}
     </div>
   )
 }

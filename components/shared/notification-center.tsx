@@ -30,12 +30,15 @@ import type { Notification } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
 import { CONFIG } from "@/lib/config"
 
+type NotificationFilter = "all" | "unread" | "tasks" | "escalations"
+
 export function NotificationCenter() {
   const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [filter, setFilter] = useState<NotificationFilter>("all")
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set())
 
   const fetchNotifications = useCallback(async () => {
@@ -239,6 +242,15 @@ export function NotificationCenter() {
     }
   }
 
+  const filteredNotifications = notifications.filter((n) => {
+    if (filter === "unread") return !n.read
+    if (filter === "tasks") return n.type === "task_assigned" || n.type === "task_completed"
+    if (filter === "escalations") return n.type === "escalation"
+    return true
+  })
+
+  const escalationCount = notifications.filter((n) => n.type === "escalation" && !n.read).length
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -281,15 +293,31 @@ export function NotificationCenter() {
             </Button>
           )}
         </div>
-        <ScrollArea className="h-[400px]">
-          {notifications.length === 0 ? (
+        {/* Filter tabs */}
+        <div className="flex border-b px-1">
+          {(["all", "unread", "tasks", "escalations"] as NotificationFilter[]).map((f) => {
+            const label = f === "all" ? "All" : f === "unread" ? `Unread${unreadCount > 0 ? ` (${unreadCount})` : ""}` : f === "tasks" ? "Tasks" : `Escalations${escalationCount > 0 ? ` (${escalationCount})` : ""}`
+            return (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`flex-1 py-2 text-xs font-medium transition-colors ${filter === f ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+
+        <ScrollArea className="h-[340px]">
+          {filteredNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
               <Bell className="h-8 w-8 mb-2 opacity-30" />
-              <p className="text-sm">No notifications</p>
+              <p className="text-sm">{filter === "all" ? "No notifications" : `No ${filter} notifications`}</p>
             </div>
           ) : (
             <div className="divide-y">
-              {notifications.map((notification) => {
+              {filteredNotifications.map((notification) => {
                 const hasLink = !!(notification.link || notification.actionUrl)
                 return (
                   <div
