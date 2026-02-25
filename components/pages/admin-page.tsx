@@ -48,8 +48,24 @@ export function AdminPage({
   const [selectedMemberProfile, setSelectedMemberProfile] = useState<TeamMember | null>(null)
   const [nudgingSending, setNudgingSending] = useState(false)
   const [reassigningTaskId, setReassigningTaskId] = useState<string | null>(null)
+  const [acknowledgedEscalations, setAcknowledgedEscalations] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set()
+    try {
+      const stored = localStorage.getItem("acknowledged_escalations")
+      return new Set(stored ? JSON.parse(stored) : [])
+    } catch { return new Set() }
+  })
+  const [showAcknowledged, setShowAcknowledged] = useState(false)
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
+
+  const handleAcknowledgeEscalation = (reportId: string) => {
+    const next = new Set(acknowledgedEscalations)
+    next.add(reportId)
+    setAcknowledgedEscalations(next)
+    try { localStorage.setItem("acknowledged_escalations", JSON.stringify(Array.from(next))) } catch {}
+    toast({ title: "Escalation acknowledged", description: "Marked as reviewed" })
+  }
 
   const sendEodNudge = async () => {
     setNudgingSending(true)
@@ -622,39 +638,76 @@ export function AdminPage({
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              Escalations ({escalations.length})
-            </CardTitle>
-            <CardDescription>Items requiring immediate attention</CardDescription>
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-destructive" />
+                  Escalations ({escalations.filter((r) => !acknowledgedEscalations.has(r.id)).length})
+                </CardTitle>
+                <CardDescription>Items requiring immediate attention</CardDescription>
+              </div>
+              {acknowledgedEscalations.size > 0 && (
+                <Button variant="ghost" size="sm" className="text-xs text-slate-400 h-7" onClick={() => setShowAcknowledged(!showAcknowledged)}>
+                  {showAcknowledged ? "Hide acknowledged" : `+${acknowledgedEscalations.size} acknowledged`}
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
-            {escalations.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No escalations</p>
-            ) : (
-              <div className="space-y-3">
-                {escalations.map((report) => {
-                  const user = teamMembers.find((m) => m.userId === report.userId)
-                  return (
-                    <div key={report.id} className="border border-border rounded-lg p-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {user && <UserInitials name={user.name} size="sm" />}
-                          <div>
-                            <p className="font-medium">{user?.name}</p>
-                            <p className="text-xs text-muted-foreground">{getRelativeDate(report.date)}</p>
+            {(() => {
+              const unacked = escalations.filter((r) => !acknowledgedEscalations.has(r.id))
+              const acked = escalations.filter((r) => acknowledgedEscalations.has(r.id))
+              const visible = showAcknowledged ? escalations : unacked
+              if (visible.length === 0 && !showAcknowledged) {
+                return (
+                  <div className="text-center py-8">
+                    <p className="text-emerald-600 font-medium text-sm">All escalations reviewed</p>
+                    {acked.length > 0 && <p className="text-xs text-slate-400 mt-1">{acked.length} acknowledged</p>}
+                  </div>
+                )
+              }
+              return (
+                <div className="space-y-3">
+                  {visible.map((report) => {
+                    const user = teamMembers.find((m) => m.userId === report.userId)
+                    const isAcked = acknowledgedEscalations.has(report.id)
+                    return (
+                      <div key={report.id} className={`border rounded-lg p-4 space-y-2 ${isAcked ? "opacity-50 border-slate-200" : "border-border"}`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {user && <UserInitials name={user.name} size="sm" />}
+                            <div>
+                              <p className="font-medium">{user?.name}</p>
+                              <p className="text-xs text-muted-foreground">{getRelativeDate(report.date)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isAcked ? (
+                              <Badge variant="outline" className="text-slate-400 border-slate-200">Reviewed</Badge>
+                            ) : (
+                              <>
+                                <Badge variant="destructive">Escalation</Badge>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  onClick={() => handleAcknowledgeEscalation(report.id)}
+                                >
+                                  Acknowledge
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </div>
-                        <Badge variant="destructive">Escalation</Badge>
+                        <div className="bg-destructive/10 border border-destructive/20 rounded p-3">
+                          <p className="text-sm">{report.escalationNote}</p>
+                        </div>
                       </div>
-                      <div className="bg-destructive/10 border border-destructive/20 rounded p-3">
-                        <p className="text-sm">{report.escalationNote}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+                    )
+                  })}
+                </div>
+              )
+            })()}
           </CardContent>
         </Card>
       </div>
