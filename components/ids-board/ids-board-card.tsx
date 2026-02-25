@@ -4,7 +4,8 @@ import type { IdsBoardItem } from "@/lib/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { GripVertical, AlertCircle, Target, Lightbulb, User } from "lucide-react"
+import { GripVertical, AlertCircle, Target, Lightbulb, User, Clock } from "lucide-react"
+import { differenceInDays, parseISO } from "date-fns"
 
 interface IdsBoardCardProps {
   item: IdsBoardItem
@@ -46,14 +47,27 @@ export function IdsBoardCard({ item, isDragging, onClick }: IdsBoardCardProps) {
                 {item.description}
               </p>
             )}
-            {(item.assignedToName || item.createdByName) && (
-              <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                <User className="h-3 w-3" />
-                <span className="truncate">
-                  {item.assignedToName || item.createdByName}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center justify-between gap-2 mt-2">
+              {(item.assignedToName || item.createdByName) ? (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
+                  <User className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">
+                    {item.assignedToName || item.createdByName}
+                  </span>
+                </div>
+              ) : <span />}
+              {item.createdAt && (() => {
+                const days = differenceInDays(new Date(), parseISO(item.createdAt))
+                if (days === 0) return null
+                const isOld = days >= 7
+                return (
+                  <div className={cn("flex items-center gap-0.5 text-xs flex-shrink-0", isOld ? "text-amber-600 font-medium" : "text-muted-foreground")}>
+                    {isOld && <Clock className="h-3 w-3" />}
+                    <span>{days}d</span>
+                  </div>
+                )
+              })()}
+            </div>
           </div>
         </div>
       </CardContent>
