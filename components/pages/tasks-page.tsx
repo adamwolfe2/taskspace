@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { KanbanBoard } from "@/components/tasks/kanban-board"
-import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2, CheckSquare, X, Trash2 } from "lucide-react"
+import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2, CheckSquare, X, Trash2, AlertTriangle } from "lucide-react"
+import { isPast, startOfDay } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useToast } from "@/hooks/use-toast"
@@ -64,6 +65,7 @@ export function TasksPage({
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
   const [isBulkProcessing, setIsBulkProcessing] = useState(false)
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
+  const [overdueOnly, setOverdueOnly] = useState(false)
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
 
@@ -141,9 +143,26 @@ export function TasksPage({
       // Priority filter
       if (priorityFilter !== "all" && task.priority !== priorityFilter) return false
 
+      // Overdue filter
+      if (overdueOnly && task.status !== "completed") {
+        if (!task.dueDate) return false
+        const due = startOfDay(new Date(task.dueDate))
+        const today = startOfDay(new Date())
+        if (!isPast(due) || due.getTime() === today.getTime()) return false
+      }
+
       return true
     })
-  }, [userTasks, searchQuery, priorityFilter])
+  }, [userTasks, searchQuery, priorityFilter, overdueOnly])
+
+  const overdueCount = useMemo(() => {
+    return userTasks.filter((t) => {
+      if (t.status === "completed" || !t.dueDate) return false
+      const due = startOfDay(new Date(t.dueDate))
+      const today = startOfDay(new Date())
+      return isPast(due) && due.getTime() !== today.getTime()
+    }).length
+  }, [userTasks])
 
   const assignedByAdmin = filteredTasks.filter((t) => t.type === "assigned" && t.status !== "completed")
   const personalTasksUnsorted = filteredTasks.filter((t) => t.type === "personal" && t.status !== "completed")
@@ -513,6 +532,18 @@ export function TasksPage({
               <SelectItem value="normal">Normal</SelectItem>
             </SelectContent>
           </Select>
+          {overdueCount > 0 && (
+            <Button
+              variant={overdueOnly ? "default" : "outline"}
+              size="sm"
+              onClick={() => setOverdueOnly(!overdueOnly)}
+              className={`flex-shrink-0 gap-1.5 min-h-[44px] ${overdueOnly ? "bg-red-600 hover:bg-red-700 border-red-600" : "border-red-200 text-red-600 hover:bg-red-50"}`}
+            >
+              <AlertTriangle className="h-4 w-4" />
+              <span className="hidden sm:inline">Overdue</span>
+              <span className={`text-xs font-bold ${overdueOnly ? "text-white" : "text-red-600"}`}>({overdueCount})</span>
+            </Button>
+          )}
           <ToggleGroup
             type="single"
             value={viewMode}

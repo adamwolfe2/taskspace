@@ -90,8 +90,10 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, roc
       className={cn(
         "p-3 sm:p-4 transition-all overflow-hidden w-full",
         isCompleted && "opacity-60 bg-muted/50",
-        !isCompleted && isPersonal && "border-l-4 border-l-primary",
-        !isCompleted && !isPersonal && "border-l-4 border-l-blue-500",
+        !isCompleted && dueDateStatus?.semanticStatus === "blocked" && "border-l-4 border-l-red-500 bg-red-50/40",
+        !isCompleted && dueDateStatus?.semanticStatus === "at-risk" && "border-l-4 border-l-amber-400",
+        !isCompleted && !dueDateStatus && isPersonal && "border-l-4 border-l-primary",
+        !isCompleted && !dueDateStatus && !isPersonal && "border-l-4 border-l-blue-500",
         isSelected && "ring-2 ring-blue-500 ring-offset-2",
       )}
     >
