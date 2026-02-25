@@ -38,6 +38,7 @@ import type {
   WeeklyReview,
   Achievement,
   UserAchievement,
+  WorkspaceInviteLink,
 } from "../types"
 import type { PaginationParams } from "../utils/pagination"
 
@@ -4725,6 +4726,84 @@ export const db = {
     externalIdMap,
     importConflicts,
     importLogs,
+  },
+
+  // Workspace invite links
+  workspaceInviteLinks: {
+    async getByWorkspaceId(workspaceId: string): Promise<WorkspaceInviteLink | null> {
+      const { rows } = await sql`
+        SELECT * FROM workspace_invite_links WHERE workspace_id = ${workspaceId}
+      `
+      if (!rows[0]) return null
+      const r = rows[0] as Record<string, unknown>
+      return {
+        id: r.id as string,
+        workspaceId: r.workspace_id as string,
+        organizationId: r.organization_id as string,
+        token: r.token as string,
+        createdBy: r.created_by as string,
+        createdAt: (r.created_at as Date)?.toISOString() || "",
+      }
+    },
+
+    async getByToken(token: string): Promise<(WorkspaceInviteLink & {
+      workspaceName: string
+      workspaceType: string
+      organizationName: string
+      logoUrl: string | null
+      primaryColor: string | null
+    }) | null> {
+      const { rows } = await sql`
+        SELECT
+          wil.*,
+          w.name  AS workspace_name,
+          w.type  AS workspace_type,
+          w.logo_url AS workspace_logo_url,
+          w.primary_color AS workspace_primary_color,
+          o.name  AS organization_name,
+          o.logo_url AS org_logo_url,
+          o.primary_color AS org_primary_color
+        FROM workspace_invite_links wil
+        JOIN workspaces      w ON w.id = wil.workspace_id
+        JOIN organizations   o ON o.id = wil.organization_id
+        WHERE wil.token = ${token}
+      `
+      if (!rows[0]) return null
+      const r = rows[0] as Record<string, unknown>
+      return {
+        id: r.id as string,
+        workspaceId: r.workspace_id as string,
+        organizationId: r.organization_id as string,
+        token: r.token as string,
+        createdBy: r.created_by as string,
+        createdAt: (r.created_at as Date)?.toISOString() || "",
+        workspaceName: r.workspace_name as string,
+        workspaceType: r.workspace_type as string,
+        organizationName: r.organization_name as string,
+        // Prefer workspace-level branding, fall back to org branding
+        logoUrl: (r.workspace_logo_url as string | null) || (r.org_logo_url as string | null),
+        primaryColor: (r.workspace_primary_color as string | null) || (r.org_primary_color as string | null),
+      }
+    },
+
+    async upsert(workspaceId: string, orgId: string, createdBy: string, token: string): Promise<WorkspaceInviteLink> {
+      const { rows } = await sql`
+        INSERT INTO workspace_invite_links (workspace_id, organization_id, token, created_by)
+        VALUES (${workspaceId}, ${orgId}, ${token}, ${createdBy})
+        ON CONFLICT (workspace_id)
+        DO UPDATE SET token = EXCLUDED.token, created_by = EXCLUDED.created_by, created_at = NOW()
+        RETURNING *
+      `
+      const r = rows[0] as Record<string, unknown>
+      return {
+        id: r.id as string,
+        workspaceId: r.workspace_id as string,
+        organizationId: r.organization_id as string,
+        token: r.token as string,
+        createdBy: r.created_by as string,
+        createdAt: (r.created_at as Date)?.toISOString() || "",
+      }
+    },
   },
 }
 

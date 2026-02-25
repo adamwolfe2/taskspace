@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils"
 import type { TeamMember } from "@/lib/types"
 import type { Workspace } from "@/lib/hooks/use-workspace"
 import { WorkspaceBrandingSettings } from "./workspace-branding-settings"
+import { WorkspaceInviteLinkCard } from "./workspace-invite-link-card"
 
 interface WorkspaceSettingsTabProps {
   teamMembers: TeamMember[]
@@ -359,6 +360,9 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
     <div className="space-y-4">
       {/* Workspace Branding - Admin only */}
       {isAdmin && <WorkspaceBrandingSettings />}
+
+      {/* Invite Link - Admin only */}
+      {isAdmin && <WorkspaceInviteLinkCard workspaceId={currentWorkspace.id} />}
 
       {/* Workspace Members */}
       <Card>

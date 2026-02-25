@@ -1685,3 +1685,13 @@ export interface SwitchOrganizationResponse {
   token: string
   expiresAt: string
 }
+
+// Workspace invite link (permanent, reusable, one per workspace)
+export interface WorkspaceInviteLink {
+  id: string
+  workspaceId: string
+  organizationId: string
+  token: string
+  createdBy: string
+  createdAt: string
+}

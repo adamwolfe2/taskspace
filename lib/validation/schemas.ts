@@ -1365,3 +1365,13 @@ export const claimTaskPoolItemSchema = z.object({
   action: z.enum(["claim", "unclaim"]),
   workspaceId: z.string().min(1, "Workspace required"),
 })
+
+// ============================================
+// WORKSPACE INVITE LINK SCHEMAS
+// ============================================
+
+export const joinWorkspaceSchema = z.object({
+  name: z.string().min(1, "Name is required").max(255).trim().optional(),
+  email: emailSchema,
+  password: passwordSchema.optional(),
+})
