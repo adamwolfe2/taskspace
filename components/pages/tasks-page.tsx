@@ -69,6 +69,7 @@ export function TasksPage({
   const [overdueOnly, setOverdueOnly] = useState(false)
   const [dueTodayOnly, setDueTodayOnly] = useState(false)
   const [inProgressOnly, setInProgressOnly] = useState(false)
+  const [rockFilter, setRockFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"default" | "due-date" | "priority" | "title" | "newest">("default")
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
@@ -134,6 +135,17 @@ export function TasksPage({
   const targetUserId = viewingUserId || effectiveUserId
   const userTasks = assignedTasks.filter((t) => t.assigneeId === targetUserId)
 
+  // Build unique rock options from tasks that have a linked rock
+  const taskRockOptions = useMemo(() => {
+    const seen = new Map<string, string>()
+    userTasks.forEach((t) => {
+      if (t.rockId && t.rockTitle && !seen.has(t.rockId)) {
+        seen.set(t.rockId, t.rockTitle)
+      }
+    })
+    return Array.from(seen.entries()).map(([id, title]) => ({ id, title }))
+  }, [userTasks])
+
   const filteredTasks = useMemo(() => {
     const PRIORITY_ORDER = { high: 0, medium: 1, normal: 2, low: 3 }
     const filtered = userTasks.filter((task) => {
@@ -157,6 +169,7 @@ export function TasksPage({
         if (due.getTime() !== today.getTime()) return false
       }
       if (inProgressOnly && task.status !== "in-progress") return false
+      if (rockFilter !== "all" && task.rockId !== rockFilter) return false
       return true
     })
     if (sortBy === "due-date") {
@@ -177,7 +190,7 @@ export function TasksPage({
       return [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     }
     return filtered
-  }, [userTasks, searchQuery, priorityFilter, overdueOnly, dueTodayOnly, inProgressOnly, sortBy])
+  }, [userTasks, searchQuery, priorityFilter, overdueOnly, dueTodayOnly, inProgressOnly, rockFilter, sortBy])
 
   const overdueCount = useMemo(() => {
     return userTasks.filter((t) => {
@@ -628,6 +641,19 @@ export function TasksPage({
               <SelectItem value="normal">Normal</SelectItem>
             </SelectContent>
           </Select>
+          {taskRockOptions.length > 0 && (
+            <Select value={rockFilter} onValueChange={setRockFilter}>
+              <SelectTrigger className="w-full sm:w-40 bg-slate-50 border-slate-200 flex-shrink-0">
+                <SelectValue placeholder="All Rocks" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Rocks</SelectItem>
+                {taskRockOptions.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>{r.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           {dueTodayCount > 0 && (
             <Button
               variant={dueTodayOnly ? "default" : "outline"}
