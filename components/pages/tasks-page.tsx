@@ -748,6 +748,28 @@ export function TasksPage({
         </div>
       </div>
 
+      {/* Stats strip (list view only, when there are tasks) */}
+      {viewMode === "list" && userTasks.length > 0 && (() => {
+        const pending = userTasks.filter((t) => t.status !== "completed").length
+        const completed = userTasks.filter((t) => t.status === "completed").length
+        const stats = [
+          { label: "Pending", value: pending, color: "text-slate-700", bg: "bg-slate-50" },
+          { label: "Overdue", value: overdueCount, color: overdueCount > 0 ? "text-red-600" : "text-slate-400", bg: overdueCount > 0 ? "bg-red-50" : "bg-slate-50" },
+          { label: "Due Today", value: dueTodayCount, color: dueTodayCount > 0 ? "text-amber-600" : "text-slate-400", bg: dueTodayCount > 0 ? "bg-amber-50" : "bg-slate-50" },
+          { label: "Completed", value: completed, color: "text-emerald-600", bg: "bg-emerald-50" },
+        ]
+        return (
+          <div className="grid grid-cols-4 gap-2">
+            {stats.map((s) => (
+              <div key={s.label} className={`${s.bg} rounded-lg px-3 py-2 text-center`}>
+                <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
+
       {/* Kanban View */}
       {viewMode === "kanban" ? (
         <div className="space-y-4 w-full">
