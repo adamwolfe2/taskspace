@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Target, Search, Calendar, AlertTriangle, Activity, List, Map, LayoutGrid, GanttChart, Plus, Loader2, Clock } from "lucide-react"
+import { Target, Search, Calendar, AlertTriangle, Activity, List, Map, LayoutGrid, GanttChart, Plus, Loader2, Clock, CheckCircle2 } from "lucide-react"
 import { formatDistanceToNow, parseISO, differenceInDays } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -77,6 +77,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
     ownerId: "",
   })
   const [isCreating, setIsCreating] = useState(false)
+  const [completingRockId, setCompletingRockId] = useState<string | null>(null)
 
   // Default due date to end of current quarter
   const getDefaultDueDate = () => {
@@ -566,6 +567,31 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                             >
                               <Activity className="h-3 w-3 mr-0.5" />
                               Check In
+                            </Button>
+                          )}
+                          {rock.status !== "completed" && updateRock && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-1.5 text-xs text-slate-400 hover:text-emerald-600"
+                              disabled={completingRockId === rock.id}
+                              onClick={async (e) => {
+                                e.stopPropagation()
+                                setCompletingRockId(rock.id)
+                                try {
+                                  await updateRock(rock.id, { status: "completed", progress: 100 })
+                                  toast({ title: "Rock completed!", description: rock.title })
+                                } catch {
+                                  toast({ title: "Failed to complete rock", variant: "destructive" })
+                                } finally {
+                                  setCompletingRockId(null)
+                                }
+                              }}
+                            >
+                              {completingRockId === rock.id
+                                ? <Loader2 className="h-3 w-3 animate-spin" />
+                                : <CheckCircle2 className="h-3 w-3 mr-0.5" />}
+                              Done
                             </Button>
                           )}
                         </div>
