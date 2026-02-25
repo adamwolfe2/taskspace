@@ -457,7 +457,10 @@ export function MeetingDetailView({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5" />
-              Action Items ({todos.length})
+              Action Items
+              <span className="text-sm font-normal text-slate-500">
+                ({todos.filter(t => t.completed).length}/{todos.length} done)
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>

@@ -608,6 +608,16 @@ export function WorkspaceScorecardPage() {
         </Card>
       )}
 
+      {/* Missing data nudge (current week, admins/editors only) */}
+      {data && data.stats.gray > 0 && data.canEdit && weekOffset === 0 && (
+        <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-sm">
+          <HelpCircle className="h-4 w-4 text-slate-400 flex-shrink-0" />
+          <span className="text-slate-600">
+            <span className="font-semibold">{data.stats.gray}</span> metric{data.stats.gray !== 1 ? "s are" : " is"} missing data for this week — open each card to enter values
+          </span>
+        </div>
+      )}
+
       {/* Metrics Display */}
       {data && data.summary.length === 0 ? (
         <Card className="border-dashed">
