@@ -127,6 +127,21 @@ export function DashboardPage({
   (r) => r.userId === effectiveUserId && r.date === today
  )
 
+ // Compute EOD submission streak for current user
+ const eodStreakDays = (() => {
+  const myDates = new Set(eodReports.filter((r) => r.userId === effectiveUserId).map((r) => r.date))
+  let streak = 0
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  while (true) {
+   const dateStr = d.toISOString().split("T")[0]
+   if (!myDates.has(dateStr)) break
+   streak++
+   d.setDate(d.getDate() - 1)
+  }
+  return streak
+ })()
+
  const dueTodayCount = userTasks.filter((t) => {
   if (t.status === "completed" || !t.dueDate) return false
   return t.dueDate === today
@@ -308,6 +323,7 @@ export function DashboardPage({
      <EODStatusBar
       hasSubmittedToday={hasSubmittedEODToday}
       onSubmitEOD={handleScrollToEOD}
+      streakDays={eodStreakDays}
      />
     )
 

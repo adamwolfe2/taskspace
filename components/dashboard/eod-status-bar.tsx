@@ -1,19 +1,21 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { CheckCircle2, ClipboardEdit } from "lucide-react"
+import { CheckCircle2, ClipboardEdit, Flame } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface EODStatusBarProps {
   hasSubmittedToday: boolean
   onSubmitEOD: () => void
+  streakDays?: number
   className?: string
 }
 
 export function EODStatusBar({
   hasSubmittedToday,
   onSubmitEOD,
+  streakDays,
   className,
 }: EODStatusBarProps) {
   const themedColors = useThemedIconColors()
@@ -36,6 +38,12 @@ export function EODStatusBar({
             EOD Submitted
           </span>
         </div>
+        {streakDays && streakDays > 1 && (
+          <div className="flex items-center gap-1">
+            <Flame className="h-4 w-4 text-orange-500" />
+            <span className="text-sm font-semibold text-orange-600">{streakDays} day streak</span>
+          </div>
+        )}
       </div>
     )
   }
