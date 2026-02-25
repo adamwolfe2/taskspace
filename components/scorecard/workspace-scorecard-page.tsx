@@ -102,6 +102,7 @@ export function WorkspaceScorecardPage() {
     suggestedActions: string[]
   } | null>(null)
   const [aiInsightsLoading, setAiInsightsLoading] = useState(false)
+  const [showAtRiskOnly, setShowAtRiskOnly] = useState(false)
 
   // Calculate week start based on offset
   const getWeekStartDate = useCallback((offset: number) => {
@@ -543,6 +544,19 @@ export function WorkspaceScorecardPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* At-risk filter */}
+          {data && (data.stats.red > 0 || data.stats.yellow > 0) && (
+            <Button
+              variant={showAtRiskOnly ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowAtRiskOnly(!showAtRiskOnly)}
+              className={showAtRiskOnly ? "bg-red-600 hover:bg-red-700 border-red-600" : "border-red-200 text-red-600 hover:bg-red-50"}
+            >
+              <AlertTriangle className="h-4 w-4 mr-1" />
+              <span>At Risk ({(data.stats.red) + (data.stats.yellow)})</span>
+            </Button>
+          )}
+
           {/* View Mode Toggle */}
           <div className="flex items-center rounded-lg border bg-slate-50 p-1">
             <Button
@@ -615,7 +629,7 @@ export function WorkspaceScorecardPage() {
         </Card>
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data?.summary.map((metric) => (
+          {data?.summary.filter((m) => !showAtRiskOnly || m.currentStatus === "red" || m.currentStatus === "yellow").map((metric) => (
             <MetricCard
               key={metric.metricId}
               metric={metric}
@@ -646,7 +660,7 @@ export function WorkspaceScorecardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data?.summary.map((metric) => {
+                {data?.summary.filter((m) => !showAtRiskOnly || m.currentStatus === "red" || m.currentStatus === "yellow").map((metric) => {
                   const status = statusConfig[metric.currentStatus]
                   const StatusIcon = status.icon
                   return (
