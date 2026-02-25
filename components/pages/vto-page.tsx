@@ -549,6 +549,41 @@ export function VTOPage() {
         </div>
       </div>
 
+      {/* VTO Completeness strip */}
+      {(() => {
+        const sections = [
+          { label: "Core Values", filled: vtoData.coreValues.some((v) => v.trim()) },
+          { label: "Core Focus", filled: !!(vtoData.coreFocus.purpose?.trim() || vtoData.coreFocus.niche?.trim()) },
+          { label: "10-Year Target", filled: !!(vtoData.tenYearTarget.target?.trim()) },
+          { label: "Marketing", filled: !!(vtoData.marketingStrategy.targetMarket?.trim() || vtoData.marketingStrategy.threeUniques?.trim()) },
+          { label: "3-Year Picture", filled: !!(vtoData.threeYearPicture.revenue?.trim() || vtoData.threeYearPicture.description?.trim()) },
+          { label: "1-Year Plan", filled: !!(vtoData.oneYearPlan.revenue?.trim() || (vtoData.oneYearPlan.goals && vtoData.oneYearPlan.goals.some((g) => g.trim()))) },
+          { label: "Q-Rocks", filled: vtoData.quarterlyRocks.some((r) => r.trim()) },
+          { label: "Issues", filled: vtoData.issuesList.some((i) => i.trim()) },
+        ]
+        const filled = sections.filter((s) => s.filled).length
+        const pct = Math.round((filled / sections.length) * 100)
+        const barColor = pct === 100 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-400" : "bg-slate-300"
+        return (
+          <div className="bg-white rounded-lg border border-slate-100 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-slate-600">V/TO Completeness</span>
+              <span className={`text-xs font-bold ${pct === 100 ? "text-emerald-600" : pct >= 50 ? "text-amber-600" : "text-slate-500"}`}>{filled}/{sections.length} sections · {pct}%</span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-1.5 mb-2">
+              <div className={`h-1.5 rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {sections.map((s) => (
+                <span key={s.label} className={`text-[10px] px-1.5 py-0.5 rounded border ${s.filled ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-slate-50 border-slate-200 text-slate-400"}`}>
+                  {s.filled ? "✓ " : ""}{s.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Last edited info */}
       {vtoData.updatedAt && (
         <div className="text-xs text-slate-500">
