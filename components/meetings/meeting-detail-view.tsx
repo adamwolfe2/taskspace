@@ -17,6 +17,7 @@ import {
   Check,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { AgendaBuilder } from "./agenda-builder"
 
 interface MeetingDetailViewProps {
   meeting: {
@@ -526,8 +527,16 @@ export function MeetingDetailView({
         </Card>
       )}
 
+      {/* Agenda Builder — shown for scheduled/active meetings */}
+      {(meeting.status === "scheduled" || meeting.status === "active") && (
+        <AgendaBuilder
+          meetingId={meeting.id}
+          disabled={false}
+        />
+      )}
+
       {/* Empty State */}
-      {sections.length === 0 && todos.length === 0 && !meeting.notes && (
+      {sections.length === 0 && todos.length === 0 && !meeting.notes && meeting.status === "completed" && (
         <Card>
           <CardContent className="py-12">
             <div className="text-center text-slate-500">
