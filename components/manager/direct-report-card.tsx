@@ -24,6 +24,7 @@ import {
   Minus,
   AlertCircle,
   ChevronRight,
+  Mail,
 } from "lucide-react"
 import { formatDistanceToNow, parseISO } from "date-fns"
 
@@ -253,15 +254,38 @@ export function DirectReportCard({ report, onClick, className }: DirectReportCar
           </div>
         )}
 
-        {/* Last Activity */}
-        {report.recentActivity.lastActive && (
-          <p className="text-xs text-slate-400 mt-3 text-right">
-            Active{" "}
-            {formatDistanceToNow(parseISO(report.recentActivity.lastActive), {
-              addSuffix: true,
-            })}
-          </p>
-        )}
+        {/* Last Activity + Quick Email */}
+        <div className="flex items-center justify-between mt-3">
+          {report.recentActivity.lastActive ? (
+            <p className="text-xs text-slate-400">
+              Active{" "}
+              {formatDistanceToNow(parseISO(report.recentActivity.lastActive), {
+                addSuffix: true,
+              })}
+            </p>
+          ) : (
+            <span />
+          )}
+          {(healthStatus.status === "critical" || healthStatus.status === "warning") && report.email && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a
+                    href={`mailto:${report.email}?subject=Check in — ${encodeURIComponent(report.name)}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 transition-colors px-2 py-1 rounded-md hover:bg-slate-100"
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    Email
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Email {report.name}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
       </CardContent>
     </Card>
   )
