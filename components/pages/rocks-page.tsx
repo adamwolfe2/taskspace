@@ -65,6 +65,8 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
   const [pageView, setPageView] = useState<"table" | "roadmap" | "kanban" | "timeline">("table")
   const [inlineEditRockId, setInlineEditRockId] = useState<string | null>(null)
   const [inlineEditValue, setInlineEditValue] = useState<string>("")
+  const [quickStatusRockId, setQuickStatusRockId] = useState<string | null>(null)
+  const [savingStatusId, setSavingStatusId] = useState<string | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [createForm, setCreateForm] = useState({
     title: "",
@@ -575,18 +577,54 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                               <span className="text-slate-400 text-sm">-</span>
                             )}
                           </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col gap-1">
-                              <span className={`status-pill ${statusConfig.bgColor} ${statusConfig.textColor}`}>
-                                {statusConfig.label}
-                              </span>
-                              {isRockBehindSchedule(rock) && (
-                                <span className="inline-flex items-center gap-0.5 text-xs text-orange-600 font-medium">
-                                  <AlertTriangle className="h-3 w-3" />
-                                  Behind pace
+                          <TableCell onClick={(e) => {
+                            if (!updateRock) return
+                            e.stopPropagation()
+                            setQuickStatusRockId(rock.id)
+                          }}>
+                            {quickStatusRockId === rock.id && updateRock ? (
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <Select
+                                  defaultOpen
+                                  value={rock.status}
+                                  onValueChange={async (v) => {
+                                    setSavingStatusId(rock.id)
+                                    setQuickStatusRockId(null)
+                                    try {
+                                      await updateRock(rock.id, { status: v as Rock["status"] })
+                                    } catch {
+                                      toast({ title: "Failed to update status", variant: "destructive" })
+                                    } finally {
+                                      setSavingStatusId(null)
+                                    }
+                                  }}
+                                  onOpenChange={(open) => { if (!open) setQuickStatusRockId(null) }}
+                                >
+                                  <SelectTrigger className="h-7 w-28 text-xs" />
+                                  <SelectContent>
+                                    <SelectItem value="on-track">On Track</SelectItem>
+                                    <SelectItem value="at-risk">At Risk</SelectItem>
+                                    <SelectItem value="blocked">Blocked</SelectItem>
+                                    <SelectItem value="completed">Completed</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col gap-1">
+                                <span
+                                  className={`status-pill ${savingStatusId === rock.id ? "opacity-50" : ""} ${statusConfig.bgColor} ${statusConfig.textColor} ${updateRock ? "cursor-pointer hover:opacity-80" : ""}`}
+                                  title={updateRock ? "Click to change status" : undefined}
+                                >
+                                  {savingStatusId === rock.id ? "Saving…" : statusConfig.label}
                                 </span>
-                              )}
-                            </div>
+                                {isRockBehindSchedule(rock) && (
+                                  <span className="inline-flex items-center gap-0.5 text-xs text-orange-600 font-medium">
+                                    <AlertTriangle className="h-3 w-3" />
+                                    Behind pace
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell
                             onClick={(e) => {

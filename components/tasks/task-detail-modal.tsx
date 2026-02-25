@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { TaskComments } from "./task-comments"
 import { TaskSubtasks } from "./task-subtasks"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
-import { Calendar, User, Target, AlertCircle, Clock, CheckCircle2, FolderKanban } from "lucide-react"
+import { Calendar, User, Target, AlertCircle, Clock, CheckCircle2, FolderKanban, Copy, Check } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 import { cn } from "@/lib/utils"
@@ -71,6 +71,7 @@ export function TaskDetailModal({
   const [comments, setComments] = useState<TaskComment[]>(task.comments || [])
   const [subtasks, setSubtasks] = useState<TaskSubtask[]>([])
   const [isLoadingSubtasks, setIsLoadingSubtasks] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
   const { toast } = useToast()
   const themedColors = useThemedIconColors()
 
@@ -282,14 +283,31 @@ export function TaskDetailModal({
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <DialogTitle
-                className={cn(
-                  "text-lg",
-                  isCompleted && "line-through text-slate-400"
-                )}
-              >
-                {task.title}
-              </DialogTitle>
+              <div className="flex items-center gap-2">
+                <DialogTitle
+                  className={cn(
+                    "text-lg flex-1",
+                    isCompleted && "line-through text-slate-400"
+                  )}
+                >
+                  {task.title}
+                </DialogTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  title="Copy link to task"
+                  onClick={() => {
+                    const url = `${window.location.origin}/app?page=tasks&taskId=${task.id}`
+                    navigator.clipboard.writeText(url).then(() => {
+                      setCopiedLink(true)
+                      setTimeout(() => setCopiedLink(false), 2000)
+                    })
+                  }}
+                >
+                  {copiedLink ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5 text-slate-400" />}
+                </Button>
+              </div>
               <DialogDescription className="flex flex-wrap items-center gap-2 mt-1">
                 <Badge variant={priority.variant}>{priority.label}</Badge>
                 {dueDateStatus ? (
