@@ -416,6 +416,29 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
             Rocks ({displayRocks.length}{baseRocks.length !== displayRocks.length ? ` of ${baseRocks.length}` : ""})
           </h3>
         </div>
+        {displayRocks.length > 0 && (() => {
+          const onTrack = displayRocks.filter((r) => r.status === "on-track").length
+          const atRisk = displayRocks.filter((r) => r.status === "at-risk").length
+          const blocked = displayRocks.filter((r) => r.status === "blocked").length
+          const completed = displayRocks.filter((r) => r.status === "completed").length
+          const avgProgress = Math.round(displayRocks.reduce((sum, r) => sum + r.progress, 0) / displayRocks.length)
+          return (
+            <div className="px-3 sm:px-5 py-3 border-b border-slate-100 grid grid-cols-5 gap-3">
+              {[
+                { label: "On Track", value: onTrack, color: "text-emerald-600", bg: "bg-emerald-50" },
+                { label: "At Risk", value: atRisk, color: "text-amber-600", bg: "bg-amber-50" },
+                { label: "Blocked", value: blocked, color: "text-red-600", bg: "bg-red-50" },
+                { label: "Completed", value: completed, color: "text-slate-600", bg: "bg-slate-100" },
+                { label: "Avg Progress", value: `${avgProgress}%`, color: "text-slate-700", bg: "bg-slate-50" },
+              ].map((s) => (
+                <div key={s.label} className={`${s.bg} rounded-lg px-3 py-2 text-center`}>
+                  <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
         <div className="p-3 sm:p-5">
           {displayRocks.length === 0 ? (
             baseRocks.length === 0 ? (
