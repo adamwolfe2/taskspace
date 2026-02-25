@@ -34,7 +34,7 @@ import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 import { useToast } from "@/hooks/use-toast";
 import { useApp } from "@/lib/contexts/app-context";
 import { DEMO_PEOPLE_ASSESSMENTS, DEMO_READONLY_MESSAGE } from "@/lib/demo-data";
-import { Users, Plus, Check, X, UserCheck, Loader2 } from "lucide-react";
+import { Users, Plus, Check, X, UserCheck, Loader2, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -359,10 +359,43 @@ export function PeopleAnalyzerPage() {
           </div>
           <WorkspaceSwitcher />
         </div>
-        <Button onClick={() => handleOpenDialog()}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Assessment
-        </Button>
+        <div className="flex items-center gap-2">
+          {assessments.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const headers = ["Name", "Gets It", "Wants It", "Has Capacity", "Core Values Rating", "Right Person Right Seat", "Assessment Count", "Notes", "Last Updated"]
+                const rows = assessments.map((a) => [
+                  a.employeeName,
+                  a.getsIt ? "Yes" : "No",
+                  a.wantsIt ? "Yes" : "No",
+                  a.hasCapacity ? "Yes" : "No",
+                  a.coreValuesRating || "",
+                  a.rightPersonRightSeat,
+                  String(a.assessmentCount),
+                  a.latestNotes || "",
+                  new Date(a.updatedAt).toLocaleDateString(),
+                ])
+                const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n")
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement("a")
+                a.href = url
+                a.download = `people-analyzer-${new Date().toISOString().split("T")[0]}.csv`
+                a.click()
+                URL.revokeObjectURL(url)
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+          )}
+          <Button onClick={() => handleOpenDialog()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Assessment
+          </Button>
+        </div>
       </div>
 
       {/* Summary Stats */}

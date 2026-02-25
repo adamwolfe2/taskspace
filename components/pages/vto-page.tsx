@@ -9,7 +9,7 @@ import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useApp } from "@/lib/contexts/app-context"
 
 import { useToast } from "@/hooks/use-toast"
-import { BookOpen, ChevronDown, ChevronRight, Loader2, Plus, X } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronRight, Loader2, Plus, X, Printer, Download } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { DEMO_VTO, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
@@ -469,6 +469,83 @@ export function VTOPage() {
           {hasUnsavedChanges && !isSaving && (
             <div className="text-sm text-amber-600">Unsaved changes</div>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs hidden sm:flex"
+            onClick={() => {
+              const lines: string[] = ["VISION/TRACTION ORGANIZER", "=".repeat(40), ""]
+              if (vtoData.coreValues.length) {
+                lines.push("CORE VALUES", "-".repeat(20))
+                vtoData.coreValues.forEach((v) => v.trim() && lines.push(`• ${v}`))
+                lines.push("")
+              }
+              if (vtoData.coreFocus.purpose || vtoData.coreFocus.niche) {
+                lines.push("CORE FOCUS", "-".repeat(20))
+                if (vtoData.coreFocus.purpose) lines.push(`Purpose: ${vtoData.coreFocus.purpose}`)
+                if (vtoData.coreFocus.niche) lines.push(`Niche: ${vtoData.coreFocus.niche}`)
+                lines.push("")
+              }
+              if (vtoData.tenYearTarget.target) {
+                lines.push("10-YEAR TARGET", "-".repeat(20))
+                lines.push(vtoData.tenYearTarget.target)
+                lines.push("")
+              }
+              const ms = vtoData.marketingStrategy
+              if (ms.targetMarket || ms.threeUniques || ms.provenProcess || ms.guarantee) {
+                lines.push("MARKETING STRATEGY", "-".repeat(20))
+                if (ms.targetMarket) lines.push(`Target Market: ${ms.targetMarket}`)
+                if (ms.threeUniques) lines.push(`3 Uniques: ${ms.threeUniques}`)
+                if (ms.provenProcess) lines.push(`Proven Process: ${ms.provenProcess}`)
+                if (ms.guarantee) lines.push(`Guarantee: ${ms.guarantee}`)
+                lines.push("")
+              }
+              const ty = vtoData.threeYearPicture
+              if (ty.revenue || ty.profit || ty.description) {
+                lines.push("3-YEAR PICTURE", "-".repeat(20))
+                if (ty.revenue) lines.push(`Revenue: ${ty.revenue}`)
+                if (ty.profit) lines.push(`Profit: ${ty.profit}`)
+                if (ty.description) lines.push(ty.description)
+                lines.push("")
+              }
+              const oy = vtoData.oneYearPlan
+              if (oy.revenue || oy.profit || (oy.goals && oy.goals.length)) {
+                lines.push("1-YEAR PLAN", "-".repeat(20))
+                if (oy.revenue) lines.push(`Revenue: ${oy.revenue}`)
+                if (oy.profit) lines.push(`Profit: ${oy.profit}`)
+                oy.goals?.forEach((g) => g.trim() && lines.push(`• ${g}`))
+                lines.push("")
+              }
+              if (vtoData.quarterlyRocks.length) {
+                lines.push("QUARTERLY ROCKS", "-".repeat(20))
+                vtoData.quarterlyRocks.forEach((r) => r.trim() && lines.push(`• ${r}`))
+                lines.push("")
+              }
+              if (vtoData.issuesList.length) {
+                lines.push("ISSUES LIST", "-".repeat(20))
+                vtoData.issuesList.forEach((i) => i.trim() && lines.push(`• ${i}`))
+              }
+              const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8;" })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement("a")
+              a.href = url
+              a.download = "vto.txt"
+              a.click()
+              URL.revokeObjectURL(url)
+            }}
+          >
+            <Download className="h-3.5 w-3.5 mr-1.5" />
+            Export
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={() => window.print()}
+          >
+            <Printer className="h-3.5 w-3.5 mr-1.5" />
+            Print
+          </Button>
         </div>
       </div>
 
