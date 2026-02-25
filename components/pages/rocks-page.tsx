@@ -10,12 +10,14 @@ import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Target, Search, Calendar, AlertTriangle } from "lucide-react"
+import { Target, Search, Calendar, AlertTriangle, Activity } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { isRockBehindSchedule } from "@/lib/utils/stats-calculator"
 import { EmptyState } from "@/components/shared/empty-state"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { useApp } from "@/lib/contexts/app-context"
 import { RockDetailModal } from "@/components/rocks/rock-detail-modal"
+import { RockCheckinDialog } from "@/components/rocks/rock-checkin-dialog"
 
 interface RocksPageProps {
   currentUser: TeamMember
@@ -45,6 +47,8 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
     const quarter = Math.floor(now.getMonth() / 3) + 1
     return `Q${quarter} ${now.getFullYear()}`
   })
+
+  const [checkinRock, setCheckinRock] = useState<Rock | null>(null)
 
   const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
   // Use users.id (not org_members.id) for filtering rocks
@@ -270,17 +274,33 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                           )}
                           <span>{formatDate(rock.dueDate)}</span>
                         </div>
-                        <span
-                          className={`font-medium ${
-                            daysLeft < 0
-                              ? "text-red-600"
-                              : daysLeft < 7
-                                ? "text-amber-600"
-                                : "text-slate-500"
-                          }`}
-                        >
-                          {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-medium ${
+                              daysLeft < 0
+                                ? "text-red-600"
+                                : daysLeft < 7
+                                  ? "text-amber-600"
+                                  : "text-slate-500"
+                            }`}
+                          >
+                            {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`}
+                          </span>
+                          {rock.status !== "completed" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-1.5 text-xs text-slate-400 hover:text-slate-700"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setCheckinRock(rock)
+                              }}
+                            >
+                              <Activity className="h-3 w-3 mr-0.5" />
+                              Check In
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )
@@ -299,6 +319,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                       <TableHead className="text-slate-500 font-medium">Progress</TableHead>
                       <TableHead className="text-slate-500 font-medium">Due Date</TableHead>
                       <TableHead className="text-slate-500 font-medium">Days Left</TableHead>
+                      <TableHead className="text-slate-500 font-medium w-24"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -371,6 +392,23 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                               {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`}
                             </span>
                           </TableCell>
+                          {rock.status !== "completed" && (
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs text-slate-500 hover:text-slate-900"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setCheckinRock(rock)
+                                }}
+                              >
+                                <Activity className="h-3 w-3 mr-1" />
+                                Check In
+                              </Button>
+                            </TableCell>
+                          )}
+                          {rock.status === "completed" && <TableCell />}
                         </TableRow>
                       )
                     })}
@@ -389,6 +427,17 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
         onOpenChange={(open) => { if (!open) setSelectedRock(null) }}
         rock={selectedRock}
         onUpdateRock={updateRock}
+      />
+    )}
+
+    {checkinRock && (
+      <RockCheckinDialog
+        open={!!checkinRock}
+        onOpenChange={(open) => { if (!open) setCheckinRock(null) }}
+        rockId={checkinRock.id}
+        rockTitle={checkinRock.title}
+        currentProgress={checkinRock.progress}
+        onCheckinComplete={() => setCheckinRock(null)}
       />
     )}
     </FeatureGate>
