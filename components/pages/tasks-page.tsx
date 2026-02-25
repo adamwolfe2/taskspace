@@ -69,7 +69,7 @@ export function TasksPage({
   const [overdueOnly, setOverdueOnly] = useState(false)
   const [dueTodayOnly, setDueTodayOnly] = useState(false)
   const [inProgressOnly, setInProgressOnly] = useState(false)
-  const [sortBy, setSortBy] = useState<"default" | "due-date" | "priority" | "title">("default")
+  const [sortBy, setSortBy] = useState<"default" | "due-date" | "priority" | "title" | "newest">("default")
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
 
@@ -172,6 +172,9 @@ export function TasksPage({
     }
     if (sortBy === "title") {
       return [...filtered].sort((a, b) => a.title.localeCompare(b.title))
+    }
+    if (sortBy === "newest") {
+      return [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     }
     return filtered
   }, [userTasks, searchQuery, priorityFilter, overdueOnly, dueTodayOnly, inProgressOnly, sortBy])
@@ -668,6 +671,7 @@ export function TasksPage({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="default">Default Order</SelectItem>
+              <SelectItem value="newest">Newest First</SelectItem>
               <SelectItem value="due-date">Due Date</SelectItem>
               <SelectItem value="priority">Priority</SelectItem>
               <SelectItem value="title">Title A–Z</SelectItem>
