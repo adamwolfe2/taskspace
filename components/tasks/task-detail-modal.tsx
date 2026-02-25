@@ -11,10 +11,12 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 import { TaskComments } from "./task-comments"
 import { TaskSubtasks } from "./task-subtasks"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
-import { Calendar, User, Target, AlertCircle, Clock, CheckCircle2, FolderKanban, Copy, Check } from "lucide-react"
+import { Calendar, User, Target, AlertCircle, Clock, CheckCircle2, FolderKanban, Copy, Check, Pencil, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 import { cn } from "@/lib/utils"
@@ -72,6 +74,9 @@ export function TaskDetailModal({
   const [subtasks, setSubtasks] = useState<TaskSubtask[]>([])
   const [isLoadingSubtasks, setIsLoadingSubtasks] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [editingDueDate, setEditingDueDate] = useState(false)
+  const [editingPriority, setEditingPriority] = useState(false)
+  const [savingField, setSavingField] = useState<string | null>(null)
   const { toast } = useToast()
   const themedColors = useThemedIconColors()
 
@@ -86,6 +91,32 @@ export function TaskDetailModal({
   }
 
   const priority = priorityConfig[task.priority]
+
+  const handleUpdateDueDate = async (newDate: string) => {
+    setSavingField("dueDate")
+    setEditingDueDate(false)
+    try {
+      await onUpdateTask(task.id, { dueDate: newDate || null })
+      toast({ title: "Due date updated" })
+    } catch (err: unknown) {
+      toast({ title: "Failed to update due date", description: err instanceof Error ? err.message : "Please try again", variant: "destructive" })
+    } finally {
+      setSavingField(null)
+    }
+  }
+
+  const handleUpdatePriority = async (newPriority: AssignedTask["priority"]) => {
+    setSavingField("priority")
+    setEditingPriority(false)
+    try {
+      await onUpdateTask(task.id, { priority: newPriority })
+      toast({ title: "Priority updated" })
+    } catch (err: unknown) {
+      toast({ title: "Failed to update priority", description: err instanceof Error ? err.message : "Please try again", variant: "destructive" })
+    } finally {
+      setSavingField(null)
+    }
+  }
 
   const handleAddComment = async (text: string) => {
     const newComment: TaskComment = {
@@ -309,23 +340,90 @@ export function TaskDetailModal({
                 </Button>
               </div>
               <DialogDescription className="flex flex-wrap items-center gap-2 mt-1">
-                <Badge variant={priority.variant}>{priority.label}</Badge>
-                {dueDateStatus ? (
-                  <span
+                {/* Editable priority */}
+                {!isCompleted && editingPriority ? (
+                  <Select
+                    defaultOpen
+                    value={task.priority}
+                    onValueChange={(v) => handleUpdatePriority(v as AssignedTask["priority"])}
+                    onOpenChange={(open) => { if (!open) setEditingPriority(false) }}
+                  >
+                    <SelectTrigger className="h-6 w-24 text-xs px-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <button
+                    onClick={() => !isCompleted && setEditingPriority(true)}
+                    disabled={isCompleted || savingField === "priority"}
+                    className={cn("focus:outline-none", !isCompleted && "cursor-pointer hover:opacity-80")}
+                    title={!isCompleted ? "Click to change priority" : undefined}
+                  >
+                    <Badge variant={priority.variant}>{savingField === "priority" ? "Saving…" : priority.label}</Badge>
+                  </button>
+                )}
+
+                {/* Editable due date */}
+                {!isCompleted && editingDueDate ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="date"
+                      defaultValue={task.dueDate || ""}
+                      autoFocus
+                      className="h-6 text-xs px-2 w-32"
+                      onBlur={(e) => {
+                        if (e.target.value !== task.dueDate) handleUpdateDueDate(e.target.value)
+                        else setEditingDueDate(false)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleUpdateDueDate((e.target as HTMLInputElement).value)
+                        if (e.key === "Escape") setEditingDueDate(false)
+                      }}
+                    />
+                    <button onClick={() => setEditingDueDate(false)} className="text-slate-400 hover:text-slate-600">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : dueDateStatus ? (
+                  <button
+                    onClick={() => !isCompleted && setEditingDueDate(true)}
+                    disabled={isCompleted || savingField === "dueDate"}
                     className={cn(
                       "flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded",
                       dueDateStatus.bgColor,
-                      dueDateStatus.color
+                      dueDateStatus.color,
+                      !isCompleted && "cursor-pointer hover:opacity-80"
                     )}
+                    title={!isCompleted ? "Click to change due date" : undefined}
                   >
                     <dueDateStatus.icon className="h-3 w-3" />
-                    {dueDateStatus.label}
-                  </span>
+                    {savingField === "dueDate" ? "Saving…" : dueDateStatus.label}
+                  </button>
                 ) : task.dueDate ? (
-                  <span className="flex items-center gap-1 text-xs" style={{ color: themedColors.secondary }}>
+                  <button
+                    onClick={() => !isCompleted && setEditingDueDate(true)}
+                    disabled={isCompleted || savingField === "dueDate"}
+                    className={cn("flex items-center gap-1 text-xs", !isCompleted && "cursor-pointer hover:opacity-80")}
+                    style={{ color: themedColors.secondary }}
+                    title={!isCompleted ? "Click to change due date" : undefined}
+                  >
                     <Calendar className="h-3 w-3" />
-                    Due: {format(new Date(task.dueDate), "MMM d, yyyy")}
-                  </span>
+                    {savingField === "dueDate" ? "Saving…" : `Due: ${format(new Date(task.dueDate), "MMM d, yyyy")}`}
+                  </button>
+                ) : !isCompleted ? (
+                  <button
+                    onClick={() => setEditingDueDate(true)}
+                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <Calendar className="h-3 w-3" />
+                    Add due date
+                  </button>
                 ) : null}
               </DialogDescription>
             </div>
