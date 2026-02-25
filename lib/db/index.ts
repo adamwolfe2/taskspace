@@ -246,6 +246,7 @@ function parseEODReport(row: Record<string, unknown>): EODReport {
     needsEscalation: row.needs_escalation as boolean,
     escalationNote: row.escalation_note as string | null,
     metricValueToday: row.metric_value_today as number | null,
+    mood: (row.mood as EODReport["mood"]) || undefined,
     submittedAt: (row.submitted_at as Date)?.toISOString() || "",
     createdAt: (row.created_at as Date)?.toISOString() || "",
   }

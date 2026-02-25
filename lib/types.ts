@@ -344,6 +344,7 @@ export interface EODReport {
   needsEscalation: boolean
   escalationNote: string | null
   metricValueToday: number | null // Daily metric value for weekly scorecard
+  mood?: "positive" | "neutral" | "negative"
   attachments?: FileAttachment[] // Optional file/image attachments
   submittedAt: string
   createdAt: string
@@ -1126,7 +1127,7 @@ export interface AssignedTaskExtended extends AssignedTask {
 }
 
 export interface EODReportExtended extends EODReport {
-  mood?: "positive" | "neutral" | "negative" | "stressed"
+  mood?: "positive" | "neutral" | "negative"
   energyLevel?: number
 }
 

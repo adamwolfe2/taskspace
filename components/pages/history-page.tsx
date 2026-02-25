@@ -34,6 +34,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   const [searchQuery, setSearchQuery] = useState("")
   const [userFilter, setUserFilter] = useState<string>(initialUserFilter || "all")
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "30days">("all")
+  const [moodFilter, setMoodFilter] = useState<"all" | "positive" | "neutral" | "negative">("all")
   const [currentPage, setCurrentPage] = useState(1)
 
   // Apply initial filter from navigation (e.g., manager dashboard drill-down)
@@ -47,7 +48,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, userFilter, dateFilter])
+  }, [searchQuery, userFilter, dateFilter, moodFilter])
   const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set())
   const [editingReport, setEditingReport] = useState<EODReport | null>(null)
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
@@ -117,6 +118,10 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
       return parseISO(report.date) >= dateFilterCutoff
     })
     .filter((report) => {
+      if (moodFilter === "all") return true
+      return report.mood === moodFilter
+    })
+    .filter((report) => {
       if (!searchQuery) return true
       const user = teamMembers.find((m) => m.userId === report.userId)
       const searchLower = searchQuery.toLowerCase()
@@ -167,6 +172,28 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
                 onClick={() => setDateFilter(filter)}
               >
                 {filter === "all" ? "All Time" : filter === "today" ? "Today" : filter === "week" ? "Last 7 Days" : "Last 30 Days"}
+              </Button>
+            ))}
+          </div>
+
+          {/* Mood quick-filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-slate-400 font-medium">Mood:</span>
+            {([
+              { value: "all", label: "All", emoji: null },
+              { value: "positive", label: "Positive", emoji: "😊" },
+              { value: "neutral", label: "Neutral", emoji: "😐" },
+              { value: "negative", label: "Negative", emoji: "😔" },
+            ] as const).map((opt) => (
+              <Button
+                key={opt.value}
+                variant={moodFilter === opt.value ? "default" : "outline"}
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => setMoodFilter(opt.value)}
+              >
+                {opt.emoji && <span>{opt.emoji}</span>}
+                {opt.label}
               </Button>
             ))}
           </div>
@@ -252,8 +279,13 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
                       {user && <UserInitials name={user.name} />}
                       <div>
                         <h3 className="font-semibold text-slate-900">EOD Report - {formatDate(report.date)}</h3>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 flex items-center gap-1.5">
                           Submitted by {user?.name} at {new Date(report.submittedAt).toLocaleTimeString()}
+                          {report.mood && (
+                            <span title={`Mood: ${report.mood}`}>
+                              {report.mood === "positive" ? "😊" : report.mood === "neutral" ? "😐" : "😔"}
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
