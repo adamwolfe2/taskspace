@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckCircle2, Target, TrendingUp } from "lucide-react"
+import { CheckCircle2, Target, TrendingUp, Flame } from "lucide-react"
 import { EnhancedStatCard } from "./enhanced-stat-card"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
@@ -75,10 +75,21 @@ export function StatsCards({ stats }: StatsCardsProps) {
       iconColor: "",
       iconColorStyle: { color: themedColors.accent },
     },
+    {
+      title: "EOD Streak",
+      value: stats.eodStreak > 0 ? `${stats.eodStreak}d` : "0",
+      trend: stats.eodStreak >= 5 ? { value: stats.eodStreak, isPositive: true } : undefined,
+      subtitle: stats.eodStreak === 0 ? "start your streak today" : stats.eodStreak === 1 ? "1 day — keep going!" : `${stats.eodStreak} days strong`,
+      icon: Flame,
+      iconBg: "",
+      iconBgStyle: { backgroundColor: stats.eodStreak >= 7 ? "rgba(249,115,22,0.1)" : stats.eodStreak >= 3 ? "rgba(245,158,11,0.1)" : "rgba(148,163,184,0.1)" },
+      iconColor: "",
+      iconColorStyle: { color: stats.eodStreak >= 7 ? "#f97316" : stats.eodStreak >= 3 ? "#f59e0b" : "#94a3b8" },
+    },
   ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
       {cards.map((card, index) => (
         <EnhancedStatCard
           key={index}
