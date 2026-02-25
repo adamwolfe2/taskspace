@@ -12,6 +12,8 @@ interface StatsCardsProps {
     activeRocks: number
     averageRockProgress: number
     eodStreak: number
+    rocksAtRisk?: number
+    rocksBlocked?: number
   }
 }
 
@@ -44,12 +46,20 @@ export function StatsCards({ stats }: StatsCardsProps) {
         value: 5,
         isPositive: true
       } : undefined,
-      subtitle: "quarterly goals",
+      subtitle: (() => {
+        const atRisk = stats.rocksAtRisk ?? 0
+        const blocked = stats.rocksBlocked ?? 0
+        if (atRisk === 0 && blocked === 0) return "quarterly goals"
+        const parts: string[] = []
+        if (atRisk > 0) parts.push(`${atRisk} at risk`)
+        if (blocked > 0) parts.push(`${blocked} blocked`)
+        return parts.join(", ")
+      })(),
       icon: Target,
       iconBg: "",
-      iconBgStyle: { backgroundColor: themedColors.secondaryAlpha10 },
+      iconBgStyle: { backgroundColor: (stats.rocksBlocked ?? 0) > 0 ? "rgba(239,68,68,0.1)" : (stats.rocksAtRisk ?? 0) > 0 ? "rgba(245,158,11,0.1)" : themedColors.secondaryAlpha10 },
       iconColor: "",
-      iconColorStyle: { color: themedColors.secondary },
+      iconColorStyle: { color: (stats.rocksBlocked ?? 0) > 0 ? "#ef4444" : (stats.rocksAtRisk ?? 0) > 0 ? "#f59e0b" : themedColors.secondary },
     },
     {
       title: "Rock Progress",

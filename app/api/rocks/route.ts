@@ -336,20 +336,36 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    // Send notification when rock is newly completed (best-effort, non-blocking)
-    const justCompleted = updatedRock?.status === "completed" && rock.status !== "completed"
-    if (justCompleted && updatedRock) {
-      // If admin completed another user's rock, notify that user
-      if (updatedRock.userId && updatedRock.userId !== auth.user.id) {
+    // Send notification when rock status changes (best-effort, non-blocking)
+    const prevStatus = rock.status
+    const newStatus = updatedRock?.status
+    if (updatedRock && newStatus && newStatus !== prevStatus) {
+      const ownerDiffers = updatedRock.userId && updatedRock.userId !== auth.user.id
+      if (newStatus === "completed" && ownerDiffers) {
+        // Notify owner their rock was marked complete by someone else
         sendNotification({
           organizationId: auth.organization.id,
           workspaceId: rock.workspaceId || undefined,
-          userId: updatedRock.userId,
+          userId: updatedRock.userId!,
           type: "rock_updated",
           title: "Rock marked complete",
           message: `"${updatedRock.title}" was marked complete.`,
           link: "/rocks",
         }).catch(err => logError(logger, "Rock completion notification failed", err))
+      } else if (newStatus === "blocked" || newStatus === "at-risk") {
+        // Notify owner when their rock is flagged blocked or at-risk by someone else
+        if (ownerDiffers) {
+          const statusLabel = newStatus === "blocked" ? "Blocked" : "At Risk"
+          sendNotification({
+            organizationId: auth.organization.id,
+            workspaceId: rock.workspaceId || undefined,
+            userId: updatedRock.userId!,
+            type: "rock_updated",
+            title: `Rock marked ${statusLabel}`,
+            message: `"${updatedRock.title}" has been marked ${statusLabel.toLowerCase()}.`,
+            link: "/rocks",
+          }).catch(err => logError(logger, "Rock status notification failed", err))
+        }
       }
     }
 

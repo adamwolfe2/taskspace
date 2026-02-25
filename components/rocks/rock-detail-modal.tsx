@@ -26,7 +26,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RockMilestoneManager } from "./rock-milestone-manager"
 import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
-import { Target, Calendar, AlertCircle, CheckCircle2, Clock, Pencil, Save, X, FolderKanban } from "lucide-react"
+import { Target, Calendar, AlertCircle, CheckCircle2, Clock, Pencil, Save, X, FolderKanban, Copy, Check } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
@@ -67,6 +67,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
   const [status, setStatus] = useState(rock.status)
   const [projectId, setProjectId] = useState<string | null>(rock.projectId || null)
   const [isSaving, setIsSaving] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
   const [showCompletePrompt, setShowCompletePrompt] = useState(false)
   const { toast } = useToast()
   const { getStatusStyle } = useBrandStatusStyles()
@@ -187,24 +188,41 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
                 </DialogDescription>
               </div>
             </div>
-            <Button
-              variant={isEditing ? "default" : "outline"}
-              size="sm"
-              onClick={isEditing ? handleSave : () => setIsEditing(true)}
-              disabled={isSaving}
-            >
-              {isEditing ? (
-                <>
-                  <Save className="h-4 w-4 mr-1" />
-                  {isSaving ? "Saving..." : "Save"}
-                </>
-              ) : (
-                <>
-                  <Pencil className="h-4 w-4 mr-1" />
-                  Edit
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2"
+                title="Copy link to rock"
+                onClick={() => {
+                  const url = `${window.location.origin}/app?page=rocks&rockId=${rock.id}`
+                  navigator.clipboard.writeText(url).then(() => {
+                    setCopiedLink(true)
+                    setTimeout(() => setCopiedLink(false), 2000)
+                  })
+                }}
+              >
+                {copiedLink ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant={isEditing ? "default" : "outline"}
+                size="sm"
+                onClick={isEditing ? handleSave : () => setIsEditing(true)}
+                disabled={isSaving}
+              >
+                {isEditing ? (
+                  <>
+                    <Save className="h-4 w-4 mr-1" />
+                    {isSaving ? "Saving..." : "Save"}
+                  </>
+                ) : (
+                  <>
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 
