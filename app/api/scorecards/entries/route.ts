@@ -13,6 +13,8 @@ import { createScorecardEntrySchema } from "@/lib/validation/schemas"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { logger } from "@/lib/logger"
 import { CONFIG } from "@/lib/config"
+import { db } from "@/lib/db"
+import { sendNotificationToMany } from "@/lib/db/notifications"
 
 export const POST = withAuth(async (request, auth) => {
   try {
@@ -65,6 +67,29 @@ export const POST = withAuth(async (request, auth) => {
       value,
       status: entry.status,
     }, "Scorecard entry submitted")
+
+    // Notify workspace admins/owners when a metric turns red (off-track)
+    if (entry.status === "red") {
+      try {
+        const allMembers = await db.members.findByOrganizationId(auth.organization.id)
+        const adminUserIds = allMembers
+          .filter((m) => m.status === "active" && (m.role === "admin" || m.role === "owner") && m.userId !== auth.user.id)
+          .map((m) => m.userId)
+          .filter(Boolean) as string[]
+        if (adminUserIds.length > 0) {
+          const targetStr = metric.targetValue != null ? ` (target: ${metric.targetValue}${metric.unit ? " " + metric.unit : ""})` : ""
+          await sendNotificationToMany({
+            organizationId: auth.organization.id,
+            userIds: adminUserIds,
+            type: "system",
+            title: "Scorecard Metric Off-Track",
+            message: `"${metric.name}" scored ${value}${targetStr} — now off-track for week of ${entryWeekStart}.`,
+          })
+        }
+      } catch (notifyErr) {
+        logger.warn({ error: notifyErr, metricId }, "Failed to send off-track notification")
+      }
+    }
 
     return NextResponse.json({
       success: true,

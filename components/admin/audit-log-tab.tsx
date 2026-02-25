@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { RefreshCw, ShieldAlert, Info, AlertTriangle, Activity } from "lucide-react"
+import { RefreshCw, ShieldAlert, Info, AlertTriangle, Activity, Download } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 
 interface AuditEntry {
@@ -83,6 +83,27 @@ export function AuditLogTab() {
     setPage(1)
   }
 
+  const exportCsv = () => {
+    if (entries.length === 0) return
+    const headers = ["Action", "Resource Type", "Resource ID", "IP Address", "Severity", "Timestamp"]
+    const rows = entries.map((e) => [
+      e.action,
+      e.resourceType || "",
+      e.resourceId || "",
+      e.ipAddress || "",
+      e.severity,
+      new Date(e.createdAt).toISOString(),
+    ])
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `audit-log-${new Date().toISOString().split("T")[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const formatAction = (action: string) => {
     return action.replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase())
   }
@@ -118,10 +139,16 @@ export function AuditLogTab() {
             </SelectContent>
           </Select>
         </div>
-        <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => fetchLogs(true)} disabled={isLoading}>
-          <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isLoading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={exportCsv} disabled={entries.length === 0}>
+            <Download className="h-3.5 w-3.5 mr-1.5" />
+            Export CSV
+          </Button>
+          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => fetchLogs(true)} disabled={isLoading}>
+            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Table */}

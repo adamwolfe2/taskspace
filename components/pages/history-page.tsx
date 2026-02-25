@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserInitials } from "@/components/shared/user-initials"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Search, AlertCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2, FileText } from "lucide-react"
+import { Search, AlertCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2, FileText, Calendar } from "lucide-react"
+import { subDays, startOfDay, parseISO } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { EditEODModal } from "@/components/dashboard/edit-eod-modal"
@@ -32,6 +33,7 @@ interface HistoryPageProps {
 export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updateEODReport, deleteEODReport, initialUserFilter, onFilterConsumed }: HistoryPageProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [userFilter, setUserFilter] = useState<string>(initialUserFilter || "all")
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "30days">("all")
   const [currentPage, setCurrentPage] = useState(1)
 
   // Apply initial filter from navigation (e.g., manager dashboard drill-down)
@@ -45,7 +47,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, userFilter])
+  }, [searchQuery, userFilter, dateFilter])
   const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set())
   const [editingReport, setEditingReport] = useState<EODReport | null>(null)
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
@@ -91,6 +93,14 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   const isAdminOrOwner = currentUser.role === "admin" || currentUser.role === "owner"
   const hasManagerFilter = !!initialUserFilter
 
+  const dateFilterCutoff = (() => {
+    const now = new Date()
+    if (dateFilter === "today") return startOfDay(now)
+    if (dateFilter === "week") return subDays(now, 7)
+    if (dateFilter === "30days") return subDays(now, 30)
+    return null
+  })()
+
   const filteredReports = eodReports
     .filter((report) => {
       if (!isAdminOrOwner && !hasManagerFilter && userFilter === "all") {
@@ -100,6 +110,10 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
         return report.userId === userFilter
       }
       return true
+    })
+    .filter((report) => {
+      if (!dateFilterCutoff) return true
+      return parseISO(report.date) >= dateFilterCutoff
     })
     .filter((report) => {
       if (!searchQuery) return true
@@ -139,7 +153,23 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
       </div>
 
       <div className="bg-white rounded-xl shadow-card p-5">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col gap-3">
+          {/* Date quick-filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+            {(["all", "today", "week", "30days"] as const).map((filter) => (
+              <Button
+                key={filter}
+                variant={dateFilter === filter ? "default" : "outline"}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setDateFilter(filter)}
+              >
+                {filter === "all" ? "All Time" : filter === "today" ? "Today" : filter === "week" ? "Last 7 Days" : "Last 30 Days"}
+              </Button>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
@@ -164,6 +194,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
               </SelectContent>
             </Select>
           )}
+          </div>
         </div>
       </div>
 
