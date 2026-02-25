@@ -411,6 +411,30 @@ export function ProjectsPage({
           </Select>
         </div>
 
+        {/* Health Summary Strip */}
+        {projects.filter(p => p.status === "active").length > 0 && (() => {
+          const activeProjects = projects.filter(p => p.status === "active")
+          const blocked = activeProjects.filter(p => getProjectHealth(p.id, rocks, assignedTasks) === "blocked").length
+          const atRisk = activeProjects.filter(p => getProjectHealth(p.id, rocks, assignedTasks) === "at-risk").length
+          const onTrack = activeProjects.filter(p => getProjectHealth(p.id, rocks, assignedTasks) === "on-track").length
+          return (
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className={`rounded-lg px-3 py-2 text-center ${blocked > 0 ? "bg-red-50" : "bg-slate-50"}`}>
+                <p className={`text-lg font-bold ${blocked > 0 ? "text-red-600" : "text-slate-400"}`}>{blocked}</p>
+                <p className="text-xs text-slate-500 mt-0.5">Blocked</p>
+              </div>
+              <div className={`rounded-lg px-3 py-2 text-center ${atRisk > 0 ? "bg-amber-50" : "bg-slate-50"}`}>
+                <p className={`text-lg font-bold ${atRisk > 0 ? "text-amber-600" : "text-slate-400"}`}>{atRisk}</p>
+                <p className="text-xs text-slate-500 mt-0.5">At Risk</p>
+              </div>
+              <div className={`rounded-lg px-3 py-2 text-center ${onTrack > 0 ? "bg-emerald-50" : "bg-slate-50"}`}>
+                <p className={`text-lg font-bold ${onTrack > 0 ? "text-emerald-600" : "text-slate-400"}`}>{onTrack}</p>
+                <p className="text-xs text-slate-500 mt-0.5">On Track</p>
+              </div>
+            </div>
+          )
+        })()}
+
         {/* Projects List */}
         {filteredProjects.length === 0 ? (
           <EmptyState
