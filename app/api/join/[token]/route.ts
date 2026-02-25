@@ -25,6 +25,7 @@ import { checkIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
 import { withTransaction } from "@/lib/db/transactions"
 import { logger, logError } from "@/lib/logger"
 import { isEmailConfigured, sendWelcomeEmail } from "@/lib/integrations/email"
+import { canAddUser, buildFeatureGateContext } from "@/lib/billing/feature-gates"
 import type { ApiResponse, AuthResponse, OrganizationMember } from "@/lib/types"
 
 interface JoinPageInfo {
@@ -243,7 +244,33 @@ export async function POST(
           jobTitle: em.job_title || undefined,
         }
       } else {
-        // New member — insert fresh
+        // New org member — enforce subscription seat limit before inserting
+        const { rows: orgRows } = await client.sql<{
+          subscription: Record<string, unknown> | null
+          is_internal: boolean
+        }>`SELECT subscription, is_internal FROM organizations WHERE id = ${organizationId} LIMIT 1`
+
+        const { rows: memberCountRows } = await client.sql<{ count: number }>`
+          SELECT COUNT(*)::int as count FROM organization_members WHERE organization_id = ${organizationId}
+        `
+
+        const orgSubscription = orgRows[0]?.subscription as { plan: "free" | "team" | "business"; status: string } | null
+        const isInternal = orgRows[0]?.is_internal || false
+        const memberCount = memberCountRows[0]?.count || 0
+
+        const featureContext = await buildFeatureGateContext(
+          organizationId,
+          orgSubscription,
+          { activeUsers: memberCount },
+          isInternal
+        )
+
+        const seatCheck = canAddUser(featureContext)
+        if (!seatCheck.allowed) {
+          throw new Error(`SEAT_LIMIT_EXCEEDED`)
+        }
+
+        // Seat available — insert fresh member
         const memberId = generateId()
         await client.sql`
           INSERT INTO organization_members (id, organization_id, user_id, email, name, role, department, joined_at, status)
@@ -378,6 +405,12 @@ export async function POST(
         return NextResponse.json<ApiResponse<null>>(
           { success: false, error: "Incorrect password. Please try again." },
           { status: 401 }
+        )
+      }
+      if (error.message === "SEAT_LIMIT_EXCEEDED") {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "This workspace has reached its member limit. Please contact the workspace admin." },
+          { status: 403 }
         )
       }
     }
