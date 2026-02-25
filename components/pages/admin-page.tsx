@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { UserInitials } from "@/components/shared/user-initials"
 import { getRelativeDate, getTodayInTimezone } from "@/lib/utils/date-utils"
 import { calculateUserStats, calculateAccountabilityScore, isRockBehindSchedule } from "@/lib/utils/stats-calculator"
-import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp } from "lucide-react"
+import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
 import { EODInsightsCard } from "@/components/ai/eod-insights-card"
@@ -77,6 +77,15 @@ export function AdminPage({
   })
 
   const rocksBehinSchedule = rocks.filter((r) => isRockBehindSchedule(r)).length
+
+  // Top performers (grade A or B)
+  const topPerformers = [...teamStats]
+    .sort((a, b) => b.accountability.score - a.accountability.score)
+    .slice(0, 3)
+    .filter((t) => t.accountability.score >= 60)
+
+  // Urgent: on-track rocks that are actually behind schedule pace
+  const urgentRocks = rocks.filter((r) => r.status === "on-track" && isRockBehindSchedule(r)).slice(0, 5)
 
   const avgRockProgress = teamStats.length > 0
     ? teamStats.reduce((sum, t) => sum + t.stats.averageRockProgress, 0) / teamStats.length
@@ -185,6 +194,84 @@ export function AdminPage({
           </CardContent>
         </Card>
       </div>
+
+      {/* Accountability Leaders */}
+      {topPerformers.length > 0 && (
+        <Card className="border-amber-200 bg-gradient-to-r from-amber-50/60 to-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Award className="h-5 w-5 text-amber-500" />
+              Accountability Leaders This Quarter
+            </CardTitle>
+            <CardDescription>Top performing team members by accountability score</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {topPerformers.map(({ member, accountability }, idx) => {
+                const scoreBg =
+                  accountability.score >= 80
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                    : "bg-amber-100 text-amber-800 border-amber-200"
+                const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉"
+                return (
+                  <div key={member.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-100 shadow-sm">
+                    <div className="text-xl">{medal}</div>
+                    <UserInitials name={member.name} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{member.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{member.department || "Team member"}</p>
+                    </div>
+                    <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-bold ${scoreBg}`}>
+                      <span className="font-black">{accountability.grade}</span>
+                      <span>{accountability.score}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Urgent: On-track rocks that are actually behind schedule */}
+      {urgentRocks.length > 0 && (
+        <Card className="border-orange-200 bg-orange-50/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Flame className="h-5 w-5 text-orange-500" />
+              On-Track Rocks Behind Expected Pace ({urgentRocks.length})
+            </CardTitle>
+            <CardDescription>
+              These rocks are marked &ldquo;On Track&rdquo; but their actual progress is below the expected quarter pace.
+              Consider updating their status or having a check-in.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {urgentRocks.map((rock) => {
+                const owner = rock.userId
+                  ? teamMembers.find((m) => m.userId === rock.userId)
+                  : undefined
+                return (
+                  <div key={rock.id} className="flex items-center justify-between gap-3 p-2.5 bg-white rounded-lg border border-orange-100">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-slate-800 truncate">{rock.title}</p>
+                      {owner && (
+                        <p className="text-xs text-slate-500">{owner.name}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="text-xs text-slate-500">
+                        <span className="font-semibold text-slate-700">{rock.progress}%</span> actual
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Daily Report Share Link */}
       {organization && (

@@ -248,8 +248,13 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                           <span className="text-xs text-slate-600">{owner.name}</span>
                         </div>
                       )}
-                      <div className="w-full">
+                      <div className="w-full space-y-1">
                         <ProgressBar value={rock.progress} status={rock.status} size="sm" />
+                        {rock.milestones && rock.milestones.length > 0 && (
+                          <p className="text-xs text-slate-500">
+                            {rock.milestones.filter((m) => m.completed).length}/{rock.milestones.length} milestones
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center justify-between text-xs text-slate-500">
                         <div className="flex items-center gap-3">
@@ -336,8 +341,15 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="w-32">
-                              <ProgressBar value={rock.progress} status={rock.status} size="sm" />
+                            <div className="space-y-1">
+                              <div className="w-32">
+                                <ProgressBar value={rock.progress} status={rock.status} size="sm" />
+                              </div>
+                              {rock.milestones && rock.milestones.length > 0 && (
+                                <span className="text-xs text-slate-500">
+                                  {rock.milestones.filter((m) => m.completed).length}/{rock.milestones.length} milestones
+                                </span>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-slate-600">{formatDate(rock.dueDate)}</TableCell>
