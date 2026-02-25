@@ -70,6 +70,7 @@ export function TasksPage({
   const [dueTodayOnly, setDueTodayOnly] = useState(false)
   const [inProgressOnly, setInProgressOnly] = useState(false)
   const [rockFilter, setRockFilter] = useState<string>("all")
+  const [projectFilter, setProjectFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"default" | "due-date" | "priority" | "title" | "newest">("default")
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
@@ -146,6 +147,17 @@ export function TasksPage({
     return Array.from(seen.entries()).map(([id, title]) => ({ id, title }))
   }, [userTasks])
 
+  // Build unique project options from tasks that have a linked project
+  const taskProjectOptions = useMemo(() => {
+    const seen = new Map<string, string>()
+    userTasks.forEach((t) => {
+      if (t.projectId && t.projectName && !seen.has(t.projectId)) {
+        seen.set(t.projectId, t.projectName)
+      }
+    })
+    return Array.from(seen.entries()).map(([id, name]) => ({ id, name }))
+  }, [userTasks])
+
   const filteredTasks = useMemo(() => {
     const PRIORITY_ORDER = { high: 0, medium: 1, normal: 2, low: 3 }
     const filtered = userTasks.filter((task) => {
@@ -170,6 +182,7 @@ export function TasksPage({
       }
       if (inProgressOnly && task.status !== "in-progress") return false
       if (rockFilter !== "all" && task.rockId !== rockFilter) return false
+      if (projectFilter !== "all" && task.projectId !== projectFilter) return false
       return true
     })
     if (sortBy === "due-date") {
@@ -190,7 +203,7 @@ export function TasksPage({
       return [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     }
     return filtered
-  }, [userTasks, searchQuery, priorityFilter, overdueOnly, dueTodayOnly, inProgressOnly, rockFilter, sortBy])
+  }, [userTasks, searchQuery, priorityFilter, overdueOnly, dueTodayOnly, inProgressOnly, rockFilter, projectFilter, sortBy])
 
   const overdueCount = useMemo(() => {
     return userTasks.filter((t) => {
@@ -650,6 +663,19 @@ export function TasksPage({
                 <SelectItem value="all">All Rocks</SelectItem>
                 {taskRockOptions.map((r) => (
                   <SelectItem key={r.id} value={r.id}>{r.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {taskProjectOptions.length > 0 && (
+            <Select value={projectFilter} onValueChange={setProjectFilter}>
+              <SelectTrigger className="w-full sm:w-40 bg-slate-50 border-slate-200 flex-shrink-0">
+                <SelectValue placeholder="All Projects" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Projects</SelectItem>
+                {taskProjectOptions.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
