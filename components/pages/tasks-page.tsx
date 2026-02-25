@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { KanbanBoard } from "@/components/tasks/kanban-board"
-import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2, CheckSquare, X, Trash2, AlertTriangle, Flag, ArrowUpDown } from "lucide-react"
+import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2, CheckSquare, X, Trash2, AlertTriangle, Flag, ArrowUpDown, Calendar } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { isPast, startOfDay } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -67,6 +67,7 @@ export function TasksPage({
   const [isBulkProcessing, setIsBulkProcessing] = useState(false)
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
   const [overdueOnly, setOverdueOnly] = useState(false)
+  const [dueTodayOnly, setDueTodayOnly] = useState(false)
   const [sortBy, setSortBy] = useState<"default" | "due-date" | "priority" | "title">("default")
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
@@ -148,6 +149,12 @@ export function TasksPage({
         const today = startOfDay(new Date())
         if (!isPast(due) || due.getTime() === today.getTime()) return false
       }
+      if (dueTodayOnly && task.status !== "completed") {
+        if (!task.dueDate) return false
+        const due = startOfDay(new Date(task.dueDate))
+        const today = startOfDay(new Date())
+        if (due.getTime() !== today.getTime()) return false
+      }
       return true
     })
     if (sortBy === "due-date") {
@@ -165,7 +172,7 @@ export function TasksPage({
       return [...filtered].sort((a, b) => a.title.localeCompare(b.title))
     }
     return filtered
-  }, [userTasks, searchQuery, priorityFilter, overdueOnly, sortBy])
+  }, [userTasks, searchQuery, priorityFilter, overdueOnly, dueTodayOnly, sortBy])
 
   const overdueCount = useMemo(() => {
     return userTasks.filter((t) => {
@@ -173,6 +180,15 @@ export function TasksPage({
       const due = startOfDay(new Date(t.dueDate))
       const today = startOfDay(new Date())
       return isPast(due) && due.getTime() !== today.getTime()
+    }).length
+  }, [userTasks])
+
+  const dueTodayCount = useMemo(() => {
+    return userTasks.filter((t) => {
+      if (t.status === "completed" || !t.dueDate) return false
+      const due = startOfDay(new Date(t.dueDate))
+      const today = startOfDay(new Date())
+      return due.getTime() === today.getTime()
     }).length
   }, [userTasks])
 
@@ -558,11 +574,23 @@ export function TasksPage({
               <SelectItem value="normal">Normal</SelectItem>
             </SelectContent>
           </Select>
+          {dueTodayCount > 0 && (
+            <Button
+              variant={dueTodayOnly ? "default" : "outline"}
+              size="sm"
+              onClick={() => { setDueTodayOnly(!dueTodayOnly); setOverdueOnly(false) }}
+              className={`flex-shrink-0 gap-1.5 min-h-[44px] ${dueTodayOnly ? "bg-amber-500 hover:bg-amber-600 border-amber-500" : "border-amber-200 text-amber-600 hover:bg-amber-50"}`}
+            >
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Due Today</span>
+              <span className={`text-xs font-bold ${dueTodayOnly ? "text-white" : "text-amber-600"}`}>({dueTodayCount})</span>
+            </Button>
+          )}
           {overdueCount > 0 && (
             <Button
               variant={overdueOnly ? "default" : "outline"}
               size="sm"
-              onClick={() => setOverdueOnly(!overdueOnly)}
+              onClick={() => { setOverdueOnly(!overdueOnly); setDueTodayOnly(false) }}
               className={`flex-shrink-0 gap-1.5 min-h-[44px] ${overdueOnly ? "bg-red-600 hover:bg-red-700 border-red-600" : "border-red-200 text-red-600 hover:bg-red-50"}`}
             >
               <AlertTriangle className="h-4 w-4" />
