@@ -151,6 +151,27 @@ export function NotificationCenter() {
     }
   }
 
+  const clearReadNotifications = async () => {
+    const readIds = notifications.filter((n) => n.read).map((n) => n.id)
+    if (readIds.length === 0) return
+    setIsLoading(true)
+    try {
+      await Promise.all(
+        readIds.map((id) =>
+          fetch(`/api/notifications?id=${id}`, {
+            method: "DELETE",
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+          })
+        )
+      )
+      setNotifications((prev) => prev.filter((n) => !n.read))
+    } catch {
+      // Error clearing read notifications
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const markAllAsRead = async () => {
     setIsLoading(true)
     try {
@@ -274,24 +295,38 @@ export function NotificationCenter() {
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-semibold">Notifications</h3>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={markAllAsRead}
-              disabled={isLoading}
-              className="text-xs h-7"
-            >
-              {isLoading ? (
-                <Loader2 className="h-3 w-3 animate-spin" role="status" aria-label="Marking all as read" />
-              ) : (
-                <>
-                  <CheckCheck className="h-3 w-3 mr-1" aria-hidden="true" />
-                  Mark all read
-                </>
-              )}
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                disabled={isLoading}
+                className="text-xs h-7"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-3 w-3 animate-spin" role="status" aria-label="Marking all as read" />
+                ) : (
+                  <>
+                    <CheckCheck className="h-3 w-3 mr-1" aria-hidden="true" />
+                    Mark all read
+                  </>
+                )}
+              </Button>
+            )}
+            {notifications.some((n) => n.read) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearReadNotifications}
+                disabled={isLoading}
+                className="text-xs h-7 text-muted-foreground"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Clear read
+              </Button>
+            )}
+          </div>
         </div>
         {/* Filter tabs */}
         <div className="flex border-b px-1">
