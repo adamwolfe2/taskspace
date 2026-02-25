@@ -36,6 +36,8 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { ProgressBar } from "@/components/shared/progress-bar"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
+import { useApp } from "@/lib/contexts/app-context"
+import { toast } from "@/hooks/use-toast"
 
 type RockStatus = "on-track" | "at-risk" | "blocked" | "completed"
 
@@ -270,6 +272,7 @@ export function RocksKanbanBoard({
   onRockClick,
 }: RocksKanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
+  const { isDemoMode } = useApp()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -335,7 +338,11 @@ export function RocksKanbanBoard({
 
     // If dropped in a different column, update status
     if (activeContainer !== overContainer) {
-      onRockStatusChange(active.id as string, overContainer as Rock["status"])
+      if (isDemoMode) {
+        toast({ title: "Demo mode", description: "Rock status changes are not saved in demo mode." })
+      } else {
+        onRockStatusChange(active.id as string, overContainer as Rock["status"])
+      }
     }
 
     setActiveId(null)
