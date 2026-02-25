@@ -225,6 +225,35 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
 
       {isExpanded && (
         <div className="p-5">
+          {/* Rock burn rate vs quarter pace */}
+          {filteredRocks.filter(r => r.status !== "completed").length > 0 && selectedQuarter !== "all" && (() => {
+            const now = new Date()
+            const qMatch = selectedQuarter.match(/^Q([1-4])\s+(\d{4})$/)
+            if (!qMatch) return null
+            const q = parseInt(qMatch[1])
+            const yr = parseInt(qMatch[2])
+            const qStart = new Date(yr, (q - 1) * 3, 1)
+            const qEnd = new Date(yr, q * 3, 0)
+            const totalDays = Math.max(qEnd.getTime() - qStart.getTime(), 1)
+            const elapsed = Math.min(Math.max(now.getTime() - qStart.getTime(), 0), totalDays)
+            const quarterPct = Math.round((elapsed / totalDays) * 100)
+            const activeRocks = filteredRocks.filter(r => r.status !== "completed")
+            const avgProgress = Math.round(activeRocks.reduce((s, r) => s + r.progress, 0) / activeRocks.length)
+            const delta = avgProgress - quarterPct
+            const isAhead = delta >= 5
+            const isBehind = delta <= -10
+            const bgClass = isAhead ? "bg-emerald-50 border-emerald-200" : isBehind ? "bg-amber-50 border-amber-200" : "bg-slate-50 border-slate-200"
+            const textClass = isAhead ? "text-emerald-700" : isBehind ? "text-amber-700" : "text-slate-600"
+            const label = isAhead ? "Ahead of pace" : isBehind ? "Behind pace" : "On pace"
+            return (
+              <div className={`flex items-center justify-between px-3 py-2 rounded-lg border mb-4 ${bgClass}`}>
+                <span className={`text-xs font-medium ${textClass}`}>
+                  {label} — {avgProgress}% avg progress vs {quarterPct}% of quarter elapsed
+                </span>
+                <span className={`text-xs font-bold ${textClass}`}>{delta > 0 ? "+" : ""}{delta}%</span>
+              </div>
+            )
+          })()}
           {filteredRocks.length === 0 ? (
           <EmptyState
             icon={Target}
