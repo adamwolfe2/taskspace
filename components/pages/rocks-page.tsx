@@ -234,8 +234,23 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Rock Progress</h1>
-          <p className="text-sm sm:text-base text-slate-500 mt-1">
-            {isAdmin ? "View all team rocks" : "Track your quarterly goals"}
+          <p className="text-sm sm:text-base text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
+            <span>{isAdmin ? "View all team rocks" : "Track your quarterly goals"}</span>
+            {(() => {
+              const now = new Date()
+              const q = Math.floor(now.getMonth() / 3) + 1
+              const year = now.getFullYear()
+              const quarterEnd = new Date(year, q * 3, 0) // last day of quarter
+              const daysLeft = differenceInDays(quarterEnd, now)
+              const quarterPctElapsed = Math.round(((now.getTime() - new Date(year, (q - 1) * 3, 1).getTime()) / (quarterEnd.getTime() - new Date(year, (q - 1) * 3, 1).getTime())) * 100)
+              const urgentClass = daysLeft <= 14 ? "bg-red-50 text-red-700 border-red-200" : daysLeft <= 30 ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-600 border-slate-200"
+              return (
+                <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-medium ${urgentClass}`}>
+                  <Clock className="h-3 w-3 flex-shrink-0" />
+                  Q{q} {year} · {daysLeft}d left ({quarterPctElapsed}% elapsed)
+                </span>
+              )
+            })()}
           </p>
         </div>
         <div className="flex items-center gap-2">
