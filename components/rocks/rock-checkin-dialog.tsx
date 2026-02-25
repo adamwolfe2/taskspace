@@ -12,12 +12,15 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Slider } from "@/components/ui/slider"
 import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
   Loader2,
   TrendingUp,
+  Minus,
+  Plus,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
@@ -83,6 +86,7 @@ export function RockCheckinDialog({
   const [confidence, setConfidence] = useState<Confidence>(currentConfidence)
   const [notes, setNotes] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [progress, setProgress] = useState(currentProgress)
 
   const handleSubmit = async () => {
     setIsLoading(true)
@@ -103,9 +107,22 @@ export function RockCheckinDialog({
         throw new Error(result.error || "Failed to submit check-in")
       }
 
+      // Also update progress if it changed
+      if (progress !== currentProgress) {
+        await fetch(`/api/rocks/${rockId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+          credentials: "include",
+          body: JSON.stringify({ progress }),
+        })
+      }
+
+      const progressChanged = progress !== currentProgress
       toast({
         title: "Check-in Submitted",
-        description: `Confidence updated to "${confidenceOptions.find((o) => o.value === confidence)?.label}"`,
+        description: progressChanged
+          ? `Progress updated to ${progress}% · Confidence: ${confidenceOptions.find((o) => o.value === confidence)?.label}`
+          : `Confidence updated to "${confidenceOptions.find((o) => o.value === confidence)?.label}"`,
       })
 
       onOpenChange(false)
@@ -140,7 +157,47 @@ export function RockCheckinDialog({
           <div className="p-3 bg-slate-50 rounded-lg">
             <h4 className="font-medium text-slate-900">{rockTitle}</h4>
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant="outline">{currentProgress}% complete</Badge>
+              <Badge variant="outline">{progress}% complete</Badge>
+              {progress !== currentProgress && (
+                <span className="text-xs text-emerald-600 font-medium">
+                  {progress > currentProgress ? `+${progress - currentProgress}%` : `${progress - currentProgress}%`}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Progress Update */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Update Progress</Label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setProgress(Math.max(0, progress - 5))}
+                disabled={isLoading || progress === 0}
+                className="h-7 w-7 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors disabled:opacity-40"
+                aria-label="Decrease progress by 5%"
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </button>
+              <Slider
+                value={[progress]}
+                onValueChange={([v]) => setProgress(v)}
+                min={0}
+                max={100}
+                step={5}
+                disabled={isLoading}
+                className="flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => setProgress(Math.min(100, progress + 5))}
+                disabled={isLoading || progress === 100}
+                className="h-7 w-7 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors disabled:opacity-40"
+                aria-label="Increase progress by 5%"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+              <span className="text-sm font-semibold text-slate-700 w-10 text-center tabular-nums">{progress}%</span>
             </div>
           </div>
 
