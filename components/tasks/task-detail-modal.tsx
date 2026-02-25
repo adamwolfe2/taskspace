@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { TaskComments } from "./task-comments"
 import { TaskSubtasks } from "./task-subtasks"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay } from "date-fns"
@@ -76,6 +77,8 @@ export function TaskDetailModal({
   const [copiedLink, setCopiedLink] = useState(false)
   const [editingDueDate, setEditingDueDate] = useState(false)
   const [editingPriority, setEditingPriority] = useState(false)
+  const [editingDescription, setEditingDescription] = useState(false)
+  const [descriptionDraft, setDescriptionDraft] = useState(task.description || "")
   const [savingField, setSavingField] = useState<string | null>(null)
   const { toast } = useToast()
   const themedColors = useThemedIconColors()
@@ -119,6 +122,24 @@ export function TaskDetailModal({
     }
   }
 
+  const handleUpdateDescription = async () => {
+    const trimmed = descriptionDraft.trim()
+    if (trimmed === (task.description || "").trim()) {
+      setEditingDescription(false)
+      return
+    }
+    setSavingField("description")
+    setEditingDescription(false)
+    try {
+      await onUpdateTask(task.id, { description: trimmed || undefined })
+      toast({ title: "Description updated" })
+    } catch (err: unknown) {
+      toast({ title: "Failed to update description", description: err instanceof Error ? err.message : "Please try again", variant: "destructive" })
+    } finally {
+      setSavingField(null)
+    }
+  }
+
   const handleAddComment = async (text: string) => {
     const newComment: TaskComment = {
       id: crypto.randomUUID(),
@@ -147,6 +168,13 @@ export function TaskDetailModal({
       })
     }
   }
+
+  // Sync description draft when task changes externally
+  useEffect(() => {
+    if (!editingDescription) {
+      setDescriptionDraft(task.description || "")
+    }
+  }, [task.description, editingDescription])
 
   // Load subtasks when modal opens
   useEffect(() => {
@@ -447,12 +475,52 @@ export function TaskDetailModal({
 
         <div className="space-y-4 py-4">
           {/* Description */}
-          {task.description && (
-            <div>
-              <h4 className="text-sm font-medium text-slate-700 mb-1">Description</h4>
-              <p className="text-sm text-slate-600">{task.description}</p>
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <h4 className="text-sm font-medium text-slate-700">Description</h4>
+              {!isCompleted && !editingDescription && (
+                <button
+                  onClick={() => { setDescriptionDraft(task.description || ""); setEditingDescription(true) }}
+                  className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1"
+                >
+                  <Pencil className="h-3 w-3" />
+                  {task.description ? "Edit" : "Add"}
+                </button>
+              )}
             </div>
-          )}
+            {editingDescription ? (
+              <div className="space-y-2">
+                <Textarea
+                  value={descriptionDraft}
+                  onChange={(e) => setDescriptionDraft(e.target.value)}
+                  autoFocus
+                  rows={3}
+                  className="text-sm resize-none"
+                  placeholder="Add a description…"
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") { setEditingDescription(false); setDescriptionDraft(task.description || "") }
+                  }}
+                />
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setEditingDescription(false); setDescriptionDraft(task.description || "") }}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" className="h-7 text-xs" onClick={handleUpdateDescription} disabled={savingField === "description"}>
+                    {savingField === "description" ? "Saving…" : "Save"}
+                  </Button>
+                </div>
+              </div>
+            ) : task.description ? (
+              <p className="text-sm text-slate-600">{task.description}</p>
+            ) : !isCompleted ? (
+              <button
+                onClick={() => { setDescriptionDraft(""); setEditingDescription(true) }}
+                className="text-sm text-slate-400 hover:text-slate-600 italic cursor-pointer"
+              >
+                No description — click to add one
+              </button>
+            ) : null}
+          </div>
 
           {/* Related Rock */}
           {task.rockTitle && (
