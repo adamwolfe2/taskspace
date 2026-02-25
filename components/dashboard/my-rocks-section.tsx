@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import type { Rock, Project } from "@/lib/types"
-import { formatDate } from "@/lib/utils/date-utils"
+import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
 import { AlertCircle, CheckCircle2, Clock, Target, ArrowRight, ChevronRight, RefreshCw, ChevronDown, ChevronUp, Minus, Plus } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { useApp } from "@/lib/contexts/app-context"
@@ -342,7 +342,17 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
                   )}
 
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                    <span className="text-xs text-slate-400">Due: {formatDate(rock.dueDate)}</span>
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                      <span>Due: {formatDate(rock.dueDate)}</span>
+                      {rock.dueDate && rock.status !== "completed" && (() => {
+                        const days = getDaysUntil(rock.dueDate)
+                        if (days < 0) return <span className="text-red-500 font-medium">{Math.abs(days)}d overdue</span>
+                        if (days === 0) return <span className="text-amber-600 font-medium">Due today</span>
+                        if (days <= 7) return <span className="text-amber-500 font-medium">{days}d left</span>
+                        if (days <= 14) return <span className="text-slate-500">{days}d left</span>
+                        return null
+                      })()}
+                    </div>
                     {onUpdateRock && (
                       <button
                         onClick={() => setSelectedRock(rock)}
