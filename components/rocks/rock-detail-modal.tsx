@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
+import { triggerConfetti } from "@/lib/utils/confetti"
 
 // Calculate quarter from a date string (YYYY-MM-DD or ISO format)
 function getQuarterFromDate(dateStr: string): string {
@@ -100,6 +101,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
       await onUpdateRock(rock.id, { title, description, status, projectId })
       setIsEditing(false)
       if (wasCompleted) {
+        triggerConfetti("rock_complete")
         toast({
           title: "🎉 Rock Completed!",
           description: `"${title}" has been marked complete. Outstanding work!`,
@@ -342,6 +344,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, projec
             onClick={async () => {
               try {
                 await onUpdateRock(rock.id, { status: "completed", progress: 100 })
+                triggerConfetti("rock_complete")
                 toast({ title: "🎉 Rock Completed!", description: `"${rock.title}" is done. Outstanding work!` })
               } catch {
                 toast({ title: "Update failed", variant: "destructive" })

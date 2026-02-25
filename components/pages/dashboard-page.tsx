@@ -157,6 +157,9 @@ export function DashboardPage({
   setUpdatingRockId(rockId)
   try {
    await updateRock(rockId, { progress })
+   if (progress >= 100) {
+    triggerConfetti("rock_complete")
+   }
   } catch {
    toast({
     title: "Error",
