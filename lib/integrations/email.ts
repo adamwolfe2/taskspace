@@ -693,6 +693,79 @@ interface BillingAlertParams {
 /**
  * Send a billing alert email to organization admins
  */
+/**
+ * Send a welcome email to a new user who joined via workspace invite link.
+ */
+export async function sendWelcomeEmail(params: {
+  to: string
+  name: string
+  organizationName: string
+  workspaceName: string
+}): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    logger.debug("Email not configured, skipping welcome email")
+    return { success: false, error: "Email not configured" }
+  }
+
+  const loginUrl = `${APP_URL}/app`
+  const unsubscribeUrl = buildUnsubscribeUrl(params.to)
+  const safeName = escapeHtml(params.name)
+  const safeOrg = escapeHtml(params.organizationName)
+  const safeWorkspace = escapeHtml(params.workspaceName)
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Taskspace</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: #0f172a; padding: 24px; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 22px;">Welcome to Taskspace</h1>
+    <p style="color: rgba(255,255,255,0.75); margin: 6px 0 0 0; font-size: 14px;">${safeOrg} · ${safeWorkspace}</p>
+  </div>
+
+  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 28px; border-radius: 0 0 8px 8px;">
+    <p style="margin: 0 0 16px 0; font-size: 16px;">Hi ${safeName},</p>
+    <p style="margin: 0 0 16px 0;">Your account is ready. You've been added to the <strong>${safeWorkspace}</strong> workspace at <strong>${safeOrg}</strong>.</p>
+    <p style="margin: 0 0 24px 0;">You can now log EOD reports, track rocks and tasks, and collaborate with your team.</p>
+
+    <div style="margin: 28px 0;">
+      <a href="${loginUrl}" style="display: inline-block; background: #0f172a; color: white; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 500; font-size: 15px;">Go to Taskspace →</a>
+    </div>
+
+    <p style="margin: 24px 0 0 0; font-size: 13px; color: #6b7280;">
+      Sent from Taskspace · <a href="${unsubscribeUrl}" style="color: #6b7280;">Unsubscribe</a>
+    </p>
+  </div>
+</body>
+</html>
+`
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: params.to,
+      subject: `Welcome to ${params.organizationName} on Taskspace`,
+      html,
+    })
+
+    if (result.error) {
+      logger.error({ error: result.error.message }, "Welcome email failed")
+      return { success: false, error: result.error.message }
+    }
+
+    logger.info({ emailId: result.data?.id, to: params.to }, "Welcome email sent")
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    logError(logger, "Welcome email error", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
 export async function sendBillingAlertEmail(params: BillingAlertParams): Promise<EmailResult> {
   const resend = getResendClient()
   if (!resend) {

@@ -24,6 +24,7 @@ import { joinWorkspaceSchema } from "@/lib/validation/schemas"
 import { checkIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
 import { withTransaction } from "@/lib/db/transactions"
 import { logger, logError } from "@/lib/logger"
+import { isEmailConfigured, sendWelcomeEmail } from "@/lib/integrations/email"
 import type { ApiResponse, AuthResponse, OrganizationMember } from "@/lib/types"
 
 interface JoinPageInfo {
@@ -125,7 +126,14 @@ export async function POST(
         organization_id: string
         token: string
         created_by: string
-      }>`SELECT * FROM workspace_invite_links WHERE token = ${token} FOR UPDATE`
+        workspace_name: string
+      }>`
+        SELECT wil.*, w.name as workspace_name
+        FROM workspace_invite_links wil
+        JOIN workspaces w ON w.id = wil.workspace_id
+        WHERE wil.token = ${token}
+        FOR UPDATE OF wil
+      `
 
       if (linkRows.length === 0) {
         throw new Error("INVALID_LINK")
@@ -134,6 +142,7 @@ export async function POST(
       const link = linkRows[0]
       const workspaceId = link.workspace_id
       const organizationId = link.organization_id
+      const workspaceName = link.workspace_name
 
       // Find or create user
       const { rows: userRows } = await client.sql<{
@@ -281,6 +290,7 @@ export async function POST(
         sessionExpiresAt,
         organizationId,
         workspaceId,
+        workspaceName,
       }
     })
 
@@ -291,6 +301,18 @@ export async function POST(
         { success: false, error: "Organization not found" },
         { status: 404 }
       )
+    }
+
+    // Send welcome email to new users (non-blocking — don't fail join if email fails)
+    if (result.isNewUser && isEmailConfigured()) {
+      sendWelcomeEmail({
+        to: result.userEmail,
+        name: result.userName,
+        organizationName: organization.name,
+        workspaceName: result.workspaceName,
+      }).catch((err) => {
+        logError(logger, "Failed to send welcome email after join", err)
+      })
     }
 
     const safeUser = {
