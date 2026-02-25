@@ -16,9 +16,11 @@ import { useApp } from "@/lib/contexts/app-context"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 import { useToast } from "@/hooks/use-toast"
+import { ToastAction } from "@/components/ui/toast"
 import { sendEODNotification } from "@/lib/email"
 import { updateStreak } from "@/lib/hooks/use-productivity"
 import { api } from "@/lib/api/client"
+import { isRockBehindSchedule } from "@/lib/utils/stats-calculator"
 
 function formatDisplayDate(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00")
@@ -332,6 +334,34 @@ export function EODSubmissionCard({
         title: "EOD Report Submitted",
         description: `Your EOD report for ${formatDisplayDate(reportDate)} has been recorded. You can submit another report for the same day if needed.`,
       })
+
+      // Nudge user about behind-schedule rocks after successful submission
+      const behindRocks = rocks.filter(
+        (r) => r.status !== "completed" && isRockBehindSchedule(r)
+      )
+      if (behindRocks.length > 0) {
+        setTimeout(() => {
+          toast({
+            title: `${behindRocks.length} Rock${behindRocks.length > 1 ? "s" : ""} Behind Pace`,
+            description:
+              behindRocks.length === 1
+                ? `"${behindRocks[0].title}" is behind its expected progress. Consider updating it.`
+                : `${behindRocks.length} rocks need attention. Great time to update progress while it's top of mind.`,
+            action: (
+              <ToastAction
+                altText="View Rocks"
+                onClick={() => {
+                  // Navigate to rocks page via hash — app uses currentPage state
+                  const el = document.querySelector('[data-nav="rocks"]') as HTMLElement | null
+                  el?.click()
+                }}
+              >
+                View Rocks
+              </ToastAction>
+            ),
+          })
+        }, 1500)
+      }
     } catch (err: unknown) {
       // Check if this is a duplicate submission (409 conflict)
       const apiErr = err as { status?: number; data?: { id: string }; message?: string }

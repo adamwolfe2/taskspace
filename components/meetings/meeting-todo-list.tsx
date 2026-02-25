@@ -15,6 +15,8 @@ import {
   Calendar,
   User,
   Loader2,
+  Plus,
+  Link2,
 } from "lucide-react"
 import type { MeetingTodo } from "@/lib/db/meetings"
 import type { AssignedTask } from "@/lib/types"
@@ -32,6 +34,7 @@ export function MeetingTodoList({ meetingId, workspaceId }: MeetingTodoListProps
   const [tasks, setTasks] = useState<AssignedTask[]>([])
   const [loading, setLoading] = useState(true)
   const [converting, setConverting] = useState<string | null>(null)
+  const [creatingTask, setCreatingTask] = useState<string | null>(null)
   const [selectedTodo, setSelectedTodo] = useState<MeetingTodo | null>(null)
   const [selectedTaskId, setSelectedTaskId] = useState<string>("")
   const [showConvertDialog, setShowConvertDialog] = useState(false)
@@ -149,6 +152,59 @@ export function MeetingTodoList({ meetingId, workspaceId }: MeetingTodoListProps
     }
   }
 
+  // Create a brand-new task directly from a todo action item
+  const createTaskFromTodo = async (todo: MeetingTodo) => {
+    setCreatingTask(todo.id)
+    try {
+      // Step 1: Create the task
+      const taskPayload: Record<string, unknown> = {
+        title: todo.title,
+        workspaceId,
+        priority: "normal",
+      }
+      if (todo.assigneeId) taskPayload.assigneeId = todo.assigneeId
+      if (todo.dueDate) taskPayload.dueDate = todo.dueDate
+
+      const createRes = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify(taskPayload),
+        credentials: "include",
+      })
+      const createData = await createRes.json()
+      if (!createData.success) {
+        throw new Error(createData.error || "Failed to create task")
+      }
+      const newTaskId = createData.data.id
+
+      // Step 2: Link todo to the newly created task
+      const linkRes = await fetch(`/api/meetings/${meetingId}/todos/${todo.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({ taskId: newTaskId }),
+      })
+      const linkData = await linkRes.json()
+      if (linkData.success) {
+        setTodos((prev) =>
+          prev.map((t) => (t.id === todo.id ? linkData.data : t))
+        )
+      }
+
+      toast({
+        title: "Task created",
+        description: `"${todo.title}" has been added as a task${todo.assigneeName ? ` for ${todo.assigneeName}` : ""}.`,
+      })
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to create task",
+        variant: "destructive",
+      })
+    } finally {
+      setCreatingTask(null)
+    }
+  }
+
   const incompleteTodos = todos.filter((t) => !t.completed)
   const completedTodos = todos.filter((t) => t.completed)
   const availableTasks = tasks.filter((t) => !t.completedAt && t.status !== "completed")
@@ -221,17 +277,35 @@ export function MeetingTodoList({ meetingId, workspaceId }: MeetingTodoListProps
                     </div>
                     {todo.taskId ? (
                       <Badge variant="outline" className="bg-emerald-50 text-emerald-700">
-                        Linked to Task
+                        Task Created
                       </Badge>
                     ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openConvertDialog(todo)}
-                      >
-                        <ArrowRight className="h-3 w-3 mr-1" />
-                        Convert to Task
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => createTaskFromTodo(todo)}
+                          disabled={creatingTask === todo.id || converting === todo.id}
+                          title="Create a new task from this action item"
+                        >
+                          {creatingTask === todo.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Plus className="h-3 w-3 mr-1" />
+                          )}
+                          Create Task
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openConvertDialog(todo)}
+                          disabled={creatingTask === todo.id || converting === todo.id}
+                          title="Link to an existing task"
+                          className="px-2"
+                        >
+                          <Link2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -290,9 +364,9 @@ export function MeetingTodoList({ meetingId, workspaceId }: MeetingTodoListProps
       <Dialog open={showConvertDialog} onOpenChange={setShowConvertDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Convert Todo to Task</DialogTitle>
+            <DialogTitle>Link to Existing Task</DialogTitle>
             <DialogDescription>
-              Link this todo to an existing task in your workspace
+              Connect this action item to a task that already exists in your workspace
             </DialogDescription>
           </DialogHeader>
           {selectedTodo && (
@@ -349,12 +423,12 @@ export function MeetingTodoList({ meetingId, workspaceId }: MeetingTodoListProps
               {converting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Converting...
+                  Linking...
                 </>
               ) : (
                 <>
-                  <ArrowRight className="h-4 w-4 mr-2" />
-                  Convert to Task
+                  <Link2 className="h-4 w-4 mr-2" />
+                  Link to Task
                 </>
               )}
             </Button>

@@ -38,6 +38,7 @@ import {
   ChevronRight,
   AlertTriangle,
   Loader2,
+  Download,
 } from "lucide-react"
 import {
   Tooltip,
@@ -212,6 +213,65 @@ export function WorkspaceScorecardPage() {
     }
   }
 
+  const exportToCsv = () => {
+    if (!trendsData && !data) return
+
+    if (trendsData && trendsData.weeks.length > 0) {
+      // Export 13-week trends
+      const headers = ["Metric", "Owner", "Target", "Unit", ...trendsData.weeks]
+      const rows = trendsData.metrics.map(({ metric, entries }) => {
+        const weekValues = trendsData.weeks.map((w) => {
+          const e = entries[w]
+          return e != null ? String(e.value) : ""
+        })
+        return [
+          metric.name,
+          metric.ownerName || "",
+          metric.targetValue != null ? String(metric.targetValue) : "",
+          metric.unit,
+          ...weekValues,
+        ]
+      })
+
+      const csvContent = [headers, ...rows]
+        .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+        .join("\n")
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `scorecard-${currentWorkspace?.name?.toLowerCase().replace(/\s+/g, "-") ?? "export"}-${new Date().toISOString().split("T")[0]}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } else if (data) {
+      // Export current week snapshot
+      const weekLabel = formatWeekDisplay(getWeekStartDate(weekOffset))
+      const headers = ["Metric", "Owner", "Target", "Unit", "Value", "Status", `Week (${weekLabel})`]
+      const rows = data.summary.map((s) => [
+        s.metricName,
+        s.ownerName || "",
+        s.targetValue != null ? String(s.targetValue) : "",
+        s.unit,
+        s.currentValue != null ? String(s.currentValue) : "",
+        s.currentStatus,
+        weekLabel,
+      ])
+
+      const csvContent = [headers, ...rows]
+        .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+        .join("\n")
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `scorecard-week-${currentWorkspace?.name?.toLowerCase().replace(/\s+/g, "-") ?? "export"}-${new Date().toISOString().split("T")[0]}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    }
+  }
+
   const handleUpdateEntry = async (metricId: string, value: number, notes?: string) => {
     if (isDemoMode) {
       toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
@@ -355,6 +415,17 @@ export function WorkspaceScorecardPage() {
 
         <div className="flex items-center gap-3">
           <WorkspaceSwitcher size="sm" />
+          {(data || trendsData) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToCsv}
+              className="hidden sm:flex items-center gap-1.5"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          )}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
