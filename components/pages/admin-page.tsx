@@ -366,7 +366,19 @@ export function AdminPage({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Team performance overview</p>
+          <p className="text-muted-foreground mt-1">
+            {(() => {
+              const parts: string[] = []
+              if (avgAccountabilityScore > 0) parts.push(`Team accountability: ${avgAccountabilityScore}% (${teamGrade})`)
+              if (totalRocksBlocked > 0) parts.push(`${totalRocksBlocked} rock${totalRocksBlocked > 1 ? "s" : ""} blocked`)
+              else if (totalRocksAtRisk > 0) parts.push(`${totalRocksAtRisk} rock${totalRocksAtRisk > 1 ? "s" : ""} at risk`)
+              const unackedEscalations = escalations.length
+              if (unackedEscalations > 0) parts.push(`${unackedEscalations} escalation${unackedEscalations > 1 ? "s" : ""}`)
+              if (reportingRate === 100) parts.push("all EODs submitted today")
+              else if (reportingRate > 0) parts.push(`${reportingRate}% EOD today`)
+              return parts.length > 0 ? parts.join(" · ") : "Team performance overview"
+            })()}
+          </p>
         </div>
         <Button variant="outline" size="sm" onClick={handleCopyTeamSummary} className="flex-shrink-0">
           {summaryCopied ? (
