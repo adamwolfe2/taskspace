@@ -56,6 +56,7 @@ export function AdminPage({
     } catch { return new Set() }
   })
   const [showAcknowledged, setShowAcknowledged] = useState(false)
+  const [showMissingSubmitters, setShowMissingSubmitters] = useState(false)
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
 
@@ -124,6 +125,8 @@ export function AdminPage({
   const reportingRate = activeMembers.length > 0
     ? Math.round((todayReports.length / activeMembers.length) * 100)
     : 0
+  const todaySubmitterIds = new Set(todayReports.map((r) => r.userId))
+  const missingSubmitters = activeMembers.filter((m) => m.userId && !todaySubmitterIds.has(m.userId))
 
   // Calculate stats for all active team members (all roles)
   const teamStats = activeMembers.map((member) => {
@@ -294,6 +297,25 @@ export function AdminPage({
               {todayReports.length}/{activeMembers.length} submitted today
             </p>
             <Progress value={reportingRate} className="mt-2" />
+            {reportingRate < 100 && missingSubmitters.length > 0 && (
+              <button
+                className="mt-2 text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                onClick={() => setShowMissingSubmitters(!showMissingSubmitters)}
+              >
+                {showMissingSubmitters ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                {missingSubmitters.length} not submitted
+              </button>
+            )}
+            {showMissingSubmitters && missingSubmitters.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                {missingSubmitters.slice(0, 6).map((m) => (
+                  <span key={m.id} className="text-xs bg-red-50 text-red-600 border border-red-100 px-1.5 py-0.5 rounded">
+                    {m.name.split(" ")[0]}
+                  </span>
+                ))}
+                {missingSubmitters.length > 6 && <span className="text-xs text-slate-400">+{missingSubmitters.length - 6}</span>}
+              </div>
+            )}
             {reportingRate < 100 && (
               <Button
                 variant="outline"
