@@ -786,6 +786,65 @@ export function AdminPage({
         )
       })()}
 
+      {/* Overdue Tasks Detail */}
+      {(() => {
+        const overdueTasks = assignedTasks
+          .filter((t) => {
+            if (t.status === "completed" || !t.dueDate) return false
+            const due = new Date(t.dueDate)
+            due.setHours(0, 0, 0, 0)
+            return due < todayStart
+          })
+          .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
+        if (overdueTasks.length === 0) return null
+        const grouped: Record<string, { member: TeamMember | null; tasks: AssignedTask[] }> = {}
+        for (const t of overdueTasks) {
+          const key = t.assigneeId || "__unassigned__"
+          if (!grouped[key]) {
+            grouped[key] = {
+              member: activeMembers.find((m) => (m.userId || m.id) === t.assigneeId) || null,
+              tasks: [],
+            }
+          }
+          grouped[key].tasks.push(t)
+        }
+        const entries = Object.values(grouped).sort((a, b) => b.tasks.length - a.tasks.length)
+        return (
+          <Card className="border-red-200 bg-red-50/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+                Overdue Tasks ({overdueTasks.length})
+              </CardTitle>
+              <CardDescription>Assigned tasks past their due date — review and follow up</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {entries.map(({ member, tasks }) => (
+                  <div key={member?.id || "unassigned"} className="space-y-1.5">
+                    <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                      {member?.name || "Unassigned"} ({tasks.length})
+                    </p>
+                    {tasks.slice(0, 3).map((task) => {
+                      const daysOverdue = Math.floor((todayStart.getTime() - new Date(task.dueDate!).getTime()) / (1000 * 60 * 60 * 24))
+                      return (
+                        <div key={task.id} className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg border border-red-100">
+                          <p className="text-sm text-slate-800 truncate flex-1">{task.title}</p>
+                          <span className="text-xs text-red-600 font-medium flex-shrink-0">{daysOverdue}d overdue</span>
+                        </div>
+                      )
+                    })}
+                    {tasks.length > 3 && (
+                      <p className="text-xs text-slate-400 pl-2">+{tasks.length - 3} more</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )
+      })()}
+
       {/* Daily Report Share Link */}
       {organization && (
         <DailyReportShare
