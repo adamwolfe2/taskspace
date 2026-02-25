@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { useIdsBoard } from "@/lib/hooks/use-ids-board"
 import { useTeamData } from "@/lib/hooks/use-team-data"
 import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
@@ -9,7 +9,9 @@ import { IdsBoardItemDialog } from "@/components/ids-board/ids-board-item-dialog
 import { FeatureGate } from "@/components/shared/feature-gate"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AlertCircle, Plus, RefreshCw } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AlertCircle, Plus, RefreshCw, Search } from "lucide-react"
 import type { IdsBoardItem, IdsBoardColumn } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
@@ -24,6 +26,8 @@ function IdsBoardContent() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<IdsBoardItem | null>(null)
   const [defaultColumn, setDefaultColumn] = useState<IdsBoardColumn>("identify")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [typeFilter, setTypeFilter] = useState<"all" | "issue" | "rock" | "custom">("all")
 
   const handleAddItem = useCallback((column: IdsBoardColumn) => {
     setEditingItem(null)
@@ -142,6 +146,27 @@ function IdsBoardContent() {
 
   const totalItems = columns.identify.length + columns.discuss.length + columns.solve.length
 
+  const filteredColumns = useMemo(() => {
+    const filter = (items: IdsBoardItem[]) => {
+      let result = items
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase()
+        result = result.filter((i) => i.title.toLowerCase().includes(q) || (i.description || "").toLowerCase().includes(q))
+      }
+      if (typeFilter !== "all") {
+        result = result.filter((i) => i.itemType === typeFilter)
+      }
+      return result
+    }
+    return {
+      identify: filter(columns.identify),
+      discuss: filter(columns.discuss),
+      solve: filter(columns.solve),
+    }
+  }, [columns, searchQuery, typeFilter])
+
+  const isFiltered = searchQuery.trim() !== "" || typeFilter !== "all"
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -170,6 +195,37 @@ function IdsBoardContent() {
         </div>
       </div>
 
+      {/* Search + Type filter */}
+      {totalItems > 0 && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-9"
+            />
+          </div>
+          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}>
+            <SelectTrigger className="h-9 w-full sm:w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="issue">Issues</SelectItem>
+              <SelectItem value="rock">Rocks</SelectItem>
+              <SelectItem value="custom">Custom</SelectItem>
+            </SelectContent>
+          </Select>
+          {isFiltered && (
+            <Button variant="ghost" size="sm" className="h-9" onClick={() => { setSearchQuery(""); setTypeFilter("all") }}>
+              Clear
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Polling indicator */}
       <p className="text-xs text-muted-foreground">
         Auto-refreshes every 3s for real-time collaboration
@@ -177,7 +233,7 @@ function IdsBoardContent() {
 
       {/* Kanban Board */}
       <IdsBoardKanban
-        columns={columns}
+        columns={filteredColumns}
         onMoveItem={handleMoveItem}
         onItemClick={handleEditItem}
         onAddItem={handleAddItem}

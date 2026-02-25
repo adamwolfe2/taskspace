@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TaskCard } from "@/components/tasks/task-card"
 import { AddTaskModal } from "@/components/tasks/add-task-modal"
 import { KanbanBoard } from "@/components/tasks/kanban-board"
-import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2, CheckSquare, X, Trash2, AlertTriangle, Flag } from "lucide-react"
+import { Plus, ClipboardList, UserCheck, Search, LayoutList, LayoutGrid, ArrowLeft, Eye, Sparkles, Loader2, CheckSquare, X, Trash2, AlertTriangle, Flag, ArrowUpDown } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { isPast, startOfDay } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -67,6 +67,7 @@ export function TasksPage({
   const [isBulkProcessing, setIsBulkProcessing] = useState(false)
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
   const [overdueOnly, setOverdueOnly] = useState(false)
+  const [sortBy, setSortBy] = useState<"default" | "due-date" | "priority" | "title">("default")
   const { toast } = useToast()
   const { currentWorkspaceId } = useWorkspaceStore()
 
@@ -132,29 +133,39 @@ export function TasksPage({
   const userTasks = assignedTasks.filter((t) => t.assigneeId === targetUserId)
 
   const filteredTasks = useMemo(() => {
-    return userTasks.filter((task) => {
-      // Search filter
+    const PRIORITY_ORDER = { high: 0, medium: 1, normal: 2, low: 3 }
+    const filtered = userTasks.filter((task) => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
         const matchesTitle = task.title.toLowerCase().includes(query)
         const matchesDescription = task.description?.toLowerCase().includes(query)
         if (!matchesTitle && !matchesDescription) return false
       }
-
-      // Priority filter
       if (priorityFilter !== "all" && task.priority !== priorityFilter) return false
-
-      // Overdue filter
       if (overdueOnly && task.status !== "completed") {
         if (!task.dueDate) return false
         const due = startOfDay(new Date(task.dueDate))
         const today = startOfDay(new Date())
         if (!isPast(due) || due.getTime() === today.getTime()) return false
       }
-
       return true
     })
-  }, [userTasks, searchQuery, priorityFilter, overdueOnly])
+    if (sortBy === "due-date") {
+      return [...filtered].sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0
+        if (!a.dueDate) return 1
+        if (!b.dueDate) return -1
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+      })
+    }
+    if (sortBy === "priority") {
+      return [...filtered].sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 3) - (PRIORITY_ORDER[b.priority] ?? 3))
+    }
+    if (sortBy === "title") {
+      return [...filtered].sort((a, b) => a.title.localeCompare(b.title))
+    }
+    return filtered
+  }, [userTasks, searchQuery, priorityFilter, overdueOnly, sortBy])
 
   const overdueCount = useMemo(() => {
     return userTasks.filter((t) => {
@@ -559,6 +570,18 @@ export function TasksPage({
               <span className={`text-xs font-bold ${overdueOnly ? "text-white" : "text-red-600"}`}>({overdueCount})</span>
             </Button>
           )}
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="w-full sm:w-36 bg-slate-50 border-slate-200 flex-shrink-0 min-h-[44px]">
+              <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default Order</SelectItem>
+              <SelectItem value="due-date">Due Date</SelectItem>
+              <SelectItem value="priority">Priority</SelectItem>
+              <SelectItem value="title">Title A–Z</SelectItem>
+            </SelectContent>
+          </Select>
           <ToggleGroup
             type="single"
             value={viewMode}
