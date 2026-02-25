@@ -14,18 +14,40 @@ import { ResetPasswordPage } from "@/components/auth/reset-password-page"
 import { AcceptInvitationPage } from "@/components/auth/accept-invitation-page"
 import { DashboardPage } from "@/components/pages/dashboard-page"
 import { DemoRestricted } from "@/components/shared/demo-restricted"
-import { HistoryPage } from "@/components/pages/history-page"
-import { RocksPage } from "@/components/pages/rocks-page"
-import { TasksPage } from "@/components/pages/tasks-page"
-import { SettingsPage } from "@/components/pages/settings-page"
-import { CalendarPage } from "@/components/pages/calendar-page"
-import { ScorecardPage } from "@/components/pages/scorecard-page"
-import { IdsBoardPage } from "@/components/pages/ids-board-page"
 import { SetupOrganizationPage } from "@/components/pages/setup-organization-page"
 import dynamic from "next/dynamic"
+// Heavy pages — code-split so they don't inflate the initial bundle
+const HistoryPage = dynamic(
+  () => import("@/components/pages/history-page").then(mod => ({ default: mod.HistoryPage })),
+  { ssr: false, loading: () => <HistoryPageSkeleton /> }
+)
+const RocksPage = dynamic(
+  () => import("@/components/pages/rocks-page").then(mod => ({ default: mod.RocksPage })),
+  { ssr: false, loading: () => <RocksPageSkeleton /> }
+)
+const TasksPage = dynamic(
+  () => import("@/components/pages/tasks-page").then(mod => ({ default: mod.TasksPage })),
+  { ssr: false, loading: () => <TasksPageSkeleton /> }
+)
+const SettingsPage = dynamic(
+  () => import("@/components/pages/settings-page").then(mod => ({ default: mod.SettingsPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const CalendarPage = dynamic(
+  () => import("@/components/pages/calendar-page").then(mod => ({ default: mod.CalendarPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const ScorecardPage = dynamic(
+  () => import("@/components/pages/scorecard-page").then(mod => ({ default: mod.ScorecardPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const IdsBoardPage = dynamic(
+  () => import("@/components/pages/ids-board-page").then(mod => ({ default: mod.IdsBoardPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
 import { InvitedUserWelcome } from "@/components/onboarding/invited-user-welcome"
 import { BrandThemeProvider } from "@/lib/contexts/brand-theme-context"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
 import { CommandPalette } from "@/components/shared/command-palette"
@@ -114,12 +136,93 @@ import { OfflineIndicator } from "@/components/shared/offline-indicator"
 import { SessionTimeoutWarning } from "@/components/shared/session-timeout-warning"
 import { BugReporter } from "@/components/shared/bug-reporter"
 
+// Auth/onboarding pages that should NOT push to browser history
+const AUTH_PAGES = new Set<PageType>([
+  "login", "register", "forgot-password", "reset-password",
+  "setup-organization", "accept-invitation", "welcome",
+])
+
+// Human-readable titles for document.title
+const PAGE_TITLES: Partial<Record<PageType, string>> = {
+  dashboard: "Dashboard",
+  rocks: "Rocks",
+  tasks: "Tasks",
+  history: "EOD History",
+  calendar: "Calendar",
+  scorecard: "Scorecard",
+  analytics: "Analytics",
+  "ids-board": "IDS Board",
+  settings: "Settings",
+  notes: "Notes",
+  "org-chart": "Org Chart",
+  admin: "Admin Dashboard",
+  "admin-team": "Team Management",
+  "admin-database": "Database",
+  "admin-api": "API Keys",
+  "command-center": "Command Center",
+  "people-analyzer": "People Analyzer",
+  vto: "V/TO",
+  manager: "Manager Dashboard",
+  projects: "Projects",
+  clients: "Clients",
+  portfolio: "Executive Portfolio",
+  "portfolio-detail": "Portfolio",
+  taskPool: "Task Pool",
+}
+
 function AppContent() {
   const { currentUser, currentPage, setCurrentPage, isLoading, isAuthenticated, currentOrganization, pageFilter, clearPageFilter, isSuperAdmin, isDemoMode, enterDemoMode } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [resetToken, setResetToken] = useState<string | null>(null)
   const [showMobileQuickTask, setShowMobileQuickTask] = useState(false)
+
+  // Capture ?p= from URL before auth resolves (so we can restore after login)
+  const pendingPageFromUrl = useRef<string | null>(null)
+  const hasConsumedUrlPage = useRef(false)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get("p")
+      if (p && !AUTH_PAGES.has(p as PageType)) {
+        pendingPageFromUrl.current = p
+      }
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // After auth resolves, navigate to the page from URL (once)
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !hasConsumedUrlPage.current) {
+      hasConsumedUrlPage.current = true
+      if (pendingPageFromUrl.current) {
+        setCurrentPage(pendingPageFromUrl.current as PageType)
+        pendingPageFromUrl.current = null
+      }
+    }
+  }, [isLoading, isAuthenticated, setCurrentPage])
+
+  // Sync currentPage → URL + document.title (authenticated app pages only)
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    if (!isAuthenticated || AUTH_PAGES.has(currentPage)) return
+    const title = PAGE_TITLES[currentPage] || "Dashboard"
+    document.title = `${title} | TaskSpace`
+    // pushState so browser back/forward works between app pages
+    if (window.history.state?.page !== currentPage) {
+      window.history.pushState({ page: currentPage }, "", `/app?p=${currentPage}`)
+    }
+  }, [currentPage, isAuthenticated])
+
+  // Restore page on browser back/forward
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (e.state?.page && !AUTH_PAGES.has(e.state.page)) {
+        setCurrentPage(e.state.page as PageType)
+      }
+    }
+    window.addEventListener("popstate", handlePopState)
+    return () => window.removeEventListener("popstate", handlePopState)
+  }, [setCurrentPage])
+
   // CRITICAL: Call useWorkspaces() at the top level to trigger workspace auto-selection
   // BEFORE useTeamData tries to fetch. Without this, workspace selection only happens
   // inside WorkspaceSwitcher (in Header), which may not run soon enough.
@@ -150,56 +253,42 @@ function AppContent() {
     return cleanup
   }, [])
 
-  // Check for invitation token, reset token, verify email token, or page parameter in URL
+  // Handle one-time URL tokens (invite, reset, verify). Run once on mount.
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
       const invite = params.get("invite")
       const reset = params.get("resetToken")
       const verifyEmail = params.get("verifyEmail")
-      const page = params.get("page")
+      const page = params.get("page")   // legacy unauthenticated redirect (?page=register)
       const demo = params.get("demo")
 
-      // Clear sensitive tokens from URL immediately to prevent exposure in browser history
+      // Clear sensitive/one-time tokens from URL; preserve ?p= (handled by URL sync above)
       if (invite || reset || verifyEmail || page || demo) {
         window.history.replaceState({}, "", window.location.pathname)
       }
 
-      // Auto-enter demo mode via URL param (e.g. /app?demo=true)
       if (demo === "true" && !isAuthenticated && !isDemoMode) {
         enterDemoMode()
         return
       }
-
-      if (invite) {
-        setInviteToken(invite)
-      }
+      if (invite) setInviteToken(invite)
       if (reset) {
         setResetToken(reset)
         setCurrentPage("reset-password")
       }
       if (verifyEmail) {
-        // Call verify-email API and show result
         fetch(`/api/auth/verify-email?token=${encodeURIComponent(verifyEmail)}`)
           .then(res => res.json())
-          .then(data => {
-            if (data.success) {
-              window.location.reload()
-            }
-          })
-          .catch(() => {
-            // Silently fail - user can resend from banner
-          })
+          .then(data => { if (data.success) window.location.reload() })
+          .catch(() => { /* silently fail — user can resend from banner */ })
       }
-      if (page) {
-        // Only apply page param for unauthenticated users who aren't still loading
-        // (prevents ?page=register from overriding a valid session during load)
-        if (!isAuthenticated && !isLoading) {
-          setCurrentPage(page as PageType)
-        }
+      if (page && !isAuthenticated && !isLoading) {
+        setCurrentPage(page as PageType)
       }
     }
-  }, [setCurrentPage, isAuthenticated, isLoading, isDemoMode, enterDemoMode])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // intentionally empty — only run once on mount
 
   // Show loading spinner while checking session
   if (isLoading) {
