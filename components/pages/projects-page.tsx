@@ -13,8 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Search, FolderKanban, MoreHorizontal, Pencil, Trash2, Calendar, Users, CheckCircle2, X, ArrowUpDown, RefreshCw, UserPlus, LayoutList, Kanban } from "lucide-react"
-import { format, parseISO } from "date-fns"
+import { Plus, Search, FolderKanban, MoreHorizontal, Pencil, Trash2, Calendar, Users, CheckCircle2, X, ArrowUpDown, RefreshCw, UserPlus, LayoutList, Kanban, Activity } from "lucide-react"
+import { format, parseISO, isPast, startOfDay } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
@@ -38,6 +38,17 @@ interface ProjectsPageProps {
   updateTask: (id: string, updates: Partial<AssignedTask>) => Promise<AssignedTask>
 }
 
+
+function getProjectHealth(projectId: string, rocks: Rock[], tasks: AssignedTask[]): "blocked" | "at-risk" | "on-track" | null {
+  const projectRocks = rocks.filter(r => r.projectId === projectId && r.status !== "completed")
+  const projectTasks = tasks.filter(t => t.projectId === projectId && t.status !== "completed")
+  if (projectRocks.some(r => r.status === "blocked")) return "blocked"
+  const today = startOfDay(new Date())
+  const hasOverdueTasks = projectTasks.some(t => t.dueDate && isPast(startOfDay(new Date(t.dueDate))) && startOfDay(new Date(t.dueDate)).getTime() !== today.getTime())
+  if (projectRocks.some(r => r.status === "at-risk") || hasOverdueTasks) return "at-risk"
+  if (projectRocks.length > 0 || projectTasks.length > 0) return "on-track"
+  return null
+}
 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return ""
@@ -413,6 +424,12 @@ export function ProjectsPage({
             {filteredProjects.map(project => {
               const client = clients.find(c => c.id === project.clientId)
               const owner = teamMembers.find(m => m.userId === project.ownerId)
+              const health = project.status !== "completed" ? getProjectHealth(project.id, rocks, assignedTasks) : null
+              const healthConfig = {
+                "blocked": { label: "Blocked", className: "bg-red-100 text-red-700 border-red-200" },
+                "at-risk": { label: "At Risk", className: "bg-amber-100 text-amber-700 border-amber-200" },
+                "on-track": { label: "On Track", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+              }
               return (
                 <Card
                   key={project.id}
@@ -430,6 +447,12 @@ export function ProjectsPage({
                           <Badge variant="outline" style={getPriorityStyle(project.priority)}>
                             {project.priority}
                           </Badge>
+                          {health && (
+                            <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 flex items-center gap-1 ${healthConfig[health].className}`}>
+                              <Activity className="h-2.5 w-2.5" />
+                              {healthConfig[health].label}
+                            </Badge>
+                          )}
                         </div>
                         {project.description && (
                           <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{project.description}</p>

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserInitials } from "@/components/shared/user-initials"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Search, AlertCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2, FileText, Calendar } from "lucide-react"
+import { Search, AlertCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2, FileText, Calendar, Copy, Check } from "lucide-react"
 import { subDays, startOfDay, parseISO } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -52,6 +52,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   const [editingReport, setEditingReport] = useState<EODReport | null>(null)
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
   const [reportToDelete, setReportToDelete] = useState<string | null>(null)
+  const [copiedReportId, setCopiedReportId] = useState<string | null>(null)
 
   const handleDeleteReport = (reportId: string) => {
     if (!deleteEODReport) return
@@ -263,6 +264,21 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
                           Escalation
                         </span>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-slate-400 hover:text-slate-600"
+                        title="Copy link to report"
+                        onClick={() => {
+                          const url = `${window.location.origin}/app?page=history&reportId=${report.id}`
+                          navigator.clipboard.writeText(url).then(() => {
+                            setCopiedReportId(report.id)
+                            setTimeout(() => setCopiedReportId(null), 2000)
+                          })
+                        }}
+                      >
+                        {copiedReportId === report.id ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                      </Button>
                       {canEditReport(report) && updateEODReport && (
                         <Button
                           variant="ghost"
