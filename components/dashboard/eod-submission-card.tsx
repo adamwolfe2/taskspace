@@ -86,6 +86,7 @@ export function EODSubmissionCard({
   ])
   const [needsEscalation, setNeedsEscalation] = useState(false)
   const [escalationNote, setEscalationNote] = useState("")
+  const [mood, setMood] = useState<"positive" | "neutral" | "negative" | null>(null)
   const [metricValueToday, setMetricValueToday] = useState<string>("")
   const [activeMetric, setActiveMetric] = useState<TeamMemberMetric | null>(null)
   const [weeklyMetricTotal, setWeeklyMetricTotal] = useState<number | null>(null)
@@ -291,6 +292,7 @@ export function EODSubmissionCard({
       needsEscalation,
       escalationNote: needsEscalation ? escalationNote.trim() : null,
       metricValueToday: validMetricValue,
+      mood: mood || undefined,
       attachments: attachments.length > 0 ? attachments : undefined,
     }
 
@@ -324,6 +326,7 @@ export function EODSubmissionCard({
       setTomorrowPriorities([{ id: crypto.randomUUID(), text: "", rockId: null, rockTitle: null }])
       setNeedsEscalation(false)
       setEscalationNote("")
+      setMood(null)
       setMetricValueToday("")
       setAttachments([])
       setInternalSelectedDate(todayInOrgTz) // Reset date to today
@@ -794,6 +797,32 @@ export function EODSubmissionCard({
               className="bg-white border-amber-200 focus:border-amber-300"
             />
           )}
+        </div>
+
+        {/* Mood */}
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold text-slate-700">How are you feeling? <span className="text-xs font-normal text-slate-400">(optional)</span></Label>
+          <div className="flex gap-3">
+            {([
+              { value: "positive", emoji: "😊", label: "Positive" },
+              { value: "neutral", emoji: "😐", label: "Neutral" },
+              { value: "negative", emoji: "😔", label: "Negative" },
+            ] as const).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setMood(mood === opt.value ? null : opt.value)}
+                className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-lg border-2 text-xs font-medium transition-all ${
+                  mood === opt.value
+                    ? "border-slate-400 bg-slate-50 text-slate-800"
+                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                }`}
+              >
+                <span className="text-xl">{opt.emoji}</span>
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-sm">

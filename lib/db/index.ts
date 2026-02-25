@@ -1610,11 +1610,11 @@ export const db = {
         // Try with metric_value_today column (requires migration)
         await sql`
           INSERT INTO eod_reports (id, organization_id, workspace_id, user_id, date, tasks, challenges,
-            tomorrow_priorities, needs_escalation, escalation_note, metric_value_today, submitted_at, created_at)
+            tomorrow_priorities, needs_escalation, escalation_note, metric_value_today, mood, submitted_at, created_at)
           VALUES (${report.id}, ${report.organizationId}, ${report.workspaceId || null}, ${report.userId}, ${report.date},
                   ${JSON.stringify(report.tasks)}, ${sanitizedChallenges},
                   ${JSON.stringify(report.tomorrowPriorities)}, ${report.needsEscalation},
-                  ${sanitizedEscalationNote}, ${report.metricValueToday}, ${report.submittedAt}, ${report.createdAt})
+                  ${sanitizedEscalationNote}, ${report.metricValueToday}, ${report.mood || null}, ${report.submittedAt}, ${report.createdAt})
         `
       } catch (err: unknown) {
         const errMessage = err instanceof Error ? err.message : String(err)

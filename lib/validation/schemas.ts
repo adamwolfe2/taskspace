@@ -363,6 +363,7 @@ export const createEODReportSchema = z.object({
   needsEscalation: z.boolean().default(false),
   escalationNote: z.string().max(2000).nullable().optional(),
   metricValueToday: z.union([z.number(), z.string(), z.null()]).optional(),
+  mood: z.enum(["positive", "neutral", "negative"]).optional(),
   attachments: z.array(fileAttachmentSchema).optional(),
   workspaceId: uuidSchema, // Required for data isolation
 })
