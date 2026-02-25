@@ -124,6 +124,26 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, onD
             )}>
               {task.title}
             </h3>
+            {!isPersonal && !isCompleted && onUpdateTask && task.dueDate && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 touch-target flex-shrink-0" aria-label="Snooze task">
+                    <AlarmClock className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 1).toISOString().split("T")[0] })}>
+                    Snooze 1 day
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 3).toISOString().split("T")[0] })}>
+                    Snooze 3 days
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 7).toISOString().split("T")[0] })}>
+                    Snooze 1 week
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             {isPersonal && !isCompleted && (
               <div className="flex items-center gap-1 flex-shrink-0">
                 {(onUpdateTask || onDuplicate) && (
