@@ -209,6 +209,29 @@ export function AdminPage({
   const totalMoodReports = recentMoodReports.length
   const moodPct = (count: number) => totalMoodReports > 0 ? Math.round((count / totalMoodReports) * 100) : 0
 
+  // EOD streak leaderboard: consecutive daily EOD submissions per team member
+  const eodStreakLeaderboard = activeMembers
+    .map((member) => {
+      const uid = member.userId || member.id
+      const memberDates = new Set(
+        eodReports.filter((r) => r.userId === uid).map((r) => r.date)
+      )
+      // Count consecutive days backwards from today (including today)
+      let streak = 0
+      const d = new Date()
+      d.setHours(0, 0, 0, 0)
+      while (true) {
+        const dateStr = d.toISOString().split("T")[0]
+        if (!memberDates.has(dateStr)) break
+        streak++
+        d.setDate(d.getDate() - 1)
+      }
+      return { member, streak }
+    })
+    .filter((e) => e.streak > 0)
+    .sort((a, b) => b.streak - a.streak)
+    .slice(0, 5)
+
   // Stale rocks: active but not updated in 7+ days
   const staleRocks = rocks
     .filter((r) => r.status !== "completed" && new Date(r.updatedAt) < sevenDaysAgo)
@@ -487,6 +510,36 @@ export function AdminPage({
                   </div>
                 )
               })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* EOD Streak Leaderboard */}
+      {eodStreakLeaderboard.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Flame className="h-5 w-5 text-orange-500" />
+              EOD Streak Leaderboard
+            </CardTitle>
+            <CardDescription>Team members with the longest consecutive daily reporting streaks</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {eodStreakLeaderboard.map(({ member, streak }, idx) => (
+                <div key={member.id} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                  <span className="text-lg w-6 text-center">{idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`}</span>
+                  <UserInitials name={member.name} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-800 truncate">{member.name}</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm font-bold text-orange-600">
+                    <Flame className="h-3.5 w-3.5" />
+                    {streak} day{streak !== 1 ? "s" : ""}
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
