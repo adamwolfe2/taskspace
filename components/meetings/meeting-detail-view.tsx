@@ -13,6 +13,8 @@ import {
   ArrowLeft,
   Sparkles,
   Loader2,
+  Copy,
+  Check,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -72,6 +74,7 @@ export function MeetingDetailView({
 }: MeetingDetailViewProps) {
   const [aiSummary, setAiSummary] = useState<string | null>(null)
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
+  const [copiedSummary, setCopiedSummary] = useState(false)
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -376,9 +379,41 @@ export function MeetingDetailView({
                 )}
               </Button>
             ) : (
-              <div className="prose prose-sm max-w-none">
-                <div className="text-sm text-slate-700 whitespace-pre-wrap">
-                  {aiSummary}
+              <div className="space-y-3">
+                <div className="prose prose-sm max-w-none">
+                  <div className="text-sm text-slate-700 whitespace-pre-wrap">
+                    {aiSummary}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      if (!aiSummary) return
+                      navigator.clipboard.writeText(aiSummary).then(() => {
+                        setCopiedSummary(true)
+                        setTimeout(() => setCopiedSummary(false), 2000)
+                      })
+                    }}
+                  >
+                    {copiedSummary ? (
+                      <><Check className="h-3.5 w-3.5 mr-1.5 text-green-600" />Copied</>
+                    ) : (
+                      <><Copy className="h-3.5 w-3.5 mr-1.5" />Copy Summary</>
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-slate-500"
+                    onClick={handleGenerateAISummary}
+                    disabled={isGeneratingAI}
+                  >
+                    <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                    Regenerate
+                  </Button>
                 </div>
               </div>
             )}
