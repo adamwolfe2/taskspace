@@ -360,7 +360,7 @@ Rock 2: Launch New Product
           </CardHeader>
           <CardContent className="space-y-4">
             {parsedRocks.map((rock, index) => (
-              <Card key={index} className="border-l-4 border-l-primary">
+              <Card key={index} className="border-l-4 border-l-slate-400">
                 <CardHeader
                   className="py-3 cursor-pointer"
                   onClick={() => setExpandedRock(expandedRock === index ? null : index)}

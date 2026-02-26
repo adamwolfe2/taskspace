@@ -232,7 +232,7 @@ export function MeetingDetailView({
           return (
             <div className="space-y-3">
               {data.issues.map((issue: any, index: number) => (
-                <div key={index} className="border-l-2 border-primary pl-3">
+                <div key={index} className="border-l-2 border-slate-300 pl-3">
                   <p className="text-sm font-medium text-slate-700">
                     {issue.title}
                   </p>
