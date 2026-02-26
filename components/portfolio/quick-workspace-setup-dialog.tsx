@@ -259,347 +259,7 @@ export function QuickWorkspaceSetupDialog({
   // ── Render helpers ─────────────────────────────────────────────────────────────
 
   const canGoNext = step === 0 ? name.trim().length >= 2 : true
-
-  function StepIndicator() {
-    return (
-      <div className="flex items-center gap-1 mb-6">
-        {STEPS.map((s, i) => {
-          const Icon = s.icon
-          const active = i === step
-          const done = i < step
-          return (
-            <div key={s.label} className="flex items-center">
-              <button
-                type="button"
-                onClick={() => {
-                  if (i < step || (i > step && canGoNext)) setStep(i)
-                }}
-                className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                  active
-                    ? "bg-slate-900 text-white"
-                    : done
-                    ? "bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"
-                    : "text-slate-400 cursor-default"
-                }`}
-              >
-                <Icon className="h-3 w-3" />
-                {s.label}
-              </button>
-              {i < STEPS.length - 1 && (
-                <ChevronRight className="h-3 w-3 text-slate-300 mx-0.5" />
-              )}
-            </div>
-          )
-        })}
-      </div>
-    )
-  }
-
-  // ─── Step 1: Branding ─────────────────────────────────────────────────────────
-
-  function Step1() {
-    return (
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="qs-name">
-            Client / Org Name <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="qs-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Acme Corp"
-            autoFocus
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="qs-website">Website URL (optional)</Label>
-          <div className="flex gap-2">
-            <Input
-              id="qs-website"
-              value={websiteUrl}
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-              placeholder="https://acme.com"
-              className="flex-1"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleScrape}
-              disabled={!websiteUrl.trim() || isScraping}
-            >
-              {isScraping ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4" />
-              )}
-              <span className="ml-1">Scrape Brand</span>
-            </Button>
-          </div>
-          {scrapeError && (
-            <p className="text-xs text-amber-600">{scrapeError}</p>
-          )}
-        </div>
-
-        {/* Brand preview */}
-        {(logoUrl || primaryColor) && (
-          <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50">
-            {primaryColor && (
-              <div
-                className="h-8 w-8 rounded-full border border-slate-200 flex-shrink-0"
-                style={{ backgroundColor: primaryColor }}
-                title={primaryColor}
-              />
-            )}
-            {secondaryColor && (
-              <div
-                className="h-8 w-8 rounded-full border border-slate-200 flex-shrink-0"
-                style={{ backgroundColor: secondaryColor }}
-                title={secondaryColor}
-              />
-            )}
-            {logoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logoUrl}
-                alt="Logo preview"
-                className="h-8 max-w-[120px] object-contain"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Manual overrides */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label htmlFor="qs-logo" className="text-xs">Logo URL</Label>
-            <Input
-              id="qs-logo"
-              value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-              placeholder="https://..."
-              className="text-sm"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="qs-color" className="text-xs">Primary Color</Label>
-            <div className="flex gap-1">
-              <Input
-                id="qs-color"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                placeholder="#2563EB"
-                className="text-sm flex-1"
-              />
-              {primaryColor && /^#[0-9A-Fa-f]{6}$/.test(primaryColor) && (
-                <div
-                  className="h-9 w-9 rounded border border-slate-200 flex-shrink-0"
-                  style={{ backgroundColor: primaryColor }}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ─── Step 2: Rocks & Tasks ────────────────────────────────────────────────────
-
-  function Step2() {
-    return (
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="qs-rocks-text">Paste rock descriptions</Label>
-          <Textarea
-            id="qs-rocks-text"
-            value={rawText}
-            onChange={(e) => setRawText(e.target.value)}
-            placeholder={`e.g.\n- Launch new product line by Q3\n  - Complete market research\n  - Finalize pricing strategy\n- Hire 3 engineers`}
-            rows={5}
-            className="resize-none font-mono text-sm"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleParse}
-            disabled={!rawText.trim() || isParsing}
-          >
-            {isParsing ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            ) : (
-              <Sparkles className="h-4 w-4 mr-1" />
-            )}
-            Parse with AI
-          </Button>
-          {parseError && <p className="text-xs text-red-600">{parseError}</p>}
-        </div>
-
-        {parsedRocks.length > 0 && (
-          <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-            {parsedRocks.map((rock, ri) => (
-              <div key={ri} className="border border-slate-200 rounded-lg p-3 space-y-2 bg-white">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium leading-tight">{rock.title}</p>
-                  <button
-                    type="button"
-                    onClick={() => removeRock(ri)}
-                    className="text-slate-400 hover:text-red-500 flex-shrink-0"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-                {rock.milestones.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {rock.milestones.map((m, mi) => (
-                      <Badge
-                        key={mi}
-                        variant="secondary"
-                        className="text-xs flex items-center gap-1 pr-1"
-                      >
-                        {m}
-                        <button
-                          type="button"
-                          onClick={() => removeMilestone(ri, mi)}
-                          className="ml-0.5 hover:text-red-500"
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {parsedRocks.length === 0 && !rawText && (
-          <p className="text-xs text-slate-400 italic">
-            Skip this step if you want to add rocks later from within the workspace.
-          </p>
-        )}
-      </div>
-    )
-  }
-
-  // ─── Step 3: Team ─────────────────────────────────────────────────────────────
-
-  function Step3() {
-    return (
-      <div className="space-y-3">
-        {invites.length === 0 && (
-          <p className="text-xs text-slate-400 italic">
-            No invitations yet — skip this step to add team members later.
-          </p>
-        )}
-
-        {invites.map((row, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <Input
-              value={row.email}
-              onChange={(e) => updateInvite(i, "email", e.target.value)}
-              placeholder="name@company.com"
-              type="email"
-              className="flex-1 text-sm"
-            />
-            <Select
-              value={row.role}
-              onValueChange={(v) => updateInvite(i, "role", v as "admin" | "member")}
-            >
-              <SelectTrigger className="w-28 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-            <button
-              type="button"
-              onClick={() => removeInvite(i)}
-              className="text-slate-400 hover:text-red-500"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ))}
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={addInvite}
-          className="w-full"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Add Member
-        </Button>
-      </div>
-    )
-  }
-
-  // ─── Step 4: Review ───────────────────────────────────────────────────────────
-
-  function Step4() {
-    const validInvites = invites.filter((i) => i.email.trim())
-    return (
-      <div className="space-y-4">
-        <h3 className="text-sm font-semibold text-slate-700">Ready to publish</h3>
-
-        <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm">
-          <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-slate-500">Organization</span>
-            <span className="font-medium">{name.trim() || "—"}</span>
-          </div>
-          <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-slate-500">Branding</span>
-            <div className="flex items-center gap-2">
-              {primaryColor && /^#[0-9A-Fa-f]{6}$/.test(primaryColor) && (
-                <div
-                  className="h-4 w-4 rounded-full border border-slate-200"
-                  style={{ backgroundColor: primaryColor }}
-                />
-              )}
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={logoUrl}
-                  alt="logo"
-                  className="h-4 max-w-[60px] object-contain"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
-                />
-              ) : (
-                <span className="text-slate-400">None</span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-slate-500">Rocks</span>
-            <Badge variant="secondary">{parsedRocks.length}</Badge>
-          </div>
-          <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-slate-500">Tasks (from milestones)</span>
-            <Badge variant="secondary">
-              {parsedTasks.length + parsedRocks.reduce((s, r) => s + r.milestones.length, 0)}
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-slate-500">Invitations</span>
-            <Badge variant="secondary">{validInvites.length}</Badge>
-          </div>
-        </div>
-
-        {publishError && (
-          <p className="text-sm text-red-600">{publishError}</p>
-        )}
-      </div>
-    )
-  }
+  const validInvitesCount = invites.filter((i) => i.email.trim()).length
 
   // ─── Main render ──────────────────────────────────────────────────────────────
 
@@ -617,12 +277,330 @@ export function QuickWorkspaceSetupDialog({
         </DialogHeader>
 
         <div className="py-2">
-          <StepIndicator />
+          {/* Step indicator */}
+          <div className="flex items-center gap-1 mb-6">
+            {STEPS.map((s, i) => {
+              const Icon = s.icon
+              const active = i === step
+              const done = i < step
+              return (
+                <div key={s.label} className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (i < step || (i > step && canGoNext)) setStep(i)
+                    }}
+                    className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                      active
+                        ? "bg-slate-900 text-white"
+                        : done
+                        ? "bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"
+                        : "text-slate-400 cursor-default"
+                    }`}
+                  >
+                    <Icon className="h-3 w-3" />
+                    {s.label}
+                  </button>
+                  {i < STEPS.length - 1 && (
+                    <ChevronRight className="h-3 w-3 text-slate-300 mx-0.5" />
+                  )}
+                </div>
+              )
+            })}
+          </div>
 
-          {step === 0 && <Step1 />}
-          {step === 1 && <Step2 />}
-          {step === 2 && <Step3 />}
-          {step === 3 && <Step4 />}
+          {/* ── Step 1: Branding ── */}
+          {step === 0 && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="qs-name">
+                  Client / Org Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="qs-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Acme Corp"
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="qs-website">Website URL (optional)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="qs-website"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    placeholder="https://acme.com"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleScrape}
+                    disabled={!websiteUrl.trim() || isScraping}
+                  >
+                    {isScraping ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
+                    <span className="ml-1">Scrape Brand</span>
+                  </Button>
+                </div>
+                {scrapeError && (
+                  <p className="text-xs text-amber-600">{scrapeError}</p>
+                )}
+              </div>
+
+              {/* Brand preview */}
+              {(logoUrl || primaryColor) && (
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50">
+                  {primaryColor && (
+                    <div
+                      className="h-8 w-8 rounded-full border border-slate-200 flex-shrink-0"
+                      style={{ backgroundColor: primaryColor }}
+                      title={primaryColor}
+                    />
+                  )}
+                  {secondaryColor && (
+                    <div
+                      className="h-8 w-8 rounded-full border border-slate-200 flex-shrink-0"
+                      style={{ backgroundColor: secondaryColor }}
+                      title={secondaryColor}
+                    />
+                  )}
+                  {logoUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={logoUrl}
+                      alt="Logo preview"
+                      className="h-8 max-w-[120px] object-contain"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Manual overrides */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="qs-logo" className="text-xs">Logo URL</Label>
+                  <Input
+                    id="qs-logo"
+                    value={logoUrl}
+                    onChange={(e) => setLogoUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="qs-color" className="text-xs">Primary Color</Label>
+                  <div className="flex gap-1">
+                    <Input
+                      id="qs-color"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      placeholder="#2563EB"
+                      className="text-sm flex-1"
+                    />
+                    {primaryColor && /^#[0-9A-Fa-f]{6}$/.test(primaryColor) && (
+                      <div
+                        className="h-9 w-9 rounded border border-slate-200 flex-shrink-0"
+                        style={{ backgroundColor: primaryColor }}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 2: Rocks & Tasks ── */}
+          {step === 1 && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="qs-rocks-text">Paste rock descriptions</Label>
+                <Textarea
+                  id="qs-rocks-text"
+                  value={rawText}
+                  onChange={(e) => setRawText(e.target.value)}
+                  placeholder={`e.g.\n- Launch new product line by Q3\n  - Complete market research\n  - Finalize pricing strategy\n- Hire 3 engineers`}
+                  rows={5}
+                  className="resize-none font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleParse}
+                  disabled={!rawText.trim() || isParsing}
+                >
+                  {isParsing ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-1" />
+                  )}
+                  Parse with AI
+                </Button>
+                {parseError && <p className="text-xs text-red-600">{parseError}</p>}
+              </div>
+
+              {parsedRocks.length > 0 && (
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {parsedRocks.map((rock, ri) => (
+                    <div key={ri} className="border border-slate-200 rounded-lg p-3 space-y-2 bg-white">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium leading-tight">{rock.title}</p>
+                        <button
+                          type="button"
+                          onClick={() => removeRock(ri)}
+                          className="text-slate-400 hover:text-red-500 flex-shrink-0"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      {rock.milestones.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {rock.milestones.map((m, mi) => (
+                            <Badge
+                              key={mi}
+                              variant="secondary"
+                              className="text-xs flex items-center gap-1 pr-1"
+                            >
+                              {m}
+                              <button
+                                type="button"
+                                onClick={() => removeMilestone(ri, mi)}
+                                className="ml-0.5 hover:text-red-500"
+                              >
+                                <X className="h-2.5 w-2.5" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {parsedRocks.length === 0 && !rawText && (
+                <p className="text-xs text-slate-400 italic">
+                  Skip this step if you want to add rocks later from within the workspace.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ── Step 3: Team ── */}
+          {step === 2 && (
+            <div className="space-y-3">
+              {invites.length === 0 && (
+                <p className="text-xs text-slate-400 italic">
+                  No invitations yet — skip this step to add team members later.
+                </p>
+              )}
+
+              {invites.map((row, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Input
+                    value={row.email}
+                    onChange={(e) => updateInvite(i, "email", e.target.value)}
+                    placeholder="name@company.com"
+                    type="email"
+                    className="flex-1 text-sm"
+                  />
+                  <Select
+                    value={row.role}
+                    onValueChange={(v) => updateInvite(i, "role", v as "admin" | "member")}
+                  >
+                    <SelectTrigger className="w-28 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="member">Member</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <button
+                    type="button"
+                    onClick={() => removeInvite(i)}
+                    className="text-slate-400 hover:text-red-500"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addInvite}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Member
+              </Button>
+            </div>
+          )}
+
+          {/* ── Step 4: Review ── */}
+          {step === 3 && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-slate-700">Ready to publish</h3>
+
+              <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm">
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-slate-500">Organization</span>
+                  <span className="font-medium">{name.trim() || "—"}</span>
+                </div>
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-slate-500">Branding</span>
+                  <div className="flex items-center gap-2">
+                    {primaryColor && /^#[0-9A-Fa-f]{6}$/.test(primaryColor) && (
+                      <div
+                        className="h-4 w-4 rounded-full border border-slate-200"
+                        style={{ backgroundColor: primaryColor }}
+                      />
+                    )}
+                    {logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={logoUrl}
+                        alt="logo"
+                        className="h-4 max-w-[60px] object-contain"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
+                      />
+                    ) : (
+                      <span className="text-slate-400">None</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-slate-500">Rocks</span>
+                  <Badge variant="secondary">{parsedRocks.length}</Badge>
+                </div>
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-slate-500">Tasks (from milestones)</span>
+                  <Badge variant="secondary">
+                    {parsedTasks.length + parsedRocks.reduce((s, r) => s + r.milestones.length, 0)}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-slate-500">Invitations</span>
+                  <Badge variant="secondary">{validInvitesCount}</Badge>
+                </div>
+              </div>
+
+              {publishError && (
+                <p className="text-sm text-red-600">{publishError}</p>
+              )}
+            </div>
+          )}
         </div>
 
         <DialogFooter className="flex-row items-center justify-between gap-2 sm:justify-between">
