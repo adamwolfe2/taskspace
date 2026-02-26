@@ -185,7 +185,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
   }
 
   const handleSubmit = async () => {
-    if (!title.trim() || !dueDate) return
+    if (!title.trim()) return
 
     const selectedRock = rockId ? userRocks.find((r) => r.id === rockId) : null
     const selectedProject = projectId ? projects.find((p) => p.id === projectId) : null
@@ -266,7 +266,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && title.trim() && dueDate && handleSubmit()}
+              onKeyDown={(e) => e.key === "Enter" && title.trim() && handleSubmit()}
               placeholder="What do you need to do?"
               autoFocus
             />
@@ -333,7 +333,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
             </div>
 
             <div>
-              <Label htmlFor="dueDate">Due Date *</Label>
+              <Label htmlFor="dueDate">Due Date</Label>
               <Input id="dueDate" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </div>
           </div>
@@ -426,7 +426,7 @@ export function AddTaskModal({ open, onOpenChange, onSubmit, userRocks, projects
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!title.trim() || !dueDate || isSubmitting}>
+          <Button onClick={handleSubmit} disabled={!title.trim() || isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
