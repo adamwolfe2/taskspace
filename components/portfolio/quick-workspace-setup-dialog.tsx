@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useApp } from "@/lib/contexts/app-context"
 import {
   Dialog, DialogContent, DialogDescription,
   DialogFooter, DialogHeader, DialogTitle,
@@ -85,6 +86,7 @@ export function QuickWorkspaceSetupDialog({
   onOpenChange,
   onSuccess,
 }: QuickWorkspaceSetupDialogProps) {
+  const { refreshSession } = useApp()
   const [step, setStep] = useState(0)
 
   // Step 1 — Branding
@@ -245,7 +247,20 @@ export function QuickWorkspaceSetupDialog({
       const json = await res.json()
       if (json.success && json.data?.newOrg) {
         onSuccess(json.data.newOrg)
-        handleOpenChange(false)
+        // Switch session to the new org and navigate to its dashboard
+        const switchRes = await fetch("/api/user/switch-organization", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+          body: JSON.stringify({ organizationId: json.data.orgId }),
+        })
+        const switchJson = await switchRes.json()
+        if (switchJson.success) {
+          await refreshSession()
+          window.location.reload()
+        } else {
+          // Org was created — just close and let user switch manually
+          handleOpenChange(false)
+        }
       } else {
         setPublishError(json.error || "Failed to create workspace.")
       }
