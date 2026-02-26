@@ -25,6 +25,7 @@ import {
   ExternalLink,
   AlertTriangle,
 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { IntegrationLogo } from "@/components/ui/integration-logo"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/lib/contexts/app-context"
@@ -89,6 +90,7 @@ interface SubscriptionInfo {
   billingCycle?: BillingCycle
   maxSeats: number | null
   usedSeats: number
+  stripeConfigured: boolean
 }
 
 export function BillingSettings() {
@@ -113,7 +115,10 @@ export function BillingSettings() {
         const data = await response.json()
 
         if (data.success && data.data) {
-          setSubscription(data.data)
+          setSubscription({
+            ...data.data,
+            stripeConfigured: data.data.stripeConfigured ?? true,
+          })
           if (data.data.billingCycle) {
             setBillingCycle(data.data.billingCycle)
           }
@@ -314,8 +319,26 @@ export function BillingSettings() {
     )
   }
 
+  const trialDaysLeft = subscription?.status === "trialing" && subscription.currentPeriodEnd
+    ? Math.max(0, Math.ceil((new Date(subscription.currentPeriodEnd).getTime() - Date.now()) / 86400000))
+    : null
+
   return (
     <div className="space-y-4">
+      {/* Stripe not configured warning */}
+      {subscription && !subscription.stripeConfigured && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Billing is not fully configured. Contact{" "}
+            <a href="mailto:support@trytaskspace.com" className="underline font-medium">
+              support@trytaskspace.com
+            </a>{" "}
+            for assistance.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Current Plan Status */}
       <Card>
         <CardHeader>
@@ -336,7 +359,15 @@ export function BillingSettings() {
                   <Badge variant="default" className="bg-emerald-500">Active</Badge>
                 )}
                 {subscription?.status === "trialing" && (
-                  <Badge variant="secondary">Trial</Badge>
+                  <>
+                    <Badge variant="secondary">Trial</Badge>
+                    {trialDaysLeft !== null && (
+                      <span className={cn("text-sm font-medium ml-1",
+                        trialDaysLeft <= 3 ? "text-red-600" : "text-amber-600")}>
+                        {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} left
+                      </span>
+                    )}
+                  </>
                 )}
                 {subscription?.status === "past_due" && (
                   <Badge variant="destructive">Past Due</Badge>
@@ -567,7 +598,7 @@ export function BillingSettings() {
                         : ""
                     )}
                     variant={isCurrentPlan ? "default" : key === "free" ? "outline" : "default"}
-                    disabled={isCurrentPlan || processingPlan !== null || !isAdmin}
+                    disabled={isCurrentPlan || processingPlan !== null || !isAdmin || (key !== "free" && !subscription?.stripeConfigured)}
                     onClick={() => handleUpgrade(key)}
                   >
                     {processingPlan === key ? (

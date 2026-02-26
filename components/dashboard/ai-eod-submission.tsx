@@ -53,6 +53,7 @@ interface AIEODSubmissionProps {
   onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt" | "organizationId"> | Omit<EODReport, "id" | "createdAt" | "organizationId" | "date">) => void | Promise<void>
   userId: string
   currentUser: TeamMember
+  eodCount?: number
 }
 
 export function AIEODSubmission({
@@ -61,6 +62,7 @@ export function AIEODSubmission({
   onSubmitEOD,
   userId,
   currentUser,
+  eodCount = 0,
 }: AIEODSubmissionProps) {
   const { currentOrganization } = useApp()
   const { colors } = useBrandTheme()
@@ -444,6 +446,11 @@ export function AIEODSubmission({
               <Label htmlFor="textDump" className="text-sm font-semibold text-slate-700">
                 Paste Your Daily Tasks
               </Label>
+              {eodCount === 0 && (
+                <p className="text-sm text-slate-500">
+                  List what you worked on today — at least one task to submit your daily report.
+                </p>
+              )}
               <Textarea
                 ref={textareaRef}
                 id="textDump"

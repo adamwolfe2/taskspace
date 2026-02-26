@@ -436,6 +436,7 @@ export function DashboardPage({
           onSubmitEOD={handleSubmitEOD}
           userId={effectiveUserId}
           currentUser={currentUser}
+          eodCount={eodReports.filter(r => r.userId === effectiveUserId).length}
          />
         </TabsContent>
         <TabsContent value="manual">

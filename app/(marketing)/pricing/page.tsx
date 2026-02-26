@@ -287,17 +287,17 @@ export default function PricingPage() {
           </p>
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <Link
-              href={STRIPE_PAYMENT_LINKS.team?.monthly || "/pricing"}
+              href={STRIPE_PAYMENT_LINKS.team?.monthly || "/app?page=register"}
               className="rounded-lg bg-black px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-900 transition-colors"
             >
               Start Free Trial
             </Link>
-            <Link
-              href="/contact"
+            <a
+              href="mailto:support@trytaskspace.com"
               className="rounded-lg border border-gray-300 bg-white px-8 py-3.5 text-sm font-semibold text-black hover:bg-gray-100 transition-colors"
             >
               Contact Sales
-            </Link>
+            </a>
           </div>
           <p className="text-gray-500 mt-6 text-sm">
             Free forever plan -- 14-day free trial on paid plans -- Cancel anytime
