@@ -125,7 +125,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     }
 
     // Check subscription limit
-    const memberSlots = auth.organization.subscription.maxUsers - existingMembers.length
+    const memberSlots = auth.organization.subscription.maxUsers === null ? Infinity : auth.organization.subscription.maxUsers - existingMembers.length
 
     for (const memberInput of payload.members || []) {
       const emailLower = memberInput.email.toLowerCase()

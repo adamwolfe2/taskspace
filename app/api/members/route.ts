@@ -42,9 +42,10 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     // Check subscription limits — only count active members (not pending invites or drafts)
     const members = await db.members.findByOrganizationId(auth.organization.id)
     const activeMembers = members.filter(m => m.status === "active")
-    if (activeMembers.length >= auth.organization.subscription.maxUsers) {
+    const maxUsers = auth.organization.subscription.maxUsers
+    if (maxUsers !== null && activeMembers.length >= maxUsers) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `You have reached your plan limit of ${auth.organization.subscription.maxUsers} users. Please upgrade to add more team members.` },
+        { success: false, error: `You have reached your plan limit of ${maxUsers} users. Please upgrade to add more team members.` },
         { status: 403 }
       )
     }

@@ -26,7 +26,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 
     const currentTotal = members.length + pendingInvites.length
     const maxUsers = auth.organization.subscription.maxUsers
-    const availableSlots = maxUsers - currentTotal
+    const availableSlots = maxUsers === null ? Infinity : maxUsers - currentTotal
 
     if (emails.length > availableSlots) {
       return NextResponse.json<ApiResponse<null>>(

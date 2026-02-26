@@ -65,7 +65,7 @@ export interface SubscriptionInfo {
   plan: "free" | "team" | "business"
   status: "active" | "trialing" | "past_due" | "canceled"
   currentPeriodEnd: string | null
-  maxUsers: number
+  maxUsers: number | null
   features: string[]
   // Additional billing fields
   billingCycle?: "monthly" | "yearly" | null
