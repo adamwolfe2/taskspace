@@ -435,7 +435,7 @@ export default function PublicEODDailyReportPage() {
 
         {/* Submission Progress */}
         {data.submissionStats.percentage < 100 && (() => {
-          const accent = data.accentColor || "#f59e0b"
+          const accent = data.accentColor || "#64748b"
           return (
             <div
               className="mb-6 p-4 rounded-xl border"
@@ -528,7 +528,7 @@ export default function PublicEODDailyReportPage() {
                 })),
                 periodType: "daily",
               }
-              return <UserBentoCard key={idx} data={bentoData} />
+              return <UserBentoCard key={idx} data={bentoData} accentColor={data.accentColor ?? undefined} />
             })}
           </UserBentoGrid>
         ) : (

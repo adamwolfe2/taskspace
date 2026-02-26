@@ -11,7 +11,6 @@ import {
   AlertTriangle,
   Calendar,
 } from "lucide-react"
-import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 
 // Rock progress data for display
 interface RockProgress {
@@ -51,14 +50,20 @@ export interface UserBentoData {
 function RockProgressBar({
   progress,
   status,
+  accentColor,
   size = "sm"
 }: {
   progress: number
   status: RockProgress["status"]
+  accentColor?: string
   size?: "sm" | "md"
 }) {
-  const { getStatusStyle } = useBrandStatusStyles()
-  const statusStyle = getStatusStyle(status)
+  // Use semantic colors for warning/danger; accent color for on-track/completed
+  const barColor = status === "blocked"
+    ? "#ef4444"
+    : status === "at-risk"
+    ? "#f59e0b"
+    : (accentColor || "#3b82f6")
 
   return (
     <div
@@ -69,7 +74,7 @@ function RockProgressBar({
     >
       <div
         className="h-full rounded-full transition-all duration-500"
-        style={{ width: `${Math.min(100, Math.max(0, progress))}%`, backgroundColor: statusStyle.color }}
+        style={{ width: `${Math.min(100, Math.max(0, progress))}%`, backgroundColor: barColor }}
       />
     </div>
   )
@@ -116,10 +121,12 @@ export function UserBentoCard({
   data,
   className,
   defaultExpanded = false,
+  accentColor,
 }: {
   data: UserBentoData
   className?: string
   defaultExpanded?: boolean
+  accentColor?: string
 }) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
 
@@ -237,6 +244,7 @@ export function UserBentoCard({
                   key={rock.id || idx}
                   progress={rock.progress}
                   status={rock.status}
+                  accentColor={accentColor}
                   size="sm"
                 />
               ))}

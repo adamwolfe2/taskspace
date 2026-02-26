@@ -155,14 +155,17 @@ export async function GET(
     logger.info({ orgSlug: slug, date }, "Public EOD accessed")
 
     // Get accent color from the org's default workspace (or first workspace)
+    // Prefer accent_color, fall back to primary_color (what most orgs have set)
     const { rows: wsRows } = await sql`
-      SELECT accent_color
+      SELECT accent_color, primary_color
       FROM workspaces
       WHERE organization_id = ${orgId}
       ORDER BY is_default DESC, created_at ASC
       LIMIT 1
     `
-    const accentColor = wsRows.length > 0 ? (wsRows[0].accent_color as string | null) : null
+    const accentColor = wsRows.length > 0
+      ? ((wsRows[0].accent_color || wsRows[0].primary_color) as string | null)
+      : null
 
     // Get all active members (join with users to get name if missing in members)
     const { rows: members } = await sql`
