@@ -163,9 +163,9 @@ export const TEAM_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     vto: false, peopleAnalyzer: false, projects: false, clients: false,
   },
   productivity: { focusBlocks: false, dailyEnergy: false, streakTracking: true, weeklyReviews: false, achievements: true },
-  integrations: { asana: false, googleCalendar: false, slack: true, webhooks: false },
-  advanced: { aiCommandCenter: true, analytics: false, managerDashboard: true, apiAccess: false, clientPortal: false },
-  admin: { teamManagement: true, databaseManagement: false, branding: true },
+  integrations: { asana: false, googleCalendar: false, slack: false, webhooks: false },
+  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: false },
+  admin: { teamManagement: true, databaseManagement: false, branding: false },
 }
 
 // Template: Client Reporting — client-facing EOD reports
@@ -176,9 +176,9 @@ export const CLIENT_REPORTING_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     vto: false, peopleAnalyzer: false, projects: true, clients: true,
   },
   productivity: { focusBlocks: false, dailyEnergy: false, streakTracking: true, weeklyReviews: false, achievements: false },
-  integrations: { asana: false, googleCalendar: false, slack: true, webhooks: false },
-  advanced: { aiCommandCenter: true, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: true },
-  admin: { teamManagement: true, databaseManagement: false, branding: true },
+  integrations: { asana: false, googleCalendar: false, slack: false, webhooks: false },
+  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: true },
+  admin: { teamManagement: true, databaseManagement: false, branding: false },
 }
 
 // Template: Multiple Companies — portfolio operator
@@ -189,9 +189,9 @@ export const MULTI_COMPANY_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     vto: true, peopleAnalyzer: false, projects: false, clients: false,
   },
   productivity: { focusBlocks: false, dailyEnergy: false, streakTracking: true, weeklyReviews: true, achievements: true },
-  integrations: { asana: false, googleCalendar: false, slack: true, webhooks: false },
-  advanced: { aiCommandCenter: true, analytics: true, managerDashboard: true, apiAccess: false, clientPortal: false },
-  admin: { teamManagement: true, databaseManagement: false, branding: true },
+  integrations: { asana: false, googleCalendar: false, slack: false, webhooks: false },
+  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: false },
+  admin: { teamManagement: true, databaseManagement: false, branding: false },
 }
 
 // ============================================

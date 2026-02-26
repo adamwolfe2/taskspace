@@ -4,13 +4,20 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { USE_CASE_TEMPLATES, type UseCaseTemplate } from "@/lib/types/use-case-templates"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2 } from "lucide-react"
+import { Loader2, Users, FileBarChart, Building2, SlidersHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface UseCaseSelectorProps {
   open: boolean
   workspaceId: string
   onComplete: (templateId: UseCaseTemplate["id"]) => void
+}
+
+const TEMPLATE_ICONS: Record<UseCaseTemplate["id"], React.ElementType> = {
+  team: Users,
+  "client-reporting": FileBarChart,
+  "multi-company": Building2,
+  custom: SlidersHorizontal,
 }
 
 export function UseCaseSelectorModal({ open, workspaceId, onComplete }: UseCaseSelectorProps) {
@@ -53,34 +60,40 @@ export function UseCaseSelectorModal({ open, workspaceId, onComplete }: UseCaseS
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {USE_CASE_TEMPLATES.map(template => (
-            <button
-              key={template.id}
-              onClick={() => handleSelect(template)}
-              disabled={!!saving}
-              className={cn(
-                "text-left rounded-xl border border-gray-200 p-5 hover:border-black hover:shadow-sm transition-all",
-                saving === template.id && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">{template.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-black text-sm">{template.title}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{template.subtitle}</div>
-                  <p className="text-sm text-gray-600 mt-2 leading-snug">{template.description}</p>
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    {template.highlightedFeatures.map(f => (
-                      <span key={f} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">{f}</span>
-                    ))}
+          {USE_CASE_TEMPLATES.map(template => {
+            const Icon = TEMPLATE_ICONS[template.id]
+            return (
+              <button
+                key={template.id}
+                onClick={() => handleSelect(template)}
+                disabled={!!saving}
+                className={cn(
+                  "text-left rounded-xl border border-gray-200 p-5 hover:border-black hover:shadow-sm transition-all disabled:cursor-not-allowed",
+                  saving === template.id && "opacity-50"
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    {saving === template.id ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                    ) : (
+                      <Icon className="h-5 w-5 text-black" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-black text-sm">{template.title}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{template.subtitle}</div>
+                    <p className="text-sm text-gray-600 mt-2 leading-snug">{template.description}</p>
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {template.highlightedFeatures.map(f => (
+                        <span key={f} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">{f}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                {saving === template.id && (
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400 flex-shrink-0 mt-0.5" />
-                )}
-              </div>
-            </button>
-          ))}
+              </button>
+            )
+          })}
         </div>
       </DialogContent>
     </Dialog>
