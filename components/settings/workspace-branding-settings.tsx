@@ -116,13 +116,13 @@ export function WorkspaceBrandingSettings() {
 
   // Color state - inherit from organization as defaults
   const [primaryColor, setPrimaryColor] = useState(
-    currentWorkspace?.primaryColor || currentOrganization?.primaryColor || "#3b82f6"
+    currentWorkspace?.primaryColor || currentOrganization?.primaryColor || "#000000"
   )
   const [secondaryColor, setSecondaryColor] = useState(
-    currentWorkspace?.secondaryColor || currentOrganization?.secondaryColor || "#60a5fa"
+    currentWorkspace?.secondaryColor || currentOrganization?.secondaryColor || "#374151"
   )
   const [accentColor, setAccentColor] = useState(
-    currentWorkspace?.accentColor || currentOrganization?.accentColor || "#8b5cf6"
+    currentWorkspace?.accentColor || currentOrganization?.accentColor || "#6b7280"
   )
 
   // Logo upload
@@ -390,9 +390,9 @@ export function WorkspaceBrandingSettings() {
   }
 
   const handleCancel = () => {
-    setPrimaryColor(currentWorkspace?.primaryColor || "#3b82f6")
-    setSecondaryColor(currentWorkspace?.secondaryColor || "#60a5fa")
-    setAccentColor(currentWorkspace?.accentColor || "#8b5cf6")
+    setPrimaryColor(currentWorkspace?.primaryColor || "#000000")
+    setSecondaryColor(currentWorkspace?.secondaryColor || "#374151")
+    setAccentColor(currentWorkspace?.accentColor || "#6b7280")
     setLogoUrl(currentWorkspace?.logoUrl || "")
     setLogoFile(null)
     setIsEditing(false)

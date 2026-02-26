@@ -448,17 +448,17 @@ export function hexToHsl(hex: string): HSL {
 }
 
 /**
- * Default brand colors (blue theme)
+ * Default brand colors (black/enterprise theme — overridden when workspace uploads branding)
  */
 export const defaultBrandColors: ExtractedColors = {
-  primary: "#3b82f6",    // Blue-500
-  secondary: "#60a5fa",  // Blue-400
-  accent: "#8b5cf6",     // Violet-500
+  primary: "#000000",    // Black
+  secondary: "#374151",  // Gray-700
+  accent: "#6b7280",     // Gray-500
   text: "#1e293b",       // Slate-800
   background: "#f8fafc", // Slate-50
   personality: {
-    vibrancy: 'vibrant',
-    temperature: 'cool',
+    vibrancy: 'muted',
+    temperature: 'neutral',
     formality: 'professional',
   },
 }
