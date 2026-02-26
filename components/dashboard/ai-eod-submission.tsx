@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Sparkles, Send, Loader2, X, Plus, AlertTriangle, Check, Target, Calendar, Clock } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember } from "@/lib/types"
@@ -571,7 +571,21 @@ Tomorrow: finalize project proposal, sync with team on sprint goals`}
                         </Badge>
                       )}
                       <CardTitle className="text-sm font-medium">{group.rockTitle}</CardTitle>
-                      <Badge variant="secondary" className="ml-auto">{group.tasks.length}</Badge>
+                      <div className="flex items-center gap-2 ml-auto">
+                        <Badge variant="secondary">{group.tasks.length}</Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => addTaskToRock(
+                            key === "general" ? null : key,
+                            key === "general" ? null : group.rockTitle
+                          )}
+                          className="h-7 px-2 text-xs text-slate-500 hover:text-slate-800"
+                        >
+                          <Plus className="h-3.5 w-3.5 mr-1" />
+                          Add Task
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="p-3 space-y-2">
@@ -612,20 +626,6 @@ Tomorrow: finalize project proposal, sync with team on sprint goals`}
                       </div>
                     ))}
                   </CardContent>
-                  <CardFooter className="px-3 py-2 border-t border-slate-100">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => addTaskToRock(
-                        key === "general" ? null : key,
-                        key === "general" ? null : group.rockTitle
-                      )}
-                      className="h-7 text-xs text-slate-500 hover:text-slate-800 px-2"
-                    >
-                      <Plus className="h-3.5 w-3.5 mr-1" />
-                      Add Task
-                    </Button>
-                  </CardFooter>
                 </Card>
               ))}
             </div>
