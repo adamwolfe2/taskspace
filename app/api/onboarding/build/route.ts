@@ -11,7 +11,7 @@ import { logger, logError } from "@/lib/logger"
 
 const memberInputSchema = z.object({
   name: z.string().min(1),
-  email: z.string().email(),
+  email: z.string().email().optional(),
   role: z.enum(["admin", "member"]).optional().default("member"),
   department: z.string().optional(),
   jobTitle: z.string().optional(),
@@ -128,6 +128,13 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     const memberSlots = auth.organization.subscription.maxUsers === null ? Infinity : auth.organization.subscription.maxUsers - existingMembers.length
 
     for (const memberInput of payload.members || []) {
+      // Skip members without an email — they can't be invited or logged in
+      if (!memberInput.email) {
+        result.errors.push(`${memberInput.name}: no email provided — add manually from Team Management`)
+        result.skipped.members++
+        continue
+      }
+
       const emailLower = memberInput.email.toLowerCase()
 
       // Skip if already in org

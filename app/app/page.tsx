@@ -46,6 +46,7 @@ const IdsBoardPage = dynamic(
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 import { InvitedUserWelcome } from "@/components/onboarding/invited-user-welcome"
+import { UseCaseSelectorModal } from "@/components/onboarding/use-case-selector"
 import { BrandThemeProvider } from "@/lib/contexts/brand-theme-context"
 import { useState, useEffect, useRef } from "react"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
@@ -238,8 +239,25 @@ function AppContent() {
   // CRITICAL: Call useWorkspaces() at the top level to trigger workspace auto-selection
   // BEFORE useTeamData tries to fetch. Without this, workspace selection only happens
   // inside WorkspaceSwitcher (in Header), which may not run soon enough.
-  useWorkspaces()
+  const { currentWorkspace, isAdmin: isWorkspaceAdmin } = useWorkspaces()
   const teamData = useTeamData()
+
+  const [showUseCaseSelector, setShowUseCaseSelector] = useState(false)
+
+  useEffect(() => {
+    if (!isAuthenticated || !currentOrganization || !isWorkspaceAdmin || !currentWorkspace) return
+    const key = `ts_usecase_${currentOrganization.id}`
+    if (!localStorage.getItem(key)) {
+      setShowUseCaseSelector(true)
+    }
+  }, [isAuthenticated, currentOrganization, isWorkspaceAdmin, currentWorkspace])
+
+  const handleUseCaseSelected = (templateId: string) => {
+    if (currentOrganization) {
+      localStorage.setItem(`ts_usecase_${currentOrganization.id}`, templateId)
+    }
+    setShowUseCaseSelector(false)
+  }
   // Register global keyboard shortcuts
   useKeyboardShortcuts([
     { key: "d", meta: true, shift: true, handler: () => setCurrentPage("dashboard") },
@@ -618,6 +636,13 @@ function AppContent() {
       <CommandPalette />
       <KeyboardShortcutsDialog />
       <BugReporter />
+      {showUseCaseSelector && currentWorkspace?.id && (
+        <UseCaseSelectorModal
+          open={showUseCaseSelector}
+          workspaceId={currentWorkspace.id}
+          onComplete={handleUseCaseSelected}
+        />
+      )}
     </div>
   )
 }

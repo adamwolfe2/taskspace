@@ -368,6 +368,16 @@ export function WorkspaceBuilder({ onClose }: WorkspaceBuilderProps) {
                 </div>
               )}
 
+              {(payload.members?.some(m => !(m as { email?: string }).email)) && (
+                <div className="flex items-start gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <span>
+                    Some members are missing email addresses and won&apos;t be created.
+                    Add them manually from <strong>Team Management</strong> after building.
+                  </span>
+                </div>
+              )}
+
               <p className="text-xs text-slate-400">
                 Existing team members with matching emails will be skipped. This cannot be undone.
               </p>
