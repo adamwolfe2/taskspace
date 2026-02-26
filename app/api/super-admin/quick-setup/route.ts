@@ -75,11 +75,16 @@ export const POST = withSuperAdmin(async (request: NextRequest, auth) => {
       enableSlackIntegration: false,
     })
     const subscriptionJson = JSON.stringify({
-      plan: "free",
+      plan: "business",
       status: "active",
-      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      maxUsers: 3,
-      features: ["basic_rocks", "basic_tasks", "eod_reports"],
+      currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      maxUsers: null,
+      features: [
+        "basic_rocks","basic_tasks","eod_reports","unlimited_rocks","unlimited_tasks",
+        "l10_meetings","manager_dashboard","multiple_workspaces","custom_branding",
+        "api_access","advanced_analytics","slack_integration","google_calendar_sync",
+        "ai_eod_parsing","ai_query","ai_daily_digest","ai_brain_dump","unlimited_ai","ai_insights",
+      ],
     })
 
     // ── Transaction: org + workspace + memberships ───────────────────────────
@@ -294,7 +299,7 @@ export const POST = withSuperAdmin(async (request: NextRequest, auth) => {
       eodsToday: 0,
       activeTasks: tasksCreated,
       openEscalations: 0,
-      plan: "free",
+      plan: "business",
       eodRate7Day: 0,
       eodRateTrend: "stable",
       completedTasksThisWeek: 0,

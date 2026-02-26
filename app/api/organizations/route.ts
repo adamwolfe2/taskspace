@@ -69,13 +69,26 @@ export const POST = withUserAuth(async (request: NextRequest, auth) => {
         enableEmailNotifications: true,
         enableSlackIntegration: false,
       },
-      subscription: {
-        plan: "free",
-        status: "active",
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        maxUsers: 100, // Internal tool - generous limit
-        features: ["basic_rocks", "basic_tasks", "eod_reports"],
-      },
+      subscription: auth.user.isSuperAdmin
+        ? {
+            plan: "business",
+            status: "active",
+            currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            maxUsers: null,
+            features: [
+              "basic_rocks","basic_tasks","eod_reports","unlimited_rocks","unlimited_tasks",
+              "l10_meetings","manager_dashboard","multiple_workspaces","custom_branding",
+              "api_access","advanced_analytics","slack_integration","google_calendar_sync",
+              "ai_eod_parsing","ai_query","ai_daily_digest","ai_brain_dump","unlimited_ai","ai_insights",
+            ],
+          }
+        : {
+            plan: "free",
+            status: "active",
+            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            maxUsers: 100,
+            features: ["basic_rocks", "basic_tasks", "eod_reports"],
+          },
     }
 
     await db.organizations.create(organization)
