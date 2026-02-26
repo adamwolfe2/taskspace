@@ -119,9 +119,9 @@ function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "owner":
-        return <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">Owner</span>
+        return <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-700 rounded-full">Owner</span>
       case "admin":
-        return <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">Admin</span>
+        return <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 rounded-full">Admin</span>
       default:
         return null
     }
@@ -588,9 +588,9 @@ export default function PublicEODWeeklyReportPage() {
         {/* Weekly Scorecard - Deliverables */}
         {data.scorecard && data.scorecard.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-8 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-purple-50 to-white">
+            <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
               <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-                <Target className="h-5 w-5 text-purple-600" />
+                <Target className="h-5 w-5 text-slate-600" />
                 Weekly Scorecard
               </h3>
               <p className="text-sm text-slate-500 mt-1">Team deliverables and metrics for this week</p>
@@ -616,7 +616,7 @@ export default function PublicEODWeeklyReportPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full text-sm font-medium">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
                           <Target className="h-3.5 w-3.5" />
                           {entry.metricName}
                         </span>

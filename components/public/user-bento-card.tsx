@@ -150,9 +150,9 @@ export function UserBentoCard({
   const getRoleBadge = () => {
     switch (data.userRole) {
       case "owner":
-        return <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-purple-100 text-purple-700 rounded">OWNER</span>
+        return <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-slate-100 text-slate-700 rounded">OWNER</span>
       case "admin":
-        return <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-700 rounded">ADMIN</span>
+        return <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-slate-100 text-slate-600 rounded">ADMIN</span>
       default:
         return null
     }

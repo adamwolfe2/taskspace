@@ -86,9 +86,9 @@ function ReportCard({ report, timezone }: { report: PublicEODReport; timezone: s
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "owner":
-        return <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">Owner</span>
+        return <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-700 rounded-full">Owner</span>
       case "admin":
-        return <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">Admin</span>
+        return <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 rounded-full">Admin</span>
       default:
         return null
     }
