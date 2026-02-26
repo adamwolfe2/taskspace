@@ -253,6 +253,13 @@ export const DELETE = withAdmin(async (request, auth, context?) => {
     // If default workspace, cascade delete the entire organization
     if (workspace.isDefault) {
       const { db } = await import("@/lib/db")
+
+      // Find another org for the user to switch to after deletion
+      const allMemberships = await db.members.findByUserId(auth.user.id)
+      const otherMembership = allMemberships.find(
+        (m) => m.organizationId !== auth.organization.id && m.status === "active"
+      )
+
       const deleted = await db.organizations.delete(workspace.organizationId)
       if (!deleted) {
         return NextResponse.json<ApiResponse<null>>(
@@ -260,9 +267,9 @@ export const DELETE = withAdmin(async (request, auth, context?) => {
           { status: 500 }
         )
       }
-      return NextResponse.json<ApiResponse<{ deleted: boolean }>>({
+      return NextResponse.json<ApiResponse<{ deleted: boolean; orgDeleted: boolean; nextOrgId: string | null }>>({
         success: true,
-        data: { deleted: true },
+        data: { deleted: true, orgDeleted: true, nextOrgId: otherMembership?.organizationId ?? null },
         message: "Organization and all workspaces deleted successfully",
       })
     }

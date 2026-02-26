@@ -393,11 +393,26 @@ export function useDeleteWorkspace() {
       throw new Error(json.error || "Failed to delete workspace")
     }
 
-    // If we deleted the current workspace, switch to default
+    // If the entire org was deleted, switch to another org then hard reload
+    if (json.data?.orgDeleted) {
+      const nextOrgId = json.data?.nextOrgId as string | null
+      if (nextOrgId) {
+        await fetch("/api/user/switch-organization", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+          credentials: "include",
+          body: JSON.stringify({ organizationId: nextOrgId }),
+        }).catch(() => {/* best-effort */})
+      }
+      window.location.reload()
+      return
+    }
+
+    // For non-default workspace deletion: switch away if we deleted the current workspace
     if (currentWorkspaceId === workspaceId) {
-      const defaultWorkspace = workspaces.find((w) => w.isDefault && w.id !== workspaceId)
-      if (defaultWorkspace) {
-        switchWorkspace(defaultWorkspace.id)
+      const fallback = workspaces.find((w) => w.id !== workspaceId)
+      if (fallback) {
+        switchWorkspace(fallback.id)
       }
     }
 
