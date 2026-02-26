@@ -75,7 +75,12 @@ export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodRepor
       description: "Share what you accomplished today",
       done: hasEodReports,
       icon: FileText,
-      action: () => {/* scroll handled by dashboard */},
+      action: () => {
+        const eodSection = document.querySelector("[data-eod-section]")
+        if (eodSection) {
+          eodSection.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
+      },
     },
   ]
 

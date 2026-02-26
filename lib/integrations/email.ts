@@ -50,7 +50,7 @@ function buildUnsubscribeUrl(email: string): string {
  */
 export function verifyUnsubscribeToken(email: string, token: string | null): boolean {
   const secret = process.env.AUTH_SECRET
-  if (!secret) return true // Graceful degradation: no secret configured
+  if (!secret) return false // Fail closed: no secret means no valid tokens
   if (!token) return false
   const expected = createHmac("sha256", secret).update(email.toLowerCase()).digest("hex").slice(0, 32)
   return token === expected

@@ -13,6 +13,7 @@ if (SENTRY_DSN) {
   Sentry.init({
     dsn: SENTRY_DSN,
     environment: process.env.NODE_ENV || "development",
+    release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
 
     // Performance monitoring sample rate
     // Adjust based on traffic - lower for high-traffic apps

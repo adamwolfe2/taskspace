@@ -284,11 +284,11 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     const now = new Date().toISOString()
 
-    // Parse metric value - ensure it's a valid number or null
+    // Parse metric value - ensure it's a valid finite number or null
     const parsedMetricValue = metricValueToday !== undefined && metricValueToday !== null && metricValueToday !== ""
-      ? parseInt(String(metricValueToday), 10)
+      ? parseFloat(String(metricValueToday))
       : null
-    const validMetricValue = parsedMetricValue !== null && !isNaN(parsedMetricValue)
+    const validMetricValue = parsedMetricValue !== null && isFinite(parsedMetricValue)
       ? parsedMetricValue
       : null
 
