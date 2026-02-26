@@ -807,6 +807,19 @@ export const api = {
       })
       return handleResponse<null>(response)
     },
+
+    async updatePortal(id: string, data: {
+      portalEnabled?: boolean
+      portalMemberFilter?: string[] | null
+      regenerateToken?: boolean
+    }) {
+      const response = await fetchWithRetry(`${API_BASE}/clients/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      return handleResponse<Client>(response)
+    },
   },
 
   // Projects

@@ -821,6 +821,9 @@ export const DEMO_CLIENTS: Client[] = [
     updatedAt: "2026-01-15",
     projectCount: 1,
     activeProjectCount: 1,
+    portalToken: null,
+    portalEnabled: false,
+    portalMemberFilter: null,
   },
   {
     id: "client-2",
@@ -838,6 +841,9 @@ export const DEMO_CLIENTS: Client[] = [
     updatedAt: "2026-01-20",
     projectCount: 2,
     activeProjectCount: 2,
+    portalToken: null,
+    portalEnabled: false,
+    portalMemberFilter: null,
   },
   {
     id: "client-3",
@@ -855,6 +861,9 @@ export const DEMO_CLIENTS: Client[] = [
     updatedAt: "2026-01-18",
     projectCount: 1,
     activeProjectCount: 1,
+    portalToken: null,
+    portalEnabled: false,
+    portalMemberFilter: null,
   },
   {
     id: "client-4",
@@ -872,6 +881,9 @@ export const DEMO_CLIENTS: Client[] = [
     updatedAt: "2026-02-01",
     projectCount: 0,
     activeProjectCount: 0,
+    portalToken: null,
+    portalEnabled: false,
+    portalMemberFilter: null,
   },
 ]
 

@@ -1,18 +1,19 @@
 "use client"
 
 import { FeatureGate } from "@/components/shared/feature-gate"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import type { Client, Project, TeamMember } from "@/lib/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Search, Building2, MoreHorizontal, Pencil, Trash2, Mail, Phone, Globe, FolderKanban } from "lucide-react"
+import { Plus, Search, Building2, MoreHorizontal, Pencil, Trash2, Mail, Phone, Globe, FolderKanban, Copy, ExternalLink, RefreshCcw, ChevronDown, ChevronUp } from "lucide-react"
 import { EmptyState } from "@/components/shared/empty-state"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
@@ -20,11 +21,18 @@ import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Checkbox } from "@/components/ui/checkbox"
+import { api } from "@/lib/api/client"
+import { useWorkspaces } from "@/lib/hooks/use-workspace"
+import { useApp } from "@/lib/contexts/app-context"
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"
 
 interface ClientsPageProps {
   currentUser: TeamMember
   clients: Client[]
   projects: Project[]
+  members?: TeamMember[]
   createClient: (client: Partial<Client>) => Promise<Client>
   updateClient: (id: string, updates: Partial<Client>) => Promise<Client>
   deleteClient: (id: string) => Promise<void>
@@ -32,13 +40,18 @@ interface ClientsPageProps {
 
 
 export function ClientsPage({
-  currentUser: _currentUser,
+  currentUser,
   clients,
   projects,
+  members = [],
   createClient,
   updateClient,
   deleteClient,
 }: ClientsPageProps) {
+  const isAdmin = currentUser.role === "admin" || currentUser.role === "owner"
+  const { isFeatureEnabled } = useWorkspaces()
+  const { currentOrganization } = useApp()
+  const orgSlug = currentOrganization?.slug ?? ""
   const { toast } = useToast()
   const { getStatusStyle } = useBrandStatusStyles()
 
@@ -51,6 +64,72 @@ export function ClientsPage({
   const [detailClient, setDetailClient] = useState<Client | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [clientToDelete, setClientToDelete] = useState<string | null>(null)
+
+  // Portal state
+  const [portalSectionOpen, setPortalSectionOpen] = useState<string | null>(null) // clientId
+  const [portalSaving, setPortalSaving] = useState(false)
+  const [showRegenerateDialog, setShowRegenerateDialog] = useState(false)
+  const [localClients, setLocalClients] = useState<Record<string, Client>>({})
+
+  // Helper to get latest client data (local overrides prop)
+  const getClient = useCallback((id: string) => localClients[id] ?? clients.find(c => c.id === id) ?? null, [localClients, clients])
+
+  const handlePortalToggle = async (client: Client, enabled: boolean) => {
+    setPortalSaving(true)
+    try {
+      const updated = await api.clients.updatePortal(client.id, { portalEnabled: enabled })
+      setLocalClients(prev => ({ ...prev, [client.id]: updated }))
+      if (detailClient?.id === client.id) setDetailClient(updated)
+      toast({ title: enabled ? "Portal enabled" : "Portal disabled" })
+    } catch (err) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" })
+    } finally {
+      setPortalSaving(false)
+    }
+  }
+
+  const handleMemberFilterChange = async (client: Client, userId: string, checked: boolean) => {
+    const currentFilter = (getClient(client.id) ?? client).portalMemberFilter
+    let newFilter: string[] | null
+    if (checked) {
+      newFilter = currentFilter ? [...currentFilter, userId] : [userId]
+    } else {
+      newFilter = currentFilter ? currentFilter.filter(id => id !== userId) : null
+      if (newFilter && newFilter.length === 0) newFilter = null
+    }
+    try {
+      const updated = await api.clients.updatePortal(client.id, { portalMemberFilter: newFilter })
+      setLocalClients(prev => ({ ...prev, [client.id]: updated }))
+      if (detailClient?.id === client.id) setDetailClient(updated)
+    } catch (err) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" })
+    }
+  }
+
+  const handleRegenerateToken = async (client: Client) => {
+    setPortalSaving(true)
+    try {
+      const updated = await api.clients.updatePortal(client.id, { regenerateToken: true })
+      setLocalClients(prev => ({ ...prev, [client.id]: updated }))
+      if (detailClient?.id === client.id) setDetailClient(updated)
+      toast({ title: "Portal link regenerated" })
+    } catch (err) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" })
+    } finally {
+      setPortalSaving(false)
+      setShowRegenerateDialog(false)
+    }
+  }
+
+  const copyPortalUrl = (client: Client) => {
+    if (!client.portalToken) return
+    const url = `${APP_URL}/client/${orgSlug}/${client.portalToken}`
+    navigator.clipboard.writeText(url)
+    toast({ title: "Portal URL copied" })
+  }
+
+  const getPortalUrl = (token: string) =>
+    `${APP_URL}/client/${orgSlug}/${token}`
 
   // Form state
   const [formName, setFormName] = useState("")
@@ -489,6 +568,143 @@ export function ClientsPage({
                       <p className="text-xs text-muted-foreground">No projects linked to this client.</p>
                     )}
                   </div>
+
+                  {/* Client Portal — admin only, feature must be enabled */}
+                  {isAdmin && isFeatureEnabled("advanced.clientPortal") && (() => {
+                    const c = getClient(detailClient.id) ?? detailClient
+                    const portalOpen = portalSectionOpen === c.id
+                    const portalUrl = c.portalToken ? getPortalUrl(c.portalToken) : null
+                    const memberFilter = c.portalMemberFilter
+                    return (
+                      <div className="border rounded-md overflow-hidden">
+                        <button
+                          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors"
+                          onClick={() => setPortalSectionOpen(portalOpen ? null : c.id)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            <span>Client Portal</span>
+                            <Badge
+                              variant="outline"
+                              className={`text-xs ${c.portalEnabled ? "border-emerald-500/50 text-emerald-600" : "border-slate-400/50 text-slate-500"}`}
+                            >
+                              {c.portalEnabled ? "Active" : "Off"}
+                            </Badge>
+                          </div>
+                          {portalOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                        </button>
+
+                        {portalOpen && (
+                          <div className="px-4 pb-4 space-y-4 border-t">
+                            {/* Enable toggle */}
+                            <div className="flex items-center justify-between pt-3">
+                              <Label htmlFor={`portal-toggle-${c.id}`} className="text-sm cursor-pointer">
+                                Enable Client Portal
+                              </Label>
+                              <Switch
+                                id={`portal-toggle-${c.id}`}
+                                checked={c.portalEnabled}
+                                onCheckedChange={(checked) => handlePortalToggle(c, checked)}
+                                disabled={portalSaving}
+                              />
+                            </div>
+
+                            {/* Portal URL */}
+                            {portalUrl && c.portalEnabled && (
+                              <div className="space-y-1.5">
+                                <Label className="text-xs text-muted-foreground">Portal URL</Label>
+                                <div className="flex gap-1.5">
+                                  <Input
+                                    readOnly
+                                    value={portalUrl}
+                                    className="text-xs h-8 font-mono bg-muted/50 flex-1"
+                                  />
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 shrink-0"
+                                    onClick={() => copyPortalUrl(c)}
+                                    title="Copy URL"
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 shrink-0"
+                                    onClick={() => window.open(portalUrl, "_blank")}
+                                    title="Open portal"
+                                  >
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Visible members */}
+                            {members.length > 0 && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">
+                                  Visible team members
+                                  <span className="ml-1 text-muted-foreground/70">(all = none selected)</span>
+                                </Label>
+                                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                                  {members.filter(m => m.userId).map(member => (
+                                    <div key={member.id} className="flex items-center gap-2">
+                                      <Checkbox
+                                        id={`member-${c.id}-${member.id}`}
+                                        checked={memberFilter ? memberFilter.includes(member.userId!) : false}
+                                        onCheckedChange={(checked) =>
+                                          handleMemberFilterChange(c, member.userId!, checked === true)
+                                        }
+                                      />
+                                      <label
+                                        htmlFor={`member-${c.id}-${member.id}`}
+                                        className="text-sm cursor-pointer"
+                                      >
+                                        {member.name}
+                                        <span className="ml-1.5 text-xs text-muted-foreground capitalize">{member.role}</span>
+                                      </label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Regenerate link */}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full text-xs"
+                              onClick={() => setShowRegenerateDialog(true)}
+                              disabled={portalSaving}
+                            >
+                              <RefreshCcw className="h-3 w-3 mr-1.5" />
+                              Regenerate Link
+                            </Button>
+
+                            {/* Regenerate confirmation */}
+                            <AlertDialog open={showRegenerateDialog} onOpenChange={setShowRegenerateDialog}>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Regenerate Portal Link?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    The old link will stop working immediately. Anyone using it will see &quot;Portal Unavailable.&quot; You&apos;ll need to share the new URL.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleRegenerateToken(c)}>
+                                    Regenerate
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
 
                   <div className="flex gap-2 pt-2">
                     <Button size="sm" variant="outline" onClick={() => { setDetailClient(null); openEditModal(detailClient) }}>

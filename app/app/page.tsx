@@ -529,6 +529,7 @@ function AppContent() {
             currentUser={currentUser!}
             clients={teamData.clients}
             projects={teamData.projects}
+            members={teamData.teamMembers}
             createClient={teamData.createClient}
             updateClient={teamData.updateClient}
             deleteClient={teamData.deleteClient}

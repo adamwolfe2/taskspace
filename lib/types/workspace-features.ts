@@ -42,6 +42,7 @@ export interface WorkspaceFeatureToggles {
     analytics: boolean
     managerDashboard: boolean
     apiAccess: boolean
+    clientPortal: boolean
   }
   admin: {
     teamManagement: boolean
@@ -98,6 +99,7 @@ export const DEFAULT_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     analytics: true,
     managerDashboard: true,
     apiAccess: true,
+    clientPortal: false,
   },
   admin: {
     teamManagement: true,
@@ -144,6 +146,7 @@ export const STARTER_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     analytics: false,
     managerDashboard: false,
     apiAccess: false,
+    clientPortal: false,
   },
   admin: {
     teamManagement: true,
@@ -366,6 +369,14 @@ export const WORKSPACE_FEATURE_METADATA: Record<WorkspaceFeatureKey, WorkspaceFe
     category: "advanced",
     icon: "Code",
     requiredOrgFeature: "api_access",
+    impact: { navigation: false, dashboard: false, api: true },
+  },
+  "advanced.clientPortal": {
+    name: "Client Portal",
+    description: "Give clients a branded portal to view team EOD reports, post comments, and submit task requests",
+    category: "advanced",
+    icon: "ExternalLink",
+    dependencies: ["core.clients", "core.eodReports"],
     impact: { navigation: false, dashboard: false, api: true },
   },
 

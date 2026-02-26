@@ -1384,3 +1384,23 @@ export const joinWorkspaceSchema = z.object({
   email: emailSchema,
   password: passwordSchema.optional(),
 })
+
+// ============================================
+// CLIENT PORTAL SCHEMAS
+// ============================================
+
+export const clientPortalTaskSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200).trim(),
+  description: z.string().max(1000).trim().optional(),
+})
+
+export const clientPortalCommentSchema = z.object({
+  reportId: z.string().min(1, "Report ID is required"),
+  content: z.string().min(1, "Comment cannot be empty").max(2000).trim(),
+})
+
+export const updateClientPortalSchema = z.object({
+  portalEnabled: z.boolean().optional(),
+  portalMemberFilter: z.array(z.string()).nullable().optional(),
+  regenerateToken: z.boolean().optional(),
+})

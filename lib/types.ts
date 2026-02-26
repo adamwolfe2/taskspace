@@ -469,9 +469,24 @@ export interface Client {
   createdBy?: string
   createdAt: string
   updatedAt: string
+  // Client Portal fields
+  portalToken: string | null
+  portalEnabled: boolean
+  portalMemberFilter: string[] | null // null = all workspace members
   // Computed (from JOINs, not stored)
   projectCount?: number
   activeProjectCount?: number
+}
+
+export interface EodComment {
+  id: string
+  eodReportId: string
+  organizationId: string
+  clientId: string | null
+  authorName: string
+  isClient: boolean
+  content: string
+  createdAt: string
 }
 
 // ============================================

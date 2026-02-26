@@ -39,6 +39,7 @@ import type {
   Achievement,
   UserAchievement,
   WorkspaceInviteLink,
+  EodComment,
 } from "../types"
 import type { PaginationParams } from "../utils/pagination"
 
@@ -286,6 +287,11 @@ function parseClient(row: Record<string, unknown>): Client {
     createdBy: (row.created_by as string) || undefined,
     createdAt: (row.created_at as Date)?.toISOString() || "",
     updatedAt: (row.updated_at as Date)?.toISOString() || "",
+    // Portal fields
+    portalToken: (row.portal_token as string) || null,
+    portalEnabled: (row.portal_enabled as boolean) || false,
+    portalMemberFilter: (row.portal_member_filter as string[]) || null,
+    // Computed
     projectCount: row.project_count !== undefined ? Number(row.project_count) : undefined,
     activeProjectCount: row.active_project_count !== undefined ? Number(row.active_project_count) : undefined,
   }
@@ -4390,6 +4396,88 @@ export const db = {
       const { rowCount } = await sql`DELETE FROM clients WHERE id = ${id} AND organization_id = ${orgId}`
       return (rowCount ?? 0) > 0
     },
+
+    async getByPortalToken(orgSlug: string, token: string): Promise<(Client & { orgSlug: string; orgName: string; orgLogoUrl: string | null; orgPrimaryColor: string | null }) | null> {
+      const { rows } = await sql`
+        SELECT c.*,
+          o.slug as org_slug,
+          o.name as org_name,
+          o.logo_url as org_logo_url,
+          o.primary_color as org_primary_color
+        FROM clients c
+        JOIN organizations o ON o.id = c.organization_id
+        WHERE c.portal_token = ${token}
+          AND o.slug = ${orgSlug}
+          AND c.portal_enabled = true
+      `
+      if (rows.length === 0) return null
+      const row = rows[0]
+      return {
+        ...parseClient(row),
+        orgSlug: row.org_slug as string,
+        orgName: row.org_name as string,
+        orgLogoUrl: (row.org_logo_url as string) || null,
+        orgPrimaryColor: (row.org_primary_color as string) || null,
+      }
+    },
+
+    async generatePortalToken(orgId: string, clientId: string): Promise<string> {
+      const { randomBytes } = await import("crypto")
+      const token = randomBytes(24).toString("base64url")
+      await sql`
+        UPDATE clients
+        SET portal_token = ${token}, updated_at = NOW()
+        WHERE id = ${clientId} AND organization_id = ${orgId}
+      `
+      return token
+    },
+
+    async updatePortalSettings(orgId: string, clientId: string, updates: {
+      portalEnabled?: boolean
+      portalMemberFilter?: string[] | null
+      regenerateToken?: boolean
+    }): Promise<Client | null> {
+      const { randomBytes } = await import("crypto")
+
+      // Fetch current record first so we can fill in unchanged fields
+      const current = await sql`
+        SELECT portal_token, portal_enabled, portal_member_filter
+        FROM clients WHERE id = ${clientId} AND organization_id = ${orgId}
+      `
+      if (current.rows.length === 0) return null
+
+      const currentToken = current.rows[0].portal_token as string | null
+      const newToken = updates.regenerateToken || !currentToken
+        ? randomBytes(24).toString("base64url")
+        : currentToken
+
+      const newEnabled = updates.portalEnabled !== undefined
+        ? updates.portalEnabled
+        : (current.rows[0].portal_enabled as boolean)
+
+      // Build the filter value as a Postgres array literal or NULL
+      let filterLiteral: string | null
+      if (updates.portalMemberFilter !== undefined) {
+        filterLiteral = updates.portalMemberFilter === null
+          ? null
+          : `{${updates.portalMemberFilter.join(",")}}`
+      } else {
+        // Keep existing: if it's an array, re-serialize; if null, keep null
+        const existing = current.rows[0].portal_member_filter as string[] | null
+        filterLiteral = existing ? `{${existing.join(",")}}` : null
+      }
+
+      const { rows } = await sql`
+        UPDATE clients SET
+          portal_token = ${newToken},
+          portal_enabled = ${newEnabled},
+          portal_member_filter = ${filterLiteral}::text[],
+          updated_at = NOW()
+        WHERE id = ${clientId} AND organization_id = ${orgId}
+        RETURNING *
+      `
+      return rows[0] ? parseClient(rows[0]) : null
+    },
   },
 
   // ============================================
@@ -4803,6 +4891,56 @@ export const db = {
         organizationId: r.organization_id as string,
         token: r.token as string,
         createdBy: r.created_by as string,
+        createdAt: (r.created_at as Date)?.toISOString() || "",
+      }
+    },
+  },
+
+  // ============================================
+  // EOD COMMENTS (Client Portal)
+  // ============================================
+  eodComments: {
+    async getByReportId(reportId: string, orgId: string): Promise<EodComment[]> {
+      const { rows } = await sql`
+        SELECT * FROM eod_comments
+        WHERE eod_report_id = ${reportId}
+          AND organization_id = ${orgId}
+        ORDER BY created_at ASC
+      `
+      return rows.map((r) => ({
+        id: r.id as string,
+        eodReportId: r.eod_report_id as string,
+        organizationId: r.organization_id as string,
+        clientId: (r.client_id as string) || null,
+        authorName: r.author_name as string,
+        isClient: r.is_client as boolean,
+        content: r.content as string,
+        createdAt: (r.created_at as Date)?.toISOString() || "",
+      }))
+    },
+
+    async create(data: {
+      eodReportId: string
+      orgId: string
+      clientId: string | null
+      authorName: string
+      isClient: boolean
+      content: string
+    }): Promise<EodComment> {
+      const { rows } = await sql`
+        INSERT INTO eod_comments (eod_report_id, organization_id, client_id, author_name, is_client, content)
+        VALUES (${data.eodReportId}, ${data.orgId}, ${data.clientId}, ${sanitizeText(data.authorName)}, ${data.isClient}, ${sanitizeText(data.content)})
+        RETURNING *
+      `
+      const r = rows[0]
+      return {
+        id: r.id as string,
+        eodReportId: r.eod_report_id as string,
+        organizationId: r.organization_id as string,
+        clientId: (r.client_id as string) || null,
+        authorName: r.author_name as string,
+        isClient: r.is_client as boolean,
+        content: r.content as string,
         createdAt: (r.created_at as Date)?.toISOString() || "",
       }
     },
