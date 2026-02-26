@@ -312,8 +312,8 @@ function AppContent() {
   }
 
   // Handle invitation acceptance (works for both new and existing users)
-  if (inviteToken) {
-    return <AcceptInvitationPage token={inviteToken} />
+  if (inviteToken && currentPage !== "login") {
+    return <AcceptInvitationPage token={inviteToken} onBack={() => { setInviteToken(null); setCurrentPage("login") }} />
   }
 
   // Handle password reset with token

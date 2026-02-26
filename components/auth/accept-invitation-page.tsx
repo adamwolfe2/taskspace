@@ -21,9 +21,10 @@ interface InvitationDetails {
 
 interface AcceptInvitationPageProps {
   token: string
+  onBack?: () => void
 }
 
-export function AcceptInvitationPage({ token }: AcceptInvitationPageProps) {
+export function AcceptInvitationPage({ token, onBack }: AcceptInvitationPageProps) {
   const { setCurrentUser, setCurrentOrganization, setCurrentPage } = useApp()
   const [invitation, setInvitation] = useState<InvitationDetails | null>(null)
   const [name, setName] = useState("")
@@ -266,7 +267,7 @@ export function AcceptInvitationPage({ token }: AcceptInvitationPageProps) {
             <div className="text-center text-sm text-muted-foreground">
               <button
                 type="button"
-                onClick={() => setCurrentPage("login")}
+                onClick={() => onBack ? onBack() : setCurrentPage("login")}
                 className="text-primary hover:underline font-medium"
               >
                 Back to Login
