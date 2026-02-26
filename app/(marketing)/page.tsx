@@ -18,6 +18,9 @@ import {
   Building2,
   LineChart,
   ListTodo,
+  Layers,
+  Eye,
+  Shuffle,
 } from "lucide-react"
 import Image from "next/image"
 import { InteractiveFeaturesShowcase } from "@/components/marketing/interactive-features-showcase"
@@ -54,9 +57,9 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl sm:text-5xl lg:text-7xl font-medium text-black leading-[1.1] mb-6"
           >
-            Run All Your Teams
+            Run All Your Teams.
             <br />
-            <span className="text-gray-400">In True Parallel</span>
+            <span className="text-gray-400">Lose Nothing.</span>
           </motion.h1>
 
           <motion.p
@@ -65,7 +68,7 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-xl sm:text-2xl text-gray-700 font-medium max-w-4xl mx-auto mb-4 text-center"
           >
-            AI operational infrastructure for multi-company founders & builders.
+            The operating system for founders who think in parallel.
           </motion.p>
 
           <motion.p
@@ -74,7 +77,7 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.25 }}
             className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto mb-10 text-center"
           >
-            Taskspace automates EOD reports, cadence metrics, and keeps every entity accountable through unified dashboards across all your teams running on EOS.
+            Taskspace gives your teams the structure and accountability they need — AI handles the organizing, so your brain can stay on what&apos;s next.
           </motion.p>
 
           <motion.div
@@ -127,23 +130,23 @@ function HowItWorksSection() {
   const steps = [
     {
       step: "1",
-      title: "Set your rocks",
+      title: "Lock in 3 priorities per quarter",
       description:
-        "Define your quarterly priorities across every team and company. Taskspace helps you break down 90-day goals into trackable milestones so nothing falls through the cracks.",
+        "Quarterly rocks force every team to pick the 3 things that actually matter. Not 47. Not a wishlist. Three. Everything else waits.",
       icon: Target,
     },
     {
       step: "2",
-      title: "Track daily progress",
+      title: "Team brain dumps. AI organizes.",
       description:
-        "Your team submits daily EOD reports that AI automatically organizes into structured updates. Scorecards, meetings, and to-dos all update in real time.",
+        "Your team pastes what they worked on. AI turns it into a structured EOD report in seconds — tasks sorted by goal, blockers flagged, tomorrow's priorities set.",
       icon: BarChart3,
     },
     {
       step: "3",
-      title: "Review & improve",
+      title: "One dashboard. Every team.",
       description:
-        "Run Level 10 meetings with data-driven agendas. Identify issues with IDS, review scorecard trends, and course-correct before the quarter ends.",
+        "See the status of every team, every company, in one place — without chasing anyone. Run L10 meetings with agendas that build themselves from real data.",
       icon: LineChart,
     },
   ]
@@ -172,7 +175,7 @@ function HowItWorksSection() {
             variants={fadeInUp}
             className="text-xl text-gray-600 max-w-2xl mx-auto"
           >
-            Get your entire organization running on EOS in minutes, not months
+            Minimal friction. Maximum visibility. Built for brains that are already managing too much.
           </motion.p>
         </motion.div>
 
@@ -597,58 +600,162 @@ function AgentsSection() {
   )
 }
 
-// Use Cases Section
-function UseCasesSection() {
-  const useCases = [
+// ADHD Founders Section
+function ADHDFoundersSection() {
+  const painPoints = [
     {
-      title: "Leadership Teams",
-      description: "Run effective L10 meetings, track leadership scorecard, and align on vision.",
-      features: ["Level 10 meetings", "Leadership scorecard", "VTO alignment", "Quarterly rock reviews"]
+      icon: Shuffle,
+      problem: "I forget what my team did the moment I switch to the next project.",
+      solution: "EOD brain dumps take 90 seconds. AI turns them into structured reports — sorted by goal, blockers flagged, priorities set. You never have to chase anyone for an update.",
     },
     {
-      title: "Department Heads",
-      description: "Manage team rocks, track departmental metrics, and solve issues with IDS.",
-      features: ["Department rocks", "Team scorecards", "IDS process", "Accountability tracking"]
+      icon: Layers,
+      problem: "I've started 40 productivity systems. Finished none.",
+      solution: "Start with one feature. EOD reports, rocks, or just a shared dashboard. Add more only when you're ready. Turn off everything you'll never use.",
     },
     {
-      title: "Entire Organization",
-      description: "Cascade goals, maintain accountability, and drive execution company-wide.",
-      features: ["Company-wide rocks", "Org-wide metrics", "Team collaboration", "Full visibility"]
-    }
+      icon: Eye,
+      problem: "Out of sight, out of mind — and my whole team knows it.",
+      solution: "Daily reports keep every team visible without you having to ask. Escalations surface automatically. You stay informed without being in every meeting.",
+    },
+    {
+      icon: Target,
+      problem: "47 priorities is actually 0 priorities.",
+      solution: "Quarterly rocks force each team to pick 3 things that matter. Not a wishlist. Not a backlog. Three. Everything else waits until next quarter.",
+    },
   ]
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-24 bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <Badge className="bg-white text-gray-600 border-gray-200 mb-4">
-            Built for Teams
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/5 text-white/70 text-sm mb-6">
+            Designed for ADHD Founders
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+            You&apos;re wired to run multiple things at once.
+            <br />
+            <span className="text-gray-400">Most tools punish you for it.</span>
+          </h2>
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+            Taskspace is built around how ADHD founders actually operate — not how productivity gurus think you should.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {painPoints.map((item, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-white/10 bg-white/5 p-8 hover:bg-white/8 transition-colors"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0 mt-1">
+                  <item.icon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm italic mb-3">
+                    &ldquo;{item.problem}&rdquo;
+                  </p>
+                  <p className="text-white text-sm leading-relaxed">
+                    {item.solution}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Start With What You Need Section
+function StartSimpleSection() {
+  const paths = [
+    {
+      label: "Just me",
+      title: "Personal accountability",
+      description: "You work better with structure but hate rigid systems. Start with EOD reports and quarterly rocks — your own brain dump + 90-day focus, nothing else.",
+      features: ["Daily EOD brain dump", "Quarterly rocks", "AI task organizer", "Streak tracking"],
+      cta: "Start solo",
+    },
+    {
+      label: "My team",
+      title: "One team, full visibility",
+      description: "Stop chasing people for updates. Your team submits daily reports, you see everything in one dashboard — who's on track, who's blocked, what needs your attention.",
+      features: ["Team EOD reports", "Shared rocks board", "Task assignments", "Escalation alerts"],
+      cta: "Manage a team",
+      highlight: true,
+    },
+    {
+      label: "Multiple companies",
+      title: "Parallel operation",
+      description: "You're running 2, 3, 5 companies. Context switching is your entire job. Taskspace gives each entity its own workspace — with one login and one overview dashboard.",
+      features: ["Multiple workspaces", "Cross-team dashboard", "Per-company branding", "Unified reporting"],
+      cta: "Run multiple companies",
+    },
+  ]
+
+  return (
+    <section className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge className="bg-gray-100 text-gray-700 border-gray-200 mb-4">
+            Use only what you need
           </Badge>
           <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
-            EOS for every level of your organization
+            Start simple. Scale when you&apos;re ready.
           </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Every feature is optional. Turn on what works for you, ignore the rest. You&apos;re not locked into anyone else&apos;s productivity system.
+          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {useCases.map((useCase, i) => (
+          {paths.map((path, i) => (
             <div
               key={i}
-              className="relative bg-white rounded-2xl border-2 border-gray-200 p-8 hover:shadow-lg transition-shadow"
+              className={`relative rounded-2xl border-2 p-8 ${
+                path.highlight
+                  ? "border-black bg-black text-white"
+                  : "border-gray-200 bg-white text-black"
+              }`}
             >
-              <h3 className="text-xl font-bold text-black mb-2">
-                {useCase.title}
+              {path.highlight && (
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                  <span className="bg-white text-black text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full border border-gray-200">
+                    Most common
+                  </span>
+                </div>
+              )}
+              <div className={`inline-block text-xs font-semibold uppercase tracking-wide px-2 py-1 rounded-full mb-4 ${
+                path.highlight ? "bg-white/10 text-white/70" : "bg-gray-100 text-gray-500"
+              }`}>
+                {path.label}
+              </div>
+              <h3 className={`text-xl font-bold mb-3 ${path.highlight ? "text-white" : "text-black"}`}>
+                {path.title}
               </h3>
-              <p className="text-sm text-gray-600 mb-6">
-                {useCase.description}
+              <p className={`text-sm mb-6 leading-relaxed ${path.highlight ? "text-gray-300" : "text-gray-600"}`}>
+                {path.description}
               </p>
-              <div className="space-y-3">
-                {useCase.features.map((feature, j) => (
-                  <div key={j} className="flex items-center gap-3 text-sm text-gray-700">
-                    <CheckCircle className="w-4 h-4 text-black flex-shrink-0" />
-                    <span>{feature}</span>
+              <div className="space-y-2.5 mb-8">
+                {path.features.map((feature, j) => (
+                  <div key={j} className="flex items-center gap-2.5 text-sm">
+                    <CheckCircle className={`w-4 h-4 flex-shrink-0 ${path.highlight ? "text-white" : "text-black"}`} />
+                    <span className={path.highlight ? "text-gray-200" : "text-gray-700"}>{feature}</span>
                   </div>
                 ))}
               </div>
+              <Link href="/app?page=register">
+                <button className={`w-full py-3 rounded-lg text-sm font-semibold transition-colors ${
+                  path.highlight
+                    ? "bg-white text-black hover:bg-gray-100"
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}>
+                  {path.cta} <ArrowRight className="inline w-4 h-4 ml-1" />
+                </button>
+              </Link>
             </div>
           ))}
         </div>
@@ -664,10 +771,10 @@ function CTASection() {
     <section className="py-32 bg-gray-50">
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black mb-6">
-          Ready to run your business on EOS?
+          Ready to stop losing the thread?
         </h2>
         <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-          Start using Taskspace to implement the Entrepreneurial Operating System. Free today.
+          Start with one feature. Add more when you&apos;re ready. Your team stays accountable whether or not you&apos;re watching.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -683,7 +790,7 @@ function CTASection() {
             </Button>
           </Link>
         </div>
-        <p className="text-gray-500 mt-6 text-sm">Free forever plan -- 14-day free trial on paid plans -- Cancel anytime</p>
+        <p className="text-gray-500 mt-6 text-sm">Free forever plan · 14-day free trial on paid plans · Cancel anytime</p>
       </div>
     </section>
   )
@@ -695,10 +802,11 @@ export default function HomePage() {
     <>
       <HeroSection />
       <HowItWorksSection />
+      <ADHDFoundersSection />
+      <StartSimpleSection />
       <CoreFeaturesSection />
       <AgentsSection />
       <IntegrationsSection />
-      <UseCasesSection />
       <CTASection />
     </>
   )

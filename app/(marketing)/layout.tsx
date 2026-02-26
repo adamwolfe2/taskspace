@@ -8,11 +8,11 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Taskspace - EOS Management Platform | Run All Your Teams In True Parallel",
+    default: "Taskspace — Built for ADHD Founders & Multi-Company Operators",
     template: "%s | Taskspace",
   },
-  description: "The all-in-one EOS management platform for multi-company founders and leadership teams. AI-powered EOD reports, quarterly rocks, scorecards, Level 10 meetings, and accountability charts.",
-  keywords: ["EOS", "Entrepreneurial Operating System", "EOS tools", "Level 10 meetings", "quarterly rocks", "scorecard", "EOD reports", "team management", "accountability chart", "IDS process", "traction", "business management", "AI productivity", "multi-company founders"],
+  description: "Structure without rigidity. Taskspace is the AI-powered operating system for ADHD founders and multi-company builders. Brain-dump EOD reports, quarterly rocks, and team accountability — use only what you need.",
+  keywords: ["ADHD founders", "ADHD entrepreneur", "ADHD productivity tools", "ADHD business", "EOS", "Entrepreneurial Operating System", "EOS tools", "Level 10 meetings", "quarterly rocks", "scorecard", "EOD reports", "team management", "accountability chart", "multi-company founders", "AI productivity"],
   icons: {
     icon: [
       { url: "/icon-light-32x32.png", media: "(prefers-color-scheme: light)" },
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     apple: "/apple-icon.png",
   },
   openGraph: {
-    title: "Taskspace - EOS Management Platform | Run All Your Teams In True Parallel",
-    description: "The all-in-one EOS platform with AI-powered EOD reports, rocks tracking, scorecards, L10 meetings, and more. Free forever plan. 14-day free trial on paid plans.",
+    title: "Taskspace — Built for ADHD Founders & Multi-Company Operators",
+    description: "Structure without rigidity. AI-powered EOD reports, quarterly rocks, and team accountability. Use only what you need. Free forever plan.",
     type: "website",
     url: APP_URL,
     siteName: "Taskspace",
@@ -37,8 +37,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Taskspace - EOS Management Platform",
-    description: "AI-powered EOS management for multi-company founders. EOD reports, rocks, scorecards, L10 meetings, and more. Start free today.",
+    title: "Taskspace — Built for ADHD Founders",
+    description: "Structure without rigidity. EOD brain dumps, quarterly rocks, and team accountability for founders who run multiple companies at once. Start free.",
     images: [`${APP_URL}/2026-02-03_17.24.49.png`],
   },
   robots: {
@@ -59,7 +59,7 @@ const jsonLd = {
   operatingSystem: "Web",
   url: APP_URL,
   description:
-    "The all-in-one EOS management platform for multi-company founders and leadership teams. AI-powered EOD reports, quarterly rocks, scorecards, Level 10 meetings, and accountability charts.",
+    "Structure without rigidity. Taskspace is the AI-powered operating system for ADHD founders and multi-company builders — EOD reports, quarterly rocks, team accountability, and more. Use only what you need.",
   offers: [
     {
       "@type": "Offer",

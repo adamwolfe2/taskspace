@@ -99,11 +99,11 @@ export default function PricingPage() {
             Simple, transparent pricing
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-black sm:text-6xl">
-            One platform. Every EOS tool.
+            Start simple. Add more when you&apos;re ready.
           </h1>
           <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
-            Free forever for small teams. Upgrade when you need full EOS tools.
-            14-day free trial on all paid plans.
+            Every feature is optional. Pay only for the team size you need.
+            Free forever for small teams — 14-day free trial on paid plans.
           </p>
         </div>
 
@@ -280,10 +280,10 @@ export default function PricingPage() {
       <div className="bg-gray-50 py-24">
         <div className="mx-auto max-w-4xl px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-black sm:text-4xl">
-            Ready to run your teams in true parallel?
+            Stop losing the thread across your teams.
           </h2>
           <p className="mt-4 text-lg text-gray-600">
-            Free forever for small teams. 14-day free trial on paid plans.
+            Start with one feature. Your team stays accountable whether or not you&apos;re watching.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <Link
