@@ -79,10 +79,10 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, onD
   const isLongDescription = task.description && task.description.length > 100
 
   const priorityConfig = {
-    high: { emoji: "🔴", label: "High" },
-    medium: { emoji: "🟡", label: "Medium" },
-    normal: { emoji: "🟢", label: "Normal" },
-    low: { emoji: "🔵", label: "Low" },
+    high: { label: "High" },
+    medium: { label: "Medium" },
+    normal: { label: "Normal" },
+    low: { label: "Low" },
   }
 
   const priority = priorityConfig[task.priority]
@@ -226,7 +226,7 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, onD
               </div>
             )}
             <Badge variant="outline" style={getPriorityStyle(task.priority)}>
-              {priority.emoji} {priority.label}
+              {priority.label}
             </Badge>
             {dueDateStatus ? (
               <div

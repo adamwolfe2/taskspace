@@ -1006,9 +1006,9 @@ export function TasksPage({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleBulkPriority("high")}>🔴 High</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleBulkPriority("normal")}>🟡 Normal</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleBulkPriority("low")}>🟢 Low</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleBulkPriority("high")}>High</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleBulkPriority("normal")}>Normal</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleBulkPriority("low")}>Low</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Button

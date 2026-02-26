@@ -88,10 +88,10 @@ export function TaskDetailModal({
   const dueDateStatus = getDueDateStatus(task.dueDate, isCompleted)
 
   const priorityConfig = {
-    high: { label: "High", variant: "destructive" as const, color: "text-red-600" },
-    medium: { label: "Medium", variant: "default" as const, color: "text-amber-600" },
-    normal: { label: "Normal", variant: "secondary" as const, color: "text-slate-600" },
-    low: { label: "Low", variant: "secondary" as const, color: "text-slate-400" },
+    high: { label: "High", variant: "outline" as const, color: "text-slate-900" },
+    medium: { label: "Medium", variant: "outline" as const, color: "text-slate-700" },
+    normal: { label: "Normal", variant: "outline" as const, color: "text-slate-600" },
+    low: { label: "Low", variant: "outline" as const, color: "text-slate-400" },
   }
 
   const priority = priorityConfig[task.priority]
