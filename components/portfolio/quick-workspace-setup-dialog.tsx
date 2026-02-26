@@ -265,7 +265,7 @@ export function QuickWorkspaceSetupDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5" />
@@ -276,7 +276,7 @@ export function QuickWorkspaceSetupDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-2">
+        <div className="flex-1 overflow-y-auto py-2 min-h-0">
           {/* Step indicator */}
           <div className="flex items-center gap-1 mb-6">
             {STEPS.map((s, i) => {
@@ -429,7 +429,7 @@ export function QuickWorkspaceSetupDialog({
                   onChange={(e) => setRawText(e.target.value)}
                   placeholder={`e.g.\n- Launch new product line by Q3\n  - Complete market research\n  - Finalize pricing strategy\n- Hire 3 engineers`}
                   rows={5}
-                  className="resize-none font-mono text-sm"
+                  className="resize-none font-mono text-sm max-h-48 overflow-y-auto"
                 />
                 <Button
                   type="button"
