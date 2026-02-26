@@ -127,13 +127,9 @@ export const POST = withUserAuth(async (request: NextRequest, auth) => {
           secondary: aiColors.secondary,
           accent: aiColors.accent,
         }
-        // Use AI-detected logo if it found one, or if current logo looks like an og:image
+        // AI logo detection is more reliable than regex — always prefer it
         if (aiColors.logoUrl) {
-          const currentLogo = brandResult.brand.logoUrl || ""
-          const isOgImage = currentLogo.includes("opengraph") || currentLogo.includes("og-image") || currentLogo.includes("social")
-          if (!brandResult.brand.logoUrl || isOgImage) {
-            brandResult.brand.logoUrl = aiColors.logoUrl
-          }
+          brandResult.brand.logoUrl = aiColors.logoUrl
         }
         logger.info(
           { url: validatedUrl, colors: aiColors, aiLogoUrl: aiColors.logoUrl },

@@ -60,7 +60,7 @@ export const POST = withAuth(async (request, auth) => {
 
     // Upload to Vercel Blob
     const blob = await put(blobPath, file, {
-      access: "private",
+      access: "public",
       addRandomSuffix: false,
     })
 

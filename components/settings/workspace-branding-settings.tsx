@@ -140,6 +140,7 @@ export function WorkspaceBrandingSettings() {
   // Preview mode
   const [_showBeforeAfter, setShowBeforeAfter] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<ColorPreset | null>(null)
+  const [variantIndex, setVariantIndex] = useState(0)
 
   // Update local state when workspace or organization changes
   useEffect(() => {
@@ -348,14 +349,22 @@ export function WorkspaceBrandingSettings() {
     })
   }
 
+  const VARIANT_ORDER = ["vibrant", "muted", "professional", "original"] as const
+
   const handleGenerateVariants = () => {
     const hsl = hexToHsl(primaryColor)
-    const _presets = generateColorPresets(hsl)
+    const presets = generateColorPresets(hsl)
+    const key = VARIANT_ORDER[variantIndex % VARIANT_ORDER.length]
+    const variant = presets[key]
 
-    // Show dialog with variants (simplified here - would be a modal in production)
+    setPrimaryColor(variant.primary)
+    setSecondaryColor(variant.secondary)
+    setAccentColor(variant.accent)
+    setVariantIndex((i) => i + 1)
+
     toast({
-      title: "Variants generated",
-      description: "Choose from vibrant, muted, or professional variants",
+      title: `${key.charAt(0).toUpperCase() + key.slice(1)} variant applied`,
+      description: "Click again to cycle to the next variant",
     })
   }
 

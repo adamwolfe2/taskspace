@@ -275,8 +275,22 @@ function extractTagline(html: string, companyName: string | null): string | null
 // EXTRACTION: LOGO & FAVICON
 // ============================================
 
+/** Path segments that indicate an image is a third-party/content logo, not the site's brand */
+const CONTENT_PATH_SEGMENTS = [
+  "/integrations/", "/integration/", "/tools/", "/tool/",
+  "/partners/", "/partner/", "/customers/", "/customer/",
+  "/logos/", "/logo-wall/", "/features/", "/apps/",
+]
+
+function isContentLogo(src: string): boolean {
+  const lower = src.toLowerCase()
+  return CONTENT_PATH_SEGMENTS.some((seg) => lower.includes(seg))
+}
+
 function extractLogoUrl(html: string, baseUrl: string, metadata?: Record<string, unknown>): string | null {
-  // 1. Look for <img> tags with "logo" in src, alt, class, or id
+  // 1. Look for <img> tags with "logo" in src, alt, class, or id.
+  //    Search the <header> first (the site's own logo is almost always there),
+  //    then fall back to the full document — skipping content/integration images.
   const logoImgPatterns = [
     // img with "logo" in alt
     /<img\s+[^>]*?alt\s*=\s*["'][^"']*logo[^"']*["'][^>]*?src\s*=\s*["']([^"']+?)["'][^>]*?\/?>/gi,
@@ -294,9 +308,25 @@ function extractLogoUrl(html: string, baseUrl: string, metadata?: Record<string,
     /<img\s+[^>]*?src\s*=\s*["']([^"']*logo[^"']*?)["'][^>]*?\/?>/gi,
   ]
 
+  // Extract just the <header> HTML for a scoped first pass
+  const headerMatch = html.match(/<header[\s\S]*?<\/header>/i)
+  const headerHtml = headerMatch?.[0] ?? ""
+
+  // Pass 1: header only (most reliable signal for the brand logo)
   for (const pattern of logoImgPatterns) {
+    pattern.lastIndex = 0
+    const match = pattern.exec(headerHtml)
+    if (match?.[1] && !isContentLogo(match[1])) {
+      const resolved = resolveUrl(match[1], baseUrl)
+      if (resolved) return resolved
+    }
+  }
+
+  // Pass 2: full document, but skip content/integration images
+  for (const pattern of logoImgPatterns) {
+    pattern.lastIndex = 0
     const match = pattern.exec(html)
-    if (match?.[1]) {
+    if (match?.[1] && !isContentLogo(match[1])) {
       const resolved = resolveUrl(match[1], baseUrl)
       if (resolved) return resolved
     }
