@@ -176,10 +176,22 @@ function parseClaudeJSON<T>(text: string): T {
 
   cleaned = cleaned.trim()
 
+  // First try direct parse
   try {
     return JSON.parse(cleaned) as T
   } catch {
-    logger.error({ responseText: text }, "Failed to parse Claude response")
+    // Try extracting a JSON object or array from anywhere in the text
+    const objMatch = cleaned.match(/\{[\s\S]*\}/)
+    const arrMatch = cleaned.match(/\[[\s\S]*\]/)
+    const match = objMatch || arrMatch
+    if (match) {
+      try {
+        return JSON.parse(match[0]) as T
+      } catch {
+        // fall through to error
+      }
+    }
+    logger.error({ responseText: text.slice(0, 500) }, "Failed to parse Claude response")
     throw new Error("Failed to parse AI response as JSON")
   }
 }
