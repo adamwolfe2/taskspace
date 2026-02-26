@@ -15,7 +15,7 @@ interface IdsBoardCardProps {
 
 const itemTypeConfig = {
   issue: { label: "Issue", icon: AlertCircle, color: "text-red-500", bg: "bg-red-50" },
-  rock: { label: "Rock", icon: Target, color: "text-purple-500", bg: "bg-purple-50" },
+  rock: { label: "Rock", icon: Target, color: "text-slate-500", bg: "bg-slate-50" },
   custom: { label: "Custom", icon: Lightbulb, color: "text-blue-500", bg: "bg-blue-50" },
 }
 

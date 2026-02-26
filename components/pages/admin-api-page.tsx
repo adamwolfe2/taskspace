@@ -87,7 +87,7 @@ function formatTime(iso: string): string {
 
 function ActionLabel({ action }: { action: string }) {
   const labels: Record<string, { label: string; color: string }> = {
-    brain_dump: { label: "Brain Dump", color: "bg-purple-100 text-purple-800" },
+    brain_dump: { label: "Brain Dump", color: "bg-slate-100 text-slate-800" },
     eod_parse: { label: "EOD Parse", color: "bg-blue-100 text-blue-800" },
     digest: { label: "Daily Digest", color: "bg-green-100 text-green-800" },
     query: { label: "AI Query", color: "bg-amber-100 text-amber-800" },
@@ -243,7 +243,7 @@ export function AdminApiPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-purple-500" />
+              <Clock className="h-4 w-4 text-slate-500" />
               <span className="text-sm text-muted-foreground">Today</span>
             </div>
             <p className="text-2xl font-bold">{formatNumber(summary.creditsToday)}</p>

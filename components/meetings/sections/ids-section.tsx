@@ -225,8 +225,8 @@ export function IDSSection({
                 <Lightbulb className="h-4 w-4 mx-auto mb-1 text-blue-600" />
                 <span className="font-medium">Identify</span>
               </div>
-              <div className="p-2 bg-purple-100 rounded">
-                <MessageSquare className="h-4 w-4 mx-auto mb-1 text-purple-600" />
+              <div className="p-2 bg-slate-100 rounded">
+                <MessageSquare className="h-4 w-4 mx-auto mb-1 text-slate-600" />
                 <span className="font-medium">Discuss</span>
               </div>
               <div className="p-2 bg-emerald-100 rounded">

@@ -83,8 +83,8 @@ export function RocksTimelineView({ rocks, quarter }: RocksTimelineViewProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-purple-50">
-            <Calendar className="h-5 w-5 text-purple-600" />
+          <div className="p-2 rounded-lg bg-slate-50">
+            <Calendar className="h-5 w-5 text-slate-600" />
           </div>
           <div>
             <h3 className="font-semibold text-foreground">Rocks Timeline</h3>

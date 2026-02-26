@@ -179,7 +179,7 @@ export function DirectReportCard({ report, onClick, className }: DirectReportCar
               <TooltipTrigger asChild>
                 <div className="text-center p-2 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
                   <div className="flex items-center justify-center gap-1">
-                    <Target className="h-4 w-4 text-purple-500" />
+                    <Target className="h-4 w-4 text-slate-500" />
                     <span className="text-lg font-bold text-slate-900">{report.rocks.length}</span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">Rocks</p>

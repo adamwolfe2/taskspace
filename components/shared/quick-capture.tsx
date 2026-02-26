@@ -254,7 +254,7 @@ export function QuickCapture({
  disabled={isSubmitting}
  aria-label={mode === "task" ? "Task title" : "Rock title"}
  />
- <Sparkles className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-purple-400" aria-hidden="true" />
+ <Sparkles className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" aria-hidden="true" />
  </div>
 
  {/* Parsed Preview */}
@@ -273,7 +273,7 @@ export function QuickCapture({
  </Badge>
  )}
  {parseInput(input).rockId && (
- <Badge variant="outline" className="bg-purple-50 text-purple-700">
+ <Badge variant="outline" className="bg-slate-50 text-slate-600">
  <Target className="h-3 w-3 mr-1" />
  {rocks.find((r) => r.id === parseInput(input).rockId)?.title}
  </Badge>

@@ -113,7 +113,7 @@ export function RocksSection({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-purple-500" />
+            <Target className="h-5 w-5 text-slate-500" />
             <CardTitle className="text-lg">Rocks Review</CardTitle>
           </div>
           {rocksAtRisk.length > 0 && (

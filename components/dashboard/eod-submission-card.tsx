@@ -661,7 +661,7 @@ export function EODSubmissionCard({
         {activeMetric && (
           <div className="space-y-2">
             <Label htmlFor="metricValue" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-              <Target className="h-4 w-4 text-purple-600" />
+              <Target className="h-4 w-4 text-slate-600" />
               {activeMetric.metricName} {isThursdaySubmission ? "(Today's contribution)" : ""}
             </Label>
             <div className="flex items-center gap-3">

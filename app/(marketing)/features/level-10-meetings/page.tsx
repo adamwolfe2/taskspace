@@ -127,7 +127,7 @@ export default function Level10MeetingsPage() {
                         className={cn(
                           "w-full flex items-center justify-between p-3 rounded-lg transition-all text-left",
                           section.status === "done" && "bg-gray-50 border border-gray-200",
-                          section.status === "current" && "bg-purple-50 border border-gray-300 shadow-sm",
+                          section.status === "current" && "bg-slate-50 border border-gray-300 shadow-sm",
                           section.status === "upcoming" && "bg-slate-50 border border-slate-200"
                         )}
                       >
@@ -141,7 +141,7 @@ export default function Level10MeetingsPage() {
                           )}
                           <span className={cn(
                             "text-sm font-semibold",
-                            section.status === "current" ? "text-purple-900" : "text-slate-900"
+                            section.status === "current" ? "text-slate-900" : "text-slate-900"
                           )}>
                             {section.name}
                           </span>

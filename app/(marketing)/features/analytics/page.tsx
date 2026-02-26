@@ -292,7 +292,7 @@ export default function AnalyticsPage() {
             >
               <motion.div
                 variants={fadeInUp}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 border border-gray-200 text-black text-sm font-medium mb-6"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-gray-200 text-black text-sm font-medium mb-6"
               >
                 <BarChart3 className="w-4 h-4" />
                 Analytics & Insights
@@ -416,7 +416,7 @@ export default function AnalyticsPage() {
             >
               <motion.div
                 variants={fadeInUp}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 border border-gray-200 text-gray-700 text-sm font-medium mb-6"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-gray-200 text-gray-700 text-sm font-medium mb-6"
               >
                 <Zap className="w-4 h-4" />
                 AI-Powered Insights

@@ -262,7 +262,7 @@ export function DirectReportDetailSheet({
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-purple-500" />
+                  <Calendar className="h-4 w-4 text-slate-500" />
                   EOD Reports
                 </CardTitle>
               </CardHeader>
@@ -437,7 +437,7 @@ export function DirectReportDetailSheet({
                         {item.type === "task" ? (
                           <ListTodo className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
                         ) : (
-                          <Target className="h-4 w-4 text-purple-500 shrink-0 mt-0.5" />
+                          <Target className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-slate-900 truncate">{item.title}</p>

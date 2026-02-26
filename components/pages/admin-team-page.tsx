@@ -1006,7 +1006,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                                 onClick={() => handleSendLoginLink(member)}
                                 disabled={isSubmitting}
                                 title="Send Login Link"
-                                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                className="text-slate-600 hover:text-slate-700 hover:bg-slate-50"
                               >
                                 <KeyRound className="h-4 w-4" />
                               </Button>
@@ -1115,7 +1115,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
                             size="sm"
                             onClick={() => handleSendLoginLink(member)}
                             disabled={isSubmitting}
-                            className="flex-1 text-purple-600 border-purple-200 hover:bg-purple-50"
+                            className="flex-1 text-slate-600 border-slate-200 hover:bg-slate-50"
                           >
                             <KeyRound className="h-4 w-4 mr-1.5" />
                             Login Link
@@ -1327,7 +1327,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
             {/* Weekly Metric Section */}
             <div className="border-t pt-4 mt-4">
               <div className="flex items-center gap-2 mb-3">
-                <Target className="h-4 w-4 text-purple-600" />
+                <Target className="h-4 w-4 text-slate-600" />
                 <Label className="font-semibold">Weekly Scorecard Metric</Label>
               </div>
               {isLoadingMetric ? (

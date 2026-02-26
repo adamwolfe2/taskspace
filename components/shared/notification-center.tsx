@@ -242,7 +242,7 @@ export function NotificationCenter() {
       case "escalation":
         return <AlertTriangle className="h-4 w-4 text-red-500" />
       case "invitation":
-        return <UserPlus className="h-4 w-4 text-purple-500" />
+        return <UserPlus className="h-4 w-4 text-slate-500" />
       case "mention":
         return <AtSign className="h-4 w-4 text-slate-500" />
       case "meeting_starting":

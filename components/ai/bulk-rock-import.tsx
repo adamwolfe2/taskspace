@@ -536,14 +536,14 @@ Rock 2: Launch New Product
               {parsedMetrics.map((metric, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg"
                 >
                   <div>
-                    <span className="font-medium text-purple-900">{metric.assigneeName}</span>
-                    <span className="text-purple-600 mx-2">→</span>
-                    <span className="text-purple-800">{metric.metricName}</span>
+                    <span className="font-medium text-slate-800">{metric.assigneeName}</span>
+                    <span className="text-slate-600 mx-2">→</span>
+                    <span className="text-slate-700">{metric.metricName}</span>
                   </div>
-                  <Badge variant="outline" className="bg-white text-purple-700 border-purple-300">
+                  <Badge variant="outline" className="bg-white text-slate-600 border-slate-300">
                     Goal: {metric.weeklyGoal}/week
                   </Badge>
                 </div>

@@ -356,7 +356,7 @@ export function MeetingDetailView({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-600" />
+              <Sparkles className="h-5 w-5 text-slate-600" />
               AI Meeting Summary
             </CardTitle>
           </CardHeader>

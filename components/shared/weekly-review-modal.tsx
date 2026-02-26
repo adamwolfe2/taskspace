@@ -187,7 +187,7 @@ export function WeeklyReviewModal({
  </Card>
  <Card>
  <CardContent className="pt-4 text-center">
- <Target className="h-6 w-6 text-purple-500 mx-auto mb-1" />
+ <Target className="h-6 w-6 text-slate-500 mx-auto mb-1" />
  <p className="text-2xl font-bold">{rockProgress.avgProgress}%</p>
  <p className="text-xs text-slate-500">Avg Rock Progress</p>
  </CardContent>
@@ -311,7 +311,7 @@ export function WeeklyReviewModal({
  key={index}
  className="flex items-center gap-2 bg-slate-50  rounded-lg px-3 py-2"
  >
- <Target className="h-4 w-4 text-purple-500 shrink-0" />
+ <Target className="h-4 w-4 text-slate-500 shrink-0" />
  <span className="flex-1 text-sm">{goal.text}</span>
  <button
  onClick={() => handleRemoveGoal(index)}
