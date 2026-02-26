@@ -1404,3 +1404,32 @@ export const updateClientPortalSchema = z.object({
   portalMemberFilter: z.array(z.string()).nullable().optional(),
   regenerateToken: z.boolean().optional(),
 })
+
+// ============================================
+// QUICK WORKSPACE SETUP SCHEMA
+// ============================================
+
+export const quickSetupSchema = z.object({
+  orgName: z.string().min(2, "Name must be at least 2 characters").max(100).trim(),
+  logoUrl: z.string().url().nullable().optional(),
+  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
+  secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
+  rocks: z.array(z.object({
+    title: z.string().min(1).max(500),
+    description: z.string().max(2000).optional(),
+    milestones: z.array(z.string().max(200)).max(50).optional(),
+    quarter: z.string().max(20).optional(),
+  })).max(50).optional(),
+  tasks: z.array(z.object({
+    title: z.string().min(1).max(500),
+    rockTitle: z.string().max(500).optional(),
+    priority: z.enum(["low", "medium", "high"]).optional(),
+    dueDate: z.string().optional(),
+  })).max(200).optional(),
+  invites: z.array(z.object({
+    email: z.string().email(),
+    role: z.enum(["admin", "member"]),
+  })).max(20).optional(),
+})
+
+export type QuickSetupInput = z.infer<typeof quickSetupSchema>

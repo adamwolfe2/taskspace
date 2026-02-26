@@ -262,8 +262,28 @@ Rules:
       )
     }
 
+    // Derive tasks from milestones so they appear in preview and get created in bulk
+    const nowDate = new Date()
+    const currentQ = Math.floor(nowDate.getMonth() / 3) + 1
+    const qEndDate = new Date(nowDate.getFullYear(), currentQ * 3, 0).toISOString().split("T")[0]
+    const parsedTasks: ParsedTask[] = []
+    for (const rock of parsedRocks) {
+      for (const milestone of rock.milestones) {
+        if (!milestone.trim()) continue
+        parsedTasks.push({
+          title: milestone.trim(),
+          rockTitle: rock.title,
+          priority: "medium",
+          dueDate: rock.suggestedQuarter ? qEndDate : qEndDate,
+        })
+      }
+    }
+
     const metricsMessage = parsedMetrics.length > 0
       ? ` and ${parsedMetrics.length} metric(s)`
+      : ""
+    const tasksMessage = parsedTasks.length > 0
+      ? ` and ${parsedTasks.length} task(s) from milestones`
       : ""
 
     return NextResponse.json<ApiResponse<ParseRocksResponse>>({
@@ -271,10 +291,10 @@ Rules:
       data: {
         rocks: parsedRocks,
         metrics: parsedMetrics,
-        tasks: [],
+        tasks: parsedTasks,
         rawResponse: responseText,
       },
-      message: `Successfully parsed ${parsedRocks.length} rock(s)${metricsMessage}`,
+      message: `Successfully parsed ${parsedRocks.length} rock(s)${tasksMessage}${metricsMessage}`,
     })
   } catch (error) {
     logError(logger, "Rock parse error", error)

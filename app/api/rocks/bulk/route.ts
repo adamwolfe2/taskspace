@@ -156,9 +156,35 @@ export const POST = withAdmin(async (request, auth) => {
       }
     }
 
+    // Build full task list: explicitly provided tasks + auto-generated tasks from milestones
+    // Build a rock-input lookup map for milestone access
+    const rockInputByTitle = new Map(rocks.map((r) => [r.title.toLowerCase().trim(), r]))
+
+    const allTasksToCreate = [...(tasks || [])]
+    for (const rock of result.created) {
+      const rockInput = rockInputByTitle.get(rock.title.toLowerCase().trim())
+      if (!rockInput?.milestones?.length) continue
+      // Find which milestones already have an explicit task for this rock (avoid duplicates)
+      const explicitTitlesForRock = new Set(
+        allTasksToCreate
+          .filter((t) => t.rockTitle?.toLowerCase() === rock.title.toLowerCase())
+          .map((t) => t.title.toLowerCase())
+      )
+      for (const milestone of rockInput.milestones) {
+        if (!milestone?.trim() || explicitTitlesForRock.has(milestone.toLowerCase())) continue
+        allTasksToCreate.push({
+          title: milestone.trim(),
+          rockTitle: rock.title,
+          priority: "medium",
+          dueDate: rock.dueDate || defaultDueDate,
+        })
+        explicitTitlesForRock.add(milestone.toLowerCase())
+      }
+    }
+
     // Create tasks if provided
     let tasksCreatedCount = 0
-    if (tasks && tasks.length > 0 && rockUserId) {
+    if (allTasksToCreate.length > 0 && rockUserId) {
       // Build a title -> id map from the rocks we just created
       const rockTitleMap = new Map(result.created.map((r) => [r.title.toLowerCase(), r]))
 
@@ -169,7 +195,7 @@ export const POST = withAdmin(async (request, auth) => {
       const assigneeName = assigneeMember?.name || targetMember.name || "Unknown"
       const now = new Date().toISOString()
 
-      for (const taskInput of tasks) {
+      for (const taskInput of allTasksToCreate) {
         try {
           // Match rock by title (case-insensitive)
           const matchedRock = taskInput.rockTitle

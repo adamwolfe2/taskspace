@@ -8,8 +8,9 @@ import { CreateOrgDialog } from "@/components/portfolio/create-org-dialog"
 import { ExecutiveSummary } from "@/components/portfolio/executive-summary"
 import { PortfolioMetricsBar } from "@/components/portfolio/portfolio-metrics-bar"
 import { CrossOrgTaskDialog } from "@/components/portfolio/cross-org-task-dialog"
+import { QuickWorkspaceSetupDialog } from "@/components/portfolio/quick-workspace-setup-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LayoutGrid, TrendingUp, Plus, ArrowRightLeft } from "lucide-react"
+import { LayoutGrid, TrendingUp, Plus, ArrowRightLeft, Zap } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
@@ -43,6 +44,7 @@ export function PortfolioPage() {
   const [error, setError] = useState<string | null>(null)
   const [showCreateOrg, setShowCreateOrg] = useState(false)
   const [showCrossOrgTask, setShowCrossOrgTask] = useState(false)
+  const [showQuickSetup, setShowQuickSetup] = useState(false)
   const [trends, setTrends] = useState<{date: string; eodSubmissionRate: number; completedTaskCount: number; openEscalationCount: number}[]>([])
 
   const fetchPortfolio = useCallback(async () => {
@@ -135,6 +137,10 @@ export function PortfolioPage() {
             <Plus className="h-4 w-4 mr-1" />
             New Org
           </Button>
+          <Button size="sm" onClick={() => setShowQuickSetup(true)}>
+            <Zap className="h-4 w-4 mr-1" />
+            Quick Setup
+          </Button>
         </div>
       </div>
 
@@ -193,6 +199,12 @@ export function PortfolioPage() {
         onOpenChange={setShowCrossOrgTask}
         orgs={orgs.map(o => ({ id: o.id, name: o.name }))}
         onCreated={fetchPortfolio}
+      />
+
+      <QuickWorkspaceSetupDialog
+        open={showQuickSetup}
+        onOpenChange={setShowQuickSetup}
+        onSuccess={(org) => setOrgs((prev) => [org, ...prev])}
       />
     </div>
     </ErrorBoundary>
