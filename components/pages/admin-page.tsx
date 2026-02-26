@@ -135,6 +135,8 @@ export function AdminPage({
   // Use organization timezone for date calculations
   const orgTimezone = organization?.settings?.timezone || "America/Los_Angeles"
 
+  const now = new Date()
+
   // Only count reports from current team members
   const todayReports = eodReports.filter((r) => r.date === getTodayInTimezone(orgTimezone) && teamMemberUserIds.has(r.userId))
   const reportingRate = activeMembers.length > 0
@@ -195,7 +197,6 @@ export function AdminPage({
   const totalRocksBlocked = rocks.filter((r) => r.status === "blocked").length
 
   // Weekly task velocity
-  const now = new Date()
   const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7)
   const twoWeeksAgo = new Date(now); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
   const weeklyTasksDone = assignedTasks.filter((t) => t.completedAt && new Date(t.completedAt) >= weekAgo).length
