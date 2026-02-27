@@ -299,7 +299,7 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
     }
 
     // Build the invite link so admin can copy it manually if email fails
-    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"}/app?invite=${newToken}`
+    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"}/join/${newToken}`
 
     return NextResponse.json<ApiResponse<{ emailSent: boolean; inviteLink: string }>>({
       success: true,

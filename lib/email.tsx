@@ -138,7 +138,7 @@ export async function sendInvitationEmail(
   organization: Organization,
   inviterName: string
 ) {
-  const inviteLink = `${APP_URL}/app?invite=${invitation.token}`
+  const inviteLink = `${APP_URL}/join/${invitation.token}`
 
   const html = emailWrapper(`
     <h1>You're invited to ${escapeHtml(organization.name)}</h1>

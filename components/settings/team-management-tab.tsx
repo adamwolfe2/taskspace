@@ -149,7 +149,7 @@ export function TeamManagementTab() {
 
       // Copy invite link to clipboard
       if (typeof window !== "undefined") {
-        const inviteLink = `${window.location.origin}?invite=${invitation.token}`
+        const inviteLink = `${window.location.origin}/join/${invitation.token}`
         try {
           await navigator.clipboard.writeText(inviteLink)
           toast({
@@ -174,7 +174,7 @@ export function TeamManagementTab() {
   const copyInviteLink = async (token: string) => {
     if (typeof window === "undefined") return
     const baseUrl = window.location.origin
-    const inviteLink = `${baseUrl}?invite=${token}`
+    const inviteLink = `${baseUrl}/join/${token}`
     try {
       await navigator.clipboard.writeText(inviteLink)
       toast({

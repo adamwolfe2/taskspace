@@ -319,7 +319,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
   const copyInviteLink = (token: string) => {
     const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
-    navigator.clipboard.writeText(`${baseUrl}?invite=${token}`)
+    navigator.clipboard.writeText(`${baseUrl}/join/${token}`)
     toast({
       title: "Link Copied",
       description: "Invitation link copied to clipboard",
@@ -528,7 +528,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
       // Copy invite link
       if (data.data?.invitation?.token && typeof window !== "undefined") {
-        const inviteLink = `${window.location.origin}?invite=${data.data.invitation.token}`
+        const inviteLink = `${window.location.origin}/join/${data.data.invitation.token}`
         try {
           await navigator.clipboard.writeText(inviteLink)
           toast({
