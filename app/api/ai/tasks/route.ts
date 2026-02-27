@@ -88,7 +88,9 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
           organizationId: auth.organization.id,
           title: updates?.title || task.title,
           description: updates?.description || task.description,
-          assigneeId: finalAssigneeId,
+          // ai_generated_tasks stores org_member_id as assigneeId, but assigned_tasks.assignee_id
+          // is a FK to users(id). Resolve using the member's userId.
+          assigneeId: member?.userId || finalAssigneeId,
           assigneeName: member?.name || updates?.assigneeName || task.assigneeName || "Unknown",
           assignedById: auth.user.id,
           assignedByName: auth.user.name,
@@ -126,7 +128,7 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
             joinDate: member.joinDate,
           }
 
-          const adminMember = members.find(m => m.id === auth.user.id)
+          const adminMember = members.find(m => m.userId === auth.user.id)
           if (adminMember) {
             const assignedBy: TeamMember = {
               id: adminMember.id,
