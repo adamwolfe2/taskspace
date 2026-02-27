@@ -78,7 +78,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
   const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null)
   const [isRefreshingEmail, setIsRefreshingEmail] = useState(false)
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false)
-  const [testEmailResult, setTestEmailResult] = useState<{ success: boolean; message: string } | null>(
+  const [testEmailResult, setTestEmailResult] = useState<{ success: boolean; message: string; detail?: string } | null>(
     null
   )
   const [apiKeyToDelete, setApiKeyToDelete] = useState<ApiKey | null>(null)
@@ -207,9 +207,13 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
           description: `Check your inbox at ${currentUser.email}`,
         })
       } else {
+        const resendDetail = data.resendError
+          ? (data.resendError.message || JSON.stringify(data.resendError))
+          : undefined
         setTestEmailResult({
           success: false,
-          message: data.error || data.resendError?.message || "Failed to send test email",
+          message: data.error || "Failed to send test email",
+          detail: resendDetail,
         })
         toast({
           title: "Failed to send test email",
@@ -429,11 +433,14 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
                   ) : (
                     <XCircle className="h-5 w-5 text-red-600" />
                   )}
-                  <p
-                    className={`text-sm ${testEmailResult.success ? "text-green-700" : "text-red-700"}`}
-                  >
-                    {testEmailResult.message}
-                  </p>
+                  <div>
+                    <p className={`text-sm font-medium ${testEmailResult.success ? "text-green-700" : "text-red-700"}`}>
+                      {testEmailResult.message}
+                    </p>
+                    {testEmailResult.detail && (
+                      <p className="text-xs text-red-600 mt-1 font-mono">{testEmailResult.detail}</p>
+                    )}
+                  </div>
                 </div>
               )}
 
