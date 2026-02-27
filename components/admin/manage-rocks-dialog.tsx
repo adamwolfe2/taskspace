@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Pencil, Trash2, Plus, X, Loader2 } from "lucide-react"
+import { Pencil, Trash2, Plus, X, Loader2, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -176,6 +176,9 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
         })
       } else {
         // Create new rock via API
+        // For accepted members send their userId; for pending (no userId yet) send email
+        // so the API can resolve and store as ownerEmail until they accept.
+        const rockOwner = selectedUser?.userId || selectedUser?.email || selectedUserId
         const response = await fetch("/api/rocks", {
           method: "POST",
           headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
@@ -187,7 +190,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
             doneWhen: doneWhenFiltered,
             dueDate: formData.dueDate,
             quarter: formData.quarter,
-            userId: selectedUserId,
+            userId: rockOwner,
             workspaceId: currentWorkspace.id,
           }),
         })
@@ -285,12 +288,28 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
               <SelectContent>
                 {teamMembers.map((member) => (
                   <SelectItem key={member.id} value={member.id}>
-                    {member.name} - {member.department}
+                    <span className="flex items-center gap-2">
+                      {member.name} - {member.department}
+                      {!member.userId && (
+                        <span className="text-xs text-amber-600 font-medium">Invite pending</span>
+                      )}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
+          {/* Pending member notice */}
+          {selectedUser && !selectedUser.userId && (
+            <div className="flex items-start gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <Clock className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span>
+                <strong>{selectedUser.name}</strong> hasn&apos;t accepted their invite yet.
+                Rocks you add will be assigned to their email and will link to their account automatically when they join.
+              </span>
+            </div>
+          )}
 
           {/* Rocks List */}
           {selectedUser && !showForm && (
