@@ -84,6 +84,7 @@
     "novel": "^1.0.2",
     "otplib": "^13.3.0",
     "pg": "^8.16.3",
+    "posthog-js": "^1.356.1",
     "qrcode": "^1.5.4",
     "react": "19.2.0",
     "react-circular-progressbar": "^2.2.0",

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type { TeamMember, Organization, PageType } from "../types"
 import { api } from "../api/client"
 import { getErrorMessage } from "../utils"
+import posthog from "posthog-js"
 
 // Filter state passed between pages during navigation (e.g., manager drill-down)
 export interface PageFilter {
@@ -336,6 +337,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refreshSession()
   }, [refreshSession])
+
+  // Identify user in PostHog on login; reset on logout
+  useEffect(() => {
+    if (currentUser && !isDemoMode && currentUser.userId) {
+      posthog.identify(currentUser.userId, {
+        email: currentUser.email,
+        name: currentUser.name,
+        role: currentUser.role,
+        department: currentUser.department,
+      })
+    } else if (!currentUser) {
+      posthog.reset()
+    }
+  }, [currentUser, isDemoMode])
 
   // Persist dark mode preference
   useEffect(() => {

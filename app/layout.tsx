@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { PostHogProvider } from "@/components/providers/posthog-provider"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -89,7 +90,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        {children}
+        <PostHogProvider>
+          {children}
+        </PostHogProvider>
         <Analytics />
         <SpeedInsights />
       </body>
