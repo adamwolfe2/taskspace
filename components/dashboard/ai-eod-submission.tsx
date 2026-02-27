@@ -76,6 +76,7 @@ export function AIEODSubmission({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [parsedData, setParsedData] = useState<ParsedEODData | null>(null)
   const [showPreview, setShowPreview] = useState(false)
+  const [parseError, setParseError] = useState(false)
 
   // Date selection state
   const [selectedDate, setSelectedDate] = useState<string>(todayInOrgTz)
@@ -134,6 +135,26 @@ export function AIEODSubmission({
     fetchMetric()
   }, [userId])
 
+  const handleSkipAI = () => {
+    // Convert text dump lines into individual tasks (strip bullet/list markers)
+    const lines = textDump.split("\n")
+      .map(l => l.replace(/^[-*•\d.)]\s*/, "").trim())
+      .filter(l => l.length > 0)
+    const tasks: EODTask[] = (lines.length > 0 ? lines : [textDump.trim()]).map(text => ({
+      id: crypto.randomUUID(),
+      text,
+      rockId: null,
+      rockTitle: null,
+    }))
+    setEditedTasks(tasks)
+    setEditedChallenges("")
+    setEditedPriorities([])
+    setEditedEscalation(false)
+    setEditedEscalationNote("")
+    setParseError(false)
+    setShowPreview(true)
+  }
+
   const handleParse = async () => {
     if (!textDump.trim()) {
       toast({
@@ -144,6 +165,7 @@ export function AIEODSubmission({
       return
     }
 
+    setParseError(false)
     setIsParsing(true)
     try {
       const response = await fetch("/api/ai/eod-parse", {
@@ -199,6 +221,7 @@ export function AIEODSubmission({
         description: `Found ${parsed.tasks.length} task${parsed.tasks.length !== 1 ? "s" : ""} for ${dateLabel}`,
       })
     } catch (error) {
+      setParseError(true)
       toast({
         title: "Parse Failed",
         description: error instanceof Error ? error.message : "Failed to parse your text dump",
@@ -464,7 +487,7 @@ export function AIEODSubmission({
 
 Tomorrow: finalize project proposal, sync with team on sprint goals`}
                 value={textDump}
-                onChange={(e) => setTextDump(e.target.value)}
+                onChange={(e) => { setTextDump(e.target.value); setParseError(false) }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && textDump.trim()) {
                     e.preventDefault()
@@ -498,6 +521,20 @@ Tomorrow: finalize project proposal, sync with team on sprint goals`}
                 </>
               )}
             </Button>
+
+            {parseError && textDump.trim() && (
+              <div className="flex flex-col items-center gap-2 pt-1">
+                <p className="text-xs text-slate-500">AI is temporarily unavailable.</p>
+                <Button
+                  variant="outline"
+                  onClick={handleSkipAI}
+                  className="w-full border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Submit without AI
+                </Button>
+              </div>
+            )}
           </>
         ) : (
           /* Preview & Edit Phase */

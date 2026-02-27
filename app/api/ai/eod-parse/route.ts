@@ -118,9 +118,15 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     })
   } catch (error) {
     logError(logger, "EOD text parse error", error)
-    const message = error instanceof Error ? error.message : "Failed to parse EOD text"
+    const raw = error instanceof Error ? error.message : ""
+    let userMessage = "Failed to parse EOD text. Please try again."
+    if (raw.includes("credit balance is too low") || raw.includes("insufficient_quota") || raw.includes("billing")) {
+      userMessage = "AI parsing is temporarily unavailable. You can still submit your EOD report manually using the form below."
+    } else if (raw === "Failed to parse AI response as JSON") {
+      userMessage = "AI returned an unexpected response. Please try again."
+    }
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: message === "Failed to parse AI response as JSON" ? "AI returned an unexpected response. Please try again." : message },
+      { success: false, error: userMessage },
       { status: 500 }
     )
   }
