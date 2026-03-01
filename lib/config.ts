@@ -81,14 +81,14 @@ export const CONFIG = {
 
   // Polling intervals (in milliseconds)
   polling: {
-    /** Status checks, org date refresh, productivity data (1 min) */
-    standard: 60_000,
-    /** Public EOD page auto-refresh, org chart employees, workspace notes (30s) */
-    fast: 30_000,
+    /** Status checks, org date refresh, productivity data (2 min) */
+    standard: 120_000,
+    /** Public EOD page auto-refresh, org chart employees, workspace notes (60s) */
+    fast: 60_000,
     /** Notification center unread count check (5 min) */
     slow: 300_000,
-    /** Org chart progress indicator (10s) */
-    realtime: 10_000,
+    /** Org chart progress indicator (30s — was 10s, reduced to cut API call volume) */
+    realtime: 30_000,
   },
 } as const
 

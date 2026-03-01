@@ -19,10 +19,10 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 
     if (countOnly) {
       const count = await db.notifications.getUnreadCount(auth.user.id, auth.organization.id)
-      return NextResponse.json<ApiResponse<{ count: number }>>({
-        success: true,
-        data: { count },
-      })
+      return NextResponse.json<ApiResponse<{ count: number }>>(
+        { success: true, data: { count } },
+        { headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=30" } }
+      )
     }
 
     // Check if cursor-based pagination is requested

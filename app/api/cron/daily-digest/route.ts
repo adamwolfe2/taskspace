@@ -11,6 +11,9 @@ import { logger, logError } from "@/lib/logger"
 import { CONFIG } from "@/lib/config"
 import * as Sentry from "@sentry/nextjs"
 
+// Module-level singleton — instantiated once per cold start, not per request
+const resend = new Resend(process.env.RESEND_API_KEY)
+
 // This endpoint is designed to be called by Vercel Cron
 // Runs every hour to check which organizations are at 6 PM in their timezone
 // Configure in vercel.json:
@@ -110,23 +113,16 @@ export async function GET(request: NextRequest) {
 
     logger.info({ timestamp: new Date().toISOString() }, "Running daily digest check")
 
-    // Clean up expired and inactive sessions
-    try {
-      const cleanup = await db.sessions.cleanupExpiredSessions()
-      logger.info({ expired: cleanup.expired, inactive: cleanup.inactive }, "Session cleanup completed")
-    } catch (cleanupError) {
-      logError(logger, "Session cleanup failed", cleanupError)
-    }
-
-    // Clean up old email delivery logs and cron execution records (older than 30 days)
-    try {
-      const [emailLogsDeleted, cronExecsDeleted] = await Promise.all([
-        db.emailDeliveryLog.cleanupOldLogs(),
-        db.cronExecutions.cleanupOldExecutions(),
-      ])
-      logger.info({ emailLogsDeleted, cronExecsDeleted }, "Cleaned up old email delivery logs and cron execution records")
-    } catch (cleanupError) {
-      logError(logger, "Email delivery log / cron execution cleanup failed", cleanupError)
+    // Fast-exit if no US/common timezone could be at 6 PM right now.
+    // US timezones span UTC-4 (EDT) to UTC-10 (HST): 6 PM window is 22:00–04:00 UTC.
+    const utcHour = new Date().getUTCHours()
+    const inWindow = utcHour >= 22 || utcHour <= 4
+    if (!inWindow) {
+      return NextResponse.json<ApiResponse<{ results: [] }>>({
+        success: true,
+        data: { results: [] },
+        message: "No organizations in 6 PM window at this UTC hour — skipped",
+      })
     }
 
     // Get all organizations
@@ -241,23 +237,25 @@ export async function GET(request: NextRequest) {
         const missingMembers = activeMembers.filter(m => !submittedUserIds.has(m.id))
         const admins = teamMembers.filter(m => m.role === "admin" || m.role === "owner")
 
+        // Build consolidated digest once — used by both email and Slack below
+        const adminUser = admins[0]
+        let consolidatedDigest: Awaited<ReturnType<typeof generateConsolidatedDigest>> | null = null
+        if (adminUser && (isEmailConfigured() || (org.settings?.slackWebhookUrl && org.settings?.enableSlackIntegration))) {
+          try {
+            consolidatedDigest = await generateConsolidatedDigest(org.id, adminUser.id, today)
+          } catch (digestError) {
+            logError(logger, `Failed to generate consolidated digest for org ${org.name}`, digestError)
+          }
+        }
+
         // Send email summary to admins
         if (isEmailConfigured()) {
           await sendDailySummaryEmail(digest, teamMembers, admins, missingMembers)
           logger.info({ orgName: org.name }, "Email sent for org")
 
           // Also send Rock-organized digest email to admins
-          const adminUser = admins[0]
-          if (adminUser) {
+          if (adminUser && consolidatedDigest) {
             try {
-              const consolidatedDigest = await generateConsolidatedDigest(
-                org.id,
-                adminUser.id,
-                today
-              )
-
-              // Send Rock-organized HTML digest to all admins
-              const resend = new Resend(process.env.RESEND_API_KEY)
               const adminEmails = admins
                 .filter(a => a.notificationPreferences?.digest?.email !== false)
                 .map(a => a.email)
@@ -265,7 +263,7 @@ export async function GET(request: NextRequest) {
               await resend.emails.send({
                 from: process.env.EMAIL_FROM || "Taskspace <team@trytaskspace.com>",
                 to: adminEmails,
-                subject: `📊 Daily Rock Progress Summary - ${consolidatedDigest.formattedDate}`,
+                subject: `Daily Rock Progress Summary - ${consolidatedDigest.formattedDate}`,
                 html: formatConsolidatedDigestHTML(consolidatedDigest),
               })
               logger.info({ orgName: org.name }, "Rock-organized digest email sent for org")
@@ -277,15 +275,8 @@ export async function GET(request: NextRequest) {
 
         // Send Slack notification if configured
         const slackWebhookUrl = org.settings?.slackWebhookUrl
-        if (isSlackConfigured(slackWebhookUrl) && org.settings?.enableSlackIntegration) {
+        if (isSlackConfigured(slackWebhookUrl) && org.settings?.enableSlackIntegration && consolidatedDigest) {
           try {
-            const adminUser = admins[0]
-            const consolidatedDigest = await generateConsolidatedDigest(
-              org.id,
-              adminUser?.id || "",
-              today
-            )
-
             // Convert digest to Slack format
             const slackAdminDigest = consolidatedDigest.adminDigest ? {
               memberName: consolidatedDigest.adminDigest.member.name,

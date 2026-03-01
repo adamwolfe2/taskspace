@@ -101,6 +101,18 @@ export async function GET(request: NextRequest) {
 
     logger.info({ timestamp: new Date().toISOString() }, "Running daily EOD email check")
 
+    // Fast-exit if no US/common timezone could be at 7 PM right now.
+    // US timezones span UTC-4 (EDT) to UTC-10 (HST): 7 PM window is 23:00–05:00 UTC.
+    const utcHour = new Date().getUTCHours()
+    const inWindow = utcHour >= 23 || utcHour <= 5
+    if (!inWindow) {
+      return NextResponse.json<ApiResponse<{ results: [] }>>({
+        success: true,
+        data: { results: [] },
+        message: "No organizations in 7 PM window at this UTC hour — skipped",
+      })
+    }
+
     // Get all organizations
     const organizations = await db.organizations.findAll()
     const results: { orgId: string; orgName: string; timezone: string; emailsSent: number; skipped: string; errors: string[] }[] = []
@@ -212,11 +224,6 @@ export async function GET(request: NextRequest) {
             emailsSent++
             // Track email delivery to prevent duplicates
             await db.emailDeliveryLog.recordDelivery("daily-eod-email", org.id, member.id, member.email, today)
-
-            // Rate limiting: add 100ms delay between emails to avoid hitting provider limits
-            if (emailsSent < activeMembers.length) {
-              await new Promise(resolve => setTimeout(resolve, 100))
-            }
           } else {
             errors.push(`${member.name}: ${result.error}`)
           }

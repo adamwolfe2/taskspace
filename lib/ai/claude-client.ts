@@ -20,7 +20,7 @@ import type {
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 const MODEL_SONNET = "claude-sonnet-4-20250514"
 const MODEL_HAIKU = "claude-haiku-4-5-20251001"
-const MAX_TOKENS = 4096
+const MAX_TOKENS = 2048
 
 interface ClaudeResponse {
   id: string
@@ -332,7 +332,7 @@ YESTERDAY'S DIGEST:
 Generate the daily digest. Focus on what actually matters. Challenge my thinking. Return JSON only.`
 
   const { result: parsed, usage, model } = await callClaudeJSONWithUsage<Omit<DailyDigest, "id" | "organizationId" | "digestDate" | "generatedAt">>(PROMPTS.digestGenerator, userMessage, {
-    maxTokens: 6000,
+    maxTokens: 2048,
     temperature: 0.6,
     model: MODEL_HAIKU,
   })
@@ -371,6 +371,7 @@ Answer the question based on the data provided. Return JSON only.`
 
   const { result, usage, model } = await callClaudeJSONWithUsage<AIQueryResponse>(PROMPTS.queryHandler, userMessage, {
     temperature: 0.5,
+    model: MODEL_HAIKU,
   })
 
   return { result, usage: { ...usage, model } }
@@ -555,7 +556,7 @@ export async function generateMeetingPrep(context: {
   }
 
   const userMessage = `${parts.join("\n\n")}\n\nPrepare a concise L10 meeting prep summary. Return JSON only.`
-  const { result, usage, model } = await callClaudeJSONWithUsage<MeetingPrepResult>(PROMPTS.meetingPrep, userMessage, { temperature: 0.4 })
+  const { result, usage, model } = await callClaudeJSONWithUsage<MeetingPrepResult>(PROMPTS.meetingPrep, userMessage, { temperature: 0.4, model: MODEL_HAIKU })
   return { result, usage: { ...usage, model } }
 }
 
@@ -613,7 +614,7 @@ export async function generateManagerInsights(context: {
   }
 
   const userMessage = `${parts.join("\n\n")}\n\nGenerate manager insights for the team. Return JSON only.`
-  const { result, usage, model } = await callClaudeJSONWithUsage<ManagerInsightsResult>(PROMPTS.managerInsights, userMessage, { temperature: 0.5 })
+  const { result, usage, model } = await callClaudeJSONWithUsage<ManagerInsightsResult>(PROMPTS.managerInsights, userMessage, { temperature: 0.5, model: MODEL_HAIKU })
   return { result, usage: { ...usage, model } }
 }
 

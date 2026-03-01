@@ -11,19 +11,15 @@ export const GET = withAuth(async (request, auth) => {
     const { searchParams } = new URL(request.url)
     const employeeName = searchParams.get("employeeName")
 
+    const cacheHeaders = { "Cache-Control": "private, max-age=20, stale-while-revalidate=10" }
+
     if (employeeName) {
       const progress = await db.orgChartRockProgress.findByEmployee(auth.organization.id, employeeName)
-      return NextResponse.json({
-        success: true,
-        progress,
-      })
+      return NextResponse.json({ success: true, progress }, { headers: cacheHeaders })
     }
 
     const progress = await db.orgChartRockProgress.findAll(auth.organization.id)
-    return NextResponse.json({
-      success: true,
-      progress,
-    })
+    return NextResponse.json({ success: true, progress }, { headers: cacheHeaders })
   } catch (error) {
     logError(logger, "Error fetching rock progress", error)
     return NextResponse.json(

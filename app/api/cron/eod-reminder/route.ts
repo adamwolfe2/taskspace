@@ -114,6 +114,18 @@ export async function GET(request: NextRequest) {
 
     logger.info({ timestamp: new Date().toISOString() }, "Running EOD reminder check")
 
+    // Fast-exit if no US/common timezone could be at 5 PM right now.
+    // US timezones span UTC-4 (EDT) to UTC-10 (HST): 5 PM window is 21:00–03:00 UTC.
+    const utcHour = new Date().getUTCHours()
+    const inWindow = utcHour >= 21 || utcHour <= 3
+    if (!inWindow) {
+      return NextResponse.json<ApiResponse<{ results: [] }>>({
+        success: true,
+        data: { results: [] },
+        message: "No organizations in 5 PM window at this UTC hour — skipped",
+      })
+    }
+
     // Get all organizations
     const organizations = await db.organizations.findAll()
     const results: { orgId: string; orgName: string; timezone: string; reminders: number; skipped: string; errors: string[] }[] = []

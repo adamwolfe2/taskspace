@@ -38,10 +38,10 @@ export const GET = withAuth(async (request, auth) => {
 
     const note = await workspaceNotes.get(workspaceId)
 
-    return NextResponse.json<ApiResponse<WorkspaceNote | null>>({
-      success: true,
-      data: note,
-    })
+    return NextResponse.json<ApiResponse<WorkspaceNote | null>>(
+      { success: true, data: note },
+      { headers: { "Cache-Control": "private, max-age=50, stale-while-revalidate=10" } }
+    )
   } catch (error) {
     logger.error({ error }, "Get workspace note error")
     return NextResponse.json<ApiResponse<null>>(
