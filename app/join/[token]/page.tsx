@@ -14,6 +14,7 @@ interface WorkspaceInfo {
   organizationName: string
   logoUrl: string | null
   primaryColor: string | null
+  invitedEmail?: string
 }
 
 export default function JoinWorkspacePage() {
@@ -43,6 +44,10 @@ export default function JoinWorkspacePage() {
       .then((data) => {
         if (data.success) {
           setInfo(data.data)
+          // Pre-fill email for email-specific invitations
+          if (data.data.invitedEmail) {
+            setEmail(data.data.invitedEmail)
+          }
         } else {
           setInfoError(data.error || "This invite link is no longer valid.")
         }
@@ -210,8 +215,12 @@ export default function JoinWorkspacePage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={isSubmitting}
+                disabled={isSubmitting || !!info?.invitedEmail}
+                className={info?.invitedEmail ? "bg-slate-50 text-slate-500" : ""}
               />
+              {info?.invitedEmail && (
+                <p className="text-xs text-slate-400">This invitation is for this email address.</p>
+              )}
             </div>
 
             <div className="space-y-1.5">

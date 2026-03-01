@@ -11,13 +11,14 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { addWorkspaceMember } from "@/lib/db/workspaces"
+import { addWorkspaceMember, getWorkspacesByOrg } from "@/lib/db/workspaces"
 import {
   hashPassword,
   verifyPassword,
   generateId,
   generateToken,
   getExpirationDate,
+  isTokenExpired,
 } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { joinWorkspaceSchema } from "@/lib/validation/schemas"
@@ -34,6 +35,8 @@ interface JoinPageInfo {
   organizationName: string
   logoUrl: string | null
   primaryColor: string | null
+  /** Present when token is from email invitation — email is pre-filled and locked */
+  invitedEmail?: string
 }
 
 /**
@@ -63,9 +66,38 @@ export async function GET(
     }
 
     const link = await db.workspaceInviteLinks.getByToken(token)
-    if (!link) {
+    if (link) {
+      return NextResponse.json<ApiResponse<JoinPageInfo>>({
+        success: true,
+        data: {
+          workspaceName: link.workspaceName,
+          workspaceType: link.workspaceType,
+          organizationName: link.organizationName,
+          logoUrl: link.logoUrl,
+          primaryColor: link.primaryColor,
+        },
+      })
+    }
+
+    // Fall back: token may be from an email invitation (invitations table)
+    const invitation = await db.invitations.findByToken(token)
+    if (!invitation || invitation.status !== "pending") {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "This invite link is no longer valid." },
+        { status: 404 }
+      )
+    }
+    if (isTokenExpired(invitation.expiresAt)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "This invitation has expired. Please ask the workspace admin to send a new one." },
+        { status: 404 }
+      )
+    }
+
+    const invOrg = await db.organizations.findById(invitation.organizationId)
+    if (!invOrg) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Organization not found." },
         { status: 404 }
       )
     }
@@ -73,11 +105,12 @@ export async function GET(
     return NextResponse.json<ApiResponse<JoinPageInfo>>({
       success: true,
       data: {
-        workspaceName: link.workspaceName,
-        workspaceType: link.workspaceType,
-        organizationName: link.organizationName,
-        logoUrl: link.logoUrl,
-        primaryColor: link.primaryColor,
+        workspaceName: invOrg.name,
+        workspaceType: "team",
+        organizationName: invOrg.name,
+        logoUrl: invOrg.logoUrl || null,
+        primaryColor: null,
+        invitedEmail: invitation.email,
       },
     })
   } catch (error) {
@@ -117,6 +150,211 @@ export async function POST(
 
     const { name, email, password } = await validateBody(request, joinWorkspaceSchema)
 
+    // ── Check which token type this is ───────────────────────────────────────
+    // Workspace invite links are reusable (any email can join).
+    // Email invitations are single-use and email-specific.
+    // We check workspace_invite_links first; if not found, fall through to invitations.
+    const isWorkspaceLink = !!(await db.workspaceInviteLinks.getByToken(token))
+
+    if (!isWorkspaceLink) {
+      // ── EMAIL INVITATION ACCEPTANCE PATH ────────────────────────────────────
+      const invResult = await withTransaction(async (client) => {
+        const now = new Date().toISOString()
+
+        // Lock invitation row — prevents race conditions
+        const { rows: invRows } = await client.sql<{
+          id: string
+          organization_id: string
+          email: string
+          role: string
+          department: string
+          expires_at: string
+          status: string
+          workspace_id: string | null
+          invited_by: string | null
+        }>`SELECT * FROM invitations WHERE token = ${token} FOR UPDATE`
+
+        if (invRows.length === 0) {
+          throw new Error("INVALID_LINK")
+        }
+        const inv = invRows[0]
+        if (inv.status !== "pending") {
+          throw new Error("ALREADY_USED")
+        }
+        if (isTokenExpired(inv.expires_at)) {
+          throw new Error("EXPIRED")
+        }
+
+        // Find or create user
+        const { rows: userRows } = await client.sql<{
+          id: string; email: string; password_hash: string; name: string; avatar: string | null
+        }>`SELECT id, email, password_hash, name, avatar FROM users WHERE LOWER(email) = LOWER(${email})`
+
+        let userId: string
+        let userName: string
+        let userEmail: string
+        let isNewUser = false
+
+        if (userRows.length > 0) {
+          // Existing user — verify password
+          if (!password) throw new Error("NEEDS_PASSWORD")
+          const validPw = await verifyPassword(password, userRows[0].password_hash)
+          if (!validPw) throw new Error("WRONG_PASSWORD")
+          userId = userRows[0].id
+          userName = userRows[0].name
+          userEmail = userRows[0].email
+        } else {
+          if (!name) throw new Error("NEEDS_NAME")
+          if (!password) throw new Error("NEEDS_PASSWORD")
+          userId = generateId()
+          userName = name
+          userEmail = email.toLowerCase()
+          const passwordHash = await hashPassword(password)
+          await client.sql`
+            INSERT INTO users (id, email, password_hash, name, avatar, created_at, updated_at, email_verified, last_login_at)
+            VALUES (${userId}, ${userEmail}, ${passwordHash}, ${userName}, ${null}, ${now}, ${now}, ${true}, ${now})
+          `
+          isNewUser = true
+        }
+
+        // Upsert org membership
+        const { rows: existingMemberRows } = await client.sql<{
+          id: string; role: string; department: string; joined_at: string;
+          invited_by: string | null; status: string; weekly_measurable: string | null;
+          timezone: string | null; eod_reminder_time: string | null;
+          manager_id: string | null; job_title: string | null;
+        }>`SELECT * FROM organization_members
+           WHERE organization_id = ${inv.organization_id}
+             AND (user_id = ${userId} OR LOWER(email) = LOWER(${email}))`
+
+        let member: OrganizationMember
+
+        if (existingMemberRows.length > 0) {
+          const em = existingMemberRows[0]
+          if (em.status !== "active") {
+            await client.sql`
+              UPDATE organization_members
+              SET user_id = ${userId}, name = ${userName}, status = ${"active"}, updated_at = NOW()
+              WHERE id = ${em.id}
+            `
+          }
+          member = {
+            id: em.id, organizationId: inv.organization_id, userId,
+            email, name: userName, role: em.role as "owner" | "admin" | "member",
+            department: em.department, joinedAt: new Date(em.joined_at).toISOString(),
+            invitedBy: em.invited_by || undefined, status: "active",
+            weeklyMeasurable: em.weekly_measurable || undefined,
+          }
+        } else {
+          // Seat check
+          const { rows: orgRows } = await client.sql<{
+            subscription: Record<string, unknown> | null; is_internal: boolean
+          }>`SELECT subscription, is_internal FROM organizations WHERE id = ${inv.organization_id}`
+          const { rows: cntRows } = await client.sql<{ count: number }>`
+            SELECT COUNT(*)::int as count FROM organization_members WHERE organization_id = ${inv.organization_id}
+          `
+          const featureCtx = await buildFeatureGateContext(
+            inv.organization_id,
+            orgRows[0]?.subscription as { plan: "free" | "team" | "business"; status: string } | null,
+            { activeUsers: cntRows[0]?.count || 0 },
+            orgRows[0]?.is_internal || false
+          )
+          const seatCheck = canAddUser(featureCtx)
+          if (!seatCheck.allowed) throw new Error("SEAT_LIMIT_EXCEEDED")
+
+          const memberId = generateId()
+          await client.sql`
+            INSERT INTO organization_members
+              (id, organization_id, user_id, email, name, role, department, joined_at, invited_by, status)
+            VALUES (${memberId}, ${inv.organization_id}, ${userId}, ${userEmail}, ${userName},
+                    ${inv.role}, ${inv.department}, ${now}, ${inv.invited_by}, ${"active"})
+          `
+          member = {
+            id: memberId, organizationId: inv.organization_id, userId,
+            email: userEmail, name: userName, role: inv.role as "owner" | "admin" | "member",
+            department: inv.department, joinedAt: now, invitedBy: inv.invited_by || undefined,
+            status: "active",
+          }
+        }
+
+        // Mark invitation accepted
+        await client.sql`UPDATE invitations SET status = ${"accepted"} WHERE id = ${inv.id}`
+
+        // Create session
+        const sessionToken = generateToken()
+        const sessionExpiresAt = getExpirationDate(24 * 7)
+        await client.sql`
+          INSERT INTO sessions (id, user_id, organization_id, token, expires_at, created_at, last_active_at)
+          VALUES (${generateId()}, ${userId}, ${inv.organization_id}, ${sessionToken}, ${sessionExpiresAt}, ${now}, ${now})
+        `
+
+        return {
+          userId, userName, userEmail, isNewUser, member, sessionToken, sessionExpiresAt,
+          organizationId: inv.organization_id, workspaceId: inv.workspace_id,
+        }
+      })
+
+      // Fetch org
+      const organization = await db.organizations.findById(invResult.organizationId)
+      if (!organization) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Organization not found" },
+          { status: 404 }
+        )
+      }
+
+      // Transfer pending items (non-blocking)
+      db.transferPendingItems(invResult.userEmail, invResult.userId).catch((err) => {
+        logError(logger, "Failed to transfer pending items after invitation join", err)
+      })
+
+      // Add to workspace(s)
+      try {
+        if (invResult.workspaceId) {
+          await addWorkspaceMember(invResult.workspaceId, invResult.userId, "member")
+        } else {
+          const orgWorkspaces = await getWorkspacesByOrg(organization.id)
+          await Promise.all(orgWorkspaces.map((ws) =>
+            addWorkspaceMember(ws.id, invResult.userId, "member").catch((err) =>
+              logError(logger, `Failed to add user to workspace ${ws.id}`, err)
+            )
+          ))
+        }
+      } catch (err) {
+        logError(logger, "Failed to add user to workspace(s) after invitation join", err)
+      }
+
+      // Welcome email
+      if (invResult.isNewUser && isEmailConfigured()) {
+        sendWelcomeEmail({
+          to: invResult.userEmail, name: invResult.userName,
+          organizationName: organization.name, workspaceName: organization.name,
+        }).catch((err) => logError(logger, "Failed to send welcome email after invitation join", err))
+      }
+
+      const safeUser = {
+        id: invResult.userId, email: invResult.userEmail, name: invResult.userName,
+        emailVerified: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      }
+
+      const response = NextResponse.json<ApiResponse<AuthResponse>>({
+        success: true,
+        data: {
+          user: safeUser, organization, member: invResult.member,
+          token: invResult.sessionToken, expiresAt: invResult.sessionExpiresAt,
+        },
+        message: invResult.isNewUser
+          ? "Account created and joined organization successfully"
+          : "Joined organization successfully",
+      })
+      response.cookies.set("session_token", invResult.sessionToken, {
+        httpOnly: true, secure: process.env.NODE_ENV === "production",
+        sameSite: "lax", expires: new Date(invResult.sessionExpiresAt), path: "/",
+      })
+      return response
+    }
+
+    // ── WORKSPACE INVITE LINK PATH (original logic) ──────────────────────────
     const result = await withTransaction(async (client) => {
       const now = new Date().toISOString()
 
@@ -387,6 +625,24 @@ export async function POST(
         return NextResponse.json<ApiResponse<null>>(
           { success: false, error: "This invite link is no longer valid." },
           { status: 404 }
+        )
+      }
+      if (error.message === "ALREADY_USED") {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "This invitation has already been used." },
+          { status: 409 }
+        )
+      }
+      if (error.message === "EXPIRED") {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "This invitation has expired. Ask the workspace admin to send a new one." },
+          { status: 410 }
+        )
+      }
+      if (error.message === "NEEDS_NAME") {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Please enter your name to create an account." },
+          { status: 422 }
         )
       }
       if (error.message === "NEEDS_REGISTRATION") {
