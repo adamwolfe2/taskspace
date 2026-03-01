@@ -228,6 +228,15 @@ export function getCurrentQuarterDisplay(): string {
   return `Q${quarter} ${year}`
 }
 
+/** Returns the current quarter string e.g. "Q1 2026" */
+export function getCurrentQuarter(): string {
+  const now = new Date()
+  const month = now.getMonth() // 0-11
+  const year = now.getFullYear()
+  const quarter = Math.floor(month / 3) + 1
+  return `Q${quarter} ${year}`
+}
+
 /**
  * Check if a date string falls on a Thursday (day 4)
  */

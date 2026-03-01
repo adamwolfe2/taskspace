@@ -56,6 +56,7 @@ import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import type { ScorecardSummary } from "@/lib/db/scorecard"
 import { getDemoScorecardData, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
+import { EmptyState } from "@/components/shared/empty-state"
 
 interface ScorecardData {
   summary: ScorecardSummary[]
@@ -621,20 +622,14 @@ export function WorkspaceScorecardPage() {
       {/* Metrics Display */}
       {data && data.summary.length === 0 ? (
         <Card className="border-dashed">
-          <CardContent className="py-12 text-center">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <BarChart3 className="h-8 w-8 text-slate-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900">No metrics on your scorecard yet</h3>
-            <p className="text-slate-500 mt-2 max-w-md mx-auto">
-              The weekly scorecard helps you track key performance indicators (KPIs) and stay on top of what matters most. Add your first metric to get started!
-            </p>
-            {data.canEdit && (
-              <Button className="mt-6" onClick={() => setShowAddDialog(true)}>
-                <Plus className="h-4 w-4 mr-1" />
-                Create your first metric!
-              </Button>
-            )}
+          <CardContent className="py-2">
+            <EmptyState
+              icon={BarChart3}
+              title="No metrics on your scorecard yet"
+              description="The weekly scorecard helps you track key performance indicators (KPIs) and stay on top of what matters most. Add your first metric to get started."
+              size="md"
+              action={data.canEdit ? { label: "Add your first metric", onClick: () => setShowAddDialog(true) } : undefined}
+            />
           </CardContent>
         </Card>
       ) : viewMode === "cards" ? (

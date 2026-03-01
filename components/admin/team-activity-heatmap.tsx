@@ -10,6 +10,7 @@ import {
 import { cn } from "@/lib/utils"
 import type { EODReport, TeamMember, AssignedTask } from "@/lib/types"
 import { format, subDays, parseISO, isSameDay, startOfDay } from "date-fns"
+import { Check, X } from "lucide-react"
 
 interface TeamActivityHeatmapProps {
  teamMembers: TeamMember[]
@@ -148,7 +149,7 @@ export function TeamActivityHeatmap({
  {format(activity.date, "MMM d, yyyy")}
  </p>
  <p>
- EOD: {activity.eodSubmitted ? "✓ Submitted" : "✗ Not submitted"}
+ EOD:{" "}{activity.eodSubmitted ? <><Check className="inline h-3 w-3 text-emerald-500" /> Submitted</> : <><X className="inline h-3 w-3 text-red-400" /> Not submitted</>}
  </p>
  <p>Tasks: {activity.tasksCompleted} completed</p>
  {activity.hasEscalation && (

@@ -50,7 +50,15 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
     const validated = await validateBody(request, aiTaskPatchSchema)
     const { taskId, action } = validated
      
-    const updates = validated.updates as Record<string, any> | undefined
+    interface TaskUpdates {
+      assigneeId?: string
+      priority?: string
+      title?: string
+      description?: string
+      assigneeName?: string
+      dueDate?: string
+    }
+    const updates = validated.updates as TaskUpdates | undefined
 
     // Get the existing task
     const tasks = await db.aiGeneratedTasks.findByOrganizationId(auth.organization.id)

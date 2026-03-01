@@ -32,6 +32,7 @@ import {
  Target,
  Volume2,
  VolumeX,
+ CheckCircle2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { AssignedTask, Rock } from "@/lib/types"
@@ -405,8 +406,8 @@ export function FocusTimer({
  </DialogDescription>
  </DialogHeader>
  <div className="py-4 text-center">
- <div className="text-4xl mb-2">
- {pomodoroCount % 4 === 0 ? "🎉" : "✨"}
+ <div className="flex justify-center mb-2">
+  <CheckCircle2 className="h-10 w-10 text-emerald-500" />
  </div>
  <p className="text-sm text-slate-500">
  Total sessions today: {pomodoroCount}

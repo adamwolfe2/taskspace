@@ -61,6 +61,8 @@ export const CONFIG = {
     paginationLimit: 20,
     maxFileUploadSizeMB: 5,
     avatarMaxSizeMB: 2,
+    eodEditGracePeriodHours: 24,
+    reportsPerPage: 25,
   },
 
   // API timeouts (in milliseconds)

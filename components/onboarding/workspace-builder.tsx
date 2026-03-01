@@ -19,6 +19,7 @@ import {
   ClipboardList,
   AlertTriangle,
   ArrowRight,
+  ArrowLeft,
   X,
 } from "lucide-react"
 import type { WorkspaceBuilderPayload } from "@/lib/ai/claude-client"
@@ -478,7 +479,7 @@ export function WorkspaceBuilder({ onClose }: WorkspaceBuilderProps) {
           {step === "preview" && (
             <>
               <Button variant="ghost" size="sm" onClick={() => setStep("input")}>
-                ← Back
+                <><ArrowLeft className="h-4 w-4 mr-1" />Back</>
               </Button>
               <Button
                 size="sm"

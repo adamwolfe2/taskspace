@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, Target, ClipboardList, FileText, Settings, Sparkles, Wand2 } from "lucide-react"
+import { X, Target, ClipboardList, FileText, Settings, Sparkles, Wand2, ArrowRight } from "lucide-react"
 import { useApp } from "@/lib/contexts/app-context"
 import { cn } from "@/lib/utils"
 import { WorkspaceBuilder } from "@/components/onboarding/workspace-builder"
@@ -11,20 +11,25 @@ import { WorkspaceBuilder } from "@/components/onboarding/workspace-builder"
 interface WelcomeCardProps {
   userName: string
   orgName?: string
+  orgId?: string
   hasRocks: boolean
   hasTasks: boolean
   hasEodReports: boolean
   isAdmin?: boolean
 }
 
-const DISMISS_KEY = "taskspace_welcome_dismissed"
+// Returns a workspace-scoped dismiss key so each workspace tracks its own dismissal state
+function getDismissKey(orgId?: string): string {
+  return orgId ? `taskspace_welcome_dismissed_${orgId}` : "taskspace_welcome_dismissed"
+}
 
-export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodReports, isAdmin }: WelcomeCardProps) {
+export function WelcomeCard({ userName, orgName, orgId, hasRocks, hasTasks, hasEodReports, isAdmin }: WelcomeCardProps) {
   const { setCurrentPage } = useApp()
   const [dismissed, setDismissed] = useState(true) // Start hidden to prevent flash
   const [showBuilder, setShowBuilder] = useState(false)
 
   useEffect(() => {
+    const DISMISS_KEY = getDismissKey(orgId)
     try {
       const dismissedAt = localStorage.getItem(DISMISS_KEY)
       if (dismissedAt) {
@@ -40,12 +45,12 @@ export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodRepor
     } catch {
       setDismissed(false)
     }
-  }, [])
+  }, [orgId])
 
   const handleDismiss = () => {
     setDismissed(true)
     try {
-      localStorage.setItem(DISMISS_KEY, new Date().toISOString())
+      localStorage.setItem(getDismissKey(orgId), new Date().toISOString())
     } catch {
       // Ignore storage errors
     }
@@ -147,7 +152,7 @@ export function WelcomeCard({ userName, orgName, hasRocks, hasTasks, hasEodRepor
                   )}
                 </div>
                 {!step.done && (
-                  <span className="text-xs text-primary font-medium flex-shrink-0">Go →</span>
+                  <span className="text-xs text-primary font-medium flex-shrink-0 flex items-center gap-0.5">Go <ArrowRight className="w-3 h-3" /></span>
                 )}
               </button>
             )

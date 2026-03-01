@@ -192,22 +192,31 @@ export const EOD_TEXT_PARSER_PROMPT = `${TEAM_CONTEXT}
 
 YOUR TASK: Parse the user's daily task dump into a structured EOD (End of Day) report.
 
-CONTEXT: The user will paste a text dump of everything they accomplished today. This may come from meeting notes, Notion, or a brain dump. The text is often organized by rock/project but may also include general tasks.
+CONTEXT: The user will paste a text dump of everything they accomplished today. This may come from meeting notes, Notion, calendar entries, or a free-form brain dump. Text is often organized by rock/project but may also include general tasks, one-liners, or bullet points. You must handle everything gracefully.
 
 PARSING RULES:
 1. IDENTIFY ROCKS: Match tasks to the provided rocks by title, keywords, or context
 2. GROUP BY ROCK: Organize tasks under their respective rocks
 3. GENERAL TASKS: Tasks not related to any rock go in a "General" category
-4. CLEAN UP TEXT: Make task descriptions clear and actionable (past tense - "completed", "set up", "reviewed")
-5. EXTRACT CHALLENGES: Look for mentions of blockers, issues, problems, delays
-6. EXTRACT PRIORITIES: Look for mentions of tomorrow's plans, next steps, priorities
+4. CLEAN UP TEXT: Make task descriptions clear and actionable (past tense — "completed", "set up", "reviewed", "drafted")
+5. EXTRACT CHALLENGES: Look for mentions of blockers, issues, problems, delays, "waiting on", "stuck on"
+6. EXTRACT PRIORITIES: Look for mentions of tomorrow's plans, next steps, "need to", "will do"
 7. DETECT ESCALATIONS: Flag anything that mentions urgency, waiting on someone, or blocked
+
+EDGE CASE HANDLING:
+- EMPTY OR VERY SHORT SUBMISSIONS (< 20 words): Return a single task "Minimal activity reported — no detail provided", set challenges to "No detail submitted", set warnings to explain the submission was sparse
+- VERY LONG SUBMISSIONS (> 500 words): Still parse everything — don't truncate. Group aggressively by rock to keep output manageable
+- UNSTRUCTURED DUMPS (no bullets, just a paragraph): Break into individual tasks by sentence or idea
+- VAGUE ENTRIES like "worked on X" or "did some stuff": Clean up to "Worked on [X] — details not specified" and add to warnings
+- DUPLICATE ITEMS: Merge near-identical items into a single task
+- NUMBERED LISTS / BULLETS: Treat each item as a separate task
 
 MATCHING TIPS:
 - Rock titles often contain key project names or keywords
-- Look for context clues: "for the landing page" -> match to a web/design rock
+- Look for context clues: "for the landing page" → match to a web/design rock
 - Technical work should match to relevant engineering/infrastructure rocks
-- If unsure, put in General but note the ambiguity
+- Client names in the dump → match to client-named rocks
+- If unsure, put in General but note the ambiguity in warnings
 
 OUTPUT FORMAT:
 Return a JSON object with:
@@ -219,7 +228,7 @@ Return a JSON object with:
       "rockTitle": "rock title or null"
     }
   ],
-  "challenges": "Summary of any challenges, blockers, or issues mentioned (or empty string if none)",
+  "challenges": "Summary of any challenges, blockers, or issues mentioned (or 'No major challenges today' if none)",
   "tomorrowPriorities": [
     {
       "text": "Priority for tomorrow",
@@ -228,18 +237,32 @@ Return a JSON object with:
     }
   ],
   "needsEscalation": true|false,
-  "escalationNote": "What needs escalation (if any)",
+  "escalationNote": "What needs escalation (if any, else empty string)",
   "metricValue": number|null,
-  "summary": "Brief 1-2 sentence summary of the day",
-  "warnings": ["Any parsing issues or ambiguities"]
+  "summary": "Brief 1-2 sentence summary of the day's output",
+  "warnings": ["Any parsing issues, ambiguities, or vague entries flagged"]
 }
 
+EXAMPLE — sparse submission:
+Input: "just meetings today"
+Output tasks: [{ "text": "Attended meetings — no specifics provided", "rockId": null, "rockTitle": null }]
+challenges: "No blockers mentioned"
+warnings: ["Submission was very short — encourage more detail tomorrow"]
+
+EXAMPLE — rock-matched submission:
+Input: "Finished the Q1 sales deck, sent proposal to Acme, reviewed three candidates for engineering role"
+Assuming rocks include "Q1 Sales Deck", "Hiring — Engineering":
+Output tasks: [
+  { "text": "Completed Q1 sales deck", "rockId": "rock_abc", "rockTitle": "Q1 Sales Deck" },
+  { "text": "Sent proposal to Acme", "rockId": null, "rockTitle": null },
+  { "text": "Reviewed three engineering candidates", "rockId": "rock_def", "rockTitle": "Hiring — Engineering" }
+]
+
 IMPORTANT:
-- Always return at least one task (even if it's just "Various administrative work")
-- If challenges aren't mentioned, set challenges to "No major challenges today" or similar
-- Be generous with rock matching - if there's a reasonable connection, use it
-- Tomorrow priorities are optional - only include if mentioned in the text
-- metricValue should only be set if the user mentions their scorecard metric number`
+- ALWAYS return at least one task (even if it's just "Various administrative work")
+- Be generous with rock matching — if there's a reasonable connection, use it
+- Tomorrow priorities are optional — only include if mentioned in the text
+- metricValue should only be set if the user explicitly mentions their scorecard metric number (e.g. "hit 12 calls today")`
 
 // Prompt for scorecard insights
 export const SCORECARD_INSIGHTS_PROMPT = `${TEAM_CONTEXT}

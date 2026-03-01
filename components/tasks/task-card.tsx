@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, User, Pencil, Trash2, AlertCircle, Clock, MessageSquare, Repeat, AlarmClock, Copy, PlayCircle } from "lucide-react"
+import { Calendar, User, Pencil, Trash2, AlertCircle, Clock, MessageSquare, Repeat, AlarmClock, Copy, PlayCircle, Check } from "lucide-react"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay, addDays } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
@@ -269,7 +269,7 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, onD
             {isCompleted && task.completedAt && (
               <p className="text-xs text-muted-foreground">
                 Completed at {format(new Date(task.completedAt), "h:mm a")}
-                {task.addedToEOD && " • Added to EOD ✓"}
+                {task.addedToEOD && <span className="inline-flex items-center gap-1"> • Added to EOD <Check className="h-3 w-3 text-emerald-500" /></span>}
               </p>
             )}
             {currentUser && onUpdateTask && (

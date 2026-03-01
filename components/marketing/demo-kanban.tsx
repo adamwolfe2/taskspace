@@ -199,7 +199,7 @@ export function DemoKanban() {
 
       <div className="mt-6 text-center">
         <p className="text-sm text-slate-600">
-          ✨ Try dragging tasks between columns to update their status
+          Try dragging tasks between columns to update their status
         </p>
       </div>
     </div>

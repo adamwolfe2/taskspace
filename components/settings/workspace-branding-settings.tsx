@@ -438,8 +438,7 @@ export function WorkspaceBrandingSettings() {
           {personality.vibrancy}
         </Badge>
         <Badge variant="outline" className="text-xs">
-          {personality.temperature === "warm" ? "🔥" : personality.temperature === "cool" ? "❄️" : "⚖️"}
-          {" "}{personality.temperature}
+          {personality.temperature}
         </Badge>
         <Badge variant="outline" className="text-xs">
           {personality.formality}

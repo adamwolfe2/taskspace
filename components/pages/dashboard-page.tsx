@@ -18,7 +18,7 @@ import { KeyboardShortcutsDialog } from "@/components/shared/keyboard-shortcuts-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { calculateUserStats } from "@/lib/utils/stats-calculator"
 import { triggerConfetti } from "@/lib/utils/confetti"
-import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { getTodayInTimezone, getCurrentQuarter } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
 import { Card, CardContent } from "@/components/ui/card"
@@ -39,15 +39,6 @@ import {
  DEFAULT_LAYOUT,
 } from "@/components/dashboard/customizable-layout"
 import type { DashboardWidget } from "@/components/dashboard/customizable-layout"
-
-// Get current quarter string (e.g., "Q1 2026")
-function getCurrentQuarter(): string {
-  const now = new Date()
-  const month = now.getMonth() // 0-11
-  const year = now.getFullYear()
-  const quarter = Math.floor(month / 3) + 1
-  return `Q${quarter} ${year}`
-}
 
 // Get a time-appropriate greeting
 function getTimeGreeting(): string {
@@ -121,7 +112,7 @@ export function DashboardPage({
  const userTasks = assignedTasks.filter((t) => t.assigneeId === effectiveUserId)
  const stats = calculateUserStats(effectiveUserId, rocks, assignedTasks, eodReports)
 
- const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
+ const orgTimezone = currentOrganization?.settings?.timezone || "America/New_York"
  const today = getTodayInTimezone(orgTimezone)
  const hasSubmittedEODToday = eodReports.some(
   (r) => r.userId === effectiveUserId && r.date === today
@@ -302,7 +293,7 @@ export function DashboardPage({
          if (completedTodayCount > 0) parts.push(`${completedTodayCount} completed today`)
          if (dueTodayCount > 0) parts.push(`${dueTodayCount} due today`)
          if ((stats.overdueTasks ?? 0) > 0) parts.push(`${stats.overdueTasks} overdue`)
-         if (stats.eodStreak > 0) parts.push(`🔥 ${stats.eodStreak}-day streak`)
+         if (stats.eodStreak > 0) parts.push(`${stats.eodStreak}-day streak`)
          return parts.length > 0 ? parts.join(" · ") : "Here's your overview for today"
         })()}
        </p>
@@ -514,6 +505,7 @@ export function DashboardPage({
    <WelcomeCard
     userName={currentUser.name || ""}
     orgName={currentOrganization?.name}
+    orgId={currentOrganization?.id}
     hasRocks={userRocks.length > 0}
     hasTasks={userTasks.length > 0}
     hasEodReports={eodReports.some((r) => r.userId === effectiveUserId)}

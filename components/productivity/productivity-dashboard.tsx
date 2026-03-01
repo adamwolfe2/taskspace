@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Activity, ChevronRight, Sparkles } from "lucide-react"
+import { Activity, ChevronRight, Sparkles, Flame, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { FocusScoreGauge, FocusScoreCompact } from "./focus-score-gauge"
 import { StreakCounter, StreakBadge } from "./streak-counter"
@@ -172,7 +172,7 @@ export function ProductivityCompact({
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-orange-500">
-            {streak}🔥
+            {streak}
           </div>
           <div className="text-[10px] text-slate-500 uppercase tracking-wide">Streak</div>
         </div>
@@ -222,7 +222,7 @@ export function ProductivityWidget({
         {/* Streak & Focus Time */}
         <div className="flex items-center gap-4 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-lg">🔥</span>
+            <Flame className="h-5 w-5 text-orange-500" />
             <div>
               <div className="text-sm font-bold text-slate-900">{streak.currentStreak} days</div>
               <div className="text-[10px] text-slate-500">Streak</div>
@@ -230,7 +230,7 @@ export function ProductivityWidget({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-lg">⏱️</span>
+            <Clock className="h-5 w-5 text-slate-500" />
             <div>
               <div className="text-sm font-bold text-slate-900">{(totalFocusMinutes / 60).toFixed(1)}h</div>
               <div className="text-[10px] text-slate-500">Today</div>

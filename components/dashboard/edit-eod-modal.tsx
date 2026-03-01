@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, X, Save, Paperclip, Calendar, AlertTriangle, Loader2 } from "lucide-react"
+import { Plus, X, Save, Paperclip, Calendar, AlertTriangle, Loader2, Smile, Meh, Frown } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, FileAttachment } from "@/lib/types"
 import { formatDate, getTodayInTimezone } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
@@ -429,9 +429,9 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
             <Label className="text-sm font-semibold text-slate-700">How were you feeling? <span className="text-xs font-normal text-slate-400">(optional)</span></Label>
             <div className="flex gap-3">
               {([
-                { value: "positive" as const, emoji: "😊", label: "Positive" },
-                { value: "neutral" as const, emoji: "😐", label: "Neutral" },
-                { value: "negative" as const, emoji: "😔", label: "Negative" },
+                { value: "positive" as const, Icon: Smile, label: "Positive" },
+                { value: "neutral" as const, Icon: Meh, label: "Neutral" },
+                { value: "negative" as const, Icon: Frown, label: "Negative" },
               ]).map((opt) => (
                 <button
                   key={opt.value}
@@ -443,7 +443,7 @@ export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: Edit
                       : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
                   }`}
                 >
-                  <span className="text-lg">{opt.emoji}</span>
+                  <opt.Icon className="h-4 w-4" />
                   {opt.label}
                 </button>
               ))}

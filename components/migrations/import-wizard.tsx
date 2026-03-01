@@ -8,6 +8,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   ArrowPathIcon,
+  ArrowLeftIcon,
 } from "@heroicons/react/24/outline"
 import type { ImportProvider, ImportJob } from "@/lib/migrations/types"
 import { ImportSummary } from "./import-summary"
@@ -326,7 +327,7 @@ export function ImportWizard() {
               onClick={() => setStep("source-selection")}
               className="text-sm text-slate-500 hover:text-slate-800 mb-4 underline"
             >
-              ← Back to source selection
+              <><ArrowLeftIcon className="inline h-4 w-4 mr-1" />Back to source selection</>
             </button>
             <h2 className="text-xl font-semibold text-slate-900 mb-2">
               Upload {PROVIDERS.find((p) => p.id === selectedProvider)?.name} File

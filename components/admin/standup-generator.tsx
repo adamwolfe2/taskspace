@@ -126,7 +126,7 @@ export function StandupGenerator({
           content += `**Today:**\n${report.today.map((t) => `- ${t}`).join("\n")}\n\n`
         }
         if (report.blockers.length > 0) {
-          content += `**Blockers:**\n${report.blockers.map((b) => `- ⚠️ ${b}`).join("\n")}\n\n`
+          content += `**Blockers:**\n${report.blockers.map((b) => `- ${b}`).join("\n")}\n\n`
         }
       })
     } else {

@@ -9,7 +9,7 @@ import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useApp } from "@/lib/contexts/app-context"
 
 import { useToast } from "@/hooks/use-toast"
-import { BookOpen, ChevronDown, ChevronRight, Loader2, Plus, X, Printer, Download } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronRight, Loader2, Plus, X, Printer, Download, Check } from "lucide-react"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { DEMO_VTO, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
@@ -576,7 +576,7 @@ export function VTOPage() {
             <div className="flex flex-wrap gap-1">
               {sections.map((s) => (
                 <span key={s.label} className={`text-[10px] px-1.5 py-0.5 rounded border ${s.filled ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-slate-50 border-slate-200 text-slate-400"}`}>
-                  {s.filled ? "✓ " : ""}{s.label}
+                  {s.filled && <Check className="inline h-3 w-3 mr-0.5" />}{s.label}
                 </span>
               ))}
             </div>

@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react"
 import { ExportButton } from "@/components/shared/export-button"
 import type { TeamMember, EODReport, Rock } from "@/lib/types"
+import { CONFIG } from "@/lib/config"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserInitials } from "@/components/shared/user-initials"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Search, AlertCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2, FileText, Calendar, Copy, Check } from "lucide-react"
+import { Search, AlertCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2, FileText, Calendar, Copy, Check, Smile, Meh, Frown } from "lucide-react"
 import { subDays, startOfDay, parseISO } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -15,9 +16,9 @@ import { EditEODModal } from "@/components/dashboard/edit-eod-modal"
 import { NoWorkspaceAlert } from "@/components/shared/no-workspace-alert"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
-// Grace period for editing reports (24 hours in milliseconds)
-const EDIT_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000
-const REPORTS_PER_PAGE = 25
+// Grace period for editing reports — sourced from config
+const EDIT_GRACE_PERIOD_MS = CONFIG.ui.eodEditGracePeriodHours * 60 * 60 * 1000
+const REPORTS_PER_PAGE = CONFIG.ui.reportsPerPage
 
 interface HistoryPageProps {
   currentUser: TeamMember
@@ -36,6 +37,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "30days">("all")
   const [moodFilter, setMoodFilter] = useState<"all" | "positive" | "neutral" | "negative">("all")
   const [currentPage, setCurrentPage] = useState(1)
+  const [isPageLoading, setIsPageLoading] = useState(false)
 
   // Apply initial filter from navigation (e.g., manager dashboard drill-down)
   useEffect(() => {
@@ -44,6 +46,13 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
       onFilterConsumed?.()
     }
   }, [initialUserFilter, onFilterConsumed])
+
+  const handlePageChange = (newPage: number) => {
+    setIsPageLoading(true)
+    setCurrentPage(newPage)
+    // Reset loading after a brief delay for smooth UX
+    requestAnimationFrame(() => setIsPageLoading(false))
+  }
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -126,7 +135,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
       const user = teamMembers.find((m) => m.userId === report.userId)
       const searchLower = searchQuery.toLowerCase()
       return (
-        user?.name.toLowerCase().includes(searchLower) ||
+        (user?.name?.toLowerCase().includes(searchLower) ?? false) ||
         report.tasks?.some((t) => t.text?.toLowerCase().includes(searchLower)) ||
         report.challenges?.toLowerCase().includes(searchLower) ||
         report.tomorrowPriorities?.some((p) => p.text?.toLowerCase().includes(searchLower))
@@ -180,10 +189,10 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-slate-400 font-medium">Mood:</span>
             {([
-              { value: "all", label: "All", emoji: null },
-              { value: "positive", label: "Positive", emoji: "😊" },
-              { value: "neutral", label: "Neutral", emoji: "😐" },
-              { value: "negative", label: "Negative", emoji: "😔" },
+              { value: "all", label: "All", icon: null },
+              { value: "positive", label: "Positive", icon: Smile },
+              { value: "neutral", label: "Neutral", icon: Meh },
+              { value: "negative", label: "Negative", icon: Frown },
             ] as const).map((opt) => (
               <Button
                 key={opt.value}
@@ -192,7 +201,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
                 className="h-7 text-xs gap-1"
                 onClick={() => setMoodFilter(opt.value)}
               >
-                {opt.emoji && <span>{opt.emoji}</span>}
+                {opt.icon && <opt.icon className="h-3.5 w-3.5" />}
                 {opt.label}
               </Button>
             ))}
@@ -307,8 +316,8 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
                         <p className="text-sm text-slate-500 flex items-center gap-1.5">
                           Submitted by {user?.name} at {new Date(report.submittedAt).toLocaleTimeString()}
                           {report.mood && (
-                            <span title={`Mood: ${report.mood}`}>
-                              {report.mood === "positive" ? "😊" : report.mood === "neutral" ? "😐" : "😔"}
+                            <span title={`Mood: ${report.mood}`} className="inline-flex items-center">
+                              {report.mood === "positive" ? <Smile className="h-3.5 w-3.5 text-emerald-500" /> : report.mood === "neutral" ? <Meh className="h-3.5 w-3.5 text-amber-500" /> : <Frown className="h-3.5 w-3.5 text-red-500" />}
                             </span>
                           )}
                         </p>
@@ -428,6 +437,18 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
                               </li>
                             ))}
                           </ul>
+                          {prioritiesByRock.general && prioritiesByRock.general.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                              <p className="text-sm font-medium text-slate-700">Tomorrow's Priorities:</p>
+                              <ul className="list-disc list-inside space-y-1 ml-2">
+                                {prioritiesByRock.general.map((priority) => (
+                                  <li key={priority.id} className="text-sm text-slate-600">
+                                    {priority.text}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -466,8 +487,8 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1 || isPageLoading}
               className="border-slate-200"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -479,8 +500,8 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages || isPageLoading}
               className="border-slate-200"
             >
               Next

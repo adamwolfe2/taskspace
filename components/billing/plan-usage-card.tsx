@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline"
+import { ArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, ArrowRightIcon } from "@heroicons/react/24/outline"
 import { PLANS, formatPrice, type PlanTier } from "@/lib/billing/plans"
 import { getUsagePercentage, isApproachingLimit } from "@/lib/billing/feature-gates"
 
@@ -124,7 +124,7 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
 
       <div className="mt-6 border-t border-slate-200 pt-4">
         <Link href="/pricing" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-          Compare all plans →
+          <span className="inline-flex items-center gap-1">Compare all plans <ArrowRightIcon className="inline h-3.5 w-3.5" /></span>
         </Link>
       </div>
     </div>

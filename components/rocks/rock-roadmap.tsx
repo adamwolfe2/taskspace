@@ -27,6 +27,7 @@ import {
  ChevronRight,
  Users,
  CheckCircle2,
+ Check,
  Clock,
  AlertCircle,
  Link2
@@ -401,9 +402,11 @@ function RoadmapRow({
  className="w-6 h-6 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
  style={{ backgroundColor: statusConfig.style.color }}
  >
- <span className="text-white text-xs font-bold">
- {rock.progress >= 100 ? "✓" : `${Math.round(rock.progress / 10)}`}
- </span>
+ {rock.progress >= 100 ? (
+ <Check className="w-3 h-3 text-white" />
+) : (
+ <span className="text-white text-xs font-bold">{Math.round(rock.progress / 10)}</span>
+)}
  </div>
  </div>
  </TooltipTrigger>

@@ -13,6 +13,7 @@ import { RoleBadge } from "@/components/shared/role-badge"
 import { formatDate } from "@/lib/utils/date-utils"
 import { getErrorMessage } from "@/lib/utils"
 import { Pencil, UserPlus, Settings, Mail, Trash2, Loader2, Clock, Copy, Users, CheckCircle2, XCircle, AlertCircle, Send, Target, KeyRound, ArrowRightLeft, RefreshCw } from "lucide-react"
+import { EmptyState } from "@/components/shared/empty-state"
 import {
   Dialog,
   DialogContent,
@@ -925,9 +926,12 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
               {/* Desktop: Table view */}
               <div className="hidden sm:block overflow-x-auto">
                 {filteredMembers.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <p className="text-sm text-muted-foreground">No team members yet. Invite your first team member to get started.</p>
-                  </div>
+                  <EmptyState
+                    icon={Users}
+                    title="No team members yet"
+                    description="Invite team members to get started with accountability tracking."
+                    size="md"
+                  />
                 ) : (
                 <Table>
                   <TableHeader>
@@ -1038,9 +1042,12 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
               {/* Mobile: Card stack view */}
               <div className="sm:hidden space-y-3">
                 {filteredMembers.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <p className="text-sm text-muted-foreground">No team members yet. Invite your first team member to get started.</p>
-                  </div>
+                  <EmptyState
+                    icon={Users}
+                    title="No team members yet"
+                    description="Invite team members to get started with accountability tracking."
+                    size="md"
+                  />
                 ) : (
                   filteredMembers.map((member) => (
                     <div

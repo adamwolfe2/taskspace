@@ -6,7 +6,7 @@ import { useApp } from "@/lib/contexts/app-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, AlertCircle, ArrowRight, ShieldCheck, ArrowLeft } from "lucide-react"
+import { Loader2, AlertCircle, ArrowRight, ShieldCheck, ArrowLeft, Check, TrendingDown } from "lucide-react"
 import { getErrorMessage } from "@/lib/utils"
 
 // ─── DEMO DATA ───────────────────────────────────────────────────────────────
@@ -127,7 +127,7 @@ function EODDemoWidget({ runKey }: { runKey: number }) {
                 <span className="text-[9px] ml-2 flex-shrink-0" style={{
                   color: m.kind === "submitted" ? "#16a34a" : m.kind === "typing" ? "#94a3b8" : "#cbd5e1"
                 }}>
-                  {m.kind === "submitted" ? `${m.tasks} tasks ✓` : m.kind === "typing" ? "typing…" : "pending"}
+                  {m.kind === "submitted" ? <><span>{m.tasks} tasks</span><Check className="inline h-2.5 w-2.5 ml-0.5" /></> : m.kind === "typing" ? "typing…" : "pending"}
                 </span>
               </div>
               <div className="text-[9px] text-slate-400">{m.role}</div>
@@ -343,7 +343,7 @@ function ScorecardDemoWidget({ runKey }: { runKey: number }) {
             <span className="text-[10px] font-semibold text-slate-900">{row.value}</span>
             <span className="text-[10px] text-slate-400">{row.target}</span>
             <span className="text-[9px] font-medium" style={{ color: row.good ? "#16a34a" : "#e11d48" }}>
-              {row.good ? "✓ good" : "↓ below"}
+              {row.good ? <><Check className="inline h-2.5 w-2.5 mr-0.5" />good</> : <><TrendingDown className="inline h-2.5 w-2.5 mr-0.5" />below</>}
             </span>
           </div>
         ))}

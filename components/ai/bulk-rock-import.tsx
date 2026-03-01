@@ -26,6 +26,7 @@ import {
   Trash2,
   ChevronUp,
   ChevronDown,
+  ArrowRight,
 } from "lucide-react"
 import type { TeamMember } from "@/lib/types"
 import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
@@ -495,7 +496,7 @@ Rock 2: Launch New Product
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-blue-900 truncate">{task.title}</p>
                     {task.rockTitle && (
-                      <p className="text-xs text-blue-600 mt-0.5">→ {task.rockTitle}</p>
+                      <p className="text-xs text-blue-600 mt-0.5 flex items-center gap-1"><ArrowRight className="h-3 w-3" />{task.rockTitle}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -540,7 +541,7 @@ Rock 2: Launch New Product
                 >
                   <div>
                     <span className="font-medium text-slate-800">{metric.assigneeName}</span>
-                    <span className="text-slate-600 mx-2">→</span>
+                    <ArrowRight className="h-4 w-4 text-slate-600 mx-1" />
                     <span className="text-slate-700">{metric.metricName}</span>
                   </div>
                   <Badge variant="outline" className="bg-white text-slate-600 border-slate-300">

@@ -12,7 +12,7 @@ import { ZoomControls } from "@/components/org-chart/zoom-controls"
 import { StatusIndicator } from "@/components/org-chart/status-indicator"
 import { buildOrgTree } from "@/lib/org-chart/utils"
 import type { OrgChartEmployee } from "@/lib/org-chart/types"
-import { Loader2, RefreshCw, Users, ArrowRightLeft, Upload } from "lucide-react"
+import { Loader2, RefreshCw, Users, ArrowRightLeft, Upload, ArrowLeft } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/lib/contexts/app-context"
@@ -118,7 +118,7 @@ export function OrgChartPage() {
       <div className="p-4 md:p-6">
         <div className="mb-4">
           <Button variant="outline" onClick={() => setShowUploadWizard(false)}>
-            ← Back to Org Chart
+            <><ArrowLeft className="h-4 w-4 mr-1" />Back to Org Chart</>
           </Button>
         </div>
         <OrgChartUploadWizard

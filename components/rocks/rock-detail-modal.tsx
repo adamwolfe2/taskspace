@@ -107,7 +107,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, onDele
       if (wasCompleted) {
         triggerConfetti("rock_complete")
         toast({
-          title: "🎉 Rock Completed!",
+          title: "Rock Completed!",
           description: `"${title}" has been marked complete. Outstanding work!`,
         })
       } else {
@@ -380,7 +380,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, onDele
     <AlertDialog open={showCompletePrompt} onOpenChange={setShowCompletePrompt}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>🎉 All milestones complete!</AlertDialogTitle>
+          <AlertDialogTitle>All Milestones Complete!</AlertDialogTitle>
           <AlertDialogDescription>
             You&apos;ve checked off every milestone for &ldquo;{rock.title}&rdquo;. Would you like to mark this rock as Completed?
           </AlertDialogDescription>
@@ -392,7 +392,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, onDele
               try {
                 await onUpdateRock(rock.id, { status: "completed", progress: 100 })
                 triggerConfetti("rock_complete")
-                toast({ title: "🎉 Rock Completed!", description: `"${rock.title}" is done. Outstanding work!` })
+                toast({ title: "Rock Completed!", description: `"${rock.title}" is done. Outstanding work!` })
               } catch {
                 toast({ title: "Update failed", variant: "destructive" })
               }

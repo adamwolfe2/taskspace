@@ -2,7 +2,7 @@
 
 import { FeatureGate } from "@/components/shared/feature-gate"
 import { ExportButton } from "@/components/shared/export-button"
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import type { AssignedTask, Rock, TeamMember, Project } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -63,6 +63,7 @@ export function TasksPage({
   const [viewingUserName, setViewingUserName] = useState<string | null>(filterUserName || null)
   const [aiPrioritizing, setAiPrioritizing] = useState(false)
   const [aiPrioritized, setAiPrioritized] = useState<Array<{ taskId: string; rank: number; reasoning: string }> | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
   const [isBulkProcessing, setIsBulkProcessing] = useState(false)
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
@@ -77,6 +78,8 @@ export function TasksPage({
 
   const handleAiPrioritize = async () => {
     if (!currentWorkspaceId) return
+    abortRef.current?.abort()
+    abortRef.current = new AbortController()
     setAiPrioritizing(true)
     try {
       const pendingTasks = userTasks.filter((t) => t.status !== "completed")
@@ -84,6 +87,7 @@ export function TasksPage({
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         credentials: "include",
+        signal: abortRef.current.signal,
         body: JSON.stringify({
           workspaceId: currentWorkspaceId,
           tasks: pendingTasks.map((t) => ({
@@ -105,7 +109,8 @@ export function TasksPage({
       } else {
         toast({ title: "Error", description: result.error, variant: "destructive" })
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return
       toast({ title: "Error", description: "Failed to prioritize tasks", variant: "destructive" })
     } finally {
       setAiPrioritizing(false)
@@ -994,13 +999,14 @@ export function TasksPage({
                   onClick={handleClearSelection}
                   className="gap-1 sm:gap-2 h-9 px-2 sm:px-3"
                   disabled={isBulkProcessing}
+                  aria-label="Clear selection"
                 >
                   <X className="h-4 w-4" />
                   <span className="hidden sm:inline">Clear</span>
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-1 sm:gap-2 h-9 px-2 sm:px-3" disabled={isBulkProcessing}>
+                    <Button variant="outline" size="sm" className="gap-1 sm:gap-2 h-9 px-2 sm:px-3" disabled={isBulkProcessing} aria-label="Set priority for selected tasks">
                       <Flag className="h-4 w-4" />
                       <span className="hidden sm:inline">Priority</span>
                     </Button>
@@ -1017,6 +1023,7 @@ export function TasksPage({
                   onClick={handleBulkSetInProgress}
                   className="gap-1 sm:gap-2 h-9 px-2 sm:px-3 border-blue-200 text-blue-600 hover:bg-blue-50"
                   disabled={isBulkProcessing}
+                  aria-label="Mark selected tasks as in progress"
                 >
                   {isBulkProcessing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -1027,7 +1034,7 @@ export function TasksPage({
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-1 sm:gap-2 h-9 px-2 sm:px-3" disabled={isBulkProcessing}>
+                    <Button variant="outline" size="sm" className="gap-1 sm:gap-2 h-9 px-2 sm:px-3" disabled={isBulkProcessing} aria-label="Set due date for selected tasks">
                       <Calendar className="h-4 w-4" />
                       <span className="hidden sm:inline">Due Date</span>
                     </Button>
@@ -1048,6 +1055,7 @@ export function TasksPage({
                   onClick={handleBulkComplete}
                   className="gap-1 sm:gap-2 h-9 px-2 sm:px-3"
                   disabled={isBulkProcessing}
+                  aria-label="Mark selected tasks as complete"
                 >
                   {isBulkProcessing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -1062,6 +1070,7 @@ export function TasksPage({
                   onClick={handleBulkDelete}
                   className="gap-1 sm:gap-2 h-9 px-2 sm:px-3"
                   disabled={isBulkProcessing}
+                  aria-label="Delete selected tasks"
                 >
                   {isBulkProcessing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

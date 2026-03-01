@@ -6,7 +6,7 @@ import { useState, useMemo, useEffect } from "react"
 import type { TeamMember, Rock } from "@/lib/types"
 import { ProgressBar } from "@/components/shared/progress-bar"
 import { UserInitials } from "@/components/shared/user-initials"
-import { formatDate, getDaysUntil } from "@/lib/utils/date-utils"
+import { formatDate, getDaysUntil, getCurrentQuarter } from "@/lib/utils/date-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -55,11 +55,26 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
       onFilterConsumed?.()
     }
   }, [initialOwnerFilter, onFilterConsumed])
-  const [quarterFilter, setQuarterFilter] = useState<string>(() => {
-    const now = new Date()
-    const quarter = Math.floor(now.getMonth() / 3) + 1
-    return `Q${quarter} ${now.getFullYear()}`
-  })
+  const [quarterFilter, setQuarterFilter] = useState<string>(getCurrentQuarter)
+
+  // Persist filters to sessionStorage to survive in-page navigations
+  useEffect(() => {
+    const saved = sessionStorage.getItem("rocks-filters")
+    if (saved) {
+      try {
+        const { q, s, o } = JSON.parse(saved)
+        if (q) setQuarterFilter(q)
+        if (s) setStatusFilter(s)
+        if (o) setOwnerFilter(o)
+      } catch { /* ignore sessionStorage parse errors */ }
+    }
+  }, [])
+
+  useEffect(() => {
+    sessionStorage.setItem("rocks-filters", JSON.stringify({
+      q: quarterFilter, s: statusFilter, o: ownerFilter
+    }))
+  }, [quarterFilter, statusFilter, ownerFilter])
 
   const [sortBy, setSortBy] = useState<string>("status")
   const [checkinRock, setCheckinRock] = useState<Rock | null>(null)
@@ -189,8 +204,8 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
         }
         case "title": return a.title.localeCompare(b.title)
         case "status": {
-          const order = { blocked: 0, "at-risk": 1, "on-track": 2, completed: 3 }
-          return (order[a.status as keyof typeof order] ?? 4) - (order[b.status as keyof typeof order] ?? 4)
+          const order: Record<string, number> = { blocked: 0, "at-risk": 1, "on-track": 2, completed: 3 }
+          return (order[a.status] ?? 4) - (order[b.status] ?? 4)
         }
         default: return 0
       }
@@ -460,7 +475,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
           const completed = displayRocks.filter((r) => r.status === "completed").length
           const avgProgress = Math.round(displayRocks.reduce((sum, r) => sum + r.progress, 0) / displayRocks.length)
           return (
-            <div className="px-3 sm:px-5 py-3 border-b border-slate-100 grid grid-cols-5 gap-3">
+            <div className="px-3 sm:px-5 py-3 border-b border-slate-100 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {[
                 { label: "On Track", value: onTrack, color: "text-emerald-600", bg: "bg-emerald-50" },
                 { label: "At Risk", value: atRisk, color: "text-amber-600", bg: "bg-amber-50" },
@@ -787,18 +802,40 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                           </TableCell>
                           {rock.status !== "completed" && (
                             <TableCell onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-xs text-slate-500 hover:text-slate-900"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setCheckinRock(rock)
-                                }}
-                              >
-                                <Activity className="h-3 w-3 mr-1" />
-                                Check In
-                              </Button>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs text-slate-500 hover:text-slate-900"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setCheckinRock(rock)
+                                  }}
+                                >
+                                  <Activity className="h-3 w-3 mr-1" />
+                                  Check In
+                                </Button>
+                                {rock.progress >= 100 && updateRock && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setCompletingRockId(rock.id)
+                                      updateRock(rock.id, { status: "completed" })
+                                        .then(() => toast({ title: "Rock completed!", description: rock.title }))
+                                        .catch(() => toast({ title: "Failed to complete rock", variant: "destructive" }))
+                                        .finally(() => setCompletingRockId(null))
+                                    }}
+                                    disabled={completingRockId === rock.id}
+                                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1 disabled:opacity-50"
+                                    title="Mark rock as completed"
+                                  >
+                                    {completingRockId === rock.id
+                                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      : <CheckCircle2 className="h-3.5 w-3.5" />}
+                                    Mark Complete
+                                  </button>
+                                )}
+                              </div>
                             </TableCell>
                           )}
                           {rock.status === "completed" && <TableCell />}

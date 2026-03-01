@@ -205,6 +205,9 @@ export async function sendDailySummaryEmail(
   <title>${subject}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+    Daily team accountability digest for ${formatDate(digest.digestDate)}
+  </div>
   <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; border-radius: 8px 8px 0 0;">
     <h1 style="color: white; margin: 0; font-size: 24px;">📊 Daily Team Summary</h1>
     <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0;">${formatDate(digest.digestDate)}</p>

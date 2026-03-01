@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { UserInitials } from "@/components/shared/user-initials"
 import { getRelativeDate, getTodayInTimezone, getDaysUntil } from "@/lib/utils/date-utils"
 import { calculateUserStats, calculateAccountabilityScore, isRockBehindSchedule } from "@/lib/utils/stats-calculator"
-import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Copy, Check, FileText, Bell, UserCheck, Clock } from "lucide-react"
+import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Copy, Check, FileText, Bell, UserCheck, Clock, Smile, Meh, Frown, CheckCircle2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
@@ -79,7 +79,7 @@ export function AdminPage({
     const next = new Set(acknowledgedEscalations)
     next.add(reportId)
     setAcknowledgedEscalations(next)
-    try { localStorage.setItem("acknowledged_escalations", JSON.stringify(Array.from(next))) } catch {}
+    try { localStorage.setItem("acknowledged_escalations", JSON.stringify(Array.from(next))) } catch { /* ignore localStorage errors */ }
     toast({ title: "Escalation acknowledged", description: "Marked as reviewed" })
   }
 
@@ -294,20 +294,31 @@ export function AdminPage({
     const rocksOnTrackCount = rocks.filter((r) => r.status === "on-track").length
     const rocksCompleted = rocks.filter((r) => r.status === "completed").length
 
-    const memberLines = [...teamStats]
-      .sort((a, b) => b.accountability.score - a.accountability.score)
+    const sortedStats = [...teamStats].sort((a, b) => b.accountability.score - a.accountability.score)
+
+    const memberLines = sortedStats
       .map(({ member, accountability, stats }) =>
         `  ${member.name} — Score: ${accountability.score} (${accountability.grade}) | Rocks: ${stats.activeRocks} active | EOD: ${accountability.breakdown.eodConsistency}% (4wk)`
       )
       .join("\n")
 
+    const topPerformerNames = sortedStats
+      .filter((t) => t.accountability.score >= 80)
+      .slice(0, 3)
+      .map((t) => t.member.name)
+    const needsAttentionNames = sortedStats
+      .filter((t) => t.accountability.score < 60)
+      .map((t) => `${t.member.name} (${t.accountability.score})`)
+
     const summary = [
-      `📊 Team Accountability Summary — ${today}`,
+      `Team Accountability Summary — ${today}`,
       "",
-      `Team avg score: ${avgScore}/100`,
+      `Team avg score: ${avgScore}/100 (${teamGrade})`,
       `EOD reporting today: ${todayReports.length}/${activeMembers.length} (${reportingRate}%)`,
       `Rocks: ${rocksOnTrackCount} on track, ${totalRocksAtRisk} at risk, ${totalRocksBlocked} blocked, ${rocksCompleted} completed`,
-      rocksBehinSchedule > 0 ? `⚠️ Behind schedule: ${rocksBehinSchedule} rocks behind expected pace` : "",
+      rocksBehinSchedule > 0 ? `Behind schedule: ${rocksBehinSchedule} rocks behind expected pace` : "",
+      topPerformerNames.length > 0 ? `Top performers: ${topPerformerNames.join(", ")}` : "",
+      needsAttentionNames.length > 0 ? `Needs attention: ${needsAttentionNames.join(", ")}` : "",
       "",
       "Individual Scores:",
       memberLines,
@@ -356,7 +367,7 @@ export function AdminPage({
     } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Failed to assign task",
+        description: "Failed to assign task",
         variant: "destructive",
       })
     }
@@ -654,12 +665,12 @@ export function AdminPage({
           <CardContent>
             <div className="grid grid-cols-3 gap-3">
               {([
-                { key: "positive", emoji: "😊", label: "Positive", count: moodCounts.positive, bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
-                { key: "neutral", emoji: "😐", label: "Neutral", count: moodCounts.neutral, bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
-                { key: "negative", emoji: "😔", label: "Negative", count: moodCounts.negative, bg: "bg-red-50", border: "border-red-200", text: "text-red-700" },
+                { key: "positive", Icon: Smile, label: "Positive", count: moodCounts.positive, bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
+                { key: "neutral", Icon: Meh, label: "Neutral", count: moodCounts.neutral, bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
+                { key: "negative", Icon: Frown, label: "Negative", count: moodCounts.negative, bg: "bg-red-50", border: "border-red-200", text: "text-red-700" },
               ] as const).map((m) => (
                 <div key={m.key} className={`flex flex-col items-center gap-1 p-3 rounded-lg border ${m.bg} ${m.border}`}>
-                  <span className="text-2xl">{m.emoji}</span>
+                  <m.Icon className="h-6 w-6" />
                   <span className={`text-xl font-bold ${m.text}`}>{moodPct(m.count)}%</span>
                   <span className="text-xs text-slate-500">{m.label} ({m.count})</span>
                 </div>
@@ -747,7 +758,8 @@ export function AdminPage({
         <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50/40 to-white">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              🎉 Recent Rock Completions
+              <Award className="h-5 w-5 text-emerald-500" />
+              Recent Rock Completions
             </CardTitle>
             <CardDescription>Rocks completed this quarter — celebrate team wins</CardDescription>
           </CardHeader>
@@ -761,11 +773,11 @@ export function AdminPage({
                 return (
                   <div key={rock.id} className="flex items-center justify-between gap-3 p-2.5 bg-white rounded-lg border border-emerald-100">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="text-emerald-600 flex-shrink-0">✓</span>
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
                       <p className="text-sm font-medium text-slate-800 truncate">{rock.title}</p>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0 text-xs text-slate-500">
-                      {owner && <span className="hidden sm:inline">{owner.name.split(" ")[0]}</span>}
+                      {owner && <span className="hidden sm:inline">{(owner.name || "").split(" ")[0]}</span>}
                       <span>{daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : `${daysAgo}d ago`}</span>
                     </div>
                   </div>
@@ -839,7 +851,7 @@ export function AdminPage({
                         <p className="text-sm font-medium text-slate-800 truncate">{rock.title}</p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0 text-xs text-slate-500">
-                        {owner && <span className="hidden sm:inline">{owner.name.split(" ")[0]}</span>}
+                        {owner && <span className="hidden sm:inline">{(owner.name || "").split(" ")[0]}</span>}
                         <span className="font-semibold text-slate-700">{rock.progress}%</span>
                         <span className={daysLeft < 14 ? "text-red-600 font-medium" : ""}>
                           {daysLeft > 0 ? `${daysLeft}d left` : daysLeft === 0 ? "Due today" : `${Math.abs(daysLeft)}d overdue`}

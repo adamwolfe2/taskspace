@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2, Paperclip, Loader2 } from "lucide-react"
+import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2, Paperclip, Loader2, Smile, Meh, Frown } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask, FileAttachment } from "@/lib/types"
 import { FileTray } from "@/components/ui/file-tray"
 import type { TeamMemberMetric } from "@/lib/metrics"
@@ -804,10 +804,10 @@ export function EODSubmissionCard({
           <Label className="text-sm font-semibold text-slate-700">How are you feeling? <span className="text-xs font-normal text-slate-400">(optional)</span></Label>
           <div className="flex gap-3">
             {([
-              { value: "positive", emoji: "😊", label: "Positive" },
-              { value: "neutral", emoji: "😐", label: "Neutral" },
-              { value: "negative", emoji: "😔", label: "Negative" },
-            ] as const).map((opt) => (
+              { value: "positive" as const, Icon: Smile, label: "Positive" },
+              { value: "neutral" as const, Icon: Meh, label: "Neutral" },
+              { value: "negative" as const, Icon: Frown, label: "Negative" },
+            ]).map((opt) => (
               <button
                 key={opt.value}
                 type="button"
@@ -818,7 +818,7 @@ export function EODSubmissionCard({
                     : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
                 }`}
               >
-                <span className="text-xl">{opt.emoji}</span>
+                <opt.Icon className="h-5 w-5" />
                 {opt.label}
               </button>
             ))}

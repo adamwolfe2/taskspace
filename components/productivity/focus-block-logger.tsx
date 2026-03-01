@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Clock, Star, AlertCircle } from "lucide-react"
+import { Plus, Clock, Star, AlertCircle, Target, Users, ClipboardList, Handshake, BookOpen, BarChart2, Timer, type LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,14 +31,23 @@ interface FocusBlockLoggerProps {
   className?: string
 }
 
-const categories: { value: FocusBlockCategory; label: string; icon: string }[] = [
-  { value: "deep_work", label: "Deep Work", icon: "🎯" },
-  { value: "meetings", label: "Meetings", icon: "👥" },
-  { value: "admin", label: "Admin", icon: "📋" },
-  { value: "collaboration", label: "Collaboration", icon: "🤝" },
-  { value: "learning", label: "Learning", icon: "📚" },
-  { value: "planning", label: "Planning", icon: "📊" },
+const categories: { value: FocusBlockCategory; label: string; Icon: LucideIcon }[] = [
+  { value: "deep_work", label: "Deep Work", Icon: Target },
+  { value: "meetings", label: "Meetings", Icon: Users },
+  { value: "admin", label: "Admin", Icon: ClipboardList },
+  { value: "collaboration", label: "Collaboration", Icon: Handshake },
+  { value: "learning", label: "Learning", Icon: BookOpen },
+  { value: "planning", label: "Planning", Icon: BarChart2 },
 ]
+
+const categoryIconMap: Record<string, LucideIcon> = {
+  deep_work: Target,
+  meetings: Users,
+  admin: ClipboardList,
+  collaboration: Handshake,
+  learning: BookOpen,
+  planning: BarChart2,
+}
 
 const qualityRatings = [
   { value: 1, label: "Poor", description: "Many distractions" },
@@ -206,7 +215,7 @@ export function FocusBlockLogger({
                       {categories.map((cat) => (
                         <SelectItem key={cat.value} value={cat.value}>
                           <span className="flex items-center gap-2">
-                            <span>{cat.icon}</span>
+                            <cat.Icon className="h-4 w-4" />
                             <span>{cat.label}</span>
                           </span>
                         </SelectItem>
@@ -337,6 +346,7 @@ export function FocusBlockLogger({
 
 function FocusBlockItem({ block }: { block: FocusBlock }) {
   const categoryInfo = getCategoryInfo(block.category)
+  const CategoryIcon = categoryIconMap[block.category] ?? Timer
   const startTime = new Date(block.startTime).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
@@ -352,8 +362,8 @@ function FocusBlockItem({ block }: { block: FocusBlock }) {
 
   return (
     <div className="flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors">
-      <div className="flex items-center justify-center w-8 h-8 rounded-lg text-sm bg-slate-100">
-        {categoryInfo.icon}
+      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100">
+        <CategoryIcon className="h-4 w-4 text-slate-600" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
