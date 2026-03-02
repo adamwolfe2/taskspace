@@ -1424,10 +1424,18 @@ export const db = {
       const sanitizedTitle = updates.title ? sanitizeText(updates.title) : null
       const sanitizedDescription = updates.description ? sanitizeText(updates.description) : null
       const expectTs = expectedUpdatedAt || null
+      // Assignee fields need CASE-based updates because assignee_id can legitimately be NULL (draft members)
+      // Use assigneeName as the "is reassigning" flag — it's always present when reassigning
+      const newAssigneeName = updates.assigneeName || null
+      const newAssigneeId = 'assigneeId' in updates ? (updates.assigneeId || null) : undefined
+      const newAssigneeEmail = 'assigneeEmail' in updates ? (updates.assigneeEmail || null) : undefined
       const { rows } = await sql`
         UPDATE assigned_tasks SET
           title = COALESCE(${sanitizedTitle}, title),
           description = COALESCE(${sanitizedDescription}, description),
+          assignee_id = CASE WHEN ${newAssigneeName}::text IS NOT NULL THEN ${newAssigneeId !== undefined ? newAssigneeId : null} ELSE assignee_id END,
+          assignee_email = CASE WHEN ${newAssigneeName}::text IS NOT NULL THEN ${newAssigneeEmail !== undefined ? newAssigneeEmail : null} ELSE assignee_email END,
+          assignee_name = COALESCE(${newAssigneeName}, assignee_name),
           priority = COALESCE(${updates.priority || null}, priority),
           due_date = COALESCE(${updates.dueDate || null}, due_date),
           status = COALESCE(${updates.status || null}, status),

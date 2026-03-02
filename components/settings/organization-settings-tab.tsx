@@ -43,6 +43,9 @@ export function OrganizationSettingsTab() {
   const [eodEmailDays, setEodEmailDays] = useState<number[]>(
     currentOrganization?.settings.eodEmailDays ?? [1, 2, 3, 4, 5]
   )
+  const [eodFrequency, setEodFrequency] = useState<"daily" | "weekly" | "bi-weekly" | "monthly">(
+    currentOrganization?.settings.eodFrequency ?? "daily"
+  )
 
   const toggleDay = (day: number) => {
     setEodEmailDays(prev =>
@@ -129,6 +132,7 @@ export function OrganizationSettingsTab() {
           weekStartDay: currentOrganization?.settings.weekStartDay ?? 1,
           eodReminderTime,
           eodEmailDays,
+          eodFrequency,
           enableEmailNotifications: currentOrganization?.settings.enableEmailNotifications ?? true,
           enableSlackIntegration: currentOrganization?.settings.enableSlackIntegration ?? false,
           slackWebhookUrl: currentOrganization?.settings.slackWebhookUrl,
@@ -273,6 +277,24 @@ export function OrganizationSettingsTab() {
             />
             <p className="text-xs text-muted-foreground">
               Team members will receive a daily reminder to submit their end-of-day report at this time. Each member can set their own preferred time in Notifications settings.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="eodFrequency">EOD Report Frequency</Label>
+            <Select value={eodFrequency} onValueChange={(v) => setEodFrequency(v as typeof eodFrequency)} disabled={!isOwner || isLoading}>
+              <SelectTrigger id="eodFrequency">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily">Daily — every selected day</SelectItem>
+                <SelectItem value="weekly">Weekly — first selected day each week</SelectItem>
+                <SelectItem value="bi-weekly">Bi-weekly — every other week</SelectItem>
+                <SelectItem value="monthly">Monthly — first selected day each month</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              How often EOD reminders and summary emails are sent. Use the day selector below to choose which days are eligible.
             </p>
           </div>
 

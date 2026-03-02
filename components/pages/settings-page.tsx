@@ -52,8 +52,8 @@ export function SettingsPage() {
           joinDate: m.joinedAt,
           userId: m.userId ?? undefined,
         })))
-      } catch {
-        toast({ title: "Failed to load team data", description: "Some settings may be incomplete. Try refreshing.", variant: "destructive" })
+      } catch (err) {
+        toast({ title: "Failed to load team data", description: err instanceof Error ? err.message : "Some settings may be incomplete. Try refreshing.", variant: "destructive" })
       }
     }
     loadTeamData()

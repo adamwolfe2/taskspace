@@ -28,6 +28,7 @@ export interface OrganizationSettings {
   weekStartDay: 0 | 1 | 2 | 3 | 4 | 5 | 6 // 0 = Sunday
   eodReminderTime: string // "17:00" format
   eodEmailDays?: number[] // Days to send EOD emails: 0=Sun,1=Mon...6=Sat. Default [1,2,3,4,5] (weekdays)
+  eodFrequency?: "daily" | "weekly" | "bi-weekly" | "monthly" // How often to send EOD reminders. Default "daily"
   enableEmailNotifications: boolean
   enableSlackIntegration: boolean
   slackWebhookUrl?: string

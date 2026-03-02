@@ -141,7 +141,14 @@ export function TasksPage({
     && viewingUserId !== currentUser.id
     && viewingUserId !== currentUser.userId
   const targetUserId = viewingUserId || effectiveUserId
-  const userTasks = assignedTasks.filter((t) => t.assigneeId === targetUserId)
+  // For draft-assigned tasks: also match by email (tasks assigned before invite acceptance)
+  const viewingMemberEmail = viewingUserId
+    ? teamMembers?.find(m => m.id === viewingUserId || m.userId === viewingUserId)?.email
+    : currentUser.email
+  const userTasks = assignedTasks.filter((t) =>
+    t.assigneeId === targetUserId ||
+    (t.assigneeEmail && viewingMemberEmail && t.assigneeEmail === viewingMemberEmail)
+  )
 
   // Build unique rock options from tasks that have a linked rock
   const taskRockOptions = useMemo(() => {

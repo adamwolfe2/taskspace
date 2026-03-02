@@ -35,6 +35,58 @@ function verifyCronSecret(request: NextRequest): boolean {
 }
 
 /**
+ * Get ISO week number for a date
+ */
+function getISOWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const dayNum = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+}
+
+/**
+ * Check if the org's frequency setting allows sending today.
+ * - daily: always allowed (day filter handled separately)
+ * - weekly: only on the first allowed weekday
+ * - bi-weekly: only on first allowed weekday of odd ISO weeks
+ * - monthly: only on the first occurrence of the first allowed weekday in the month (day ≤ 7)
+ */
+function isFrequencyAllowed(org: Organization, timezone: string): boolean {
+  const frequency = org.settings?.eodFrequency || "daily"
+  if (frequency === "daily") return true
+
+  const now = new Date()
+  const allowedDays: number[] = org.settings?.eodEmailDays ?? [1, 2, 3, 4, 5]
+  const dayFormatter = new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "short" })
+  const dayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+  const currentDay = dayMap[dayFormatter.format(now)] ?? now.getDay()
+  const firstAllowedDay = Math.min(...allowedDays)
+
+  if (frequency === "weekly") {
+    return currentDay === firstAllowedDay
+  }
+
+  if (frequency === "bi-weekly") {
+    if (currentDay !== firstAllowedDay) return false
+    return getISOWeekNumber(now) % 2 === 1 // odd weeks
+  }
+
+  if (frequency === "monthly") {
+    if (currentDay !== firstAllowedDay) return false
+    // First occurrence of this weekday in the month (day of month 1–7)
+    const dateStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(now)
+    const dayOfMonth = parseInt(dateStr.split("-")[2])
+    return dayOfMonth <= 7
+  }
+
+  return true
+}
+
+/**
  * Check if the current time in the given timezone is 5 PM (17:00)
  * Uses the organization's eodReminderTime setting if available
  */
@@ -70,7 +122,10 @@ function isReminderTime(org: Organization): boolean {
     const currentDay = dayMap[dayFormatter.format(now)] ?? now.getDay()
     const isAllowedDay = allowedDays.includes(currentDay)
 
-    return isCorrectHour && isAllowedDay
+    if (!isCorrectHour || !isAllowedDay) return false
+
+    // Check frequency constraint (weekly, bi-weekly, monthly)
+    return isFrequencyAllowed(org, timezone)
   } catch (error) {
     logError(logger, `Timezone error for org ${org.id}`, error)
     const now = new Date()

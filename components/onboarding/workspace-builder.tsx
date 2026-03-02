@@ -379,6 +379,42 @@ export function WorkspaceBuilder({ onClose }: WorkspaceBuilderProps) {
                 </div>
               )}
 
+              {/* Task assignment preview — show who each task goes to */}
+              {payload.tasks && payload.tasks.length > 0 && (
+                <div className="border border-slate-200 rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-medium text-slate-700">Task assignments</p>
+                  <ul className="space-y-1">
+                    {payload.tasks.slice(0, 8).map((task, i) => {
+                      const t = task as { title: string; assigneeEmail?: string }
+                      const memberInfo = payload.members?.find(
+                        m => (m as { email?: string }).email?.toLowerCase() === t.assigneeEmail?.toLowerCase()
+                      ) as { name?: string; email?: string } | undefined
+                      const displayName = memberInfo?.name || t.assigneeEmail || "Unassigned"
+                      const isInvited = memberInfo && !(memberInfo as { email?: string }).email
+                      return (
+                        <li key={i} className="flex items-center justify-between gap-2 text-xs">
+                          <span className="text-slate-600 truncate max-w-[60%]">· {t.title}</span>
+                          <span className={`text-slate-400 truncate ${isInvited ? "italic" : ""}`}>
+                            {displayName}{t.assigneeEmail && memberInfo ? " (invited)" : ""}
+                          </span>
+                        </li>
+                      )
+                    })}
+                    {payload.tasks.length > 8 && (
+                      <li className="text-xs text-slate-400">+ {payload.tasks.length - 8} more tasks</li>
+                    )}
+                  </ul>
+                  {payload.tasks.some(t => (t as { assigneeEmail?: string }).assigneeEmail &&
+                    payload.members?.find(m => (m as { email?: string }).email?.toLowerCase() ===
+                      (t as { assigneeEmail?: string }).assigneeEmail?.toLowerCase())
+                  ) && (
+                    <p className="text-xs text-amber-600">
+                      Tasks assigned to invited members will be held for them until they join.
+                    </p>
+                  )}
+                </div>
+              )}
+
               <p className="text-xs text-slate-400">
                 Existing team members with matching emails will be skipped. This cannot be undone.
               </p>

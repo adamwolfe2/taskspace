@@ -67,7 +67,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   const [summarizingId, setSummarizingId] = useState<string | null>(null)
 
   const fetchSummary = async (reportId: string) => {
-    if (summaries[reportId] || summarizingId) return
+    if (summaries[reportId] || summarizingId === reportId) return
     setSummarizingId(reportId)
     try {
       const res = await fetch("/api/ai/eod-summary", {

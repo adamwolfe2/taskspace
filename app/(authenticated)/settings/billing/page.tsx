@@ -6,15 +6,15 @@ import { PlanUsageCard } from "@/components/billing/plan-usage-card"
 import { PLANS, type PlanTier, formatPrice } from "@/lib/billing/plans"
 import { UpgradeDialog } from "@/components/billing/upgrade-dialog"
 import {
-  CreditCardIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ArrowPathIcon,
-  DocumentTextIcon,
-  ArrowTopRightOnSquareIcon,
-  ExclamationTriangleIcon,
-} from "@heroicons/react/24/outline"
+  CreditCard,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
+  FileText,
+  ExternalLink,
+  AlertTriangle,
+} from "lucide-react"
 import Link from "next/link"
 
 interface BillingData {
@@ -52,7 +52,7 @@ export default function BillingSettingsPage() {
       <div className="min-h-screen bg-slate-50 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-12">
-            <ArrowPathIcon className="h-8 w-8 animate-spin text-blue-600" />
+            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
           </div>
         </div>
       </div>
@@ -221,7 +221,7 @@ function BillingSettingsContent() {
       <div className="min-h-screen bg-slate-50 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-12">
-            <ArrowPathIcon className="h-8 w-8 animate-spin text-blue-600" />
+            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
           </div>
         </div>
       </div>
@@ -255,7 +255,7 @@ function BillingSettingsContent() {
         {billingToast === "success" && (
           <div className="mb-6 rounded-lg bg-green-50 border border-green-200 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CheckCircleIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
+              <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
               <p className="text-sm font-medium text-green-800">
                 Subscription activated! Your 14-day free trial has started.
               </p>
@@ -268,7 +268,7 @@ function BillingSettingsContent() {
         {billingToast === "canceled" && (
           <div className="mb-6 rounded-lg bg-yellow-50 border border-yellow-200 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <XCircleIcon className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+              <XCircle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
               <p className="text-sm font-medium text-yellow-800">
                 Checkout was canceled. No charges were made.
               </p>
@@ -283,7 +283,7 @@ function BillingSettingsContent() {
         {isPastDue && (
           <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <ExclamationTriangleIcon className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-red-800">Payment failed</p>
                 <p className="text-sm text-red-700">Please update your payment method to avoid service interruption.</p>
@@ -299,7 +299,7 @@ function BillingSettingsContent() {
         {isCanceled && currentPlan === "free" && (
           <div className="mb-6 rounded-lg bg-slate-50 border border-slate-200 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <XCircleIcon className="h-5 w-5 text-slate-500 flex-shrink-0" />
+              <XCircle className="h-5 w-5 text-slate-500 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-slate-800">Your subscription was canceled</p>
                 <p className="text-sm text-slate-600">You&apos;re on the Free plan. Upgrade anytime to restore paid features.</p>
@@ -344,11 +344,11 @@ function BillingSettingsContent() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {isActive ? (
-                      <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
                     ) : isPastDue ? (
-                      <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
+                      <AlertTriangle className="h-5 w-5 text-red-500" />
                     ) : (
-                      <XCircleIcon className="h-5 w-5 text-slate-400" />
+                      <XCircle className="h-5 w-5 text-slate-400" />
                     )}
                     <div>
                       <p className="font-medium text-slate-900">
@@ -375,7 +375,7 @@ function BillingSettingsContent() {
                 {data.subscription?.trialEnd && isTrial && (
                   <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                     <div className="flex items-center gap-3">
-                      <ClockIcon className="h-5 w-5 text-blue-400" />
+                      <Clock className="h-5 w-5 text-blue-400" />
                       <div>
                         <p className="font-medium text-slate-900">Trial Ends</p>
                         <p className="text-sm text-slate-600">
@@ -391,7 +391,7 @@ function BillingSettingsContent() {
                 {data.subscription?.currentPeriodEnd && !isTrial && (
                   <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                     <div className="flex items-center gap-3">
-                      <ClockIcon className="h-5 w-5 text-slate-400" />
+                      <Clock className="h-5 w-5 text-slate-400" />
                       <div>
                         <p className="font-medium text-slate-900">
                           {isCanceling ? "Access Until" : "Next Billing Date"}
@@ -409,7 +409,7 @@ function BillingSettingsContent() {
                 {data.hasStripeAccount && (
                   <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                     <div className="flex items-center gap-3">
-                      <CreditCardIcon className="h-5 w-5 text-slate-400" />
+                      <CreditCard className="h-5 w-5 text-slate-400" />
                       <div>
                         <p className="font-medium text-slate-900">Payment Method</p>
                         <p className="text-sm text-slate-600">Manage via Stripe Customer Portal</p>
@@ -577,8 +577,8 @@ function BillingSettingsContent() {
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
                               >
-                                <DocumentTextIcon className="h-4 w-4" />
-                                <ArrowTopRightOnSquareIcon className="h-3 w-3" />
+                                <FileText className="h-4 w-4" />
+                                <ExternalLink className="h-3 w-3" />
                               </a>
                             )}
                           </td>

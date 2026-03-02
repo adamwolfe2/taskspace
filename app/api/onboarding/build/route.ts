@@ -321,23 +321,32 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     // ── 5. TASKS ────────────────────────────────────────────────────────────
     for (const taskInput of payload.tasks || []) {
       try {
-        // Resolve assignee — only assign if they have a real userId
-        let assigneeId = auth.user.id
+        // Resolve assignee — supports active members (userId), draft/invited members (email only), or admin fallback
+        let assigneeId: string | null = auth.user.id
+        let assigneeEmail: string | undefined = undefined
         let assigneeName = auth.user.name
         let taskType: "assigned" | "personal" = "personal"
         let assignedById: string | null = null
         let assignedByName: string | null = null
 
         if (taskInput.assigneeEmail) {
-          const assigneeInfo = emailToMember.get(taskInput.assigneeEmail.toLowerCase())
-          if (assigneeInfo?.userId) {
-            assigneeId = assigneeInfo.userId
+          const emailLower = taskInput.assigneeEmail.toLowerCase()
+          const assigneeInfo = emailToMember.get(emailLower)
+          if (assigneeInfo) {
             assigneeName = assigneeInfo.name
             taskType = "assigned"
             assignedById = auth.user.id
             assignedByName = auth.user.name
+            if (assigneeInfo.userId) {
+              // Active member with a real user account
+              assigneeId = assigneeInfo.userId
+            } else {
+              // Draft/invited member — store email so task transfers on join
+              assigneeId = null
+              assigneeEmail = emailLower
+            }
           }
-          // Draft member (no userId) or unknown email → falls through to admin as owner
+          // Unknown email (not in org) → falls through to admin as owner
         }
 
         // Resolve rock link by title
@@ -354,6 +363,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           title: taskInput.title.trim(),
           description: taskInput.description?.trim(),
           assigneeId,
+          assigneeEmail,
           assigneeName,
           assignedById,
           assignedByName,

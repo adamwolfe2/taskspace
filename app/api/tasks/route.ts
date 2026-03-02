@@ -423,6 +423,40 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     if (updates.recurrence !== undefined) {
       updateData.recurrence = updates.recurrence === null ? undefined : updates.recurrence
     }
+
+    // Reassignment — admin only, resolve member and update all assignee fields
+    if (updates.assigneeId !== undefined) {
+      if (!isAdmin(auth)) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Only admins can reassign tasks" },
+          { status: 403 }
+        )
+      }
+
+      // Look up new assignee by userId first, then by org_member.id
+      let targetMember = await db.members.findByOrgAndUser(auth.organization.id, updates.assigneeId)
+      if (!targetMember) {
+        targetMember = await db.members.findByOrgAndId(auth.organization.id, updates.assigneeId)
+      }
+      if (!targetMember) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Assignee not found in this organization" },
+          { status: 404 }
+        )
+      }
+
+      if (targetMember.userId) {
+        // Active member — use their users.id
+        updateData.assigneeId = targetMember.userId
+        updateData.assigneeEmail = undefined
+      } else {
+        // Draft member (invited, not yet accepted) — use email
+        updateData.assigneeId = null
+        updateData.assigneeEmail = targetMember.email
+      }
+      updateData.assigneeName = targetMember.name
+    }
+
     updateData.updatedAt = new Date().toISOString()
 
     const updatedTask = await db.assignedTasks.update(id, updateData, expectedUpdatedAt)

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { UserInitials } from "@/components/shared/user-initials"
 import { Check, X, Edit2, ChevronDown, ChevronUp, Loader2, Sparkles } from "lucide-react"
 import type { AIGeneratedTask, TeamMember } from "@/lib/types"
@@ -202,74 +203,124 @@ export function AITaskReview({
   isLoading,
 }: AITaskReviewProps) {
   const [showAll, setShowAll] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const displayTasks = showAll ? tasks : tasks.slice(0, 5)
+
+  // Group tasks by assignee for the confirmation dialog
+  const tasksByAssignee = tasks.reduce<Record<string, { name: string; tasks: AIGeneratedTask[] }>>((acc, task) => {
+    const member = teamMembers.find((m) => m.id === task.assigneeId)
+    const name = member?.name || task.assigneeName || "Unknown"
+    const key = task.assigneeId || name
+    if (!acc[key]) acc[key] = { name, tasks: [] }
+    acc[key].tasks.push(task)
+    return acc
+  }, {})
 
   if (tasks.length === 0) {
     return null
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            Pending AI Tasks ({tasks.length})
-          </CardTitle>
-          <CardDescription>
-            Review and approve AI-generated task suggestions
-          </CardDescription>
-        </div>
-        {tasks.length > 1 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onApproveAll}
-            disabled={isLoading}
-            className="gap-2"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Check className="h-4 w-4" />
-            )}
-            Approve All
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {displayTasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            teamMembers={teamMembers}
-            onApprove={onApprove}
-            onReject={onReject}
-            isLoading={isLoading}
-          />
-        ))}
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Pending AI Tasks ({tasks.length})
+            </CardTitle>
+            <CardDescription>
+              Review each task and confirm who it&apos;s assigned to before approving
+            </CardDescription>
+          </div>
+          {tasks.length > 1 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowConfirm(true)}
+              disabled={isLoading}
+              className="gap-2"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              Approve All ({tasks.length})
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {displayTasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              teamMembers={teamMembers}
+              onApprove={onApprove}
+              onReject={onReject}
+              isLoading={isLoading}
+            />
+          ))}
 
-        {tasks.length > 5 && (
-          <Button
-            variant="ghost"
-            className="w-full"
-            onClick={() => setShowAll(!showAll)}
-          >
-            {showAll ? (
-              <>
-                <ChevronUp className="h-4 w-4 mr-2" />
-                Show Less
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-4 w-4 mr-2" />
-                Show {tasks.length - 5} More
-              </>
-            )}
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+          {tasks.length > 5 && (
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => setShowAll(!showAll)}
+            >
+              {showAll ? (
+                <>
+                  <ChevronUp className="h-4 w-4 mr-2" />
+                  Show Less
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4 mr-2" />
+                  Show {tasks.length - 5} More
+                </>
+              )}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm task assignments</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p>You&apos;re about to create <strong>{tasks.length} task{tasks.length !== 1 ? "s" : ""}</strong> for the following people. Make sure each assignment is correct before continuing.</p>
+                <div className="space-y-2 rounded-lg border bg-muted/40 p-3">
+                  {Object.values(tasksByAssignee).map(({ name, tasks: memberTasks }) => (
+                    <div key={name}>
+                      <p className="font-medium text-foreground">{name} — {memberTasks.length} task{memberTasks.length !== 1 ? "s" : ""}</p>
+                      <ul className="mt-1 ml-3 space-y-0.5">
+                        {memberTasks.map((t) => (
+                          <li key={t.id} className="text-muted-foreground truncate">• {t.title}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-muted-foreground">Use the edit button on individual tasks to change an assignment before approving.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel — let me review</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowConfirm(false)
+                onApproveAll()
+              }}
+            >
+              Confirm &amp; create all
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

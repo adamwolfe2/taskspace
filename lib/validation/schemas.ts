@@ -109,6 +109,7 @@ export const updateOrganizationSchema = z.object({
     weekStartDay: weekStartDaySchema.optional(),
     eodReminderTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
     eodEmailDays: z.array(z.number().int().min(0).max(6)).min(1).max(7).optional(),
+    eodFrequency: z.enum(["daily", "weekly", "bi-weekly", "monthly"]).optional(),
     enableEmailNotifications: z.boolean().optional(),
     enableSlackIntegration: z.boolean().optional(),
     slackWebhookUrl: z.string().url().optional(),
@@ -250,6 +251,8 @@ export const updateTaskSchema = z.object({
   id: uuidSchema, // Task ID to update
   title: z.string().trim().min(1).max(500).optional(),
   description: z.string().trim().max(5000).optional(),
+  assigneeId: uuidSchema.optional(), // Reassignment — admin only
+  assigneeName: z.string().trim().min(1).max(200).optional(),
   priority: prioritySchema.optional(),
   dueDate: dateSchema.optional(),
   status: taskStatusSchema.optional(),
