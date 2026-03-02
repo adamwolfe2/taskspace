@@ -10,6 +10,8 @@ import {
   TrendingUp,
   AlertTriangle,
   Calendar,
+  Sparkles,
+  Loader2,
 } from "lucide-react"
 
 // Rock progress data for display
@@ -122,13 +124,38 @@ export function UserBentoCard({
   className,
   defaultExpanded = false,
   accentColor,
+  reportId,
+  slug,
+  token,
 }: {
   data: UserBentoData
   className?: string
   defaultExpanded?: boolean
   accentColor?: string
+  reportId?: string
+  slug?: string
+  token?: string | null
 }) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  const [summary, setSummary] = useState<string | null>(null)
+  const [isSummarizing, setIsSummarizing] = useState(false)
+
+  const fetchSummary = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (summary || isSummarizing || !token || !reportId || !slug) return
+    setIsSummarizing(true)
+    try {
+      const res = await fetch("/api/public/eod/summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId, slug, token }),
+      })
+      const json = await res.json()
+      if (json.success && json.data?.summary) setSummary(json.data.summary)
+    } finally {
+      setIsSummarizing(false)
+    }
+  }
 
   // Calculate aggregate rock progress
   const avgRockProgress = useMemo(() => {
@@ -183,19 +210,35 @@ export function UserBentoCard({
             <h3 className="font-semibold text-slate-900 text-base">{data.userName}</h3>
             {getRoleBadge()}
           </div>
-          <button
-            className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
-            onClick={(e) => {
-              e.stopPropagation()
-              setIsExpanded(!isExpanded)
-            }}
-          >
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4 text-slate-400" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-slate-400" />
+          <div className="flex items-center gap-1">
+            {token && reportId && (
+              <button
+                onClick={fetchSummary}
+                disabled={isSummarizing}
+                title="AI summary"
+                className={`p-1 rounded-lg transition-colors ${summary ? "text-blue-600 bg-blue-50" : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"} disabled:opacity-50`}
+              >
+                {isSummarizing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+              </button>
             )}
-          </button>
+            <button
+              className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsExpanded(!isExpanded)
+              }}
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-slate-400" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Department/Title - compact */}
@@ -282,6 +325,14 @@ export function UserBentoCard({
           </div>
         )}
       </div>
+
+      {/* AI Summary strip */}
+      {summary && (
+        <div className="px-4 py-2.5 bg-blue-50/60 border-t border-blue-100 flex items-start gap-2">
+          <Sparkles className="h-3 w-3 text-blue-500 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-slate-700 leading-relaxed">{summary}</p>
+        </div>
+      )}
 
       {/* Expanded Content - Task Details grouped by Rock */}
       {isExpanded && data.tasks.length > 0 && (

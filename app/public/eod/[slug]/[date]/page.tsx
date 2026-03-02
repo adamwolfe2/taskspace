@@ -570,7 +570,7 @@ export default function PublicEODDailyReportPage() {
                 })),
                 periodType: "daily",
               }
-              return <UserBentoCard key={idx} data={bentoData} accentColor={data.accentColor ?? undefined} />
+              return <UserBentoCard key={idx} data={bentoData} accentColor={data.accentColor ?? undefined} reportId={report.reportId} slug={slug} token={token} />
             })}
           </UserBentoGrid>
         ) : (
