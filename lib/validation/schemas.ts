@@ -108,6 +108,7 @@ export const updateOrganizationSchema = z.object({
     timezone: z.string().optional(),
     weekStartDay: weekStartDaySchema.optional(),
     eodReminderTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    eodEmailDays: z.array(z.number().int().min(0).max(6)).min(1).max(7).optional(),
     enableEmailNotifications: z.boolean().optional(),
     enableSlackIntegration: z.boolean().optional(),
     slackWebhookUrl: z.string().url().optional(),

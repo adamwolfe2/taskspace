@@ -31,8 +31,9 @@ interface PublicEODPriority {
   rockTitle?: string
 }
 
-// Rock progress for bento cards (no internal IDs exposed)
+// Rock progress for bento cards
 interface PublicRockProgress {
+  id: string
   progress: number
   status: "on-track" | "at-risk" | "blocked" | "completed"
 }
@@ -240,6 +241,7 @@ export async function GET(
         rocksByUser.set(userId, [])
       }
       rocksByUser.get(userId)!.push({
+        id: rock.id as string,
         progress: (rock.progress as number) || 0,
         status: (rock.status as PublicRockProgress["status"]) || "on-track",
       })

@@ -1107,7 +1107,7 @@ export function TasksPage({
                     />
                   </DropdownMenuContent>
                 </DropdownMenu>
-                {teamMembers && teamMembers.length > 0 && (
+                {teamMembers && teamMembers.length > 0 && (currentUser.role === "admin" || currentUser.role === "owner") && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="gap-1 sm:gap-2 h-9 px-2 sm:px-3" disabled={isBulkProcessing} aria-label="Reassign selected tasks">

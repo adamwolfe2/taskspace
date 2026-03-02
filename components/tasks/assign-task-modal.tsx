@@ -132,6 +132,9 @@ export function AssignTaskModal({
                 {assignableMembers.map((member) => (
                   <SelectItem key={member.id} value={member.id}>
                     {member.name}
+                    {member.status === "invited" && (
+                      <span className="ml-1.5 text-xs text-muted-foreground">(Invited)</span>
+                    )}
                   </SelectItem>
                 ))}
               </SelectContent>

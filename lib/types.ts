@@ -39,6 +39,7 @@ export interface OrganizationSettings {
     accentColor?: string
   }
   asanaIntegration?: AsanaIntegrationSettings
+  publicEodToken?: string | null
 }
 
 export interface AsanaIntegrationSettings {

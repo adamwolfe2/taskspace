@@ -432,6 +432,7 @@ function AppContent() {
             initialAssigneeFilter={pageFilter?.userId}
             filterUserName={pageFilter?.userName}
             onFilterConsumed={clearPageFilter}
+            onClearFilter={clearPageFilter}
           />
         )
       case "admin":

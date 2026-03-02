@@ -66,6 +66,7 @@ export const POST = withUserAuth(async (request: NextRequest, auth) => {
         timezone,
         weekStartDay: 1,
         eodReminderTime: "17:00",
+        eodEmailDays: [1, 2, 3, 4, 5],
         enableEmailNotifications: true,
         enableSlackIntegration: false,
       },

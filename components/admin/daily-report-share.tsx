@@ -38,7 +38,7 @@ export function DailyReportShare({
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [copied, setCopied] = useState(false)
   const [token, setToken] = useState<string | null>(
-    (organization.settings as { publicEodToken?: string } | null)?.publicEodToken || null
+    organization.settings?.publicEodToken || null
   )
   const [isGenerating, setIsGenerating] = useState(false)
 

@@ -43,7 +43,7 @@ export function WeeklyReportShare({ organization }: WeeklyReportShareProps) {
   const [selectedThursday, setSelectedThursday] = useState(() => getThursdayForWeek(new Date()))
   const [copied, setCopied] = useState(false)
   const [token, setToken] = useState<string | null>(
-    (organization.settings as { publicEodToken?: string } | null)?.publicEodToken || null
+    organization.settings?.publicEodToken || null
   )
   const [isGenerating, setIsGenerating] = useState(false)
 
