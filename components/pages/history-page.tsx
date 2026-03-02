@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserInitials } from "@/components/shared/user-initials"
 import { formatDate } from "@/lib/utils/date-utils"
-import { Search, AlertCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2, FileText, Calendar, Copy, Check, Smile, Meh, Frown } from "lucide-react"
+import { Search, AlertCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2, FileText, Calendar, Copy, Check, Smile, Meh, Frown, Sparkles } from "lucide-react"
 import { subDays, startOfDay, parseISO } from "date-fns"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -63,6 +63,26 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
   const [reportToDelete, setReportToDelete] = useState<string | null>(null)
   const [copiedReportId, setCopiedReportId] = useState<string | null>(null)
+  const [summaries, setSummaries] = useState<Record<string, string>>({})
+  const [summarizingId, setSummarizingId] = useState<string | null>(null)
+
+  const fetchSummary = async (reportId: string) => {
+    if (summaries[reportId] || summarizingId) return
+    setSummarizingId(reportId)
+    try {
+      const res = await fetch("/api/ai/eod-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId }),
+      })
+      const json = await res.json()
+      if (json.success && json.data?.summary) {
+        setSummaries(prev => ({ ...prev, [reportId]: json.data.summary }))
+      }
+    } finally {
+      setSummarizingId(null)
+    }
+  }
 
   const handleDeleteReport = (reportId: string) => {
     if (!deleteEODReport) return
@@ -330,6 +350,22 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
                           Escalation
                         </span>
                       )}
+                      {isAdminOrOwner && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`h-8 w-8 p-0 ${summaries[report.id] ? "text-primary" : "text-slate-400 hover:text-primary"}`}
+                          title="AI summary"
+                          onClick={() => fetchSummary(report.id)}
+                          disabled={summarizingId === report.id}
+                        >
+                          {summarizingId === report.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
@@ -376,6 +412,12 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
                     </div>
                   </div>
                 </div>
+                {summaries[report.id] && (
+                  <div className="px-5 py-3 bg-primary/5 border-b border-primary/10 flex items-start gap-2">
+                    <Sparkles className="h-3.5 w-3.5 text-primary mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-slate-700">{summaries[report.id]}</p>
+                  </div>
+                )}
                 {isExpanded && (
                   <div className="p-5 space-y-6">
                     <div>

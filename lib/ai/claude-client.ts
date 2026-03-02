@@ -466,6 +466,40 @@ ${context.eodReports.slice(0, 10).map(r => `- ${r.date}: ${r.tasks?.length || 0}
 }
 
 /**
+ * Generate a 1-3 sentence plain-language summary of what a team member worked on
+ * Intended for admins who want a quick digest without reading every task line
+ */
+export async function summarizePersonEOD(
+  memberName: string,
+  tasks: Array<{ text: string; rockTitle?: string | null }>,
+  challenges: string,
+  tomorrowPriorities: Array<{ text: string }>
+): Promise<AIResultWithUsage<{ summary: string }>> {
+  const taskLines = tasks.map(t => t.rockTitle ? `- ${t.text} (${t.rockTitle})` : `- ${t.text}`).join("\n")
+  const priorityLines = tomorrowPriorities.map(p => `- ${p.text}`).join("\n")
+
+  const userMessage = `Team member: ${memberName}
+
+Tasks completed today:
+${taskLines || "None listed"}
+
+Challenges: ${challenges || "None"}
+
+Tomorrow's priorities:
+${priorityLines || "None listed"}
+
+Write 1-3 sentences summarizing what ${memberName} worked on today. Plain language, past tense, no bullet points. Focus on what they accomplished and any blockers. Return JSON only.`
+
+  const { result, usage, model } = await callClaudeJSONWithUsage<{ summary: string }>(
+    `You are a concise executive summarizer. Given an employee's end-of-day report, write 1-3 plain-language sentences summarizing what they accomplished. Be specific but brief. Return JSON: { "summary": "..." }`,
+    userMessage,
+    { maxTokens: 256, temperature: 0.3, model: MODEL_HAIKU }
+  )
+
+  return { result: { summary: result.summary || "" }, usage: { ...usage, model } }
+}
+
+/**
  * Parse response type for EOD text dump
  */
 export interface ParsedEODReport {
