@@ -421,6 +421,7 @@ function AppContent() {
         return (
           <TasksPage
             currentUser={currentUser!}
+            teamMembers={teamData.teamMembers}
             assignedTasks={teamData.assignedTasks}
             setAssignedTasks={teamData.setAssignedTasks}
             rocks={teamData.rocks}

@@ -27,6 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 
 interface TasksPageProps {
   currentUser: TeamMember
+  teamMembers?: TeamMember[]
   assignedTasks: AssignedTask[]
   setAssignedTasks: (tasks: AssignedTask[]) => void
   rocks: Rock[]
@@ -42,6 +43,7 @@ interface TasksPageProps {
 
 export function TasksPage({
   currentUser,
+  teamMembers,
   assignedTasks,
   setAssignedTasks: _setAssignedTasks,
   rocks,
@@ -559,6 +561,62 @@ export function TasksPage({
     }
   }
 
+  const handleBulkReassign = async (newAssigneeId: string, assigneeName: string) => {
+    const taskIds = Array.from(selectedTasks)
+    setIsBulkProcessing(true)
+    try {
+      const response = await fetch("/api/tasks/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        credentials: "include",
+        body: JSON.stringify({ operation: "reassign", taskIds, newAssigneeId }),
+      })
+      const result = await response.json()
+      if (!result.success) throw new Error(result.error || "Failed to reassign tasks")
+      setSelectedTasks(new Set())
+      toast({ title: "Tasks reassigned", description: `${result.data.processed} task${result.data.processed !== 1 ? "s" : ""} assigned to ${assigneeName}` })
+    } catch (err) {
+      toast({ title: "Error", description: getErrorMessage(err, "Failed to reassign tasks"), variant: "destructive" })
+    } finally {
+      setIsBulkProcessing(false)
+    }
+  }
+
+  const handleBulkPushToPool = async () => {
+    if (!currentWorkspaceId) return
+    const taskIds = Array.from(selectedTasks)
+    const tasksToMove = userTasks.filter((t) => taskIds.includes(t.id))
+    setIsBulkProcessing(true)
+    try {
+      const results = await Promise.all(
+        tasksToMove.map((task) =>
+          fetch("/api/task-pool", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+            credentials: "include",
+            body: JSON.stringify({
+              workspaceId: currentWorkspaceId,
+              title: task.title,
+              description: task.description || "",
+              priority: task.priority === "medium" ? "normal" : task.priority,
+            }),
+          })
+        )
+      )
+      const failed = results.filter((r) => !r.ok).length
+      setSelectedTasks(new Set())
+      if (failed > 0) {
+        toast({ title: "Partially pushed", description: `${tasksToMove.length - failed} task${tasksToMove.length - failed !== 1 ? "s" : ""} added to pool, ${failed} failed`, variant: "destructive" })
+      } else {
+        toast({ title: "Pushed to pool", description: `${tasksToMove.length} task${tasksToMove.length !== 1 ? "s" : ""} added to the task pool` })
+      }
+    } catch (err) {
+      toast({ title: "Error", description: getErrorMessage(err, "Failed to push tasks to pool"), variant: "destructive" })
+    } finally {
+      setIsBulkProcessing(false)
+    }
+  }
+
   const handleKanbanStatusChange = async (taskId: string, newStatus: AssignedTask["status"]) => {
     if (newStatus === "completed") {
       // Delegate to handleCompleteTask so recurring task logic fires correctly
@@ -1049,6 +1107,41 @@ export function TasksPage({
                     />
                   </DropdownMenuContent>
                 </DropdownMenu>
+                {teamMembers && teamMembers.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-1 sm:gap-2 h-9 px-2 sm:px-3" disabled={isBulkProcessing} aria-label="Reassign selected tasks">
+                        <UserCheck className="h-4 w-4" />
+                        <span className="hidden sm:inline">Reassign</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="max-h-60 overflow-y-auto">
+                      {teamMembers.filter((m) => m.status === "active").map((member) => (
+                        <DropdownMenuItem key={member.id} onClick={() => handleBulkReassign(member.id, member.name)}>
+                          {member.name}
+                          {member.role === "owner" || member.role === "admin" ? (
+                            <span className="ml-1.5 text-xs text-muted-foreground capitalize">({member.role})</span>
+                          ) : null}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkPushToPool}
+                  className="gap-1 sm:gap-2 h-9 px-2 sm:px-3 border-slate-200 text-slate-600 hover:bg-slate-50"
+                  disabled={isBulkProcessing || !currentWorkspaceId}
+                  aria-label="Push selected tasks to task pool"
+                >
+                  {isBulkProcessing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ClipboardList className="h-4 w-4" />
+                  )}
+                  <span className="hidden sm:inline">Pool</span>
+                </Button>
                 <Button
                   variant="default"
                   size="sm"
