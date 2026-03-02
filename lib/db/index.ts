@@ -194,7 +194,8 @@ function parseAssignedTask(row: Record<string, unknown>): AssignedTask {
     workspaceId: row.workspace_id as string | null | undefined,
     title: row.title as string,
     description: row.description as string | undefined,
-    assigneeId: row.assignee_id as string,
+    assigneeId: row.assignee_id as string | null,
+    assigneeEmail: row.assignee_email as string | undefined,
     assigneeName: row.assignee_name as string,
     assignedById: row.assigned_by_id as string | null,
     assignedByName: row.assigned_by_name as string | null,
@@ -1407,11 +1408,11 @@ export const db = {
     async create(task: AssignedTask): Promise<AssignedTask> {
       const sanitizedDescription = task.description ? sanitizeText(task.description) : null
       await sql`
-        INSERT INTO assigned_tasks (id, organization_id, workspace_id, title, description, assignee_id, assignee_name,
+        INSERT INTO assigned_tasks (id, organization_id, workspace_id, title, description, assignee_id, assignee_email, assignee_name,
           assigned_by_id, assigned_by_name, type, rock_id, rock_title, priority, due_date, status,
           completed_at, added_to_eod, eod_report_id, created_at, updated_at)
         VALUES (${task.id}, ${task.organizationId}, ${task.workspaceId || null}, ${sanitizeText(task.title)}, ${sanitizedDescription},
-                ${task.assigneeId}, ${task.assigneeName}, ${task.assignedById}, ${task.assignedByName},
+                ${task.assigneeId || null}, ${task.assigneeEmail || null}, ${task.assigneeName}, ${task.assignedById}, ${task.assignedByName},
                 ${task.type}, ${task.rockId}, ${task.rockTitle}, ${task.priority}, ${task.dueDate},
                 ${task.status}, ${task.completedAt}, ${task.addedToEOD}, ${task.eodReportId},
                 ${task.createdAt}, ${task.updatedAt})

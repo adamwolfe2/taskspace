@@ -147,7 +147,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     const affectedUserIds = new Set<string>()
     validTaskIds.forEach((id) => {
       const task = taskMap.get(id)
-      if (task) affectedUserIds.add(task.assigneeId)
+      if (task && task.assigneeId) affectedUserIds.add(task.assigneeId)
     })
     affectedUserIds.forEach((userId) => {
       invalidateTaskCache(auth.organization.id, userId)

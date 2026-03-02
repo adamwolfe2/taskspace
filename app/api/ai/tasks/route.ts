@@ -81,6 +81,13 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
         const members = await db.members.findWithUsersByOrganizationId(auth.organization.id)
         const member = members.find(m => m.id === finalAssigneeId)
 
+        if (!member) {
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, error: "Assignee is not a member of this organization" },
+            { status: 404 }
+          )
+        }
+
         // Map AI priority to task priority (urgent/high -> high, medium -> medium, low -> normal)
         const priorityMap: Record<string, "high" | "medium" | "normal"> = {
           urgent: "high",
@@ -91,15 +98,19 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
         const rawPriority = updates?.priority || task.priority
         const mappedPriority = priorityMap[rawPriority] || "normal"
 
+        // Resolve assignee: ai_generated_tasks stores org_member.id; assigned_tasks needs users.id
+        // For active members: use userId. For draft members (no userId yet): use email.
+        const resolvedAssigneeId = member.userId ?? null
+        const resolvedAssigneeEmail = member.userId ? undefined : member.email
+
         const assignedTask: AssignedTask = {
           id: newTaskId,
           organizationId: auth.organization.id,
           title: updates?.title || task.title,
           description: updates?.description || task.description,
-          // ai_generated_tasks stores org_member_id as assigneeId, but assigned_tasks.assignee_id
-          // is a FK to users(id). Resolve using the member's userId.
-          assigneeId: member?.userId || finalAssigneeId,
-          assigneeName: member?.name || updates?.assigneeName || task.assigneeName || "Unknown",
+          assigneeId: resolvedAssigneeId,
+          assigneeEmail: resolvedAssigneeEmail,
+          assigneeName: member.name || updates?.assigneeName || task.assigneeName || "Unknown",
           assignedById: auth.user.id,
           assignedByName: auth.user.name,
           type: "assigned",
@@ -125,8 +136,8 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
           convertedTaskId: newTaskId,
         })
 
-        // Send email notification to assignee
-        if (isEmailConfigured() && member) {
+        // Send email notification to assignee (always have member.email, even for draft members)
+        if (isEmailConfigured()) {
           const assignee: TeamMember = {
             id: member.id,
             name: member.name,

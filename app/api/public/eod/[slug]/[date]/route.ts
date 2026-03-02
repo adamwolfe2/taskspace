@@ -47,6 +47,7 @@ function getQuarterFromDate(dateStr: string): string {
 }
 
 interface PublicEODReport {
+  reportId: string // Latest report ID — used for AI summary endpoint
   userName: string
   userRole: "owner" | "admin" | "member"
   department: string
@@ -58,7 +59,6 @@ interface PublicEODReport {
   tomorrowPriorities: PublicEODPriority[]
   needsEscalation: boolean
   escalationNote: string | null
-  // New fields for bento cards
   rocks: PublicRockProgress[]
 }
 
@@ -302,6 +302,7 @@ export async function GET(
       const priorities = (latestReport.tomorrow_priorities as Array<{ text: string; rockId?: string }>) || []
 
       publicReports.push({
+        reportId: latestReport.id as string,
         userName: (member.name as string) || "Unknown",
         userRole: member.role as "owner" | "admin" | "member",
         department: (member.department as string) || "General",

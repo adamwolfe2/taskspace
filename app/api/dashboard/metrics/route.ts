@@ -106,6 +106,7 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
     // Top contributors (simplified - just count completed tasks)
     const memberTaskCounts = new Map<string, number>()
     completedTasks.forEach(task => {
+      if (!task.assigneeId) return
       const current = memberTaskCounts.get(task.assigneeId) || 0
       memberTaskCounts.set(task.assigneeId, current + 1)
     })

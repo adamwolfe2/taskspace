@@ -18,6 +18,7 @@ import {
   ChevronUp,
   LayoutGrid,
   List,
+  Sparkles,
 } from "lucide-react"
 import { UserBentoCard, UserBentoGrid, type UserBentoData } from "@/components/public/user-bento-card"
 import { ExportDropdown } from "@/components/public/export-dropdown"
@@ -44,6 +45,7 @@ interface PublicRockProgress {
 }
 
 interface PublicEODReport {
+  reportId: string
   userName: string
   userRole: "owner" | "admin" | "member"
   department: string
@@ -74,8 +76,26 @@ interface PublicDailyReport {
   }
 }
 
-function ReportCard({ report, timezone }: { report: PublicEODReport; timezone: string }) {
+function ReportCard({ report, timezone, slug, token }: { report: PublicEODReport; timezone: string; slug: string; token: string | null }) {
   const [isExpanded, setIsExpanded] = useState(true)
+  const [summary, setSummary] = useState<string | null>(null)
+  const [isSummarizing, setIsSummarizing] = useState(false)
+
+  const fetchSummary = async () => {
+    if (summary || isSummarizing || !token) return
+    setIsSummarizing(true)
+    try {
+      const res = await fetch("/api/public/eod/summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId: report.reportId, slug, token }),
+      })
+      const json = await res.json()
+      if (json.success && json.data?.summary) setSummary(json.data.summary)
+    } finally {
+      setIsSummarizing(false)
+    }
+  }
 
   const submittedTime = formatInTimeZone(
     parseISO(report.submittedAt),
@@ -132,12 +152,26 @@ function ReportCard({ report, timezone }: { report: PublicEODReport; timezone: s
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {report.needsEscalation && (
               <span className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-600 rounded-lg text-sm font-medium">
                 <AlertTriangle className="h-4 w-4" />
                 Escalation
               </span>
+            )}
+            {token && (
+              <button
+                onClick={(e) => { e.stopPropagation(); fetchSummary() }}
+                disabled={isSummarizing}
+                title="AI summary"
+                className={`p-1.5 rounded-lg transition-colors ${summary ? "text-blue-600 bg-blue-50" : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"} disabled:opacity-50`}
+              >
+                {isSummarizing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+              </button>
             )}
             <button className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
               {isExpanded ? (
@@ -149,6 +183,14 @@ function ReportCard({ report, timezone }: { report: PublicEODReport; timezone: s
           </div>
         </div>
       </div>
+
+      {/* AI Summary strip */}
+      {summary && (
+        <div className="px-6 py-3 bg-blue-50/60 border-b border-blue-100 flex items-start gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-slate-700">{summary}</p>
+        </div>
+      )}
 
       {/* Content */}
       {isExpanded && (
@@ -535,7 +577,7 @@ export default function PublicEODDailyReportPage() {
           // List View - Detailed Reports
           <div className="space-y-4">
             {data.reports.map((report, idx) => (
-              <ReportCard key={idx} report={report} timezone={data.timezone} />
+              <ReportCard key={idx} report={report} timezone={data.timezone} slug={slug} token={token} />
             ))}
           </div>
         )}

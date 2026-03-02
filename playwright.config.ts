@@ -6,6 +6,7 @@ import { defineConfig, devices } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './__tests__/e2e',
+  globalSetup: './playwright/global-setup.ts',
 
   // Maximum time one test can run
   timeout: 60 * 1000,
@@ -68,11 +69,12 @@ export default defineConfig({
     },
   ],
 
-  // Run local dev server before starting tests
+  // Run local dev server before starting tests.
+  // Next.js cold-start compilation can take 60-90s — use 3min timeout.
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: 180 * 1000,
   },
 })

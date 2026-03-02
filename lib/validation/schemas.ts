@@ -239,7 +239,7 @@ export const createTaskSchema = z.object({
   assigneeId: uuidSchema.optional(), // Optional - defaults to current user
   workspaceId: uuidSchema, // Required for data isolation
   priority: prioritySchema.default("normal"),
-  dueDate: dateSchema.optional(), // Optional - defaults to today
+  dueDate: z.preprocess((v) => (v === "" ? undefined : v), dateSchema.optional()), // Optional - defaults to today; empty string treated as absent
   rockId: uuidSchema.nullable().optional(),
   projectId: uuidSchema.nullable().optional(),
   recurrence: recurrenceSchema.optional(),

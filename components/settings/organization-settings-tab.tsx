@@ -40,6 +40,15 @@ export function OrganizationSettingsTab() {
   const [eodReminderTime, setEodReminderTime] = useState(
     currentOrganization?.settings.eodReminderTime || "17:00"
   )
+  const [eodEmailDays, setEodEmailDays] = useState<number[]>(
+    currentOrganization?.settings.eodEmailDays ?? [1, 2, 3, 4, 5]
+  )
+
+  const toggleDay = (day: number) => {
+    setEodEmailDays(prev =>
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort()
+    )
+  }
   const [orgLogo, setOrgLogo] = useState<string | undefined>(
     currentOrganization?.logoUrl || undefined
   )
@@ -119,6 +128,7 @@ export function OrganizationSettingsTab() {
           timezone,
           weekStartDay: currentOrganization?.settings.weekStartDay ?? 1,
           eodReminderTime,
+          eodEmailDays,
           enableEmailNotifications: currentOrganization?.settings.enableEmailNotifications ?? true,
           enableSlackIntegration: currentOrganization?.settings.enableSlackIntegration ?? false,
           slackWebhookUrl: currentOrganization?.settings.slackWebhookUrl,
@@ -263,6 +273,41 @@ export function OrganizationSettingsTab() {
             />
             <p className="text-xs text-muted-foreground">
               Team members will receive a daily reminder to submit their end-of-day report at this time. Each member can set their own preferred time in Notifications settings.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>EOD Email Send Days</Label>
+            <div className="flex items-center gap-2 flex-wrap">
+              {[
+                { label: "Mon", value: 1 },
+                { label: "Tue", value: 2 },
+                { label: "Wed", value: 3 },
+                { label: "Thu", value: 4 },
+                { label: "Fri", value: 5 },
+                { label: "Sat", value: 6 },
+                { label: "Sun", value: 0 },
+              ].map(({ label, value }) => {
+                const active = eodEmailDays.includes(value)
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => isOwner && !isLoading && toggleDay(value)}
+                    disabled={!isOwner || isLoading}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
+                      active
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-muted-foreground border-input hover:border-primary/50"
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Reminder and "Great work today" emails only send on the selected days. Default is Monday–Friday.
             </p>
           </div>
 

@@ -33,34 +33,43 @@ function verifyCronSecret(request: NextRequest): boolean {
   return authHeader === `Bearer ${cronSecret}`
 }
 
+// Default sending days: Mon–Fri (1–5). Used when org has not configured eodEmailDays.
+const DEFAULT_EMAIL_DAYS = [1, 2, 3, 4, 5]
+
 /**
- * Check if the current time in the given timezone is 7 PM (19:00)
- * Default target time is 7 PM PST, but uses org timezone if configured
+ * Check if the current time in the given timezone is 7 PM (19:00) AND
+ * today is one of the org's configured sending days (default: Mon–Fri).
  */
 function isDailyEmailTime(org: Organization): boolean {
-  // Default to 7 PM (19:00) - the daily email time
   const targetHour = 19
-  const timezone = org.settings?.timezone || "America/Los_Angeles" // Default to PST
+  const timezone = org.settings?.timezone || "America/Los_Angeles"
+  const allowedDays: number[] = org.settings?.eodEmailDays ?? DEFAULT_EMAIL_DAYS
 
   try {
-    // Get current time in the organization's timezone
     const now = new Date()
-    const formatter = new Intl.DateTimeFormat("en-US", {
+
+    // Check hour
+    const hourFormatter = new Intl.DateTimeFormat("en-US", {
       timeZone: timezone,
       hour: "2-digit",
-      minute: "2-digit",
       hour12: false,
     })
-    const timeStr = formatter.format(now)
-    const [currentHour] = timeStr.split(":").map(Number)
+    const [currentHour] = hourFormatter.format(now).split(":").map(Number)
 
-    // Check if we're in the 7 PM hour window (19:00 - 19:59)
-    return currentHour === targetHour
+    // Check day of week (0=Sun … 6=Sat) in org's timezone
+    const dayFormatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      weekday: "short",
+    })
+    const dayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+    const currentDay = dayMap[dayFormatter.format(now)] ?? now.getDay()
+
+    return currentHour === targetHour && allowedDays.includes(currentDay)
   } catch (error) {
     logError(logger, `Timezone error for org ${org.id}`, error)
-    // Fall back to checking if it's 7 PM UTC
     const now = new Date()
-    return now.getUTCHours() === targetHour
+    const DEFAULT_EMAIL_DAYS = [1, 2, 3, 4, 5]
+    return now.getUTCHours() === targetHour && DEFAULT_EMAIL_DAYS.includes(now.getUTCDay())
   }
 }
 

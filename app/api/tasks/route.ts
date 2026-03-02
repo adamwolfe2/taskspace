@@ -157,7 +157,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     }
 
     // Determine assignee
-    let targetUserId = auth.user.id
+    let targetUserId: string | null = auth.user.id
+    let assigneeEmail: string | undefined = undefined
     let assigneeName = auth.user.name
     let taskType: "assigned" | "personal" = "personal"
     let assignedById: string | null = null
@@ -171,34 +172,35 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
         )
       }
 
-      // Get assignee info
-      const assigneeMember = await db.members.findByOrgAndUser(auth.organization.id, assigneeId)
-      if (!assigneeMember) {
+      // Try to find by userId first (active member), then by org_member.id (any member incl. draft)
+      let targetMember = await db.members.findByOrgAndUser(auth.organization.id, assigneeId)
+      if (!targetMember) {
+        targetMember = await db.members.findByOrgAndId(auth.organization.id, assigneeId)
+      }
+      if (!targetMember) {
         return NextResponse.json<ApiResponse<null>>(
           { success: false, error: "Assignee is not a member of this organization" },
           { status: 404 }
         )
       }
 
-      // Verify assignee has access to the target workspace
-      const assigneeHasAccess = await userHasWorkspaceAccess(assigneeId, workspaceId)
-      if (!assigneeHasAccess) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "Assignee does not have access to this workspace" },
-          { status: 403 }
-        )
+      if (targetMember.userId) {
+        // Active member — verify workspace access and use their userId
+        const assigneeHasAccess = await userHasWorkspaceAccess(targetMember.userId, workspaceId)
+        if (!assigneeHasAccess) {
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, error: "Assignee does not have access to this workspace" },
+            { status: 403 }
+          )
+        }
+        targetUserId = targetMember.userId
+      } else {
+        // Draft member (invited but not yet accepted) — use their email
+        assigneeEmail = targetMember.email
+        targetUserId = null
       }
 
-      const assigneeUser = await db.users.findById(assigneeId)
-      if (!assigneeUser) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "Assignee not found" },
-          { status: 404 }
-        )
-      }
-
-      targetUserId = assigneeId
-      assigneeName = assigneeUser.name
+      assigneeName = targetMember.name
       taskType = "assigned"
       assignedById = auth.user.id
       assignedByName = auth.user.name
@@ -262,6 +264,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       title: title.trim(),
       description: description?.trim(),
       assigneeId: targetUserId,
+      assigneeEmail,
       assigneeName,
       assignedById,
       assignedByName,
@@ -300,8 +303,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       workspaceId: task.workspaceId,
     }).catch(err => logError(logger, "Task creation webhook failed", err))
 
-    // Send notifications for assigned tasks (not personal tasks)
-    if (taskType === "assigned" && assigneeId !== auth.user.id) {
+    // Send notifications for assigned tasks (not personal tasks, not draft members)
+    if (taskType === "assigned" && targetUserId && assigneeId !== auth.user.id) {
       // Create in-app notification
       const notification: Notification = {
         id: generateId(),

@@ -1,0 +1,37 @@
+{
+  "cookies": [
+    {
+      "name": "session_token",
+      "value": "89c8edceeab812d01e3b6cf56cc8ccbf7cffbf4acd2d119e47bbf14cd5b9cb3f",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1773028142.822725,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "workspace-storage",
+          "value": "{\"state\":{\"currentWorkspaceId\":\"4f68f1fb-1922-4bbb-8908-d7a6c5ede1e0\"},\"version\":0}"
+        },
+        {
+          "name": "lastActivity",
+          "value": "1772426942862"
+        },
+        {
+          "name": "ts_usecase_49b464ddfd104104e0df3c70",
+          "value": "skipped"
+        },
+        {
+          "name": "darkMode",
+          "value": "false"
+        }
+      ]
+    }
+  ]
+}

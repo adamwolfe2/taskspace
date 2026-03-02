@@ -27,6 +27,7 @@ export interface OrganizationSettings {
   timezone: string
   weekStartDay: 0 | 1 | 2 | 3 | 4 | 5 | 6 // 0 = Sunday
   eodReminderTime: string // "17:00" format
+  eodEmailDays?: number[] // Days to send EOD emails: 0=Sun,1=Mon...6=Sat. Default [1,2,3,4,5] (weekdays)
   enableEmailNotifications: boolean
   enableSlackIntegration: boolean
   slackWebhookUrl?: string
@@ -283,7 +284,8 @@ export interface AssignedTask {
   workspaceId?: string | null // Multi-workspace support (SESSION 5)
   title: string
   description?: string
-  assigneeId: string
+  assigneeId: string | null // null for draft/invited members
+  assigneeEmail?: string    // set instead of assigneeId for draft members
   assigneeName: string
   assignedById: string | null
   assignedByName: string | null

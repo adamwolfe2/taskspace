@@ -99,7 +99,7 @@ function TaskCard({
                 <SelectContent>
                   {teamMembers.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {m.name}
+                      {m.name}{m.status === "invited" || m.status === "pending" ? " (Invited)" : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>

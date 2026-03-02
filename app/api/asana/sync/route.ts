@@ -80,8 +80,8 @@ export const POST = withAdmin(async (request, auth) => {
     // Sync TaskSpace → Asana (if direction is "to_asana" or "both")
     if (direction === "to_asana" || direction === "both") {
       for (const aimsTask of aimsTasks) {
-        const mapping = aimsUserToAsana.get(aimsTask.assigneeId)
-        if (!mapping) continue // Skip tasks for unmapped users
+        const mapping = aimsTask.assigneeId ? aimsUserToAsana.get(aimsTask.assigneeId) : undefined
+        if (!mapping) continue // Skip tasks for unmapped users (incl. draft-assigned tasks)
 
         // Skip tasks that originated from Asana (they're already in Asana)
         if (aimsTask.source === "asana") continue

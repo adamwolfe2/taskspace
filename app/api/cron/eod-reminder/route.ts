@@ -60,18 +60,19 @@ function isReminderTime(org: Organization): boolean {
     // Check if we're in the reminder hour window (e.g., 17:00 - 17:59)
     const isCorrectHour = currentHour === reminderHour
 
-    // Also check if it's a weekday in the org's timezone
+    // Check day of week against org's configured sending days (default Mon–Fri)
+    const allowedDays: number[] = org.settings?.eodEmailDays ?? [1, 2, 3, 4, 5]
     const dayFormatter = new Intl.DateTimeFormat("en-US", {
       timeZone: timezone,
       weekday: "short",
     })
-    const dayOfWeek = dayFormatter.format(now)
-    const isWeekday = !["Sat", "Sun"].includes(dayOfWeek)
+    const dayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+    const currentDay = dayMap[dayFormatter.format(now)] ?? now.getDay()
+    const isAllowedDay = allowedDays.includes(currentDay)
 
-    return isCorrectHour && isWeekday
+    return isCorrectHour && isAllowedDay
   } catch (error) {
     logError(logger, `Timezone error for org ${org.id}`, error)
-    // Fall back to checking if it's 5 PM UTC on a weekday
     const now = new Date()
     return now.getUTCHours() === 17 && now.getUTCDay() >= 1 && now.getUTCDay() <= 5
   }

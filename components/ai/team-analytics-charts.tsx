@@ -255,7 +255,7 @@ export function TeamAnalyticsCharts({
 
     // Count completed tasks
     filteredTasks.forEach(task => {
-      if (performance[task.assigneeId]) {
+      if (task.assigneeId && performance[task.assigneeId]) {
         performance[task.assigneeId].tasksCompleted++
       }
     })
