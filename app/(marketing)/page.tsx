@@ -59,7 +59,7 @@ function HeroSection() {
           >
             Run All Your Teams.
             <br />
-            <span className="text-gray-400">Lose Nothing.</span>
+            <span className="text-gray-400">In True Parallel.</span>
           </motion.h1>
 
           <motion.p
@@ -68,7 +68,7 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-xl sm:text-2xl text-gray-700 font-medium max-w-4xl mx-auto mb-4 text-center"
           >
-            The operating system for founders who think in parallel.
+            The operating system for ADHD founders.
           </motion.p>
 
           <motion.p
