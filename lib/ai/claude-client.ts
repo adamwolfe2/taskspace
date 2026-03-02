@@ -157,8 +157,46 @@ async function callClaudeJSONWithUsage<T>(
 }
 
 /**
+ * Attempt to repair truncated JSON by closing unclosed brackets/braces.
+ * Claude can be cut off mid-output when max_tokens is hit.
+ */
+function repairTruncatedJSON(text: string): string {
+  const stack: string[] = []
+  let inString = false
+  let escape = false
+
+  for (const ch of text) {
+    if (escape) {
+      escape = false
+      continue
+    }
+    if (ch === "\\" && inString) {
+      escape = true
+      continue
+    }
+    if (ch === '"') {
+      inString = !inString
+      continue
+    }
+    if (inString) continue
+
+    if (ch === "{") stack.push("}")
+    else if (ch === "[") stack.push("]")
+    else if (ch === "}" || ch === "]") {
+      if (stack.length > 0 && stack[stack.length - 1] === ch) {
+        stack.pop()
+      }
+    }
+  }
+
+  // Close any unclosed string first, then close containers in reverse
+  return text + (inString ? '"' : "") + stack.reverse().join("")
+}
+
+/**
  * Parse JSON from Claude's response
  * Handles cases where Claude wraps JSON in markdown code blocks
+ * and attempts to repair truncated responses.
  */
 function parseClaudeJSON<T>(text: string): T {
   // Remove markdown code blocks if present
@@ -188,9 +226,23 @@ function parseClaudeJSON<T>(text: string): T {
       try {
         return JSON.parse(match[0]) as T
       } catch {
+        // fall through to repair attempt
+      }
+    }
+
+    // Response may be truncated — attempt to repair by closing unclosed brackets
+    const candidate = match ? match[0] : cleaned
+    if (candidate.trim().startsWith("{") || candidate.trim().startsWith("[")) {
+      try {
+        const repaired = repairTruncatedJSON(candidate)
+        const result = JSON.parse(repaired) as T
+        logger.warn({ responseText: text.slice(0, 200) }, "Parsed truncated Claude response after repair")
+        return result
+      } catch {
         // fall through to error
       }
     }
+
     logger.error({ responseText: text.slice(0, 500) }, "Failed to parse Claude response")
     throw new Error("Failed to parse AI response as JSON")
   }
@@ -463,6 +515,7 @@ Parse this into a structured EOD report. Match tasks to my rocks where possible.
   const { result: parsed, usage, model } = await callClaudeJSONWithUsage<ParsedEODReport>(PROMPTS.eodTextParser, userMessage, {
     temperature: 0.3,
     model: MODEL_HAIKU,
+    maxTokens: 8192,
   })
 
   return {
