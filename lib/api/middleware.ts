@@ -44,6 +44,75 @@ import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 /**
+ * API paths that must remain accessible regardless of subscription status.
+ * Users need billing routes to upgrade, auth routes to log in/out.
+ */
+const SUBSCRIPTION_EXEMPT_PREFIXES = [
+  "/api/billing",
+  "/api/auth",
+  "/api/health",
+  "/api/cron",
+  "/api/onboarding",
+]
+
+/**
+ * Enforce subscription status server-side. Returns a 402 response if the
+ * org's paid trial has expired or subscription was canceled before the
+ * webhook could downgrade the plan to free.
+ *
+ * Free-plan orgs always pass through — feature gating handles their limits.
+ * Past-due orgs keep access during the dunning grace period.
+ *
+ * Returns null if access should be allowed, or a 402 NextResponse to return immediately.
+ */
+function checkSubscriptionOrRespond(
+  request: NextRequest,
+  auth: AuthContext
+): NextResponse<ApiResponse<null>> | null {
+  const sub = auth.organization.subscription
+
+  // Free plan always has access — no expiry
+  if (!sub || sub.plan === "free") return null
+
+  // Active and past_due subscriptions are allowed
+  // (past_due enters dunning — access continues until subscription.deleted fires)
+  if (sub.status === "active" || sub.status === "past_due") return null
+
+  // Determine if the request path is exempt from enforcement
+  const pathname = new URL(request.url).pathname
+  if (SUBSCRIPTION_EXEMPT_PREFIXES.some(p => pathname.startsWith(p))) return null
+
+  // Trial expired: trialing status but currentPeriodEnd is in the past
+  if (sub.status === "trialing") {
+    if (!sub.currentPeriodEnd) return null // No end date set — still valid
+    const trialEnd = new Date(sub.currentPeriodEnd)
+    if (trialEnd > new Date()) return null // Trial still active
+    return NextResponse.json<ApiResponse<null>>(
+      {
+        success: false,
+        error: "Your free trial has expired. Please upgrade to continue using Taskspace.",
+        code: "TRIAL_EXPIRED",
+      },
+      { status: 402 }
+    )
+  }
+
+  // Canceled: webhook should have set plan to "free", but guard anyway
+  if (sub.status === "canceled") {
+    return NextResponse.json<ApiResponse<null>>(
+      {
+        success: false,
+        error: "Your subscription has been canceled. Please renew to continue.",
+        code: "SUBSCRIPTION_CANCELED",
+      },
+      { status: 402 }
+    )
+  }
+
+  return null
+}
+
+/**
  * Check org-level rate limit and return 429 response if exceeded.
  * Returns null if within limits, or a NextResponse to return immediately.
  */
@@ -143,6 +212,9 @@ export function withAuth(
       const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
       if (orgLimitResponse) return orgLimitResponse
 
+      const subResponse = checkSubscriptionOrRespond(request, auth)
+      if (subResponse) return subResponse
+
       return await handler(request, auth, context)
     } catch (error) {
       return handleError(error)
@@ -238,6 +310,9 @@ export function withAdmin(
       const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
       if (orgLimitResponse) return orgLimitResponse
 
+      const subResponse = checkSubscriptionOrRespond(request, auth)
+      if (subResponse) return subResponse
+
       return await handler(request, auth, context)
     } catch (error) {
       return handleError(error)
@@ -288,6 +363,9 @@ export function withOwner(
 
       const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
       if (orgLimitResponse) return orgLimitResponse
+
+      const subResponse = checkSubscriptionOrRespond(request, auth)
+      if (subResponse) return subResponse
 
       return await handler(request, auth, context)
     } catch (error) {
@@ -520,6 +598,9 @@ export function withWorkspaceAccess(
       const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
       if (orgLimitResponse) return orgLimitResponse
 
+      const subResponse = checkSubscriptionOrRespond(request, auth)
+      if (subResponse) return subResponse
+
       return await handler(request, auth, workspaceId)
     } catch (error) {
       return handleError(error)
@@ -602,6 +683,9 @@ export function withWorkspaceParam(
 
       const orgLimitResponse = checkOrgRateLimitOrRespond(auth)
       if (orgLimitResponse) return orgLimitResponse
+
+      const subResponse = checkSubscriptionOrRespond(request, auth)
+      if (subResponse) return subResponse
 
       return await handler(request, auth, workspaceId, context)
     } catch (error) {
