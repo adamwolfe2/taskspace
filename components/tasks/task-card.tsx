@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, User, Pencil, Trash2, AlertCircle, Clock, MessageSquare, Repeat, AlarmClock, Copy, PlayCircle, Check } from "lucide-react"
+import { Calendar, User, Pencil, Trash2, Clock, MessageSquare, Repeat, AlarmClock, Copy, PlayCircle, Check } from "lucide-react"
 import { format, differenceInDays, isToday, isTomorrow, isPast, startOfDay, addDays } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useBrandStatusStyles } from "@/lib/hooks/use-brand-status-styles"
@@ -34,13 +34,9 @@ function getDueDateStatus(dueDate: string | null, isCompleted: boolean) {
   const due = startOfDay(new Date(dueDate))
   const daysUntilDue = differenceInDays(due, today)
 
-  if (isPast(due) && !isToday(due)) {
-    return {
-      label: `${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) > 1 ? "s" : ""} overdue`,
-      semanticStatus: "blocked" as const,
-      icon: AlertCircle,
-    }
-  }
+  // Overdue tasks: no alarming badge — due date shown quietly below
+  if (isPast(due) && !isToday(due)) return null
+
   if (isToday(due)) {
     return {
       label: "Due today",
@@ -91,22 +87,12 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, onD
     <>
     <Card
       className={cn(
-        "p-3 sm:p-4 transition-all overflow-hidden w-full",
+        "p-2.5 sm:p-3 transition-all overflow-hidden w-full",
         isCompleted && "opacity-60 bg-muted/50",
-        !isCompleted && dueDateStatus?.semanticStatus === "blocked" && "border-l-4 border-l-red-500 bg-red-50/40",
-        !isCompleted && dueDateStatus?.semanticStatus === "at-risk" && "border-l-4 border-l-amber-400",
-        isSelected && "ring-2 ring-blue-500 ring-offset-2",
+        isSelected && "ring-2 ring-primary/40 ring-offset-1",
       )}
     >
       <div className="flex items-start gap-2 sm:gap-3 min-w-0">
-        {showSelectionCheckbox && onToggleSelection && (
-          <Checkbox
-            checked={isSelected || false}
-            onCheckedChange={() => onToggleSelection(task.id)}
-            className="mt-1 flex-shrink-0"
-            aria-label={`Select task "${task.title}"`}
-          />
-        )}
         <Checkbox
           checked={isCompleted}
           onCheckedChange={() => !isCompleted && onComplete(task.id)}
@@ -117,7 +103,7 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, onD
         <div className="flex-1 space-y-2 min-w-0 overflow-hidden">
           <div className="flex items-start justify-between gap-2">
             <h3 className={cn(
-              "font-medium break-words line-clamp-2 whitespace-pre-wrap",
+              "text-sm font-medium break-words line-clamp-2 whitespace-pre-wrap",
               isCompleted && "line-through text-muted-foreground"
             )}>
               {task.title}
@@ -191,16 +177,16 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, onD
           {task.description && (
             <div>
               <p className={cn(
-                "text-sm text-muted-foreground break-words whitespace-pre-wrap",
+                "text-xs text-muted-foreground break-words whitespace-pre-wrap",
                 isCompleted && "line-through",
-                !showFullDescription && isLongDescription && "line-clamp-2"
+                !showFullDescription && "line-clamp-1"
               )}>
                 {task.description}
               </p>
               {isLongDescription && (
                 <button
                   onClick={() => setShowFullDescription(!showFullDescription)}
-                  className="text-xs text-slate-500 hover:text-slate-700 mt-1 underline"
+                  className="text-xs text-slate-400 hover:text-slate-600 mt-0.5 underline"
                   aria-expanded={showFullDescription}
                   aria-label={showFullDescription ? "Show less of description" : "Show more of description"}
                 >
