@@ -47,6 +47,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 
     // Create checkout session
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
+    const isFirstSubscription = org.subscription?.plan === "free"
     const session = await createCheckoutSession({
       organizationId: org.id,
       organizationName: org.name,
@@ -56,6 +57,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       successUrl: `${baseUrl}/settings/billing?billing=success`,
       cancelUrl: `${baseUrl}/settings/billing?billing=canceled`,
       customerId,
+      trialPeriodDays: isFirstSubscription ? 14 : undefined,
     })
 
     if (!session.url) {

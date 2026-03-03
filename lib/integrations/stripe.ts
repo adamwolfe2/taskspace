@@ -42,6 +42,7 @@ export interface CreateCheckoutParams {
   successUrl: string
   cancelUrl: string
   customerId?: string
+  trialPeriodDays?: number
 }
 
 export interface CreatePortalParams {
@@ -81,6 +82,7 @@ export async function createCheckoutSession(params: CreateCheckoutParams) {
         organizationId: params.organizationId,
         plan: params.plan,
       },
+      ...(params.trialPeriodDays ? { trial_period_days: params.trialPeriodDays } : {}),
     },
     allow_promotion_codes: true,
     billing_address_collection: "required",
