@@ -1,14 +1,15 @@
 import { test, expect, type Page } from '@playwright/test'
 
 test.use({ storageState: 'playwright/.auth/user.json' })
+test.use({ viewport: { width: 1280, height: 720 } }) // App tests require desktop layout
 
 async function goDashboard(page: Page) {
   await page.goto('/app?p=dashboard')
-  await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+  await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
   // Wait for workspace to load (Rock Progress is feature-gated, confirming workspace is ready)
   await page.locator('[data-sidebar="desktop"]')
     .getByRole('button', { name: 'Rock Progress', exact: true })
-    .waitFor({ state: 'visible', timeout: 30000 })
+    .waitFor({ state: 'attached', timeout: 30000 })
   // Dismiss any modal that might appear (e.g. use-case selector on first load)
   const modal = page.getByRole('dialog')
   if (await modal.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -85,14 +86,14 @@ test.describe('EOD Report Submission', () => {
 test.describe('EOD History', () => {
   test('history page loads without error', async ({ page }) => {
     await page.goto('/app?p=history')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     // Should not show an error boundary
     await expect(page.getByText(/something went wrong/i)).not.toBeVisible({ timeout: 5000 })
   })
 
   test('history page renders a list or empty state', async ({ page }) => {
     await page.goto('/app?p=history')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     // History page shows content — either empty state heading or report list with date headings
     const main = page.locator('main[role="main"]')
     await expect(main.locator('h2, h3').first()).toBeVisible({ timeout: 10000 })

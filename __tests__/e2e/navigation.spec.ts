@@ -7,14 +7,17 @@ test.use({ storageState: 'playwright/.auth/user.json' })
 // Workspace features are fetched after auth — feature-gated nav items only
 // appear once the workspace is loaded.
 async function waitForApp(page: Page) {
-  await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+  // Wait for sidebar to be attached to DOM (visible on desktop, hidden on mobile)
+  await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
   // "Rock Progress" is feature-gated; its presence confirms workspace is loaded
   await page.locator('[data-sidebar="desktop"]')
     .getByRole('button', { name: 'Rock Progress', exact: true })
-    .waitFor({ state: 'visible', timeout: 30000 })
+    .waitFor({ state: 'attached', timeout: 30000 })
 }
 
 test.describe('Authenticated Navigation', () => {
+  // These tests require desktop layout to interact with the sidebar
+  test.use({ viewport: { width: 1280, height: 720 } })
   test('dashboard loads after login', async ({ page }) => {
     await page.goto('/app')
     await waitForApp(page)
@@ -81,7 +84,7 @@ test.describe('Authenticated Navigation', () => {
 
   test('command palette opens with Cmd+K', async ({ page }) => {
     await page.goto('/app')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     await page.keyboard.press('Meta+k')
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
     await page.keyboard.press('Escape')
@@ -90,7 +93,7 @@ test.describe('Authenticated Navigation', () => {
 
   test('main content area is accessible (has main landmark)', async ({ page }) => {
     await page.goto('/app')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     await expect(page.locator('main[role="main"]')).toBeVisible()
   })
 

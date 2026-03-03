@@ -1,14 +1,15 @@
 import { test, expect, type Page } from '@playwright/test'
 
 test.use({ storageState: 'playwright/.auth/user.json' })
+test.use({ viewport: { width: 1280, height: 720 } }) // App tests require desktop layout
 
 async function goTasks(page: Page) {
   await page.goto('/app?p=tasks')
-  await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+  await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
   // Wait for workspace to load (Rock Progress is feature-gated, confirming workspace is ready)
   await page.locator('[data-sidebar="desktop"]')
     .getByRole('button', { name: 'Rock Progress', exact: true })
-    .waitFor({ state: 'visible', timeout: 30000 })
+    .waitFor({ state: 'attached', timeout: 30000 })
 }
 
 test.describe('Tasks Page', () => {
@@ -108,7 +109,7 @@ test.describe('Tasks Page', () => {
 test.describe('Task Pool Page', () => {
   test('task pool page loads without error', async ({ page }) => {
     await page.goto('/app?p=taskPool')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     await expect(page.getByText(/something went wrong/i)).not.toBeVisible({ timeout: 5000 })
   })
 })

@@ -1,18 +1,19 @@
 import { test, expect } from '@playwright/test'
 
 test.use({ storageState: 'playwright/.auth/user.json' })
+test.use({ viewport: { width: 1280, height: 720 } }) // App tests require desktop layout
 
 async function waitForWorkspace(page: import('@playwright/test').Page) {
-  await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+  await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
   await page.locator('[data-sidebar="desktop"]')
     .getByRole('button', { name: 'Rock Progress', exact: true })
-    .waitFor({ state: 'visible', timeout: 30000 })
+    .waitFor({ state: 'attached', timeout: 30000 })
 }
 
 test.describe('Settings Page', () => {
   test('settings page loads without error', async ({ page }) => {
     await page.goto('/app?p=settings')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     await expect(page.getByText(/something went wrong/i)).not.toBeVisible({ timeout: 5000 })
   })
 
@@ -29,7 +30,7 @@ test.describe('Settings Page', () => {
 test.describe('Scorecard Page', () => {
   test('scorecard page loads without error', async ({ page }) => {
     await page.goto('/app?p=scorecard')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     await expect(page.getByText(/something went wrong/i)).not.toBeVisible({ timeout: 5000 })
   })
 })
@@ -37,7 +38,7 @@ test.describe('Scorecard Page', () => {
 test.describe('IDS Board', () => {
   test('IDS board page loads without error', async ({ page }) => {
     await page.goto('/app?p=ids-board')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     await expect(page.getByText(/something went wrong/i)).not.toBeVisible({ timeout: 5000 })
   })
 })
@@ -45,7 +46,7 @@ test.describe('IDS Board', () => {
 test.describe('Notes Page', () => {
   test('notes page loads without error', async ({ page }) => {
     await page.goto('/app?p=notes')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     await expect(page.getByText(/something went wrong/i)).not.toBeVisible({ timeout: 5000 })
   })
 })
@@ -53,7 +54,7 @@ test.describe('Notes Page', () => {
 test.describe('Calendar Page', () => {
   test('calendar page loads without error', async ({ page }) => {
     await page.goto('/app?p=calendar')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     await expect(page.getByText(/something went wrong/i)).not.toBeVisible({ timeout: 5000 })
   })
 })
@@ -61,7 +62,7 @@ test.describe('Calendar Page', () => {
 test.describe('Org Chart Page', () => {
   test('org chart page loads without error', async ({ page }) => {
     await page.goto('/app?p=org-chart')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     await expect(page.getByText(/something went wrong/i)).not.toBeVisible({ timeout: 5000 })
   })
 })
@@ -69,7 +70,7 @@ test.describe('Org Chart Page', () => {
 test.describe('V/TO Page', () => {
   test('vto page loads without error', async ({ page }) => {
     await page.goto('/app?p=vto')
-    await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+    await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
     await expect(page.getByText(/something went wrong/i)).not.toBeVisible({ timeout: 5000 })
   })
 })

@@ -1,14 +1,15 @@
 import { test, expect, type Page } from '@playwright/test'
 
 test.use({ storageState: 'playwright/.auth/user.json' })
+test.use({ viewport: { width: 1280, height: 720 } }) // App tests require desktop layout
 
 async function goRocks(page: Page) {
   await page.goto('/app?p=rocks')
-  await page.waitForSelector('[data-sidebar="desktop"]', { timeout: 20000 })
+  await page.waitForSelector('[data-sidebar="desktop"]', { state: 'attached', timeout: 20000 })
   // Wait for workspace to load (Rock Progress is feature-gated, confirming workspace is ready)
   await page.locator('[data-sidebar="desktop"]')
     .getByRole('button', { name: 'Rock Progress', exact: true })
-    .waitFor({ state: 'visible', timeout: 30000 })
+    .waitFor({ state: 'attached', timeout: 30000 })
 }
 
 test.describe('Rocks Page', () => {
