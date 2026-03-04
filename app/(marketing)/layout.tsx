@@ -3,7 +3,7 @@ import { MegaMenu } from "@/components/marketing/mega-menu"
 import { MarketingFooter } from "@/components/marketing/footer"
 import { CookieConsent } from "@/components/marketing/cookie-consent"
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

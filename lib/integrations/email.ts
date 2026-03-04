@@ -22,7 +22,7 @@ export function isEmailConfigured(): boolean {
 }
 
 const FROM_EMAIL = process.env.EMAIL_FROM || "Taskspace <team@trytaskspace.com>"
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://trytaskspace.com"
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
 
 /**
  * Generate a signed HMAC token for one-click unsubscribe links.
