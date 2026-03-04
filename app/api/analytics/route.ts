@@ -61,19 +61,14 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
         break
     }
 
-    // Fetch workspace-specific data
+    // Fetch workspace-specific data — workspace and date filters pushed to SQL
     const [rocks, tasks, eodReports, workspaceMembers, orgMembers] = await Promise.all([
-      db.rocks.findByOrganizationId(auth.organization.id),
-      db.assignedTasks.findByOrganizationId(auth.organization.id),
-      db.eodReports.findByOrganizationId(auth.organization.id),
+      db.rocks.findByOrganizationId(auth.organization.id, workspaceId),
+      db.assignedTasks.findByOrganizationId(auth.organization.id, workspaceId),
+      db.eodReports.findByOrganizationId(auth.organization.id, workspaceId, startDate),
       getWorkspaceMembers(workspaceId),
       db.members.findWithUsersByOrganizationId(auth.organization.id),
     ])
-
-    // ALWAYS filter by workspace - enforce workspace isolation
-    const filteredRocks = rocks.filter((r) => r.workspaceId === workspaceId)
-    const filteredTasks = tasks.filter((t) => t.workspaceId === workspaceId)
-    const filteredReports = eodReports.filter((r) => r.workspaceId === workspaceId)
 
     // Get workspace member user IDs for filtering
     const workspaceMemberUserIds = new Set(workspaceMembers.map((wm) => wm.userId))
@@ -81,16 +76,14 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     // Get full member details for workspace members only
     const members = orgMembers.filter((m) => m.userId && workspaceMemberUserIds.has(m.userId))
 
-    // Filter by date range
-    const rocksInRange = filteredRocks.filter(
+    // Date range filtering for rocks/tasks (eodReports already filtered in SQL via startDate)
+    const rocksInRange = rocks.filter(
       (r) => new Date(r.createdAt) >= startDate
     )
-    const tasksInRange = filteredTasks.filter(
+    const tasksInRange = tasks.filter(
       (t) => new Date(t.createdAt) >= startDate
     )
-    const reportsInRange = filteredReports.filter(
-      (r) => new Date(r.date) >= startDate
-    )
+    const reportsInRange = eodReports // already filtered by workspace + startDate in SQL
 
     // Generate daily intervals
     const days = eachDayOfInterval({ start: startDate, end: now })
@@ -137,12 +130,12 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     })
 
     // 4. OVERALL METRICS
-    const totalRocks = filteredRocks.length
-    const completedRocks = filteredRocks.filter((r) => r.status === "completed").length
+    const totalRocks = rocks.length
+    const completedRocks = rocks.filter((r) => r.status === "completed").length
     const rockCompletionRate = totalRocks > 0 ? Math.round((completedRocks / totalRocks) * 100) : 0
 
-    const totalTasks = filteredTasks.length
-    const completedTasks = filteredTasks.filter((t) => t.status === "completed").length
+    const totalTasks = tasks.length
+    const completedTasks = tasks.filter((t) => t.status === "completed").length
     const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
     const totalExpectedReports = members.filter((m) => m.status === "active").length * days.length
