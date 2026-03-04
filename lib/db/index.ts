@@ -1564,15 +1564,31 @@ export const db = {
 
   // EOD Reports
   eodReports: {
-    async findByOrganizationId(orgId: string, workspaceId?: string): Promise<EODReport[]> {
+    async findByOrganizationId(orgId: string, workspaceId?: string, sinceDate?: Date): Promise<EODReport[]> {
       // OPTIMIZED: Added LIMIT and ORDER BY - fetches last 90 days max
-      // Added optional workspace filter to move filtering to SQL layer
+      // Added optional workspace filter and sinceDate to push filtering to SQL layer
+      const sinceDateStr = sinceDate ? sinceDate.toISOString().split("T")[0] : null
+      if (workspaceId && sinceDateStr) {
+        const { rows } = await sql`
+          SELECT * FROM eod_reports
+          WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId} AND date >= ${sinceDateStr}
+          ORDER BY date DESC LIMIT 500
+        `
+        return rows.map(parseEODReport)
+      }
       if (workspaceId) {
         const { rows } = await sql`
           SELECT * FROM eod_reports
           WHERE organization_id = ${orgId} AND workspace_id = ${workspaceId}
-          ORDER BY date DESC
-          LIMIT 500
+          ORDER BY date DESC LIMIT 500
+        `
+        return rows.map(parseEODReport)
+      }
+      if (sinceDateStr) {
+        const { rows } = await sql`
+          SELECT * FROM eod_reports
+          WHERE organization_id = ${orgId} AND date >= ${sinceDateStr}
+          ORDER BY date DESC LIMIT 500
         `
         return rows.map(parseEODReport)
       }

@@ -6,6 +6,7 @@ import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { subDays, subMonths, eachDayOfInterval, format } from "date-fns"
+import { isFeatureEnabled, getFeatureGateError } from "@/lib/auth/feature-gate"
 
 /**
  * GET /api/analytics
@@ -13,6 +14,10 @@ import { subDays, subMonths, eachDayOfInterval, format } from "date-fns"
  */
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
+    if (!isFeatureEnabled(auth.organization, "basic_analytics")) {
+      return getFeatureGateError("basic_analytics")
+    }
+
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
     const dateRange = searchParams.get("dateRange") || "30d" // 7d, 30d, 90d, 1y

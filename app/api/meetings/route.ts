@@ -10,10 +10,15 @@ import type { ApiResponse } from "@/lib/types"
 import type { Meeting } from "@/lib/db/meetings"
 import { parsePaginationParams, buildPaginatedResponse } from "@/lib/utils/pagination"
 import type { PaginatedResponse } from "@/lib/utils/pagination"
+import { isFeatureEnabled, getFeatureGateError } from "@/lib/auth/feature-gate"
 
 // GET /api/meetings - List meetings for a workspace
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
+    if (!isFeatureEnabled(auth.organization, "l10_meetings")) {
+      return getFeatureGateError("l10_meetings")
+    }
+
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
     const status = searchParams.get("status") as Meeting["status"] | null
@@ -90,6 +95,10 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // POST /api/meetings - Create a new meeting (admin/manager only)
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
+    if (!isFeatureEnabled(auth.organization, "l10_meetings")) {
+      return getFeatureGateError("l10_meetings")
+    }
+
     const { workspaceId, title, scheduledAt, attendees } = await validateBody(request, createMeetingSchema)
 
     // SECURITY: Verify workspace belongs to user's organization

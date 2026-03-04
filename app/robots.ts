@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next"
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = "https://trytaskspace.com"
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
 
   return {
     rules: [
@@ -16,7 +16,6 @@ export default function robots(): MetadataRoute.Robots {
           "/settings/",
           "/_next/",
           "/private/",
-          "/public/eod/",
         ],
       },
     ],

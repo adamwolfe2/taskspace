@@ -7,10 +7,15 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createIdsBoardItemSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
 import type { ApiResponse, IdsBoardItem } from "@/lib/types"
+import { isFeatureEnabled, getFeatureGateError } from "@/lib/auth/feature-gate"
 
 // GET /api/ids-board?workspaceId=xxx - List all IDS board items
 export const GET = withAuth(async (request, auth) => {
   try {
+    if (!isFeatureEnabled(auth.organization, "ids_board")) {
+      return getFeatureGateError("ids_board")
+    }
+
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
 
@@ -55,6 +60,10 @@ export const GET = withAuth(async (request, auth) => {
 // POST /api/ids-board - Create a new IDS board item
 export const POST = withAuth(async (request, auth) => {
   try {
+    if (!isFeatureEnabled(auth.organization, "ids_board")) {
+      return getFeatureGateError("ids_board")
+    }
+
     const { workspaceId, title, description, columnName, itemType, linkedId, assignedTo } =
       await validateBody(request, createIdsBoardItemSchema)
 

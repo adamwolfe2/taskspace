@@ -41,8 +41,8 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     const { query, workspaceId } = await validateBody(request, aiQueryRequestSchema)
 
     // SECURITY: Add optional workspace filtering to prevent cross-workspace data leakage
-    // If workspaceId is provided, filter data to only that workspace
-    const workspaceFilter = workspaceId || null
+    // Pass workspaceId directly to DB queries — no in-memory filtering needed
+    const workspaceFilter = workspaceId || undefined
 
     // Build context from team data
     const teamMembersData = await db.members.findWithUsersByOrganizationId(auth.organization.id)
@@ -58,26 +58,15 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       status: m.status,
     }))
 
-    // Fetch all data
-    const allTasks = await db.assignedTasks.findByOrganizationId(auth.organization.id)
-    const allRocks = await db.rocks.findByOrganizationId(auth.organization.id)
-    const allEodReports = await db.eodReports.findByOrganizationId(auth.organization.id)
-
-    // Filter by workspace if specified
-    const tasks = workspaceFilter
-      ? allTasks.filter(t => t.workspaceId === workspaceFilter)
-      : allTasks
-    const rocks = workspaceFilter
-      ? allRocks.filter(r => r.workspaceId === workspaceFilter)
-      : allRocks
-    const eodReports = workspaceFilter
-      ? allEodReports.filter(e => e.workspaceId === workspaceFilter)
-      : allEodReports
-
-    // Get the last 30 days of reports for context
+    // Fetch data with filters pushed to SQL layer
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const recentReports = eodReports.filter(r => new Date(r.date) >= thirtyDaysAgo)
+
+    const [tasks, rocks, recentReports] = await Promise.all([
+      db.assignedTasks.findByOrganizationId(auth.organization.id, workspaceFilter),
+      db.rocks.findByOrganizationId(auth.organization.id, workspaceFilter),
+      db.eodReports.findByOrganizationId(auth.organization.id, workspaceFilter, thirtyDaysAgo),
+    ])
 
     // Create conversation record
     const now = new Date().toISOString()

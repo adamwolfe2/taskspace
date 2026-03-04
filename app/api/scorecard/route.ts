@@ -15,6 +15,7 @@
 import { NextResponse } from "next/server"
 import { isAdmin } from "@/lib/auth/middleware"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
+import { isFeatureEnabled, getFeatureGateError } from "@/lib/auth/feature-gate"
 import { userHasWorkspaceAccess, getWorkspaceMembers } from "@/lib/db/workspaces"
 import { getScorecardData } from "@/lib/metrics"
 import { sql } from "@/lib/db/sql"
@@ -26,6 +27,10 @@ import { updateScorecardEntrySchema } from "@/lib/validation/schemas"
 
 export const GET = withAuth(async (request, auth) => {
   try {
+    if (!isFeatureEnabled(auth.organization, "scorecard")) {
+      return getFeatureGateError("scorecard")
+    }
+
     const url = new URL(request.url)
     const workspaceId = url.searchParams.get("workspaceId")
 
@@ -94,6 +99,10 @@ export const GET = withAuth(async (request, auth) => {
  */
 export const PATCH = withAuth(async (request, auth) => {
   try {
+    if (!isFeatureEnabled(auth.organization, "scorecard")) {
+      return getFeatureGateError("scorecard")
+    }
+
     // Only admins can edit scorecard entries
     if (!isAdmin(auth)) {
       return NextResponse.json(
