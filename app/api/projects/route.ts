@@ -45,13 +45,10 @@ export const GET = withAuth(async (request, auth) => {
       )
     }
 
-    // Feature gate check
+    // Feature gate check — return empty list (not 403) so background fetches don't pollute the console
     const workspace = await getWorkspaceById(workspaceId)
     if (workspace && !isWorkspaceFeatureEnabled(auth.organization, workspace, "core.projects")) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Projects feature is not enabled for this workspace" },
-        { status: 403 }
-      )
+      return NextResponse.json<ApiResponse<Project[]>>({ success: true, data: [] })
     }
 
     // Check if pagination params are provided

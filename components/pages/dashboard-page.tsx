@@ -383,6 +383,7 @@ export function DashboardPage({
      <ErrorBoundary title="Productivity bar unavailable">
       <ProductivityBar
        userId={effectiveUserId}
+       workspaceId={currentWorkspaceId ?? undefined}
        eodReports={eodReports}
        tasks={assignedTasks}
        rocks={rocks}

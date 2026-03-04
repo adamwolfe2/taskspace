@@ -12,6 +12,7 @@ import type { Achievement, UserAchievement, EODReport, AssignedTask, Rock, Weekl
 
 interface ProductivityBarProps {
   userId: string
+  workspaceId?: string
   eodReports: EODReport[]
   tasks: AssignedTask[]
   rocks: Rock[]
@@ -22,6 +23,7 @@ interface ProductivityBarProps {
 
 export function ProductivityBar({
   userId,
+  workspaceId,
   eodReports,
   tasks,
   rocks,
@@ -41,9 +43,9 @@ export function ProductivityBar({
     try {
       const promises: Promise<void>[] = []
 
-      if (showStreaks) {
+      if (showStreaks && workspaceId) {
         promises.push(
-          fetch("/api/productivity/streak").then(async (res) => {
+          fetch(`/api/productivity/streak?workspaceId=${workspaceId}`).then(async (res) => {
             if (res.ok) {
               const data = await res.json()
               if (data.success && data.data) setStreak(data.data)
