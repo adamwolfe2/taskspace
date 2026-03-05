@@ -82,7 +82,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
 
   return (
     <nav className="flex flex-col h-full py-4">
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
         {/* Empty state when all features disabled */}
         {!hasAnyFeatures && (
           <div className="px-6 py-8 text-center">
@@ -198,7 +198,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
       </div>
 
       {/* Onboarding checklist + Settings at bottom */}
-      <div className="mt-auto space-y-0">
+      <div className="shrink-0 space-y-0">
         <GettingStartedChecklist onNavigate={(page) => handleNavigation(page)} />
       {!isDemoMode && (
       <div className="px-3 pt-2 border-t border-slate-100">

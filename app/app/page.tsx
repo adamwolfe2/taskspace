@@ -349,13 +349,13 @@ function AppContent() {
     )
   }
 
-  // Handle invitation acceptance (works for both new and existing users)
-  if (inviteToken && currentPage !== "login") {
+  // Handle invitation acceptance (works for both new and existing users, regardless of auth status)
+  if (inviteToken) {
     return <AcceptInvitationPage token={inviteToken} onBack={() => { setInviteToken(null); setCurrentPage("login") }} />
   }
 
-  // Handle password reset with token
-  if (resetToken && !isAuthenticated) {
+  // Handle password reset with token (always show — even if user has active session)
+  if (resetToken) {
     return <ResetPasswordPage token={resetToken} />
   }
 

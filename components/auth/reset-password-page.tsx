@@ -14,7 +14,7 @@ interface ResetPasswordPageProps {
 }
 
 export function ResetPasswordPage({ token }: ResetPasswordPageProps) {
-  const { setCurrentPage } = useApp()
+  const { setCurrentPage, logout } = useApp()
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -94,6 +94,8 @@ export function ResetPasswordPage({ token }: ResetPasswordPageProps) {
       }
 
       setSuccess(true)
+      // Log out any active session so user must sign in with new password
+      try { await logout() } catch { /* ignore */ }
     } catch {
       setError("An error occurred. Please try again.")
     } finally {
