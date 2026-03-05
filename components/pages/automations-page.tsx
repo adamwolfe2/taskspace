@@ -45,6 +45,11 @@ export function AutomationsPage() {
   const [description, setDescription] = useState("")
   const [triggerType, setTriggerType] = useState<AutomationTriggerType>("task_completed")
   const [actionType, setActionType] = useState<AutomationAction["type"]>("notify")
+  // Action config fields
+  const [actionTitle, setActionTitle] = useState("")
+  const [actionMessage, setActionMessage] = useState("")
+  const [actionEmail, setActionEmail] = useState("")
+  const [actionWebhook, setActionWebhook] = useState("")
 
   const workspaceId = currentWorkspace?.id
 
@@ -86,7 +91,24 @@ export function AutomationsPage() {
           description: description || undefined,
           triggerType,
           triggerConfig: {},
-          actions: [{ type: actionType, config: {} }],
+          actions: [{ type: actionType, config: {
+            ...(actionType === "notify" && {
+              title: actionTitle || undefined,
+              message: actionMessage || undefined,
+            }),
+            ...(actionType === "create_task" && {
+              title: actionTitle || "Automated Task",
+            }),
+            ...(actionType === "send_email" && {
+              to: actionEmail || undefined,
+              subject: actionTitle || undefined,
+              body: actionMessage || undefined,
+            }),
+            ...(actionType === "send_slack" && {
+              webhookUrl: actionWebhook || undefined,
+              message: actionMessage || undefined,
+            }),
+          } }],
         }),
       })
       const data = await res.json()
@@ -94,6 +116,10 @@ export function AutomationsPage() {
         setShowCreate(false)
         setName("")
         setDescription("")
+        setActionTitle("")
+        setActionMessage("")
+        setActionEmail("")
+        setActionWebhook("")
         fetchAutomations()
       }
     } catch {
@@ -176,6 +202,58 @@ export function AutomationsPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  {/* Action config fields */}
+                  {actionType === "notify" && (
+                    <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground">Notification is sent to the user who triggered the event.</p>
+                      <div>
+                        <label className="text-sm font-medium">Title (optional)</label>
+                        <Input value={actionTitle} onChange={e => setActionTitle(e.target.value)} placeholder="e.g., Task completed!" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Message (optional)</label>
+                        <Input value={actionMessage} onChange={e => setActionMessage(e.target.value)} placeholder="e.g., Great work on finishing that task" />
+                      </div>
+                    </div>
+                  )}
+                  {actionType === "create_task" && (
+                    <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground">Task is assigned to the user who triggered the event.</p>
+                      <div>
+                        <label className="text-sm font-medium">Task Title</label>
+                        <Input value={actionTitle} onChange={e => setActionTitle(e.target.value)} placeholder="e.g., Follow up on completed rock" />
+                      </div>
+                    </div>
+                  )}
+                  {actionType === "send_email" && (
+                    <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <label className="text-sm font-medium">Recipient Email</label>
+                        <Input type="email" value={actionEmail} onChange={e => setActionEmail(e.target.value)} placeholder="e.g., manager@company.com" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Subject</label>
+                        <Input value={actionTitle} onChange={e => setActionTitle(e.target.value)} placeholder="e.g., EOD Report Submitted" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Body</label>
+                        <Textarea value={actionMessage} onChange={e => setActionMessage(e.target.value)} placeholder="Email body..." rows={2} />
+                      </div>
+                    </div>
+                  )}
+                  {actionType === "send_slack" && (
+                    <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <label className="text-sm font-medium">Slack Webhook URL</label>
+                        <Input value={actionWebhook} onChange={e => setActionWebhook(e.target.value)} placeholder="https://hooks.slack.com/services/..." />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Message (optional)</label>
+                        <Input value={actionMessage} onChange={e => setActionMessage(e.target.value)} placeholder="e.g., A task was just completed!" />
+                      </div>
+                    </div>
+                  )}
+
                   <Button onClick={handleCreate} disabled={!name} className="w-full">
                     Create Automation
                   </Button>

@@ -14,6 +14,7 @@ import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
 import { sendNotification } from "@/lib/db/notifications"
 import { audit } from "@/lib/audit"
 import { isTrialExpired } from "@/lib/billing/feature-gates"
+import { evaluateAutomations } from "@/lib/automations/engine"
 
 // GET /api/rocks - Get rocks
 export const GET = withAuth(async (request: NextRequest, auth) => {
@@ -377,6 +378,18 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       progress: updatedRock?.progress ?? rock.progress,
       workspaceId: rock.workspaceId,
     }).catch(err => logError(logger, "Rock update webhook failed", err))
+
+    // Evaluate automations on status change (fire-and-forget)
+    if (updatedRock && newStatus && newStatus !== prevStatus && rock.workspaceId) {
+      evaluateAutomations(auth.organization.id, rock.workspaceId, "rock_status_changed", {
+        userId: auth.user.id,
+        rockId: id,
+        rockTitle: updatedRock.title,
+        rockStatus: newStatus,
+        previousStatus: prevStatus,
+        workspaceId: rock.workspaceId,
+      }).catch(err => logError(logger, "Rock automation evaluation failed", err))
+    }
 
     return NextResponse.json<ApiResponse<Rock | null>>({
       success: true,

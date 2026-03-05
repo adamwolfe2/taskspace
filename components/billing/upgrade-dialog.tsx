@@ -178,7 +178,7 @@ export function UpgradeDialog({
               onClick={() => setBillingCycle("yearly")}
             >
               Yearly
-              <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700">
+              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
                 Save 20%
               </Badge>
             </button>
@@ -202,12 +202,12 @@ export function UpgradeDialog({
                 className={cn(
                   "relative rounded-xl border p-5 transition-all",
                   isPopular
-                    ? "border-blue-300 bg-blue-50/30 ring-1 ring-blue-200"
+                    ? "border-primary/30 bg-primary/5 ring-1 ring-primary/20"
                     : "border-slate-200"
                 )}
               >
                 {isPopular && (
-                  <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-blue-600">
+                  <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary">
                     Recommended
                   </Badge>
                 )}
@@ -245,8 +245,8 @@ export function UpgradeDialog({
                 )}
 
                 {reason === "seats" && (
-                  <div className="mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center gap-1.5 text-sm text-blue-800">
+                  <div className="mb-3 p-2 bg-primary/5 rounded-lg border border-primary/20">
+                    <div className="flex items-center gap-1.5 text-sm text-primary">
                       <span className="font-medium">
                         {plan.maxSeats === null ? "Unlimited" : plan.maxSeats} team members
                       </span>
@@ -257,7 +257,7 @@ export function UpgradeDialog({
                 <ul className="space-y-2 mb-6">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm">
-                      <Check className="h-4 w-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                      <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -266,7 +266,7 @@ export function UpgradeDialog({
                 <Button
                   className={cn(
                     "w-full",
-                    isPopular ? "bg-blue-600 hover:bg-blue-700" : ""
+                    isPopular ? "bg-primary hover:bg-primary/90" : ""
                   )}
                   disabled={processingPlan !== null}
                   onClick={() => handleUpgrade(key)}

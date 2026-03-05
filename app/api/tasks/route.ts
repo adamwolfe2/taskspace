@@ -15,6 +15,7 @@ import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { logger, logError } from "@/lib/logger"
 import { audit } from "@/lib/audit"
 import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
+import { evaluateAutomations } from "@/lib/automations/engine"
 import { getTodayInTimezone } from "@/lib/utils/date-utils"
 import { isTrialExpired } from "@/lib/billing/feature-gates"
 import { CONFIG } from "@/lib/config"
@@ -515,6 +516,17 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     // Check achievements when task is completed (fire-and-forget)
     if (updates.status === "completed") {
       checkAchievements(auth.user.id, auth.organization.id).catch(() => {})
+
+      // Evaluate automations (fire-and-forget)
+      if (task.workspaceId) {
+        evaluateAutomations(auth.organization.id, task.workspaceId, "task_completed", {
+          userId: auth.user.id,
+          taskId: id,
+          taskTitle: updatedTask?.title || task.title,
+          taskStatus: "completed",
+          workspaceId: task.workspaceId,
+        }).catch(err => logError(logger, "Task completion automation evaluation failed", err))
+      }
     }
 
     return NextResponse.json<ApiResponse<AssignedTask | null>>({

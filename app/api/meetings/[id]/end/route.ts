@@ -5,7 +5,8 @@ import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { meetings } from "@/lib/db/meetings"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { endMeetingSchema } from "@/lib/validation/schemas"
-import { logger } from "@/lib/logger"
+import { logger, logError } from "@/lib/logger"
+import { evaluateAutomations } from "@/lib/automations/engine"
 import { isValidTransition, getTransitionErrorMessage } from "@/lib/api/meetings"
 import type { ApiResponse } from "@/lib/types"
 import type { Meeting, MeetingStats } from "@/lib/db/meetings"
@@ -75,6 +76,15 @@ export const POST = withAuth(async (request, auth, context?) => {
     const stats = await meetings.getStats(meeting.workspaceId)
 
     logger.info(`Meeting ended: ${id} with rating ${rating || "none"}`)
+
+    // Evaluate automations (fire-and-forget)
+    evaluateAutomations(auth.organization.id, meeting.workspaceId, "meeting_ended", {
+      userId: auth.user.id,
+      meetingId: id,
+      meetingTitle: endedMeeting.title || "Meeting",
+      rating: rating || null,
+      workspaceId: meeting.workspaceId,
+    }).catch(err => logError(logger, "Meeting end automation evaluation failed", err))
 
     return NextResponse.json<ApiResponse<EndMeetingResponse>>({
       success: true,

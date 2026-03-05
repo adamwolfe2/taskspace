@@ -23,6 +23,7 @@ import type { PaginatedResponse } from "@/lib/utils/pagination"
 import { format, subDays } from "date-fns"
 import { logger, logError } from "@/lib/logger"
 import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
+import { evaluateAutomations } from "@/lib/automations/engine"
 
 // GET /api/eod-reports - Get EOD reports
 export const GET = withAuth(async (request: NextRequest, auth) => {
@@ -608,6 +609,16 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     // Check achievements (fire-and-forget — never blocks the response)
     checkAchievements(auth.user.id, auth.organization.id).catch(() => {})
+
+    // Evaluate automations (fire-and-forget)
+    evaluateAutomations(auth.organization.id, workspaceId, "eod_submitted", {
+      userId: auth.user.id,
+      reportId: report.id,
+      date: report.date,
+      tasksCount: tasks.length,
+      needsEscalation: report.needsEscalation,
+      workspaceId,
+    }).catch(err => logError(logger, "EOD automation evaluation failed", err))
 
     return NextResponse.json<ApiResponse<EODReport>>({
       success: true,

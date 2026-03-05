@@ -61,7 +61,7 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
         {currentPlan !== "business" && (
           <Link
             href="/settings/billing"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
           >
             <ArrowUpIcon className="h-4 w-4" />
             Upgrade
@@ -92,7 +92,7 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
                           ? "bg-red-600"
                           : approaching
                             ? "bg-yellow-500"
-                            : "bg-green-500"
+                            : "bg-primary"
                       }`}
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     />
@@ -112,7 +112,7 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
                 </div>
               )}
               {unlimited && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-green-600">
+                <p className="mt-1 flex items-center gap-1 text-xs text-primary">
                   <CheckCircleIcon className="h-4 w-4" />
                   Unlimited
                 </p>
@@ -123,7 +123,7 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
       </div>
 
       <div className="mt-6 border-t border-slate-200 pt-4">
-        <Link href="/pricing" className="text-sm font-medium text-blue-600 hover:text-blue-700">
+        <Link href="/pricing" className="text-sm font-medium text-primary hover:text-primary/80">
           <span className="inline-flex items-center gap-1">Compare all plans <ArrowRightIcon className="inline h-3.5 w-3.5" /></span>
         </Link>
       </div>

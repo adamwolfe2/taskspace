@@ -275,7 +275,7 @@ export function AIBudgetControls({ organizationId }: AIBudgetControlsProps) {
               onChange={(e) =>
                 updateSetting("warningThresholdPercent", parseInt(e.target.value))
               }
-              className="cursor-pointer"
+              className="cursor-pointer [accent-color:hsl(var(--primary))]"
             />
             <p className="text-xs text-muted-foreground">
               Show a warning when usage reaches this percentage of your credit limit

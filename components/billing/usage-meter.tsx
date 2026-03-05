@@ -103,11 +103,11 @@ export function UsageMeter({ showCard = true, compact = false, onUpgradeClick }:
         <div className="flex items-center gap-1.5">
           <Zap className={cn(
             "h-4 w-4",
-            isExhausted ? "text-red-500" : isLow ? "text-amber-500" : "text-emerald-500"
+            isExhausted ? "text-red-500" : isLow ? "text-amber-500" : "text-primary"
           )} />
           <span className="text-sm font-medium">
             {isUnlimited ? (
-              <span className="text-emerald-600">Unlimited</span>
+              <span className="text-primary">Unlimited</span>
             ) : (
               <>
                 <span className={cn(
@@ -142,11 +142,11 @@ export function UsageMeter({ showCard = true, compact = false, onUpgradeClick }:
         <div className="flex items-center gap-2">
           <Zap className={cn(
             "h-5 w-5",
-            isExhausted ? "text-red-500" : isLow ? "text-amber-500" : "text-emerald-500"
+            isExhausted ? "text-red-500" : isLow ? "text-amber-500" : "text-primary"
           )} />
           <span className="font-medium">AI Credits</span>
           {isUnlimited && (
-            <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
+            <Badge variant="secondary" className="bg-primary/10 text-primary">
               <Sparkles className="h-3 w-3 mr-1" />
               Unlimited
             </Badge>

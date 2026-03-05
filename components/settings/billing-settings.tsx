@@ -356,7 +356,7 @@ export function BillingSettings() {
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold">{PLANS[currentPlan].name}</span>
                 {subscription?.status === "active" && (
-                  <Badge variant="default" className="bg-emerald-500">Active</Badge>
+                  <Badge variant="default" className="bg-primary">Active</Badge>
                 )}
                 {subscription?.status === "trialing" && (
                   <>
@@ -447,7 +447,7 @@ export function BillingSettings() {
                         ? "bg-red-500"
                         : subscription.usedSeats / subscription.maxSeats >= 0.8
                         ? "bg-amber-400"
-                        : "bg-emerald-500"
+                        : "bg-primary"
                     )}
                     style={{ width: `${Math.min(100, (subscription.usedSeats / subscription.maxSeats) * 100)}%` }}
                   />
@@ -519,7 +519,7 @@ export function BillingSettings() {
                 onClick={() => setBillingCycle("yearly")}
               >
                 Yearly
-                <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700">
+                <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
                   Save 20%
                 </Badge>
               </button>
@@ -540,19 +540,19 @@ export function BillingSettings() {
                   className={cn(
                     "relative rounded-xl border p-5 transition-all",
                     isCurrentPlan
-                      ? "border-emerald-300 bg-emerald-50/50 ring-1 ring-emerald-200"
+                      ? "border-primary/30 bg-primary/5 ring-1 ring-primary/20"
                       : isPopular
-                      ? "border-blue-300 bg-blue-50/30"
+                      ? "border-primary/30 bg-primary/5"
                       : "border-slate-200 hover:border-slate-300"
                   )}
                 >
                   {isPopular && !isCurrentPlan && (
-                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-blue-600">
+                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary">
                       Most Popular
                     </Badge>
                   )}
                   {isCurrentPlan && (
-                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-emerald-600">
+                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary">
                       Current Plan
                     </Badge>
                   )}
@@ -580,7 +580,7 @@ export function BillingSettings() {
                   <ul className="space-y-2 mb-6">
                     {plan.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm">
-                        <Check className="h-4 w-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -590,11 +590,11 @@ export function BillingSettings() {
                     className={cn(
                       "w-full",
                       isCurrentPlan
-                        ? "bg-emerald-600 hover:bg-emerald-700"
+                        ? "bg-primary hover:bg-primary/90"
                         : key === "free"
                         ? ""
                         : isPopular
-                        ? "bg-blue-600 hover:bg-blue-700"
+                        ? "bg-primary hover:bg-primary/90"
                         : ""
                     )}
                     variant={isCurrentPlan ? "default" : key === "free" ? "outline" : "default"}
@@ -658,7 +658,7 @@ export function BillingSettings() {
                 <p className="text-2xl font-bold mt-1">{pack.price}</p>
                 <p className="text-xs text-slate-500 mt-0.5">one-time purchase</p>
                 {pack.savings && (
-                  <Badge variant="secondary" className="mt-2 bg-emerald-100 text-emerald-700 text-xs">
+                  <Badge variant="secondary" className="mt-2 bg-primary/10 text-primary text-xs">
                     {pack.savings}
                   </Badge>
                 )}
