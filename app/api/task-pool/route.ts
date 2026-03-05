@@ -99,9 +99,10 @@ export const POST = withAuth(async (request, auth) => {
         { status: error.statusCode }
       )
     }
-    logger.error({ error }, "Create task pool item error")
+    const errMsg = error instanceof Error ? error.message : String(error)
+    logger.error({ error, message: errMsg }, "Create task pool item error")
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Failed to create task pool item" },
+      { success: false, error: `Failed to create task pool item: ${errMsg}` },
       { status: 500 }
     )
   }

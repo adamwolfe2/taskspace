@@ -9,7 +9,7 @@
  * - Bulk due date change
  */
 
-import { NextRequest } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
@@ -73,14 +73,14 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     const body = await validateBody(request, bulkOperationSchema)
 
     // Verify all tasks belong to the organization (targeted query, not full table scan)
-    const taskIdList = body.taskIds.join(",")
+    const taskIdArray = `{${body.taskIds.join(",")}}`
     const { rows: validRows } = await sql<{ id: string; assignee_id: string; status: string }>`
       SELECT id, assignee_id, status
       FROM assigned_tasks
       WHERE organization_id = ${auth.organization.id}
-        AND id = ANY(string_to_array(${taskIdList}, ','))
+        AND id = ANY(${taskIdArray}::text[])
     `
-    const taskMap = new Map(validRows.map((t) => [t.id, t as unknown as AssignedTask]))
+    const taskMap = new Map(validRows.map((t) => [t.id, { id: t.id, assigneeId: t.assignee_id, status: t.status } as unknown as AssignedTask]))
 
     const validTaskIds = validRows.map((r) => r.id)
 
@@ -179,8 +179,12 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     if (error instanceof ValidationError) {
       return Errors.validationError(error.message).toResponse()
     }
+    const errMsg = error instanceof Error ? error.message : String(error)
     logError(logger, "Bulk operation error", error)
-    return Errors.internal().toResponse()
+    return NextResponse.json(
+      { success: false, error: `Bulk operation failed: ${errMsg}` },
+      { status: 500 }
+    )
   }
 })
 
@@ -239,10 +243,11 @@ async function bulkReassign(
   organizationId: string,
   _userId: string
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
-  // Verify new assignee exists (targeted query instead of full member list)
-  const { rows: assigneeRows } = await sql<{ id: string; name: string }>`
-    SELECT id, name FROM organization_members
-    WHERE id = ${newAssigneeId} AND organization_id = ${organizationId} AND status = 'active'
+  // Verify new assignee exists — look up by id OR user_id since frontend may pass either
+  const { rows: assigneeRows } = await sql<{ id: string; user_id: string; name: string }>`
+    SELECT id, user_id, name FROM organization_members
+    WHERE (id = ${newAssigneeId} OR user_id = ${newAssigneeId})
+      AND organization_id = ${organizationId} AND status = 'active'
     LIMIT 1
   `
   const assignee = assigneeRows[0]
@@ -251,12 +256,15 @@ async function bulkReassign(
     return { processed: 0, skipped: taskIds.length, errors: ["Invalid assignee"] }
   }
 
+  // assigned_tasks.assignee_id stores users.id, not org_members.id
+  const assigneeUserId = assignee.user_id || assignee.id
+
   const eligibleIds = taskIds.filter((id) => taskMap.has(id))
   const eligibleIdArray = `{${eligibleIds.join(",")}}`
 
   const { rowCount } = await sql`
     UPDATE assigned_tasks
-    SET assignee_id = ${newAssigneeId}, assignee_name = ${assignee.name}, updated_at = NOW()
+    SET assignee_id = ${assigneeUserId}, assignee_name = ${assignee.name}, updated_at = NOW()
     WHERE id = ANY(${eligibleIdArray}::text[])
       AND organization_id = ${organizationId}
   `

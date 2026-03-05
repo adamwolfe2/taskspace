@@ -612,7 +612,7 @@ export function TasksPage({
               workspaceId: currentWorkspaceId,
               title: task.title,
               description: task.description || "",
-              priority: task.priority === "medium" ? "normal" : task.priority,
+              priority: task.priority === "medium" || task.priority === "low" ? "normal" : task.priority,
             }),
           })
         )
@@ -621,6 +621,16 @@ export function TasksPage({
         .filter((_, i) => results[i].ok)
         .map((t) => t.id)
       const failed = results.filter((r) => !r.ok).length
+
+      // Log failed responses for debugging
+      if (failed > 0) {
+        const failedDetails = await Promise.all(
+          results.filter((r) => !r.ok).map(async (r) => {
+            try { return await r.json() } catch { return { error: `HTTP ${r.status}` } }
+          })
+        )
+        console.error("Pool move failures:", failedDetails)
+      }
 
       // Delete the original assigned tasks that were successfully moved
       if (successfulTaskIds.length > 0) {
