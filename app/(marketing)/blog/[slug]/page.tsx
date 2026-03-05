@@ -51,8 +51,62 @@ export default async function BlogPostPage({ params }: Props) {
   const post = getPost(slug)
   if (!post) notFound()
 
+  const baseUrl = "https://trytaskspace.com"
+
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": post.title,
+    "description": post.description,
+    "url": `${baseUrl}/blog/${slug}`,
+    "datePublished": post.date ? post.date + "T12:00:00Z" : undefined,
+    "dateModified": post.date ? post.date + "T12:00:00Z" : undefined,
+    "author": {
+      "@type": "Organization",
+      "name": "Taskspace",
+      "url": baseUrl,
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Taskspace",
+      "url": baseUrl,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${baseUrl}/icon.png`,
+      },
+    },
+    "image": post.image
+      ? `${baseUrl}${post.image}`
+      : `${baseUrl}/2026-02-03_17.24.49.png`,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `${baseUrl}/blog/${slug}`,
+    },
+    "keywords": post.tags?.join(", "),
+    "articleSection": "EOS & Business Operations",
+    "inLanguage": "en-US",
+  }
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": baseUrl },
+      { "@type": "ListItem", "position": 2, "name": "Blog", "item": `${baseUrl}/blog` },
+      { "@type": "ListItem", "position": 3, "name": post.title, "item": `${baseUrl}/blog/${slug}` },
+    ],
+  }
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Header */}
       <div className="border-b border-slate-200 bg-slate-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

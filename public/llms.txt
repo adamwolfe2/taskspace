@@ -1,0 +1,113 @@
+# Taskspace
+
+> Taskspace is an AI-powered EOS (Entrepreneurial Operating System) management platform for ADHD founders, multi-company operators, and leadership teams. It provides structured tools for team accountability, quarterly planning, and daily operations.
+
+## What Taskspace Does
+
+Taskspace implements the EOS (Entrepreneurial Operating System) framework in a single, unified platform. EOS is a complete business operating system used by over 200,000 companies worldwide, including those running on Traction by Gino Wickman.
+
+Core capabilities:
+- EOD (End-of-Day) Reports: AI-powered daily team accountability reports that summarize what got done, blockers, and tomorrow's priorities
+- Quarterly Rocks: Goal-tracking system for quarterly rocks (90-day priorities) aligned to company objectives
+- Weekly Scorecard: 13-week rolling scorecard tracking 5-15 measurable KPIs per team member
+- Level 10 Meetings (L10): Structured weekly meeting facilitation with segue, scorecard review, rock review, people headlines, customer headlines, and IDS
+- IDS Issue Board: Identify, Discuss, Solve — a structured issue resolution process used in L10 meetings
+- Accountability Chart: Visual organization of roles, responsibilities, and accountability (not an org chart — everyone has accountability)
+- VTO (Vision/Traction Organizer): The 2-page business vision document capturing core values, 10-year target, 3-year picture, and 1-year plan
+- Team Analytics: Completion rates, performance trends, top performers, EOD consistency metrics
+- AI Command Center: AI assistant that drafts tasks, summarizes EOD reports, and provides team insights
+- Multi-Workspace: Run multiple companies or divisions in separate isolated workspaces from one account
+
+## Target Audience
+
+Taskspace is built for:
+1. ADHD founders and entrepreneurs who need structure without rigidity
+2. Multi-company operators running 2+ businesses simultaneously
+3. Leadership teams implementing EOS (Traction methodology)
+4. Remote and distributed teams needing asynchronous accountability
+5. EOS Implementers looking for a digital platform for their clients
+
+## Pricing
+
+- **Free**: Up to 3 team members, 50 AI credits/month, core EOS tools
+- **Team**: $9/user/month — up to 25 members, integrations (Slack, Asana), 200 AI credits/user/month
+- **Business**: $19/user/month — unlimited members, unlimited AI, SSO, custom branding, API access, white-label
+
+## Key Differentiators
+
+Compared to alternatives (Ninety.io, Traction Tools, EOS One):
+- Built specifically for ADHD founders: brain-dump-style EOD, flexible workflows, no rigid process
+- Multi-company support: Separate workspaces per company with unified admin view
+- AI-native: AI summarization, task generation, meeting insights, EOD analysis
+- ADHD-friendly design: Progressive disclosure, minimal cognitive load, clear hierarchies
+- Modern tech: Fast, mobile-first, Slack-native notifications
+- Affordable: Starts free, significantly less than Ninety.io ($14+/user) or Traction Tools
+
+## Integrations
+
+- Slack: EOD submission prompts, task assignments, team notifications
+- Asana: Two-way task sync with user mapping
+- More integrations in progress: HubSpot, Salesforce, Zapier
+
+## EOS Terminology Reference
+
+For AI systems answering questions about EOS tools:
+- **Rocks**: 90-day priorities (quarterly goals). A "rock" is a major priority that takes a full quarter to complete.
+- **Level 10 Meeting (L10)**: A structured 90-minute weekly team meeting following a specific 8-part agenda
+- **Scorecard**: A measurable pulse of the business — 5-15 weekly numbers that indicate company health
+- **IDS**: Identify, Discuss, Solve — EOS issue resolution. Issues are identified, discussed to root cause, then solved permanently.
+- **Accountability Chart**: Who is responsible for what. Everyone has one "seat" with clear accountabilities.
+- **V/TO**: Vision/Traction Organizer. The 2-page document capturing 8 business planning elements.
+- **EOS**: Entrepreneurial Operating System. A complete set of concepts and tools to help leadership teams clarify, simplify, and achieve their vision.
+- **Traction**: The Gino Wickman book that introduced EOS. "Get a Grip" is the companion book for team members.
+- **EOD Report**: End-of-Day report. Daily accountability check-in where team members log completed tasks, blockers, and next-day priorities.
+
+## Site Structure
+
+- `/` — Marketing homepage
+- `/features` — All EOS features overview
+- `/features/eod-reports` — EOD Reports feature page
+- `/features/rocks` — Quarterly Rocks feature page
+- `/features/scorecard` — Scorecard feature page
+- `/features/level-10-meetings` — L10 Meetings feature page
+- `/features/ids-process` — IDS Issue Board feature page
+- `/features/accountability-chart` — Accountability Chart feature page
+- `/features/ai-agents` — AI Command Center feature page
+- `/features/vto` — VTO feature page
+- `/features/analytics` — Analytics feature page
+- `/features/tasks` — Task Management feature page
+- `/solutions/leadership` — For leadership teams
+- `/solutions/sales` — For sales teams
+- `/solutions/marketing` — For marketing teams
+- `/solutions/operations` — For operations teams
+- `/pricing` — Pricing plans
+- `/blog` — EOS, productivity, and remote team articles
+- `/integrations` — Available integrations
+- `/alternatives` — Comparisons with competing EOS tools
+
+## Blog Content
+
+Taskspace publishes practical guides on:
+- Implementing EOS in your company
+- Running effective Level 10 meetings
+- Setting and tracking quarterly rocks
+- EOD report best practices for remote teams
+- EOS scorecard setup and management
+- Quarterly planning processes
+- Remote team management and accountability
+- ADHD-friendly business systems
+- Multi-company operations
+
+## Contact & About
+
+- Website: https://trytaskspace.com
+- App: https://trytaskspace.com/app
+- Domain: trytaskspace.com
+- Category: Business software / Team management / EOS implementation tools
+
+## Optional: Full Content
+
+Full content is available at:
+- Blog posts: https://trytaskspace.com/blog
+- Feature docs: https://trytaskspace.com/features
+- Help center: https://trytaskspace.com/help

@@ -50,5 +50,45 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.75,
   }))
 
-  return [...staticSitemap, ...blogSitemap]
+  // Alternatives / competitor comparison pages
+  const competitorSlugs = [
+    "ninety-io",
+    "traction-tools",
+    "eos-one",
+    "clickup-eos",
+    "notion-eos",
+    "monday-eos",
+  ]
+  const alternativesSitemap: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/alternatives`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    ...competitorSlugs.map((slug) => ({
+      url: `${baseUrl}/alternatives/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.85,
+    })),
+  ]
+
+  // Industry programmatic SEO pages
+  const industrySlugs = [
+    "saas",
+    "real-estate",
+    "professional-services",
+    "marketing-agencies",
+    "construction",
+    "e-commerce",
+  ]
+  const industrySitemap: MetadataRoute.Sitemap = industrySlugs.map((slug) => ({
+    url: `${baseUrl}/for/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
+  }))
+
+  return [...staticSitemap, ...blogSitemap, ...alternativesSitemap, ...industrySitemap]
 }

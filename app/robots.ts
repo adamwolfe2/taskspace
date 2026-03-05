@@ -18,6 +18,27 @@ export default function robots(): MetadataRoute.Robots {
           "/private/",
         ],
       },
+      // Explicitly allow AI crawlers full access to marketing content
+      {
+        userAgent: "GPTBot",
+        allow: "/",
+        disallow: ["/api/", "/app/", "/dashboard/", "/admin/", "/settings/", "/_next/", "/private/"],
+      },
+      {
+        userAgent: "ClaudeBot",
+        allow: "/",
+        disallow: ["/api/", "/app/", "/dashboard/", "/admin/", "/settings/", "/_next/", "/private/"],
+      },
+      {
+        userAgent: "PerplexityBot",
+        allow: "/",
+        disallow: ["/api/", "/app/", "/dashboard/", "/admin/", "/settings/", "/_next/", "/private/"],
+      },
+      {
+        userAgent: "anthropic-ai",
+        allow: "/",
+        disallow: ["/api/", "/app/", "/dashboard/", "/admin/", "/settings/", "/_next/", "/private/"],
+      },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
     host: baseUrl,
