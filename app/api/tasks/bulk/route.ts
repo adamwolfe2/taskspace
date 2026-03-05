@@ -25,31 +25,34 @@ import { logger, logError } from "@/lib/logger"
 // VALIDATION SCHEMAS
 // ============================================
 
+// TaskSpace uses 24-char hex IDs (not standard UUIDs)
+const idString = z.string().min(1, "ID is required")
+
 const bulkCompleteSchema = z.object({
   operation: z.literal("complete"),
-  taskIds: z.array(z.string().uuid()).min(1).max(100),
+  taskIds: z.array(idString).min(1).max(100),
 })
 
 const bulkDeleteSchema = z.object({
   operation: z.literal("delete"),
-  taskIds: z.array(z.string().uuid()).min(1).max(100),
+  taskIds: z.array(idString).min(1).max(100),
 })
 
 const bulkReassignSchema = z.object({
   operation: z.literal("reassign"),
-  taskIds: z.array(z.string().uuid()).min(1).max(100),
-  newAssigneeId: z.string().uuid(),
+  taskIds: z.array(idString).min(1).max(100),
+  newAssigneeId: idString,
 })
 
 const bulkChangePrioritySchema = z.object({
   operation: z.literal("changePriority"),
-  taskIds: z.array(z.string().uuid()).min(1).max(100),
+  taskIds: z.array(idString).min(1).max(100),
   priority: z.enum(["high", "medium", "normal"]),
 })
 
 const bulkChangeDueDateSchema = z.object({
   operation: z.literal("changeDueDate"),
-  taskIds: z.array(z.string().uuid()).min(1).max(100),
+  taskIds: z.array(idString).min(1).max(100),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 })
 
