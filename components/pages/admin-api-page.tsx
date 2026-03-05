@@ -68,8 +68,8 @@ interface DashboardData {
   isSuperAdmin: boolean
 }
 
-function formatNumber(n: number): string {
-  if (n === Infinity) return "Unlimited"
+function formatNumber(n: number | null | undefined): string {
+  if (n == null || n === Infinity) return "Unlimited"
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
   return n.toLocaleString()
@@ -174,7 +174,9 @@ export function AdminApiPage() {
   if (!data) return null
 
   const { summary, dailyTrend, byAction, byModel, byOrganization, recentCalls, isSuperAdmin } = data
-  const usagePercent = summary.creditsLimit === Infinity
+  // JSON serializes Infinity as null — treat null as unlimited
+  const isUnlimited = summary.creditsLimit === null || summary.creditsLimit === Infinity
+  const usagePercent = isUnlimited
     ? 0
     : Math.round(((summary.creditsLimit - summary.remainingCredits) / summary.creditsLimit) * 100)
 
@@ -211,7 +213,7 @@ export function AdminApiPage() {
             </div>
             <p className="text-2xl font-bold">{formatNumber(summary.totalCredits)}</p>
             <p className="text-xs text-muted-foreground">
-              {summary.creditsLimit === Infinity
+              {isUnlimited
                 ? "Unlimited plan"
                 : `${formatNumber(summary.remainingCredits)} remaining (${usagePercent}% used)`
               }

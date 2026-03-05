@@ -77,7 +77,7 @@ export function EOSHealthPage() {
     try {
       const res = await fetch("/api/eos-health", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ workspaceId, quarter: selectedQuarter }),
       })
       const data = await res.json()

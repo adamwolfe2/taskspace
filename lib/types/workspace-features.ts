@@ -141,9 +141,9 @@ export const STARTER_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
   productivity: {
     focusBlocks: false,
     dailyEnergy: false,
-    streakTracking: true,
+    streakTracking: false,
     weeklyReviews: false,
-    achievements: true,
+    achievements: false,
   },
   integrations: {
     asana: false,
@@ -152,7 +152,7 @@ export const STARTER_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     webhooks: false,
   },
   advanced: {
-    aiCommandCenter: true,
+    aiCommandCenter: false,
     analytics: false,
     managerDashboard: false,
     apiAccess: false,
@@ -166,7 +166,7 @@ export const STARTER_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
   admin: {
     teamManagement: true,
     databaseManagement: false,
-    branding: true,
+    branding: false,
   },
 }
 

@@ -79,7 +79,7 @@ export function AutomationsPage() {
     try {
       const res = await fetch("/api/automations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           workspaceId,
           name,
@@ -105,7 +105,7 @@ export function AutomationsPage() {
     try {
       await fetch(`/api/automations/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ isEnabled }),
       })
       setAutomations(prev => prev.map(a => a.id === id ? { ...a, isEnabled } : a))
@@ -116,7 +116,7 @@ export function AutomationsPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`/api/automations/${id}`, { method: "DELETE" })
+      await fetch(`/api/automations/${id}`, { method: "DELETE", headers: { "X-Requested-With": "XMLHttpRequest" } })
       setAutomations(prev => prev.filter(a => a.id !== id))
       if (selectedId === id) setSelectedId(null)
     } catch {

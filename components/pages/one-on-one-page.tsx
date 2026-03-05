@@ -57,7 +57,7 @@ export function OneOnOnePage({ currentUser, teamMembers }: OneOnOnePageProps) {
     try {
       const res = await fetch("/api/one-on-ones", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           workspaceId,
           managerId: userId,
@@ -82,7 +82,7 @@ export function OneOnOnePage({ currentUser, teamMembers }: OneOnOnePageProps) {
     try {
       const res = await fetch("/api/ai/one-on-ones/prep", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ reportId: oneOnOne.reportId, workspaceId }),
       })
       const data = await res.json()
@@ -101,7 +101,7 @@ export function OneOnOnePage({ currentUser, teamMembers }: OneOnOnePageProps) {
     try {
       await fetch(`/api/one-on-ones/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ status: "completed", completedAt: new Date().toISOString() }),
       })
       fetchOneOnOnes()
@@ -112,7 +112,7 @@ export function OneOnOnePage({ currentUser, teamMembers }: OneOnOnePageProps) {
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`/api/one-on-ones/${id}`, { method: "DELETE" })
+      await fetch(`/api/one-on-ones/${id}`, { method: "DELETE", headers: { "X-Requested-With": "XMLHttpRequest" } })
       if (selectedId === id) setSelectedId(null)
       fetchOneOnOnes()
     } catch {
@@ -299,7 +299,7 @@ export function OneOnOnePage({ currentUser, teamMembers }: OneOnOnePageProps) {
                           if (e.target.value !== (selected.notes || "")) {
                             await fetch(`/api/one-on-ones/${selected.id}`, {
                               method: "PUT",
-                              headers: { "Content-Type": "application/json" },
+                              headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
                               body: JSON.stringify({ notes: e.target.value }),
                             })
                           }

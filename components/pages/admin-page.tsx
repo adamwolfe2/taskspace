@@ -401,6 +401,18 @@ export function AdminPage({
         </Button>
       </div>
 
+      {/* Daily & Weekly Report Share Links */}
+      {organization && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <DailyReportShare
+            organization={organization as Organization}
+            eodReports={eodReports}
+            teamMembers={teamMembers}
+          />
+          <WeeklyReportShare organization={organization as Organization} />
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -925,19 +937,7 @@ export function AdminPage({
         )
       })()}
 
-      {/* Daily Report Share Link */}
-      {organization && (
-        <DailyReportShare
-          organization={organization as Organization}
-          eodReports={eodReports}
-          teamMembers={teamMembers}
-        />
-      )}
-
-      {/* Weekly Report Share Link */}
-      {organization && (
-        <WeeklyReportShare organization={organization as Organization} />
-      )}
+      {/* Share links moved to top of page */}
 
       {/* Standup Generator */}
       <StandupGenerator

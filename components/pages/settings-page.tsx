@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Building, Bell, Users, CreditCard, Key, Download, Sparkles, Briefcase, Sliders, User, Palette } from "lucide-react"
+import { Building, Bell, Users, CreditCard, Key, Download, Sparkles, Briefcase, Sliders, User, Palette, Shield } from "lucide-react"
 import { api } from "@/lib/api/client"
 import type { TeamMember } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
@@ -20,6 +20,7 @@ import {
 import { WorkspaceFeaturesTab } from "@/components/settings/workspace-features-tab"
 import { WorkspaceBrandingSettings } from "@/components/settings/workspace-branding-settings"
 import { ProfileSettingsTab } from "@/components/settings/profile-settings-tab"
+import { SecuritySettingsTab } from "@/components/settings/security-settings-tab"
 import { AIInbox } from "@/components/ai/ai-inbox"
 import { AIBudgetControls } from "@/components/ai/ai-budget-controls"
 import { ErrorBoundary, CompactErrorBoundary } from "@/components/shared/error-boundary"
@@ -113,6 +114,11 @@ export function SettingsPage() {
               </TabsTrigger>
             )}
 
+            <TabsTrigger value="security" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap min-h-[40px] sm:min-h-[36px]">
+              <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Security
+            </TabsTrigger>
+
             <TabsTrigger value="notifications" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap min-h-[40px] sm:min-h-[36px]">
               <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Notifications</span>
@@ -156,6 +162,13 @@ export function SettingsPage() {
         <TabsContent value="profile" className="space-y-4">
           <CompactErrorBoundary section="Profile">
             <ProfileSettingsTab />
+          </CompactErrorBoundary>
+        </TabsContent>
+
+        {/* Security Tab - Password, 2FA, account deletion */}
+        <TabsContent value="security" className="space-y-4">
+          <CompactErrorBoundary section="Security">
+            <SecuritySettingsTab />
           </CompactErrorBoundary>
         </TabsContent>
 
