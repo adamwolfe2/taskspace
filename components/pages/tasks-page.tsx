@@ -29,7 +29,7 @@ interface TasksPageProps {
   currentUser: TeamMember
   teamMembers?: TeamMember[]
   assignedTasks: AssignedTask[]
-  setAssignedTasks: (tasks: AssignedTask[]) => void
+  setAssignedTasks: React.Dispatch<React.SetStateAction<AssignedTask[]>>
   rocks: Rock[]
   projects: Project[]
   createTask: (task: Partial<AssignedTask>) => Promise<AssignedTask>
@@ -45,7 +45,7 @@ export function TasksPage({
   currentUser,
   teamMembers,
   assignedTasks,
-  setAssignedTasks: _setAssignedTasks,
+  setAssignedTasks,
   rocks,
   projects,
   createTask,
@@ -580,6 +580,13 @@ export function TasksPage({
       })
       const result = await response.json()
       if (!result.success) throw new Error(result.error || "Failed to reassign tasks")
+      setAssignedTasks((prev) =>
+        prev.map((t) =>
+          taskIds.includes(t.id)
+            ? { ...t, assigneeId: newAssigneeId, assigneeName }
+            : t
+        )
+      )
       setSelectedTasks(new Set())
       toast({ title: "Tasks reassigned", description: `${result.data.processed} task${result.data.processed !== 1 ? "s" : ""} assigned to ${assigneeName}` })
     } catch (err) {
@@ -610,12 +617,27 @@ export function TasksPage({
           })
         )
       )
+      const successfulTaskIds = tasksToMove
+        .filter((_, i) => results[i].ok)
+        .map((t) => t.id)
       const failed = results.filter((r) => !r.ok).length
+
+      // Delete the original assigned tasks that were successfully moved
+      if (successfulTaskIds.length > 0) {
+        await fetch("/api/tasks/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+          credentials: "include",
+          body: JSON.stringify({ operation: "delete", taskIds: successfulTaskIds }),
+        })
+        setAssignedTasks((prev) => prev.filter((t) => !successfulTaskIds.includes(t.id)))
+      }
+
       setSelectedTasks(new Set())
       if (failed > 0) {
-        toast({ title: "Partially pushed", description: `${tasksToMove.length - failed} task${tasksToMove.length - failed !== 1 ? "s" : ""} added to pool, ${failed} failed`, variant: "destructive" })
+        toast({ title: "Partially moved", description: `${successfulTaskIds.length} task${successfulTaskIds.length !== 1 ? "s" : ""} moved to pool, ${failed} failed`, variant: "destructive" })
       } else {
-        toast({ title: "Pushed to pool", description: `${tasksToMove.length} task${tasksToMove.length !== 1 ? "s" : ""} added to the task pool` })
+        toast({ title: "Moved to pool", description: `${tasksToMove.length} task${tasksToMove.length !== 1 ? "s" : ""} moved to the task pool` })
       }
     } catch (err) {
       toast({ title: "Error", description: getErrorMessage(err, "Failed to push tasks to pool"), variant: "destructive" })

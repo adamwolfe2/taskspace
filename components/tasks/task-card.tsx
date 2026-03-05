@@ -89,17 +89,20 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, onD
       className={cn(
         "p-2.5 sm:p-3 transition-all overflow-hidden w-full",
         isCompleted && "opacity-60 bg-muted/50",
-        isSelected && "ring-2 ring-primary/40 ring-offset-1",
+        isSelected && "ring-2 ring-primary/40 ring-offset-1 bg-primary/5",
       )}
     >
       <div className="flex items-start gap-2 sm:gap-3 min-w-0">
-        <Checkbox
-          checked={isCompleted}
-          onCheckedChange={() => !isCompleted && onComplete(task.id)}
-          className="mt-1 flex-shrink-0"
-          disabled={isCompleted}
-          aria-label={isCompleted ? `Task "${task.title}" completed` : `Mark task "${task.title}" as complete`}
-        />
+        {showSelectionCheckbox && onToggleSelection ? (
+          <Checkbox
+            checked={isSelected ?? false}
+            onCheckedChange={() => onToggleSelection(task.id)}
+            className="mt-1 flex-shrink-0"
+            aria-label={isSelected ? `Deselect "${task.title}"` : `Select "${task.title}"`}
+          />
+        ) : (
+          isCompleted && <Check className="h-4 w-4 mt-1 flex-shrink-0 text-muted-foreground" />
+        )}
         <div className="flex-1 space-y-2 min-w-0 overflow-hidden">
           <div className="flex items-start justify-between gap-2">
             <h3 className={cn(
@@ -108,23 +111,31 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, onD
             )}>
               {task.title}
             </h3>
-            {!isPersonal && !isCompleted && onUpdateTask && task.dueDate && (
+            {!isPersonal && !isCompleted && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 touch-target flex-shrink-0" aria-label="Snooze task">
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 touch-target flex-shrink-0" aria-label="Task actions">
                     <AlarmClock className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 1).toISOString().split("T")[0] })}>
-                    Snooze 1 day
+                  <DropdownMenuItem onClick={() => onComplete(task.id)}>
+                    <Check className="h-3.5 w-3.5 mr-2" />
+                    Mark complete
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 3).toISOString().split("T")[0] })}>
-                    Snooze 3 days
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 7).toISOString().split("T")[0] })}>
-                    Snooze 1 week
-                  </DropdownMenuItem>
+                  {onUpdateTask && task.dueDate && (
+                    <>
+                      <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 1).toISOString().split("T")[0] })}>
+                        Snooze 1 day
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 3).toISOString().split("T")[0] })}>
+                        Snooze 3 days
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onUpdateTask(task.id, { dueDate: addDays(new Date(task.dueDate!), 7).toISOString().split("T")[0] })}>
+                        Snooze 1 week
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -138,6 +149,10 @@ export function TaskCard({ task, onComplete, onEdit, onDelete, onUpdateTask, onD
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onComplete(task.id)}>
+                        <Check className="h-3.5 w-3.5 mr-2" />
+                        Mark complete
+                      </DropdownMenuItem>
                       {onDuplicate && (
                         <DropdownMenuItem onClick={() => onDuplicate(task)}>
                           <Copy className="h-3.5 w-3.5 mr-2" />
