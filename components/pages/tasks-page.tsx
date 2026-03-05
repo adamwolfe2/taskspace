@@ -599,55 +599,24 @@ export function TasksPage({
   const handleBulkPushToPool = async () => {
     if (!currentWorkspaceId) return
     const taskIds = Array.from(selectedTasks)
-    const tasksToMove = userTasks.filter((t) => taskIds.includes(t.id))
     setIsBulkProcessing(true)
     try {
-      const results = await Promise.all(
-        tasksToMove.map((task) =>
-          fetch("/api/task-pool", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
-            credentials: "include",
-            body: JSON.stringify({
-              workspaceId: currentWorkspaceId,
-              title: task.title,
-              description: task.description || "",
-              priority: task.priority === "medium" || task.priority === "low" ? "normal" : task.priority,
-            }),
-          })
-        )
-      )
-      const successfulTaskIds = tasksToMove
-        .filter((_, i) => results[i].ok)
-        .map((t) => t.id)
-      const failed = results.filter((r) => !r.ok).length
+      const response = await fetch("/api/tasks/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        credentials: "include",
+        body: JSON.stringify({ operation: "moveToPool", taskIds, workspaceId: currentWorkspaceId }),
+      })
+      const result = await response.json()
+      if (!result.success) throw new Error(result.error || "Failed to move tasks to pool")
 
-      // Log failed responses for debugging
-      if (failed > 0) {
-        const failedDetails = await Promise.all(
-          results.filter((r) => !r.ok).map(async (r) => {
-            try { return await r.json() } catch { return { error: `HTTP ${r.status}` } }
-          })
-        )
-        console.error("Pool move failures:", failedDetails)
-      }
-
-      // Delete the original assigned tasks that were successfully moved
-      if (successfulTaskIds.length > 0) {
-        await fetch("/api/tasks/bulk", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
-          credentials: "include",
-          body: JSON.stringify({ operation: "delete", taskIds: successfulTaskIds }),
-        })
-        setAssignedTasks((prev) => prev.filter((t) => !successfulTaskIds.includes(t.id)))
-      }
-
+      setAssignedTasks((prev) => prev.filter((t) => !taskIds.includes(t.id)))
       setSelectedTasks(new Set())
-      if (failed > 0) {
-        toast({ title: "Partially moved", description: `${successfulTaskIds.length} task${successfulTaskIds.length !== 1 ? "s" : ""} moved to pool, ${failed} failed`, variant: "destructive" })
+
+      if (result.data.errors?.length > 0) {
+        toast({ title: "Partially moved", description: `${result.data.processed} task${result.data.processed !== 1 ? "s" : ""} moved to pool, ${result.data.errors.length} failed`, variant: "destructive" })
       } else {
-        toast({ title: "Moved to pool", description: `${tasksToMove.length} task${tasksToMove.length !== 1 ? "s" : ""} moved to the task pool` })
+        toast({ title: "Moved to pool", description: `${result.data.processed} task${result.data.processed !== 1 ? "s" : ""} moved to the task pool` })
       }
     } catch (err) {
       toast({ title: "Error", description: getErrorMessage(err, "Failed to push tasks to pool"), variant: "destructive" })

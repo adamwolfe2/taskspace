@@ -18,6 +18,7 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { Errors, successResponse } from "@/lib/api/errors"
 import { invalidateTaskCache } from "@/lib/cache"
 import { z } from "zod"
+import { generateId } from "@/lib/auth/password"
 import type { AssignedTask } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -56,12 +57,19 @@ const bulkChangeDueDateSchema = z.object({
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 })
 
+const bulkMoveToPoolSchema = z.object({
+  operation: z.literal("moveToPool"),
+  taskIds: z.array(idString).min(1).max(100),
+  workspaceId: idString,
+})
+
 const bulkOperationSchema = z.discriminatedUnion("operation", [
   bulkCompleteSchema,
   bulkDeleteSchema,
   bulkReassignSchema,
   bulkChangePrioritySchema,
   bulkChangeDueDateSchema,
+  bulkMoveToPoolSchema,
 ])
 
 // ============================================
@@ -139,6 +147,17 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
           taskMap,
           auth.organization.id,
           auth.user.id
+        )
+        break
+
+      case "moveToPool":
+        result = await bulkMoveToPool(
+          validTaskIds,
+          taskMap,
+          auth.organization.id,
+          body.workspaceId,
+          auth.member.id,
+          auth.member.name
         )
         break
 
@@ -313,4 +332,37 @@ async function bulkChangeDueDate(
 
   const processed = rowCount ?? 0
   return { processed, skipped: taskIds.length - processed, errors: [] }
+}
+
+async function bulkMoveToPool(
+  taskIds: string[],
+  taskMap: Map<string, AssignedTask>,
+  organizationId: string,
+  workspaceId: string,
+  createdById: string,
+  createdByName: string,
+): Promise<{ processed: number; skipped: number; errors: string[] }> {
+  let processed = 0
+  const errors: string[] = []
+
+  for (const taskId of taskIds) {
+    const task = taskMap.get(taskId)
+    if (!task) continue
+    try {
+      const poolId = generateId()
+      const priority = task.priority === "low" || task.priority === "medium" ? "normal" : task.priority
+      await sql`
+        INSERT INTO task_pool (id, organization_id, workspace_id, title, description, priority, created_by_id, created_by_name)
+        VALUES (${poolId}, ${organizationId}, ${workspaceId}, ${task.title || ""}, ${task.description || null}, ${priority}, ${createdById}, ${createdByName})
+      `
+      await sql`
+        DELETE FROM assigned_tasks WHERE id = ${taskId} AND organization_id = ${organizationId}
+      `
+      processed++
+    } catch (err) {
+      errors.push(`Task ${taskId}: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
+
+  return { processed, skipped: taskIds.length - processed, errors }
 }
