@@ -82,13 +82,20 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 
     // Verify all tasks belong to the organization (targeted query, not full table scan)
     const taskIdArray = `{${body.taskIds.join(",")}}`
-    const { rows: validRows } = await sql<{ id: string; assignee_id: string; status: string }>`
-      SELECT id, assignee_id, status
+    const { rows: validRows } = await sql<{ id: string; assignee_id: string; status: string; title: string; description: string | null; priority: string }>`
+      SELECT id, assignee_id, status, title, description, priority
       FROM assigned_tasks
       WHERE organization_id = ${auth.organization.id}
         AND id = ANY(${taskIdArray}::text[])
     `
-    const taskMap = new Map(validRows.map((t) => [t.id, { id: t.id, assigneeId: t.assignee_id, status: t.status } as unknown as AssignedTask]))
+    const taskMap = new Map(validRows.map((t) => [t.id, {
+      id: t.id,
+      assigneeId: t.assignee_id,
+      status: t.status,
+      title: t.title,
+      description: t.description,
+      priority: t.priority,
+    } as unknown as AssignedTask]))
 
     const validTaskIds = validRows.map((r) => r.id)
 
@@ -342,6 +349,14 @@ async function bulkMoveToPool(
   createdById: string,
   createdByName: string,
 ): Promise<{ processed: number; skipped: number; errors: string[] }> {
+  // Verify workspace exists and belongs to org before inserting
+  const { rows: wsRows } = await sql<{ id: string }>`
+    SELECT id FROM workspaces WHERE id = ${workspaceId} AND organization_id = ${organizationId} LIMIT 1
+  `
+  if (wsRows.length === 0) {
+    return { processed: 0, skipped: taskIds.length, errors: ["Workspace not found or does not belong to this organization"] }
+  }
+
   let processed = 0
   const errors: string[] = []
 
@@ -350,10 +365,12 @@ async function bulkMoveToPool(
     if (!task) continue
     try {
       const poolId = generateId()
-      const priority = task.priority === "low" || task.priority === "medium" ? "normal" : task.priority
+      const title = task.title || "Untitled task"
+      const description = task.description || null
+      const priority = task.priority === "low" || task.priority === "medium" ? "normal" : (task.priority || "normal")
       await sql`
         INSERT INTO task_pool (id, organization_id, workspace_id, title, description, priority, created_by_id, created_by_name)
-        VALUES (${poolId}, ${organizationId}, ${workspaceId}, ${task.title || ""}, ${task.description || null}, ${priority}, ${createdById}, ${createdByName})
+        VALUES (${poolId}, ${organizationId}, ${workspaceId}, ${title}, ${description}, ${priority}, ${createdById}, ${createdByName})
       `
       await sql`
         DELETE FROM assigned_tasks WHERE id = ${taskId} AND organization_id = ${organizationId}
