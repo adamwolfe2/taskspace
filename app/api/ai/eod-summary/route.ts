@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
 import { db } from "@/lib/db"
 import { summarizePersonEOD, isClaudeConfigured } from "@/lib/ai/claude-client"
+import { aiRateLimit } from "@/lib/api/rate-limit"
 import type { ApiResponse } from "@/lib/types"
 import { z } from "zod"
 import { validateBody } from "@/lib/validation/middleware"
@@ -28,6 +29,15 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Admin access required" },
         { status: 403 }
+      )
+    }
+
+    // Rate limit: 20 AI summary calls per user per hour
+    const rateCheck = aiRateLimit(auth.user.id, 'eod-summary')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Try again later." },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
       )
     }
 

@@ -8,7 +8,6 @@ import { api } from "../api/client"
 import { useApp } from "../contexts/app-context"
 import { useWorkspaceStore } from "./use-workspace"
 import { getErrorMessage } from "../utils"
-import { CONFIG } from "../config"
 import { toast } from "@/hooks/use-toast"
 import {
   DEMO_TEAM_MEMBERS,

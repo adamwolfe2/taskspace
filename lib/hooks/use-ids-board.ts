@@ -1,7 +1,7 @@
 "use client"
 
 import useSWR from "swr"
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useApp } from "@/lib/contexts/app-context"
 import type { IdsBoardItem, IdsBoardColumn, IdsBoardItemType, ApiResponse } from "@/lib/types"
@@ -34,14 +34,20 @@ export function useIdsBoard() {
     { refreshInterval: 30000, dedupingInterval: 10000 }
   )
 
-  const items = isDemoMode ? DEMO_IDS_ITEMS : (data?.data || [])
+  const items = useMemo(
+    () => isDemoMode ? DEMO_IDS_ITEMS : (data?.data || []),
+    [isDemoMode, data]
+  )
 
   // Group items by column
-  const columns: Record<IdsBoardColumn, IdsBoardItem[]> = {
-    identify: items.filter((i) => i.columnName === "identify").sort((a, b) => a.orderIndex - b.orderIndex),
-    discuss: items.filter((i) => i.columnName === "discuss").sort((a, b) => a.orderIndex - b.orderIndex),
-    solve: items.filter((i) => i.columnName === "solve").sort((a, b) => a.orderIndex - b.orderIndex),
-  }
+  const columns = useMemo<Record<IdsBoardColumn, IdsBoardItem[]>>(
+    () => ({
+      identify: items.filter((i) => i.columnName === "identify").sort((a, b) => a.orderIndex - b.orderIndex),
+      discuss: items.filter((i) => i.columnName === "discuss").sort((a, b) => a.orderIndex - b.orderIndex),
+      solve: items.filter((i) => i.columnName === "solve").sort((a, b) => a.orderIndex - b.orderIndex),
+    }),
+    [items]
+  )
 
   const createItem = useCallback(
     async (params: {

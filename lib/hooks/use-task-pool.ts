@@ -1,7 +1,7 @@
 "use client"
 
 import useSWR from "swr"
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useApp } from "@/lib/contexts/app-context"
 import type { TaskPoolItem, ApiResponse } from "@/lib/types"
@@ -24,7 +24,7 @@ export function useTaskPool() {
     { refreshInterval: 30_000, dedupingInterval: 10000 }
   )
 
-  const tasks: TaskPoolItem[] = data?.data || []
+  const tasks = useMemo<TaskPoolItem[]>(() => data?.data || [], [data])
 
   const addTask = useCallback(
     async (params: { title: string; description?: string; priority?: TaskPoolItem["priority"] }) => {

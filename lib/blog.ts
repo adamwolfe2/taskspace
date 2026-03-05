@@ -35,7 +35,6 @@ function markdownToHtml(md: string): string {
   let inUl = false
   let inOl = false
   let inTable = false
-  let tableHeaderDone = false
   let inCode = false
   let codeBuffer: string[] = []
 
@@ -53,7 +52,7 @@ function markdownToHtml(md: string): string {
   const closeOpenBlocks = () => {
     if (inUl) { out.push("</ul>"); inUl = false }
     if (inOl) { out.push("</ol>"); inOl = false }
-    if (inTable) { out.push("</tbody></table>"); inTable = false; tableHeaderDone = false }
+    if (inTable) { out.push("</tbody></table>"); inTable = false }
   }
 
   const isTableRow = (l: string) => l.trim().startsWith("|") && l.trim().endsWith("|")
@@ -94,12 +93,10 @@ function markdownToHtml(md: string): string {
       if (!inTable) {
         closeOpenBlocks()
         inTable = true
-        tableHeaderDone = false
         out.push('<div class="overflow-x-auto my-6"><table class="w-full text-sm border-collapse border border-slate-200">')
         out.push("<thead><tr>")
         cells.forEach(c => out.push(`<th class="border border-slate-200 bg-slate-50 px-4 py-2 text-left font-semibold text-slate-900">${inline(c)}</th>`))
         out.push("</tr></thead><tbody>")
-        tableHeaderDone = true
       } else {
         out.push('<tr class="even:bg-slate-50">')
         cells.forEach(c => out.push(`<td class="border border-slate-200 px-4 py-2 text-slate-700">${inline(c)}</td>`))
@@ -112,7 +109,7 @@ function markdownToHtml(md: string): string {
     const olMatch = line.match(/^(\d+)\.\s(.*)/)
     if (olMatch) {
       if (inUl) { out.push("</ul>"); inUl = false }
-      if (inTable) { out.push("</tbody></table></div>"); inTable = false; tableHeaderDone = false }
+      if (inTable) { out.push("</tbody></table></div>"); inTable = false }
       if (!inOl) {
         out.push('<ol class="list-decimal list-inside space-y-1 my-4 text-slate-700">')
         inOl = true
@@ -125,7 +122,7 @@ function markdownToHtml(md: string): string {
     const isUl = line.startsWith("- ") || line.startsWith("* ")
     if (!isUl && inUl) { out.push("</ul>"); inUl = false }
     if (!olMatch && inOl) { out.push("</ol>"); inOl = false }
-    if (!isTableRow(line) && inTable) { out.push("</tbody></table></div>"); inTable = false; tableHeaderDone = false }
+    if (!isTableRow(line) && inTable) { out.push("</tbody></table></div>"); inTable = false }
 
     if (line.startsWith("# ")) {
       closeOpenBlocks()
