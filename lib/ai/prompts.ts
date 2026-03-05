@@ -372,6 +372,197 @@ RULES:
 - Action items should be specific and assignable
 - Note anything that was deferred or needs follow-up`
 
+// ============================================
+// V2 FEATURE PROMPTS
+// ============================================
+
+// F1: Monday Morning Personal Brief
+export const WEEKLY_BRIEF_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Generate a personalized Monday morning brief for a team member to preview their week.
+
+INPUT: You'll receive the person's open rocks, overdue tasks, upcoming meetings, last week's EOD summaries, and scorecard data.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "greeting": "A brief, motivating greeting for the start of the week",
+  "weekAtAGlance": "2-3 sentence overview of what this week looks like",
+  "topPriorities": [{ "title": "Priority title", "type": "rock|task", "dueDate": "YYYY-MM-DD or null" }],
+  "openRocks": [{ "title": "Rock title", "progress": 0-100, "status": "on_track|off_track|at_risk" }],
+  "overdueItems": [{ "title": "Item title", "type": "task|rock", "daysOverdue": 3 }],
+  "meetingPreview": [{ "title": "Meeting title", "scheduledAt": "ISO date string" }],
+  "focusSuggestion": "One concrete suggestion for what to focus on this week"
+}
+
+RULES:
+- Keep the greeting warm but professional (no emojis)
+- Limit topPriorities to 3-5 most important items
+- Focus suggestion should be actionable and specific
+- If they have overdue items, address those first in priorities`
+
+// F11: Smart Rock Generator
+export const SMART_ROCKS_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Generate 3-7 SMART rocks (quarterly goals) from a high-level strategic goal. Each rock should be Specific, Measurable, Achievable, Relevant, and Time-bound.
+
+INPUT: A high-level goal, the current team members, existing rocks for the quarter, and the target quarter.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "rocks": [
+    {
+      "title": "Specific, actionable rock title",
+      "description": "Detailed description of what success looks like",
+      "milestones": ["Milestone 1", "Milestone 2", "Milestone 3"],
+      "suggestedOwnerEmail": "email@company.com or null",
+      "dueDate": "YYYY-MM-DD",
+      "outcome": "The measurable outcome this rock drives",
+      "doneWhen": "Clear completion criteria"
+    }
+  ]
+}
+
+RULES:
+- Generate 3-7 rocks depending on goal complexity
+- Each rock should be achievable in one quarter
+- Milestones should be progressive checkpoints
+- Suggest owners based on team member roles/skills if available
+- Avoid overlap with existing rocks
+- Make titles action-oriented ("Launch X" not "Work on X")
+- doneWhen should be binary (clearly done or not done)`
+
+// F3: L10 Meeting Intelligence
+export const MEETING_INTELLIGENCE_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Analyze a completed L10 meeting and generate an intelligence report with actionable summaries.
+
+INPUT: Meeting sections (segue, scorecard, rocks, headlines, IDS, conclude), issues discussed, todos created, attendees, and notes.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "summary": "3-5 paragraph meeting summary focusing on outcomes and decisions",
+  "actionItems": [{ "text": "Specific action item", "assignee": "Name or null", "dueDate": "YYYY-MM-DD or null" }],
+  "keyDecisions": [{ "decision": "What was decided", "context": "Why this matters" }],
+  "unresolvedIssues": [{ "title": "Issue title", "priority": "high|medium|low" }],
+  "followUpSuggestions": ["What should be followed up on before next meeting"]
+}
+
+RULES:
+- Focus on decisions and outcomes, not process
+- Action items should be specific and assignable
+- Flag any issues that were discussed but not resolved
+- Follow-up suggestions should be concrete and time-bound
+- Keep the summary concise but comprehensive`
+
+// F4: 1-on-1 AI Prep
+export const ONE_ON_ONE_PREP_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Generate preparation notes for a 1-on-1 meeting between a manager and their direct report.
+
+INPUT: The report's recent EOD reports, rock progress, task completion rate, and mood trends.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "performanceSummary": "2-3 sentence overview of how this person is doing",
+  "talkingPoints": ["Specific topics to discuss based on their recent work"],
+  "recognitionOpportunities": ["Things they did well that deserve acknowledgment"],
+  "concernAreas": ["Areas where they may need support or redirection"],
+  "suggestedQuestions": ["Open-ended questions the manager could ask"]
+}
+
+RULES:
+- Be balanced — lead with recognition before concerns
+- Talking points should be specific to recent work, not generic
+- Suggested questions should be open-ended, not yes/no
+- If mood has been declining, flag it sensitively
+- Keep the tone coaching-oriented, not evaluative`
+
+// F5: Rock Retrospective
+export const ROCK_RETROSPECTIVE_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Generate a quarterly rock retrospective analyzing completion patterns, velocity, and recommendations.
+
+INPUT: All rocks for the quarter with their status, owners, milestones, and completion dates.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "completionRate": 75.0,
+  "summary": "2-3 paragraph analysis of the quarter's rock performance",
+  "patterns": ["Pattern 1: Most missed rocks were in sales", "Pattern 2: ..."],
+  "topPerformers": [{ "name": "Person name", "completed": 3, "total": 4 }],
+  "missedRockAnalysis": [{ "title": "Rock title", "owner": "Name", "reason": "Why it was likely missed" }],
+  "recommendations": ["Specific recommendation for next quarter"]
+}
+
+RULES:
+- Be honest about performance but constructive
+- Identify systemic patterns, not just individual issues
+- Recommendations should be specific and actionable
+- If completion rate is high, celebrate; if low, diagnose
+- Look for scope creep, resource constraints, and priority conflicts`
+
+// F9: EOS Health Report Card
+export const EOS_HEALTH_REPORT_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Score an organization on the 6 EOS components based on actual platform usage data.
+
+EOS COMPONENTS:
+1. Vision — Does the org have clear vision/values/goals? (V/TO completeness, rock alignment)
+2. People — Right people, right seats? (People analyzer scores, team structure, EOD consistency)
+3. Data — Are they data-driven? (Scorecard usage, metric tracking, regular measurement)
+4. Issues — Do they identify and solve issues? (IDS board activity, resolution rate, escalation patterns)
+5. Process — Are processes documented and followed? (Meeting consistency, EOD compliance, task workflows)
+6. Traction — Are they executing? (Rock completion, task completion, meeting ratings)
+
+INPUT: VTO data, org chart, scorecard metrics, IDS issues, rocks, meetings, EOD reports.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "scores": { "vision": 0-100, "people": 0-100, "data": 0-100, "issues": 0-100, "process": 0-100, "traction": 0-100 },
+  "overallGrade": "A|B|C|D|F",
+  "analysis": "Comprehensive 3-5 paragraph analysis of organizational health",
+  "recommendations": ["Specific, prioritized recommendation 1", "Recommendation 2", ...]
+}
+
+RULES:
+- Score based on actual data, not assumptions
+- Be specific about what earned or lost points
+- Grade scale: A (90+), B (80-89), C (70-79), D (60-69), F (<60)
+- Recommendations should address the lowest-scoring components first
+- Maximum 5 recommendations, ordered by impact`
+
+// F10: Company Digest Generator
+export const COMPANY_DIGEST_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Generate a formatted company update suitable for board meetings, investors, or all-hands.
+
+INPUT: Quarter/period data including rocks, key metrics, team highlights, and challenges.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "title": "Company Update — Q1 2025",
+  "executiveSummary": "2-3 paragraph executive summary",
+  "rockUpdate": "Summary of quarterly goal progress",
+  "keyMetrics": [{ "name": "Metric name", "value": "Current value", "trend": "up|down|flat" }],
+  "teamHighlights": ["Notable team achievement 1", "Achievement 2"],
+  "challenges": ["Challenge 1 and how it's being addressed"],
+  "outlook": "Forward-looking paragraph about next period priorities"
+}
+
+RULES:
+- Write in a professional, board-ready tone
+- Lead with wins before challenges
+- Include specific numbers where available
+- Outlook should be realistic but optimistic
+- Keep the total length suitable for a 5-minute read`
+
 // Export all prompts
 const BRAND_EXTRACTOR_PROMPT = `You are a brand identity expert. Given the content of a website, identify the company's brand colors.
 
@@ -416,4 +607,12 @@ export const PROMPTS = {
   managerInsights: MANAGER_INSIGHTS_PROMPT,
   meetingNotesSummary: MEETING_NOTES_SUMMARY_PROMPT,
   brandExtractor: BRAND_EXTRACTOR_PROMPT,
+  // V2 features
+  weeklyBrief: WEEKLY_BRIEF_PROMPT,
+  smartRocks: SMART_ROCKS_PROMPT,
+  meetingIntelligence: MEETING_INTELLIGENCE_PROMPT,
+  oneOnOnePrep: ONE_ON_ONE_PREP_PROMPT,
+  rockRetrospective: ROCK_RETROSPECTIVE_PROMPT,
+  eosHealthReport: EOS_HEALTH_REPORT_PROMPT,
+  companyDigest: COMPANY_DIGEST_PROMPT,
 }

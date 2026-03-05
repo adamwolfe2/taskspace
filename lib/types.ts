@@ -394,6 +394,253 @@ export type PageType =
   | "people-analyzer"
   | "portfolio"
   | "portfolio-detail"
+  | "one-on-one"
+  | "eos-health"
+  | "cross-workspace"
+  | "automations"
+
+// ============================================
+// V2 FEATURE TYPES
+// ============================================
+
+export interface WeeklyBrief {
+  greeting: string
+  weekAtAGlance: string
+  topPriorities: { title: string; type: "rock" | "task"; dueDate?: string }[]
+  openRocks: { title: string; progress: number; status: string }[]
+  overdueItems: { title: string; type: string; daysOverdue: number }[]
+  meetingPreview: { title: string; scheduledAt: string }[]
+  focusSuggestion: string
+}
+
+export interface WeeklyBriefRecord {
+  id: string
+  orgId: string
+  userId: string
+  weekStart: string
+  content: WeeklyBrief
+  createdAt: string
+}
+
+export interface MeetingTemplate {
+  id: string
+  workspaceId: string
+  name: string
+  description?: string
+  sections: MeetingTemplateSection[]
+  isDefault: boolean
+  createdBy?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MeetingTemplateSection {
+  sectionType: string
+  durationTarget: number
+  data?: Record<string, unknown>
+}
+
+export interface MeetingIntelligence {
+  summary: string
+  actionItems: { text: string; assignee?: string; dueDate?: string }[]
+  keyDecisions: { decision: string; context?: string }[]
+  unresolvedIssues: { title: string; priority?: string }[]
+  followUpSuggestions: string[]
+}
+
+export interface OneOnOne {
+  id: string
+  workspaceId: string
+  managerId: string
+  reportId: string
+  scheduledAt?: string
+  completedAt?: string
+  status: "scheduled" | "in_progress" | "completed" | "cancelled"
+  notes?: string
+  aiPrep?: OneOnOnePrep
+  talkingPoints: { text: string; completed?: boolean }[]
+  actionItems: { text: string; assignee?: string; dueDate?: string; completed?: boolean }[]
+  rating?: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OneOnOnePrep {
+  performanceSummary: string
+  talkingPoints: string[]
+  recognitionOpportunities: string[]
+  concernAreas: string[]
+  suggestedQuestions: string[]
+}
+
+export interface RockRetrospective {
+  id: string
+  orgId: string
+  workspaceId: string
+  quarter: string
+  aiAnalysis: RockRetrospectiveAnalysis
+  completionRate: number
+  totalRocks: number
+  completedRocks: number
+  createdBy?: string
+  createdAt: string
+}
+
+export interface RockRetrospectiveAnalysis {
+  completionRate: number
+  summary: string
+  patterns: string[]
+  topPerformers: { name: string; completed: number; total: number }[]
+  missedRockAnalysis: { title: string; owner?: string; reason?: string }[]
+  recommendations: string[]
+}
+
+export interface TeamHealthSnapshot {
+  id: string
+  orgId: string
+  workspaceId: string
+  weekStart: string
+  overallScore: number
+  dimensions: TeamHealthDimensions
+  computedAt: string
+  createdAt: string
+}
+
+export interface TeamHealthDimensions {
+  eodRate: number
+  taskCompletion: number
+  rockProgress: number
+  meetingAttendance: number
+  moodScore: number
+  escalationRate: number
+}
+
+export interface PeopleVelocity {
+  id: string
+  orgId: string
+  userId: string
+  weekStart: string
+  metrics: PeopleVelocityMetrics
+  computedAt: string
+}
+
+export interface PeopleVelocityMetrics {
+  tasksCompleted: number
+  tasksDue: number
+  rockMilestonesHit: number
+  eodStreak: number
+  avgMood: number
+  velocityScore: number
+}
+
+export interface EOSHealthReport {
+  id: string
+  orgId: string
+  workspaceId: string
+  quarter: string
+  scores: EOSHealthScores
+  overallGrade: string
+  aiAnalysis: string
+  recommendations: string[]
+  createdBy?: string
+  createdAt: string
+}
+
+export interface EOSHealthScores {
+  vision: number
+  people: number
+  data: number
+  issues: number
+  process: number
+  traction: number
+}
+
+export interface CompanyDigest {
+  id: string
+  orgId: string
+  workspaceId: string
+  title: string
+  periodType: string
+  periodStart: string
+  periodEnd: string
+  content: CompanyDigestContent
+  format: string
+  createdBy?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CompanyDigestContent {
+  title: string
+  executiveSummary: string
+  rockUpdate: string
+  keyMetrics: { name: string; value: string; trend?: string }[]
+  teamHighlights: string[]
+  challenges: string[]
+  outlook: string
+  formattedHTML?: string
+}
+
+export interface SmartRockSuggestion {
+  title: string
+  description: string
+  milestones: string[]
+  suggestedOwnerEmail?: string
+  dueDate?: string
+  outcome: string
+  doneWhen: string
+}
+
+export interface Automation {
+  id: string
+  orgId: string
+  workspaceId: string
+  name: string
+  description?: string
+  triggerType: AutomationTriggerType
+  triggerConfig: Record<string, unknown>
+  actions: AutomationAction[]
+  isEnabled: boolean
+  runCount: number
+  lastRunAt?: string
+  createdBy?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type AutomationTriggerType =
+  | "task_completed"
+  | "eod_submitted"
+  | "rock_status_changed"
+  | "meeting_ended"
+  | "scorecard_updated"
+
+export interface AutomationAction {
+  type: "notify" | "create_task" | "send_slack" | "send_email"
+  config: Record<string, unknown>
+}
+
+export interface AutomationLog {
+  id: string
+  automationId: string
+  triggerEvent: Record<string, unknown>
+  actionsExecuted: Record<string, unknown>
+  status: "success" | "partial" | "failed"
+  error?: string
+  executedAt: string
+}
+
+export interface ScorecardBenchmark {
+  id: string
+  orgId: string
+  workspaceId: string
+  metricName: string
+  benchmarkValue: number
+  benchmarkType: string
+  period: string
+  computedAt: string
+  createdAt: string
+}
 
 // ============================================
 // TASK POOL TYPES

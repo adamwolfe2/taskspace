@@ -75,17 +75,19 @@ import {
  FileEdit,
  Hand,
  ClipboardCheck,
+ Heart,
+ Sun,
 } from "lucide-react"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 // Grid CSS is loaded globally via app/globals.css for reliability with dynamic imports
 
 // Bump this whenever DEFAULT_LAYOUT or rowHeight changes.
 // Stale localStorage with a different version is discarded on load.
-const LAYOUT_VERSION = 6
+const LAYOUT_VERSION = 7
 
 export interface DashboardWidget {
  id: string
- type: "welcome" | "eod_status" | "action_hub" | "rocks" | "tasks" | "stats" | "productivity" | "eod_calendar" | "eod_submission" | "focus" | "activity" | "focus_of_day" | "smart_suggestions"
+ type: "welcome" | "eod_status" | "action_hub" | "rocks" | "tasks" | "stats" | "productivity" | "eod_calendar" | "eod_submission" | "focus" | "activity" | "focus_of_day" | "smart_suggestions" | "weekly_brief" | "team_health"
  title: string
  enabled: boolean
  minW?: number
@@ -139,6 +141,8 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
  { id: "activity", type: "activity", title: "Activity Feed", enabled: true, minW: 2, minH: 4, maxH: 10 },
  { id: "focus_of_day", type: "focus_of_day", title: "Focus of the Day", enabled: false, minW: 2, minH: 4, maxH: 10 },
  { id: "smart_suggestions", type: "smart_suggestions", title: "Smart Suggestions", enabled: false, minW: 2, minH: 5, maxH: 14 },
+ { id: "weekly_brief", type: "weekly_brief", title: "Week Preview", enabled: true, minW: 2, minH: 4, maxH: 10 },
+ { id: "team_health", type: "team_health", title: "Team Health", enabled: true, minW: 1, minH: 5, maxH: 10 },
 ]
 
 // Default bento layout — 4 columns, rowHeight=40px
@@ -155,6 +159,8 @@ export const DEFAULT_LAYOUT: LayoutItem[] = [
  { i: "eod_submission", x: 0, y: 36, w: 4, h: 10 }, // ~544px — full width
  { i: "eod_status",     x: 0, y: 46, w: 4, h: 2  }, // ~96px  — below fold (optional)
  { i: "focus",          x: 0, y: 48, w: 2, h: 7  }, // ~376px — below fold (optional)
+ { i: "weekly_brief",   x: 2, y: 48, w: 2, h: 6  }, // ~320px — below fold
+ { i: "team_health",    x: 0, y: 55, w: 2, h: 7  }, // ~376px — below fold
 ]
 
 function getWidgetIcon(type: DashboardWidget["type"]) {
@@ -172,6 +178,8 @@ function getWidgetIcon(type: DashboardWidget["type"]) {
   case "activity": return Activity
   case "focus_of_day": return Target
   case "smart_suggestions": return Sparkles
+  case "weekly_brief": return Sun
+  case "team_health": return Heart
   default: return LayoutGrid
  }
 }
@@ -191,6 +199,8 @@ function getWidgetDescription(type: DashboardWidget["type"]) {
   case "activity": return "Recent activity feed"
   case "focus_of_day": return "Today's top priorities — overdue tasks and rock deadlines"
   case "smart_suggestions": return "Smart recommendations based on your tasks, rocks, and patterns"
+  case "weekly_brief": return "Monday morning AI preview of your week ahead"
+  case "team_health": return "Weekly team health pulse score and trends"
   default: return ""
  }
 }

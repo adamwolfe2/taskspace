@@ -43,6 +43,11 @@ export interface WorkspaceFeatureToggles {
     managerDashboard: boolean
     apiAccess: boolean
     clientPortal: boolean
+    oneOnOnes: boolean
+    automations: boolean
+    crossWorkspace: boolean
+    eosHealthReport: boolean
+    companyDigest: boolean
   }
   admin: {
     teamManagement: boolean
@@ -100,6 +105,11 @@ export const DEFAULT_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     managerDashboard: true,
     apiAccess: true,
     clientPortal: false,
+    oneOnOnes: true,
+    automations: true,
+    crossWorkspace: true,
+    eosHealthReport: true,
+    companyDigest: true,
   },
   admin: {
     teamManagement: true,
@@ -147,6 +157,11 @@ export const STARTER_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     managerDashboard: false,
     apiAccess: false,
     clientPortal: false,
+    oneOnOnes: false,
+    automations: false,
+    crossWorkspace: false,
+    eosHealthReport: false,
+    companyDigest: false,
   },
   admin: {
     teamManagement: true,
@@ -164,7 +179,7 @@ export const TEAM_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
   },
   productivity: { focusBlocks: false, dailyEnergy: false, streakTracking: true, weeklyReviews: false, achievements: true },
   integrations: { asana: false, googleCalendar: false, slack: false, webhooks: false },
-  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: false },
+  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: false, oneOnOnes: false, automations: false, crossWorkspace: false, eosHealthReport: false, companyDigest: false },
   admin: { teamManagement: true, databaseManagement: false, branding: false },
 }
 
@@ -177,7 +192,7 @@ export const CLIENT_REPORTING_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
   },
   productivity: { focusBlocks: false, dailyEnergy: false, streakTracking: true, weeklyReviews: false, achievements: false },
   integrations: { asana: false, googleCalendar: false, slack: false, webhooks: false },
-  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: true },
+  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: true, oneOnOnes: false, automations: false, crossWorkspace: false, eosHealthReport: false, companyDigest: false },
   admin: { teamManagement: true, databaseManagement: false, branding: false },
 }
 
@@ -190,7 +205,7 @@ export const MULTI_COMPANY_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
   },
   productivity: { focusBlocks: false, dailyEnergy: false, streakTracking: true, weeklyReviews: true, achievements: true },
   integrations: { asana: false, googleCalendar: false, slack: false, webhooks: false },
-  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: false },
+  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: false, oneOnOnes: false, automations: false, crossWorkspace: true, eosHealthReport: false, companyDigest: false },
   admin: { teamManagement: true, databaseManagement: false, branding: false },
 }
 
@@ -416,6 +431,44 @@ export const WORKSPACE_FEATURE_METADATA: Record<WorkspaceFeatureKey, WorkspaceFe
     category: "advanced",
     icon: "ExternalLink",
     dependencies: ["core.clients", "core.eodReports"],
+    impact: { navigation: false, dashboard: false, api: true },
+  },
+  "advanced.oneOnOnes": {
+    name: "1-on-1 Meetings",
+    description: "Structured 1-on-1 meetings with AI-powered preparation and talking points",
+    category: "advanced",
+    icon: "UserCheck",
+    dependencies: ["core.eodReports", "core.rocks"],
+    impact: { navigation: true, dashboard: false, api: true },
+  },
+  "advanced.automations": {
+    name: "Automations",
+    description: "Visual if-then automation builder for tasks, EODs, rocks, and meetings",
+    category: "advanced",
+    icon: "Zap",
+    impact: { navigation: true, dashboard: false, api: true },
+  },
+  "advanced.crossWorkspace": {
+    name: "Cross-Workspace Dashboard",
+    description: "Unified dashboard showing health and progress across all your workspaces",
+    category: "advanced",
+    icon: "LayoutGrid",
+    impact: { navigation: true, dashboard: false, api: true },
+  },
+  "advanced.eosHealthReport": {
+    name: "EOS Health Report",
+    description: "AI-scored report card on all 6 EOS components with recommendations",
+    category: "advanced",
+    icon: "Heart",
+    requiredOrgFeature: "ai_insights",
+    impact: { navigation: true, dashboard: false, api: true },
+  },
+  "advanced.companyDigest": {
+    name: "Company Digest",
+    description: "AI-generated company updates for boards, investors, or all-hands meetings",
+    category: "advanced",
+    icon: "FileText",
+    requiredOrgFeature: "ai_insights",
     impact: { navigation: false, dashboard: false, api: true },
   },
 

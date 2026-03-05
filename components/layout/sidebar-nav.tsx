@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
-import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle, Search, FileText, BookOpen, UserCheck, FolderKanban, Building2, Briefcase, Activity, Users2 } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle, Search, FileText, BookOpen, UserCheck, FolderKanban, Building2, Briefcase, Activity, Users2, UserPlus, Heart, LayoutGrid, Workflow } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
@@ -45,6 +45,8 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     { id: "notes", label: "Notes", icon: FileText, requiredFeature: "core.notes" },
     { id: "vto", label: "V/TO", icon: BookOpen, requiredFeature: "core.vto" },
     { id: "people-analyzer", label: "People Analyzer", icon: UserCheck, requiredFeature: "core.peopleAnalyzer" },
+    { id: "one-on-one", label: "1-on-1 Meetings", icon: UserPlus, requiredFeature: "advanced.oneOnOnes" },
+    { id: "cross-workspace", label: "Cross-Workspace", icon: LayoutGrid, requiredFeature: "advanced.crossWorkspace" },
   ]
 
   const adminItems: {
@@ -60,6 +62,8 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     { id: "admin-team", label: "Team Management", icon: Users, requiredFeature: "admin.teamManagement" },
     { id: "admin-database", label: "Database Management", icon: Database, requiredFeature: "admin.databaseManagement" },
     { id: "admin-api", label: "API Usage", icon: Activity },
+    { id: "eos-health", label: "EOS Health", icon: Heart, requiredFeature: "advanced.eosHealthReport" },
+    { id: "automations", label: "Automations", icon: Workflow, requiredFeature: "advanced.automations" },
   ]
 
   // Filter nav items based on enabled features

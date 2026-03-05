@@ -3,7 +3,16 @@
  * Handles all interactions with the Anthropic Claude API
  */
 
-import { PROMPTS } from "./prompts"
+import {
+  PROMPTS,
+  WEEKLY_BRIEF_PROMPT,
+  SMART_ROCKS_PROMPT,
+  MEETING_INTELLIGENCE_PROMPT,
+  ONE_ON_ONE_PREP_PROMPT,
+  ROCK_RETROSPECTIVE_PROMPT,
+  EOS_HEALTH_REPORT_PROMPT,
+  COMPANY_DIGEST_PROMPT,
+} from "./prompts"
 import { logger } from "@/lib/logger"
 import type {
   EODReport,
@@ -15,6 +24,13 @@ import type {
   DailyDigest,
   EODInsight,
   AIQueryResponse,
+  WeeklyBrief,
+  SmartRockSuggestion,
+  MeetingIntelligence,
+  OneOnOnePrep,
+  RockRetrospectiveAnalysis,
+  EOSHealthScores,
+  CompanyDigestContent,
 } from "../types"
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
@@ -904,5 +920,279 @@ ${text}`
       tasks: result.tasks || [],
     },
     usage: { ...usage, model },
+  }
+}
+
+// ============================================
+// V2 AI FUNCTIONS
+// ============================================
+
+/**
+ * F1: Generate Monday morning personal brief
+ */
+export async function generateWeeklyBrief(context: {
+  rocks: Pick<Rock, "title" | "progress" | "status">[]
+  tasks: Pick<AssignedTask, "title" | "dueDate" | "status">[]
+  meetings: { title: string; scheduledAt: string }[]
+  lastWeekEODs: { date: string; summary?: string }[]
+  scorecardData?: Record<string, unknown>
+}): Promise<AIResultWithUsage<WeeklyBrief>> {
+  const userMessage = `Generate a Monday morning weekly brief for this team member.
+
+OPEN ROCKS: ${JSON.stringify(context.rocks)}
+TASKS (including overdue): ${JSON.stringify(context.tasks)}
+UPCOMING MEETINGS: ${JSON.stringify(context.meetings)}
+LAST WEEK'S EOD SUMMARIES: ${JSON.stringify(context.lastWeekEODs)}
+${context.scorecardData ? `SCORECARD DATA: ${JSON.stringify(context.scorecardData)}` : ""}
+
+Return JSON only.`
+
+  const { result, usage, model } = await callClaudeJSONWithUsage<WeeklyBrief>(
+    WEEKLY_BRIEF_PROMPT,
+    userMessage,
+    { maxTokens: 2048, temperature: 0.5, model: MODEL_HAIKU }
+  )
+
+  return {
+    result: {
+      greeting: result.greeting || "Good morning! Here's your week ahead.",
+      weekAtAGlance: result.weekAtAGlance || "",
+      topPriorities: result.topPriorities || [],
+      openRocks: result.openRocks || [],
+      overdueItems: result.overdueItems || [],
+      meetingPreview: result.meetingPreview || [],
+      focusSuggestion: result.focusSuggestion || "",
+    },
+    usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, model },
+  }
+}
+
+/**
+ * F11: Generate SMART rocks from a high-level goal
+ */
+export async function generateSmartRocks(
+  goal: string,
+  context: {
+    teamMembers: Pick<TeamMember, "name" | "email" | "role">[]
+    existingRocks: Pick<Rock, "title" | "status">[]
+    quarter: string
+  }
+): Promise<AIResultWithUsage<SmartRockSuggestion[]>> {
+  const userMessage = `Generate SMART rocks from this goal.
+
+GOAL: ${goal}
+QUARTER: ${context.quarter}
+TEAM MEMBERS: ${JSON.stringify(context.teamMembers)}
+EXISTING ROCKS THIS QUARTER: ${JSON.stringify(context.existingRocks)}
+
+Return JSON only.`
+
+  const { result, usage, model } = await callClaudeJSONWithUsage<{ rocks: SmartRockSuggestion[] }>(
+    SMART_ROCKS_PROMPT,
+    userMessage,
+    { maxTokens: 4096, temperature: 0.6, model: MODEL_SONNET }
+  )
+
+  return {
+    result: result.rocks || [],
+    usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, model },
+  }
+}
+
+/**
+ * F3: Generate meeting intelligence from completed L10 meeting
+ */
+export async function generateMeetingIntelligence(meeting: {
+  sections: { sectionType: string; data: Record<string, unknown> }[]
+  issues: { title: string; status: string; resolution?: string }[]
+  todos: { title: string; assigneeName?: string; completed: boolean }[]
+  attendees: string[]
+  notes?: string
+}): Promise<AIResultWithUsage<MeetingIntelligence>> {
+  const userMessage = `Analyze this completed L10 meeting and generate an intelligence report.
+
+MEETING SECTIONS: ${JSON.stringify(meeting.sections)}
+ISSUES DISCUSSED: ${JSON.stringify(meeting.issues)}
+TODOS CREATED: ${JSON.stringify(meeting.todos)}
+ATTENDEES: ${JSON.stringify(meeting.attendees)}
+${meeting.notes ? `NOTES: ${meeting.notes}` : ""}
+
+Return JSON only.`
+
+  const { result, usage, model } = await callClaudeJSONWithUsage<MeetingIntelligence>(
+    MEETING_INTELLIGENCE_PROMPT,
+    userMessage,
+    { maxTokens: 4096, temperature: 0.4, model: MODEL_SONNET }
+  )
+
+  return {
+    result: {
+      summary: result.summary || "",
+      actionItems: result.actionItems || [],
+      keyDecisions: result.keyDecisions || [],
+      unresolvedIssues: result.unresolvedIssues || [],
+      followUpSuggestions: result.followUpSuggestions || [],
+    },
+    usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, model },
+  }
+}
+
+/**
+ * F4: Generate 1-on-1 meeting prep for manager
+ */
+export async function generateOneOnOnePrep(context: {
+  reportEODs: { date: string; summary?: string; sentiment?: string }[]
+  reportRocks: Pick<Rock, "title" | "progress" | "status">[]
+  reportTasks: { completed: number; total: number; overdue: number }
+  reportMood: { date: string; mood?: string; score?: number }[]
+}): Promise<AIResultWithUsage<OneOnOnePrep>> {
+  const userMessage = `Generate 1-on-1 meeting preparation notes for this direct report.
+
+RECENT EOD REPORTS: ${JSON.stringify(context.reportEODs)}
+ROCK PROGRESS: ${JSON.stringify(context.reportRocks)}
+TASK METRICS: ${JSON.stringify(context.reportTasks)}
+MOOD TRENDS: ${JSON.stringify(context.reportMood)}
+
+Return JSON only.`
+
+  const { result, usage, model } = await callClaudeJSONWithUsage<OneOnOnePrep>(
+    ONE_ON_ONE_PREP_PROMPT,
+    userMessage,
+    { maxTokens: 2048, temperature: 0.5, model: MODEL_HAIKU }
+  )
+
+  return {
+    result: {
+      performanceSummary: result.performanceSummary || "",
+      talkingPoints: result.talkingPoints || [],
+      recognitionOpportunities: result.recognitionOpportunities || [],
+      concernAreas: result.concernAreas || [],
+      suggestedQuestions: result.suggestedQuestions || [],
+    },
+    usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, model },
+  }
+}
+
+/**
+ * F5: Generate quarterly rock retrospective
+ */
+export async function generateRockRetrospective(rocks: {
+  title: string
+  owner?: string
+  status: string
+  progress: number
+  milestones?: string[]
+  completedAt?: string
+}[]): Promise<AIResultWithUsage<RockRetrospectiveAnalysis>> {
+  const userMessage = `Generate a quarterly rock retrospective analysis.
+
+ROCKS THIS QUARTER: ${JSON.stringify(rocks)}
+
+Return JSON only.`
+
+  const { result, usage, model } = await callClaudeJSONWithUsage<RockRetrospectiveAnalysis>(
+    ROCK_RETROSPECTIVE_PROMPT,
+    userMessage,
+    { maxTokens: 4096, temperature: 0.4, model: MODEL_SONNET }
+  )
+
+  return {
+    result: {
+      completionRate: result.completionRate || 0,
+      summary: result.summary || "",
+      patterns: result.patterns || [],
+      topPerformers: result.topPerformers || [],
+      missedRockAnalysis: result.missedRockAnalysis || [],
+      recommendations: result.recommendations || [],
+    },
+    usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, model },
+  }
+}
+
+/**
+ * F9: Generate EOS Health Report Card
+ */
+export async function generateEOSHealthReport(context: {
+  vtoData?: Record<string, unknown>
+  orgChart?: Record<string, unknown>
+  scorecardMetrics?: Record<string, unknown>
+  idsIssues?: { total: number; resolved: number; open: number }
+  rocks?: { total: number; completed: number; onTrack: number }
+  meetings?: { total: number; avgRating?: number; attendanceRate?: number }
+  eodReports?: { totalMembers: number; avgCompletionRate: number }
+}): Promise<AIResultWithUsage<{ scores: { vision: number; people: number; data: number; issues: number; process: number; traction: number }; overallGrade: string; analysis: string; recommendations: string[] }>> {
+  const userMessage = `Score this organization on the 6 EOS components.
+
+V/TO DATA: ${JSON.stringify(context.vtoData || {})}
+ORG CHART: ${JSON.stringify(context.orgChart || {})}
+SCORECARD METRICS: ${JSON.stringify(context.scorecardMetrics || {})}
+IDS ISSUES: ${JSON.stringify(context.idsIssues || {})}
+ROCKS: ${JSON.stringify(context.rocks || {})}
+MEETINGS: ${JSON.stringify(context.meetings || {})}
+EOD REPORTS: ${JSON.stringify(context.eodReports || {})}
+
+Return JSON only.`
+
+  const { result, usage, model } = await callClaudeJSONWithUsage<{
+    scores: { vision: number; people: number; data: number; issues: number; process: number; traction: number }
+    overallGrade: string
+    analysis: string
+    recommendations: string[]
+  }>(
+    EOS_HEALTH_REPORT_PROMPT,
+    userMessage,
+    { maxTokens: 4096, temperature: 0.3, model: MODEL_SONNET }
+  )
+
+  return {
+    result: {
+      scores: result.scores || { vision: 0, people: 0, data: 0, issues: 0, process: 0, traction: 0 },
+      overallGrade: result.overallGrade || "C",
+      analysis: result.analysis || "",
+      recommendations: result.recommendations || [],
+    },
+    usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, model },
+  }
+}
+
+/**
+ * F10: Generate company digest / board update
+ */
+export async function generateCompanyDigest(context: {
+  periodType: string
+  periodStart: string
+  periodEnd: string
+  rocks?: { title: string; status: string; progress: number }[]
+  metrics?: { name: string; value: string }[]
+  teamHighlights?: string[]
+  challenges?: string[]
+}): Promise<AIResultWithUsage<CompanyDigestContent>> {
+  const userMessage = `Generate a company update digest for this period.
+
+PERIOD: ${context.periodType} (${context.periodStart} to ${context.periodEnd})
+ROCKS: ${JSON.stringify(context.rocks || [])}
+KEY METRICS: ${JSON.stringify(context.metrics || [])}
+TEAM HIGHLIGHTS: ${JSON.stringify(context.teamHighlights || [])}
+CHALLENGES: ${JSON.stringify(context.challenges || [])}
+
+Return JSON only.`
+
+  const { result, usage, model } = await callClaudeJSONWithUsage<CompanyDigestContent>(
+    COMPANY_DIGEST_PROMPT,
+    userMessage,
+    { maxTokens: 4096, temperature: 0.5, model: MODEL_SONNET }
+  )
+
+  return {
+    result: {
+      title: result.title || "Company Update",
+      executiveSummary: result.executiveSummary || "",
+      rockUpdate: result.rockUpdate || "",
+      keyMetrics: result.keyMetrics || [],
+      teamHighlights: result.teamHighlights || [],
+      challenges: result.challenges || [],
+      outlook: result.outlook || "",
+    },
+    usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, model },
   }
 }

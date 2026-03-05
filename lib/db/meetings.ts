@@ -1041,6 +1041,63 @@ export async function deleteMeetingTodo(todoId: string): Promise<boolean> {
 }
 
 // ============================================
+// CARRY-FORWARD ITEMS
+// ============================================
+
+export interface CarryForwardItems {
+  unresolvedIssues: Issue[]
+  incompleteTodos: MeetingTodo[]
+}
+
+/**
+ * Get unresolved issues and incomplete todos from the last completed meeting
+ * for a workspace. Used to carry forward open items into a new meeting.
+ */
+export async function getCarryForwardItems(workspaceId: string): Promise<CarryForwardItems> {
+  // Find the most recently completed meeting for this workspace
+  const { rows: lastMeetingRows } = await sql`
+    SELECT id FROM meetings
+    WHERE workspace_id = ${workspaceId}
+      AND status = 'completed'
+    ORDER BY ended_at DESC
+    LIMIT 1
+  `
+
+  if (lastMeetingRows.length === 0) {
+    return { unresolvedIssues: [], incompleteTodos: [] }
+  }
+
+  const lastMeetingId = lastMeetingRows[0].id as string
+
+  // Get issues that were linked to the last meeting but not resolved in it
+  const { rows: issueRows } = await sql`
+    SELECT i.*, u.name as owner_name
+    FROM issues i
+    JOIN meeting_issues mi ON mi.issue_id = i.id
+    LEFT JOIN users u ON u.id = i.owner_id
+    WHERE mi.meeting_id = ${lastMeetingId}
+      AND mi.resolved_in_meeting = FALSE
+      AND i.status IN ('open', 'discussing')
+    ORDER BY i.priority DESC, i.created_at ASC
+  `
+
+  // Get todos from the last meeting that were not completed
+  const { rows: todoRows } = await sql`
+    SELECT mt.*, u.name as assignee_name
+    FROM meeting_todos mt
+    LEFT JOIN users u ON u.id = mt.assignee_id
+    WHERE mt.meeting_id = ${lastMeetingId}
+      AND mt.completed = FALSE
+    ORDER BY mt.created_at ASC
+  `
+
+  return {
+    unresolvedIssues: issueRows.map(parseIssue),
+    incompleteTodos: todoRows.map(parseTodo),
+  }
+}
+
+// ============================================
 // PAGINATED QUERIES
 // ============================================
 
@@ -1199,6 +1256,9 @@ export const meetings = {
   completeTodo: completeMeetingTodo,
   convertTodoToTask,
   deleteTodo: deleteMeetingTodo,
+
+  // Carry-forward
+  getCarryForwardItems,
 }
 
 export default meetings

@@ -129,6 +129,22 @@ const TaskPoolPage = dynamic(
   () => import("@/components/pages/task-pool-page").then(mod => ({ default: mod.TaskPoolPage })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
+const OneOnOnePage = dynamic(
+  () => import("@/components/pages/one-on-one-page").then(mod => ({ default: mod.OneOnOnePage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const EOSHealthPage = dynamic(
+  () => import("@/components/pages/eos-health-page").then(mod => ({ default: mod.EOSHealthPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const CrossWorkspacePage = dynamic(
+  () => import("@/components/pages/cross-workspace-page").then(mod => ({ default: mod.CrossWorkspacePage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const AutomationsPage = dynamic(
+  () => import("@/components/pages/automations-page").then(mod => ({ default: mod.AutomationsPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
 
 import { Loader2, Plus } from "lucide-react"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
@@ -169,6 +185,10 @@ const PAGE_TITLES: Partial<Record<PageType, string>> = {
   portfolio: "Executive Portfolio",
   "portfolio-detail": "Portfolio",
   taskPool: "Task Pool",
+  "one-on-one": "1-on-1 Meetings",
+  "eos-health": "EOS Health Report",
+  "cross-workspace": "Cross-Workspace",
+  automations: "Automations",
 }
 
 function AppContent() {
@@ -559,6 +579,14 @@ function AppContent() {
         return isSuperAdmin ? <PortfolioPage /> : <DashboardPage {...dashboardProps} />
       case "portfolio-detail":
         return isSuperAdmin ? <PortfolioDetailPage /> : <DashboardPage {...dashboardProps} />
+      case "one-on-one":
+        return <OneOnOnePage currentUser={currentUser!} teamMembers={teamData.teamMembers} />
+      case "eos-health":
+        return isAdmin ? <EOSHealthPage /> : <DashboardPage {...dashboardProps} />
+      case "cross-workspace":
+        return <CrossWorkspacePage />
+      case "automations":
+        return isAdmin ? <AutomationsPage /> : <DashboardPage {...dashboardProps} />
       default:
         return <DashboardPage {...dashboardProps} />
     }

@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Target, Search, Calendar, AlertTriangle, Activity, List, Map, LayoutGrid, GanttChart, Plus, Loader2, Clock, CheckCircle2 } from "lucide-react"
+import { Target, Search, Calendar, AlertTriangle, Activity, List, Map, LayoutGrid, GanttChart, Plus, Loader2, Clock, CheckCircle2, Sparkles } from "lucide-react"
 import { formatDistanceToNow, parseISO, differenceInDays } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -27,6 +27,7 @@ import { RockCheckinDialog } from "@/components/rocks/rock-checkin-dialog"
 import { RockRoadmap } from "@/components/rocks/rock-roadmap"
 import { RocksKanbanBoard } from "@/components/rocks/rocks-kanban-board"
 import { RocksTimelineView } from "@/components/rocks/rocks-timeline-view"
+import { SmartRockGeneratorModal } from "@/components/rocks/smart-rock-generator-modal"
 
 interface RocksPageProps {
   currentUser: TeamMember
@@ -93,6 +94,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
   })
   const [isCreating, setIsCreating] = useState(false)
   const [completingRockId, setCompletingRockId] = useState<string | null>(null)
+  const [smartRockModalOpen, setSmartRockModalOpen] = useState(false)
 
   // Default due date to end of current quarter
   const getDefaultDueDate = () => {
@@ -312,6 +314,17 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
             </Button>
           </div>
           <ExportButton type="rocks" />
+          {createRock && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSmartRockModalOpen(true)}
+              className="min-h-[36px] border-violet-200 text-violet-700 hover:bg-violet-50 hover:border-violet-300"
+            >
+              <Sparkles className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Generate from Goal</span>
+            </Button>
+          )}
           {createRock && (
             <Button
               size="sm"
@@ -945,6 +958,20 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Smart Rock Generator Modal */}
+    {createRock && (
+      <SmartRockGeneratorModal
+        open={smartRockModalOpen}
+        onOpenChange={setSmartRockModalOpen}
+        teamMembers={teamMembers}
+        quarter={quarterFilter !== "all" ? quarterFilter : getCurrentQuarter()}
+        onRockCreated={() => {
+          // Refresh is handled by the parent — no-op here but kept for extensibility
+        }}
+        createRock={createRock}
+      />
+    )}
     </FeatureGate>
   )
 }

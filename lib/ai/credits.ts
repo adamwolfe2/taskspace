@@ -70,6 +70,15 @@ export const AI_CREDIT_COSTS = {
   slackResponse: 5,
   taskSuggestion: 3,
 
+  // V2 AI features
+  weeklyBrief: 8,
+  smartRocks: 10,
+  meetingIntelligence: 12,
+  oneOnOnePrep: 6,
+  rockRetrospective: 10,
+  eosHealthReport: 15,
+  companyDigest: 12,
+
   // Per token costs (for detailed tracking)
   inputTokenPer1K: 1,
   outputTokenPer1K: 3,

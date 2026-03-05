@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { sendMissingEODReminder, isEmailConfigured } from "@/lib/integrations/email"
 import { sendSlackMessage, buildEODReminderMessage, isSlackConfigured } from "@/lib/integrations/slack"
+import { isWebPushConfigured, sendPushNotification } from "@/lib/push/web-push"
 import type { ApiResponse, TeamMember, Organization } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { CONFIG } from "@/lib/config"
@@ -331,6 +332,28 @@ export async function GET(request: NextRequest) {
           } catch (slackError) {
             logError(logger, `Slack reminder failed for org ${org.name}`, slackError)
             errors.push(`Slack: ${slackError instanceof Error ? slackError.message : "Unknown error"}`)
+          }
+        }
+
+        // Send push notifications to missing members if web push is configured
+        if (isWebPushConfigured() && missingMembers.length > 0) {
+          try {
+            const { sql } = await import("@/lib/db/sql")
+            for (const member of missingMembers) {
+              const subsResult = await sql`
+                SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ${member.id}
+              `
+              for (const sub of subsResult.rows) {
+                await sendPushNotification(
+                  { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+                  { title: "EOD Reminder", body: `Hey ${member.name}, don't forget to submit your EOD report!`, url: "/app?p=eod" }
+                )
+              }
+            }
+            logger.info({ orgName: org.name }, "Push notifications sent for org")
+          } catch (pushError) {
+            logError(logger, `Push notification failed for org ${org.name}`, pushError)
+            errors.push(`Push: ${pushError instanceof Error ? pushError.message : "Unknown error"}`)
           }
         }
 

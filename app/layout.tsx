@@ -73,6 +73,7 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  manifest: "/manifest.json",
   icons: {
     icon: [
       { url: "/icon-light-32x32.png", media: "(prefers-color-scheme: light)" },
