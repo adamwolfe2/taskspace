@@ -7,6 +7,12 @@ import { logger, logError } from "@/lib/logger"
 
 // POST /api/test-email - Test email configuration
 export const POST = withAdmin(async (request, auth) => {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: "Not available" },
+      { status: 404 }
+    )
+  }
   try {
     const { testEmail } = await validateBody(request, testEmailSchema)
 
@@ -89,6 +95,12 @@ export const POST = withAdmin(async (request, auth) => {
 
 // GET /api/test-email - Get email configuration status (debug)
 export const GET = withAdmin(async (_request, _auth) => {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: "Not available" },
+      { status: 404 }
+    )
+  }
   try {
     const RESEND_API_KEY = process.env.RESEND_API_KEY || ""
     const EMAIL_FROM = process.env.EMAIL_FROM || "Taskspace <onboarding@resend.dev>"

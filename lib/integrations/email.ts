@@ -569,7 +569,7 @@ export async function sendDailyEODLinkEmail(
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
       Sent from Taskspace • ${escapeHtml(organizationName)}<br>
       <a href="${buildUnsubscribeUrl(member.email)}" style="color: #9ca3af; text-decoration: underline;">Unsubscribe from email notifications</a> &nbsp;·&nbsp;
-      <a href="${APP_URL}/app?page=settings" style="color: #9ca3af; text-decoration: underline;">Manage preferences</a>
+      <a href="${APP_URL}/app?p=settings" style="color: #9ca3af; text-decoration: underline;">Manage preferences</a>
     </p>
   </div>
 </body>
@@ -651,7 +651,7 @@ export async function sendMissingEODReminder(
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
       Sent from Taskspace • ${escapeHtml(organizationName)}<br>
       <a href="${buildUnsubscribeUrl(member.email)}" style="color: #9ca3af; text-decoration: underline;">Unsubscribe from email notifications</a> &nbsp;·&nbsp;
-      <a href="${APP_URL}/app?page=settings" style="color: #9ca3af; text-decoration: underline;">Manage preferences</a>
+      <a href="${APP_URL}/app?p=settings" style="color: #9ca3af; text-decoration: underline;">Manage preferences</a>
     </p>
   </div>
 </body>
@@ -686,7 +686,7 @@ export async function sendMissingEODReminder(
 interface BillingAlertParams {
   to: string[]
   subject: string
-  alertType: "payment_failed" | "payment_failed_urgent" | "payment_failed_final" | "subscription_canceled" | "subscription_updated" | "trial_ending"
+  alertType: "payment_failed" | "payment_failed_urgent" | "payment_failed_final" | "subscription_canceled" | "subscription_updated" | "trial_ending" | "invoice_paid"
   organizationName: string
   message: string
   details: string
@@ -783,6 +783,7 @@ export async function sendBillingAlertEmail(params: BillingAlertParams): Promise
     subscription_canceled: { bg: "#fef3c7", border: "#f59e0b", emoji: "⚠️" },
     subscription_updated: { bg: "#f0f9ff", border: "#3b82f6", emoji: "ℹ️" },
     trial_ending: { bg: "#eff6ff", border: "#3b82f6", emoji: "⏰" },
+    invoice_paid: { bg: "#f0fdf4", border: "#22c55e", emoji: "✅" },
   }
 
   const color = alertColors[params.alertType]
@@ -814,7 +815,7 @@ export async function sendBillingAlertEmail(params: BillingAlertParams): Promise
     ` : ""}
 
     <div style="margin-top: ${params.invoiceUrl ? "20px" : "30px"}; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-      <a href="${APP_URL}/settings/billing" style="display: inline-block; background: ${color.border}; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Manage Billing</a>
+      <a href="${APP_URL}/app?p=settings" style="display: inline-block; background: ${color.border}; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Manage Billing</a>
     </div>
 
     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
@@ -842,6 +843,190 @@ export async function sendBillingAlertEmail(params: BillingAlertParams): Promise
     return { success: true, id: result.data?.id }
   } catch (error) {
     logError(logger, "Billing alert email error", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+/**
+ * Send a trial-started confirmation email to a new user
+ */
+export async function sendTrialStartedEmail(params: {
+  to: string
+  name: string
+  organizationName: string
+  trialEndDate: string
+}): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    logger.debug("Email not configured, skipping trial started email")
+    return { success: false, error: "Email not configured" }
+  }
+
+  const loginUrl = `${APP_URL}/app`
+  const billingUrl = `${APP_URL}/app?p=settings`
+  const unsubscribeUrl = buildUnsubscribeUrl(params.to)
+  const safeName = escapeHtml(params.name.split(" ")[0] || params.name)
+  const safeOrg = escapeHtml(params.organizationName)
+  const trialEnd = new Date(params.trialEndDate).toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric", year: "numeric"
+  })
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your 14-day Taskspace trial has started</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: #0f172a; padding: 24px; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 22px;">Your 14-day trial has started</h1>
+    <p style="color: rgba(255,255,255,0.75); margin: 6px 0 0 0; font-size: 14px;">${safeOrg}</p>
+  </div>
+
+  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 28px; border-radius: 0 0 8px 8px;">
+    <p style="margin: 0 0 16px 0; font-size: 16px;">Hi ${safeName},</p>
+    <p style="margin: 0 0 16px 0;">Your free trial is active until <strong>${trialEnd}</strong>. Here's what's included:</p>
+
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; margin: 20px 0; border-radius: 8px;">
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #374151;">
+        <li style="margin: 6px 0;">EOD reports &amp; daily team accountability</li>
+        <li style="margin: 6px 0;">Quarterly Rocks &amp; goal tracking</li>
+        <li style="margin: 6px 0;">Tasks, scorecards &amp; IDS board</li>
+        <li style="margin: 6px 0;">AI-powered insights &amp; summaries</li>
+      </ul>
+    </div>
+
+    <p style="margin: 0 0 24px 0;">Start by setting your first quarterly Rock — it takes less than 2 minutes.</p>
+
+    <div style="margin: 28px 0;">
+      <a href="${loginUrl}?p=rocks" style="display: inline-block; background: #0f172a; color: white; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 500; font-size: 15px;">Set up your first Rock &rarr;</a>
+    </div>
+
+    <p style="margin: 20px 0 0 0; font-size: 13px; color: #6b7280;">
+      No credit card required during your trial. <a href="${billingUrl}" style="color: #6b7280;">Manage billing</a> &middot;
+      <a href="${unsubscribeUrl}" style="color: #6b7280;">Unsubscribe</a>
+    </p>
+  </div>
+</body>
+</html>
+`
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: params.to,
+      subject: "Your 14-day Taskspace trial has started",
+      html,
+    })
+
+    if (result.error) {
+      logger.error({ error: result.error.message }, "Trial started email failed")
+      return { success: false, error: result.error.message }
+    }
+
+    logger.info({ emailId: result.data?.id, to: params.to }, "Trial started email sent")
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    logError(logger, "Trial started email error", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+/**
+ * Send an onboarding drip email for day 1, 3, or 7 after signup
+ */
+export async function sendOnboardingDripEmail(params: {
+  to: string
+  name: string
+  orgName: string
+  day: 1 | 3 | 7
+}): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    logger.debug("Email not configured, skipping onboarding drip email")
+    return { success: false, error: "Email not configured" }
+  }
+
+  const loginUrl = `${APP_URL}/app`
+  const unsubscribeUrl = buildUnsubscribeUrl(params.to)
+  const safeName = escapeHtml(params.name.split(" ")[0] || params.name)
+  const safeOrg = escapeHtml(params.orgName)
+
+  const drips = {
+    1: {
+      subject: `${params.name.split(" ")[0]}, submit your first EOD report today`,
+      headline: "Day 1 — Submit your first EOD report",
+      body: `Running a great team starts with daily visibility. Your EOD report takes 2 minutes and gives your team (and you) a clear picture of what's getting done.`,
+      ctaUrl: `${loginUrl}?p=dashboard`,
+      ctaText: "Submit today's EOD report &rarr;",
+    },
+    3: {
+      subject: "Invite your team to Taskspace",
+      headline: "Day 3 — Better together",
+      body: `Accountability works best as a team sport. Invite your team members so everyone can submit reports, track rocks, and stay aligned.`,
+      ctaUrl: `${loginUrl}?p=admin-team`,
+      ctaText: "Invite team members &rarr;",
+    },
+    7: {
+      subject: "Set your first quarterly Rock",
+      headline: "Day 7 — Set your Q-goal",
+      body: `Rocks are the 3–5 most important things your team needs to accomplish this quarter. Setting them takes 5 minutes and dramatically improves focus and follow-through.`,
+      ctaUrl: `${loginUrl}?p=rocks`,
+      ctaText: "Set your first Rock &rarr;",
+    },
+  } as const
+
+  const drip = drips[params.day]
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(drip.subject)}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: #0f172a; padding: 24px; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 20px;">${escapeHtml(drip.headline)}</h1>
+    <p style="color: rgba(255,255,255,0.65); margin: 6px 0 0 0; font-size: 13px;">${safeOrg}</p>
+  </div>
+
+  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 28px; border-radius: 0 0 8px 8px;">
+    <p style="margin: 0 0 16px 0; font-size: 16px;">Hi ${safeName},</p>
+    <p style="margin: 0 0 24px 0;">${escapeHtml(drip.body)}</p>
+
+    <div style="margin: 28px 0;">
+      <a href="${drip.ctaUrl}" style="display: inline-block; background: #0f172a; color: white; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 500; font-size: 15px;">${drip.ctaText}</a>
+    </div>
+
+    <p style="margin: 24px 0 0 0; font-size: 13px; color: #6b7280;">
+      Sent from Taskspace &middot; <a href="${unsubscribeUrl}" style="color: #6b7280;">Unsubscribe</a>
+    </p>
+  </div>
+</body>
+</html>
+`
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: params.to,
+      subject: drip.subject,
+      html,
+    })
+
+    if (result.error) {
+      logger.error({ error: result.error.message, day: params.day }, "Onboarding drip email failed")
+      return { success: false, error: result.error.message }
+    }
+
+    logger.info({ emailId: result.data?.id, to: params.to, day: params.day }, "Onboarding drip email sent")
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    logError(logger, "Onboarding drip email error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }

@@ -17,6 +17,7 @@ import { registerSchema } from "@/lib/validation/schemas"
 import { logger, logAuthEvent, formatError } from "@/lib/logger"
 import { CONFIG } from "@/lib/config"
 import { sendVerificationEmail } from "@/lib/email"
+import { sendWelcomeEmail, sendTrialStartedEmail } from "@/lib/integrations/email"
 import { withTransaction } from "@/lib/db/transactions"
 import type { User, Organization, OrganizationMember, Session, EmailVerificationToken, ApiResponse, AuthResponse } from "@/lib/types"
 
@@ -208,6 +209,32 @@ export async function POST(request: NextRequest) {
     } catch (emailError) {
       // Don't block registration if verification email fails
       logger.warn({ userId, error: formatError(emailError) }, "Failed to send verification email during registration")
+    }
+
+    // Send welcome email (non-blocking)
+    try {
+      await sendWelcomeEmail({
+        to: user.email,
+        name,
+        organizationName: organization?.name || `${name}'s Workspace`,
+        workspaceName: "Default",
+      })
+    } catch (e) {
+      logger.warn({ userId, error: formatError(e) }, "Failed to send welcome email during registration")
+    }
+
+    // Send trial started email (non-blocking)
+    if (organization?.subscription?.currentPeriodEnd) {
+      try {
+        await sendTrialStartedEmail({
+          to: user.email,
+          name,
+          organizationName: organization.name,
+          trialEndDate: organization.subscription.currentPeriodEnd,
+        })
+      } catch (e) {
+        logger.warn({ userId, error: formatError(e) }, "Failed to send trial started email during registration")
+      }
     }
 
     // Enforce concurrent session limit (max 5 active sessions per user)

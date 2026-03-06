@@ -38,13 +38,13 @@ export default function IntegrationsPage() {
             </motion.div>
             <motion.h1
               variants={fadeInUp}
-              className="text-5xl font-bold text-black mb-6"
+              className="text-3xl sm:text-5xl font-bold text-black mb-6"
             >
               Integrates with your entire stack
             </motion.h1>
             <motion.p
               variants={fadeInUp}
-              className="text-xl text-gray-600 max-w-3xl mx-auto"
+              className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto"
             >
               From ad platforms to analytics, and the tools that drive your daily operations.
             </motion.p>

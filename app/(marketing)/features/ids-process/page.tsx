@@ -59,12 +59,12 @@ export default function IDSProcessPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h1 variants={fadeInUp} className="text-6xl font-bold text-slate-900 leading-[1.1]">
+              <motion.h1 variants={fadeInUp} className="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                 Solve problems in{" "}
                 <span className="text-slate-400">10 minutes</span>, not 10 meetings
               </motion.h1>
 
-              <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed">
+              <motion.p variants={fadeInUp} className="text-base sm:text-xl text-slate-600 leading-relaxed">
                 The IDS Process (Identify, Discuss, Solve) is the structured framework that turns
                 vague issues into actionable solutions. Stop talking in circles. Start solving.
               </motion.p>
@@ -253,7 +253,7 @@ export default function IDSProcessPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Most teams <span className="text-black font-bold">talk in circles</span>
               </motion.h2>
 
@@ -287,7 +287,7 @@ export default function IDSProcessPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                 A proven process that <span className="text-black font-bold">actually solves things</span>
               </motion.h2>
 
@@ -320,7 +320,7 @@ export default function IDSProcessPage() {
                 IDENTIFY
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Get to the root cause, not symptoms
               </h2>
 
@@ -468,7 +468,7 @@ export default function IDSProcessPage() {
                 DISCUSS
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Collaborative brainstorming, structured
               </h2>
 
@@ -505,7 +505,7 @@ export default function IDSProcessPage() {
                 SOLVE
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Turn decisions into action items
               </h2>
 

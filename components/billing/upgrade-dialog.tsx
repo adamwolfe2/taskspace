@@ -145,7 +145,7 @@ export function UpgradeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-amber-500" />
@@ -188,8 +188,8 @@ export function UpgradeDialog({
         {/* Plans Grid */}
         <div className={cn(
           "grid gap-4",
-          availablePlans.length === 1 ? "grid-cols-1 max-w-md mx-auto" :
-          availablePlans.length === 2 ? "grid-cols-2" : "grid-cols-3"
+          availablePlans.length === 1 ? "grid-cols-1 max-w-sm mx-auto" :
+          availablePlans.length === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-3"
         )}>
           {availablePlans.map(([key, plan]) => {
             const Icon = plan.icon

@@ -86,12 +86,12 @@ export default function AccountabilityChartPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h1 variants={fadeInUp} className="text-6xl font-bold text-slate-900 leading-[1.1]">
+              <motion.h1 variants={fadeInUp} className="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                 Right person, right seat,{" "}
                 <span className="text-slate-400">clear responsibilities</span>
               </motion.h1>
 
-              <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed">
+              <motion.p variants={fadeInUp} className="text-base sm:text-xl text-slate-600 leading-relaxed">
                 Replace the traditional org chart with an Accountability Chart that defines crystal-clear
                 roles, responsibilities, and seat expectations for every position.
               </motion.p>
@@ -254,7 +254,7 @@ export default function AccountabilityChartPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Traditional org charts <span className="text-black font-bold">don't define accountability</span>
               </motion.h2>
 
@@ -288,7 +288,7 @@ export default function AccountabilityChartPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Crystal-clear <span className="text-black font-bold">seats and roles</span>
               </motion.h2>
 
@@ -321,7 +321,7 @@ export default function AccountabilityChartPage() {
                 SEAT DEFINITION
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Define every seat with 5 key roles
               </h2>
 
@@ -466,7 +466,7 @@ export default function AccountabilityChartPage() {
                 PEOPLE ANALYZER
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Right people in right seats
               </h2>
 
@@ -503,7 +503,7 @@ export default function AccountabilityChartPage() {
                 ORG CLARITY
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Everyone knows who does what
               </h2>
 

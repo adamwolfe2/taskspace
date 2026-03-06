@@ -54,12 +54,12 @@ export default function AiAgentsPage() {
                   </Badge>
                 </motion.div>
 
-                <motion.h1 variants={fadeInUp} className="text-6xl font-bold text-slate-900 leading-[1.1]">
+                <motion.h1 variants={fadeInUp} className="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                   AI that works{" "}
                   <span className="text-slate-400">alongside your team</span>
                 </motion.h1>
 
-                <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed">
+                <motion.p variants={fadeInUp} className="text-base sm:text-xl text-slate-600 leading-relaxed">
                   Automated analysis that surfaces insights, identifies blockers, and highlights what
                   needs attention. Let AI handle the data work so you can focus on leading.
                 </motion.p>
@@ -167,7 +167,7 @@ export default function AiAgentsPage() {
                   </Badge>
                 </motion.div>
 
-                <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+                <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                   Drowning in data, <span className="text-black font-bold">starving for insights</span>
                 </motion.h2>
 
@@ -201,7 +201,7 @@ export default function AiAgentsPage() {
                   </Badge>
                 </motion.div>
 
-                <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+                <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                   AI does the analysis <span className="text-black font-bold">automatically</span>
                 </motion.h2>
 
@@ -232,7 +232,7 @@ export default function AiAgentsPage() {
                 <Sparkles className="w-4 h-4 mr-1" />
                 AI AGENTS
               </Badge>
-              <h2 className="text-4xl font-bold text-slate-900 mb-4">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900 mb-4">
                 Five specialized agents working for your team
               </h2>
               <p className="text-xl text-slate-600 max-w-3xl mx-auto">
@@ -317,7 +317,7 @@ export default function AiAgentsPage() {
                   HOW IT WORKS
                 </Badge>
 
-                <h2 className="text-4xl font-bold text-slate-900">
+                <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                   Insights appear automatically
                 </h2>
 

@@ -75,6 +75,31 @@ export async function GET(request: NextRequest) {
     results.expiredInvitations = -1
   }
 
+  try {
+    // 5. Prune processed_webhook_events older than 30 days
+    // Prevents unbounded growth — Stripe retries within 3 days, 30 days is safe headroom
+    const { rowCount } = await sql`
+      DELETE FROM processed_webhook_events
+      WHERE processed_at < NOW() - INTERVAL '30 days'
+    `
+    results.processedWebhookEvents = rowCount ?? 0
+  } catch (err) {
+    logger.error({ err }, "Cleanup: failed to prune processed_webhook_events")
+    results.processedWebhookEvents = -1
+  }
+
+  try {
+    // 6. Prune expired pending_subscriptions (already have expires_at column)
+    const { rowCount } = await sql`
+      DELETE FROM pending_subscriptions
+      WHERE expires_at < NOW() AND status = 'pending'
+    `
+    results.expiredPendingSubscriptions = rowCount ?? 0
+  } catch (err) {
+    logger.error({ err }, "Cleanup: failed to prune expired pending_subscriptions")
+    results.expiredPendingSubscriptions = -1
+  }
+
   logger.info({ results }, "Daily cleanup cron completed")
 
   return NextResponse.json({ success: true, results })

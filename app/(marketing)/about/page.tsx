@@ -36,13 +36,13 @@ export default function AboutPage() {
             </motion.div>
             <motion.h1
               variants={fadeInUp}
-              className="text-5xl font-bold text-black mb-6"
+              className="text-3xl sm:text-5xl font-bold text-black mb-6"
             >
               About Taskspace
             </motion.h1>
             <motion.p
               variants={fadeInUp}
-              className="text-xl text-gray-600 leading-relaxed"
+              className="text-base sm:text-xl text-gray-600 leading-relaxed"
             >
               The all-in-one EOS management platform for multi-company founders
               and leadership teams running on the Entrepreneurial Operating System.

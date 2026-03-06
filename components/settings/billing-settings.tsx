@@ -24,6 +24,7 @@ import {
   Sparkles,
   ExternalLink,
   AlertTriangle,
+  Link2,
 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { IntegrationLogo } from "@/components/ui/integration-logo"
@@ -103,6 +104,8 @@ export function BillingSettings() {
   const [processingPlan, setProcessingPlan] = useState<string | null>(null)
   const [isManaging, setIsManaging] = useState(false)
   const [showCancelDialog, setShowCancelDialog] = useState(false)
+  const [claimSessionId, setClaimSessionId] = useState("")
+  const [isClaiming, setIsClaiming] = useState(false)
 
   const currentPlan = subscription?.plan || "free"
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
@@ -288,6 +291,44 @@ export function BillingSettings() {
       })
     } finally {
       setIsManaging(false)
+    }
+  }
+
+  const handleClaimSubscription = async () => {
+    const sessionId = claimSessionId.trim()
+    if (!sessionId.startsWith("cs_")) {
+      toast({
+        title: "Invalid session ID",
+        description: "Stripe session IDs start with cs_. Find it in your confirmation email.",
+        variant: "destructive",
+      })
+      return
+    }
+    setIsClaiming(true)
+    try {
+      const response = await fetch("/api/billing/claim-subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        credentials: "include",
+        body: JSON.stringify({ sessionId }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: "Subscription activated", description: "Your subscription has been linked to this organization." })
+        setClaimSessionId("")
+        // Refresh subscription data
+        const res = await fetch("/api/billing/subscription")
+        const subData = await res.json()
+        if (subData.success && subData.data) {
+          setSubscription({ ...subData.data, stripeConfigured: subData.data.stripeConfigured ?? true })
+        }
+      } else {
+        toast({ title: "Could not claim subscription", description: data.error || "Please contact support.", variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to claim subscription. Please try again.", variant: "destructive" })
+    } finally {
+      setIsClaiming(false)
     }
   }
 
@@ -486,6 +527,42 @@ export function BillingSettings() {
           )}
         </CardContent>
       </Card>
+
+      {/* Claim pending subscription — for users who paid via Payment Link before signing up */}
+      {currentPlan === "free" && isAdmin && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Link2 className="h-4 w-4 text-slate-500" />
+              Already paid?
+            </CardTitle>
+            <CardDescription>
+              If you purchased a plan via a payment link before signing up, enter your Stripe session ID to activate it.
+              Your session ID starts with <code className="text-xs bg-slate-100 px-1 py-0.5 rounded">cs_</code> and can be found in your payment confirmation email.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={claimSessionId}
+                onChange={(e) => setClaimSessionId(e.target.value)}
+                placeholder="cs_live_..."
+                className="flex-1 text-sm border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary font-mono"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClaimSubscription}
+                disabled={isClaiming || !claimSessionId.trim()}
+                className="shrink-0"
+              >
+                {isClaiming ? <Loader2 className="h-4 w-4 animate-spin" /> : "Activate"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Plan Comparison */}
       <Card>

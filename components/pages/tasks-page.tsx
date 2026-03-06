@@ -830,7 +830,7 @@ export function TasksPage({
           { label: "Completed", value: completed, color: "text-emerald-600", bg: "bg-emerald-50" },
         ]
         return (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {stats.map((s) => (
               <div key={s.label} className={`${s.bg} rounded-lg px-3 py-2 text-center`}>
                 <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>

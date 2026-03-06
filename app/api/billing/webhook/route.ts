@@ -324,6 +324,10 @@ async function handleSubscriptionUpdated(subscription: StripeWebhookObject) {
     // Get plan from price ID
     const priceId = subscription.items?.data?.[0]?.price?.id
     const planInfo = priceId ? getPlanFromPriceId(priceId) : null
+    if (priceId && !planInfo) {
+      // Price ID not in STRIPE_PRICE_IDS — likely a missing env var or a new price not yet configured
+      logger.warn({ priceId, orgId, subscriptionId: subscription.id }, "Webhook: unrecognized Stripe price ID — falling back to metadata/default. Check STRIPE_PRICE_ID env vars.")
+    }
     const plan = planInfo?.plan || subscription.metadata?.plan || "team"
     const billingCycle = planInfo?.billingCycle || subscription.metadata?.billingCycle || "monthly"
 
@@ -400,6 +404,9 @@ async function handleSubscriptionUpdated(subscription: StripeWebhookObject) {
  * Uses transaction to ensure atomicity of organization read + update
  */
 async function handleSubscriptionDeleted(subscription: StripeWebhookObject) {
+  let canceledOrgId: string | null = null
+  let canceledOrgName: string | null = null
+
   await withTransaction(async (client) => {
     const organizationId = subscription.metadata?.organizationId
 
@@ -407,19 +414,21 @@ async function handleSubscriptionDeleted(subscription: StripeWebhookObject) {
     let orgId: string | null = null
     let orgSubscriptionId: string | null = null
     if (organizationId) {
-      const { rows: orgResults } = await client.sql<{ id: string; stripe_subscription_id: string | null }>`
-        SELECT id, stripe_subscription_id FROM organizations WHERE id = ${organizationId} LIMIT 1
+      const { rows: orgResults } = await client.sql<{ id: string; name: string; stripe_subscription_id: string | null }>`
+        SELECT id, name, stripe_subscription_id FROM organizations WHERE id = ${organizationId} LIMIT 1
       `
       if (orgResults.length > 0) {
         orgId = orgResults[0].id
+        canceledOrgName = orgResults[0].name
         orgSubscriptionId = orgResults[0].stripe_subscription_id
       }
     } else {
-      const { rows: orgResults } = await client.sql<{ id: string; stripe_subscription_id: string | null }>`
-        SELECT id, stripe_subscription_id FROM organizations WHERE stripe_customer_id = ${subscription.customer} LIMIT 1
+      const { rows: orgResults } = await client.sql<{ id: string; name: string; stripe_subscription_id: string | null }>`
+        SELECT id, name, stripe_subscription_id FROM organizations WHERE stripe_customer_id = ${subscription.customer} LIMIT 1
       `
       if (orgResults.length > 0) {
         orgId = orgResults[0].id
+        canceledOrgName = orgResults[0].name
         orgSubscriptionId = orgResults[0].stripe_subscription_id
       }
     }
@@ -437,6 +446,8 @@ async function handleSubscriptionDeleted(subscription: StripeWebhookObject) {
       )
       return
     }
+
+    canceledOrgId = orgId
 
     // Downgrade to free plan
     const freeConfig = PLAN_FEATURES.free
@@ -485,6 +496,33 @@ async function handleSubscriptionDeleted(subscription: StripeWebhookObject) {
       resourceId: subscription.id,
     })
   })
+
+  // Send cancellation confirmation email after transaction
+  if (canceledOrgId && isEmailConfigured()) {
+    try {
+      const { rows: adminUsers } = await sql`
+        SELECT u.email
+        FROM users u
+        JOIN organization_members om ON om.user_id = u.id
+        WHERE om.organization_id = ${canceledOrgId}
+          AND (om.role = 'admin' OR om.role = 'owner')
+          AND u.email IS NOT NULL
+      `
+      if (adminUsers.length > 0) {
+        await sendBillingAlertEmail({
+          to: adminUsers.map(u => u.email as string),
+          subject: "Your Taskspace subscription has been canceled",
+          alertType: "subscription_canceled",
+          organizationName: canceledOrgName || "Your Organization",
+          message: "Your subscription has been canceled.",
+          details: "You've been moved to the free plan. You can reactivate your subscription anytime from Settings → Billing.",
+        })
+        logger.info({ orgId: canceledOrgId }, "Cancellation confirmation email sent")
+      }
+    } catch (emailError) {
+      logError(logger, "Failed to send cancellation email", emailError)
+    }
+  }
 }
 
 /**
@@ -519,6 +557,46 @@ async function handleInvoicePaid(invoice: StripeWebhookObject) {
   }
 
   logger.info({ orgId: org.id, amount: (invoice.amount_paid ?? 0) / 100, currency: invoice.currency ?? "usd" }, "Invoice paid for org")
+
+  // Send payment receipt email if amount > 0
+  const amountPaid = invoice.amount_paid ?? 0
+  if (amountPaid > 0 && isEmailConfigured()) {
+    try {
+      const { rows: adminUsers } = await sql`
+        SELECT u.email
+        FROM users u
+        JOIN organization_members om ON om.user_id = u.id
+        WHERE om.organization_id = ${org.id}
+          AND (om.role = 'admin' OR om.role = 'owner')
+          AND u.email IS NOT NULL
+      `
+      if (adminUsers.length > 0) {
+        const amountFormatted = (amountPaid / 100).toFixed(2)
+        const currency = (invoice.currency || "usd").toUpperCase()
+        const planName = (org.subscription as { plan?: string })?.plan || "subscription"
+        const periodStart = invoice.period_start
+          ? new Date(invoice.period_start * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+          : null
+        const periodEnd = invoice.period_end
+          ? new Date(invoice.period_end * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+          : null
+        const periodStr = periodStart && periodEnd ? ` for ${periodStart} – ${periodEnd}` : ""
+
+        await sendBillingAlertEmail({
+          to: adminUsers.map(u => u.email as string),
+          subject: `Payment confirmed — ${currency} $${amountFormatted} received`,
+          alertType: "invoice_paid",
+          organizationName: org.name,
+          message: `Payment of ${currency} $${amountFormatted} received for your ${planName} plan.`,
+          details: `Billing period${periodStr}. Thank you for your payment.`,
+          invoiceUrl: invoice.hosted_invoice_url as string | undefined,
+        })
+        logger.info({ orgId: org.id, adminCount: adminUsers.length }, "Payment receipt email sent")
+      }
+    } catch (emailError) {
+      logError(logger, "Failed to send payment receipt email", emailError)
+    }
+  }
 }
 
 /**

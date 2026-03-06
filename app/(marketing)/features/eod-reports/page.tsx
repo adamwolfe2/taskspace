@@ -169,7 +169,7 @@ export default function EODReportsPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                 EOD reports shouldn't take <span className="text-black font-bold">30 minutes</span>
               </motion.h2>
 
@@ -203,7 +203,7 @@ export default function EODReportsPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Submit EODs in <span className="text-black font-bold">10 seconds</span>
               </motion.h2>
 
@@ -236,7 +236,7 @@ export default function EODReportsPage() {
                 AI INTELLIGENCE
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 AI that understands your work context
               </h2>
 
@@ -334,7 +334,7 @@ export default function EODReportsPage() {
                 TEAM VISIBILITY
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Give managers real-time visibility
               </h2>
 

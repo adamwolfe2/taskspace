@@ -333,6 +333,17 @@ export function initGlobalErrorHandler(): () => void {
           return
         }
 
+        // For 403s where a specific plan is required, show inline upgrade dialog
+        // Matches: "requires Business plan", "require Team plan or higher", etc.
+        if (error.status === 403 && /requires?\s|plan/i.test(error.message || "")) {
+          window.dispatchEvent(
+            new CustomEvent("taskspace:upgrade-required", {
+              detail: { featureName: error.message },
+            })
+          )
+          return
+        }
+
         toast({
           variant: "destructive",
           title: "Error",

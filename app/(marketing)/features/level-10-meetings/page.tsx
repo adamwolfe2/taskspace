@@ -68,12 +68,12 @@ export default function Level10MeetingsPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h1 variants={fadeInUp} className="text-6xl font-bold text-slate-900 leading-[1.1]">
+              <motion.h1 variants={fadeInUp} className="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                 The most productive{" "}
                 <span className="text-slate-400">90 minutes</span> of your week
               </motion.h1>
 
-              <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed">
+              <motion.p variants={fadeInUp} className="text-base sm:text-xl text-slate-600 leading-relaxed">
                 Perfect Level 10 agendas, pre-populated with scorecard data, rock updates, and issues.
                 Same day, same time, same agenda. 90 minutes that solve real problems.
               </motion.p>
@@ -183,7 +183,7 @@ export default function Level10MeetingsPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Most leadership meetings <span className="text-black font-bold">waste time</span>
               </motion.h2>
 
@@ -217,7 +217,7 @@ export default function Level10MeetingsPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Structured meetings that <span className="text-black font-bold">solve problems</span>
               </motion.h2>
 
@@ -250,7 +250,7 @@ export default function Level10MeetingsPage() {
                 AUTO-POPULATED
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Agenda ready before you sit down
               </h2>
 
@@ -397,7 +397,7 @@ export default function Level10MeetingsPage() {
                 IDS PROCESS
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 60 minutes to solve your biggest problems
               </h2>
 
@@ -434,7 +434,7 @@ export default function Level10MeetingsPage() {
                 MEETING TIMER
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Stay on track, every single week
               </h2>
 

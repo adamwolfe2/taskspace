@@ -36,7 +36,7 @@ export default function PrivacyPage() {
               </motion.div>
               <motion.h1
                 variants={fadeInUp}
-                className="text-5xl font-bold text-black mb-6"
+                className="text-3xl sm:text-5xl font-bold text-black mb-6"
               >
                 Privacy Policy
               </motion.h1>

@@ -429,11 +429,17 @@ export function CustomizableLayout({
      </GridLayout>
     ) : null
    ) : (
-    /* ── Default Mode: Native CSS Grid — fixed 4 cols matching RGL edit mode ── */
-    <div
-     className="grid grid-cols-4 gap-4"
-     style={{ gridAutoRows: '40px' }}
-    >
+    /* ── Default Mode: Native CSS Grid — fixed 4 cols on lg+, stacked on mobile ── */
+    <>
+     {/* Mobile: simple stacked layout (hidden on lg+) */}
+     <div className="block lg:hidden">
+      <SimpleDashboardLayout widgets={sortedWidgets} renderWidget={renderWidget} />
+     </div>
+     {/* Desktop: 4-column CSS grid matching RGL edit mode (hidden below lg) */}
+     <div
+      className="hidden lg:grid grid-cols-4 gap-4"
+      style={{ gridAutoRows: '40px' }}
+     >
      {sortedWidgets.map((widget) => {
       const item = enabledLayout.find((l) => l.i === widget.id)
       return (
@@ -452,6 +458,7 @@ export function CustomizableLayout({
       )
      })}
     </div>
+    </>
    )}
 
    {/* Empty state when no widgets */}

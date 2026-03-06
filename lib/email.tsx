@@ -1,3 +1,4 @@
+// @deprecated — use lib/integrations/email.ts for new email functions
 import type { EODReport, TeamMember, Rock, Invitation, Organization, PasswordResetToken, EmailVerificationToken } from "./types"
 import { withRetry, isTransientError } from "./utils"
 import { CONFIG } from "./config"
@@ -407,35 +408,15 @@ export async function sendPasswordResetEmail(
   )
 }
 
-// Send welcome email to new users
+// Send welcome email to new users — delegates to canonical implementation
 export async function sendWelcomeEmail(user: TeamMember, organization: Organization) {
-  const dashboardLink = `${APP_URL}/dashboard`
-
-  const html = emailWrapper(`
-    <h1>Welcome to ${escapeHtml(organization.name)}</h1>
-    <p class="subtitle">You're all set up on Taskspace</p>
-
-    <p>Hi ${escapeHtml((user.name || "there").split(" ")[0])},</p>
-    <p>Your account is ready. Here's what you can do:</p>
-
-    <div class="callout">
-      <p style="margin: 0 0 4px 0; font-size: 14px;"><strong>Submit EOD Reports</strong> &mdash; Share your daily progress</p>
-      <p style="margin: 0 0 4px 0; font-size: 14px;"><strong>Track Quarterly Rocks</strong> &mdash; Focus on what matters</p>
-      <p style="margin: 0 0 4px 0; font-size: 14px;"><strong>Manage Tasks</strong> &mdash; Stay organized</p>
-      <p style="margin: 0 0 4px 0; font-size: 14px;"><strong>View Scorecards</strong> &mdash; Monitor key metrics</p>
-      <p style="margin: 0; font-size: 14px;"><strong>Join Meetings</strong> &mdash; Collaborate with your team</p>
-    </div>
-
-    <div class="cta">
-      <a href="${dashboardLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Go to Dashboard</a>
-    </div>
-  `, `${escapeHtml(organization.name)} &middot; Powered by Taskspace<br><a href="${APP_URL}/unsubscribe?email=${encodeURIComponent(user.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
-
-  return sendEmail(
-    [user.email],
-    `Welcome to ${escapeHtml(organization.name)} on TaskSpace!`,
-    html
-  )
+  const { sendWelcomeEmail: sendWelcomeEmailIntegration } = await import("./integrations/email")
+  return sendWelcomeEmailIntegration({
+    to: user.email,
+    name: user.name,
+    organizationName: organization.name,
+    workspaceName: "Default",
+  })
 }
 
 // Send rock assigned notification

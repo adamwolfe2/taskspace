@@ -74,6 +74,11 @@ export const metadata: Metadata = {
     },
   },
   manifest: "/manifest.json",
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    viewportFit: 'cover',
+  },
   icons: {
     icon: [
       { url: "/icon-light-32x32.png", media: "(prefers-color-scheme: light)" },
@@ -90,7 +95,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased" style={{ WebkitTextSizeAdjust: '100%' }}>
         <PostHogProvider>
           {children}
         </PostHogProvider>

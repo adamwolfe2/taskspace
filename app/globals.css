@@ -959,3 +959,53 @@
     }
   }
 }
+
+/* ============================================
+   MOBILE / TOUCH OPTIMIZATIONS
+   ============================================ */
+
+/* Larger touch targets for range sliders on touch devices */
+@media (pointer: coarse) {
+  input[type="range"].slider-thumb::-webkit-slider-thumb {
+    width: 28px;
+    height: 28px;
+  }
+
+  input[type="range"].slider-thumb::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Larger drag handles on touch */
+  .react-resizable-handle {
+    width: 28px !important;
+    height: 28px !important;
+    opacity: 0.6 !important;
+  }
+}
+
+/* Prevent overscroll bounce showing white background on iOS */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* Safe area for section cards on notched devices */
+.section-card {
+  padding-left: max(0px, env(safe-area-inset-left));
+  padding-right: max(0px, env(safe-area-inset-right));
+}
+
+/* Responsive padding for stat cards */
+@media (max-width: 640px) {
+  .stat-card {
+    padding: 0.875rem;
+  }
+  .section-header {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+  .section-content {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+}

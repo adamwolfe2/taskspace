@@ -57,6 +57,8 @@ import { initGlobalErrorHandler } from "@/lib/api/client"
 import { DemoModeBanner } from "@/components/shared/demo-mode-banner"
 import { EmailVerificationBanner } from "@/components/shared/email-verification-banner"
 import { TrialBanner } from "@/components/billing/trial-banner"
+import { UpgradeDialog, useUpgradeDialog } from "@/components/billing"
+import { isTrialExpired } from "@/lib/billing/feature-gates"
 import {
   DashboardSkeleton,
   HistoryPageSkeleton,
@@ -197,6 +199,7 @@ function AppContent() {
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [resetToken, setResetToken] = useState<string | null>(null)
   const [showMobileQuickTask, setShowMobileQuickTask] = useState(false)
+  const { open: upgradeOpen, reason: upgradeReason, featureName: upgradeFeature, showUpgradeDialog, setOpen: setUpgradeOpen } = useUpgradeDialog()
 
   // Capture ?p= from URL before auth resolves (so we can restore after login)
   const pendingPageFromUrl = useRef<string | null>(null)
@@ -302,6 +305,18 @@ function AppContent() {
     const cleanup = initGlobalErrorHandler()
     return cleanup
   }, [])
+
+  // Listen for feature-gate upgrade-required events from the API client.
+  // Suppress when trial wall is already blocking (TrialBanner renders its own UpgradeDialog).
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if (isTrialExpired(currentOrganization?.subscription, currentOrganization?.isInternal)) return
+      const detail = (e as CustomEvent<{ featureName?: string }>).detail
+      showUpgradeDialog("feature", detail?.featureName)
+    }
+    window.addEventListener("taskspace:upgrade-required", handler)
+    return () => window.removeEventListener("taskspace:upgrade-required", handler)
+  }, [showUpgradeDialog, currentOrganization])
 
   // Handle one-time URL tokens (invite, reset, verify). Run once on mount.
   useEffect(() => {
@@ -607,6 +622,13 @@ function AppContent() {
       <EmailVerificationBanner />
       <TrialBanner />
       <OfflineIndicator />
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        reason={upgradeReason}
+        featureName={upgradeFeature}
+        currentPlan={currentOrganization?.subscription?.plan as string | undefined}
+      />
       <SessionTimeoutWarning />
 
       <div className="flex">

@@ -169,7 +169,7 @@ export function MetricCard({
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Enter value"
-                className="w-28"
+                className="w-28 min-h-[44px]"
                 autoFocus
                 disabled={isSaving}
               />
@@ -183,7 +183,7 @@ export function MetricCard({
               disabled={isSaving}
             />
             <div className="flex items-center gap-2">
-              <Button size="sm" onClick={handleSave} disabled={isSaving || !value}>
+              <Button size="sm" className="min-h-[32px] min-w-[32px]" onClick={handleSave} disabled={isSaving || !value}>
                 {isSaving ? (
                   <Loader2 className="h-3 w-3 animate-spin mr-1" />
                 ) : (
@@ -191,7 +191,7 @@ export function MetricCard({
                 )}
                 Save
               </Button>
-              <Button size="sm" variant="outline" onClick={handleCancel} disabled={isSaving}>
+              <Button size="sm" className="min-h-[32px] min-w-[32px]" variant="outline" onClick={handleCancel} disabled={isSaving}>
                 <X className="h-3 w-3 mr-1" />
                 Cancel
               </Button>

@@ -23,11 +23,11 @@ export default function CommunicationPage() {
                   TEAM COMMUNICATION
                 </Badge>
 
-                <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
                   Keep your team in sync, every day
                 </h1>
 
-                <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                <p className="text-base sm:text-xl text-gray-600 mb-8 leading-relaxed">
                   Replace chaotic status updates with structured end-of-day reports.
                   Get real-time notifications, manager feedback, and weekly digests—all
                   in one place.
@@ -248,7 +248,7 @@ export default function CommunicationPage() {
         <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4">
                 Everything you need for team communication
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -384,7 +384,7 @@ export default function CommunicationPage() {
         {/* CTA Section */}
         <section className="py-24 bg-slate-50">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl font-bold text-slate-900 mb-6">
+            <h2 className="text-2xl sm:text-4xl font-bold text-slate-900 mb-6">
               Ready to transform your team communication?
             </h2>
             <p className="text-xl text-slate-500 mb-8">

@@ -38,13 +38,13 @@ export default function ContactPage() {
             </motion.div>
             <motion.h1
               variants={fadeInUp}
-              className="text-5xl font-bold text-black mb-6"
+              className="text-3xl sm:text-5xl font-bold text-black mb-6"
             >
               Get in touch
             </motion.h1>
             <motion.p
               variants={fadeInUp}
-              className="text-xl text-gray-600"
+              className="text-base sm:text-xl text-gray-600"
             >
               We're here to help. Reach out to our team.
             </motion.p>

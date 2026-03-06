@@ -53,12 +53,12 @@ export default function VtoPage() {
                   </Badge>
                 </motion.div>
 
-                <motion.h1 variants={fadeInUp} className="text-6xl font-bold text-slate-900 leading-[1.1]">
+                <motion.h1 variants={fadeInUp} className="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                   Your company vision,{" "}
                   <span className="text-slate-400">one living document</span>
                 </motion.h1>
 
-                <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed">
+                <motion.p variants={fadeInUp} className="text-base sm:text-xl text-slate-600 leading-relaxed">
                   Align your entire team around core values, 10-year targets, and quarterly priorities.
                   The V/TO keeps everyone rowing in the same direction, all the time.
                 </motion.p>
@@ -148,7 +148,7 @@ export default function VtoPage() {
                   </Badge>
                 </motion.div>
 
-                <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+                <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                   Most companies <span className="text-black font-bold">lack alignment</span>
                 </motion.h2>
 
@@ -182,7 +182,7 @@ export default function VtoPage() {
                   </Badge>
                 </motion.div>
 
-                <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+                <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                   Build a <span className="text-black font-bold">company everyone understands</span>
                 </motion.h2>
 
@@ -215,7 +215,7 @@ export default function VtoPage() {
                   COMPLETE V/TO FRAMEWORK
                 </Badge>
 
-                <h2 className="text-4xl font-bold text-slate-900">
+                <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                   All 8 sections of the V/TO, perfectly organized
                 </h2>
 
@@ -356,7 +356,7 @@ export default function VtoPage() {
                   VISION CASCADE
                 </Badge>
 
-                <h2 className="text-4xl font-bold text-slate-900">
+                <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                   Long-term vision flows into quarterly execution
                 </h2>
 

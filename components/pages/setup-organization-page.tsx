@@ -170,6 +170,17 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
     progress(5, "Finishing up")
     await refreshSession()
 
+    // Send welcome email with real org/workspace names (non-blocking)
+    fetch("/api/email/welcome", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+      credentials: "include",
+      body: JSON.stringify({
+        organizationName: data.organization.name,
+        workspaceName: data.workspace.name,
+      }),
+    }).catch(() => { /* non-critical */ })
+
     toast({
       title: "Welcome to Taskspace!",
       description: "Your workspace is ready. Let's build daily accountability.",

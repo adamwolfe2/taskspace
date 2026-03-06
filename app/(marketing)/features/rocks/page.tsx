@@ -53,12 +53,12 @@ export default function RocksPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h1 variants={fadeInUp} className="text-6xl font-bold text-slate-900 leading-[1.1]">
+              <motion.h1 variants={fadeInUp} className="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                 Quarterly rocks that{" "}
                 <span className="text-slate-400">actually get done</span>
               </motion.h1>
 
-              <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed">
+              <motion.p variants={fadeInUp} className="text-base sm:text-xl text-slate-600 leading-relaxed">
                 Set 3-7 quarterly priorities. Track progress with visual indicators, milestones, and
                 automatic status updates based on daily activity. Built for the EOS methodology.
               </motion.p>
@@ -148,7 +148,7 @@ export default function RocksPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Most quarterly goals <span className="text-black font-bold">never get done</span>
               </motion.h2>
 
@@ -182,7 +182,7 @@ export default function RocksPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h2 variants={fadeInUp} className="text-4xl font-bold text-slate-900">
+              <motion.h2 variants={fadeInUp} className="text-2xl sm:text-4xl font-bold text-slate-900">
                 Execute with <span className="text-black font-bold">perfect clarity</span>
               </motion.h2>
 
@@ -215,7 +215,7 @@ export default function RocksPage() {
                 VISUAL PROGRESS
               </Badge>
 
-              <h2 className="text-4xl font-bold text-slate-900">
+              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
                 See exactly where you stand
               </h2>
 
