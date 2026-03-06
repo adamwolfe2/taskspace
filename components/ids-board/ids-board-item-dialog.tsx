@@ -132,7 +132,7 @@ export function IdsBoardItemDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Column</Label>
               <Select value={columnName} onValueChange={(v) => setColumnName(v as IdsBoardColumn)}>
@@ -183,8 +183,8 @@ export function IdsBoardItemDialog({
             </div>
           )}
 
-          <DialogFooter className="flex justify-between">
-            <div className="flex gap-2">
+          <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-2">
+            <div className="flex flex-wrap gap-2">
               {isEditing && onDelete && (
                 <Button
                   type="button"

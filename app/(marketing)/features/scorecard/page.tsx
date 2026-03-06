@@ -60,12 +60,12 @@ export default function ScorecardPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h1 variants={fadeInUp} className="text-6xl font-bold text-slate-900 leading-[1.1]">
+              <motion.h1 variants={fadeInUp} className="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                 Track the pulse of your{" "}
                 <span className="text-slate-400">business weekly</span>
               </motion.h1>
 
-              <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed">
+              <motion.p variants={fadeInUp} className="text-base sm:text-xl text-slate-600 leading-relaxed">
                 Define 5-15 measurables that matter. Track them weekly. Identify trends before they
                 become problems. Built for Level 10 meetings and EOS scorecards.
               </motion.p>

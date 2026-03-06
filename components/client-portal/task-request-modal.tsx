@@ -68,7 +68,7 @@ export function TaskRequestModal({ open, onOpenChange, slug, token }: TaskReques
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Request a Task</DialogTitle>
           <DialogDescription>

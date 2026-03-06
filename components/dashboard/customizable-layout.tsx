@@ -430,8 +430,10 @@ export function CustomizableLayout({
     ) : null
    ) : (
     /* ── Default Mode: Native CSS Grid — fixed 4 cols matching RGL edit mode ── */
+    <>
+    {/* Desktop: 4-column CSS grid matching RGL layout */}
     <div
-     className="grid grid-cols-4 gap-4"
+     className="hidden md:grid grid-cols-4 gap-4"
      style={{ gridAutoRows: '40px' }}
     >
      {sortedWidgets.map((widget) => {
@@ -452,6 +454,18 @@ export function CustomizableLayout({
       )
      })}
     </div>
+    {/* Mobile: single column stacked layout */}
+    <div className="md:hidden space-y-4">
+     {sortedWidgets.map((widget) => (
+      <div
+       key={widget.id}
+       className="bg-white rounded-lg border shadow-sm overflow-hidden"
+      >
+       {renderWidget(widget)}
+      </div>
+     ))}
+    </div>
+    </>
    )}
 
    {/* Empty state when no widgets */}

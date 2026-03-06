@@ -404,7 +404,7 @@ export function ClientsPage({
 
         {/* Create/Edit Modal */}
         <Dialog open={showCreateModal} onOpenChange={(open) => { setShowCreateModal(open); if (!open) { resetForm(); setEditingClient(null) } }}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>{editingClient ? "Edit Client" : "New Client"}</DialogTitle>
               <DialogDescription>

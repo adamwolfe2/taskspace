@@ -82,7 +82,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
 
   return (
     <nav className="flex flex-col h-full py-4">
-      <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-6 pb-[env(safe-area-inset-bottom)]">
         {/* Empty state when all features disabled */}
         {!hasAnyFeatures && (
           <div className="px-6 py-8 text-center">

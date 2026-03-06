@@ -246,9 +246,9 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
             const textClass = isAhead ? "text-emerald-700" : isBehind ? "text-amber-700" : "text-slate-600"
             const label = isAhead ? "Ahead of pace" : isBehind ? "Behind pace" : "On pace"
             return (
-              <div className={`flex items-center justify-between px-3 py-2 rounded-lg border mb-4 ${bgClass}`}>
+              <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3 px-2 sm:px-3 py-2 rounded-lg border mb-4 ${bgClass}`}>
                 <span className={`text-xs font-medium ${textClass}`}>
-                  {label} — {avgProgress}% avg progress vs {quarterPct}% of quarter elapsed
+                  {label} — {avgProgress}% avg vs {quarterPct}% elapsed
                 </span>
                 <span className={`text-xs font-bold ${textClass}`}>{delta > 0 ? "+" : ""}{delta}%</span>
               </div>
@@ -306,7 +306,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => handleSliderChange(rock.id, Math.max(0, rock.progress - 10))}
-                          className="h-6 w-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                          className="h-8 w-8 sm:h-6 sm:w-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors touch-target"
                           aria-label="Decrease progress by 10%"
                         >
                           <Minus className="h-3 w-3" />
@@ -314,7 +314,7 @@ export function MyRocksSection({ rocks, onUpdateProgress, onUpdateRock, onRefres
                         <span className="font-semibold text-slate-700 w-10 text-center">{rock.progress}%</span>
                         <button
                           onClick={() => handleSliderChange(rock.id, Math.min(100, rock.progress + 10))}
-                          className="h-6 w-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                          className="h-8 w-8 sm:h-6 sm:w-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors touch-target"
                           aria-label="Increase progress by 10%"
                         >
                           <Plus className="h-3 w-3" />

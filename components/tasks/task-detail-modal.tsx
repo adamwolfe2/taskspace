@@ -597,7 +597,7 @@ export function TaskDetailModal({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-2 border-t pt-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-2 border-t pt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>

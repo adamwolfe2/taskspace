@@ -68,12 +68,12 @@ export default function Level10MeetingsPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h1 variants={fadeInUp} className="text-6xl font-bold text-slate-900 leading-[1.1]">
+              <motion.h1 variants={fadeInUp} className="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                 The most productive{" "}
                 <span className="text-slate-400">90 minutes</span> of your week
               </motion.h1>
 
-              <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed">
+              <motion.p variants={fadeInUp} className="text-base sm:text-xl text-slate-600 leading-relaxed">
                 Perfect Level 10 agendas, pre-populated with scorecard data, rock updates, and issues.
                 Same day, same time, same agenda. 90 minutes that solve real problems.
               </motion.p>

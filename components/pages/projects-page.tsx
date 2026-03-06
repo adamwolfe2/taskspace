@@ -543,7 +543,7 @@ export function ProjectsPage({
 
         {/* Create/Edit Modal */}
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>{editingProject ? "Edit Project" : "New Project"}</DialogTitle>
               <DialogDescription>

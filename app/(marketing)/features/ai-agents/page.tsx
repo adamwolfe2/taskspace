@@ -54,12 +54,12 @@ export default function AiAgentsPage() {
                   </Badge>
                 </motion.div>
 
-                <motion.h1 variants={fadeInUp} className="text-6xl font-bold text-slate-900 leading-[1.1]">
+                <motion.h1 variants={fadeInUp} className="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                   AI that works{" "}
                   <span className="text-slate-400">alongside your team</span>
                 </motion.h1>
 
-                <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed">
+                <motion.p variants={fadeInUp} className="text-base sm:text-xl text-slate-600 leading-relaxed">
                   Automated analysis that surfaces insights, identifies blockers, and highlights what
                   needs attention. Let AI handle the data work so you can focus on leading.
                 </motion.p>

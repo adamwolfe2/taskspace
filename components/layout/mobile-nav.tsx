@@ -75,7 +75,7 @@ export function MobileNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 z-40"
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 z-30"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-center justify-around h-16 px-2">
@@ -102,7 +102,7 @@ export function MobileNav() {
                 )}
               </div>
               <span className={cn(
-                "text-[10px] leading-tight truncate max-w-full px-1",
+                "text-[11px] leading-tight truncate max-w-full px-1",
                 isActive ? "font-semibold" : "font-medium"
               )}>
                 {item.label}
@@ -130,7 +130,7 @@ export function MobileNav() {
                 )}
               </div>
               <span className={cn(
-                "text-[10px] leading-tight",
+                "text-[11px] leading-tight",
                 isMoreActive ? "font-semibold" : "font-medium"
               )}>
                 More
@@ -145,7 +145,7 @@ export function MobileNav() {
             <SheetHeader className="pb-4">
               <SheetTitle className="text-left">More Options</SheetTitle>
             </SheetHeader>
-            <div className="grid grid-cols-3 gap-3 pb-6">
+            <div className="grid grid-cols-2 xs:grid-cols-3 gap-3 pb-6">
               {filteredSecondaryItems.map((item) => {
                 const isActive = currentPage === item.id
                 return (

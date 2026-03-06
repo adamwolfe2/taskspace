@@ -145,7 +145,7 @@ const EditableMetricCell = React.memo(function EditableMetricCell({
       <Button
         size="icon"
         variant="ghost"
-        className="h-6 w-6"
+        className="h-8 w-8 sm:h-6 sm:w-6 touch-target"
         onClick={handleSave}
         disabled={saving}
         aria-label="Save"
@@ -159,7 +159,7 @@ const EditableMetricCell = React.memo(function EditableMetricCell({
       <Button
         size="icon"
         variant="ghost"
-        className="h-6 w-6"
+        className="h-8 w-8 sm:h-6 sm:w-6 touch-target"
         onClick={onCancel}
         disabled={saving}
         aria-label="Cancel"

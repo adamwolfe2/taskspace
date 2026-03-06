@@ -87,7 +87,7 @@ export default function HelpPage() {
             </motion.div>
             <motion.h1
               variants={fadeInUp}
-              className="text-5xl font-bold text-black mb-6"
+              className="text-3xl sm:text-5xl font-bold text-black mb-6"
             >
               How can we help?
             </motion.h1>

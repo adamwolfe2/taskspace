@@ -53,12 +53,12 @@ export default function VtoPage() {
                   </Badge>
                 </motion.div>
 
-                <motion.h1 variants={fadeInUp} className="text-6xl font-bold text-slate-900 leading-[1.1]">
+                <motion.h1 variants={fadeInUp} className="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                   Your company vision,{" "}
                   <span className="text-slate-400">one living document</span>
                 </motion.h1>
 
-                <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed">
+                <motion.p variants={fadeInUp} className="text-base sm:text-xl text-slate-600 leading-relaxed">
                   Align your entire team around core values, 10-year targets, and quarterly priorities.
                   The V/TO keeps everyone rowing in the same direction, all the time.
                 </motion.p>

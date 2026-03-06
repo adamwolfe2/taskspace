@@ -151,7 +151,7 @@ export function TeamMemberProfileModal({
           </div>
 
           {/* Quick Stats Row */}
-          <div className="grid grid-cols-4 gap-2 py-3 border-y border-slate-100">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 py-3 border-y border-slate-100">
             <div className="text-center">
               <div className="flex items-center justify-center gap-1 text-slate-500 mb-1">
                 <Flame className="h-3.5 w-3.5 text-orange-400" />

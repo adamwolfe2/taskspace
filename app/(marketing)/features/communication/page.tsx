@@ -23,7 +23,7 @@ export default function CommunicationPage() {
                   TEAM COMMUNICATION
                 </Badge>
 
-                <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
                   Keep your team in sync, every day
                 </h1>
 

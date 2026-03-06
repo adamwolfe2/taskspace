@@ -91,7 +91,7 @@ export function KeyboardShortcutsDialog({
 
  return (
  <Dialog open={open} onOpenChange={setOpen}>
- <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+ <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
  <DialogHeader>
  <DialogTitle>Keyboard Shortcuts</DialogTitle>
  <DialogDescription>

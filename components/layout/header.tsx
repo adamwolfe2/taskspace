@@ -129,7 +129,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 <ChevronDown className="hidden md:inline h-4 w-4 text-slate-400" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 bg-white shadow-lg border-slate-200">
+            <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] sm:w-64 max-w-64 bg-white shadow-lg border-slate-200">
               <DropdownMenuLabel className="text-slate-400 text-xs font-medium">My Account</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-slate-100" />
               <div className="px-3 py-3">

@@ -47,7 +47,7 @@ export function UseCaseSelectorModal({ open, workspaceId, onComplete }: UseCaseS
 
   return (
     <Dialog open={open} modal onOpenChange={open => { if (!open) onComplete("custom") }}>
-      <DialogContent className="max-w-2xl w-full">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl w-full">
         <div className="text-center mb-6">
           <DialogTitle className="text-2xl font-bold">What are you using Taskspace for?</DialogTitle>
           <DialogDescription className="text-gray-500 mt-2">

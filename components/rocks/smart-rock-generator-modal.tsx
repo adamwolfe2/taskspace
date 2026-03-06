@@ -265,7 +265,7 @@ export function SmartRockGeneratorModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col gap-0 p-0">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col gap-0 p-0">
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-lg font-semibold text-slate-900">

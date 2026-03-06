@@ -326,7 +326,7 @@ export function AutomationsPage() {
 
           {/* Logs Dialog */}
           <Dialog open={showLogs} onOpenChange={setShowLogs}>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle>Execution Log</DialogTitle>
               </DialogHeader>

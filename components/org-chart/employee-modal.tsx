@@ -139,7 +139,7 @@ export function EmployeeModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[85vh] sm:max-h-[90vh] p-0 overflow-hidden">
         <ScrollArea className="max-h-[90vh]">
           <div className="p-6">
             {/* Header */}

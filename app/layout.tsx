@@ -1,9 +1,16 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { PostHogProvider } from "@/components/providers/posthog-provider"
 import "./globals.css"
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+}
 
 export const metadata: Metadata = {
   title: {
@@ -89,8 +96,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="font-sans antialiased">
+    <html lang="en" className="[-webkit-text-size-adjust:100%]">
+      <body className="font-sans antialiased pb-[env(safe-area-inset-bottom)]">
         <PostHogProvider>
           {children}
         </PostHogProvider>

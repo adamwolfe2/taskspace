@@ -597,7 +597,7 @@ export function PeopleAnalyzerPage() {
 
       {/* Add/Edit Assessment Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {editingAssessment ? "Edit" : "Add"} Assessment

@@ -195,9 +195,9 @@ export function EnhancedTeamTable({
             <TableRow>
               <TableHead className="w-[200px] lg:w-[300px]">Member</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>Department</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Joined</TableHead>
+              <TableHead className="hidden md:table-cell">Department</TableHead>
+              <TableHead className="hidden sm:table-cell">Status</TableHead>
+              <TableHead className="hidden lg:table-cell">Joined</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -245,12 +245,12 @@ export function EnhancedTeamTable({
                         {roleConfig.label}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <span className="text-sm text-foreground">
                         {member.department || "—"}
                       </span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(member.lastActive)}
                         <span className="text-xs text-muted-foreground">
@@ -260,7 +260,7 @@ export function EnhancedTeamTable({
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <span className="text-sm text-muted-foreground">
                         {member.createdAt ? formatDate(member.createdAt) : "N/A"}
                       </span>
@@ -268,7 +268,7 @@ export function EnhancedTeamTable({
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Member actions">
+                          <Button variant="ghost" size="sm" className="h-10 w-10 p-0 touch-target" aria-label="Member actions">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>

@@ -92,7 +92,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
 
               <p className="mt-6 flex items-baseline gap-x-1">
                 <span
-                  className={`text-5xl font-bold tracking-tight ${
+                  className={`text-3xl sm:text-5xl font-bold tracking-tight ${
                     isPopular ? "text-white" : "text-black"
                   }`}
                 >

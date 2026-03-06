@@ -452,7 +452,7 @@ export function EODSubmissionCard({
         </div>
       </div>
       {/* Date Selection */}
-      <div className="px-5 pt-4">
+      <div className="px-3 sm:px-5 pt-4">
         <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
           <Calendar className="h-5 w-5" style={{ color: themedColors.secondary }} />
           <div className="flex-1">
@@ -488,7 +488,7 @@ export function EODSubmissionCard({
           )}
         </div>
       </div>
-      <div className="p-5 space-y-6">
+      <div className="p-3 sm:p-5 space-y-4 sm:space-y-6">
         {/* Draft restored notice */}
         {draftRestored && (
           <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm">
