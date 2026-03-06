@@ -3400,6 +3400,8 @@ export const db = {
       longestStreak: number
       lastSubmissionDate: string | null
       milestoneDates: Record<string, string>
+      streakFreezesRemaining: number
+      streakFreezesUsed: number
       updatedAt: string
     } | null> {
       const { rows } = await sql`
@@ -3408,6 +3410,18 @@ export const db = {
       `
       if (!rows[0]) return null
       const row = rows[0]
+
+      // Auto-reset freezes monthly
+      const resetDate = row.streak_freeze_reset_date ? new Date(row.streak_freeze_reset_date as string) : null
+      let freezesRemaining = (row.streak_freezes_remaining as number) ?? 2
+      let freezesUsed = (row.streak_freezes_used as number) ?? 0
+      if (resetDate && resetDate <= new Date()) {
+        // Past reset date — grant fresh freezes
+        freezesRemaining = 2
+        freezesUsed = 0
+        // We'll persist this on the next upsert
+      }
+
       return {
         id: row.id as string,
         organizationId: row.organization_id as string,
@@ -3416,6 +3430,8 @@ export const db = {
         longestStreak: (row.longest_streak as number) || 0,
         lastSubmissionDate: row.last_submission_date as string | null,
         milestoneDates: (row.milestone_dates as Record<string, string>) || {},
+        streakFreezesRemaining: freezesRemaining,
+        streakFreezesUsed: freezesUsed,
         updatedAt: (row.updated_at as Date)?.toISOString() || "",
       }
     },
@@ -3426,18 +3442,30 @@ export const db = {
       longestStreak: number
       lastSubmissionDate: string
       milestoneDates?: Record<string, string>
+      streakFreezesRemaining?: number
+      streakFreezesUsed?: number
     }): Promise<{ id: string }> {
       const milestonesJson = JSON.stringify(streak.milestoneDates || {})
+      const freezesRemaining = streak.streakFreezesRemaining ?? 2
+      const freezesUsed = streak.streakFreezesUsed ?? 0
+      // Next month's 1st for freeze reset
+      const nextMonth = new Date()
+      nextMonth.setMonth(nextMonth.getMonth() + 1, 1)
+      const resetDate = nextMonth.toISOString().split("T")[0]
       const { rows } = await sql`
-        INSERT INTO user_streaks (organization_id, user_id, current_streak, longest_streak, last_submission_date, milestone_dates)
+        INSERT INTO user_streaks (organization_id, user_id, current_streak, longest_streak, last_submission_date, milestone_dates, streak_freezes_remaining, streak_freezes_used, streak_freeze_reset_date)
         VALUES (${streak.organizationId}, ${streak.userId}, ${streak.currentStreak},
-                ${streak.longestStreak}, ${streak.lastSubmissionDate}::date, ${milestonesJson}::jsonb)
+                ${streak.longestStreak}, ${streak.lastSubmissionDate}::date, ${milestonesJson}::jsonb,
+                ${freezesRemaining}, ${freezesUsed}, ${resetDate}::date)
         ON CONFLICT (organization_id, user_id)
         DO UPDATE SET
           current_streak = EXCLUDED.current_streak,
           longest_streak = EXCLUDED.longest_streak,
           last_submission_date = EXCLUDED.last_submission_date,
           milestone_dates = EXCLUDED.milestone_dates,
+          streak_freezes_remaining = EXCLUDED.streak_freezes_remaining,
+          streak_freezes_used = EXCLUDED.streak_freezes_used,
+          streak_freeze_reset_date = EXCLUDED.streak_freeze_reset_date,
           updated_at = NOW()
         RETURNING id
       `
@@ -3447,6 +3475,8 @@ export const db = {
       currentStreak: number
       longestStreak: number
       isNewRecord: boolean
+      freezeUsed: boolean
+      freezesRemaining: number
     }> {
       // Get existing streak
       const existing = await this.findByUser(userId, organizationId)
@@ -3461,7 +3491,7 @@ export const db = {
           lastSubmissionDate: today,
           milestoneDates: {},
         })
-        return { currentStreak: 1, longestStreak: 1, isNewRecord: true }
+        return { currentStreak: 1, longestStreak: 1, isNewRecord: true, freezeUsed: false, freezesRemaining: 2 }
       }
 
       const lastDate = existing.lastSubmissionDate ? new Date(existing.lastSubmissionDate) : null
@@ -3473,11 +3503,16 @@ export const db = {
           currentStreak: existing.currentStreak,
           longestStreak: existing.longestStreak,
           isNewRecord: false,
+          freezeUsed: false,
+          freezesRemaining: existing.streakFreezesRemaining,
         }
       }
 
       let newCurrentStreak = existing.currentStreak
       let isNewRecord = false
+      let freezeUsed = false
+      let freezesRemaining = existing.streakFreezesRemaining
+      let freezesUsed = existing.streakFreezesUsed
 
       if (lastDate) {
         // Calculate working days difference
@@ -3503,8 +3538,18 @@ export const db = {
           // Same day or weekend skip
           newCurrentStreak += 0
         } else {
-          // Streak broken
-          newCurrentStreak = 1
+          // Would break streak — check for available freezes
+          const missedDays = workingDaysDiff - 1 // Days actually missed (gap between last and today)
+          if (freezesRemaining >= missedDays && existing.currentStreak > 0) {
+            // Apply freeze(s) — preserve the streak
+            freezesRemaining -= missedDays
+            freezesUsed += missedDays
+            freezeUsed = true
+            newCurrentStreak += 1 // Continue streak (today's submission counts)
+          } else {
+            // Not enough freezes — streak resets
+            newCurrentStreak = 1
+          }
         }
       } else {
         newCurrentStreak = 1
@@ -3529,9 +3574,11 @@ export const db = {
         longestStreak: newLongestStreak,
         lastSubmissionDate: today,
         milestoneDates,
+        streakFreezesRemaining: freezesRemaining,
+        streakFreezesUsed: freezesUsed,
       })
 
-      return { currentStreak: newCurrentStreak, longestStreak: newLongestStreak, isNewRecord }
+      return { currentStreak: newCurrentStreak, longestStreak: newLongestStreak, isNewRecord, freezeUsed, freezesRemaining }
     },
   },
 

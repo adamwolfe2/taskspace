@@ -163,7 +163,9 @@ export function useWorkspaces() {
           mutate()
         })
         .catch((err) => {
-          console.error("Failed to create default workspace:", err)
+          if (process.env.NODE_ENV === 'development') {
+            console.error("Failed to create default workspace:", err)
+          }
           Sentry.captureException(err)
         })
 

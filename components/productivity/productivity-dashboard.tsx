@@ -92,6 +92,7 @@ export function ProductivityDashboard({
             currentStreak={streak.currentStreak}
             longestStreak={streak.longestStreak}
             lastSubmissionDate={streak.lastSubmissionDate}
+            streakFreezesRemaining={streak.streakFreezesRemaining}
             size="md"
           />
           <EnergyCheckIn

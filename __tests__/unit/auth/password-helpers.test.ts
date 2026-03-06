@@ -122,8 +122,10 @@ describe("getExpirationDate", () => {
     const after = Date.now()
     const resultTime = new Date(result).getTime()
     const sevenDaysMs = 168 * 60 * 60 * 1000
-    expect(resultTime).toBeGreaterThanOrEqual(before + sevenDaysMs - 1000)
-    expect(resultTime).toBeLessThanOrEqual(after + sevenDaysMs + 1000)
+    // Allow up to 2 hours tolerance for DST transitions within the 7-day window
+    const dstToleranceMs = 2 * 60 * 60 * 1000
+    expect(resultTime).toBeGreaterThanOrEqual(before + sevenDaysMs - dstToleranceMs)
+    expect(resultTime).toBeLessThanOrEqual(after + sevenDaysMs + dstToleranceMs)
   })
 
   it("should accept custom hours", () => {

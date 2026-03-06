@@ -382,24 +382,24 @@ export default function CommunicationPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-24 bg-gray-900 text-white">
+        <section className="py-24 bg-slate-50">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl font-bold mb-6">
+            <h2 className="text-4xl font-bold text-slate-900 mb-6">
               Ready to transform your team communication?
             </h2>
-            <p className="text-xl text-gray-300 mb-8">
+            <p className="text-xl text-slate-500 mb-8">
               Join hundreds of teams using Taskspace to stay aligned, accountable,
               and moving forward every single day.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/pricing">
-                <Button size="lg" className="bg-white hover:bg-gray-100 text-gray-900">
+                <Button size="lg" className="bg-slate-900 hover:bg-slate-800 text-white">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/contact">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                <Button size="lg" variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100">
                   Talk to Sales
                 </Button>
               </Link>

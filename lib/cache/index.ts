@@ -244,6 +244,9 @@ export const orgSettingsCache = new Cache({ ttlSeconds: 600, maxSize: 100 })
 // User profile cache (5 min TTL)
 export const userCache = new Cache({ ttlSeconds: 300, maxSize: 500 })
 
+// AI response cache (4 hour TTL — for expensive AI calls with stable inputs)
+export const aiCache = new Cache({ ttlSeconds: 14400, maxSize: 100 })
+
 // ============================================
 // CACHE KEY GENERATORS
 // ============================================
@@ -280,6 +283,7 @@ export const CacheKeys = {
   // AI/Insights
   dailyDigest: (orgId: string, date: string) => `org:${orgId}:digest:${date}`,
   eodInsight: (reportId: string) => `eod:${reportId}:insight`,
+  scorecardInsights: (workspaceId: string, date: string) => `ai:scorecard:${workspaceId}:${date}`,
 
   // API
   apiKey: (key: string) => `apikey:${key}`,

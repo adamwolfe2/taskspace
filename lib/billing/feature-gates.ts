@@ -6,6 +6,10 @@
  */
 
 import { PlanTier, AI_OPERATION_COSTS, getPlanById } from "./plans"
+import {
+  isTrialExpired as _isTrialExpired,
+  getTrialDaysRemaining as _getTrialDaysRemaining,
+} from "./trial"
 
 export interface FeatureGateContext {
   organizationId: string
@@ -274,28 +278,23 @@ export function isApproachingLimit(used: number, limit: number | null): boolean 
 
 /**
  * Check if trial has expired
+ * Delegates to canonical implementation in lib/billing/trial.ts
  */
-export function isTrialExpired(subscription?: { plan: PlanTier; currentPeriodEnd?: string | null } | null, isInternal?: boolean): boolean {
-  if (isInternal) return false
-  if (!subscription || subscription.plan !== "free") return false
-  if (!subscription.currentPeriodEnd) return false
-
-  const expiryDate = new Date(subscription.currentPeriodEnd)
-  return expiryDate < new Date()
+export function isTrialExpired(subscription?: { plan: PlanTier; status?: string; currentPeriodEnd?: string | null } | null, isInternal?: boolean): boolean {
+  return _isTrialExpired(
+    subscription ? { plan: subscription.plan, status: subscription.status || "active", currentPeriodEnd: subscription.currentPeriodEnd } : null,
+    isInternal
+  )
 }
 
 /**
  * Get days remaining in trial
+ * Delegates to canonical implementation in lib/billing/trial.ts
  */
-export function getTrialDaysRemaining(subscription?: { plan: PlanTier; currentPeriodEnd?: string } | null): number {
-  if (!subscription || subscription.plan !== "free" || !subscription.currentPeriodEnd) return 0
-
-  const expiryDate = new Date(subscription.currentPeriodEnd)
-  const today = new Date()
-  const diffTime = expiryDate.getTime() - today.getTime()
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
-  return Math.max(0, diffDays)
+export function getTrialDaysRemaining(subscription?: { plan: PlanTier; status?: string; currentPeriodEnd?: string } | null): number {
+  return _getTrialDaysRemaining(
+    subscription ? { plan: subscription.plan, status: subscription.status || "active", currentPeriodEnd: subscription.currentPeriodEnd } : null
+  )
 }
 
 /**

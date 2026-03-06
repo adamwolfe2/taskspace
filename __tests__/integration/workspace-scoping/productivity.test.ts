@@ -44,6 +44,9 @@ jest.mock("@/lib/db", () => ({
     eodReports: {
       findByUserId: jest.fn(),
     },
+    userStreaks: {
+      findByUser: jest.fn(),
+    },
     tasks: {
       findByUserId: jest.fn(),
     },

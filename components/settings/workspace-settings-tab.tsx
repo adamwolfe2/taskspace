@@ -26,7 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Users, Loader2, Trash2, Shield, Eye, Crown, Settings2, BarChart3, AlertTriangle, Briefcase, Building2, Folder, Save, CheckCircle2, Target, FileText } from "lucide-react"
+import { Users, Loader2, Trash2, Shield, Eye, Crown, Settings2, BarChart3, AlertTriangle, Briefcase, Building2, Folder, Save, CheckCircle2, Target, FileText, ExternalLink } from "lucide-react"
 import { useWorkspaces, useWorkspaceDetails, useUpdateWorkspace, useDeleteWorkspace } from "@/lib/hooks/use-workspace"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
@@ -363,6 +363,24 @@ export function WorkspaceSettingsTab({ teamMembers }: WorkspaceSettingsTabProps)
 
       {/* Invite Link - Admin only */}
       {isAdmin && <WorkspaceInviteLinkCard workspaceId={currentWorkspace.id} />}
+
+      {/* Client Portal Callout */}
+      {isAdmin && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <ExternalLink className="h-4 w-4 text-blue-600" />
+              Client Portal
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-sm text-muted-foreground">
+              Your workspace has a client portal where clients can view EOD reports, post comments, and submit task requests.
+              Each client gets a unique portal link — manage them from the <strong>Clients</strong> page.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Workspace Members */}
       <Card>

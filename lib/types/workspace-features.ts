@@ -104,7 +104,7 @@ export const DEFAULT_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     analytics: true,
     managerDashboard: true,
     apiAccess: true,
-    clientPortal: false,
+    clientPortal: true,
     oneOnOnes: true,
     automations: true,
     crossWorkspace: true,

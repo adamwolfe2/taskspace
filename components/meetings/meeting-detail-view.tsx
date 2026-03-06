@@ -19,6 +19,23 @@ import {
 import { cn } from "@/lib/utils"
 import { AgendaBuilder } from "./agenda-builder"
 
+interface ScorecardMetric {
+  name: string
+  value: string | number
+  goal?: string | number
+}
+
+interface RockReview {
+  title: string
+  owner?: string
+  onTrack: boolean
+}
+
+interface IdsIssue {
+  title: string
+  resolution?: string
+}
+
 interface MeetingDetailViewProps {
   meeting: {
     id: string
@@ -159,7 +176,7 @@ export function MeetingDetailView({
         if (Array.isArray(data.metrics)) {
           return (
             <div className="space-y-3">
-              {data.metrics.map((metric: any, index: number) => (
+              {(data.metrics as ScorecardMetric[]).map((metric, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between border-b border-slate-100 pb-2 last:border-0"
@@ -188,7 +205,7 @@ export function MeetingDetailView({
         if (Array.isArray(data.rocks)) {
           return (
             <div className="space-y-2">
-              {data.rocks.map((rock: any, index: number) => (
+              {(data.rocks as RockReview[]).map((rock, index) => (
                 <div
                   key={index}
                   className="flex items-start gap-2 p-2 rounded-lg bg-slate-50"
@@ -231,7 +248,7 @@ export function MeetingDetailView({
         if (Array.isArray(data.issues)) {
           return (
             <div className="space-y-3">
-              {data.issues.map((issue: any, index: number) => (
+              {(data.issues as IdsIssue[]).map((issue, index) => (
                 <div key={index} className="border-l-2 border-slate-300 pl-3">
                   <p className="text-sm font-medium text-slate-700">
                     {issue.title}

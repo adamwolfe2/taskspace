@@ -42,6 +42,7 @@ import { handleError } from "@/lib/api/errors"
 import { checkOrgRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { isTrialExpired as checkTrialExpired } from "@/lib/billing/trial"
 
 /**
  * API paths that must remain accessible regardless of subscription status.
@@ -71,8 +72,8 @@ function checkSubscriptionOrRespond(
 ): NextResponse<ApiResponse<null>> | null {
   const sub = auth.organization.subscription
 
-  // Free plan always has access — no expiry
-  if (!sub || sub.plan === "free") return null
+  // Free plan without a trial window always has access — feature gating handles limits
+  if (!sub || (sub.plan === "free" && !sub.currentPeriodEnd)) return null
 
   // Active and past_due subscriptions are allowed
   // (past_due enters dunning — access continues until subscription.deleted fires)
@@ -82,11 +83,8 @@ function checkSubscriptionOrRespond(
   const pathname = new URL(request.url).pathname
   if (SUBSCRIPTION_EXEMPT_PREFIXES.some(p => pathname.startsWith(p))) return null
 
-  // Trial expired: trialing status but currentPeriodEnd is in the past
-  if (sub.status === "trialing") {
-    if (!sub.currentPeriodEnd) return null // No end date set — still valid
-    const trialEnd = new Date(sub.currentPeriodEnd)
-    if (trialEnd > new Date()) return null // Trial still active
+  // Canonical trial expiry check — covers both "trialing" status and free-plan trials
+  if (checkTrialExpired(sub)) {
     return NextResponse.json<ApiResponse<null>>(
       {
         success: false,
@@ -96,6 +94,9 @@ function checkSubscriptionOrRespond(
       { status: 402 }
     )
   }
+
+  // Still in an active trial
+  if (sub.status === "trialing") return null
 
   // Canceled: webhook should have set plan to "free", but guard anyway
   if (sub.status === "canceled") {

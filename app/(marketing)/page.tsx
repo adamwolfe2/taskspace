@@ -626,18 +626,18 @@ function ADHDFoundersSection() {
   ]
 
   return (
-    <section className="py-24 bg-black text-white">
+    <section className="py-24 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/5 text-white/70 text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-200 bg-white text-slate-500 text-sm mb-6">
             Designed for ADHD Founders
           </div>
-          <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+          <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
             You&apos;re wired to run multiple things at once.
             <br />
-            <span className="text-gray-400">Most tools punish you for it.</span>
+            <span className="text-slate-400">Most tools punish you for it.</span>
           </h2>
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
             Taskspace is built around how ADHD founders actually operate — not how productivity gurus think you should.
           </p>
         </div>
@@ -646,17 +646,17 @@ function ADHDFoundersSection() {
           {painPoints.map((item, i) => (
             <div
               key={i}
-              className="rounded-2xl border border-white/10 bg-white/5 p-8 hover:bg-white/8 transition-colors"
+              className="rounded-2xl border border-slate-200 bg-white p-8 hover:border-slate-300 transition-colors"
             >
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0 mt-1">
-                  <item.icon className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 mt-1">
+                  <item.icon className="w-5 h-5 text-slate-700" />
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm italic mb-3">
+                  <p className="text-slate-400 text-sm italic mb-3">
                     &ldquo;{item.problem}&rdquo;
                   </p>
-                  <p className="text-white text-sm leading-relaxed">
+                  <p className="text-slate-700 text-sm leading-relaxed">
                     {item.solution}
                   </p>
                 </div>
@@ -717,7 +717,7 @@ function StartSimpleSection() {
               key={i}
               className={`relative rounded-2xl border-2 p-8 ${
                 path.highlight
-                  ? "border-black bg-black text-white"
+                  ? "border-slate-900 bg-slate-50 text-slate-900 shadow-lg"
                   : "border-gray-200 bg-white text-black"
               }`}
             >
@@ -729,29 +729,29 @@ function StartSimpleSection() {
                 </div>
               )}
               <div className={`inline-block text-xs font-semibold uppercase tracking-wide px-2 py-1 rounded-full mb-4 ${
-                path.highlight ? "bg-white/10 text-white/70" : "bg-gray-100 text-gray-500"
+                path.highlight ? "bg-slate-100 text-slate-500" : "bg-gray-100 text-gray-500"
               }`}>
                 {path.label}
               </div>
-              <h3 className={`text-xl font-bold mb-3 ${path.highlight ? "text-white" : "text-black"}`}>
+              <h3 className={`text-xl font-bold mb-3 ${path.highlight ? "text-slate-900" : "text-black"}`}>
                 {path.title}
               </h3>
-              <p className={`text-sm mb-6 leading-relaxed ${path.highlight ? "text-gray-300" : "text-gray-600"}`}>
+              <p className={`text-sm mb-6 leading-relaxed ${path.highlight ? "text-slate-500" : "text-gray-600"}`}>
                 {path.description}
               </p>
               <div className="space-y-2.5 mb-8">
                 {path.features.map((feature, j) => (
                   <div key={j} className="flex items-center gap-2.5 text-sm">
-                    <CheckCircle className={`w-4 h-4 flex-shrink-0 ${path.highlight ? "text-white" : "text-black"}`} />
-                    <span className={path.highlight ? "text-gray-200" : "text-gray-700"}>{feature}</span>
+                    <CheckCircle className={`w-4 h-4 flex-shrink-0 ${path.highlight ? "text-slate-900" : "text-black"}`} />
+                    <span className={path.highlight ? "text-slate-600" : "text-gray-700"}>{feature}</span>
                   </div>
                 ))}
               </div>
               <Link href="/app?page=register">
                 <button className={`w-full py-3 rounded-lg text-sm font-semibold transition-colors ${
                   path.highlight
-                    ? "bg-white text-black hover:bg-gray-100"
-                    : "bg-black text-white hover:bg-gray-800"
+                    ? "bg-slate-900 text-white hover:bg-slate-800"
+                    : "bg-slate-900 text-white hover:bg-slate-800"
                 }`}>
                   {path.cta} <ArrowRight className="inline w-4 h-4 ml-1" />
                 </button>

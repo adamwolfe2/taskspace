@@ -54,13 +54,15 @@ export class ErrorBoundary extends Component<Props, State> {
  })
 
  // Also log to console for development visibility
- console.error(
-   "[ErrorBoundary] Caught error:",
-   "\n  Name:", error.name,
-   "\n  Message:", error.message,
-   "\n  Component Stack:", errorInfo.componentStack,
-   "\n  URL:", typeof window !== "undefined" ? window.location.href : "unknown"
- )
+ if (process.env.NODE_ENV === "development") {
+   console.error(
+     "[ErrorBoundary] Caught error:",
+     "\n  Name:", error.name,
+     "\n  Message:", error.message,
+     "\n  Component Stack:", errorInfo.componentStack,
+     "\n  URL:", typeof window !== "undefined" ? window.location.href : "unknown"
+   )
+ }
 
  this.setState({ errorInfo })
  this.props.onError?.(error, errorInfo)

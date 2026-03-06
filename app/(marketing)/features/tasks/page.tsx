@@ -251,12 +251,12 @@ export default function TasksPage() {
                 </div>
 
                 {/* Solution Card */}
-                <div className="rounded-lg border border-black bg-black p-6 text-left">
-                  <div className="mb-4 inline-flex rounded-full bg-white p-3">
-                    <CheckCircle className="h-6 w-6 text-black" />
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 text-left">
+                  <div className="mb-4 inline-flex rounded-full bg-slate-900 p-3">
+                    <CheckCircle className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="mb-2 font-semibold text-white">With Taskspace</h3>
-                  <ul className="space-y-2 text-sm text-gray-300">
+                  <h3 className="mb-2 font-semibold text-slate-900">With Taskspace</h3>
+                  <ul className="space-y-2 text-sm text-slate-600">
                     <li>• Auto-generated from meeting notes</li>
                     <li>• Clear assignee and 7-day default due dates</li>
                     <li>• Linked to quarterly rocks</li>

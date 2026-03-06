@@ -1617,6 +1617,8 @@ export interface UserStreak {
     "90"?: string
     "100"?: string
   }
+  streakFreezesRemaining: number
+  streakFreezesUsed: number
   updatedAt: string
 }
 

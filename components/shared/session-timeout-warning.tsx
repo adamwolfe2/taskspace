@@ -40,7 +40,9 @@ export function SessionTimeoutWarning() {
         localStorage.setItem('lastActivity', Date.now().toString())
       }
     } catch (error) {
-      console.error('[Session] Failed to refresh session:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Session] Failed to refresh session:', error)
+      }
     }
   }, [])
 

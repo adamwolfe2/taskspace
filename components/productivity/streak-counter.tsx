@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Flame, Trophy, Target } from "lucide-react"
+import { Flame, Trophy, Target, Shield } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   getStreakMilestoneInfo,
@@ -19,6 +19,7 @@ interface StreakCounterProps {
   currentStreak: number
   longestStreak: number
   lastSubmissionDate?: string | null
+  streakFreezesRemaining?: number
   size?: "sm" | "md" | "lg"
   showProgress?: boolean
   showBest?: boolean
@@ -29,6 +30,7 @@ export function StreakCounter({
   currentStreak,
   longestStreak,
   lastSubmissionDate: _lastSubmissionDate,
+  streakFreezesRemaining = 0,
   size = "md",
   showProgress = true,
   showBest = true,
@@ -173,13 +175,32 @@ export function StreakCounter({
         </div>
       )}
 
-      {/* Best streak */}
-      {showBest && longestStreak > 0 && !isNewRecord && size !== "sm" && (
-        <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100">
-          <Target className="h-3.5 w-3.5 text-slate-400" />
-          <span className="text-xs text-slate-500">
-            Best: <span className="font-medium text-slate-700">{longestStreak} days</span>
-          </span>
+      {/* Best streak + Freeze count */}
+      {size !== "sm" && (
+        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100">
+          {showBest && longestStreak > 0 && !isNewRecord && (
+            <div className="flex items-center gap-1.5">
+              <Target className="h-3.5 w-3.5 text-slate-400" />
+              <span className="text-xs text-slate-500">
+                Best: <span className="font-medium text-slate-700">{longestStreak} days</span>
+              </span>
+            </div>
+          )}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1.5">
+                  <Shield className="h-3.5 w-3.5 text-blue-400" />
+                  <span className="text-xs text-slate-500">
+                    Freezes: <span className="font-medium text-blue-600">{streakFreezesRemaining}</span>
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{streakFreezesRemaining} streak freeze{streakFreezesRemaining !== 1 ? "s" : ""} remaining this month. Miss a day without losing your streak.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       )}
     </div>

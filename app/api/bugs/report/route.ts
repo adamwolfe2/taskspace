@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { bugReportSchema } from "@/lib/validation/schemas"
+import { logger, logError } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
 /**
@@ -42,10 +43,7 @@ ${description}
 
     if (!githubToken) {
       // Fallback: just log the bug if GitHub token not configured
-      console.error("GitHub token not configured, bug report:", {
-        title: issueTitle,
-        body: issueBody,
-      })
+      logger.warn({ title: issueTitle }, "GitHub token not configured, bug report logged")
 
       return NextResponse.json<ApiResponse<{ issueNumber: number }>>({
         success: true,
@@ -70,7 +68,7 @@ ${description}
 
     if (!githubResponse.ok) {
       const errorData = await githubResponse.json()
-      console.error("GitHub API error:", errorData)
+      logger.error({ error: errorData }, "GitHub API error creating issue")
       throw new Error("Failed to create GitHub issue")
     }
 
@@ -91,7 +89,7 @@ ${description}
         { status: error.statusCode }
       )
     }
-    console.error("Bug report error:", error)
+    logError(logger, "Bug report error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to submit bug report" },
       { status: 500 }

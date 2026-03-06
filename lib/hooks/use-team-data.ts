@@ -90,9 +90,9 @@ export function useTeamData() {
     shouldFetch ? ["team-data", currentWorkspaceId] : null,
     teamDataFetcher,
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
       revalidateOnReconnect: true,
-      refreshInterval: 30_000, // 30s background polling
+      refreshInterval: 60_000, // 60s background polling
       dedupingInterval: 5000,
       onError: (err) => {
         Sentry.captureException(err)

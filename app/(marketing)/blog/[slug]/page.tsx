@@ -157,14 +157,14 @@ export default async function BlogPostPage({ params }: Props) {
         <hr className="my-12 border-slate-200" />
 
         {/* CTA */}
-        <div className="p-8 bg-slate-900 rounded-lg text-center text-white">
-          <h3 className="text-2xl font-bold mb-2">Ready to put this into practice?</h3>
-          <p className="text-slate-300 mb-6">
+        <div className="p-8 bg-slate-50 border border-slate-200 rounded-lg text-center">
+          <h3 className="text-2xl font-bold text-slate-900 mb-2">Ready to put this into practice?</h3>
+          <p className="text-slate-500 mb-6">
             Taskspace brings EOS to life — rocks, EOD reports, scorecards, and team accountability tools built for remote teams.
           </p>
           <Link
             href="/app?page=register"
-            className="inline-flex items-center gap-2 bg-white text-slate-900 font-semibold px-6 py-3 rounded-lg hover:bg-slate-100 transition-colors"
+            className="inline-flex items-center gap-2 bg-slate-900 text-white font-semibold px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors"
           >
             Get started free <ArrowRight className="h-4 w-4" />
           </Link>

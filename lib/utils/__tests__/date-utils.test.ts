@@ -62,14 +62,14 @@ describe("isValidEODDate", () => {
     expect(result.reason).toContain("future")
   })
 
-  it("accepts up to 7 days in the past", () => {
-    expect(isValidEODDate("2026-02-10", tz).valid).toBe(true)
+  it("accepts up to 14 days in the past", () => {
+    expect(isValidEODDate("2026-02-03", tz).valid).toBe(true)
   })
 
-  it("rejects 8 days ago", () => {
-    const result = isValidEODDate("2026-02-09", tz)
+  it("rejects 15 days ago", () => {
+    const result = isValidEODDate("2026-02-02", tz)
     expect(result.valid).toBe(false)
-    expect(result.reason).toContain("7 days")
+    expect(result.reason).toContain("14 days")
   })
 
   it("rejects dates much further in the past", () => {

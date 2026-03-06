@@ -8,6 +8,7 @@ import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import { validateBody } from "@/lib/validation/middleware"
 import { aiScorecardInsightsSchema } from "@/lib/validation/schemas"
 import { logger } from "@/lib/logger"
+import { aiCache, CacheKeys } from "@/lib/cache"
 import type { ApiResponse } from "@/lib/types"
 
 export const POST = withAuth(async (request, auth) => {
@@ -48,8 +49,23 @@ export const POST = withAuth(async (request, auth) => {
       )
     }
 
+    // Check cache first (4-hour TTL)
+    const today = new Date().toISOString().split("T")[0]
+    const cacheKey = CacheKeys.scorecardInsights(workspaceId, today)
+    const cached = aiCache.get(cacheKey)
+    if (cached) {
+      return NextResponse.json<ApiResponse<typeof cached>>({
+        success: true,
+        data: cached,
+        message: "Cached scorecard insights",
+      })
+    }
+
     const trends = await getScorecardTrends(workspaceId, 13)
     const { result: insights, usage } = await generateScorecardInsights(trends)
+
+    // Cache the result
+    aiCache.set(cacheKey, insights)
 
     // Record AI usage
     await recordUsage({

@@ -225,9 +225,11 @@ async function fetchWithRetry(
           retryConfig,
           response.headers.get("Retry-After")
         )
-        console.warn(
-          `[API Client] Request to ${url} returned ${response.status}, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${retryConfig.maxRetries})`
-        )
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            `[API Client] Request to ${url} returned ${response.status}, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${retryConfig.maxRetries})`
+          )
+        }
         await new Promise((resolve) => setTimeout(resolve, delay))
         continue
       }
@@ -239,10 +241,12 @@ async function fetchWithRetry(
       // Network errors are retryable
       if (attempt < retryConfig.maxRetries) {
         const delay = calculateRetryDelay(attempt, retryConfig)
-        console.warn(
-          `[API Client] Network error for ${url}, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${retryConfig.maxRetries}):`,
-          lastError.message
-        )
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            `[API Client] Network error for ${url}, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${retryConfig.maxRetries}):`,
+            lastError.message
+          )
+        }
         await new Promise((resolve) => setTimeout(resolve, delay))
         continue
       }
@@ -336,12 +340,16 @@ export function initGlobalErrorHandler(): () => void {
         })
       }).catch(() => {
         // Toast module not available, fall back to console
-        console.error("[API Error]", error.message)
+        if (process.env.NODE_ENV === "development") {
+          console.error("[API Error]", error.message)
+        }
       })
     }
 
     // Log all unhandled rejections for debugging
-    console.error("[Unhandled Promise Rejection]", error)
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Unhandled Promise Rejection]", error)
+    }
   }
 
   window.addEventListener("unhandledrejection", handler)

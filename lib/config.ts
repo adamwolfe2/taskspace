@@ -87,8 +87,8 @@ export const CONFIG = {
     fast: 60_000,
     /** Notification center unread count check (5 min) */
     slow: 300_000,
-    /** Org chart progress indicator (30s — was 10s, reduced to cut API call volume) */
-    realtime: 30_000,
+    /** Org chart progress indicator (60s — was 30s, reduced to cut API call volume) */
+    realtime: 60_000,
   },
 } as const
 

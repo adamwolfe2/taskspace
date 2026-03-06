@@ -116,7 +116,7 @@ async function callClaudeWithUsage(
       },
       signal: controller.signal,
       body: JSON.stringify({
-        model: options?.model || MODEL_SONNET,
+        model: options?.model || MODEL_HAIKU,
         max_tokens: options?.maxTokens || MAX_TOKENS,
         temperature: options?.temperature ?? 0.7,
         system: systemPrompt,
@@ -908,7 +908,7 @@ ${text}`
   const { result, usage, model } = await callClaudeJSONWithUsage<WorkspaceBuilderPayload>(
     WORKSPACE_BUILDER_SYSTEM_PROMPT,
     userMessage,
-    { maxTokens: 8192, temperature: 0.2, model: MODEL_SONNET }
+    { maxTokens: 8192, temperature: 0.2, model: MODEL_HAIKU }
   )
 
   return {
@@ -990,7 +990,7 @@ Return JSON only.`
   const { result, usage, model } = await callClaudeJSONWithUsage<{ rocks: SmartRockSuggestion[] }>(
     SMART_ROCKS_PROMPT,
     userMessage,
-    { maxTokens: 4096, temperature: 0.6, model: MODEL_SONNET }
+    { maxTokens: 4096, temperature: 0.6, model: MODEL_HAIKU }
   )
 
   return {
@@ -1022,7 +1022,7 @@ Return JSON only.`
   const { result, usage, model } = await callClaudeJSONWithUsage<MeetingIntelligence>(
     MEETING_INTELLIGENCE_PROMPT,
     userMessage,
-    { maxTokens: 4096, temperature: 0.4, model: MODEL_SONNET }
+    { maxTokens: 4096, temperature: 0.4, model: MODEL_HAIKU }
   )
 
   return {
@@ -1093,7 +1093,7 @@ Return JSON only.`
   const { result, usage, model } = await callClaudeJSONWithUsage<RockRetrospectiveAnalysis>(
     ROCK_RETROSPECTIVE_PROMPT,
     userMessage,
-    { maxTokens: 4096, temperature: 0.4, model: MODEL_SONNET }
+    { maxTokens: 4096, temperature: 0.4, model: MODEL_HAIKU }
   )
 
   return {
@@ -1141,7 +1141,7 @@ Return JSON only.`
   }>(
     EOS_HEALTH_REPORT_PROMPT,
     userMessage,
-    { maxTokens: 4096, temperature: 0.3, model: MODEL_SONNET }
+    { maxTokens: 4096, temperature: 0.3, model: MODEL_HAIKU }
   )
 
   return {
@@ -1180,7 +1180,7 @@ Return JSON only.`
   const { result, usage, model } = await callClaudeJSONWithUsage<CompanyDigestContent>(
     COMPANY_DIGEST_PROMPT,
     userMessage,
-    { maxTokens: 4096, temperature: 0.5, model: MODEL_SONNET }
+    { maxTokens: 4096, temperature: 0.5, model: MODEL_HAIKU }
   )
 
   return {

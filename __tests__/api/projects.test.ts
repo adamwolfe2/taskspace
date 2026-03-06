@@ -257,7 +257,7 @@ describe("Projects API", () => {
       expect(data.error).toBe("Access denied to this workspace")
     })
 
-    it("should return 403 when projects feature is disabled", async () => {
+    it("should return empty list when projects feature is disabled", async () => {
       mockVerifyWorkspaceOrgBoundary.mockResolvedValue(true)
       mockUserHasWorkspaceAccess.mockResolvedValue(true)
       mockGetWorkspaceById.mockResolvedValue(mockWorkspace)
@@ -270,9 +270,9 @@ describe("Projects API", () => {
       const response = await GET(request, mockAuth as any)
       const data = await response.json()
 
-      expect(response.status).toBe(403)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe("Projects feature is not enabled for this workspace")
+      expect(response.status).toBe(200)
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual([])
     })
   })
 

@@ -37,6 +37,13 @@ jest.mock("@/lib/logger", () => ({
   logError: jest.fn(),
 }))
 
+jest.mock("@/lib/auth/feature-gate", () => ({
+  isFeatureEnabled: jest.fn().mockReturnValue(true),
+  getFeatureGateError: jest.fn().mockReturnValue(
+    new (require("next/server").NextResponse)(JSON.stringify({ success: false, error: "Feature disabled" }), { status: 403 })
+  ),
+}))
+
 const mockWithAuth = jest.fn((handler: unknown) => handler)
 jest.mock("@/lib/api/middleware", () => ({
   withAuth: (handler: unknown) => mockWithAuth(handler),

@@ -196,6 +196,9 @@ export const GET = withAuth(async (request, auth) => {
       }
     }
 
+    // Fetch freeze data from DB
+    const dbStreakData = await db.userStreaks.findByUser(userId, auth.organization.id)
+
     const streak: UserStreak = {
       id: `${auth.organization.id}-${userId}`,
       organizationId: auth.organization.id,
@@ -204,6 +207,8 @@ export const GET = withAuth(async (request, auth) => {
       longestStreak,
       lastSubmissionDate: sortedReports.length > 0 ? sortedReports[0].date : null,
       milestoneDates,
+      streakFreezesRemaining: dbStreakData?.streakFreezesRemaining ?? 2,
+      streakFreezesUsed: dbStreakData?.streakFreezesUsed ?? 0,
       updatedAt: new Date().toISOString(),
     }
 

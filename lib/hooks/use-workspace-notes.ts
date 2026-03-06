@@ -30,8 +30,8 @@ export function useWorkspaceNotes() {
     !isDemoMode && workspaceId ? `/api/workspace-notes?workspaceId=${workspaceId}` : null,
     fetcher,
     {
-      refreshInterval: 30000,
-      revalidateOnFocus: false,
+      refreshInterval: 60000,
+      revalidateOnFocus: true,
       dedupingInterval: 10000,
     }
   )
