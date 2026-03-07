@@ -62,9 +62,9 @@ export async function POST(request: NextRequest) {
 
     logger.info({ userId: auth.user.id }, "2FA setup initiated")
 
-    return NextResponse.json<ApiResponse<{ qrCode: string; secret: string }>>({
+    return NextResponse.json<ApiResponse<{ qrCode: string }>>({
       success: true,
-      data: { qrCode: qrCodeDataUrl, secret },
+      data: { qrCode: qrCodeDataUrl },
     })
   } catch (error) {
     logError(logger, "2FA setup error", error)

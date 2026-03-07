@@ -5,11 +5,44 @@
  * based on their subscription plan and usage limits.
  */
 
-import { PlanTier, AI_OPERATION_COSTS, getPlanById } from "./plans"
+import { PlanTier, AI_OPERATION_COSTS, getPlanById, type PlanConfig } from "./plans"
 import {
   isTrialExpired as _isTrialExpired,
   getTrialDaysRemaining as _getTrialDaysRemaining,
 } from "./trial"
+
+const PAST_DUE_GRACE_DAYS = 7
+
+/**
+ * Returns the effective Plan to use for feature gating.
+ *
+ * Falls back to the free plan when:
+ *  - The org's trial has expired (webhook may not have arrived yet)
+ *  - The subscription is past_due AND the grace period has elapsed
+ *
+ * This ensures premium features are blocked at the gate level even when
+ * Stripe webhook delivery is delayed or the env STRIPE_WEBHOOK_SECRET
+ * is not yet configured.
+ */
+function getEffectivePlan(context: FeatureGateContext): PlanConfig {
+  const sub = context.subscription
+
+  // Trial expired (status "trialing" with expired period, or free plan with expired period)
+  if (_isTrialExpired(sub ? { plan: sub.plan, status: sub.status, currentPeriodEnd: sub.currentPeriodEnd } : null)) {
+    return getPlanById("free")
+  }
+
+  // Past_due beyond grace period → downgrade to free at the gate
+  if (sub?.status === "past_due" && sub.currentPeriodEnd) {
+    const graceCutoff = new Date(sub.currentPeriodEnd)
+    graceCutoff.setDate(graceCutoff.getDate() + PAST_DUE_GRACE_DAYS)
+    if (new Date() > graceCutoff) {
+      return getPlanById("free")
+    }
+  }
+
+  return getPlanById(sub?.plan || "free")
+}
 
 export interface FeatureGateContext {
   organizationId: string
@@ -36,7 +69,7 @@ export function canCreateWorkspace(context: FeatureGateContext): {
   reason?: string
   upgradeRequired?: PlanTier
 } {
-  const plan = getPlanById(context.subscription?.plan || "free")
+  const plan = getEffectivePlan(context)
 
   // Check if plan allows multiple workspaces
   if (!plan.features.multipleWorkspaces) {
@@ -67,7 +100,7 @@ export function canAddUser(context: FeatureGateContext): {
   reason?: string
   upgradeRequired?: PlanTier
 } {
-  const plan = getPlanById(context.subscription?.plan || "free")
+  const plan = getEffectivePlan(context)
 
   if (plan.limits.maxUsers === null) {
     return { allowed: true } // Unlimited users
@@ -97,7 +130,7 @@ export function canAddManager(context: FeatureGateContext): {
   reason?: string
   upgradeRequired?: PlanTier
 } {
-  const plan = getPlanById(context.subscription?.plan || "free")
+  const plan = getEffectivePlan(context)
 
   if (plan.limits.maxManagers === null) {
     return { allowed: true } // Unlimited managers
@@ -127,7 +160,7 @@ export function canUseAI(
   creditsAvailable?: number
   upgradeRequired?: PlanTier
 } {
-  const plan = getPlanById(context.subscription?.plan || "free")
+  const plan = getEffectivePlan(context)
   const operationCost = AI_OPERATION_COSTS[operation]
 
   // Check if plan includes unlimited AI
@@ -162,7 +195,7 @@ export function canUseIntegration(
   reason?: string
   upgradeRequired?: PlanTier
 } {
-  const plan = getPlanById(context.subscription?.plan || "free")
+  const plan = getEffectivePlan(context)
 
   const integrationFeatureMap = {
     slack: "slackIntegration",
@@ -205,7 +238,7 @@ export function canCustomizeBranding(context: FeatureGateContext): {
   reason?: string
   upgradeRequired?: PlanTier
 } {
-  const plan = getPlanById(context.subscription?.plan || "free")
+  const plan = getEffectivePlan(context)
 
   if (!plan.features.customBranding) {
     return {
@@ -226,7 +259,7 @@ export function canAccessAPI(context: FeatureGateContext): {
   reason?: string
   upgradeRequired?: PlanTier
 } {
-  const plan = getPlanById(context.subscription?.plan || "free")
+  const plan = getEffectivePlan(context)
 
   if (!plan.features.apiAccess) {
     return {
@@ -247,7 +280,7 @@ export function canAccessAdvancedAnalytics(context: FeatureGateContext): {
   reason?: string
   upgradeRequired?: PlanTier
 } {
-  const plan = getPlanById(context.subscription?.plan || "free")
+  const plan = getEffectivePlan(context)
 
   if (!plan.features.advancedAnalytics) {
     return {
