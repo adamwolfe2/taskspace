@@ -1,6 +1,6 @@
 "use client"
 
-import useSWR from "swr"
+import useSWR, { mutate as globalMutate } from "swr"
 import { useCallback, useMemo } from "react"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { useApp } from "@/lib/contexts/app-context"
@@ -64,14 +64,12 @@ export function useTaskPool() {
       }
       if (!workspaceId) return null
 
-      // Optimistic: mark as claimed locally (we don't know the member name here, server returns it)
+      // Optimistic: remove the task from the pool immediately (full transfer — it won't exist in pool after claim)
       const snapshot = data
       mutate(
         {
           success: true,
-          data: tasks.map((t) =>
-            t.id === itemId ? { ...t, isClaimedToday: true } : t
-          ),
+          data: tasks.filter((t) => t.id !== itemId),
         },
         { revalidate: false }
       )
@@ -92,8 +90,17 @@ export function useTaskPool() {
           })
           return null
         }
+
+        // Revalidate pool (confirms deletion) and team-data (so tasks page shows the new task)
         await mutate()
-        return result.data as TaskPoolItem
+        await globalMutate((key) => Array.isArray(key) && key[0] === "team-data")
+
+        toast({
+          title: "Task claimed",
+          description: "Added to your Tasks page",
+        })
+
+        return result.data
       } catch {
         mutate(snapshot, { revalidate: false })
         toast({ title: "Error", description: "Failed to claim task", variant: "destructive" })

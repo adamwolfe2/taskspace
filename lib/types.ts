@@ -302,7 +302,7 @@ export interface AssignedTask {
   completedAt?: string | null
   addedToEOD?: boolean
   eodReportId?: string | null
-  source?: "manual" | "asana" | "ai_suggestion"
+  source?: "manual" | "asana" | "ai_suggestion" | "task_pool"
   asanaGid?: string | null // Asana task GID for two-way sync
   comments?: TaskComment[]
   recurrence?: TaskRecurrence

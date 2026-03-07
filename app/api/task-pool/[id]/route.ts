@@ -3,11 +3,14 @@ import { withAuth, type RouteContext } from "@/lib/api/middleware"
 import { verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { taskPool } from "@/lib/db/task-pool"
+import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
+import { generateId } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { claimTaskPoolItemSchema } from "@/lib/validation/schemas"
 import { isAdmin } from "@/lib/auth/middleware"
 import { logger } from "@/lib/logger"
-import type { ApiResponse, TaskPoolItem } from "@/lib/types"
+import type { ApiResponse, TaskPoolItem, AssignedTask } from "@/lib/types"
 
 // PATCH /api/task-pool/[id] - Claim or unclaim a task
 export const PATCH = withAuth(async (request, auth, context) => {
@@ -50,24 +53,66 @@ export const PATCH = withAuth(async (request, auth, context) => {
     }
 
     if (action === "claim") {
-      const updated = await taskPool.claim(
+      // Atomically mark as claimed — prevents double-claim race condition
+      const claimed = await taskPool.claim(
         itemId,
         auth.organization.id,
         auth.member.id,
         auth.member.name
       )
 
-      if (!updated) {
+      if (!claimed) {
         return NextResponse.json<ApiResponse<null>>(
           { success: false, error: "Task is already claimed today" },
           { status: 409 }
         )
       }
 
-      return NextResponse.json<ApiResponse<TaskPoolItem>>({
+      // Full transfer: create an assigned_task for the claimer
+      const now = new Date().toISOString()
+      const assignedTask: AssignedTask = {
+        id: generateId(),
+        organizationId: auth.organization.id,
+        workspaceId: existing.workspaceId,
+        title: existing.title,
+        description: existing.description ?? undefined,
+        assigneeId: auth.user.id,
+        assigneeEmail: auth.user.email,
+        assigneeName: auth.member.name,
+        assignedById: auth.user.id,
+        assignedByName: auth.member.name,
+        type: "assigned",
+        rockId: null,
+        rockTitle: null,
+        priority: existing.priority,
+        dueDate: null,
+        status: "pending",
+        source: "task_pool",
+        createdAt: now,
+        updatedAt: now,
+      }
+
+      try {
+        await db.assignedTasks.create(assignedTask)
+      } catch (err) {
+        // Compensate: revert the claim so the task stays claimable
+        await taskPool.unclaim(itemId, auth.organization.id)
+        logger.error({ err, itemId }, "Failed to create assigned task for pool claim")
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "Failed to transfer task" },
+          { status: 500 }
+        )
+      }
+
+      // Remove the pool item — it now lives in assigned_tasks
+      await sql`DELETE FROM task_pool WHERE id = ${itemId} AND organization_id = ${auth.organization.id}`
+
+      logger.info({ itemId, assignedTaskId: assignedTask.id, userId: auth.user.id }, "Task pool item transferred to assigned tasks")
+
+      return NextResponse.json<ApiResponse<AssignedTask>>({
         success: true,
-        data: updated,
-        message: "Task claimed",
+        data: assignedTask,
+        message: "Task claimed and added to your tasks",
       })
     }
 
