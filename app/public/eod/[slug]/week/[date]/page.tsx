@@ -79,7 +79,7 @@ interface ScorecardEntry {
   memberName: string
   department: string
   metricName: string
-  weeklyGoal: number
+  weeklyGoal: number | null
   actualValue: number | null
   isOnTrack: boolean
 }
@@ -622,7 +622,9 @@ export default function PublicEODWeeklyReportPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className="text-sm font-semibold text-slate-700">{entry.weeklyGoal}</span>
+                        <span className="text-sm font-semibold text-slate-700">
+                          {entry.weeklyGoal !== null ? entry.weeklyGoal : "-"}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         {entry.actualValue !== null ? (

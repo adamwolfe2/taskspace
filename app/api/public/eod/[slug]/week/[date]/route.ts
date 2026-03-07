@@ -76,7 +76,7 @@ interface ScorecardEntry {
   memberName: string
   department: string
   metricName: string
-  weeklyGoal: number
+  weeklyGoal: number | null
   actualValue: number | null
   isOnTrack: boolean
 }
@@ -409,40 +409,42 @@ export async function GET(
     const daysWithReports = submissionsByDay.filter(d => d.count > 0).length
     const averageTasksPerDay = daysWithReports > 0 ? Math.round(totalTasks / daysWithReports) : 0
 
-    // Fetch weekly scorecard data
-    // Note: The URL uses Thursday as week ending (EOW), but scorecard entries are stored with Friday
-    // We need to convert Thursday to the next day (Friday) for the scorecard lookup
-    const scorecardWeekEnding = new Date(endDate)
-    scorecardWeekEnding.setDate(scorecardWeekEnding.getDate() + 1) // Thursday + 1 = Friday
-    const scorecardWeekEndingStr = scorecardWeekEnding.toISOString().split("T")[0]
+    // Fetch weekly scorecard data from System B (scorecard_metrics + scorecard_entries).
+    // The URL date is a Thursday (week ending). System B stores entries by Monday week_start.
+    // Thursday (day 4) → Monday = Thursday - 3 days.
+    const scorecardWeekStart = new Date(endDate)
+    const dayOfWeek = scorecardWeekStart.getUTCDay() // 0=Sun, 1=Mon, ..., 4=Thu
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    scorecardWeekStart.setUTCDate(scorecardWeekStart.getUTCDate() - daysToMonday)
+    const scorecardWeekStartStr = scorecardWeekStart.toISOString().split("T")[0]
 
     const { rows: scorecardRows } = await sql`
       SELECT
-        tmm.team_member_id as member_id,
-        COALESCE(NULLIF(om.name, ''), u.name, 'Unknown') as member_name,
-        om.department,
-        tmm.metric_name,
-        tmm.weekly_goal,
-        wme.actual_value
-      FROM team_member_metrics tmm
-      JOIN organization_members om ON tmm.team_member_id = om.id
+        sm.id as metric_id,
+        COALESCE(NULLIF(om.name, ''), u.name, 'Unassigned') as member_name,
+        COALESCE(om.department, 'General') as department,
+        sm.name as metric_name,
+        sm.target_value as weekly_goal,
+        se.value as actual_value,
+        COALESCE(se.status, 'gray') as entry_status
+      FROM scorecard_metrics sm
+      JOIN workspaces w ON w.id = sm.workspace_id AND w.organization_id = ${orgId}
+      LEFT JOIN organization_members om ON sm.owner_id = om.id
       LEFT JOIN users u ON u.id = om.user_id
-      LEFT JOIN weekly_metric_entries wme ON wme.metric_id = tmm.id
-        AND wme.week_ending = ${scorecardWeekEndingStr}::date
-      WHERE om.organization_id = ${orgId}
-        AND tmm.is_active = true
-        AND om.status = 'active'
-      ORDER BY COALESCE(NULLIF(om.name, ''), u.name) ASC
+      LEFT JOIN scorecard_entries se ON se.metric_id = sm.id
+        AND se.week_start = ${scorecardWeekStartStr}::date
+      WHERE sm.is_active = TRUE AND sm.deleted_at IS NULL
+      ORDER BY COALESCE(NULLIF(om.name, ''), u.name, sm.name) ASC
     `
 
     const scorecard: ScorecardEntry[] = scorecardRows.map(row => ({
-      memberId: row.member_id as string,
+      memberId: row.metric_id as string,
       memberName: row.member_name as string,
       department: (row.department as string) || "General",
       metricName: row.metric_name as string,
-      weeklyGoal: row.weekly_goal as number,
-      actualValue: row.actual_value as number | null,
-      isOnTrack: row.actual_value !== null && (row.actual_value as number) >= (row.weekly_goal as number),
+      weeklyGoal: row.weekly_goal !== null ? Number(row.weekly_goal) : null,
+      actualValue: row.actual_value !== null ? Number(row.actual_value) : null,
+      isOnTrack: row.entry_status === "green" || row.entry_status === "yellow",
     }))
 
     // Format week display
