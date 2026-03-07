@@ -210,7 +210,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     // Get rock title if linked to a rock
     let rockTitle: string | null = null
     if (rockId) {
-      const rock = await db.rocks.findById(rockId)
+      const rock = await db.rocks.findById(rockId, auth.organization.id)
       if (rock && rock.organizationId === auth.organization.id) {
         rockTitle = rock.title
       }
@@ -368,7 +368,7 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     // Validate request body
     const { id, expectedUpdatedAt, ...updates } = await validateBody(request, updateTaskSchema)
 
-    const task = await db.assignedTasks.findById(id)
+    const task = await db.assignedTasks.findById(id, auth.organization.id)
     if (!task) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Task not found" },
@@ -564,7 +564,7 @@ export const DELETE = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    const task = await db.assignedTasks.findById(id)
+    const task = await db.assignedTasks.findById(id, auth.organization.id)
     if (!task) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Task not found" },

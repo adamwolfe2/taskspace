@@ -49,7 +49,7 @@ export const POST = withAuth(async (request, auth, context?) => {
     }
 
     // Validate task exists and user has access
-    const task = await db.assignedTasks.findById(taskId)
+    const task = await db.assignedTasks.findById(taskId, auth.organization.id)
     if (!task) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Task not found" },

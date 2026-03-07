@@ -61,7 +61,7 @@ export const PATCH = withAuth(async (request: NextRequest, auth, context?: Route
     }
 
     // Fetch task to verify permissions
-    const task = await db.assignedTasks.findById(taskId)
+    const task = await db.assignedTasks.findById(taskId, auth.organization.id)
     if (!task) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Task not found" },
@@ -163,7 +163,7 @@ export const DELETE = withAuth(async (request: NextRequest, auth, context?: Rout
     }
 
     // Fetch task to verify permissions
-    const task = await db.assignedTasks.findById(taskId)
+    const task = await db.assignedTasks.findById(taskId, auth.organization.id)
     if (!task) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Task not found" },

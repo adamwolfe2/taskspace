@@ -283,7 +283,7 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
     // Validate request body
     const { id, expectedUpdatedAt, ...updates } = await validateBody(request, updateRockSchema)
 
-    const rock = await db.rocks.findById(id)
+    const rock = await db.rocks.findById(id, auth.organization.id)
     if (!rock) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Rock not found" },
@@ -426,7 +426,7 @@ export const DELETE = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    const rock = await db.rocks.findById(id)
+    const rock = await db.rocks.findById(id, auth.organization.id)
     if (!rock) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Rock not found" },

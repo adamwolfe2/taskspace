@@ -412,7 +412,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     if (taskIds.length > 0) {
       // Batch fetch all tasks at once
-      const assignedTasks = await db.assignedTasks.findByIds(taskIds)
+      const assignedTasks = await db.assignedTasks.findByIds(taskIds, auth.organization.id)
 
       // Filter tasks that belong to the current user (security check)
       const userTasks = assignedTasks.filter(t => t.assigneeId === auth.user.id)

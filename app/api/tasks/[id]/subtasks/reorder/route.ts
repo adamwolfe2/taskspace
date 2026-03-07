@@ -42,7 +42,7 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
     const { subtaskIds } = await validateBody(request, reorderSubtasksSchema)
 
     // Fetch task
-    const task = await db.assignedTasks.findById(taskId)
+    const task = await db.assignedTasks.findById(taskId, auth.organization.id)
     if (!task) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Task not found" },

@@ -226,7 +226,7 @@ async function createEntityFromSuggestion(
 
       if (rockData.rockId) {
         // SECURITY: Verify rock belongs to this organization before updating
-        const rock = await db.rocks.findById(rockData.rockId)
+        const rock = await db.rocks.findById(rockData.rockId, organizationId)
         if (!rock || rock.organizationId !== organizationId) {
           return null
         }

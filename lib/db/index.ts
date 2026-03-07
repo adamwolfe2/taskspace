@@ -1090,7 +1090,11 @@ export const db = {
       const { rows } = await sql`SELECT * FROM rocks ORDER BY created_at DESC LIMIT 1000`
       return rows.map(parseRock)
     },
-    async findById(id: string): Promise<Rock | null> {
+    async findById(id: string, orgId?: string): Promise<Rock | null> {
+      if (orgId) {
+        const { rows } = await sql`SELECT * FROM rocks WHERE id = ${id} AND organization_id = ${orgId} LIMIT 1`
+        return rows[0] ? parseRock(rows[0]) : null
+      }
       const { rows } = await sql`SELECT * FROM rocks WHERE id = ${id} LIMIT 1`
       return rows[0] ? parseRock(rows[0]) : null
     },
@@ -1243,7 +1247,7 @@ export const db = {
 
   // Rock Milestones
   rockMilestones: {
-    async findByRockId(rockId: string): Promise<Array<{
+    async findByRockId(rockId: string, orgId?: string): Promise<Array<{
       id: string
       rockId: string
       text: string
@@ -1253,11 +1257,18 @@ export const db = {
       createdAt: string
       updatedAt: string
     }>> {
-      const { rows } = await sql`
-        SELECT * FROM rock_milestones
-        WHERE rock_id = ${rockId}
-        ORDER BY position ASC
-      `
+      const { rows } = orgId
+        ? await sql`
+            SELECT rm.* FROM rock_milestones rm
+            JOIN rocks r ON r.id = rm.rock_id
+            WHERE rm.rock_id = ${rockId} AND r.organization_id = ${orgId}
+            ORDER BY rm.position ASC
+          `
+        : await sql`
+            SELECT * FROM rock_milestones
+            WHERE rock_id = ${rockId}
+            ORDER BY position ASC
+          `
       return rows.map(row => ({
         id: row.id as string,
         rockId: row.rock_id as string,
@@ -1384,7 +1395,11 @@ export const db = {
       `
       return rows.map(parseAssignedTask)
     },
-    async findById(id: string): Promise<AssignedTask | null> {
+    async findById(id: string, orgId?: string): Promise<AssignedTask | null> {
+      if (orgId) {
+        const { rows } = await sql`SELECT * FROM assigned_tasks WHERE id = ${id} AND organization_id = ${orgId} LIMIT 1`
+        return rows[0] ? parseAssignedTask(rows[0]) : null
+      }
       const { rows } = await sql`SELECT * FROM assigned_tasks WHERE id = ${id} LIMIT 1`
       return rows[0] ? parseAssignedTask(rows[0]) : null
     },
@@ -1395,10 +1410,17 @@ export const db = {
       `
       return rows[0] ? parseAssignedTask(rows[0]) : null
     },
-    async findByIds(ids: string[]): Promise<AssignedTask[]> {
+    async findByIds(ids: string[], orgId?: string): Promise<AssignedTask[]> {
       if (ids.length === 0) return []
       // Use PostgreSQL array literal format for ANY clause
       const idArray = `{${ids.join(',')}}`
+      if (orgId) {
+        const { rows } = await sql`
+          SELECT * FROM assigned_tasks
+          WHERE id = ANY(${idArray}::text[]) AND organization_id = ${orgId}
+        `
+        return rows.map(parseAssignedTask)
+      }
       const { rows } = await sql`
         SELECT * FROM assigned_tasks
         WHERE id = ANY(${idArray}::text[])

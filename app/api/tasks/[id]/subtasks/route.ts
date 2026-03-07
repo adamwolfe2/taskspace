@@ -41,7 +41,7 @@ export const GET = withAuth(async (request: NextRequest, auth, context?: RouteCo
     }
 
     // Fetch task
-    const task = await db.assignedTasks.findById(taskId)
+    const task = await db.assignedTasks.findById(taskId, auth.organization.id)
     if (!task) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Task not found" },
@@ -104,7 +104,7 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
     const { title, completed, orderIndex } = await validateBody(request, createSubtaskSchema)
 
     // Fetch task
-    const task = await db.assignedTasks.findById(taskId)
+    const task = await db.assignedTasks.findById(taskId, auth.organization.id)
     if (!task) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Task not found" },

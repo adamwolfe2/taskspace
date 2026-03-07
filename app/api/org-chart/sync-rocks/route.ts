@@ -112,7 +112,7 @@ export const POST = withAdmin(async (request, auth) => {
         // Fetch all milestones in parallel batches
         const rockIds = quarterRocks.map(r => r.id)
         const allMilestones = await Promise.all(
-          rockIds.map(rockId => db.rockMilestones.findByRockId(rockId).catch(() => []))
+          rockIds.map(rockId => db.rockMilestones.findByRockId(rockId, orgId).catch(() => []))
         )
         rockIds.forEach((rockId, idx) => {
           milestonesByRockId.set(rockId, allMilestones[idx].map(m => ({

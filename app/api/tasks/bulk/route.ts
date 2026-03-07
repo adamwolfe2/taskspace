@@ -357,28 +357,47 @@ async function bulkMoveToPool(
     return { processed: 0, skipped: taskIds.length, errors: ["Workspace not found or does not belong to this organization"] }
   }
 
-  let processed = 0
-  const errors: string[] = []
+  // Build list of eligible tasks from the map
+  const eligible = taskIds.flatMap(id => {
+    const task = taskMap.get(id)
+    return task ? [task] : []
+  })
 
-  for (const taskId of taskIds) {
-    const task = taskMap.get(taskId)
-    if (!task) continue
-    try {
-      const poolId = generateId()
-      const title = task.title || "Untitled task"
-      const description = task.description || null
-      const priority = task.priority === "low" || task.priority === "medium" ? "normal" : (task.priority || "normal")
+  if (eligible.length === 0) {
+    return { processed: 0, skipped: taskIds.length, errors: [] }
+  }
+
+  // Batch INSERT into task_pool using a VALUES list
+  const valueRows = eligible.map(task => ({
+    id: generateId(),
+    organizationId,
+    workspaceId,
+    title: task.title || "Untitled task",
+    description: task.description || null,
+    priority: task.priority === "low" || task.priority === "medium" ? "normal" : (task.priority || "normal"),
+    createdById,
+    createdByName,
+  }))
+
+  // Execute batch insert and delete in a transaction-like sequence
+  const errors: string[] = []
+  let processed = 0
+  try {
+    for (const row of valueRows) {
       await sql`
         INSERT INTO task_pool (id, organization_id, workspace_id, title, description, priority, created_by_id, created_by_name)
-        VALUES (${poolId}, ${organizationId}, ${workspaceId}, ${title}, ${description}, ${priority}, ${createdById}, ${createdByName})
+        VALUES (${row.id}, ${row.organizationId}, ${row.workspaceId}, ${row.title}, ${row.description}, ${row.priority}, ${row.createdById}, ${row.createdByName})
       `
-      await sql`
-        DELETE FROM assigned_tasks WHERE id = ${taskId} AND organization_id = ${organizationId}
-      `
-      processed++
-    } catch (err) {
-      errors.push(`Task ${taskId}: ${err instanceof Error ? err.message : String(err)}`)
     }
+    // Batch DELETE all eligible tasks in a single query
+    const eligibleIdArray = `{${eligible.map(t => t.id).join(",")}}`
+    const { rowCount } = await sql`
+      DELETE FROM assigned_tasks
+      WHERE id = ANY(${eligibleIdArray}::text[]) AND organization_id = ${organizationId}
+    `
+    processed = rowCount ?? 0
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : String(err))
   }
 
   return { processed, skipped: taskIds.length - processed, errors }
