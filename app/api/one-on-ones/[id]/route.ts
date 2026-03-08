@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import type { RouteContext } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateOneOnOneSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, OneOnOne } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -106,8 +108,7 @@ export const PUT = withAuth(async (request: NextRequest, auth, context?: RouteCo
       )
     }
 
-    const body = await request.json()
-    const { notes, status, talkingPoints, actionItems, rating, completedAt } = body
+    const { notes, status, talkingPoints, actionItems, rating, completedAt } = await validateBody(request, updateOneOnOneSchema)
 
     await sql`
       UPDATE one_on_ones
@@ -131,6 +132,12 @@ export const PUT = withAuth(async (request: NextRequest, auth, context?: RouteCo
       message: "1-on-1 updated successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Update 1-on-1 error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update 1-on-1" },

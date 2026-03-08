@@ -3,21 +3,15 @@ import { withAuth } from "@/lib/api/middleware"
 import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import { generateOneOnOnePrep } from "@/lib/ai/claude-client"
 import { sql } from "@/lib/db/sql"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { oneOnOnePrepSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, OneOnOnePrep } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
 // POST /api/ai/one-on-ones/prep - Generate AI prep for a 1-on-1
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { reportId, workspaceId, oneOnOneId } = body
-
-    if (!reportId || !workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "reportId and workspaceId are required" },
-        { status: 400 }
-      )
-    }
+    const { reportId, workspaceId, oneOnOneId } = await validateBody(request, oneOnOnePrepSchema)
 
     // Credit check
     const creditCheck = await checkCreditsOrRespond({
@@ -138,6 +132,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       data: prep,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "AI 1-on-1 prep error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to generate 1-on-1 prep" },

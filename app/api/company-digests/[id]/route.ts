@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import type { RouteContext } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateCompanyDigestSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, CompanyDigest } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -111,8 +113,7 @@ export const PUT = withAuth(async (request: NextRequest, auth, context?: RouteCo
       )
     }
 
-    const body = await request.json()
-    const { title, content } = body
+    const { title, content } = await validateBody(request, updateCompanyDigestSchema)
 
     await sql`
       UPDATE company_digests
@@ -132,6 +133,12 @@ export const PUT = withAuth(async (request: NextRequest, auth, context?: RouteCo
       message: "Digest updated successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Update company digest error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update company digest" },

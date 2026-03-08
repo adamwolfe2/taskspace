@@ -1437,3 +1437,36 @@ export const quickSetupSchema = z.object({
 })
 
 export type QuickSetupInput = z.infer<typeof quickSetupSchema>
+
+// ============================================
+// ONE-ON-ONE SCHEMAS
+// ============================================
+
+export const oneOnOnePrepSchema = z.object({
+  reportId: z.string().min(1, "reportId is required"),
+  workspaceId: z.string().min(1, "workspaceId is required"),
+  oneOnOneId: z.string().optional(),
+})
+
+export const updateOneOnOneSchema = z.object({
+  notes: z.string().max(10000).optional(),
+  status: z.enum(["scheduled", "completed", "cancelled"]).optional(),
+  talkingPoints: z.array(z.record(z.unknown())).max(100).optional(),
+  actionItems: z.array(z.record(z.unknown())).max(100).optional(),
+  rating: z.number().int().min(1).max(10).optional(),
+  completedAt: z.string().optional(),
+})
+
+export type OneOnOnePrepInput = z.infer<typeof oneOnOnePrepSchema>
+export type UpdateOneOnOneInput = z.infer<typeof updateOneOnOneSchema>
+
+// ============================================
+// COMPANY DIGEST UPDATE SCHEMA
+// ============================================
+
+export const updateCompanyDigestSchema = z.object({
+  title: z.string().min(1).max(500).trim().optional(),
+  content: z.record(z.unknown()).optional(),
+})
+
+export type UpdateCompanyDigestInput = z.infer<typeof updateCompanyDigestSchema>
