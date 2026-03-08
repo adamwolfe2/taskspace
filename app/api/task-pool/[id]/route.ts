@@ -62,10 +62,19 @@ export const PATCH = withAuth(async (request, auth, context) => {
       )
 
       if (!claimed) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: "Task is already claimed today" },
-          { status: 409 }
-        )
+        // Task already claimed today — check if it's stuck from a previous failed transfer
+        // by the same member (claim succeeded but assigned_task creation failed + unclaim failed).
+        // Re-fetch to get the latest claimed_by_id.
+        const current = await taskPool.findById(itemId, auth.organization.id)
+        const isStuckOwnClaim = current?.isClaimedToday && current.claimedById === auth.member.id
+        if (!isStuckOwnClaim) {
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, error: "Task is already claimed today" },
+            { status: 409 }
+          )
+        }
+        // Fall through to retry the transfer for the stuck task
+        logger.warn({ itemId, memberId: auth.member.id }, "Retrying stuck task pool transfer")
       }
 
       // Full transfer: create an assigned_task for the claimer
@@ -95,8 +104,14 @@ export const PATCH = withAuth(async (request, auth, context) => {
       try {
         await db.assignedTasks.create(assignedTask)
       } catch (err) {
-        // Compensate: revert the claim so the task stays claimable
-        await taskPool.unclaim(itemId, auth.organization.id)
+        // Compensate: try to revert the claim so the task stays claimable.
+        // Guard this with its own try/catch — if unclaim also fails, the task will be
+        // stuck until tomorrow (next daily reset). Log both errors for debugging.
+        try {
+          await taskPool.unclaim(itemId, auth.organization.id)
+        } catch (unclaimErr) {
+          logger.error({ unclaimErr, itemId }, "Unclaim compensation also failed — task stuck until tomorrow")
+        }
         logger.error({ err, itemId }, "Failed to create assigned task for pool claim")
         return NextResponse.json<ApiResponse<null>>(
           { success: false, error: "Failed to transfer task" },
