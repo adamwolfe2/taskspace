@@ -860,10 +860,8 @@ export const db = {
       `
       return rows[0] ? parseMember(rows[0]) : null
     },
-    async delete(id: string, organizationId?: string): Promise<boolean> {
-      const { rowCount } = organizationId
-        ? await sql`DELETE FROM organization_members WHERE id = ${id} AND organization_id = ${organizationId}`
-        : await sql`DELETE FROM organization_members WHERE id = ${id}`
+    async delete(id: string, organizationId: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM organization_members WHERE id = ${id} AND organization_id = ${organizationId}`
       return (rowCount ?? 0) > 0
     },
   },
@@ -1160,10 +1158,8 @@ export const db = {
       `
       return rows[0] ? parseRock(rows[0]) : null
     },
-    async delete(id: string, organizationId?: string): Promise<boolean> {
-      const { rowCount } = organizationId
-        ? await sql`DELETE FROM rocks WHERE id = ${id} AND organization_id = ${organizationId}`
-        : await sql`DELETE FROM rocks WHERE id = ${id}`
+    async delete(id: string, organizationId: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM rocks WHERE id = ${id} AND organization_id = ${organizationId}`
       return (rowCount ?? 0) > 0
     },
     // Optimized: fetch rocks for multiple users at once (reduces data transfer)
@@ -1498,10 +1494,8 @@ export const db = {
         )
       )
     },
-    async delete(id: string, organizationId?: string): Promise<boolean> {
-      const { rowCount } = organizationId
-        ? await sql`DELETE FROM assigned_tasks WHERE id = ${id} AND organization_id = ${organizationId}`
-        : await sql`DELETE FROM assigned_tasks WHERE id = ${id}`
+    async delete(id: string, organizationId: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM assigned_tasks WHERE id = ${id} AND organization_id = ${organizationId}`
       return (rowCount ?? 0) > 0
     },
     // Optimized: fetch tasks for multiple users at once (reduces data transfer)
@@ -1732,10 +1726,8 @@ export const db = {
         throw err
       }
     },
-    async delete(id: string, organizationId?: string): Promise<boolean> {
-      const { rowCount } = organizationId
-        ? await sql`DELETE FROM eod_reports WHERE id = ${id} AND organization_id = ${organizationId}`
-        : await sql`DELETE FROM eod_reports WHERE id = ${id}`
+    async delete(id: string, organizationId: string): Promise<boolean> {
+      const { rowCount } = await sql`DELETE FROM eod_reports WHERE id = ${id} AND organization_id = ${organizationId}`
       return (rowCount ?? 0) > 0
     },
     // Optimized: fetch EOD reports for multiple users with date range (reduces data transfer)

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db/sql"
 import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
+import { checkApiRateLimit, getClientIP } from "@/lib/auth/rate-limit"
 import type { ApiResponse, EodComment } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import type { RouteContext } from "@/lib/api/middleware"
@@ -21,6 +22,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Portal token is required" },
         { status: 400 }
+      )
+    }
+
+    // Rate limit: 10 comments per 5 minutes per IP
+    const ip = getClientIP(request)
+    const rateLimitResult = await checkApiRateLimit(request, `portal-comments:${ip}`, 10, 5 * 60 * 1000)
+    if (!rateLimitResult.success) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Too many requests. Please try again later." },
+        { status: 429 }
       )
     }
 

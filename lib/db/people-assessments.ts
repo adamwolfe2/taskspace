@@ -148,10 +148,8 @@ export async function updateAssessment(
   return parseAssessment(rows[0])
 }
 
-export async function deleteAssessment(id: string, workspaceId?: string): Promise<boolean> {
-  const { rows } = workspaceId
-    ? await sql`DELETE FROM people_assessments WHERE id = ${id} AND workspace_id = ${workspaceId} RETURNING id`
-    : await sql`DELETE FROM people_assessments WHERE id = ${id} RETURNING id`
+export async function deleteAssessment(id: string, workspaceId: string): Promise<boolean> {
+  const { rows } = await sql`DELETE FROM people_assessments WHERE id = ${id} AND workspace_id = ${workspaceId} RETURNING id`
   return rows.length > 0
 }
 

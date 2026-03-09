@@ -52,12 +52,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user already exists
+    // Check if user already exists — use 400 (not 409) to avoid email enumeration
     const existingUser = await db.users.findByEmail(email)
     if (existingUser) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "An account with this email already exists" },
-        { status: 409 }
+        { success: false, error: "Unable to create account. Please check your details and try again." },
+        { status: 400 }
       )
     }
 
