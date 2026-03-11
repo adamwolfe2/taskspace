@@ -147,6 +147,14 @@ const AutomationsPage = dynamic(
   () => import("@/components/pages/automations-page").then(mod => ({ default: mod.AutomationsPage })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
+const CompanyDigestPage = dynamic(
+  () => import("@/components/pages/company-digest-page").then(mod => ({ default: mod.CompanyDigestPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
+const PeopleVelocityPage = dynamic(
+  () => import("@/components/pages/people-velocity-page").then(mod => ({ default: mod.PeopleVelocityPage })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
 
 import { Loader2, Plus } from "lucide-react"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
@@ -191,6 +199,8 @@ const PAGE_TITLES: Partial<Record<PageType, string>> = {
   "eos-health": "EOS Health Report",
   "cross-workspace": "Cross-Workspace",
   automations: "Automations",
+  "company-digest": "Company Digest",
+  "people-velocity": "People Velocity",
 }
 
 function AppContent() {
@@ -602,6 +612,10 @@ function AppContent() {
         return <CrossWorkspacePage />
       case "automations":
         return isAdmin ? <AutomationsPage /> : <DashboardPage {...dashboardProps} />
+      case "company-digest":
+        return isAdmin ? <CompanyDigestPage /> : <DashboardPage {...dashboardProps} />
+      case "people-velocity":
+        return isAdmin ? <PeopleVelocityPage /> : <DashboardPage {...dashboardProps} />
       default:
         return <DashboardPage {...dashboardProps} />
     }

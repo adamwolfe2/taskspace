@@ -29,6 +29,7 @@ import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { WelcomeCard } from "@/components/dashboard/welcome-card"
 import { FocusOfTheDay } from "@/components/dashboard/focus-of-the-day"
 import { SmartSuggestions } from "@/components/dashboard/smart-suggestions"
+import { WeeklyBriefWidget } from "@/components/dashboard/widgets/weekly-brief-widget"
 import { FocusTimer } from "@/components/shared/focus-timer"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import {
@@ -488,6 +489,19 @@ export function DashboardPage({
       />
      </ErrorBoundary>
     )
+
+   case "weekly_brief":
+    return (
+     <ErrorBoundary title="Week Preview unavailable">
+      <WeeklyBriefWidget
+       userId={currentUser.id}
+       workspaceId={currentWorkspaceId ?? undefined}
+      />
+     </ErrorBoundary>
+    )
+
+   case "team_health":
+    return null
 
    default:
     return null

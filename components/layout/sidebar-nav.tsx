@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/contexts/app-context"
-import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle, Search, FileText, BookOpen, UserCheck, FolderKanban, Building2, Briefcase, Activity, Users2, UserPlus, Heart, LayoutGrid, Workflow } from "lucide-react"
+import { LayoutDashboard, History, Target, Shield, Users, CheckSquare, Settings, Zap, BarChart3, Calendar, UsersRound, TableProperties, ExternalLink, Network, Database, AlertCircle, Search, FileText, BookOpen, UserCheck, FolderKanban, Building2, Briefcase, Activity, Users2, UserPlus, Heart, LayoutGrid, Workflow, Newspaper, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PageType } from "@/lib/types"
 import { useWorkspaceFeatures } from "@/lib/hooks/use-workspace-features"
@@ -64,6 +64,8 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     { id: "admin-api", label: "API Usage", icon: Activity },
     { id: "eos-health", label: "EOS Health", icon: Heart, requiredFeature: "advanced.eosHealthReport" },
     { id: "automations", label: "Automations", icon: Workflow, requiredFeature: "advanced.automations" },
+    { id: "company-digest", label: "Company Digest", icon: Newspaper, requiredFeature: "advanced.companyDigest" },
+    { id: "people-velocity", label: "People Velocity", icon: TrendingUp, requiredFeature: "advanced.peopleVelocity" },
   ]
 
   // Filter nav items based on enabled features

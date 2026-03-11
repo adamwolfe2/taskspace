@@ -48,6 +48,7 @@ export interface WorkspaceFeatureToggles {
     crossWorkspace: boolean
     eosHealthReport: boolean
     companyDigest: boolean
+    peopleVelocity: boolean
   }
   admin: {
     teamManagement: boolean
@@ -110,6 +111,7 @@ export const DEFAULT_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     crossWorkspace: true,
     eosHealthReport: true,
     companyDigest: true,
+    peopleVelocity: true,
   },
   admin: {
     teamManagement: true,
@@ -162,6 +164,7 @@ export const STARTER_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
     crossWorkspace: false,
     eosHealthReport: false,
     companyDigest: false,
+    peopleVelocity: false,
   },
   admin: {
     teamManagement: true,
@@ -179,7 +182,7 @@ export const TEAM_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
   },
   productivity: { focusBlocks: false, dailyEnergy: false, streakTracking: true, weeklyReviews: false, achievements: true },
   integrations: { asana: false, googleCalendar: false, slack: false, webhooks: false },
-  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: false, oneOnOnes: false, automations: false, crossWorkspace: false, eosHealthReport: false, companyDigest: false },
+  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: false, oneOnOnes: false, automations: false, crossWorkspace: false, eosHealthReport: false, companyDigest: false, peopleVelocity: false },
   admin: { teamManagement: true, databaseManagement: false, branding: false },
 }
 
@@ -192,7 +195,7 @@ export const CLIENT_REPORTING_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
   },
   productivity: { focusBlocks: false, dailyEnergy: false, streakTracking: true, weeklyReviews: false, achievements: false },
   integrations: { asana: false, googleCalendar: false, slack: false, webhooks: false },
-  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: true, oneOnOnes: false, automations: false, crossWorkspace: false, eosHealthReport: false, companyDigest: false },
+  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: true, oneOnOnes: false, automations: false, crossWorkspace: false, eosHealthReport: false, companyDigest: false, peopleVelocity: false },
   admin: { teamManagement: true, databaseManagement: false, branding: false },
 }
 
@@ -205,7 +208,7 @@ export const MULTI_COMPANY_WORKSPACE_FEATURES: WorkspaceFeatureToggles = {
   },
   productivity: { focusBlocks: false, dailyEnergy: false, streakTracking: true, weeklyReviews: true, achievements: true },
   integrations: { asana: false, googleCalendar: false, slack: false, webhooks: false },
-  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: false, oneOnOnes: false, automations: false, crossWorkspace: true, eosHealthReport: false, companyDigest: false },
+  advanced: { aiCommandCenter: false, analytics: false, managerDashboard: false, apiAccess: false, clientPortal: false, oneOnOnes: false, automations: false, crossWorkspace: true, eosHealthReport: false, companyDigest: false, peopleVelocity: false },
   admin: { teamManagement: true, databaseManagement: false, branding: false },
 }
 
@@ -470,6 +473,14 @@ export const WORKSPACE_FEATURE_METADATA: Record<WorkspaceFeatureKey, WorkspaceFe
     icon: "FileText",
     requiredOrgFeature: "ai_insights",
     impact: { navigation: false, dashboard: false, api: true },
+  },
+
+  "advanced.peopleVelocity": {
+    name: "People Velocity",
+    description: "Weekly execution metrics tracking task completion, rock progress, EOD consistency, and mood",
+    category: "advanced",
+    icon: "Zap",
+    impact: { navigation: true, dashboard: false, api: true },
   },
 
   // Admin Features

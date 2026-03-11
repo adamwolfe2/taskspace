@@ -398,6 +398,8 @@ export type PageType =
   | "eos-health"
   | "cross-workspace"
   | "automations"
+  | "company-digest"
+  | "people-velocity"
 
 // ============================================
 // V2 FEATURE TYPES
