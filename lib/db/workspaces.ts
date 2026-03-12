@@ -289,6 +289,12 @@ export async function deleteWorkspace(id: string): Promise<boolean> {
     throw new Error("Cannot delete the default workspace")
   }
 
+  // Clean up workspace-scoped data that uses ON DELETE SET NULL (not CASCADE)
+  // Tables with ON DELETE CASCADE (meetings, issues, scorecard_metrics) are handled by Postgres
+  await sql`DELETE FROM assigned_tasks WHERE workspace_id = ${id}`
+  await sql`DELETE FROM rocks WHERE workspace_id = ${id}`
+  await sql`DELETE FROM eod_reports WHERE workspace_id = ${id}`
+
   // Explicitly remove workspace members (no FK cascade defined on this table)
   await sql`DELETE FROM workspace_members WHERE workspace_id = ${id}`
 

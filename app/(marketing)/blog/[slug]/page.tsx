@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { getPost, getAllPosts } from "@/lib/blog"
+import { getPost, getAllPosts, sanitizeHtml } from "@/lib/blog"
 import { Calendar, Clock, ArrowLeft, ArrowRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
@@ -150,7 +150,7 @@ export default async function BlogPostPage({ params }: Props) {
       {/* Article body */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <article
-          dangerouslySetInnerHTML={{ __html: post.content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
         />
 
         {/* Divider */}

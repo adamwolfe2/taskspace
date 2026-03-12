@@ -50,6 +50,7 @@ export const GET = withAdmin(async (request, auth) => {
     const startDate = validated.startDate || null
     const endDate = validated.endDate || null
     const search = validated.search || null
+    const searchPattern = search ? `%${search}%` : null
 
     const offset = (page - 1) * limit
 
@@ -77,10 +78,10 @@ export const GET = withAdmin(async (request, auth) => {
         AND (${severity}::text IS NULL OR severity = ${severity})
         AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
         AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
-        AND (${search}::text IS NULL OR (
-          action ILIKE '%' || ${search} || '%' OR
-          resource_type ILIKE '%' || ${search} || '%' OR
-          details::text ILIKE '%' || ${search} || '%'
+        AND (${searchPattern}::text IS NULL OR (
+          action ILIKE ${searchPattern} OR
+          resource_type ILIKE ${searchPattern} OR
+          details::text ILIKE ${searchPattern}
         ))
       ORDER BY created_at DESC
       LIMIT ${limit}
@@ -99,10 +100,10 @@ export const GET = withAdmin(async (request, auth) => {
         AND (${severity}::text IS NULL OR severity = ${severity})
         AND (${startDate}::date IS NULL OR created_at >= ${startDate}::date)
         AND (${endDate}::date IS NULL OR created_at < ${endDate}::date + interval '1 day')
-        AND (${search}::text IS NULL OR (
-          action ILIKE '%' || ${search} || '%' OR
-          resource_type ILIKE '%' || ${search} || '%' OR
-          details::text ILIKE '%' || ${search} || '%'
+        AND (${searchPattern}::text IS NULL OR (
+          action ILIKE ${searchPattern} OR
+          resource_type ILIKE ${searchPattern} OR
+          details::text ILIKE ${searchPattern}
         ))
     `
     const total = parseInt(countResult[0]?.total || "0", 10)

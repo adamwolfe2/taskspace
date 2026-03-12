@@ -16,33 +16,50 @@ import { DashboardPage } from "@/components/pages/dashboard-page"
 import { DemoRestricted } from "@/components/shared/demo-restricted"
 import { SetupOrganizationPage } from "@/components/pages/setup-organization-page"
 import dynamic from "next/dynamic"
+// Fallback component shown when a dynamic import fails (e.g. network error)
+const LoadFailFallback = () => <div className="p-8 text-center text-muted-foreground">Failed to load page. Please refresh.</div>
+
 // Heavy pages — code-split so they don't inflate the initial bundle
 const HistoryPage = dynamic(
-  () => import("@/components/pages/history-page").then(mod => ({ default: mod.HistoryPage })),
+  () => import("@/components/pages/history-page")
+    .then(mod => ({ default: mod.HistoryPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <HistoryPageSkeleton /> }
 )
 const RocksPage = dynamic(
-  () => import("@/components/pages/rocks-page").then(mod => ({ default: mod.RocksPage })),
+  () => import("@/components/pages/rocks-page")
+    .then(mod => ({ default: mod.RocksPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <RocksPageSkeleton /> }
 )
 const TasksPage = dynamic(
-  () => import("@/components/pages/tasks-page").then(mod => ({ default: mod.TasksPage })),
+  () => import("@/components/pages/tasks-page")
+    .then(mod => ({ default: mod.TasksPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <TasksPageSkeleton /> }
 )
 const SettingsPage = dynamic(
-  () => import("@/components/pages/settings-page").then(mod => ({ default: mod.SettingsPage })),
+  () => import("@/components/pages/settings-page")
+    .then(mod => ({ default: mod.SettingsPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const CalendarPage = dynamic(
-  () => import("@/components/pages/calendar-page").then(mod => ({ default: mod.CalendarPage })),
+  () => import("@/components/pages/calendar-page")
+    .then(mod => ({ default: mod.CalendarPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const ScorecardPage = dynamic(
-  () => import("@/components/pages/scorecard-page").then(mod => ({ default: mod.ScorecardPage })),
+  () => import("@/components/pages/scorecard-page")
+    .then(mod => ({ default: mod.ScorecardPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const IdsBoardPage = dynamic(
-  () => import("@/components/pages/ids-board-page").then(mod => ({ default: mod.IdsBoardPage })),
+  () => import("@/components/pages/ids-board-page")
+    .then(mod => ({ default: mod.IdsBoardPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 import { InvitedUserWelcome } from "@/components/onboarding/invited-user-welcome"
@@ -68,91 +85,135 @@ import {
 
 // Dynamic imports — heavy libs + admin-only + secondary pages
 const AnalyticsPage = dynamic(
-  () => import("@/components/pages/analytics-page").then(mod => ({ default: mod.AnalyticsPage })),
+  () => import("@/components/pages/analytics-page")
+    .then(mod => ({ default: mod.AnalyticsPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const NotesPage = dynamic(
-  () => import("@/components/pages/notes-page").then(mod => ({ default: mod.NotesPage })),
+  () => import("@/components/pages/notes-page")
+    .then(mod => ({ default: mod.NotesPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const OrgChartPage = dynamic(
-  () => import("@/components/pages/org-chart-page").then(mod => ({ default: mod.OrgChartPage })),
+  () => import("@/components/pages/org-chart-page")
+    .then(mod => ({ default: mod.OrgChartPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const AdminPage = dynamic(
-  () => import("@/components/pages/admin-page").then(mod => ({ default: mod.AdminPage })),
+  () => import("@/components/pages/admin-page")
+    .then(mod => ({ default: mod.AdminPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const AdminTeamPage = dynamic(
-  () => import("@/components/pages/admin-team-page").then(mod => ({ default: mod.AdminTeamPage })),
+  () => import("@/components/pages/admin-team-page")
+    .then(mod => ({ default: mod.AdminTeamPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const AdminDatabasePage = dynamic(
-  () => import("@/components/pages/admin-database-page").then(mod => ({ default: mod.AdminDatabasePage })),
+  () => import("@/components/pages/admin-database-page")
+    .then(mod => ({ default: mod.AdminDatabasePage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const AdminApiPage = dynamic(
-  () => import("@/components/pages/admin-api-page").then(mod => ({ default: mod.AdminApiPage })),
+  () => import("@/components/pages/admin-api-page")
+    .then(mod => ({ default: mod.AdminApiPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const CommandCenterPage = dynamic(
-  () => import("@/components/pages/command-center-page").then(mod => ({ default: mod.CommandCenterPage })),
+  () => import("@/components/pages/command-center-page")
+    .then(mod => ({ default: mod.CommandCenterPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const PeopleAnalyzerPage = dynamic(
-  () => import("@/components/pages/people-analyzer-page").then(mod => ({ default: mod.PeopleAnalyzerPage })),
+  () => import("@/components/pages/people-analyzer-page")
+    .then(mod => ({ default: mod.PeopleAnalyzerPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const VTOPage = dynamic(
-  () => import("@/components/pages/vto-page").then(mod => ({ default: mod.VTOPage })),
+  () => import("@/components/pages/vto-page")
+    .then(mod => ({ default: mod.VTOPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const ManagerDashboardPage = dynamic(
-  () => import("@/components/pages/manager-dashboard-page").then(mod => ({ default: mod.ManagerDashboardPage })),
+  () => import("@/components/pages/manager-dashboard-page")
+    .then(mod => ({ default: mod.ManagerDashboardPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const ProjectsPage = dynamic(
-  () => import("@/components/pages/projects-page").then(mod => ({ default: mod.ProjectsPage })),
+  () => import("@/components/pages/projects-page")
+    .then(mod => ({ default: mod.ProjectsPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const ClientsPage = dynamic(
-  () => import("@/components/pages/clients-page").then(mod => ({ default: mod.ClientsPage })),
+  () => import("@/components/pages/clients-page")
+    .then(mod => ({ default: mod.ClientsPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const PortfolioPage = dynamic(
-  () => import("@/components/pages/portfolio-page").then(mod => ({ default: mod.PortfolioPage })),
+  () => import("@/components/pages/portfolio-page")
+    .then(mod => ({ default: mod.PortfolioPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const PortfolioDetailPage = dynamic(
-  () => import("@/components/pages/portfolio-detail-page").then(mod => ({ default: mod.PortfolioDetailPage })),
+  () => import("@/components/pages/portfolio-detail-page")
+    .then(mod => ({ default: mod.PortfolioDetailPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const TaskPoolPage = dynamic(
-  () => import("@/components/pages/task-pool-page").then(mod => ({ default: mod.TaskPoolPage })),
+  () => import("@/components/pages/task-pool-page")
+    .then(mod => ({ default: mod.TaskPoolPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const OneOnOnePage = dynamic(
-  () => import("@/components/pages/one-on-one-page").then(mod => ({ default: mod.OneOnOnePage })),
+  () => import("@/components/pages/one-on-one-page")
+    .then(mod => ({ default: mod.OneOnOnePage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const EOSHealthPage = dynamic(
-  () => import("@/components/pages/eos-health-page").then(mod => ({ default: mod.EOSHealthPage })),
+  () => import("@/components/pages/eos-health-page")
+    .then(mod => ({ default: mod.EOSHealthPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const CrossWorkspacePage = dynamic(
-  () => import("@/components/pages/cross-workspace-page").then(mod => ({ default: mod.CrossWorkspacePage })),
+  () => import("@/components/pages/cross-workspace-page")
+    .then(mod => ({ default: mod.CrossWorkspacePage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const AutomationsPage = dynamic(
-  () => import("@/components/pages/automations-page").then(mod => ({ default: mod.AutomationsPage })),
+  () => import("@/components/pages/automations-page")
+    .then(mod => ({ default: mod.AutomationsPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const CompanyDigestPage = dynamic(
-  () => import("@/components/pages/company-digest-page").then(mod => ({ default: mod.CompanyDigestPage })),
+  () => import("@/components/pages/company-digest-page")
+    .then(mod => ({ default: mod.CompanyDigestPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 const PeopleVelocityPage = dynamic(
-  () => import("@/components/pages/people-velocity-page").then(mod => ({ default: mod.PeopleVelocityPage })),
+  () => import("@/components/pages/people-velocity-page")
+    .then(mod => ({ default: mod.PeopleVelocityPage }))
+    .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
 
@@ -353,7 +414,9 @@ function AppContent() {
         setCurrentPage("reset-password")
       }
       if (verifyEmail) {
-        fetch(`/api/auth/verify-email?token=${encodeURIComponent(verifyEmail)}`)
+        fetch(`/api/auth/verify-email?token=${encodeURIComponent(verifyEmail)}`, {
+          headers: { "X-Requested-With": "TaskSpace" },
+        })
           .then(res => res.json())
           .then(data => { if (data.success) window.location.reload() })
           .catch(() => { /* silently fail — user can resend from banner */ })

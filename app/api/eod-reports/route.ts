@@ -154,6 +154,17 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     // Determine which user(s) to fetch for
     const targetUserId = isAdmin(auth) && userId ? userId : (isAdmin(auth) ? null : auth.user.id)
 
+    // SECURITY: When an admin queries another user's reports, verify the target user is a member of this org
+    if (targetUserId && targetUserId !== auth.user.id) {
+      const isMember = await db.members.findByOrgAndUser(auth.organization.id, targetUserId)
+      if (!isMember) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "User not found" },
+          { status: 404 }
+        )
+      }
+    }
+
     if (targetUserId) {
       // Fetch reports for a specific user with date range - workspace-scoped at SQL level
       reports = await db.eodReports.findByUserIdsWithDateRange(

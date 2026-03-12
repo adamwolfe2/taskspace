@@ -150,6 +150,16 @@ function markdownToHtml(md: string): string {
   return out.join("\n")
 }
 
+/** Strip dangerous HTML patterns to prevent XSS in rendered blog content */
+export function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/\bon\w+\s*=\s*\S+/gi, '')
+    .replace(/javascript\s*:/gi, '')
+    .replace(/data\s*:/gi, 'data-blocked:')
+}
+
 function readingTime(text: string): number {
   return Math.max(1, Math.round(text.split(/\s+/).length / 200))
 }
@@ -163,7 +173,7 @@ export function getAllPosts(): BlogPost[] {
     const slug = file.replace(/\.md$/, "")
     const raw = fs.readFileSync(path.join(POSTS_DIR, file), "utf-8")
     const { data, body } = parseFrontmatter(raw)
-    const html = markdownToHtml(body)
+    const html = sanitizeHtml(markdownToHtml(body))
     return {
       slug,
       title: data.title || slug,
@@ -185,7 +195,7 @@ export function getPost(slug: string): BlogPost | null {
 
   const raw = fs.readFileSync(filePath, "utf-8")
   const { data, body } = parseFrontmatter(raw)
-  const html = markdownToHtml(body)
+  const html = sanitizeHtml(markdownToHtml(body))
 
   return {
     slug,

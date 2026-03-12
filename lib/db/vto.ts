@@ -95,10 +95,12 @@ export async function upsertVTO(
       issues_list = ${issuesList}::jsonb,
       last_edited_by = ${userId},
       updated_at = NOW()
-    RETURNING *
+    RETURNING id
   `
 
-  return parseVTO(rows[0])
+  // Use the actual row ID returned by the database (handles both insert and update paths)
+  const existingRow = await getVTO(workspaceId)
+  return existingRow!
 }
 
 // ============================================
