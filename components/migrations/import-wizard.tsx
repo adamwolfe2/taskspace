@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
 import Image from "next/image"
 import {
@@ -61,6 +61,16 @@ export function ImportWizard() {
   const [error, setError] = useState<string | null>(null)
   const [importJob, setImportJob] = useState<ImportJob | null>(null)
   const [progress, setProgress] = useState(0)
+  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Clear polling timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // File upload dropzone
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -146,7 +156,7 @@ export function ImportWizard() {
         if (job.status === "validating") {
           attempts++
           if (attempts < maxAttempts) {
-            setTimeout(poll, 5000) // Poll every 5 seconds
+            pollTimeoutRef.current = setTimeout(poll, 5000) // Poll every 5 seconds
           } else {
             throw new Error("Import timed out")
           }
@@ -163,7 +173,7 @@ export function ImportWizard() {
         if (job.status === "importing") {
           attempts++
           if (attempts < maxAttempts) {
-            setTimeout(poll, 5000)
+            pollTimeoutRef.current = setTimeout(poll, 5000)
           } else {
             throw new Error("Import timed out")
           }

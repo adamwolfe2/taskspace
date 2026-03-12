@@ -119,16 +119,17 @@ async function computeAndCacheVelocity(
 
   const id = "pv_" + generateId()
   await sql`
-    INSERT INTO people_velocity_cache (id, org_id, user_id, week_start, metrics, computed_at)
+    INSERT INTO people_velocity_cache (id, org_id, user_id, workspace_id, week_start, metrics, computed_at)
     VALUES (
       ${id},
       ${orgId},
       ${userId},
+      ${workspaceId},
       ${weekStart}::date,
       ${JSON.stringify(metrics)}::jsonb,
       NOW()
     )
-    ON CONFLICT (org_id, user_id, week_start)
+    ON CONFLICT (org_id, user_id, workspace_id, week_start)
     DO UPDATE SET
       metrics = EXCLUDED.metrics,
       computed_at = NOW()
@@ -207,11 +208,12 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     const userIdsStr = `{${userIds.join(",")}}`
     const weekStartsStr = `{${weekStarts.join(",")}}`
 
-    // Fetch cached entries for the requested range
+    // Fetch cached entries for the requested range (scoped to workspace)
     const cachedResult = await sql`
       SELECT id, org_id, user_id, week_start, metrics, computed_at
       FROM people_velocity_cache
       WHERE org_id = ${auth.organization.id}
+        AND workspace_id = ${workspaceId}
         AND user_id = ANY(${userIdsStr}::text[])
         AND week_start = ANY(${weekStartsStr}::date[])
       ORDER BY week_start DESC, user_id
