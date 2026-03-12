@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { sql } from "@/lib/db/sql"
 import { withAuth, withAdmin } from "@/lib/api/middleware"
 import { answerQuery, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
@@ -62,11 +63,46 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-    const [tasks, rocks, recentReports] = await Promise.all([
+    const [tasks, rocks, recentReports, scorecardResult] = await Promise.all([
       db.assignedTasks.findByOrganizationId(auth.organization.id, workspaceFilter),
       db.rocks.findByOrganizationId(auth.organization.id, workspaceFilter),
       db.eodReports.findByOrganizationId(auth.organization.id, workspaceFilter, thirtyDaysAgo),
+      sql`
+        SELECT
+          COALESCE(NULLIF(om.name, ''), u.name, 'Unknown') as member_name,
+          tmm.metric_name,
+          tmm.weekly_goal,
+          wme.actual_value,
+          wme.week_ending
+        FROM team_member_metrics tmm
+        JOIN organization_members om ON om.id = tmm.team_member_id
+        LEFT JOIN users u ON u.id = om.user_id
+        LEFT JOIN weekly_metric_entries wme ON wme.metric_id = tmm.id
+          AND wme.week_ending = (SELECT MAX(week_ending) FROM weekly_metric_entries)
+        WHERE om.organization_id = ${auth.organization.id}
+          AND om.status = 'active'
+          AND tmm.is_active = true
+        ORDER BY COALESCE(NULLIF(om.name, ''), u.name) ASC
+      `,
     ])
+
+    // Build member name lookup for EOD reports
+    const memberNameMap = new Map(teamMembers.map(m => [m.id, m.name]))
+    const memberUserIdMap = new Map(teamMembersData.map(m => [m.userId, m.name]))
+    const enrichedReports = recentReports.map(r => ({
+      ...r,
+      userName: memberUserIdMap.get(r.userId) || r.userId,
+    }))
+
+    const scorecardData = scorecardResult.rows.map(row => ({
+      memberName: row.member_name as string,
+      metricName: row.metric_name as string,
+      weeklyGoal: Number(row.weekly_goal),
+      actualValue: row.actual_value !== null ? Number(row.actual_value) : null,
+      weekEnding: row.week_ending instanceof Date
+        ? `${row.week_ending.getFullYear()}-${String(row.week_ending.getMonth() + 1).padStart(2, '0')}-${String(row.week_ending.getDate()).padStart(2, '0')}`
+        : String(row.week_ending || ""),
+    }))
 
     // Create conversation record
     const now = new Date().toISOString()
@@ -85,7 +121,8 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       teamMembers,
       tasks,
       rocks,
-      eodReports: recentReports,
+      eodReports: enrichedReports,
+      scorecardData,
     })
 
     // Record AI usage

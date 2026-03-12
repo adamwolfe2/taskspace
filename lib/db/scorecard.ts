@@ -457,6 +457,7 @@ export async function getMetricHistory(
 
 /**
  * Get full scorecard summary for a workspace
+ * Checks new scorecard_metrics first, then falls back to legacy team_member_metrics
  */
 export async function getScorecardSummary(
   workspaceId: string,
@@ -465,7 +466,7 @@ export async function getScorecardSummary(
   const week = weekStart || getWeekStart()
 
   try {
-    // Direct query instead of SQL function (SQL function may not exist)
+    // Try new scorecard_metrics first
     const { rows } = await sql`
       SELECT
         m.id as metric_id,
@@ -487,7 +488,47 @@ export async function getScorecardSummary(
       WHERE m.workspace_id = ${workspaceId} AND m.is_active = true
       ORDER BY m.display_order ASC, m.name ASC
     `
-    return rows.map(parseSummary)
+    if (rows.length > 0) {
+      return rows.map(parseSummary)
+    }
+
+    // Fall back to legacy team_member_metrics for this workspace's members
+    // Convert Monday week_start to Friday week_ending (add 4 days)
+    const weekDate = new Date(week + "T12:00:00Z")
+    weekDate.setUTCDate(weekDate.getUTCDate() + 4)
+    const weekEndingStr = weekDate.toISOString().split("T")[0]
+
+    const { rows: legacyRows } = await sql`
+      SELECT
+        tmm.id as metric_id,
+        tmm.metric_name as metric_name,
+        NULL as metric_description,
+        om.user_id as owner_id,
+        COALESCE(NULLIF(om.name, ''), u.name, 'Unassigned') as owner_name,
+        tmm.weekly_goal as target_value,
+        'above' as target_direction,
+        '' as unit,
+        0 as display_order,
+        wme.actual_value as current_value,
+        CASE
+          WHEN wme.actual_value IS NULL THEN 'gray'
+          WHEN wme.actual_value >= tmm.weekly_goal THEN 'green'
+          WHEN wme.actual_value >= tmm.weekly_goal * 0.8 THEN 'yellow'
+          ELSE 'red'
+        END as current_status,
+        NULL as current_notes,
+        ${week} as week_start
+      FROM team_member_metrics tmm
+      JOIN organization_members om ON om.id = tmm.team_member_id
+      LEFT JOIN users u ON u.id = om.user_id
+      JOIN workspace_members wm ON wm.user_id = om.user_id AND wm.workspace_id = ${workspaceId}
+      LEFT JOIN weekly_metric_entries wme ON wme.metric_id = tmm.id
+        AND wme.week_ending = ${weekEndingStr}::date
+      WHERE tmm.is_active = true
+        AND om.status = 'active'
+      ORDER BY COALESCE(NULLIF(om.name, ''), u.name) ASC
+    `
+    return legacyRows.map(parseSummary)
   } catch (error) {
     logError(logger, "Error in getScorecardSummary", error)
     // Return empty array if tables don't exist yet

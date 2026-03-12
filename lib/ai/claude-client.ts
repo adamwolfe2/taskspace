@@ -424,9 +424,10 @@ export async function answerQuery(
     tasks?: AssignedTask[]
     rocks?: Rock[]
     teamMembers?: TeamMember[]
+    scorecardData?: Array<{ memberName: string; metricName: string; weeklyGoal: number; actualValue: number | null; weekEnding: string }>
   }
 ): Promise<AIResultWithUsage<AIQueryResponse>> {
-  const contextStr = buildContext(context)
+  const contextStr = buildContext({ ...context, currentTasks: context.tasks })
 
   const userMessage = `
 ADAM'S QUESTION:
@@ -453,6 +454,7 @@ function buildContext(context: {
   currentTasks?: AssignedTask[]
   rocks?: Rock[]
   eodReports?: EODReport[]
+  scorecardData?: Array<{ memberName: string; metricName: string; weeklyGoal: number; actualValue: number | null; weekEnding: string }>
 }): string {
   const parts: string[] = []
 
@@ -474,8 +476,36 @@ ${context.rocks.map(r => `- ${r.title}: ${r.progress}% (${r.status})`).join("\n"
   }
 
   if (context.eodReports && context.eodReports.length > 0) {
-    parts.push(`RECENT EOD REPORTS (${context.eodReports.length}):
-${context.eodReports.slice(0, 10).map(r => `- ${r.date}: ${r.tasks?.length || 0} tasks reported`).join("\n")}`)
+    // Build per-member grouped reports with full content
+    const memberReports = new Map<string, string[]>()
+    for (const r of context.eodReports) {
+      const name = (r as EODReport & { userName?: string }).userName || r.userId || "Unknown"
+      if (!memberReports.has(name)) memberReports.set(name, [])
+      const tasks = (r.tasks as Array<{ text: string }> | undefined) || []
+      const taskList = tasks.map(t => t.text).filter(Boolean).join("; ")
+      const challenges = typeof r.challenges === "string" ? r.challenges : ""
+      const priorities = (r.tomorrowPriorities as Array<{ text: string }> | undefined) || []
+      const priorityList = priorities.map(p => p.text).filter(Boolean).join("; ")
+      const dateStr = r.date instanceof Date
+        ? `${r.date.getFullYear()}-${String(r.date.getMonth() + 1).padStart(2, '0')}-${String(r.date.getDate()).padStart(2, '0')}`
+        : String(r.date).split("T")[0]
+      let line = `  ${dateStr}: Tasks: ${taskList || "none"}`
+      if (challenges) line += ` | Challenges: ${challenges}`
+      if (priorityList) line += ` | Priorities: ${priorityList}`
+      memberReports.get(name)!.push(line)
+    }
+    const reportLines: string[] = []
+    for (const [name, lines] of memberReports) {
+      reportLines.push(`${name}:\n${lines.slice(0, 7).join("\n")}`)
+    }
+    parts.push(`RECENT EOD REPORTS (${context.eodReports.length} total):\n${reportLines.join("\n")}`)
+  }
+
+  if (context.scorecardData && context.scorecardData.length > 0) {
+    parts.push(`WEEKLY SCORECARD METRICS:\n${context.scorecardData.map(s => {
+      const status = s.actualValue === null ? "not reported" : s.actualValue >= s.weeklyGoal ? "ON TRACK" : "BELOW GOAL"
+      return `- ${s.memberName}: ${s.metricName} — goal: ${s.weeklyGoal}, actual: ${s.actualValue ?? "N/A"} (${status}) [week ending ${s.weekEnding}]`
+    }).join("\n")}`)
   }
 
   return parts.join("\n\n") || "No data available"
