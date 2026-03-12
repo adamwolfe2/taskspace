@@ -19,7 +19,7 @@ ALTER TABLE rocks
   );
 
 -- Step 4: Create index on owner_email for faster lookups
-CREATE INDEX idx_rocks_owner_email ON rocks(owner_email) WHERE owner_email IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_rocks_owner_email ON rocks(owner_email) WHERE owner_email IS NOT NULL;
 
 -- Step 5: Do the same for tasks table so tasks can be created for draft members
 ALTER TABLE tasks
@@ -35,7 +35,7 @@ ALTER TABLE tasks
     (user_id IS NULL AND owner_email IS NOT NULL)
   );
 
-CREATE INDEX idx_tasks_owner_email ON tasks(owner_email) WHERE owner_email IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tasks_owner_email ON tasks(owner_email) WHERE owner_email IS NOT NULL;
 
 -- Step 6: Create function to transfer pending rocks/tasks when user accepts invitation
 CREATE OR REPLACE FUNCTION transfer_pending_items_to_user(

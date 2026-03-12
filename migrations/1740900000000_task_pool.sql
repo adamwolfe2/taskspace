@@ -1,4 +1,4 @@
-CREATE TABLE task_pool (
+CREATE TABLE IF NOT EXISTS task_pool (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
@@ -15,5 +15,5 @@ CREATE TABLE task_pool (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_task_pool_workspace ON task_pool(workspace_id);
-CREATE INDEX idx_task_pool_org ON task_pool(organization_id);
+CREATE INDEX IF NOT EXISTS idx_task_pool_workspace ON task_pool(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_task_pool_org ON task_pool(organization_id);

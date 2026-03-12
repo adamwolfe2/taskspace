@@ -7,10 +7,10 @@ ALTER TABLE clients
   ADD COLUMN portal_enabled       BOOLEAN NOT NULL DEFAULT false,
   ADD COLUMN portal_member_filter TEXT[] DEFAULT NULL;
 
-CREATE INDEX idx_clients_portal_token ON clients(portal_token)
+CREATE INDEX IF NOT EXISTS idx_clients_portal_token ON clients(portal_token)
   WHERE portal_token IS NOT NULL;
 
-CREATE TABLE eod_comments (
+CREATE TABLE IF NOT EXISTS eod_comments (
   id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   eod_report_id   TEXT NOT NULL REFERENCES eod_reports(id) ON DELETE CASCADE,
   organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -21,4 +21,4 @@ CREATE TABLE eod_comments (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_eod_comments_report ON eod_comments(eod_report_id);
+CREATE INDEX IF NOT EXISTS idx_eod_comments_report ON eod_comments(eod_report_id);

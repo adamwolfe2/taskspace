@@ -2,10 +2,10 @@
 -- These address N+1 and slow query patterns identified in codebase audit
 
 CREATE INDEX IF NOT EXISTS idx_assigned_tasks_workspace_assignee_status
-  ON assigned_tasks(workspace_id, assigned_to, status);
+  ON assigned_tasks(workspace_id, assignee_id, status);
 
 CREATE INDEX IF NOT EXISTS idx_assigned_tasks_workspace_due_date
-  ON assigned_tasks(workspace_id, org_id, due_date)
+  ON assigned_tasks(workspace_id, organization_id, due_date)
   WHERE due_date IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_meetings_workspace_status
@@ -15,16 +15,16 @@ CREATE INDEX IF NOT EXISTS idx_issues_workspace_status
   ON issues(workspace_id, status);
 
 CREATE INDEX IF NOT EXISTS idx_eod_reports_org_user_date
-  ON eod_reports(org_id, user_id, date DESC);
+  ON eod_reports(organization_id, user_id, date DESC);
 
 CREATE INDEX IF NOT EXISTS idx_rocks_workspace_assignee_status
-  ON rocks(workspace_id, assigned_to, status);
+  ON rocks(workspace_id, user_id, status);
 
 CREATE INDEX IF NOT EXISTS idx_scorecard_entries_metric_week
   ON scorecard_entries(metric_id, week_start);
 
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read
-  ON notifications(user_id, is_read, created_at DESC);
+  ON notifications(user_id, read, created_at DESC);
 
 -- Add workspace_id to people_velocity_cache for multi-workspace scoping
 ALTER TABLE people_velocity_cache ADD COLUMN IF NOT EXISTS workspace_id VARCHAR(255);
