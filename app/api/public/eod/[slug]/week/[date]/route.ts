@@ -442,8 +442,8 @@ export async function GET(
         COALESCE(se.status, 'gray') as entry_status
       FROM scorecard_metrics sm
       JOIN workspaces w ON w.id = sm.workspace_id AND w.organization_id = ${orgId}
-      LEFT JOIN organization_members om ON sm.owner_id = om.id
-      LEFT JOIN users u ON u.id = om.user_id
+      LEFT JOIN users u ON u.id = sm.owner_id
+      LEFT JOIN organization_members om ON om.user_id = sm.owner_id AND om.organization_id = ${orgId}
       LEFT JOIN scorecard_entries se ON se.metric_id = sm.id
         AND se.week_start = ${scorecardWeekStartStr}::date
       WHERE sm.is_active = TRUE AND sm.deleted_at IS NULL
