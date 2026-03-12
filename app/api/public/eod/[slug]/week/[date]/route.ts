@@ -384,6 +384,10 @@ export async function GET(
     const totalMembers = members.length
 
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      // Skip Saturday (6) and Sunday (0) — only show weekdays
+      const dayOfWeekNum = d.getUTCDay()
+      if (dayOfWeekNum === 0 || dayOfWeekNum === 6) continue
+
       const dateStr = d.toISOString().split("T")[0]
       const dayReports = reports.filter(r => {
         const dateValue = r.date
