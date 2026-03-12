@@ -87,6 +87,7 @@ interface ScorecardEntry {
 interface WeeklyReport {
   organizationName: string
   organizationLogo?: string
+  accentColor?: string | null
   weekEnding: string
   weekRange: string
   displayWeek: string
@@ -569,13 +570,18 @@ export default function PublicEODWeeklyReportPage() {
           <div className="flex items-end gap-2 h-32">
             {data.weeklyStats.submissionsByDay.map((day) => {
               const percentage = day.total > 0 ? (day.count / day.total) * 100 : 0
+              const accent = data.accentColor || "#3b82f6"
               return (
                 <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
                   <span className="text-xs font-medium text-slate-600">{day.count}/{day.total}</span>
                   <div className="w-full bg-slate-100 rounded-t-lg overflow-hidden" style={{ height: "80px" }}>
                     <div
-                      className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg transition-all duration-500"
-                      style={{ height: `${percentage}%`, marginTop: `${100 - percentage}%` }}
+                      className="w-full rounded-t-lg transition-all duration-500"
+                      style={{
+                        height: `${percentage}%`,
+                        marginTop: `${100 - percentage}%`,
+                        background: `linear-gradient(to top, ${accent}, ${accent}cc)`,
+                      }}
                     />
                   </div>
                   <span className="text-xs text-slate-500">{day.displayDate.split(",")[0]}</span>
@@ -746,7 +752,7 @@ export default function PublicEODWeeklyReportPage() {
                 })),
                 periodType: "weekly",
               }
-              return <UserBentoCard key={idx} data={bentoData} />
+              return <UserBentoCard key={idx} data={bentoData} accentColor={data.accentColor ?? undefined} />
             })}
           </UserBentoGrid>
         ) : (

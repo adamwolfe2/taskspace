@@ -84,6 +84,7 @@ interface ScorecardEntry {
 interface WeeklyReport {
   organizationName: string
   organizationLogo?: string
+  accentColor?: string | null
   weekEnding: string
   weekRange: string
   displayWeek: string
@@ -176,6 +177,18 @@ export async function GET(
     // If no token configured, allow open access (original behavior)
 
     logger.info({ orgSlug: slug, date }, "Public weekly EOD accessed")
+
+    // Get accent color from the org's default workspace
+    const { rows: wsRows } = await sql`
+      SELECT accent_color, primary_color
+      FROM workspaces
+      WHERE organization_id = ${orgId}
+      ORDER BY is_default DESC, created_at ASC
+      LIMIT 1
+    `
+    const accentColor = wsRows.length > 0
+      ? ((wsRows[0].accent_color || wsRows[0].primary_color) as string | null)
+      : null
 
     // Get all active members (join with users to get name if missing in members)
     const { rows: members } = await sql`
@@ -454,6 +467,7 @@ export async function GET(
     const weeklyReport: WeeklyReport = {
       organizationName: orgName,
       organizationLogo: orgLogo,
+      accentColor,
       weekEnding: endDateStr,
       weekRange: weekRangeDisplay,
       displayWeek,

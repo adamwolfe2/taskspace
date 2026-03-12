@@ -57,7 +57,7 @@ export const PATCH = withAuth(async (request, auth, context) => {
       const claimed = await taskPool.claim(
         itemId,
         auth.organization.id,
-        auth.member.id,
+        auth.user.id,
         auth.member.name
       )
 
@@ -66,7 +66,7 @@ export const PATCH = withAuth(async (request, auth, context) => {
         // by the same member (claim succeeded but assigned_task creation failed + unclaim failed).
         // Re-fetch to get the latest claimed_by_id.
         const current = await taskPool.findById(itemId, auth.organization.id)
-        const isStuckOwnClaim = current?.isClaimedToday && current.claimedById === auth.member.id
+        const isStuckOwnClaim = current?.isClaimedToday && current.claimedById === auth.user.id
         if (!isStuckOwnClaim) {
           return NextResponse.json<ApiResponse<null>>(
             { success: false, error: "Task is already claimed today" },
@@ -132,7 +132,7 @@ export const PATCH = withAuth(async (request, auth, context) => {
     }
 
     // unclaim
-    const canUnclaim = existing.claimedById === auth.member.id || isAdmin(auth)
+    const canUnclaim = existing.claimedById === auth.user.id || isAdmin(auth)
     if (!canUnclaim) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "You can only unclaim your own tasks" },
