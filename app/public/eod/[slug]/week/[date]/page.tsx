@@ -543,21 +543,21 @@ export default function PublicEODWeeklyReportPage() {
               <CheckCircle2 className="h-4 w-4" />
               <span className="text-xs font-medium">Tasks Completed</span>
             </div>
-            <p className="text-2xl font-bold text-green-600">{data.weeklyStats.totalTasks}</p>
+            <p className="text-2xl font-bold text-slate-900">{data.weeklyStats.totalTasks}</p>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
             <div className="flex items-center gap-2 text-slate-500 mb-1">
               <TrendingUp className="h-4 w-4" />
               <span className="text-xs font-medium">Avg Tasks/Day</span>
             </div>
-            <p className="text-2xl font-bold text-blue-600">{data.weeklyStats.averageTasksPerDay}</p>
+            <p className="text-2xl font-bold text-slate-900">{data.weeklyStats.averageTasksPerDay}</p>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
             <div className="flex items-center gap-2 text-slate-500 mb-1">
               <AlertTriangle className="h-4 w-4" />
               <span className="text-xs font-medium">Escalations</span>
             </div>
-            <p className="text-2xl font-bold text-red-600">{data.weeklyStats.totalEscalations}</p>
+            <p className="text-2xl font-bold text-slate-900">{data.weeklyStats.totalEscalations}</p>
           </div>
         </div>
 
