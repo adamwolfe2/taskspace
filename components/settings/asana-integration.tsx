@@ -74,11 +74,12 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
     setIsLoading(true)
     try {
       const response = await fetch("/api/asana/status")
-      const data = await response.json()
-      setAsanaStatus(data)
+      const json = await response.json()
+      const status = json.data || json // Handle both { data: {...} } and raw response
+      setAsanaStatus(status)
 
-      if (data.connected && data.workspaces?.length > 0 && !selectedWorkspace) {
-        setSelectedWorkspace(data.workspaces[0].gid)
+      if (status.connected && status.workspaces?.length > 0 && !selectedWorkspace) {
+        setSelectedWorkspace(status.workspaces[0].gid)
       }
     } catch {
       setAsanaStatus({ connected: false, configured: false })
@@ -90,8 +91,9 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
   const loadProjects = useCallback(async (workspaceGid: string) => {
     try {
       const response = await fetch(`/api/asana/projects?workspace=${workspaceGid}`)
-      const data = await response.json()
-      setProjects(data.projects || [])
+      const json = await response.json()
+      const payload = json.data || json
+      setProjects(payload.projects || [])
     } catch {
       // Asana projects fetch failed — user can still configure manually
     }
@@ -100,8 +102,9 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
   const loadAsanaUsers = useCallback(async (workspaceGid: string) => {
     try {
       const response = await fetch(`/api/asana/users?workspace=${workspaceGid}`)
-      const data = await response.json()
-      setAsanaUsers(data.users || [])
+      const json = await response.json()
+      const payload = json.data || json
+      setAsanaUsers(payload.users || [])
     } catch {
       // Asana users fetch failed — user can still configure manually
     }
@@ -217,13 +220,14 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
         body: JSON.stringify({ direction }),
       })
 
-      const data = await response.json()
+      const json = await response.json()
 
-      if (!response.ok) throw new Error(data.error || "Sync failed")
+      if (!response.ok) throw new Error(json.error || "Sync failed")
 
+      const syncResult = json.data?.result || json.result || {}
       toast({
         title: "Sync complete",
-        description: `Created ${data.result.tasksCreatedInAsana} in Asana, ${data.result.tasksCreatedInAims} in Taskspace. Updated ${data.result.tasksUpdatedInAsana + data.result.tasksUpdatedInAims} tasks.`,
+        description: `Created ${syncResult.tasksCreatedInAsana || 0} in Asana, ${syncResult.tasksCreatedInAims || 0} in Taskspace. Updated ${(syncResult.tasksUpdatedInAsana || 0) + (syncResult.tasksUpdatedInAims || 0)} tasks.`,
       })
 
     } catch (error) {
