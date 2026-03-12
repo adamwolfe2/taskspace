@@ -486,9 +486,7 @@ ${context.rocks.map(r => `- ${r.title}: ${r.progress}% (${r.status})`).join("\n"
       const challenges = typeof r.challenges === "string" ? r.challenges : ""
       const priorities = (r.tomorrowPriorities as Array<{ text: string }> | undefined) || []
       const priorityList = priorities.map(p => p.text).filter(Boolean).join("; ")
-      const dateStr = r.date instanceof Date
-        ? `${r.date.getFullYear()}-${String(r.date.getMonth() + 1).padStart(2, '0')}-${String(r.date.getDate()).padStart(2, '0')}`
-        : String(r.date).split("T")[0]
+      const dateStr = String(r.date).split("T")[0]
       let line = `  ${dateStr}: Tasks: ${taskList || "none"}`
       if (challenges) line += ` | Challenges: ${challenges}`
       if (priorityList) line += ` | Priorities: ${priorityList}`

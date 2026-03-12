@@ -511,16 +511,4 @@ export async function GET(
     return response
   }
 }
-eklyReport },
-      { headers }
-    )
-  } catch (error) {
-    logError(logger, "Weekly EOD report error", error)
-    const response = NextResponse.json(
-      { success: false, error: "Failed to load weekly report" },
-      { status: 500 }
-    )
-    response.headers.set("X-Robots-Tag", "noindex, nofollow")
-    return response
-  }
-}
+
