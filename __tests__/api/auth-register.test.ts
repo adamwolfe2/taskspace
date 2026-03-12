@@ -217,9 +217,9 @@ describe("Auth Register API", () => {
       const response = await POST(request)
       const data = await response.json()
 
-      expect(response.status).toBe(409)
+      expect(response.status).toBe(400)
       expect(data.success).toBe(false)
-      expect(data.error).toContain("already exists")
+      expect(data.error).toContain("Unable to create account")
       expect(mockUsersCreate).not.toHaveBeenCalled()
     })
 
