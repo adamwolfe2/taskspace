@@ -23,6 +23,7 @@ import {
   Paperclip,
   File,
   ExternalLink,
+  Sparkles,
 } from "lucide-react"
 import { UserBentoCard, UserBentoGrid, type UserBentoData } from "@/components/public/user-bento-card"
 import { ExportDropdown } from "@/components/public/export-dropdown"
@@ -114,8 +115,29 @@ function isImageType(type: string): boolean {
   return type.startsWith("image/")
 }
 
-function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
+function UserWeeklyCard({ report, slug, token, weekDate }: { report: WeeklyUserReport; slug?: string; token?: string | null; weekDate?: string }) {
   const [isExpanded, setIsExpanded] = useState(true)
+  const [summary, setSummary] = useState<string | null>(null)
+  const [isSummarizing, setIsSummarizing] = useState(false)
+
+  const canSummarize = token && slug && weekDate
+
+  const fetchSummary = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (summary || isSummarizing || !canSummarize) return
+    setIsSummarizing(true)
+    try {
+      const res = await fetch("/api/public/eod/weekly-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, token, date: weekDate, userName: report.userName }),
+      })
+      const json = await res.json()
+      if (json.success && json.data?.summary) setSummary(json.data.summary)
+    } finally {
+      setIsSummarizing(false)
+    }
+  }
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -189,6 +211,20 @@ function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
                 </span>
               )}
             </div>
+            {canSummarize && (
+              <button
+                onClick={fetchSummary}
+                disabled={isSummarizing}
+                title="AI summary"
+                className={`p-1.5 rounded-lg transition-colors ${summary ? "text-blue-600 bg-blue-50" : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"} disabled:opacity-50`}
+              >
+                {isSummarizing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+              </button>
+            )}
             <button className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
               {isExpanded ? (
                 <ChevronUp className="h-5 w-5 text-slate-400" />
@@ -199,6 +235,14 @@ function UserWeeklyCard({ report }: { report: WeeklyUserReport }) {
           </div>
         </div>
       </div>
+
+      {/* AI Summary strip */}
+      {summary && (
+        <div className="px-6 py-3 bg-blue-50/60 border-b border-blue-100 flex items-start gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-slate-700">{summary}</p>
+        </div>
+      )}
 
       {/* Content */}
       {isExpanded && (
@@ -752,14 +796,14 @@ export default function PublicEODWeeklyReportPage() {
                 })),
                 periodType: "weekly",
               }
-              return <UserBentoCard key={idx} data={bentoData} accentColor={data.accentColor ?? undefined} />
+              return <UserBentoCard key={idx} data={bentoData} accentColor={data.accentColor ?? undefined} slug={slug} token={token} weekDate={date} />
             })}
           </UserBentoGrid>
         ) : (
           // List View - Detailed Reports
           <div className="space-y-4">
             {data.userReports.map((report, idx) => (
-              <UserWeeklyCard key={idx} report={report} />
+              <UserWeeklyCard key={idx} report={report} slug={slug} token={token} weekDate={date} />
             ))}
           </div>
         )}

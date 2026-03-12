@@ -127,6 +127,8 @@ export function UserBentoCard({
   reportId,
   slug,
   token,
+  weekDate,
+  initialSummary,
 }: {
   data: UserBentoData
   className?: string
@@ -135,20 +137,29 @@ export function UserBentoCard({
   reportId?: string
   slug?: string
   token?: string | null
+  weekDate?: string
+  initialSummary?: string | null
 }) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
-  const [summary, setSummary] = useState<string | null>(null)
+  const [summary, setSummary] = useState<string | null>(initialSummary || null)
   const [isSummarizing, setIsSummarizing] = useState(false)
+
+  const canSummarize = token && slug && (reportId || weekDate)
 
   const fetchSummary = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (summary || isSummarizing || !token || !reportId || !slug) return
+    if (summary || isSummarizing || !canSummarize) return
     setIsSummarizing(true)
     try {
-      const res = await fetch("/api/public/eod/summary", {
+      // Use weekly summary endpoint if weekDate is provided, otherwise daily
+      const endpoint = weekDate ? "/api/public/eod/weekly-summary" : "/api/public/eod/summary"
+      const body = weekDate
+        ? { slug, token, date: weekDate, userName: data.userName }
+        : { reportId, slug, token }
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reportId, slug, token }),
+        body: JSON.stringify(body),
       })
       const json = await res.json()
       if (json.success && json.data?.summary) setSummary(json.data.summary)
@@ -211,7 +222,7 @@ export function UserBentoCard({
             {getRoleBadge()}
           </div>
           <div className="flex items-center gap-1">
-            {token && reportId && (
+            {canSummarize && (
               <button
                 onClick={fetchSummary}
                 disabled={isSummarizing}

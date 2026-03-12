@@ -544,6 +544,45 @@ Write 1-3 sentences summarizing what ${memberName} worked on today. Plain langua
 }
 
 /**
+ * Generate a 1-3 sentence summary of a team member's entire week of EOD reports.
+ * Used on the weekly end-of-week report page (public).
+ */
+export async function summarizeWeeklyPersonEOD(
+  memberName: string,
+  tasks: Array<{ text: string; rockTitle?: string | null }>,
+  challenges: string[],
+  priorities: Array<{ text: string }>,
+  escalations: Array<{ note: string }>,
+  totalReports: number
+): Promise<AIResultWithUsage<{ summary: string }>> {
+  const taskLines = tasks.map(t => t.rockTitle ? `- ${t.text} (${t.rockTitle})` : `- ${t.text}`).join("\n")
+  const challengeLines = challenges.filter(Boolean).map(c => `- ${c}`).join("\n")
+  const priorityLines = priorities.map(p => `- ${p.text}`).join("\n")
+  const escalationLines = escalations.map(e => `- ${e.note}`).join("\n")
+
+  const userMessage = `Team member: ${memberName}
+Reports submitted: ${totalReports}
+
+Tasks completed this week:
+${taskLines || "None listed"}
+
+Challenges this week: ${challengeLines || "None"}
+
+${escalationLines ? `Escalations:\n${escalationLines}\n` : ""}Next week's priorities:
+${priorityLines || "None listed"}
+
+Write 1-3 sentences summarizing ${memberName}'s week. Plain language, past tense, no bullet points. Focus on key accomplishments and any notable blockers. Return JSON only.`
+
+  const { result, usage, model } = await callClaudeJSONWithUsage<{ summary: string }>(
+    `You are a concise executive summarizer. Given a team member's weekly end-of-day report summary, write 1-3 plain-language sentences summarizing what they accomplished that week. Be specific but brief. Highlight patterns (e.g. focus areas) and any concerns. Return JSON: { "summary": "..." }`,
+    userMessage,
+    { maxTokens: 256, temperature: 0.3, model: MODEL_HAIKU }
+  )
+
+  return { result: { summary: result.summary || "" }, usage: { ...usage, model } }
+}
+
+/**
  * Parse response type for EOD text dump
  */
 export interface ParsedEODReport {
