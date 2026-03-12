@@ -7,11 +7,21 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { oneOnOnePrepSchema } from "@/lib/validation/schemas"
 import type { ApiResponse, OneOnOnePrep } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 
 // POST /api/ai/one-on-ones/prep - Generate AI prep for a 1-on-1
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
     const { reportId, workspaceId, oneOnOneId } = await validateBody(request, oneOnOnePrepSchema)
+
+    // Per-user rate limit: max 5 requests per minute
+    const rateLimit = await checkApiRateLimit(request, `one-on-one-prep:${auth.user.id}`, 5, 60_000)
+    if (!rateLimit.success) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Too many requests. Please wait a moment." },
+        { status: 429, headers: getRateLimitHeaders(rateLimit, 5) }
+      )
+    }
 
     // Credit check
     const creditCheck = await checkCreditsOrRespond({

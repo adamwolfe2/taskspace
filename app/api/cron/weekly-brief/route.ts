@@ -94,65 +94,75 @@ export async function GET(request: NextRequest) {
         const activeMembers = members.filter(m => m.status === "active")
         let briefsGenerated = 0
 
-        for (const member of activeMembers) {
-          // Idempotency: check if brief already exists for this user/week
-          const existing = await sql`
-            SELECT id FROM weekly_briefs
-            WHERE org_id = ${org.id} AND user_id = ${member.id} AND week_start = ${weekStart}::date
-          `
-          if (existing.rows.length > 0) continue
+        // Process in batches of 5 to avoid API rate limits
+        const BATCH_SIZE = 5
+        for (let i = 0; i < activeMembers.length; i += BATCH_SIZE) {
+          const batch = activeMembers.slice(i, i + BATCH_SIZE)
+          const results_batch = await Promise.allSettled(
+            batch.map(async (member) => {
+              // Idempotency: check if brief already exists for this user/week
+              const existing = await sql`
+                SELECT id FROM weekly_briefs
+                WHERE org_id = ${org.id} AND user_id = ${member.id} AND week_start = ${weekStart}::date
+              `
+              if (existing.rows.length > 0) return false
 
-          try {
-            // Fetch context for this member
-            const [rocks, tasks, eodReports] = await Promise.all([
-              db.rocks.findByOrganizationId(org.id).then(r =>
-                r.filter(rock => rock.userId === member.id && rock.status !== "completed")
-                  .map(rock => ({ title: rock.title, progress: rock.progress, status: rock.status }))
-              ),
-              db.assignedTasks.findByAssigneeId(member.id, org.id).then(t =>
-                t.filter(task => task.status !== "completed")
-                  .map(task => ({ title: task.title, dueDate: task.dueDate || "", status: task.status }))
-              ),
-              db.eodReports.findByOrganizationId(org.id).then(reports =>
-                reports
-                  .filter(r => r.userId === member.id)
-                  .slice(0, 5)
-                  .map(r => ({ date: r.date, summary: r.challenges || undefined }))
-              ),
-            ])
+              // Fetch context for this member
+              const [rocks, tasks, eodReports] = await Promise.all([
+                db.rocks.findByOrganizationId(org.id).then(r =>
+                  r.filter(rock => rock.userId === member.id && rock.status !== "completed")
+                    .map(rock => ({ title: rock.title, progress: rock.progress, status: rock.status }))
+                ),
+                db.assignedTasks.findByAssigneeId(member.id, org.id).then(t =>
+                  t.filter(task => task.status !== "completed")
+                    .map(task => ({ title: task.title, dueDate: task.dueDate || "", status: task.status }))
+                ),
+                db.eodReports.findByOrganizationId(org.id).then(reports =>
+                  reports
+                    .filter(r => r.userId === member.id)
+                    .slice(0, 5)
+                    .map(r => ({ date: r.date, summary: r.challenges || undefined }))
+                ),
+              ])
 
-            const { result: brief, usage } = await generateWeeklyBrief({
-              rocks,
-              tasks,
-              meetings: [],
-              lastWeekEODs: eodReports,
-            })
-
-            // Save brief
-            await sql`
-              INSERT INTO weekly_briefs (id, org_id, user_id, week_start, content, created_at)
-              VALUES (${generateId()}, ${org.id}, ${member.id}, ${weekStart}::date, ${JSON.stringify(brief)}::jsonb, NOW())
-              ON CONFLICT (org_id, user_id, week_start) DO NOTHING
-            `
-
-            // Record AI usage
-            try {
-              const { recordUsage } = await import("@/lib/ai/credits")
-              await recordUsage({
-                organizationId: org.id,
-                userId: "system-cron",
-                action: "cron-weekly-brief",
-                model: usage.model,
-                inputTokens: usage.inputTokens,
-                outputTokens: usage.outputTokens,
+              const { result: brief, usage } = await generateWeeklyBrief({
+                rocks,
+                tasks,
+                meetings: [],
+                lastWeekEODs: eodReports,
               })
-            } catch (usageErr) {
-              logError(logger, "Failed to record weekly brief AI usage", usageErr)
-            }
 
-            briefsGenerated++
-          } catch (memberErr) {
-            logError(logger, `Weekly brief failed for member ${member.id}`, memberErr)
+              // Save brief
+              await sql`
+                INSERT INTO weekly_briefs (id, org_id, user_id, week_start, content, created_at)
+                VALUES (${generateId()}, ${org.id}, ${member.id}, ${weekStart}::date, ${JSON.stringify(brief)}::jsonb, NOW())
+                ON CONFLICT (org_id, user_id, week_start) DO NOTHING
+              `
+
+              // Record AI usage
+              try {
+                const { recordUsage } = await import("@/lib/ai/credits")
+                await recordUsage({
+                  organizationId: org.id,
+                  userId: "system-cron",
+                  action: "cron-weekly-brief",
+                  model: usage.model,
+                  inputTokens: usage.inputTokens,
+                  outputTokens: usage.outputTokens,
+                })
+              } catch (usageErr) {
+                logError(logger, "Failed to record weekly brief AI usage", usageErr)
+              }
+
+              return true
+            })
+          )
+          for (const result of results_batch) {
+            if (result.status === 'rejected') {
+              logger.warn({ error: result.reason }, 'Failed to generate brief for user')
+            } else if (result.value === true) {
+              briefsGenerated++
+            }
           }
         }
 

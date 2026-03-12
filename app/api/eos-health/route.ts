@@ -6,6 +6,8 @@ import { generateId } from "@/lib/auth/password"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse, EOSHealthReport } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { generateEOSHealthSchema } from "@/lib/validation/schemas"
 
 function rowToEOSHealthReport(row: Record<string, unknown>): EOSHealthReport {
   return {
@@ -65,15 +67,7 @@ export const GET = withAdmin(async (request: NextRequest, auth) => {
 // POST /api/eos-health - Generate a new EOS health report
 export const POST = withAdmin(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { workspaceId, quarter } = body
-
-    if (!workspaceId || !quarter) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId and quarter are required" },
-        { status: 400 }
-      )
-    }
+    const { workspaceId, quarter } = await validateBody(request, generateEOSHealthSchema)
 
     // Credit check
     const creditCheck = await checkCreditsOrRespond({
@@ -250,6 +244,12 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       data: report,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: 400 }
+      )
+    }
     logError(logger, "Generate EOS health report error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to generate EOS health report" },

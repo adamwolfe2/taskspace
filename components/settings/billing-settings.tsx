@@ -139,6 +139,7 @@ export function BillingSettings() {
   const handleUpgrade = async (plan: PlanKey) => {
     if (plan === "free" || plan === currentPlan) return
 
+    const previousSubscription = subscription
     setProcessingPlan(plan)
     try {
       // If on free plan, go to checkout
@@ -188,6 +189,8 @@ export function BillingSettings() {
         }
       }
     } catch (error) {
+      // Rollback optimistic subscription state on failure
+      setSubscription(previousSubscription)
       // Last resort: try payment link before showing error
       const paymentLink = STRIPE_PAYMENT_LINKS[plan]?.[billingCycle]
       if (paymentLink && currentPlan === "free") {

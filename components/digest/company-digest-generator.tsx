@@ -97,7 +97,10 @@ export function CompanyDigestGenerator() {
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`/api/company-digests/${id}`, { method: "DELETE" })
+      await fetch(`/api/company-digests/${id}`, {
+        method: "DELETE",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      })
       fetchDigests()
       if (selectedDigest?.id === id) setSelectedDigest(null)
     } catch {

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { pushSubscribeSchema } from "@/lib/validation/schemas"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 
@@ -14,29 +16,7 @@ import { logger, logError } from "@/lib/logger"
  */
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { endpoint, p256dh, auth: authKey } = body
-
-    if (!endpoint || typeof endpoint !== "string") {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "endpoint is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!p256dh || typeof p256dh !== "string") {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "p256dh is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!authKey || typeof authKey !== "string") {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "auth key is required" },
-        { status: 400 }
-      )
-    }
+    const { endpoint, p256dh, auth: authKey } = await validateBody(request, pushSubscribeSchema)
 
     const id = generateId()
 
@@ -71,6 +51,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       { status: 201 }
     )
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: 400 }
+      )
+    }
     logError(logger, "POST /api/push/subscribe error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to subscribe to push notifications" },

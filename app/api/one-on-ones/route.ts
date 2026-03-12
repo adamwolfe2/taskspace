@@ -4,6 +4,8 @@ import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, OneOnOne } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createOneOnOneSchema } from "@/lib/validation/schemas"
 
 function rowToOneOnOne(row: Record<string, unknown>): OneOnOne {
   return {
@@ -96,15 +98,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // POST /api/one-on-ones - Create a new 1-on-1
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { workspaceId, managerId, reportId, scheduledAt, notes } = body
-
-    if (!workspaceId || !managerId || !reportId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId, managerId, and reportId are required" },
-        { status: 400 }
-      )
-    }
+    const { workspaceId, managerId, reportId, scheduledAt, notes } = await validateBody(request, createOneOnOneSchema)
 
     const id = "ono_" + generateId()
     const now = new Date().toISOString()
@@ -151,6 +145,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       { status: 201 }
     )
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: 400 }
+      )
+    }
     logError(logger, "Create 1-on-1 error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create 1-on-1" },

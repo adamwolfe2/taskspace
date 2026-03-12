@@ -4,6 +4,8 @@ import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, Automation, AutomationAction, AutomationTriggerType } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createAutomationSchema } from "@/lib/validation/schemas"
 
 // ============================================
 // ROW PARSER
@@ -74,50 +76,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const {
-      workspaceId,
-      name,
-      description,
-      triggerType,
-      triggerConfig,
-      actions,
-    } = body
-
-    if (!workspaceId || typeof workspaceId !== "string") {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "name is required" },
-        { status: 400 }
-      )
-    }
-
-    const validTriggerTypes: AutomationTriggerType[] = [
-      "task_completed",
-      "eod_submitted",
-      "rock_status_changed",
-      "meeting_ended",
-      "scorecard_updated",
-    ]
-    if (!triggerType || !validTriggerTypes.includes(triggerType)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `triggerType must be one of: ${validTriggerTypes.join(", ")}` },
-        { status: 400 }
-      )
-    }
-
-    if (!actions || !Array.isArray(actions) || actions.length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "actions array is required and must not be empty" },
-        { status: 400 }
-      )
-    }
+    const { workspaceId, name, description, triggerType, triggerConfig, actions } = await validateBody(request, createAutomationSchema)
 
     const id = generateId()
     const resolvedTriggerConfig = triggerConfig && typeof triggerConfig === "object" ? triggerConfig : {}
@@ -155,6 +114,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       { status: 201 }
     )
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "POST /api/automations error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create automation" },

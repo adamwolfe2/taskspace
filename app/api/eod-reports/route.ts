@@ -25,6 +25,10 @@ import { logger, logError } from "@/lib/logger"
 import { dispatchWebhook } from "@/lib/webhooks/dispatcher"
 import { evaluateAutomations } from "@/lib/automations/engine"
 
+// Simple concurrency limiter for background AI parsing
+let activeParses = 0
+const MAX_CONCURRENT_PARSES = 3
+
 // GET /api/eod-reports - Get EOD reports
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
@@ -454,81 +458,88 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 
     // AI: Parse EOD report asynchronously (fire-and-forget)
     if (isClaudeConfigured() && member) {
-      // Get user's rocks for context
-      const rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
+      if (activeParses >= MAX_CONCURRENT_PARSES) {
+        logger.warn({ activeParses }, "Skipping background parse — concurrency limit reached")
+      } else {
+        activeParses++
 
-      // Parse EOD with AI in background (don't await)
-      parseEODReport(report, member.name, member.department, rocks)
-        .then(async ({ result, usage }) => {
-          // Record AI usage for background parse
-          const { recordUsage } = await import("@/lib/ai/credits")
-          await recordUsage({
-            organizationId: auth.organization.id,
-            userId: auth.user.id,
-            action: "eod-report-parse",
-            model: usage.model,
-            inputTokens: usage.inputTokens,
-            outputTokens: usage.outputTokens,
-          }).catch(err => logError(logger, "Failed to record AI usage", err))
+        // Get user's rocks for context
+        const rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
 
-          // Create insight record
-          const insight: EODInsight = {
-            id: generateId(),
-            organizationId: auth.organization.id,
-            eodReportId: report.id,
-            ...result.insight,
-            processedAt: new Date().toISOString(),
-          }
-          await db.eodInsights.create(insight)
+        // Parse EOD with AI in background (don't await)
+        parseEODReport(report, member.name, member.department, rocks)
+          .then(async ({ result, usage }) => {
+            // Record AI usage for background parse
+            const { recordUsage } = await import("@/lib/ai/credits")
+            await recordUsage({
+              organizationId: auth.organization.id,
+              userId: auth.user.id,
+              action: "eod-report-parse",
+              model: usage.model,
+              inputTokens: usage.inputTokens,
+              outputTokens: usage.outputTokens,
+            }).catch(err => logError(logger, "Failed to record AI usage", err))
 
-          // Generate AI suggestions for the inbox
-          const admins = teamMembersData.filter(m => m.role === "admin" || m.role === "owner")
-          generateEODSuggestions({
-            organizationId: auth.organization.id,
-            report,
-            insight,
-            member: {
-              id: member.id,
-              name: member.name,
-              department: member.department,
-            },
-            adminIds: admins.map(a => a.id),
-          }).catch(err => logError(logger, "AI suggestions generation failed", err, { reportId: report.id }))
-
-          // Log if admin alert is needed
-          if (result.alertAdmin && result.alertReason) {
-            logger.info({ memberName: member.name, reason: result.alertReason }, "AI alert triggered for admin")
-            // Send email notification to admins
-            if (isEmailConfigured()) {
-              const adminMembers: TeamMember[] = admins.map(a => ({
-                id: a.id,
-                name: a.name,
-                email: a.email,
-                role: a.role,
-                department: a.department,
-                joinDate: a.joinDate,
-              }))
-
-              const alertType = result.insight.sentiment === "negative" || result.insight.sentiment === "stressed"
-                ? "sentiment"
-                : result.insight.blockers && result.insight.blockers.length > 0
-                ? "blocker"
-                : "pattern"
-
-              sendAIAlertEmail(
-                alertType,
-                member.name,
-                member.department,
-                result.alertReason,
-                result.insight.aiSummary,
-                adminMembers
-              ).catch(err => logError(logger, "AI alert email failed", err, { memberName: member.name }))
+            // Create insight record
+            const insight: EODInsight = {
+              id: generateId(),
+              organizationId: auth.organization.id,
+              eodReportId: report.id,
+              ...result.insight,
+              processedAt: new Date().toISOString(),
             }
-          }
-        })
-        .catch((err) => {
-          logError(logger, "AI EOD parsing failed", err, { reportId: report.id })
-        })
+            await db.eodInsights.create(insight)
+
+            // Generate AI suggestions for the inbox
+            const admins = teamMembersData.filter(m => m.role === "admin" || m.role === "owner")
+            generateEODSuggestions({
+              organizationId: auth.organization.id,
+              report,
+              insight,
+              member: {
+                id: member.id,
+                name: member.name,
+                department: member.department,
+              },
+              adminIds: admins.map(a => a.id),
+            }).catch(err => logError(logger, "AI suggestions generation failed", err, { reportId: report.id }))
+
+            // Log if admin alert is needed
+            if (result.alertAdmin && result.alertReason) {
+              logger.info({ memberName: member.name, reason: result.alertReason }, "AI alert triggered for admin")
+              // Send email notification to admins
+              if (isEmailConfigured()) {
+                const adminMembers: TeamMember[] = admins.map(a => ({
+                  id: a.id,
+                  name: a.name,
+                  email: a.email,
+                  role: a.role,
+                  department: a.department,
+                  joinDate: a.joinDate,
+                }))
+
+                const alertType = result.insight.sentiment === "negative" || result.insight.sentiment === "stressed"
+                  ? "sentiment"
+                  : result.insight.blockers && result.insight.blockers.length > 0
+                  ? "blocker"
+                  : "pattern"
+
+                sendAIAlertEmail(
+                  alertType,
+                  member.name,
+                  member.department,
+                  result.alertReason,
+                  result.insight.aiSummary,
+                  adminMembers
+                ).catch(err => logError(logger, "AI alert email failed", err, { memberName: member.name }))
+              }
+            }
+          })
+          .catch((err) => {
+            logError(logger, "AI EOD parsing failed", err, { reportId: report.id })
+          })
+          .finally(() => { activeParses-- })
+      }
     }
 
     // Send full EOD report via Slack if enabled

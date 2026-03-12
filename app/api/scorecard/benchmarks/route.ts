@@ -37,26 +37,45 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     const now = new Date()
     const benchmarks: ScorecardBenchmark[] = []
 
-    // Compute 13-week rolling average for each metric
+    // 13-week window
+    const thirteenWeeksAgo = new Date(now)
+    thirteenWeeksAgo.setDate(thirteenWeeksAgo.getDate() - 91)
+    const startDate = thirteenWeeksAgo.toISOString().split("T")[0]
+
+    // Batch query: compute rolling averages for ALL metrics in a single query
+    const metricIds = metricsResult.rows.map(m => m.id as string)
+
+    const aggregatedMap = new Map<string, { avgValue: number; weeksWithData: number }>()
+
+    if (metricIds.length > 0) {
+      const aggregatedResult = await sql`
+        SELECT
+          metric_id,
+          AVG(value) AS avg_value,
+          COUNT(*) AS weeks_with_data
+        FROM scorecard_entries
+        WHERE metric_id = ANY(${metricIds}::text[])
+          AND week_start::date >= ${startDate}::date
+          AND value IS NOT NULL
+        GROUP BY metric_id
+      `
+
+      for (const row of aggregatedResult.rows) {
+        aggregatedMap.set(row.metric_id as string, {
+          avgValue: parseFloat((row.avg_value as string) || "0") || 0,
+          weeksWithData: parseInt((row.weeks_with_data as string) || "0", 10),
+        })
+      }
+    }
+
+    // Map aggregated results back to each metric
     for (const metric of metricsResult.rows) {
       const metricId = metric.id as string
       const metricName = metric.name as string
 
-      // 13-week window
-      const thirteenWeeksAgo = new Date(now)
-      thirteenWeeksAgo.setDate(thirteenWeeksAgo.getDate() - 91)
-      const thirteenWeeksAgoStr = thirteenWeeksAgo.toISOString().split("T")[0]
-
-      const entriesResult = await sql`
-        SELECT AVG(value) AS avg_value, COUNT(*) AS weeks_with_data
-        FROM scorecard_entries
-        WHERE metric_id = ${metricId}
-          AND week_start::date >= ${thirteenWeeksAgoStr}::date
-          AND value IS NOT NULL
-      `
-
-      const avgValue = parseFloat((entriesResult.rows[0]?.avg_value as string) || "0") || 0
-      const weeksWithData = parseInt((entriesResult.rows[0]?.weeks_with_data as string) || "0", 10)
+      const agg = aggregatedMap.get(metricId)
+      const avgValue = agg?.avgValue ?? 0
+      const weeksWithData = agg?.weeksWithData ?? 0
 
       // Use rolling average if we have at least 4 weeks of data, else fall back to target or default
       let benchmarkValue = avgValue

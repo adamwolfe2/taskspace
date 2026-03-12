@@ -6,6 +6,9 @@ import { generateId } from "@/lib/auth/password"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse, CompanyDigest } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { generateCompanyDigestSchema } from "@/lib/validation/schemas"
+import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 
 function rowToCompanyDigest(row: Record<string, unknown>): CompanyDigest {
   return {
@@ -73,13 +76,14 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // POST /api/company-digests - Generate a new company digest
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { workspaceId, periodType, periodStart, periodEnd } = body
+    const { workspaceId, periodType, periodStart, periodEnd } = await validateBody(request, generateCompanyDigestSchema)
 
-    if (!workspaceId || !periodType || !periodStart || !periodEnd) {
+    // Per-user rate limit: max 5 requests per minute
+    const rateLimit = await checkApiRateLimit(request, `company-digests:${auth.user.id}`, 5, 60_000)
+    if (!rateLimit.success) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId, periodType, periodStart, and periodEnd are required" },
-        { status: 400 }
+        { success: false, error: "Too many requests. Please wait a moment." },
+        { status: 429, headers: getRateLimitHeaders(rateLimit, 5) }
       )
     }
 
@@ -218,6 +222,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       data: digest,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: 400 }
+      )
+    }
     logError(logger, "Generate company digest error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to generate company digest" },

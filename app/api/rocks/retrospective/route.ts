@@ -6,6 +6,8 @@ import { generateId } from "@/lib/auth/password"
 import type { ApiResponse, RockRetrospective } from "@/lib/types"
 import { sql } from "@/lib/db/sql"
 import { db } from "@/lib/db"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { generateRockRetroSchema } from "@/lib/validation/schemas"
 
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
@@ -65,15 +67,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { workspaceId, quarter } = body
-
-    if (!workspaceId || !quarter) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId and quarter are required" },
-        { status: 400 }
-      )
-    }
+    const { workspaceId, quarter } = await validateBody(request, generateRockRetroSchema)
 
     // Credit check
     const creditCheck = await checkCreditsOrRespond({
@@ -166,6 +160,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       data: retrospective,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: 400 }
+      )
+    }
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to generate retrospective" },
       { status: 500 }

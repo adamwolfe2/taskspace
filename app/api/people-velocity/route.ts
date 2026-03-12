@@ -4,6 +4,8 @@ import { generateId } from "@/lib/auth/password"
 import { sql } from "@/lib/db/sql"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse, PeopleVelocity, PeopleVelocityMetrics } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { computePeopleVelocitySchema } from "@/lib/validation/schemas"
 
 function rowToVelocity(row: Record<string, unknown>): PeopleVelocity {
   return {
@@ -252,15 +254,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // POST /api/people-velocity — Force recompute velocity for current week
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { workspaceId, userId } = body as { workspaceId?: string; userId?: string }
-
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
+    const { workspaceId, userId } = await validateBody(request, computePeopleVelocitySchema)
 
     const targetUserId = userId || auth.user.id
 
@@ -282,6 +276,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       data: velocity,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: 400 }
+      )
+    }
     logError(logger, "Recompute velocity error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to compute velocity" },

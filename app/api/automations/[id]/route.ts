@@ -3,6 +3,8 @@ import { withAuth, type RouteContext } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse, Automation, AutomationAction, AutomationTriggerType } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateAutomationSchema } from "@/lib/validation/schemas"
 
 // ============================================
 // ROW PARSER
@@ -97,45 +99,7 @@ export const PUT = withAuth(async (request: NextRequest, auth, context?: RouteCo
       )
     }
 
-    const body = await request.json()
-    const {
-      name,
-      description,
-      triggerType,
-      triggerConfig,
-      actions,
-      isEnabled,
-    } = body
-
-    const validTriggerTypes: AutomationTriggerType[] = [
-      "task_completed",
-      "eod_submitted",
-      "rock_status_changed",
-      "meeting_ended",
-      "scorecard_updated",
-    ]
-
-    // Validate provided fields
-    if (name !== undefined && (typeof name !== "string" || name.trim().length === 0)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "name must be a non-empty string" },
-        { status: 400 }
-      )
-    }
-
-    if (triggerType !== undefined && !validTriggerTypes.includes(triggerType)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: `triggerType must be one of: ${validTriggerTypes.join(", ")}` },
-        { status: 400 }
-      )
-    }
-
-    if (actions !== undefined && (!Array.isArray(actions) || actions.length === 0)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "actions must be a non-empty array" },
-        { status: 400 }
-      )
-    }
+    const { name, description, triggerType, triggerConfig, actions, isEnabled } = await validateBody(request, updateAutomationSchema)
 
     const { rows } = await sql`
       UPDATE automations
@@ -166,6 +130,12 @@ export const PUT = withAuth(async (request: NextRequest, auth, context?: RouteCo
       message: "Automation updated",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "PUT /api/automations/[id] error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update automation" },

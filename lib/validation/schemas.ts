@@ -1470,3 +1470,142 @@ export const updateCompanyDigestSchema = z.object({
 })
 
 export type UpdateCompanyDigestInput = z.infer<typeof updateCompanyDigestSchema>
+
+// ============================================
+// AUTOMATION SCHEMAS
+// ============================================
+
+export const createAutomationSchema = z.object({
+  workspaceId: z.string().min(1, "workspaceId is required"),
+  name: z.string().min(1, "name is required").max(200).trim(),
+  description: z.string().max(1000).trim().optional(),
+  triggerType: z.enum([
+    "task_completed",
+    "eod_submitted",
+    "rock_status_changed",
+    "meeting_ended",
+    "scorecard_updated",
+  ]),
+  triggerConfig: z.record(z.unknown()).optional(),
+  actions: z.array(z.object({
+    type: z.string().min(1),
+    config: z.record(z.unknown()).optional(),
+  })).min(1, "At least one action is required").max(20),
+})
+
+export const updateAutomationSchema = z.object({
+  name: z.string().min(1, "name must be non-empty").max(200).trim().optional(),
+  description: z.string().max(1000).trim().optional(),
+  triggerType: z.enum([
+    "task_completed",
+    "eod_submitted",
+    "rock_status_changed",
+    "meeting_ended",
+    "scorecard_updated",
+  ]).optional(),
+  triggerConfig: z.record(z.unknown()).optional(),
+  actions: z.array(z.object({
+    type: z.string().min(1),
+    config: z.record(z.unknown()).optional(),
+  })).min(1).max(20).optional(),
+  isEnabled: z.boolean().optional(),
+})
+
+export type CreateAutomationInput = z.infer<typeof createAutomationSchema>
+export type UpdateAutomationInput = z.infer<typeof updateAutomationSchema>
+
+// ============================================
+// ONE-ON-ONE CREATE SCHEMA
+// ============================================
+
+export const createOneOnOneSchema = z.object({
+  workspaceId: z.string().min(1, "workspaceId is required"),
+  managerId: z.string().min(1, "managerId is required"),
+  reportId: z.string().min(1, "reportId is required"),
+  scheduledAt: z.string().optional(),
+  notes: z.string().max(10000).trim().optional(),
+})
+
+export type CreateOneOnOneInput = z.infer<typeof createOneOnOneSchema>
+
+// ============================================
+// EOS HEALTH / ROCK RETROSPECTIVE SCHEMAS
+// ============================================
+
+export const generateEOSHealthSchema = z.object({
+  workspaceId: z.string().min(1, "workspaceId is required"),
+  quarter: z.string().min(1, "quarter is required").max(20),
+})
+
+export const generateRockRetroSchema = z.object({
+  workspaceId: z.string().min(1, "workspaceId is required"),
+  quarter: z.string().min(1, "quarter is required").max(20),
+})
+
+export type GenerateEOSHealthInput = z.infer<typeof generateEOSHealthSchema>
+export type GenerateRockRetroInput = z.infer<typeof generateRockRetroSchema>
+
+// ============================================
+// MEETING TEMPLATE SCHEMAS
+// ============================================
+
+const meetingTemplateSectionSchema = z.object({
+  type: z.string().min(1),
+  title: z.string().min(1).max(200),
+  durationMinutes: z.number().int().min(0).max(120).optional(),
+  description: z.string().max(1000).optional(),
+})
+
+export const createMeetingTemplateSchema = z.object({
+  workspaceId: z.string().min(1, "workspaceId is required"),
+  name: z.string().min(1, "Template name is required").max(200).trim(),
+  description: z.string().max(1000).trim().optional(),
+  sections: z.array(meetingTemplateSectionSchema).min(1, "At least one section is required").max(20),
+  isDefault: z.boolean().optional(),
+})
+
+export const updateMeetingTemplateSchema = z.object({
+  name: z.string().min(1, "Template name cannot be empty").max(200).trim().optional(),
+  description: z.string().max(1000).trim().optional(),
+  sections: z.array(meetingTemplateSectionSchema).min(1, "At least one section is required").max(20).optional(),
+  isDefault: z.boolean().optional(),
+})
+
+export type CreateMeetingTemplateInput = z.infer<typeof createMeetingTemplateSchema>
+export type UpdateMeetingTemplateInput = z.infer<typeof updateMeetingTemplateSchema>
+
+// ============================================
+// PUSH SUBSCRIPTION SCHEMA
+// ============================================
+
+export const pushSubscribeSchema = z.object({
+  endpoint: z.string().min(1, "endpoint is required").url(),
+  p256dh: z.string().min(1, "p256dh is required"),
+  auth: z.string().min(1, "auth key is required"),
+})
+
+export type PushSubscribeInput = z.infer<typeof pushSubscribeSchema>
+
+// ============================================
+// AI GENERATION SCHEMAS
+// ============================================
+
+export const generateCompanyDigestSchema = z.object({
+  workspaceId: z.string().min(1, "workspaceId is required"),
+  periodType: z.enum(["weekly", "monthly", "quarterly"]),
+  periodStart: z.string().min(1, "periodStart is required"),
+  periodEnd: z.string().min(1, "periodEnd is required"),
+})
+
+export const generateWeeklyBriefSchema = z.object({
+  workspaceId: z.string().min(1, "workspaceId is required"),
+})
+
+export const computePeopleVelocitySchema = z.object({
+  workspaceId: z.string().min(1, "workspaceId is required"),
+  userId: z.string().optional(),
+})
+
+export type GenerateCompanyDigestInput = z.infer<typeof generateCompanyDigestSchema>
+export type GenerateWeeklyBriefInput = z.infer<typeof generateWeeklyBriefSchema>
+export type ComputePeopleVelocityInput = z.infer<typeof computePeopleVelocitySchema>

@@ -1,16 +1,29 @@
 import { NextRequest, NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
+import { aiCache } from "@/lib/cache"
 import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import { generateWeeklyBrief } from "@/lib/ai/claude-client"
 import { generateId } from "@/lib/auth/password"
 import { sql } from "@/lib/db/sql"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse, WeeklyBriefRecord } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { generateWeeklyBriefSchema } from "@/lib/validation/schemas"
+import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 
 export const GET = withAuth(async (request: NextRequest, auth) => {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId") || auth.user.id
+
+    const cacheKey = `weekly-brief:${auth.organization.id}:${userId}`
+    const cached = aiCache.get(cacheKey)
+    if (cached) {
+      return NextResponse.json<ApiResponse<WeeklyBriefRecord>>({
+        success: true,
+        data: cached as WeeklyBriefRecord,
+      })
+    }
 
     const result = await sql`
       SELECT id, org_id, user_id, week_start, content, created_at
@@ -37,6 +50,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       createdAt: (row.created_at as Date)?.toISOString() || "",
     }
 
+    aiCache.set(cacheKey, brief)
+
     return NextResponse.json<ApiResponse<WeeklyBriefRecord>>({
       success: true,
       data: brief,
@@ -53,13 +68,14 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 // POST /api/briefs/weekly — Generate a new Monday morning brief for the current user
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const workspaceId: string | undefined = body?.workspaceId
+    const { workspaceId } = await validateBody(request, generateWeeklyBriefSchema)
 
-    if (!workspaceId) {
+    // Per-user rate limit: max 5 requests per minute
+    const rateLimit = await checkApiRateLimit(request, `briefs-weekly:${auth.user.id}`, 5, 60_000)
+    if (!rateLimit.success) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
+        { success: false, error: "Too many requests. Please wait a moment." },
+        { status: 429, headers: getRateLimitHeaders(rateLimit, 5) }
       )
     }
 
@@ -182,6 +198,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       outputTokens: usage.outputTokens,
     })
 
+    aiCache.delete(`weekly-brief:${auth.organization.id}:${auth.user.id}`)
+
     const brief: WeeklyBriefRecord = {
       id,
       orgId: auth.organization.id,
@@ -196,6 +214,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       data: brief,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: 400 }
+      )
+    }
     logError(logger, "Generate weekly brief error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to generate weekly brief" },

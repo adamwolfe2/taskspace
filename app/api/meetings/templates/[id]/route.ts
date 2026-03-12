@@ -3,6 +3,8 @@ import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
 import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { sql } from "@/lib/db/sql"
 import { sanitizeText } from "@/lib/utils/sanitize"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { updateMeetingTemplateSchema } from "@/lib/validation/schemas"
 import { isFeatureEnabled, getFeatureGateError } from "@/lib/auth/feature-gate"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
@@ -150,27 +152,7 @@ export const PUT = withAuth(async (request: NextRequest, auth, context?) => {
       )
     }
 
-    const body = await request.json()
-    const { name, description, sections, isDefault } = body as {
-      name?: string
-      description?: string
-      sections?: MeetingTemplateSection[]
-      isDefault?: boolean
-    }
-
-    if (name !== undefined && (!name || !name.trim())) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Template name cannot be empty" },
-        { status: 400 }
-      )
-    }
-
-    if (sections !== undefined && (!Array.isArray(sections) || sections.length === 0)) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "At least one section is required" },
-        { status: 400 }
-      )
-    }
+    const { name, description, sections, isDefault } = await validateBody(request, updateMeetingTemplateSchema)
 
     const sanitizedName = name ? sanitizeText(name.trim()) : existing.name
     const sanitizedDescription =
@@ -226,6 +208,12 @@ export const PUT = withAuth(async (request: NextRequest, auth, context?) => {
       message: "Template updated successfully",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: 400 }
+      )
+    }
     logger.error({ error }, "Update meeting template error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to update meeting template" },

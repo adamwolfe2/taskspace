@@ -4,6 +4,8 @@ import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import { sanitizeText } from "@/lib/utils/sanitize"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { createMeetingTemplateSchema } from "@/lib/validation/schemas"
 import { isFeatureEnabled, getFeatureGateError } from "@/lib/auth/feature-gate"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
@@ -108,35 +110,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       return getFeatureGateError("l10_meetings")
     }
 
-    const body = await request.json()
-    const { name, description, sections, workspaceId, isDefault } = body as {
-      name: string
-      description?: string
-      sections: MeetingTemplateSection[]
-      workspaceId: string
-      isDefault?: boolean
-    }
-
-    if (!name || typeof name !== "string" || !name.trim()) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Template name is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!workspaceId) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "workspaceId is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!Array.isArray(sections) || sections.length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "At least one section is required" },
-        { status: 400 }
-      )
-    }
+    const { name, description, sections, workspaceId, isDefault } = await validateBody(request, createMeetingTemplateSchema)
 
     // SECURITY: Verify workspace belongs to user's organization
     const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
@@ -200,6 +174,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       { status: 201 }
     )
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: 400 }
+      )
+    }
     logger.error({ error }, "Create meeting template error")
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to create meeting template" },
