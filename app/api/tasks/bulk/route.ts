@@ -383,11 +383,13 @@ async function bulkMoveToPool(
   const errors: string[] = []
   let processed = 0
   try {
-    for (const row of valueRows) {
-      await sql`
-        INSERT INTO task_pool (id, organization_id, workspace_id, title, description, priority, created_by_id, created_by_name)
-        VALUES (${row.id}, ${row.organizationId}, ${row.workspaceId}, ${row.title}, ${row.description}, ${row.priority}, ${row.createdById}, ${row.createdByName})
-      `
+    if (valueRows.length > 0) {
+      await Promise.all(
+        valueRows.map(row => sql`
+          INSERT INTO task_pool (id, organization_id, workspace_id, title, description, priority, created_by_id, created_by_name)
+          VALUES (${row.id}, ${row.organizationId}, ${row.workspaceId}, ${row.title}, ${row.description}, ${row.priority}, ${row.createdById}, ${row.createdByName})
+        `)
+      )
     }
     // Batch DELETE all eligible tasks in a single query
     const eligibleIdArray = `{${eligible.map(t => t.id).join(",")}}`

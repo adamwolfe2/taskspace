@@ -22,8 +22,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId")
     const status = searchParams.get("status") as Meeting["status"] | null
-    const limit = parseInt(searchParams.get("limit") || "20", 10)
-    const offset = parseInt(searchParams.get("offset") || "0", 10)
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100)
+    const offset = Math.max(parseInt(searchParams.get("offset") || "0", 10), 0)
 
     if (!workspaceId) {
       return NextResponse.json<ApiResponse<null>>(

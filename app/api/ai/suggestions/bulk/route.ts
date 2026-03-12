@@ -72,34 +72,48 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         })
       }
     } else {
-      // Bulk approve - process each one
-      for (const id of validIds) {
-        try {
-          const result = await approveSuggestion(
-            {
-              suggestionId: id,
-              reviewedBy: auth.user.id,
-              reviewerNotes,
-            },
-            async (s: AISuggestion) => {
-              return await createEntityFromSuggestion(s, auth.organization.id)
-            }
-          )
+      // Bulk approve - process in batches of 5 for concurrency
+      const BATCH_SIZE = 5
+      for (let i = 0; i < validIds.length; i += BATCH_SIZE) {
+        const batch = validIds.slice(i, i + BATCH_SIZE)
+        const batchResults = await Promise.allSettled(
+          batch.map(async (id) => {
+            const result = await approveSuggestion(
+              {
+                suggestionId: id,
+                reviewedBy: auth.user.id,
+                reviewerNotes,
+              },
+              async (s: AISuggestion) => {
+                return await createEntityFromSuggestion(s, auth.organization.id)
+              }
+            )
+            return { id, result }
+          })
+        )
 
-          results.push({
-            suggestionId: id,
-            success: true,
-            createdEntity: result.createdEntity
-              ? { type: result.createdEntity.type, id: result.createdEntity.id }
-              : undefined,
-          })
-        } catch (err) {
-          logError(logger, `Bulk approve failed for suggestion ${id}`, err)
-          results.push({
-            suggestionId: id,
-            success: false,
-            error: err instanceof Error ? err.message : "Unknown error",
-          })
+        for (const settled of batchResults) {
+          if (settled.status === 'fulfilled') {
+            const { id, result } = settled.value
+            results.push({
+              suggestionId: id,
+              success: true,
+              createdEntity: result.createdEntity
+                ? { type: result.createdEntity.type, id: result.createdEntity.id }
+                : undefined,
+            })
+          } else {
+            const err = settled.reason
+            // Extract the suggestion id from the error or batch index
+            const batchIndex = batchResults.indexOf(settled)
+            const failedId = batch[batchIndex]
+            logError(logger, `Bulk approve failed for suggestion ${failedId}`, err)
+            results.push({
+              suggestionId: failedId,
+              success: false,
+              error: err instanceof Error ? err.message : "Unknown error",
+            })
+          }
         }
       }
     }

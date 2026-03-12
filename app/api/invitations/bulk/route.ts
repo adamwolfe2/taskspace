@@ -19,12 +19,24 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     // Validate request body
     const { emails, role, department } = await validateBody(request, bulkInviteSchema)
 
-    // Get current counts for subscription limit check
-    const members = await db.members.findByOrganizationId(auth.organization.id)
-    const existingInvitations = await db.invitations.findByOrganizationId(auth.organization.id)
-    const pendingInvites = existingInvitations.filter(i => i.status === "pending")
+    const result: { successful: Invitation[]; failed: Array<{ email: string; error: string }> } = {
+      successful: [],
+      failed: [],
+    }
 
-    const currentTotal = members.length + pendingInvites.length
+    const now = new Date().toISOString()
+    const normalizedEmails = emails.map(e => e.toLowerCase())
+
+    // OPTIMIZED: Batch fetch all users and existing invitations upfront instead of N+1 queries
+    const [existingUsers, orgMembers, existingInvitations] = await Promise.all([
+      db.users.findByEmails(normalizedEmails),
+      db.members.findByOrganizationId(auth.organization.id),
+      db.invitations.findByOrganizationId(auth.organization.id),
+    ])
+
+    // Subscription limit check
+    const pendingInvites = existingInvitations.filter(i => i.status === "pending")
+    const currentTotal = orgMembers.length + pendingInvites.length
     const maxUsers = auth.organization.subscription.maxUsers
     const availableSlots = maxUsers === null ? Infinity : maxUsers - currentTotal
 
@@ -38,26 +50,11 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       )
     }
 
-    const result: { successful: Invitation[]; failed: Array<{ email: string; error: string }> } = {
-      successful: [],
-      failed: [],
-    }
-
-    const now = new Date().toISOString()
-    const normalizedEmails = emails.map(e => e.toLowerCase())
-
-    // OPTIMIZED: Batch fetch all users and existing invitations upfront instead of N+1 queries
-    const [existingUsers, orgMembers, existingInvitations2] = await Promise.all([
-      db.users.findByEmails(normalizedEmails),
-      db.members.findByOrganizationId(auth.organization.id),
-      db.invitations.findByOrganizationId(auth.organization.id),
-    ])
-
     // Build lookup maps for O(1) checks
     const userByEmail = new Map(existingUsers.map(u => [u.email.toLowerCase(), u]))
     const memberByUserId = new Map(orgMembers.map(m => [m.userId, m]))
     const pendingInviteEmails = new Set(
-      existingInvitations2
+      existingInvitations
         .filter(i => i.status === "pending")
         .map(i => i.email.toLowerCase())
     )

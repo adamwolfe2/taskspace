@@ -79,17 +79,21 @@ export async function GET(request: NextRequest) {
 
     let processed = 0
 
+    // Batch query: find all tasks that already have a non-completed child instance
+    const taskIds = completedRecurring.map(t => t.id)
+    const taskIdsStr = `{${taskIds.join(",")}}`
+    const { rows: existingChildren } = await sql`
+      SELECT DISTINCT parent_recurring_task_id
+      FROM assigned_tasks
+      WHERE parent_recurring_task_id = ANY(${taskIdsStr}::text[])
+        AND status != 'completed'
+    `
+    const tasksWithOpenChildren = new Set(existingChildren.map(r => r.parent_recurring_task_id as string))
+
     for (const task of completedRecurring) {
       try {
-        // Check if a follow-on instance already exists (any non-completed task pointing to this one)
-        const { rows: existing } = await sql`
-          SELECT 1 FROM assigned_tasks
-          WHERE parent_recurring_task_id = ${task.id}
-            AND status != 'completed'
-          LIMIT 1
-        `
-
-        if (existing.length > 0) {
+        // Skip if a follow-on instance already exists
+        if (tasksWithOpenChildren.has(task.id)) {
           logger.info({ taskId: task.id }, "Follow-on instance already exists, skipping")
           continue
         }
