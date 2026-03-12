@@ -190,6 +190,7 @@ export function withAuth(
   handler: AuthenticatedHandler<ApiResponse<unknown>>
 ): (request: NextRequest, context?: RouteContext) => Promise<NextResponse<ApiResponse<unknown>>> {
   return async (request: NextRequest, context?: RouteContext) => {
+    const startTime = Date.now()
     try {
       if (!verifyCsrfHeader(request)) {
         return NextResponse.json<ApiResponse<null>>(
@@ -216,7 +217,12 @@ export function withAuth(
       const subResponse = checkSubscriptionOrRespond(request, auth)
       if (subResponse) return subResponse
 
-      return await handler(request, auth, context)
+      const response = await handler(request, auth, context)
+      const duration = Date.now() - startTime
+      if (duration > 2000) {
+        logger.warn({ path: request.nextUrl.pathname, method: request.method, duration }, "Slow API request")
+      }
+      return response
     } catch (error) {
       return handleError(error)
     }

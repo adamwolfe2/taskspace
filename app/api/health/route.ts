@@ -1,42 +1,67 @@
 /**
  * Health Check Endpoint
  *
- * Provides minimal system health status for monitoring and load balancers.
+ * Provides system health status for monitoring and load balancers.
  * Returns:
- * - 200: System healthy
- * - 503: System unhealthy
+ * - 200: System healthy or degraded (database up, optional services missing)
+ * - 503: System unhealthy (database down)
  */
 
 import { sql } from "@/lib/db/sql"
 import { NextRequest, NextResponse } from "next/server"
 
-interface PublicHealthStatus {
-  status: "healthy" | "unhealthy"
-  timestamp: string
+interface HealthServices {
   database: boolean
+  ai: boolean
+  stripe: boolean
+  email: boolean
+}
+
+interface PublicHealthStatus {
+  status: "healthy" | "degraded" | "unhealthy"
+  timestamp: string
+  services: HealthServices
+  version: string
 }
 
 export async function GET(_request: NextRequest): Promise<NextResponse> {
-  let status: "healthy" | "unhealthy" = "healthy"
   let databaseConnected = false
 
   // Database connection check (minimal, no latency exposed)
   try {
     const { rows } = await sql`SELECT 1 as test`
     databaseConnected = rows[0]?.test === 1
-
-    if (!databaseConnected) {
-      status = "unhealthy"
-    }
   } catch {
-    status = "unhealthy"
     databaseConnected = false
+  }
+
+  // Service configuration checks (verify env vars exist, no API calls)
+  const aiConfigured = Boolean(process.env.ANTHROPIC_API_KEY)
+  const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY)
+  const emailConfigured = Boolean(process.env.RESEND_API_KEY)
+
+  const services: HealthServices = {
+    database: databaseConnected,
+    ai: aiConfigured,
+    stripe: stripeConfigured,
+    email: emailConfigured,
+  }
+
+  // Status logic: unhealthy if DB down, degraded if DB up but other services missing
+  let status: PublicHealthStatus["status"]
+  if (!databaseConnected) {
+    status = "unhealthy"
+  } else if (!aiConfigured || !stripeConfigured || !emailConfigured) {
+    status = "degraded"
+  } else {
+    status = "healthy"
   }
 
   const healthStatus: PublicHealthStatus = {
     status,
     timestamp: new Date().toISOString(),
-    database: databaseConnected,
+    services,
+    version: process.env.VERCEL_GIT_COMMIT_SHA || "dev",
   }
 
   // Return appropriate status code
