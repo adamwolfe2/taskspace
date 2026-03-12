@@ -147,8 +147,10 @@ export const updateOrganizationSettingsSchema = z.object({
         .array(
           z.object({
             aimsUserId: z.string(),
-            asanaUserId: z.string(),
-            asanaUserEmail: z.string().email().optional(),
+            aimsUserEmail: z.string().optional(),
+            aimsUserName: z.string().optional(),
+            asanaUserGid: z.string(),
+            asanaUserEmail: z.string().optional(),
             asanaUserName: z.string().optional(),
           })
         )
