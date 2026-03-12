@@ -44,6 +44,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 
     // Batch query: compute rolling averages for ALL metrics in a single query
     const metricIds = metricsResult.rows.map(m => m.id as string)
+    const metricIdsStr = `{${metricIds.join(",")}}`
 
     const aggregatedMap = new Map<string, { avgValue: number; weeksWithData: number }>()
 
@@ -54,7 +55,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
           AVG(value) AS avg_value,
           COUNT(*) AS weeks_with_data
         FROM scorecard_entries
-        WHERE metric_id = ANY(${metricIds}::text[])
+        WHERE metric_id = ANY(${metricIdsStr}::text[])
           AND week_start::date >= ${startDate}::date
           AND value IS NOT NULL
         GROUP BY metric_id

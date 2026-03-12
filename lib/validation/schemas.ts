@@ -1550,10 +1550,9 @@ export type GenerateRockRetroInput = z.infer<typeof generateRockRetroSchema>
 // ============================================
 
 const meetingTemplateSectionSchema = z.object({
-  type: z.string().min(1),
-  title: z.string().min(1).max(200),
-  durationMinutes: z.number().int().min(0).max(120).optional(),
-  description: z.string().max(1000).optional(),
+  sectionType: z.string().min(1),
+  durationTarget: z.number().int().min(0).max(120).optional(),
+  data: z.record(z.unknown()).optional(),
 })
 
 export const createMeetingTemplateSchema = z.object({
