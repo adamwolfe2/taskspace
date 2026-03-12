@@ -422,43 +422,45 @@ export async function GET(
     const daysWithReports = submissionsByDay.filter(d => d.count > 0).length
     const averageTasksPerDay = daysWithReports > 0 ? Math.round(totalTasks / daysWithReports) : 0
 
-    // Fetch weekly scorecard data from System B (scorecard_metrics + scorecard_entries).
-    // The URL date is a Thursday (week ending). System B stores entries by Monday week_start.
-    // Thursday (day 4) → Monday = Thursday - 3 days.
-    const scorecardWeekStart = new Date(endDate)
-    const dayOfWeek = scorecardWeekStart.getUTCDay() // 0=Sun, 1=Mon, ..., 4=Thu
-    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-    scorecardWeekStart.setUTCDate(scorecardWeekStart.getUTCDate() - daysToMonday)
-    const scorecardWeekStartStr = scorecardWeekStart.toISOString().split("T")[0]
+    // Fetch weekly scorecard data from legacy tables (team_member_metrics + weekly_metric_entries).
+    // Legacy entries are keyed by week_ending (always a Friday).
+    // The URL date is a Thursday — the corresponding Friday is the next day.
+    const scorecardFriday = new Date(endDate)
+    scorecardFriday.setUTCDate(scorecardFriday.getUTCDate() + 1) // Thursday → Friday
+    const scorecardWeekEndingStr = scorecardFriday.toISOString().split("T")[0]
 
     const { rows: scorecardRows } = await sql`
       SELECT
-        sm.id as metric_id,
+        tmm.id as metric_id,
         COALESCE(NULLIF(om.name, ''), u.name, 'Unassigned') as member_name,
         COALESCE(om.department, 'General') as department,
-        sm.name as metric_name,
-        sm.target_value as weekly_goal,
-        se.value as actual_value,
-        COALESCE(se.status, 'gray') as entry_status
-      FROM scorecard_metrics sm
-      JOIN workspaces w ON w.id = sm.workspace_id AND w.organization_id = ${orgId}
-      LEFT JOIN users u ON u.id = sm.owner_id
-      LEFT JOIN organization_members om ON om.user_id = sm.owner_id AND om.organization_id = ${orgId}
-      LEFT JOIN scorecard_entries se ON se.metric_id = sm.id
-        AND se.week_start = ${scorecardWeekStartStr}::date
-      WHERE sm.is_active = TRUE AND sm.deleted_at IS NULL
-      ORDER BY COALESCE(NULLIF(om.name, ''), u.name, sm.name) ASC
+        tmm.metric_name,
+        tmm.weekly_goal,
+        wme.actual_value
+      FROM team_member_metrics tmm
+      JOIN organization_members om ON om.id = tmm.team_member_id
+      LEFT JOIN users u ON u.id = om.user_id
+      LEFT JOIN weekly_metric_entries wme ON wme.metric_id = tmm.id
+        AND wme.week_ending = ${scorecardWeekEndingStr}::date
+      WHERE om.organization_id = ${orgId}
+        AND om.status = 'active'
+        AND tmm.is_active = true
+      ORDER BY COALESCE(NULLIF(om.name, ''), u.name) ASC
     `
 
-    const scorecard: ScorecardEntry[] = scorecardRows.map(row => ({
-      memberId: row.metric_id as string,
-      memberName: row.member_name as string,
-      department: (row.department as string) || "General",
-      metricName: row.metric_name as string,
-      weeklyGoal: row.weekly_goal !== null ? Number(row.weekly_goal) : null,
-      actualValue: row.actual_value !== null ? Number(row.actual_value) : null,
-      isOnTrack: row.entry_status === "green" || row.entry_status === "yellow",
-    }))
+    const scorecard: ScorecardEntry[] = scorecardRows.map(row => {
+      const goal = row.weekly_goal !== null ? Number(row.weekly_goal) : null
+      const actual = row.actual_value !== null ? Number(row.actual_value) : null
+      return {
+        memberId: row.metric_id as string,
+        memberName: row.member_name as string,
+        department: (row.department as string) || "General",
+        metricName: row.metric_name as string,
+        weeklyGoal: goal,
+        actualValue: actual,
+        isOnTrack: actual !== null && goal !== null && actual >= goal,
+      }
+    })
 
     // Format week display
     const weekRangeDisplay = `${startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${endDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
@@ -497,6 +499,19 @@ export async function GET(
 
     return NextResponse.json(
       { success: true, data: weeklyReport },
+      { headers }
+    )
+  } catch (error) {
+    logError(logger, "Weekly EOD report error", error)
+    const response = NextResponse.json(
+      { success: false, error: "Failed to load weekly report" },
+      { status: 500 }
+    )
+    response.headers.set("X-Robots-Tag", "noindex, nofollow")
+    return response
+  }
+}
+eklyReport },
       { headers }
     )
   } catch (error) {

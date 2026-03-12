@@ -482,7 +482,7 @@ export async function getScorecardSummary(
         e.notes as current_notes,
         ${week} as week_start
       FROM scorecard_metrics m
-      LEFT JOIN organization_members om ON m.owner_id = om.id
+      LEFT JOIN organization_members om ON om.user_id = m.owner_id AND om.organization_id = (SELECT organization_id FROM workspaces WHERE id = ${workspaceId} LIMIT 1)
       LEFT JOIN scorecard_entries e ON m.id = e.metric_id AND e.week_start = ${week}::date
       WHERE m.workspace_id = ${workspaceId} AND m.is_active = true
       ORDER BY m.display_order ASC, m.name ASC
