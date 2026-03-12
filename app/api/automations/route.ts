@@ -52,6 +52,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       WHERE org_id = ${auth.organization.id}
         AND workspace_id = ${workspaceId}
       ORDER BY created_at DESC
+      LIMIT 200
     `
 
     const automations = rows.map(parseAutomation)

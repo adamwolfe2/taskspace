@@ -10,13 +10,14 @@ import type { RouteContext } from '@/lib/api/middleware'
 import { isAdmin } from '@/lib/auth/middleware'
 import type { ApiResponse } from '@/lib/types'
 import type {
-  ProcessChunkRequest,
   ProcessChunkResponse,
   LogLevel,
   ImportStage,
 } from '@/lib/migrations/types'
 import { extract, normalize, map, load, calculateProgress } from '@/lib/migrations/pipeline'
 import { logger } from '@/lib/logger'
+import { validateBody, ValidationError } from '@/lib/validation/middleware'
+import { processImportChunkSchema } from '@/lib/validation/schemas'
 
 export const POST = withAuth(
   async (request: NextRequest, auth, context?: RouteContext) => {
@@ -37,16 +38,7 @@ export const POST = withAuth(
       }
 
       const { jobId } = await context.params
-      const body: ProcessChunkRequest = await request.json()
-      const { offset, limit } = body
-
-      // Validate chunk parameters
-      if (offset < 0 || limit <= 0 || limit > 100) {
-        return NextResponse.json<ApiResponse<null>>(
-          { success: false, error: 'Invalid chunk parameters. Limit must be 1-100.' },
-          { status: 400 }
-        )
-      }
+      const { offset, limit } = await validateBody(request, processImportChunkSchema)
 
       // Find import job
       const job = await db.migrations.importJobs.findById(jobId)
@@ -149,6 +141,12 @@ export const POST = withAuth(
         },
       })
     } catch (error) {
+      if (error instanceof ValidationError) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: error.message },
+          { status: error.statusCode }
+        )
+      }
       logger.error({ error }, 'Import chunk processing failed')
 
       // Log error to import logs

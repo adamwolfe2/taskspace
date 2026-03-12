@@ -3,11 +3,18 @@
  *
  * Provides utilities for checking and recording AI credit usage
  * in API endpoints.
+ *
+ * Uses a reserve-then-finalize pattern to prevent TOCTOU race conditions:
+ * 1. reserveCreditsOrRespond() atomically inserts a reservation row
+ * 2. AI processing runs
+ * 3. finalizeReservation() updates with actual token counts
+ * If the AI call fails, the reservation still stands (credits stay deducted).
  */
 
 import { NextResponse } from "next/server"
-import { checkAICredits, recordAIUsage } from "@/lib/billing/stripe"
+import { checkAICredits, recordAIUsage, reserveAICredits } from "@/lib/billing/stripe"
 import type { ApiResponse } from "@/lib/types"
+import { logger } from "@/lib/logger"
 
 export interface AICreditsContext {
   organizationId: string
@@ -19,28 +26,46 @@ export interface CreditCheckResult {
   creditsUsed: number
   creditsLimit: number
   remainingCredits: number
+  reservationId?: string
 }
 
 /**
- * Check if organization has AI credits and return error response if not
+ * Atomically reserve AI credits and return error response if limit reached.
+ * This replaces the old check-then-record pattern to eliminate the race window
+ * where two concurrent requests could both pass a non-atomic credit check.
  */
 export async function checkCreditsOrRespond(
-  context: AICreditsContext
+  context: AICreditsContext & { action?: string; estimatedCredits?: number }
 ): Promise<CreditCheckResult | NextResponse> {
-  const result = await checkAICredits(context.organizationId)
+  const estimatedCredits = context.estimatedCredits ?? 5
 
-  if (!result.hasCredits) {
-    return NextResponse.json<ApiResponse<null>>(
-      {
-        success: false,
-        error: "AI credit limit reached. Please upgrade your plan for more credits.",
-        code: "CREDITS_EXHAUSTED",
-      },
-      { status: 402 } // Payment Required
-    )
+  // Try atomic reservation first
+  const reservation = await reserveAICredits({
+    organizationId: context.organizationId,
+    userId: context.userId,
+    action: context.action ?? "ai_request",
+    creditsToReserve: estimatedCredits,
+  })
+
+  if (reservation.reserved) {
+    return {
+      hasCredits: true,
+      creditsUsed: reservation.currentUsage,
+      creditsLimit: reservation.limit,
+      remainingCredits: Math.max(0, reservation.limit - reservation.currentUsage - estimatedCredits),
+      reservationId: reservation.reservationId,
+    }
   }
 
-  return result
+  // Reservation failed — over limit
+  return NextResponse.json<ApiResponse<null>>(
+    {
+      success: false,
+      error: "AI credit limit reached. Please upgrade your plan for more credits.",
+      code: "CREDITS_EXHAUSTED",
+    },
+    { status: 402 }
+  )
 }
 
 /**
@@ -94,7 +119,9 @@ export function calculateTokenCost(inputTokens: number, outputTokens: number): n
 }
 
 /**
- * Record AI usage after successful operation
+ * Record AI usage after successful operation.
+ * If a reservationId is provided, updates the existing reservation row
+ * with actual token counts instead of inserting a new row.
  */
 export async function recordUsage(params: {
   organizationId: string
@@ -105,6 +132,7 @@ export async function recordUsage(params: {
   outputTokens?: number
   credits?: number
   metadata?: Record<string, unknown>
+  reservationId?: string
 }): Promise<void> {
   const {
     organizationId,
@@ -115,11 +143,33 @@ export async function recordUsage(params: {
     outputTokens = 0,
     credits,
     metadata,
+    reservationId,
   } = params
 
   // Calculate credits if not provided
   const creditsUsed = credits ?? calculateTokenCost(inputTokens, outputTokens)
 
+  if (reservationId) {
+    // Finalize the reservation — update with actual usage
+    try {
+      const { sql } = await import("@/lib/db/sql")
+      await sql`
+        UPDATE ai_usage
+        SET
+          model = ${model},
+          input_tokens = ${inputTokens},
+          output_tokens = ${outputTokens},
+          credits_used = ${creditsUsed},
+          metadata = ${JSON.stringify(metadata || {})}::jsonb
+        WHERE id = ${reservationId}
+      `
+    } catch (error) {
+      logger.error({ error, reservationId }, "Failed to finalize AI credit reservation")
+    }
+    return
+  }
+
+  // No reservation — fall back to legacy insert (for cron jobs, background tasks, etc.)
   await recordAIUsage({
     organizationId,
     userId,

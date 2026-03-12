@@ -85,6 +85,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       model: usage.model,
       inputTokens: usage.inputTokens,
       outputTokens: usage.outputTokens,
+      reservationId: creditCheck.reservationId,
     })
 
     // Create AI generated tasks

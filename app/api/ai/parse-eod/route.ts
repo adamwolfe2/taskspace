@@ -113,6 +113,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       model: usage.model,
       inputTokens: usage.inputTokens,
       outputTokens: usage.outputTokens,
+      reservationId: creditCheck.reservationId,
     })
 
     // Create insight record

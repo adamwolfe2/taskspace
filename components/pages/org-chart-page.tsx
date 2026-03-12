@@ -22,7 +22,10 @@ import { CONFIG } from "@/lib/config"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { DEMO_ORG_CHART, DEMO_READONLY_MESSAGE } from "@/lib/demo-data"
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+const fetcher = (url: string) => fetch(url).then((res) => {
+  if (!res.ok) throw new Error(`Fetch failed: ${res.status}`)
+  return res.json()
+})
 
 function mapDemoOrgChart(): OrgChartEmployee[] {
   const nameById = new Map(DEMO_ORG_CHART.map((e) => [e.id, e.name]))

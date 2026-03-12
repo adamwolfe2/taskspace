@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db/sql"
 import { logger } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
+import { validateBody } from "@/lib/validation/middleware"
+import { webVitalsSchema } from "@/lib/validation/schemas"
 
 /**
  * Web Vitals Analytics Endpoint
@@ -10,36 +12,11 @@ import type { ApiResponse } from "@/lib/types"
  * Data can be analyzed to identify performance issues and track improvements.
  */
 
-interface WebVitalMetric {
-  name: string
-  value: number
-  rating: "good" | "needs-improvement" | "poor"
-  id: string
-  navigationType: string
-  url: string
-  userAgent: string
-  timestamp: number
-}
-
-const VALID_METRIC_NAMES = new Set(["CLS", "FCP", "FID", "INP", "LCP", "TTFB"])
-const VALID_RATINGS = new Set(["good", "needs-improvement", "poor"])
-
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const metric: WebVitalMetric = await request.json().catch(() => null)
+    const metric = await validateBody(request, webVitalsSchema).catch(() => null)
 
-    // Validate required fields and whitelisted values
-    if (
-      !metric ||
-      !VALID_METRIC_NAMES.has(metric.name) ||
-      typeof metric.value !== "number" ||
-      !isFinite(metric.value) ||
-      metric.value < 0 ||
-      metric.value > 60000 ||
-      !VALID_RATINGS.has(metric.rating) ||
-      typeof metric.url !== "string" ||
-      metric.url.length > 2000
-    ) {
+    if (!metric) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Invalid metric data" },
         { status: 400 }

@@ -3,6 +3,8 @@ import { withAuth } from "@/lib/api/middleware"
 import { sendWelcomeEmail } from "@/lib/integrations/email"
 import { logger, formatError } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
+import { validateBody } from "@/lib/validation/middleware"
+import { sendWelcomeEmailSchema } from "@/lib/validation/schemas"
 
 /**
  * POST /api/email/welcome
@@ -11,9 +13,9 @@ import type { ApiResponse } from "@/lib/types"
  */
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json().catch(() => ({}))
-    const organizationName = body.organizationName || `${auth.user.name}'s Workspace`
-    const workspaceName = body.workspaceName || "Default"
+    const body = await validateBody(request, sendWelcomeEmailSchema).catch(() => ({}))
+    const organizationName = (body as Record<string, string>).organizationName || `${auth.user.name}'s Workspace`
+    const workspaceName = (body as Record<string, string>).workspaceName || "Default"
 
     await sendWelcomeEmail({
       to: auth.user.email,

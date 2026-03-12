@@ -97,6 +97,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       inputTokens: usage.inputTokens,
       outputTokens: usage.outputTokens,
       credits: AI_CREDIT_COSTS.smartRocks,
+      reservationId: creditCheck.reservationId,
     })
 
     logger.info(

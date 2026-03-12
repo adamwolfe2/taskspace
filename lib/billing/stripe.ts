@@ -109,6 +109,90 @@ export interface AIUsageRecord {
 }
 
 /**
+ * Atomically reserve AI credits before processing.
+ * Uses a CTE-based conditional INSERT so concurrent requests cannot
+ * both reserve credits that would exceed the plan limit.
+ * Returns the reservation row ID so it can be updated with actual usage later.
+ */
+export async function reserveAICredits(params: {
+  organizationId: string
+  userId: string
+  action: string
+  creditsToReserve: number
+}): Promise<{
+  reserved: boolean
+  reservationId?: string
+  currentUsage: number
+  limit: number
+}> {
+  try {
+    const { rows: orgRows } = await sql`
+      SELECT subscription->>'plan' as plan FROM organizations WHERE id = ${params.organizationId}
+    `
+    const plan = (orgRows[0]?.plan as string) || "free"
+    const planConfig = PLANS[plan] || PLANS.free
+    const limit = planConfig.aiCreditsMonthly
+
+    if (limit === -1) {
+      // Unlimited plan — unconditional insert
+      const { rows } = await sql`
+        INSERT INTO ai_usage (
+          organization_id, user_id, action, model,
+          input_tokens, output_tokens, credits_used, metadata
+        ) VALUES (
+          ${params.organizationId}, ${params.userId}, ${params.action}, 'pending',
+          0, 0, ${params.creditsToReserve}, '{}'::jsonb
+        )
+        RETURNING id
+      `
+      return { reserved: true, reservationId: rows[0]?.id as string, currentUsage: 0, limit: -1 }
+    }
+
+    // Atomic: CTE checks usage and only inserts if within limit
+    const { rows, rowCount } = await sql`
+      WITH current_month_usage AS (
+        SELECT COALESCE(SUM(credits_used), 0) AS used
+        FROM ai_usage
+        WHERE organization_id = ${params.organizationId}
+          AND created_at >= date_trunc('month', CURRENT_DATE)
+      )
+      INSERT INTO ai_usage (
+        organization_id, user_id, action, model,
+        input_tokens, output_tokens, credits_used, metadata
+      )
+      SELECT
+        ${params.organizationId}, ${params.userId}, ${params.action}, 'pending',
+        0, 0, ${params.creditsToReserve}, '{}'::jsonb
+      FROM current_month_usage
+      WHERE used + ${params.creditsToReserve} <= ${limit}
+      RETURNING id, (SELECT used FROM current_month_usage) as current_usage
+    `
+
+    if ((rowCount ?? 0) === 0) {
+      // Over limit
+      const { rows: usageRows } = await sql`
+        SELECT COALESCE(SUM(credits_used), 0)::integer as used
+        FROM ai_usage
+        WHERE organization_id = ${params.organizationId}
+          AND created_at >= date_trunc('month', CURRENT_DATE)
+      `
+      return { reserved: false, currentUsage: (usageRows[0]?.used as number) || 0, limit }
+    }
+
+    return {
+      reserved: true,
+      reservationId: rows[0]?.id as string,
+      currentUsage: parseFloat((rows[0]?.current_usage as string) || "0"),
+      limit,
+    }
+  } catch (error) {
+    logger.error({ error, organizationId: params.organizationId }, "Failed to reserve AI credits")
+    // Fail closed — deny when we can't verify
+    return { reserved: false, currentUsage: 0, limit: 0 }
+  }
+}
+
+/**
  * Check if organization has AI credits remaining
  */
 export async function checkAICredits(organizationId: string): Promise<{

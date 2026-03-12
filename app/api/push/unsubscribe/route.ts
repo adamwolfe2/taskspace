@@ -3,6 +3,8 @@ import { withAuth } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { pushUnsubscribeSchema } from "@/lib/validation/schemas"
 
 /**
  * POST /api/push/unsubscribe
@@ -12,15 +14,7 @@ import { logger, logError } from "@/lib/logger"
  */
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const body = await request.json()
-    const { endpoint } = body
-
-    if (!endpoint || typeof endpoint !== "string") {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "endpoint is required" },
-        { status: 400 }
-      )
-    }
+    const { endpoint } = await validateBody(request, pushUnsubscribeSchema)
 
     const { rowCount } = await sql`
       DELETE FROM push_subscriptions
@@ -42,6 +36,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       message: "Successfully unsubscribed from push notifications",
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "POST /api/push/unsubscribe error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to unsubscribe from push notifications" },

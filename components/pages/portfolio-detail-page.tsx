@@ -147,14 +147,20 @@ export function PortfolioDetailPage() {
     fetch(`/api/super-admin/orgs/${orgId}/metrics`, {
       headers: { "X-Requested-With": "XMLHttpRequest" },
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`Metrics fetch failed: ${res.status}`)
+        return res.json()
+      })
       .then((json) => { if (json.success) setMetrics(json.data) })
       .catch(() => {})
 
     fetch(`/api/super-admin/snapshots?days=14&orgId=${orgId}`, {
       headers: { "X-Requested-With": "XMLHttpRequest" },
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`Snapshots fetch failed: ${res.status}`)
+        return res.json()
+      })
       .then((json) => {
         if (json.success) {
           setSnapshots(

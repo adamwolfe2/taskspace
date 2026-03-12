@@ -135,6 +135,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       model: usage.model,
       inputTokens: usage.inputTokens,
       outputTokens: usage.outputTokens,
+      reservationId: creditCheck.reservationId,
     })
 
     return NextResponse.json<ApiResponse<OneOnOnePrep>>({

@@ -1608,3 +1608,65 @@ export const computePeopleVelocitySchema = z.object({
 export type GenerateCompanyDigestInput = z.infer<typeof generateCompanyDigestSchema>
 export type GenerateWeeklyBriefInput = z.infer<typeof generateWeeklyBriefSchema>
 export type ComputePeopleVelocityInput = z.infer<typeof computePeopleVelocitySchema>
+
+// ============================================
+// PUSH UNSUBSCRIBE SCHEMA
+// ============================================
+
+export const pushUnsubscribeSchema = z.object({
+  endpoint: z.string().min(1, "endpoint is required").url(),
+})
+
+export type PushUnsubscribeInput = z.infer<typeof pushUnsubscribeSchema>
+
+// ============================================
+// BILLING CLAIM SUBSCRIPTION SCHEMA
+// ============================================
+
+export const claimSubscriptionSchema = z.object({
+  sessionId: z.string().min(1, "sessionId is required").max(200).refine(
+    (val) => val.startsWith("cs_"),
+    "Invalid session ID format"
+  ),
+})
+
+export type ClaimSubscriptionInput = z.infer<typeof claimSubscriptionSchema>
+
+// ============================================
+// IMPORT PROCESS CHUNK SCHEMA
+// ============================================
+
+export const processImportChunkSchema = z.object({
+  offset: z.number().int().min(0, "offset must be >= 0"),
+  limit: z.number().int().min(1, "limit must be >= 1").max(100, "limit must be <= 100"),
+})
+
+export type ProcessImportChunkInput = z.infer<typeof processImportChunkSchema>
+
+// ============================================
+// EMAIL WELCOME SCHEMA
+// ============================================
+
+export const sendWelcomeEmailSchema = z.object({
+  organizationName: z.string().max(200).optional(),
+  workspaceName: z.string().max(200).optional(),
+})
+
+export type SendWelcomeEmailInput = z.infer<typeof sendWelcomeEmailSchema>
+
+// ============================================
+// WEB VITALS SCHEMA
+// ============================================
+
+export const webVitalsSchema = z.object({
+  name: z.enum(["CLS", "FCP", "FID", "INP", "LCP", "TTFB"]),
+  value: z.number().min(0).max(60000),
+  rating: z.enum(["good", "needs-improvement", "poor"]),
+  id: z.string().min(1),
+  navigationType: z.string().default("navigate"),
+  url: z.string().max(2000),
+  userAgent: z.string().max(500).default(""),
+  timestamp: z.number(),
+})
+
+export type WebVitalsInput = z.infer<typeof webVitalsSchema>

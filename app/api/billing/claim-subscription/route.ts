@@ -6,6 +6,8 @@ import { getStripeConfig, PLAN_FEATURES } from "@/lib/integrations/stripe-config
 import { auditLogger } from "@/lib/audit/logger"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
+import { validateBody, ValidationError } from "@/lib/validation/middleware"
+import { claimSubscriptionSchema } from "@/lib/validation/schemas"
 
 /**
  * POST /api/billing/claim-subscription
@@ -46,16 +48,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const sessionId = body.sessionId as string | undefined
-
-    // Validate session ID format (Stripe session IDs start with cs_)
-    if (!sessionId || typeof sessionId !== "string" || !sessionId.startsWith("cs_") || sessionId.length > 200) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Invalid session ID" },
-        { status: 400 }
-      )
-    }
+    const { sessionId } = await validateBody(request, claimSubscriptionSchema)
 
     const org = auth.organization
     const isAdminOrOwner = auth.member.role === "admin" || auth.member.role === "owner"
@@ -225,6 +218,12 @@ export async function POST(request: NextRequest) {
       { success: true, data: { alreadyLinked: false } }
     )
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     logError(logger, "Claim subscription error", error)
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to claim subscription" },

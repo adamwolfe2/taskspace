@@ -100,6 +100,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         conversationId: conversation.id,
         queryLength: query.length,
       },
+      reservationId: creditCheck.reservationId,
     })
 
     // Update conversation with response

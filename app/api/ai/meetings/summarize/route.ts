@@ -121,6 +121,7 @@ export const POST = withAuth(async (request, auth) => {
       inputTokens: usage.inputTokens,
       outputTokens: usage.outputTokens,
       credits: AI_CREDIT_COSTS.meetingIntelligence,
+      reservationId: creditCheck.reservationId,
     })
 
     return NextResponse.json<ApiResponse<MeetingIntelligence>>({
