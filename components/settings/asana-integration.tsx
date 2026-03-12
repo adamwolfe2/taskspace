@@ -190,8 +190,10 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
 
       if (!response.ok) throw new Error("Failed to save settings")
 
-      const data = await response.json()
-      setCurrentOrganization(data.organization)
+      const json = await response.json()
+      if (json.data) {
+        setCurrentOrganization(json.data)
+      }
 
       toast({
         title: "Settings saved",
