@@ -433,6 +433,8 @@ export async function GET(
     scorecardFriday.setUTCDate(scorecardFriday.getUTCDate() + 1) // Thursday → Friday
     const scorecardWeekEndingStr = scorecardFriday.toISOString().split("T")[0]
 
+    // Use COALESCE to fall back to live aggregation from eod_reports
+    // when weekly_metric_entries hasn't been populated yet
     const { rows: scorecardRows } = await sql`
       SELECT
         tmm.id as metric_id,
@@ -440,7 +442,18 @@ export async function GET(
         COALESCE(om.department, 'General') as department,
         tmm.metric_name,
         tmm.weekly_goal,
-        wme.actual_value
+        COALESCE(
+          wme.actual_value,
+          (
+            SELECT COALESCE(SUM(er.metric_value_today), 0)
+            FROM eod_reports er
+            WHERE er.user_id = om.user_id
+              AND er.organization_id = om.organization_id
+              AND er.date >= ${startDateStr}
+              AND er.date <= ${endDateStr}
+              AND er.metric_value_today IS NOT NULL
+          )
+        ) as actual_value
       FROM team_member_metrics tmm
       JOIN organization_members om ON om.id = tmm.team_member_id
       LEFT JOIN users u ON u.id = om.user_id

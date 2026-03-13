@@ -369,6 +369,16 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
         workspaceId: existingReport.workspaceId,
       }).catch(err => logError(logger, "EOD update webhook failed", err))
 
+      // Update weekly metric aggregation on report updates too
+      const effectiveMetric = mergedMetricValue
+      if (effectiveMetric !== null && effectiveMetric !== undefined) {
+        const activeMetric = await getActiveMetricForUser(auth.user.id, auth.organization.id)
+        if (activeMetric) {
+          upsertWeeklyMetricEntry(auth.user.id, auth.organization.id, activeMetric.id)
+            .catch(err => logError(logger, "Failed to update weekly metric entry on report update", err, { userId: auth.user.id }))
+        }
+      }
+
       return NextResponse.json<ApiResponse<EODReport>>({
         success: true,
         data: updatedReport || existingReport,
