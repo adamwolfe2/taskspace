@@ -7,7 +7,6 @@ import {
   listWorkspaceUsers,
   findSlackUserByEmail,
 } from "@/lib/integrations/slack-bot"
-import { decryptToken } from "@/lib/crypto/token-encryption"
 import { logger, logError } from "@/lib/logger"
 import { z } from "zod"
 import type { ApiResponse } from "@/lib/types"

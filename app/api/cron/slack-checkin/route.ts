@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { slackDb } from "@/lib/db/slack"
-import { decryptToken } from "@/lib/crypto/token-encryption"
 import { startConversation } from "@/lib/slack/conversation-manager"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"

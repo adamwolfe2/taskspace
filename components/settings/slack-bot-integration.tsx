@@ -36,11 +36,10 @@ import { useToast } from "@/hooks/use-toast"
 import type { TeamMember } from "@/lib/types"
 
 interface SlackUserMapping {
-  aimsUserId: string
-  aimsUserName: string
-  aimsUserEmail: string
+  userId: string
+  userName: string
   slackUserId: string
-  slackUserName: string
+  slackEmail?: string
   enabled: boolean
 }
 
@@ -292,23 +291,20 @@ export function SlackBotIntegration({ teamMembers }: SlackBotIntegrationProps) {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest",
         },
-        body: JSON.stringify({ action: "relink_users" }),
+        body: JSON.stringify({ action: "link_users" }),
       })
 
       const json = await response.json()
       if (!response.ok) throw new Error(json.error || "Failed to re-link users")
 
       const result = json.data || json
-      if (result.userMappings) {
-        setUserMappings(result.userMappings)
-      }
 
       toast({
         title: "Users re-linked",
-        description: `${result.linkedUsersCount ?? 0} users matched by email.`,
+        description: `${result.linked ?? 0} new user${(result.linked ?? 0) !== 1 ? "s" : ""} matched by email.`,
       })
 
-      // Refresh status
+      // Refresh to get updated mappings
       fetchSlackStatus()
     } catch (error) {
       toast({
@@ -324,7 +320,7 @@ export function SlackBotIntegration({ teamMembers }: SlackBotIntegrationProps) {
   const toggleUserMapping = (aimsUserId: string, enabled: boolean) => {
     setUserMappings(prev =>
       prev.map(m =>
-        m.aimsUserId === aimsUserId ? { ...m, enabled } : m
+        m.userId === aimsUserId ? { ...m, enabled } : m
       )
     )
   }
@@ -478,7 +474,7 @@ export function SlackBotIntegration({ teamMembers }: SlackBotIntegrationProps) {
 
                   <div className="space-y-3">
                     {teamMembers.filter(m => m.status === "active").map((member) => {
-                      const mapping = userMappings.find(m => m.aimsUserId === member.id)
+                      const mapping = userMappings.find(m => m.userId === member.id)
 
                       return (
                         <div key={member.id} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
@@ -490,7 +486,7 @@ export function SlackBotIntegration({ teamMembers }: SlackBotIntegrationProps) {
                             {mapping ? (
                               <>
                                 <div className="text-right">
-                                  <p className="text-sm text-green-700 font-medium">{mapping.slackUserName}</p>
+                                  <p className="text-sm text-green-700 font-medium">{mapping.userName}</p>
                                   <p className="text-xs text-green-600">Linked</p>
                                 </div>
                                 <Switch
