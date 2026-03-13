@@ -17,6 +17,17 @@ export async function POST(request: NextRequest) {
     // Read raw body for signature verification
     const rawBody = await request.text()
 
+    // Parse the JSON body early so we can handle the challenge before signature check
+    const body = JSON.parse(rawBody)
+
+    // Handle URL verification challenge (used during Slack app setup).
+    // This must run before signature verification so the challenge succeeds
+    // even if SLACK_SIGNING_SECRET hasn't been configured yet.
+    if (body.type === "url_verification") {
+      logger.info("Slack URL verification challenge received")
+      return NextResponse.json({ challenge: body.challenge })
+    }
+
     // Check for retries - Slack sends X-Slack-Retry-Num on retries
     const retryNum = request.headers.get("x-slack-retry-num")
     const retryReason = request.headers.get("x-slack-retry-reason")
@@ -29,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    // Verify Slack signature
+    // Verify Slack signature for all non-challenge requests
     const signature = request.headers.get("x-slack-signature") || ""
     const timestamp = request.headers.get("x-slack-request-timestamp") || ""
 
@@ -41,15 +52,6 @@ export async function POST(request: NextRequest) {
         { error: "Invalid signature" },
         { status: 401 }
       )
-    }
-
-    // Parse the JSON body
-    const body = JSON.parse(rawBody)
-
-    // Handle URL verification challenge (used during Slack app setup)
-    if (body.type === "url_verification") {
-      logger.info("Slack URL verification challenge received")
-      return NextResponse.json({ challenge: body.challenge })
     }
 
     // Handle event callbacks
