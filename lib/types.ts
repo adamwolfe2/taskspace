@@ -41,6 +41,11 @@ export interface OrganizationSettings {
   }
   asanaIntegration?: AsanaIntegrationSettings
   publicEodToken?: string | null
+  slackBotIntegration?: {
+    enabled: boolean
+    contextSource: 'taskspace' | 'taskspace_and_asana'
+    reminderEnabled: boolean
+  }
 }
 
 export interface AsanaIntegrationSettings {
@@ -62,6 +67,50 @@ export interface AsanaUserMapping {
   asanaUserGid: string
   asanaUserEmail: string
   asanaUserName: string
+}
+
+// Slack Bot Integration
+export interface SlackInstallation {
+  id: string
+  organizationId: string
+  slackTeamId: string
+  slackTeamName: string
+  botToken: string
+  botUserId: string
+  installerUserId: string
+  enabled: boolean
+  installedAt: string
+  updatedAt: string
+}
+
+export interface SlackUserMapping {
+  id: string
+  organizationId: string
+  userId: string
+  slackUserId: string
+  slackEmail?: string
+  enabled: boolean
+  linkedAt: string
+}
+
+export type SlackConversationState = 'initiated' | 'awaiting_response' | 'parsing' | 'confirming' | 'submitted' | 'cancelled' | 'expired'
+
+export interface SlackConversation {
+  id: string
+  organizationId: string
+  userId: string
+  slackUserId: string
+  slackChannelId: string
+  workspaceId?: string
+  state: SlackConversationState
+  reportDate: string
+  collectedText?: string
+  parsedReport?: Record<string, unknown>
+  rocksContext?: unknown
+  messageTs?: string
+  createdAt: string
+  updatedAt: string
+  expiresAt: string
 }
 
 export interface SubscriptionInfo {

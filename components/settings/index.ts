@@ -6,6 +6,7 @@ export { WorkspaceDashboard } from "./workspace-dashboard"
 export { AsanaIntegration } from "./asana-integration"
 export { AsanaMemberConnection } from "./asana-member-connection"
 export { GoogleCalendarIntegration } from "./google-calendar-integration"
+export { SlackBotIntegration } from "./slack-bot-integration"
 export { NotificationPreferencesCard } from "./notification-preferences"
 export { PushNotificationsCard } from "./push-notifications"
 

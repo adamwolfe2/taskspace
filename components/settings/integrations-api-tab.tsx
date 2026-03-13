@@ -41,6 +41,7 @@ import { getErrorMessage } from "@/lib/utils"
 import type { TeamMember, ApiKey } from "@/lib/types"
 import { AsanaIntegration } from "./asana-integration"
 import { GoogleCalendarIntegration } from "./google-calendar-integration"
+import { SlackBotIntegration } from "./slack-bot-integration"
 import { WebhookManagement } from "./webhook-management"
 
 interface IntegrationStatus {
@@ -722,6 +723,9 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
 
       {/* Asana Integration */}
       <AsanaIntegration teamMembers={teamMembers} />
+
+      {/* Slack Bot Integration */}
+      <SlackBotIntegration teamMembers={teamMembers} />
 
       {/* Google Calendar Integration */}
       {currentUser && <GoogleCalendarIntegration userId={currentUser.id} />}
