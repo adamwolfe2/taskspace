@@ -35,6 +35,7 @@
  * ```
  */
 
+import crypto from "crypto"
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthContext, getUserAuthContext, isAdmin, isOwner, type AuthContext, type UserAuthContext } from "@/lib/auth/middleware"
 import { userHasWorkspaceAccess, getUserWorkspaceRole } from "@/lib/db/workspaces"
@@ -43,6 +44,15 @@ import { checkOrgRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { isTrialExpired as checkTrialExpired } from "@/lib/billing/trial"
+
+/**
+ * Add security and cache headers to API responses to prevent
+ * sensitive data from being cached by browsers or intermediaries.
+ */
+function addSecurityHeaders(response: NextResponse): void {
+  response.headers.set("Cache-Control", "private, no-cache, no-store, must-revalidate")
+  response.headers.set("Pragma", "no-cache")
+}
 
 /**
  * API paths that must remain accessible regardless of subscription status.
@@ -219,9 +229,10 @@ export function withAuth(
 
       const response = await handler(request, auth, context)
       const duration = Date.now() - startTime
-      if (duration > 2000) {
+      if (duration > 1000) {
         logger.warn({ path: request.nextUrl.pathname, method: request.method, duration }, "Slow API request")
       }
+      addSecurityHeaders(response)
       return response
     } catch (error) {
       return handleError(error)
@@ -320,7 +331,9 @@ export function withAdmin(
       const subResponse = checkSubscriptionOrRespond(request, auth)
       if (subResponse) return subResponse
 
-      return await handler(request, auth, context)
+      const response = await handler(request, auth, context)
+      addSecurityHeaders(response)
+      return response
     } catch (error) {
       return handleError(error)
     }
@@ -374,7 +387,9 @@ export function withOwner(
       const subResponse = checkSubscriptionOrRespond(request, auth)
       if (subResponse) return subResponse
 
-      return await handler(request, auth, context)
+      const response = await handler(request, auth, context)
+      addSecurityHeaders(response)
+      return response
     } catch (error) {
       return handleError(error)
     }
@@ -431,8 +446,12 @@ export function withDangerousAdmin(
             { status: 403 }
           )
         }
-        const headerSecret = request.headers.get("x-admin-secret")
-        if (headerSecret !== secret) {
+        const headerSecret = request.headers.get("x-admin-secret") || ""
+        // Use timing-safe comparison to prevent timing attacks
+        const secretsMatch =
+          headerSecret.length === secret.length &&
+          crypto.timingSafeEqual(Buffer.from(headerSecret), Buffer.from(secret))
+        if (!secretsMatch) {
           return NextResponse.json<ApiResponse<null>>(
             { success: false, error: "Forbidden: Invalid or missing admin secret" },
             { status: 403 }
@@ -440,7 +459,9 @@ export function withDangerousAdmin(
         }
       }
 
-      return await handler(request, auth, context)
+      const response = await handler(request, auth, context)
+      addSecurityHeaders(response)
+      return response
     } catch (error) {
       return handleError(error)
     }
@@ -487,7 +508,9 @@ export function withSuperAdmin(
         )
       }
 
-      return await handler(request, auth, context)
+      const response = await handler(request, auth, context)
+      addSecurityHeaders(response)
+      return response
     } catch (error) {
       return handleError(error)
     }
@@ -608,7 +631,9 @@ export function withWorkspaceAccess(
       const subResponse = checkSubscriptionOrRespond(request, auth)
       if (subResponse) return subResponse
 
-      return await handler(request, auth, workspaceId)
+      const response = await handler(request, auth, workspaceId)
+      addSecurityHeaders(response)
+      return response
     } catch (error) {
       return handleError(error)
     }
@@ -694,7 +719,9 @@ export function withWorkspaceParam(
       const subResponse = checkSubscriptionOrRespond(request, auth)
       if (subResponse) return subResponse
 
-      return await handler(request, auth, workspaceId, context)
+      const response = await handler(request, auth, workspaceId, context)
+      addSecurityHeaders(response)
+      return response
     } catch (error) {
       return handleError(error)
     }

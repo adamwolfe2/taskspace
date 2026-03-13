@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { sendDailyEODLinkEmail, isEmailConfigured } from "@/lib/integrations/email"
 import type { ApiResponse, TeamMember, Organization } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { verifyCronSecret } from "@/lib/api/cron-auth"
 import * as Sentry from "@sentry/nextjs"
 
 // This endpoint is designed to be called by Vercel Cron
@@ -14,24 +15,6 @@ import * as Sentry from "@sentry/nextjs"
 //     { "path": "/api/cron/daily-eod-email", "schedule": "0 * * * *" }
 //   ]
 // }
-
-// Verify cron secret to prevent unauthorized calls
-function verifyCronSecret(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET
-  const isProduction = process.env.NODE_ENV === "production"
-
-  if (!cronSecret) {
-    if (isProduction) {
-      logger.error("CRON_SECRET not configured in production - denying request")
-      return false
-    }
-    logger.info("CRON_SECRET not configured, allowing request in development")
-    return true
-  }
-
-  const authHeader = request.headers.get("authorization")
-  return authHeader === `Bearer ${cronSecret}`
-}
 
 // Default sending days: Mon–Fri (1–5). Used when org has not configured eodEmailDays.
 const DEFAULT_EMAIL_DAYS = [1, 2, 3, 4, 5]

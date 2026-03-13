@@ -281,9 +281,9 @@ function handlePostgresError(error: { code: string; message: string }): ApiError
     case "22P02": // invalid_text_representation
       return Errors.invalidInput("field", "Invalid data format")
     case "42P01": // undefined_table
-      return Errors.database("Database table not found")
+      return Errors.database()
     case "42601": // syntax_error
-      return Errors.database("Database query error")
+      return Errors.database()
     case "40001": // serialization_failure
       return Errors.database("Transaction conflict, please retry")
     case "08006": // connection_failure

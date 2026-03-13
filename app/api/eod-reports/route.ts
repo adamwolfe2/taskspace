@@ -449,17 +449,21 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       if (asanaClient.isConfigured()) {
         const asanaTasks = userTasks.filter(t => t.asanaGid)
 
-        await Promise.all(
-          asanaTasks.map(async (task) => {
-            try {
-              await asanaClient.completeTask(task.asanaGid!)
-              logger.info({ taskId: task.id, asanaGid: task.asanaGid }, "Synced task completion to Asana")
-            } catch (asanaErr) {
-              // Log but don't fail - Asana sync is best-effort
-              logError(logger, "Failed to sync task completion to Asana", asanaErr, { taskId: task.id, asanaGid: task.asanaGid })
-            }
-          })
-        )
+          // Process in batches of 5 to avoid Asana rate limits
+        const BATCH_SIZE = 5
+        for (let i = 0; i < asanaTasks.length; i += BATCH_SIZE) {
+          const batch = asanaTasks.slice(i, i + BATCH_SIZE)
+          await Promise.all(
+            batch.map(async (task) => {
+              try {
+                await asanaClient.completeTask(task.asanaGid!)
+                logger.info({ taskId: task.id, asanaGid: task.asanaGid }, "Synced task completion to Asana")
+              } catch (asanaErr) {
+                logError(logger, "Failed to sync task completion to Asana", asanaErr, { taskId: task.id, asanaGid: task.asanaGid })
+              }
+            })
+          )
+        }
       }
     }
 

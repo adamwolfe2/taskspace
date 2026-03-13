@@ -12,19 +12,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import { logger } from "@/lib/logger"
-
-function verifyCronSecret(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) {
-    if (process.env.NODE_ENV === "production") {
-      logger.error("CRON_SECRET not configured — denying cleanup cron request")
-      return false
-    }
-    logger.warn("CRON_SECRET not configured — allowing cleanup cron in development mode")
-    return true
-  }
-  return request.headers.get("authorization") === `Bearer ${cronSecret}`
-}
+import { verifyCronSecret } from "@/lib/api/cron-auth"
 
 export async function GET(request: NextRequest) {
   if (!verifyCronSecret(request)) {

@@ -9,6 +9,7 @@ import type { ApiResponse, DailyDigest, TeamMember, Organization } from "@/lib/t
 import { Resend } from "resend"
 import { logger, logError } from "@/lib/logger"
 import { CONFIG } from "@/lib/config"
+import { verifyCronSecret } from "@/lib/api/cron-auth"
 import * as Sentry from "@sentry/nextjs"
 
 // Module-level singleton — instantiated once per cold start, not per request
@@ -22,24 +23,6 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 //     { "path": "/api/cron/daily-digest", "schedule": "0 * * * 1-5" }
 //   ]
 // }
-
-// Verify cron secret to prevent unauthorized calls
-function verifyCronSecret(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET
-  const isProduction = process.env.NODE_ENV === "production"
-
-  if (!cronSecret) {
-    if (isProduction) {
-      logger.error("CRON_SECRET not configured in production - denying request")
-      return false
-    }
-    logger.info("CRON_SECRET not configured, allowing request in development")
-    return true
-  }
-
-  const authHeader = request.headers.get("authorization")
-  return authHeader === `Bearer ${cronSecret}`
-}
 
 /**
  * Check if it's 6 PM (18:00) in the organization's timezone

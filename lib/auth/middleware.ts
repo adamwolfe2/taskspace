@@ -128,7 +128,9 @@ async function getSessionAuthContext(request: NextRequest): Promise<AuthContext 
         "Super admin bypass: marking org as internal"
       )
       // Persist in background — don't block the request
-      db.organizations.update(organization.id, { isInternal: true }).catch(() => {})
+      db.organizations.update(organization.id, { isInternal: true }).catch((err) => {
+        logError(logger, "Failed to mark org as internal for super admin", err)
+      })
       organization = { ...organization, isInternal: true }
     }
 

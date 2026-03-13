@@ -6,6 +6,7 @@ import { startConversation } from "@/lib/slack/conversation-manager"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { CONFIG } from "@/lib/config"
+import { verifyCronSecret } from "@/lib/api/cron-auth"
 import * as Sentry from "@sentry/nextjs"
 
 // This endpoint is designed to be called by Vercel Cron
@@ -16,24 +17,6 @@ import * as Sentry from "@sentry/nextjs"
 //     { "path": "/api/cron/slack-checkin", "schedule": "0 * * * *" }
 //   ]
 // }
-
-// Verify cron secret to prevent unauthorized calls
-function verifyCronSecret(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET
-  const isProduction = process.env.NODE_ENV === "production"
-
-  if (!cronSecret) {
-    if (isProduction) {
-      logger.error("CRON_SECRET not configured in production - denying request")
-      return false
-    }
-    logger.info("CRON_SECRET not configured, allowing request in development")
-    return true
-  }
-
-  const authHeader = request.headers.get("authorization")
-  return authHeader === `Bearer ${cronSecret}`
-}
 
 /**
  * Check if the current time in the given timezone matches the reminder hour.

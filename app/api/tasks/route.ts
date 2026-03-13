@@ -87,7 +87,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       })
     }
 
-    // Legacy non-paginated path (backward compatible)
+    // Legacy non-paginated path (backward compatible) — capped at 500 results
+    const MAX_LEGACY_RESULTS = 500
     let tasks: AssignedTask[]
 
     if (isAdmin(auth)) {
@@ -104,6 +105,15 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
     // Filter by status if specified
     if (status) {
       tasks = tasks.filter(t => t.status === status)
+    }
+
+    // Cap results to prevent memory issues at scale
+    if (tasks.length > MAX_LEGACY_RESULTS) {
+      logger.warn(
+        { orgId: auth.organization.id, workspaceId, totalTasks: tasks.length },
+        "Legacy task endpoint returning capped results — client should use pagination"
+      )
+      tasks = tasks.slice(0, MAX_LEGACY_RESULTS)
     }
 
     return NextResponse.json<ApiResponse<AssignedTask[]>>({

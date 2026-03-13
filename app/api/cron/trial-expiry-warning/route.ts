@@ -3,27 +3,11 @@ import { sql } from "@/lib/db/sql"
 import { isEmailConfigured, sendBillingAlertEmail } from "@/lib/integrations/email"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { verifyCronSecret } from "@/lib/api/cron-auth"
 
 // Runs daily at 10 AM UTC — configured in vercel.json
 // Sends trial expiry warning to free-plan orgs expiring within 7 days
 // Skips orgs with an active Stripe subscription (they get the Stripe trial_will_end webhook)
-
-function verifyCronSecret(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET
-  const isProduction = process.env.NODE_ENV === "production"
-
-  if (!cronSecret) {
-    if (isProduction) {
-      logger.error("CRON_SECRET not configured in production - denying request")
-      return false
-    }
-    logger.info("CRON_SECRET not configured, allowing request in development")
-    return true
-  }
-
-  const authHeader = request.headers.get("authorization")
-  return authHeader === `Bearer ${cronSecret}`
-}
 
 export async function GET(request: NextRequest) {
   try {

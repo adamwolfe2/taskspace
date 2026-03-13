@@ -3,25 +3,10 @@ import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { verifyCronSecret } from "@/lib/api/cron-auth"
 
 // Vercel Cron: runs nightly at midnight UTC
 // Configure in vercel.json: { "path": "/api/cron/portfolio-snapshot", "schedule": "0 0 * * *" }
-
-function verifyCronSecret(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET
-  const isProduction = process.env.NODE_ENV === "production"
-
-  if (!cronSecret) {
-    if (isProduction) {
-      logger.error("CRON_SECRET not configured in production - denying request")
-      return false
-    }
-    return true
-  }
-
-  const authHeader = request.headers.get("authorization")
-  return authHeader === `Bearer ${cronSecret}`
-}
 
 interface OrgSnapshot {
   orgId: string

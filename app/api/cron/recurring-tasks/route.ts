@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@vercel/postgres"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
+import { verifyCronSecret } from "@/lib/api/cron-auth"
 
 /**
  * Recurring Tasks Cron Job
@@ -12,23 +13,6 @@ import { logger, logError } from "@/lib/logger"
  * Configured in vercel.json:
  * { "path": "/api/cron/recurring-tasks", "schedule": "0 6 * * *" }
  */
-
-function verifyCronSecret(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET
-  const isProduction = process.env.NODE_ENV === "production"
-
-  if (!cronSecret) {
-    if (isProduction) {
-      logger.error("CRON_SECRET not configured in production - denying request")
-      return false
-    }
-    logger.info("CRON_SECRET not configured, allowing request in development")
-    return true
-  }
-
-  const authHeader = request.headers.get("authorization")
-  return authHeader === `Bearer ${cronSecret}`
-}
 
 function computeNextDueDate(currentDueDate: string, recurrence: { type: string; interval: number }): string {
   const date = new Date(currentDueDate)

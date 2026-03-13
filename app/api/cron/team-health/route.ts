@@ -6,16 +6,7 @@ import { logger, logError } from "@/lib/logger"
 import { CONFIG } from "@/lib/config"
 import * as Sentry from "@sentry/nextjs"
 import { sql } from "@/lib/db/sql"
-
-function verifyCronSecret(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET
-  const isProduction = process.env.NODE_ENV === "production"
-  if (!cronSecret) {
-    if (isProduction) return false
-    return true
-  }
-  return request.headers.get("authorization") === `Bearer ${cronSecret}`
-}
+import { verifyCronSecret } from "@/lib/api/cron-auth"
 
 function isHealthCheckTime(org: Organization): boolean {
   const timezone = org.settings?.timezone || CONFIG.organization.defaultTimezone

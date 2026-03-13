@@ -20,9 +20,10 @@ function getLocalPool(): Pool {
     localPool = new Pool({
       connectionString: process.env.POSTGRES_URL,
       ssl: false,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      max: 50,
+      idleTimeoutMillis: 60000,
+      connectionTimeoutMillis: 15000,
+      statement_timeout: 30000, // Kill queries running longer than 30s
     })
   }
   return localPool
