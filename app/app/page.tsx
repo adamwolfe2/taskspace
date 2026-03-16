@@ -340,6 +340,12 @@ function AppContent() {
 
   useEffect(() => {
     if (!isAuthenticated || !currentOrganization || !isWorkspaceAdmin || !currentWorkspace) return
+    // Only show the use-case selector if the workspace has never had features configured.
+    // Check workspace settings (persisted in DB) instead of localStorage to avoid
+    // re-prompting on every new browser, device, or account switch.
+    const wsSettings = currentWorkspace.settings as Record<string, unknown> | undefined
+    const hasFeatures = wsSettings?.features != null
+    if (hasFeatures) return
     const key = `ts_usecase_${currentOrganization.id}`
     if (!localStorage.getItem(key)) {
       setShowUseCaseSelector(true)
