@@ -413,7 +413,7 @@ function S6() {
             ))}
           </div>
         </div>
-        <DemoRocks />
+        <DemoRocks compact />
       </div>
     </Slide>
   )
@@ -481,11 +481,11 @@ function S8() {
 function S9() {
   return (
     <Slide>
-      <div className="min-h-[70vh] flex flex-col justify-center">
+      <div className="flex flex-col justify-center">
         <Label>The choice in front of you</Label>
         <h2
-          className="font-serif font-normal text-black leading-[1.04] mb-12"
-          style={{ fontSize: "clamp(36px, 5vw, 68px)" }}
+          className="font-serif font-normal text-black leading-[1.04] mb-10"
+          style={{ fontSize: "clamp(32px, 4.5vw, 58px)" }}
         >
           Stop managing.<br />Start scaling.
         </h2>
@@ -493,9 +493,9 @@ function S9() {
         {/* Two paths */}
         <div className="grid grid-cols-1 sm:grid-cols-2 border border-black mb-10">
           {/* Path A — the hard way */}
-          <div className="p-8 border-b sm:border-b-0 sm:border-r border-black">
-            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/35 mb-5">Without Taskspace</div>
-            <div className="space-y-3">
+          <div className="p-7 border-b sm:border-b-0 sm:border-r border-black">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/35 mb-4">Without Taskspace</div>
+            <div className="space-y-2.5">
               {[
                 "Juggling spreadsheets, Slack threads, and Notion docs forever",
                 "Playing phone tag with team leads. Every. Week.",
@@ -505,16 +505,16 @@ function S9() {
               ].map((item) => (
                 <div key={item} className="flex items-start gap-3">
                   <span className="font-mono text-[11px] text-black/25 mt-0.5 flex-shrink-0">✕</span>
-                  <span className="font-mono text-[13px] text-black/55 leading-relaxed">{item}</span>
+                  <span className="font-mono text-[12px] text-black/55 leading-relaxed">{item}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Path B — Taskspace */}
-          <div className="p-8 bg-black">
-            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40 mb-5">With Taskspace</div>
-            <div className="space-y-3">
+          <div className="p-7 bg-black">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40 mb-4">With Taskspace</div>
+            <div className="space-y-2.5">
               {[
                 "Every morning: a full briefing on every team, every company",
                 "15+ hours per week back. Status meetings: gone.",
@@ -524,54 +524,59 @@ function S9() {
               ].map((item) => (
                 <div key={item} className="flex items-start gap-3">
                   <span className="font-mono text-[11px] text-white/50 mt-0.5 flex-shrink-0">→</span>
-                  <span className="font-mono text-[13px] text-white/85 leading-relaxed">{item}</span>
+                  <span className="font-mono text-[12px] text-white/85 leading-relaxed">{item}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8">
+        {/* CTA + Pricing — side by side */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-start">
+          {/* Left: CTA + quote */}
           <div>
-            <div className="border border-black px-8 py-4 bg-black inline-block mb-2 transition-transform duration-200 hover:scale-[1.02] hover:shadow-lg cursor-pointer">
+            <div className="border border-black px-8 py-4 bg-black inline-block mb-3 transition-transform duration-200 hover:scale-[1.02] hover:shadow-lg cursor-pointer">
               <span className="font-mono text-[11px] text-white uppercase tracking-widest">Start Free — No Credit Card</span>
             </div>
-            <p className="font-mono text-[10px] text-black/30 uppercase tracking-widest">
+            <p className="font-mono text-[10px] text-black/30 uppercase tracking-widest mb-6">
               trytaskspace.com · Live in under two minutes
             </p>
-          </div>
-          <div className="hidden sm:block border-l-[3px] border-black pl-6">
-            <div className="font-serif font-normal text-black leading-snug mb-1" style={{ fontSize: "clamp(16px, 1.8vw, 20px)", maxWidth: "310px" }}>
-              "Let's get your most chaotic company set up right now — before this call ends."
+            <div className="border-l-[3px] border-black pl-5">
+              <div className="font-serif font-normal text-black leading-snug mb-1" style={{ fontSize: "clamp(14px, 1.5vw, 18px)", maxWidth: "310px" }}>
+                "Let's get your most chaotic company set up right now — before this call ends."
+              </div>
+              <div className="font-mono text-[10px] text-black/35 uppercase tracking-widest">— Your Taskspace onboarding call</div>
             </div>
-            <div className="font-mono text-[10px] text-black/35 uppercase tracking-widest">— Your Taskspace onboarding call</div>
           </div>
-        </div>
 
-        {/* Pricing strip */}
-        <div className="grid grid-cols-3 border border-black mt-8 max-w-lg">
-          {[
-            { plan: "Free",     price: "$0",  note: "Up to 3 users · 1 workspace",  featured: false },
-            { plan: "Team",     price: "$9",  note: "Per user/mo · 3 workspaces",   featured: true  },
-            { plan: "Business", price: "$19", note: "Per user/mo · Unlimited",      featured: false },
-          ].map((tier, i) => (
-            <div
-              key={tier.plan}
-              className="py-5 px-4 relative"
-              style={{
-                borderRight:     i < 2 ? "1px solid black" : undefined,
-                backgroundColor: tier.featured ? "rgba(0,0,0,0.05)" : "transparent",
-              }}
-            >
-              {tier.featured && (
-                <div className="font-mono text-[8px] uppercase tracking-widest text-black/50 mb-1">★ Most Popular</div>
-              )}
-              <div className="font-mono text-[9px] uppercase tracking-widest mb-1 text-black/35">{tier.plan}</div>
-              <div className="font-serif font-normal text-black mb-0.5" style={{ fontSize: "clamp(18px, 2vw, 26px)" }}>{tier.price}</div>
-              <div className="font-mono text-[9px] text-black/30 leading-relaxed">{tier.note}</div>
-            </div>
-          ))}
+          {/* Right: Pricing strip — stacked vertically */}
+          <div className="border border-black">
+            {[
+              { plan: "Free",     price: "$0",  note: "Up to 3 users · 1 workspace",  featured: false },
+              { plan: "Team",     price: "$9",  note: "Per user/mo · 3 workspaces",   featured: true  },
+              { plan: "Business", price: "$19", note: "Per user/mo · Unlimited",      featured: false },
+            ].map((tier, i) => (
+              <div
+                key={tier.plan}
+                className="flex items-center justify-between py-4 px-5"
+                style={{
+                  borderBottom: i < 2 ? "1px solid black" : undefined,
+                  backgroundColor: tier.featured ? "rgba(0,0,0,0.05)" : "transparent",
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  {tier.featured && (
+                    <span className="font-mono text-[8px] uppercase tracking-widest text-black/50">★</span>
+                  )}
+                  <div>
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-black/40">{tier.plan}</div>
+                    <div className="font-mono text-[9px] text-black/30 leading-relaxed">{tier.note}</div>
+                  </div>
+                </div>
+                <div className="font-serif font-normal text-black" style={{ fontSize: "clamp(18px, 2vw, 26px)" }}>{tier.price}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </Slide>

@@ -86,10 +86,10 @@ export const PATCH = withAuth(async (request, auth, context) => {
         title: existing.title,
         description: existing.description ?? undefined,
         assigneeId: auth.user.id,
-        assigneeEmail: auth.user.email,
-        assigneeName: auth.member.name,
+        assigneeEmail: undefined,
+        assigneeName: auth.member.name || "Unknown",
         assignedById: auth.user.id,
-        assignedByName: auth.member.name,
+        assignedByName: auth.member.name || "Unknown",
         type: "assigned",
         rockId: null,
         rockTitle: null,
@@ -97,6 +97,9 @@ export const PATCH = withAuth(async (request, auth, context) => {
         dueDate: null,
         status: "pending",
         source: "task_pool",
+        completedAt: undefined,
+        addedToEOD: false,
+        eodReportId: undefined,
         createdAt: now,
         updatedAt: now,
       }
@@ -112,7 +115,10 @@ export const PATCH = withAuth(async (request, auth, context) => {
         } catch (unclaimErr) {
           logger.error({ unclaimErr, itemId }, "Unclaim compensation also failed — task stuck until tomorrow")
         }
-        logger.error({ err, itemId }, "Failed to create assigned task for pool claim")
+        logger.error(
+          { err, itemId, userId: auth.user.id, orgId: auth.organization.id, workspaceId: existing.workspaceId },
+          "Failed to create assigned task for pool claim"
+        )
         return NextResponse.json<ApiResponse<null>>(
           { success: false, error: "Failed to transfer task" },
           { status: 500 }

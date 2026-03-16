@@ -102,7 +102,7 @@ const statusConfigs = {
   },
 }
 
-export function DemoRocks() {
+export function DemoRocks({ compact = false }: { compact?: boolean }) {
   const [rocks, setRocks] = useState(DEMO_ROCKS)
   const [hoveredRock, setHoveredRock] = useState<string | null>(null)
 
@@ -110,6 +110,74 @@ export function DemoRocks() {
     setRocks(rocks.map(rock =>
       rock.id === rockId ? { ...rock, progress: newProgress } : rock
     ))
+  }
+
+  if (compact) {
+    return (
+      <div className="w-full space-y-3">
+        {/* Compact stat row */}
+        <div className="flex items-center gap-4 mb-1">
+          <div className="flex items-center gap-1.5">
+            <Target className="h-3.5 w-3.5 text-gray-500" />
+            <span className="font-mono text-[11px] text-black/50">3 Rocks</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <TrendingUp className="h-3.5 w-3.5 text-gray-500" />
+            <span className="font-mono text-[11px] text-black/50">47% Avg</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <CheckCircle2 className="h-3.5 w-3.5 text-gray-500" />
+            <span className="font-mono text-[11px] text-black/50">6/12 Done</span>
+          </div>
+        </div>
+
+        {/* Compact rock cards */}
+        {rocks.map((rock, index) => {
+          const statusConfig = statusConfigs[rock.status]
+          const StatusIcon = statusConfig.icon
+          const completedMilestones = rock.milestones.filter(m => m.completed).length
+
+          return (
+            <motion.div
+              key={rock.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.08 }}
+              className="border border-slate-200 bg-white p-3.5"
+            >
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <StatusIcon className={`h-3.5 w-3.5 ${statusConfig.iconColor} flex-shrink-0`} />
+                  <span className="font-mono text-[11px] font-medium text-slate-900 truncate">{rock.title}</span>
+                </div>
+                <span className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 ${statusConfig.bgColor} ${statusConfig.textColor} flex-shrink-0`}>
+                  {statusConfig.label}
+                </span>
+              </div>
+
+              {/* Progress */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 bg-slate-100 overflow-hidden">
+                  <motion.div
+                    className={`h-full ${statusConfig.progressColor}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${rock.progress}%` }}
+                    transition={{ duration: 0.6, delay: index * 0.08 }}
+                  />
+                </div>
+                <span className="font-mono text-[10px] font-semibold text-slate-700 w-8 text-right">{rock.progress}%</span>
+              </div>
+
+              {/* Milestone count */}
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                <span className="font-mono text-[9px] text-slate-400">{completedMilestones}/{rock.milestones.length} milestones</span>
+                <span className="font-mono text-[9px] text-slate-400">Due {rock.dueDate}</span>
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+    )
   }
 
   return (

@@ -83,8 +83,9 @@ export function useTaskPool() {
         const result = await res.json()
         if (!result.success) {
           mutate(snapshot, { revalidate: false })
+          const isConflict = res.status === 409
           toast({
-            title: "Already claimed",
+            title: isConflict ? "Already claimed" : "Claim failed",
             description: result.error || "This task was just claimed by someone else",
             variant: "destructive",
           })
