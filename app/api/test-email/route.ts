@@ -67,7 +67,7 @@ export const POST = withAdmin(async (request, auth) => {
       }),
     })
 
-    const data = await response.json()
+    const data = await response.json().catch(() => ({ message: response.statusText }))
 
     if (!response.ok) {
       return NextResponse.json({

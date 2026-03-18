@@ -67,7 +67,7 @@ ${description}
     })
 
     if (!githubResponse.ok) {
-      const errorData = await githubResponse.json()
+      const errorData = await githubResponse.json().catch(() => ({ message: githubResponse.statusText }))
       logger.error({ error: errorData }, "GitHub API error creating issue")
       throw new Error("Failed to create GitHub issue")
     }
