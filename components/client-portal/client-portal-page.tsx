@@ -265,7 +265,7 @@ export function ClientPortalPage({
         {/* Date navigation + stats */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={goBack} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={goBack} className="h-8 w-8" aria-label="Previous day">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="text-center min-w-[180px]">
@@ -282,6 +282,7 @@ export function ClientPortalPage({
               onClick={goForward}
               disabled={isToday}
               className="h-8 w-8"
+              aria-label="Next day"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -301,6 +302,7 @@ export function ClientPortalPage({
               onClick={() => fetchReports(date, true)}
               disabled={isRefreshing}
               className="h-8 w-8"
+              aria-label="Refresh reports"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
             </Button>
