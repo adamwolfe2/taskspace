@@ -300,6 +300,7 @@ export function FileTray({
                   className="h-8 w-8 p-0 text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => handleRemove(file.id)}
                   disabled={disabled}
+                  aria-label="Remove file"
                 >
                   <X className="h-4 w-4" />
                 </Button>

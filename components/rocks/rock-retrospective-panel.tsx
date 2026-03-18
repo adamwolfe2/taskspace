@@ -4,9 +4,9 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+
 import { Separator } from "@/components/ui/separator"
-import { Sparkles, Loader2, TrendingUp, Users, Target, AlertCircle } from "lucide-react"
+import { Sparkles, Loader2, TrendingUp, Users, Target } from "lucide-react"
 import type { RockRetrospective } from "@/lib/types"
 
 interface RockRetrospectivePanelProps {

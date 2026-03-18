@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
-import { validatePortalToken } from "@/lib/auth/client-portal-auth"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import type { RouteContext } from "@/lib/api/middleware"

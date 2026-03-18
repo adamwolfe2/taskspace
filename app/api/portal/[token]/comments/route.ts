@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db/sql"
 import { db } from "@/lib/db"
-import { generateId } from "@/lib/auth/password"
+
 import { checkApiRateLimit, getClientIP } from "@/lib/auth/rate-limit"
 import type { ApiResponse, EodComment } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"

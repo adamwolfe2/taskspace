@@ -11,7 +11,6 @@ import {
   ListChecks,
   CheckCircle2,
   Circle,
-  ArrowRight,
   Calendar,
   User,
   Loader2,

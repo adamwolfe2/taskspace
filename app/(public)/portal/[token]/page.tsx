@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
+
 import { Loader2, FileText, Target, CheckSquare, MessageSquare, Send } from "lucide-react"
 
 interface PortalData {

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { UserInitials } from "@/components/shared/user-initials"
 import { getRelativeDate, getTodayInTimezone, getDaysUntil } from "@/lib/utils/date-utils"
 import { calculateUserStats, calculateAccountabilityScore, isRockBehindSchedule } from "@/lib/utils/stats-calculator"
-import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Copy, Check, FileText, Bell, UserCheck, Clock, Smile, Meh, Frown, CheckCircle2 } from "lucide-react"
+import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Check, FileText, Bell, UserCheck, Clock, Smile, Meh, Frown, CheckCircle2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal"
@@ -1021,6 +1021,7 @@ export function AdminPage({
                           size="sm"
                           className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600"
                           title="Reassign task"
+                          aria-label="Reassign task"
                           onClick={() => setReassigningTaskId(reassigningTaskId === task.id ? null : task.id)}
                         >
                           <UserCheck className="h-3.5 w-3.5" />

@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { getAllPosts } from "@/lib/blog"
-import { Calendar, Clock, Tag, ArrowRight } from "lucide-react"
+import { Calendar, Clock, ArrowRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 export const metadata: Metadata = {

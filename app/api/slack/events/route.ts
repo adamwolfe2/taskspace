@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { slackDb } from "@/lib/db/slack"
 import { verifySlackRequest } from "@/lib/integrations/slack-bot"
-import { decryptToken } from "@/lib/crypto/token-encryption"
+
 import { handleUserMessage } from "@/lib/slack/conversation-manager"
 import { logger, logError } from "@/lib/logger"
 

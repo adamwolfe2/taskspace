@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { slackDb } from "@/lib/db/slack"
 import { exchangeOAuthCode, listWorkspaceUsers } from "@/lib/integrations/slack-bot"
-import { encryptToken } from "@/lib/crypto/token-encryption"
+
 import { logger, logError } from "@/lib/logger"
 
 /**

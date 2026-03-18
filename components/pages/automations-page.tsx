@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -9,11 +9,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
+
 import { FeatureGate } from "@/components/shared/feature-gate"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
-import { Plus, Zap, Loader2, Play, Pause, Trash2, History, ArrowRight } from "lucide-react"
+import { Plus, Zap, Loader2, Trash2, History, ArrowRight } from "lucide-react"
 import type { Automation, AutomationLog, AutomationTriggerType, AutomationAction } from "@/lib/types"
 
 const TRIGGER_LABELS: Record<AutomationTriggerType, string> = {

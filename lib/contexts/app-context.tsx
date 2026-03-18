@@ -31,10 +31,6 @@ interface AppContextType {
   navigateWithFilter: (page: PageType, filter: PageFilter) => void
   clearPageFilter: () => void
 
-  // Theme
-  darkMode: boolean
-  setDarkMode: (dark: boolean) => void
-
   // Auth actions
   login: (email: string, password: string) => Promise<{ pendingTwoFactor?: true; userId?: string } | void>
   verify2FA: (userId: string, code: string) => Promise<void>
@@ -102,7 +98,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [currentPage, setCurrentPage] = useState<PageType>("login")
   const [pageFilter, setPageFilter] = useState<PageFilter | null>(null)
-  const [darkMode, setDarkMode] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [emailVerified, setEmailVerified] = useState(true) // Default true to avoid flash
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
@@ -352,23 +347,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [currentUser, isDemoMode])
 
-  // Persist dark mode preference
-  useEffect(() => {
-    const savedDarkMode = localStorage.getItem("darkMode")
-    if (savedDarkMode) {
-      setDarkMode(savedDarkMode === "true")
-    }
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem("darkMode", String(darkMode))
-    if (darkMode) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }, [darkMode])
-
   return (
     <AppContext.Provider
       value={{
@@ -384,8 +362,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         pageFilter,
         navigateWithFilter,
         clearPageFilter,
-        darkMode,
-        setDarkMode,
         login,
         verify2FA,
         register,
@@ -420,8 +396,6 @@ const defaultAppContext: AppContextType = {
   pageFilter: null,
   navigateWithFilter: noop,
   clearPageFilter: noop,
-  darkMode: false,
-  setDarkMode: noop,
   login: noopAsync,
   verify2FA: noopAsync,
   register: noopAsync,

@@ -9,7 +9,7 @@ import {
 } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { acceptInvitationSchema } from "@/lib/validation/schemas"
-import { addWorkspaceMember, getDefaultWorkspace, getWorkspacesByOrg } from "@/lib/db/workspaces"
+import { addWorkspaceMember, getWorkspacesByOrg } from "@/lib/db/workspaces"
 import type { OrganizationMember, Session, ApiResponse, AuthResponse, User } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { withTransaction } from "@/lib/db/transactions"

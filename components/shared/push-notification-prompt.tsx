@@ -85,7 +85,7 @@ export function PushNotificationPrompt() {
               <Button size="sm" variant="ghost" onClick={handleDismiss}>Not now</Button>
             </div>
           </div>
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleDismiss}>
+          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleDismiss} aria-label="Dismiss notification prompt">
             <X className="h-3 w-3" />
           </Button>
         </div>

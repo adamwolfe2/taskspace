@@ -95,6 +95,7 @@ function DigestCard({ digest, onDelete }: { digest: CompanyDigest; onDelete: () 
               size="sm"
               className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
               onClick={() => setExpanded(v => !v)}
+              aria-label={expanded ? "Collapse digest" : "Expand digest"}
             >
               {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
@@ -103,6 +104,7 @@ function DigestCard({ digest, onDelete }: { digest: CompanyDigest; onDelete: () 
               size="sm"
               className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
               onClick={onDelete}
+              aria-label="Delete digest"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

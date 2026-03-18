@@ -24,8 +24,6 @@ import {
   Plus,
   Search,
   LogOut,
-  Moon,
-  Sun,
   Zap,
   Loader2,
   User,
@@ -58,7 +56,7 @@ export function CommandPalette() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { setCurrentPage, currentUser, logout, darkMode, setDarkMode } = useApp()
+  const { setCurrentPage, currentUser, logout } = useApp()
 
   // Listen for keyboard shortcut (Cmd+K or Ctrl+K)
   useEffect(() => {
@@ -118,11 +116,6 @@ export function CommandPalette() {
     setOpen(false)
     await logout()
   }, [logout])
-
-  const toggleDarkMode = useCallback(() => {
-    setDarkMode(!darkMode)
-    setOpen(false)
-  }, [darkMode, setDarkMode])
 
   const handleQuickCreate = useCallback(() => {
     setOpen(false)
@@ -272,15 +265,6 @@ export function CommandPalette() {
         setTimeout(() => setShowQuickTask(true), 100)
       },
       keywords: ["new", "create", "add", "todo", "task"],
-      group: "Actions",
-    },
-    {
-      id: "toggle-dark",
-      name: darkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-      description: "Toggle dark/light theme",
-      icon: darkMode ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />,
-      action: toggleDarkMode,
-      keywords: ["theme", "appearance", "color"],
       group: "Actions",
     },
     {

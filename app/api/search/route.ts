@@ -1,8 +1,7 @@
 import { NextRequest } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
-import { successResponse, Errors } from "@/lib/api/errors"
-import type { ApiResponse } from "@/lib/types"
+import { successResponse } from "@/lib/api/errors"
 
 interface SearchResult {
   id: string

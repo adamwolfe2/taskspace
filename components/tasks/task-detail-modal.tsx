@@ -371,6 +371,7 @@ export function TaskDetailModal({
                   size="icon"
                   className="h-7 w-7 shrink-0"
                   title="Copy link to task"
+                  aria-label="Copy link to task"
                   onClick={() => {
                     const url = `${window.location.origin}/app?page=tasks&taskId=${task.id}`
                     navigator.clipboard.writeText(url).then(() => {

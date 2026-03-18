@@ -12,7 +12,7 @@ import {
   ArrowLeft, ExternalLink, Users, FileText, CheckSquare,
   AlertTriangle, Target, CheckCircle, Clock, Zap, Flame,
   TrendingUp, TrendingDown, Bell, UserPlus, ChevronDown, ChevronUp,
-  Loader2, Mail,
+  Loader2,
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"

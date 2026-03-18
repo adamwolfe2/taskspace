@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
+
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
-import { Heart, Sparkles, Loader2, TrendingUp, TrendingDown, AlertCircle } from "lucide-react"
+import { Heart, Sparkles, Loader2, AlertCircle } from "lucide-react"
 import type { EOSHealthReport, EOSHealthScores } from "@/lib/types"
 
 const EOS_COMPONENTS = [

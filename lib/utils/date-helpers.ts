@@ -77,15 +77,15 @@ export function formatDueDate(date: string | Date): {
 export function getDueDateColor(urgency: string): string {
   switch (urgency) {
     case "overdue":
-      return "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950"
+      return "text-red-600 bg-red-50"
     case "today":
-      return "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-950"
+      return "text-amber-600 bg-amber-50"
     case "soon":
-      return "text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-950"
+      return "text-orange-600 bg-orange-50"
     case "upcoming":
-      return "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950"
+      return "text-blue-600 bg-blue-50"
     default:
-      return "text-slate-600 bg-slate-50 dark:text-slate-400 dark:bg-slate-800"
+      return "text-slate-600 bg-slate-50"
   }
 }
 

@@ -11,7 +11,6 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
-import { db } from "@/lib/db"
 import { sql } from "@/lib/db/sql"
 import { logTaskEvent } from "@/lib/audit/logger"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
