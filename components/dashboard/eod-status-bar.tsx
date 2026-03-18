@@ -1,20 +1,17 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { CheckCircle2, ClipboardEdit, Flame } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 interface EODStatusBarProps {
   hasSubmittedToday: boolean
-  onSubmitEOD: () => void
   streakDays?: number
   className?: string
 }
 
 export function EODStatusBar({
   hasSubmittedToday,
-  onSubmitEOD,
   streakDays,
   className,
 }: EODStatusBarProps) {
@@ -61,17 +58,6 @@ export function EODStatusBar({
           EOD Not Submitted
         </span>
       </div>
-      <Button
-        size="sm"
-        onClick={onSubmitEOD}
-        className="h-7 text-xs"
-        style={{
-          backgroundColor: themedColors.primary,
-          color: "#fff",
-        }}
-      >
-        Submit Now
-      </Button>
     </div>
   )
 }

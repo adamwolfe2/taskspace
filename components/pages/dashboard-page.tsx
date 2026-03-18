@@ -314,7 +314,6 @@ export function DashboardPage({
     return (
      <EODStatusBar
       hasSubmittedToday={hasSubmittedEODToday}
-      onSubmitEOD={handleScrollToEOD}
       streakDays={eodStreakDays}
      />
     )

@@ -793,28 +793,33 @@ Tomorrow: finalize project proposal, sync with team on sprint goals`}
               )}
             </div>
 
-            {/* Submit */}
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting || editedTasks.length === 0}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white"
-              aria-busy={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" role="status" aria-label="Submitting" />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Submit EOD Report
-                </>
-              )}
-            </Button>
           </>
         )}
       </div>
+
+      {/* Sticky submit button — always visible at bottom of card when in preview mode */}
+      {showPreview && (
+        <div className="sticky bottom-0 p-4 border-t border-slate-200 bg-white rounded-b-lg">
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || editedTasks.length === 0}
+            className="w-full h-12 text-base font-semibold bg-slate-900 hover:bg-slate-800 text-white shadow-lg"
+            aria-busy={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" role="status" aria-label="Submitting" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <Send className="h-5 w-5 mr-2" aria-hidden="true" />
+                Submit EOD Report
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

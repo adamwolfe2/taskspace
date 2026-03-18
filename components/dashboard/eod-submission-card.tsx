@@ -825,15 +825,19 @@ export function EODSubmissionCard({
           </div>
         </div>
 
-        <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-sm">
+      </div>
+
+      {/* Sticky submit button — always visible at bottom of card */}
+      <div className="sticky bottom-0 p-4 border-t border-slate-200 bg-white rounded-b-lg">
+        <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full h-12 text-base font-semibold bg-slate-900 hover:bg-slate-800 text-white shadow-lg">
           {isSubmitting ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
               Submitting...
             </>
           ) : (
             <>
-              <Send className="h-4 w-4 mr-2" />
+              <Send className="h-5 w-5 mr-2" />
               {isBackdatedReport ? `Submit EOD for ${formatDisplayDate(reportDate)}` : "Submit EOD Report"}
             </>
           )}
