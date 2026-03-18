@@ -8,20 +8,18 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
-    theme_color: '#3b82f6',
+    theme_color: '#111827',
     orientation: 'portrait-primary' as const,
     icons: [
       {
-        src: '/icon-192.png',
-        sizes: '192x192',
+        src: '/icon.png',
+        sizes: '32x32',
         type: 'image/png',
-        purpose: 'maskable' as const,
       },
       {
-        src: '/icon-512.png',
-        sizes: '512x512',
+        src: '/apple-icon.png',
+        sizes: '180x180',
         type: 'image/png',
-        purpose: 'maskable' as const,
       },
     ],
   }

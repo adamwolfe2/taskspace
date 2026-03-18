@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useApp } from "@/lib/contexts/app-context"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { Button } from "@/components/ui/button"
