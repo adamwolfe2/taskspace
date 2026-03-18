@@ -19,22 +19,23 @@ export interface PriceConfig {
 }
 
 // Price IDs for each plan (configure in Stripe Dashboard)
+// .trim() guards against env vars with trailing whitespace/newlines
 export const STRIPE_PRICE_IDS: Record<string, PriceConfig> = {
   team: {
-    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_TEAM_MONTHLY || "",
-    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_TEAM_YEARLY || "",
+    monthly: (process.env.NEXT_PUBLIC_STRIPE_PRICE_TEAM_MONTHLY || "").trim(),
+    yearly: (process.env.NEXT_PUBLIC_STRIPE_PRICE_TEAM_YEARLY || "").trim(),
   },
   business: {
-    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY || "",
-    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_YEARLY || "",
+    monthly: (process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY || "").trim(),
+    yearly: (process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_YEARLY || "").trim(),
   },
 }
 
 // AI Credit Pack Price IDs
 export const AI_CREDIT_PRICE_IDS = {
-  credits_500: process.env.NEXT_PUBLIC_STRIPE_PRICE_AI_500 || "",
-  credits_2000: process.env.NEXT_PUBLIC_STRIPE_PRICE_AI_2000 || "",
-  credits_5000: process.env.NEXT_PUBLIC_STRIPE_PRICE_AI_5000 || "",
+  credits_500: (process.env.NEXT_PUBLIC_STRIPE_PRICE_AI_500 || "").trim(),
+  credits_2000: (process.env.NEXT_PUBLIC_STRIPE_PRICE_AI_2000 || "").trim(),
+  credits_5000: (process.env.NEXT_PUBLIC_STRIPE_PRICE_AI_5000 || "").trim(),
 }
 
 // Stripe Payment Links (direct checkout URLs for marketing pages)
@@ -42,20 +43,20 @@ export const AI_CREDIT_PRICE_IDS = {
 // Stripe Payment Links — configure via environment variables, no hardcoded fallbacks
 export const STRIPE_PAYMENT_LINKS: Record<string, { monthly: string; yearly: string }> = {
   team: {
-    monthly: process.env.NEXT_PUBLIC_STRIPE_LINK_TEAM_MONTHLY || "",
-    yearly: process.env.NEXT_PUBLIC_STRIPE_LINK_TEAM_YEARLY || "",
+    monthly: (process.env.NEXT_PUBLIC_STRIPE_LINK_TEAM_MONTHLY || "").trim(),
+    yearly: (process.env.NEXT_PUBLIC_STRIPE_LINK_TEAM_YEARLY || "").trim(),
   },
   business: {
-    monthly: process.env.NEXT_PUBLIC_STRIPE_LINK_BUSINESS_MONTHLY || "",
-    yearly: process.env.NEXT_PUBLIC_STRIPE_LINK_BUSINESS_YEARLY || "",
+    monthly: (process.env.NEXT_PUBLIC_STRIPE_LINK_BUSINESS_MONTHLY || "").trim(),
+    yearly: (process.env.NEXT_PUBLIC_STRIPE_LINK_BUSINESS_YEARLY || "").trim(),
   },
 }
 
 // AI Credit Purchase Links
 export const AI_CREDIT_PAYMENT_LINKS = {
-  credits_500: process.env.NEXT_PUBLIC_STRIPE_LINK_AI_500 || "",
-  credits_2000: process.env.NEXT_PUBLIC_STRIPE_LINK_AI_2000 || "",
-  credits_5000: process.env.NEXT_PUBLIC_STRIPE_LINK_AI_5000 || "",
+  credits_500: (process.env.NEXT_PUBLIC_STRIPE_LINK_AI_500 || "").trim(),
+  credits_2000: (process.env.NEXT_PUBLIC_STRIPE_LINK_AI_2000 || "").trim(),
+  credits_5000: (process.env.NEXT_PUBLIC_STRIPE_LINK_AI_5000 || "").trim(),
 }
 
 /**
@@ -69,9 +70,9 @@ export function getPaymentLink(plan: string, billingCycle: "monthly" | "yearly")
 
 // Get Stripe configuration
 export function getStripeConfig(): StripeConfig {
-  const secretKey = process.env.STRIPE_SECRET_KEY
-  const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  const secretKey = process.env.STRIPE_SECRET_KEY?.trim()
+  const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim()
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim()
 
   return {
     secretKey,
