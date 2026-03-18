@@ -3,13 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
 import Image from "next/image"
-import {
-  ArrowUpTrayIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ArrowPathIcon,
-  ArrowLeftIcon,
-} from "@heroicons/react/24/outline"
+import { Upload, CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react"
 import type { ImportProvider, ImportJob } from "@/lib/migrations/types"
 import { ImportSummary } from "./import-summary"
 
@@ -337,7 +331,7 @@ export function ImportWizard() {
               onClick={() => setStep("source-selection")}
               className="text-sm text-slate-500 hover:text-slate-800 mb-4 underline"
             >
-              <><ArrowLeftIcon className="inline h-4 w-4 mr-1" />Back to source selection</>
+              <><ArrowLeft className="inline h-4 w-4 mr-1" />Back to source selection</>
             </button>
             <h2 className="text-xl font-semibold text-slate-900 mb-2">
               Upload {PROVIDERS.find((p) => p.id === selectedProvider)?.name} File
@@ -357,7 +351,7 @@ export function ImportWizard() {
             }`}
           >
             <input {...getInputProps()} />
-            <ArrowUpTrayIcon className="mx-auto h-12 w-12 text-slate-400" />
+            <Upload className="mx-auto h-12 w-12 text-slate-400" />
             <p className="mt-2 text-sm text-slate-600">
               {isDragActive
                 ? "Drop the file here"
@@ -371,7 +365,7 @@ export function ImportWizard() {
           {/* Selected file */}
           {file && (
             <div className="rounded-lg bg-green-50 p-4 flex items-start gap-3">
-              <CheckCircleIcon className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-green-900">{file.name}</p>
                 <p className="text-xs text-green-700 mt-1">
@@ -382,7 +376,7 @@ export function ImportWizard() {
                 onClick={() => setFile(null)}
                 className="text-green-700 hover:text-green-900"
               >
-                <XCircleIcon className="h-5 w-5" />
+                <XCircle className="h-5 w-5" />
               </button>
             </div>
           )}
@@ -390,7 +384,7 @@ export function ImportWizard() {
           {/* Error message */}
           {error && (
             <div className="rounded-lg bg-red-50 p-4 flex items-start gap-3">
-              <XCircleIcon className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
@@ -421,7 +415,7 @@ export function ImportWizard() {
       {step === "processing" && (
         <div className="space-y-6">
           <div className="text-center py-12">
-            <ArrowPathIcon className="mx-auto h-16 w-16 animate-spin text-slate-600" role="status" aria-label="Importing data" />
+            <Loader2 className="mx-auto h-16 w-16 animate-spin text-slate-600" role="status" aria-label="Importing data" />
             <h2 className="mt-4 text-xl font-semibold text-slate-900">
               Importing Your Data
             </h2>
@@ -452,7 +446,7 @@ export function ImportWizard() {
 
           {error && (
             <div className="rounded-lg bg-red-50 p-4 flex items-start gap-3">
-              <XCircleIcon className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-red-800">Import Failed</p>
                 <p className="text-sm text-red-700 mt-1">{error}</p>

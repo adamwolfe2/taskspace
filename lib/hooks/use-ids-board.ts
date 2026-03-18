@@ -104,8 +104,8 @@ export function useIdsBoard() {
     async (
       itemId: string,
       updates: { title?: string; description?: string | null; assignedTo?: string | null; itemType?: IdsBoardItemType }
-    ) => {
-      if (isDemoMode) { showDemoToast(); return null as unknown as IdsBoardItem }
+    ): Promise<IdsBoardItem | null> => {
+      if (isDemoMode) { showDemoToast(); return null }
 
       // Optimistic update - coerce nulls to undefined for type compat
       const safeUpdates: Partial<IdsBoardItem> = {}
@@ -136,15 +136,15 @@ export function useIdsBoard() {
       } catch {
         mutate() // Rollback optimistic update
         toast({ title: "Error", description: "Failed to update item", variant: "destructive" })
-        return null as unknown as IdsBoardItem
+        return null
       }
     },
     [isDemoMode, items, mutate]
   )
 
   const moveItem = useCallback(
-    async (itemId: string, columnName: IdsBoardColumn, orderIndex: number) => {
-      if (isDemoMode) { showDemoToast(); return null as unknown as IdsBoardItem }
+    async (itemId: string, columnName: IdsBoardColumn, orderIndex: number): Promise<IdsBoardItem | null> => {
+      if (isDemoMode) { showDemoToast(); return null }
 
       // Optimistic update
       const updatedItems = items.map((i) =>
@@ -171,7 +171,7 @@ export function useIdsBoard() {
       } catch {
         mutate() // Rollback optimistic update
         toast({ title: "Error", description: "Failed to move item", variant: "destructive" })
-        return null as unknown as IdsBoardItem
+        return null
       }
     },
     [isDemoMode, items, mutate]

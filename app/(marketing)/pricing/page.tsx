@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline"
+import { Check, X } from "lucide-react"
 import { PLANS, FEATURE_CATEGORIES, type PlanConfig } from "@/lib/billing/plans"
 import { AI_CREDIT_PAYMENT_LINKS, STRIPE_PAYMENT_LINKS } from "@/lib/integrations/stripe-config"
 import { PricingCards } from "@/components/marketing/pricing-cards"
@@ -111,19 +111,19 @@ export default function PricingPage() {
         <div className="mt-10 flex justify-center">
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">
             <div className="flex items-center gap-2">
-              <CheckIcon className="h-5 w-5 text-black" />
+              <Check className="h-5 w-5 text-black" />
               <span className="text-sm font-medium text-gray-700">
                 Free forever plan
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckIcon className="h-5 w-5 text-black" />
+              <Check className="h-5 w-5 text-black" />
               <span className="text-sm font-medium text-gray-700">
                 14-day free trial
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckIcon className="h-5 w-5 text-black" />
+              <Check className="h-5 w-5 text-black" />
               <span className="text-sm font-medium text-gray-700">
                 Cancel anytime
               </span>
@@ -318,9 +318,9 @@ function renderFeatureValue(
 
   if (typeof value === "boolean") {
     return value ? (
-      <CheckIcon className="mx-auto h-5 w-5 text-black" />
+      <Check className="mx-auto h-5 w-5 text-black" />
     ) : (
-      <XMarkIcon className="mx-auto h-5 w-5 text-gray-300" />
+      <X className="mx-auto h-5 w-5 text-gray-300" />
     )
   }
 

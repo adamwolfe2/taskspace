@@ -319,11 +319,19 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
   }
 
   const copyToClipboard = async (text: string, label: string) => {
-    await navigator.clipboard.writeText(text)
-    toast({
-      title: "Copied!",
-      description: `${label} copied to clipboard`,
-    })
+    try {
+      await navigator.clipboard.writeText(text)
+      toast({
+        title: "Copied!",
+        description: `${label} copied to clipboard`,
+      })
+    } catch {
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy to clipboard. Please copy manually.",
+        variant: "destructive",
+      })
+    }
   }
 
   const maskApiKey = (key: string) => {

@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon } from "@heroicons/react/24/outline"
+import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react"
 import type { ImportJob } from "@/lib/migrations/types"
 
 interface ImportSummaryProps {
@@ -30,9 +30,9 @@ export function ImportSummary({ job, onReset }: ImportSummaryProps) {
           }`}
         >
           {hasErrors ? (
-            <XCircleIcon className="h-10 w-10 text-red-600" />
+            <XCircle className="h-10 w-10 text-red-600" />
           ) : (
-            <CheckCircleIcon className="h-10 w-10 text-green-600" />
+            <CheckCircle2 className="h-10 w-10 text-green-600" />
           )}
         </div>
         <h2 className="mt-4 text-2xl font-semibold text-slate-900">
@@ -114,7 +114,7 @@ export function ImportSummary({ job, onReset }: ImportSummaryProps) {
       {hasErrors && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-6">
           <div className="flex items-start gap-3">
-            <XCircleIcon className="h-6 w-6 text-red-600 flex-shrink-0" />
+            <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
             <div className="flex-1">
               <h3 className="text-sm font-medium text-red-900">
                 {job.errors.length} Error{job.errors.length !== 1 ? "s" : ""}
@@ -140,7 +140,7 @@ export function ImportSummary({ job, onReset }: ImportSummaryProps) {
       {hasWarnings && (
         <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6">
           <div className="flex items-start gap-3">
-            <ExclamationTriangleIcon className="h-6 w-6 text-yellow-600 flex-shrink-0" />
+            <AlertTriangle className="h-6 w-6 text-yellow-600 flex-shrink-0" />
             <div className="flex-1">
               <h3 className="text-sm font-medium text-yellow-900">
                 {job.warnings.length} Warning{job.warnings.length !== 1 ? "s" : ""}

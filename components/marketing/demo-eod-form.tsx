@@ -244,7 +244,7 @@ export function DemoEODForm() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="bg-white rounded-xl shadow-xl border border-gray-300 overflow-hidden"
           >
-            <div className="p-12 text-center">
+            <div className="p-6 sm:p-12 text-center">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}

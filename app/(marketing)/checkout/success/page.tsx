@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { CheckCircleIcon, ArrowRightIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline"
+import { CheckCircle2, ArrowRight, AlertTriangle } from "lucide-react"
 
 type ClaimStatus = "loading" | "claimed" | "pending_auth" | "already_claimed" | "error"
 
@@ -115,7 +115,7 @@ function CheckoutSuccessContent() {
         {status === "claimed" && (
           <>
             <div className="mx-auto h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mb-6">
-              <CheckCircleIcon className="h-8 w-8 text-green-600" />
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold text-black mb-3">
               You're all set!
@@ -131,7 +131,7 @@ function CheckoutSuccessContent() {
               href="/app"
               className="inline-flex items-center gap-2 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
             >
-              Go to Dashboard <ArrowRightIcon className="h-4 w-4" />
+              Go to Dashboard <ArrowRight className="h-4 w-4" />
             </Link>
           </>
         )}
@@ -139,7 +139,7 @@ function CheckoutSuccessContent() {
         {status === "already_claimed" && (
           <>
             <div className="mx-auto h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mb-6">
-              <CheckCircleIcon className="h-8 w-8 text-green-600" />
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold text-black mb-3">
               Subscription already active
@@ -151,7 +151,7 @@ function CheckoutSuccessContent() {
               href="/app"
               className="inline-flex items-center gap-2 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
             >
-              Go to Dashboard <ArrowRightIcon className="h-4 w-4" />
+              Go to Dashboard <ArrowRight className="h-4 w-4" />
             </Link>
           </>
         )}
@@ -159,7 +159,7 @@ function CheckoutSuccessContent() {
         {status === "pending_auth" && (
           <>
             <div className="mx-auto h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mb-6">
-              <CheckCircleIcon className="h-8 w-8 text-green-600" />
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold text-black mb-3">
               Payment received!
@@ -177,7 +177,7 @@ function CheckoutSuccessContent() {
                 href={sessionId ? `/app?page=register&checkout_session=${encodeURIComponent(sessionId)}` : "/app?page=register"}
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
               >
-                Create Account <ArrowRightIcon className="h-4 w-4" />
+                Create Account <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href={sessionId ? `/app?checkout_session=${encodeURIComponent(sessionId)}` : "/app"}
@@ -192,7 +192,7 @@ function CheckoutSuccessContent() {
         {status === "error" && (
           <>
             <div className="mx-auto h-16 w-16 rounded-full bg-yellow-100 flex items-center justify-center mb-6">
-              <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600" />
+              <AlertTriangle className="h-8 w-8 text-yellow-600" />
             </div>
             <h1 className="text-2xl font-bold text-black mb-3">
               We're working on it
@@ -209,7 +209,7 @@ function CheckoutSuccessContent() {
                 href="/app"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
               >
-                Go to Dashboard <ArrowRightIcon className="h-4 w-4" />
+                Go to Dashboard <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/contact"

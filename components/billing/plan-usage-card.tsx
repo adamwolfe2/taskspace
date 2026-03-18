@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, ArrowRightIcon } from "@heroicons/react/24/outline"
+import { ArrowUp, CheckCircle2, AlertTriangle, ArrowRight } from "lucide-react"
 import { PLANS, formatPrice, type PlanTier } from "@/lib/billing/plans"
 import { getUsagePercentage, isApproachingLimit } from "@/lib/billing/feature-gates"
 
@@ -63,7 +63,7 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
             href="/settings/billing"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
           >
-            <ArrowUpIcon className="h-4 w-4" />
+            <ArrowUp className="h-4 w-4" />
             Upgrade
           </Link>
         )}
@@ -99,13 +99,13 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
                   </div>
                   {approaching && percentage < 100 && (
                     <p className="mt-1 flex items-center gap-1 text-xs text-yellow-600">
-                      <ExclamationTriangleIcon className="h-4 w-4" />
+                      <AlertTriangle className="h-4 w-4" />
                       Approaching limit
                     </p>
                   )}
                   {percentage >= 100 && (
                     <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
-                      <ExclamationTriangleIcon className="h-4 w-4" />
+                      <AlertTriangle className="h-4 w-4" />
                       Limit reached - upgrade to continue
                     </p>
                   )}
@@ -113,7 +113,7 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
               )}
               {unlimited && (
                 <p className="mt-1 flex items-center gap-1 text-xs text-primary">
-                  <CheckCircleIcon className="h-4 w-4" />
+                  <CheckCircle2 className="h-4 w-4" />
                   Unlimited
                 </p>
               )}
@@ -124,7 +124,7 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
 
       <div className="mt-6 border-t border-slate-200 pt-4">
         <Link href="/pricing" className="text-sm font-medium text-primary hover:text-primary/80">
-          <span className="inline-flex items-center gap-1">Compare all plans <ArrowRightIcon className="inline h-3.5 w-3.5" /></span>
+          <span className="inline-flex items-center gap-1">Compare all plans <ArrowRight className="inline h-3.5 w-3.5" /></span>
         </Link>
       </div>
     </div>

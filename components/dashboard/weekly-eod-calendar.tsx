@@ -197,7 +197,7 @@ export function WeeklyEODCalendar({
  {weekDays.map((day) => {
  const isSelected = selectedDate === day.date
  const isClickable = !day.isFuture && onSelectDate
- const showAsSelected = isSelected || (selectedDate === null && day.isToday)
+ const showAsSelected = isSelected || (selectedDate == null && day.isToday)
  const reports = reportsByDate.get(day.date) || []
  const reportCount = reports.length
  const hasMultipleReports = reportCount > 1

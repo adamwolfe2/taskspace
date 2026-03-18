@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/outline"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Checkout Canceled | Taskspace",
@@ -12,7 +12,7 @@ export default function CheckoutCancelPage() {
     <div className="bg-white min-h-[80vh] flex items-center justify-center px-6">
       <div className="max-w-lg w-full text-center">
         <div className="mx-auto h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-6">
-          <ArrowLeftIcon className="h-8 w-8 text-gray-400" />
+          <ArrowLeft className="h-8 w-8 text-gray-400" />
         </div>
         <h1 className="text-2xl font-bold text-black mb-3">
           Checkout canceled
@@ -29,7 +29,7 @@ export default function CheckoutCancelPage() {
             href="/pricing"
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
           >
-            View Plans <ArrowRightIcon className="h-4 w-4" />
+            View Plans <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="/"

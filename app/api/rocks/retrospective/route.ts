@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { withAuth } from "@/lib/api/middleware"
+import { withAuth, verifyWorkspaceOrgBoundary } from "@/lib/api/middleware"
+import { userHasWorkspaceAccess } from "@/lib/db/workspaces"
 import { generateRockRetrospective } from "@/lib/ai/claude-client"
 import { checkCreditsOrRespond, recordUsage } from "@/lib/ai/credits"
 import { generateId } from "@/lib/auth/password"
@@ -19,6 +20,23 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "workspaceId is required" },
         { status: 400 }
+      )
+    }
+
+    // Verify workspaceId belongs to the org and user has access
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
+    const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+    if (!hasAccess) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Access denied to this workspace" },
+        { status: 403 }
       )
     }
 
@@ -68,6 +86,23 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
     const { workspaceId, quarter } = await validateBody(request, generateRockRetroSchema)
+
+    // Verify workspaceId belongs to the org and user has access
+    const isValidWorkspace = await verifyWorkspaceOrgBoundary(workspaceId, auth.organization.id)
+    if (!isValidWorkspace) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Workspace not found" },
+        { status: 404 }
+      )
+    }
+
+    const hasAccess = await userHasWorkspaceAccess(auth.user.id, workspaceId)
+    if (!hasAccess) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Access denied to this workspace" },
+        { status: 403 }
+      )
+    }
 
     // Credit check
     const creditCheck = await checkCreditsOrRespond({

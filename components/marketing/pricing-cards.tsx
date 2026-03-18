@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { CheckIcon } from "@heroicons/react/24/outline"
+import { Check } from "lucide-react"
 import { formatPrice, calculateYearlySavings, type PlanConfig } from "@/lib/billing/plans"
 import { STRIPE_PAYMENT_LINKS } from "@/lib/integrations/stripe-config"
 
@@ -154,7 +154,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
                 }`}
               >
                 <li className="flex gap-x-3">
-                  <CheckIcon
+                  <Check
                     className={`h-6 w-5 flex-none ${
                       isPopular ? "text-white" : "text-black"
                     }`}
@@ -173,7 +173,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
                   </span>
                 </li>
                 <li className="flex gap-x-3">
-                  <CheckIcon
+                  <Check
                     className={`h-6 w-5 flex-none ${
                       isPopular ? "text-white" : "text-black"
                     }`}
@@ -192,7 +192,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
                   </span>
                 </li>
                 <li className="flex gap-x-3">
-                  <CheckIcon
+                  <Check
                     className={`h-6 w-5 flex-none ${
                       isPopular ? "text-white" : "text-black"
                     }`}
@@ -211,7 +211,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
                   </span>
                 </li>
                 <li className="flex gap-x-3">
-                  <CheckIcon
+                  <Check
                     className={`h-6 w-5 flex-none ${
                       isPopular ? "text-white" : "text-black"
                     }`}
@@ -220,7 +220,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
                 </li>
                 {plan.features.asanaSync && (
                   <li className="flex gap-x-3">
-                    <CheckIcon
+                    <Check
                       className={`h-6 w-5 flex-none ${
                         isPopular ? "text-white" : "text-black"
                       }`}
@@ -230,7 +230,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
                 )}
                 {plan.features.customBranding && (
                   <li className="flex gap-x-3">
-                    <CheckIcon
+                    <Check
                       className={`h-6 w-5 flex-none ${
                         isPopular ? "text-white" : "text-black"
                       }`}
@@ -240,7 +240,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
                 )}
                 {plan.features.ssoAuth && (
                   <li className="flex gap-x-3">
-                    <CheckIcon
+                    <Check
                       className={`h-6 w-5 flex-none ${
                         isPopular ? "text-white" : "text-black"
                       }`}
