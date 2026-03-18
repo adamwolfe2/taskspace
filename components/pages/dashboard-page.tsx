@@ -149,7 +149,14 @@ export function DashboardPage({
  }
 
  const handleScrollToEOD = () => {
-  eodCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  const el = eodCardRef.current
+  if (!el) return
+  el.scrollIntoView({ behavior: "smooth", block: "start" })
+  // Briefly highlight the EOD form to draw attention
+  el.classList.add("ring-2", "ring-amber-400", "ring-offset-2", "rounded-lg", "transition-all")
+  setTimeout(() => {
+   el.classList.remove("ring-2", "ring-amber-400", "ring-offset-2", "rounded-lg", "transition-all")
+  }, 2000)
  }
 
  const handleToggleTask = async (taskId: string) => {

@@ -129,13 +129,13 @@ interface CustomizableLayoutProps {
 // Heights use rowHeight=40px grid units. Pixel height ≈ h*40 + (h-1)*16 margin.
 export const DEFAULT_WIDGETS: DashboardWidget[] = [
  { id: "welcome", type: "welcome", title: "Welcome & Quick Actions", enabled: true, minW: 2, minH: 2, maxH: 5 },
- { id: "eod_status", type: "eod_status", title: "EOD Status", enabled: true, minW: 2, minH: 2, maxH: 3 },
  { id: "action_hub", type: "action_hub", title: "Action Hub", enabled: true, minW: 2, minH: 4, maxH: 10 },
  { id: "rocks", type: "rocks", title: "My Rocks", enabled: true, minW: 2, minH: 5, maxH: 16 },
  { id: "tasks", type: "tasks", title: "Assigned Tasks", enabled: true, minW: 2, minH: 5, maxH: 16 },
  { id: "stats", type: "stats", title: "Stats Overview", enabled: true, minW: 2, minH: 3, maxH: 6 },
  { id: "productivity", type: "productivity", title: "Productivity", enabled: true, minW: 2, minH: 3, maxH: 6 },
  { id: "eod_calendar", type: "eod_calendar", title: "Weekly EOD Calendar", enabled: true, minW: 2, minH: 5, maxH: 12 },
+ { id: "eod_status", type: "eod_status", title: "EOD Status", enabled: true, minW: 2, minH: 2, maxH: 3 },
  { id: "eod_submission", type: "eod_submission", title: "EOD Submission", enabled: true, minW: 2, minH: 6, maxH: 16 },
  { id: "focus", type: "focus", title: "Focus Timer", enabled: true, minW: 1, minH: 5, maxH: 10 },
  { id: "activity", type: "activity", title: "Activity Feed", enabled: true, minW: 2, minH: 4, maxH: 10 },
@@ -156,8 +156,8 @@ export const DEFAULT_LAYOUT: LayoutItem[] = [
  { i: "productivity",   x: 0, y: 24, w: 4, h: 3  }, // ~152px — skinny bar (full width)
  { i: "eod_calendar",   x: 0, y: 27, w: 2, h: 9  }, // ~488px — left column
  { i: "activity",       x: 2, y: 27, w: 2, h: 9  }, // ~488px — right column
- { i: "eod_submission", x: 0, y: 36, w: 4, h: 10 }, // ~544px — full width
- { i: "eod_status",     x: 0, y: 46, w: 4, h: 2  }, // ~96px  — below fold (optional)
+ { i: "eod_status",     x: 0, y: 36, w: 4, h: 2  }, // ~96px  — visible above EOD form
+ { i: "eod_submission", x: 0, y: 38, w: 4, h: 10 }, // ~544px — full width
  { i: "focus",          x: 0, y: 48, w: 2, h: 7  }, // ~376px — below fold (optional)
  { i: "weekly_brief",   x: 2, y: 48, w: 2, h: 6  }, // ~320px — below fold
  { i: "team_health",    x: 0, y: 55, w: 2, h: 7  }, // ~376px — below fold
