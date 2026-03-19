@@ -8,7 +8,7 @@ import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { createEODReportSchema, updateEODReportSchema } from "@/lib/validation/schemas"
 import { parseEODReport, isClaudeConfigured } from "@/lib/ai/claude-client"
 import { generateEODSuggestions } from "@/lib/ai/eod-suggestions"
-import { sendEscalationNotification, sendAIAlertEmail, isEmailConfigured } from "@/lib/integrations/email"
+import { sendEscalationNotification, sendAIAlertEmail, sendEODNotification, isEmailConfigured } from "@/lib/integrations/email"
 import { sendSlackMessage, buildFullEODReportMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import { asanaClient } from "@/lib/integrations/asana"
 import { getActiveMetricForUser, upsertWeeklyMetricEntry } from "@/lib/metrics"
@@ -595,6 +595,21 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       )
       sendSlackMessage(webhookUrl!, fullEODMessage)
         .catch(err => logError(logger, "Slack EOD report notification failed", err))
+    }
+
+    // Send EOD notification email (fire-and-forget)
+    if (isEmailConfigured() && member) {
+      const rocks = await db.rocks.findByUserId(auth.user.id, auth.organization.id)
+      const memberInfo: TeamMember = {
+        id: member.id,
+        name: member.name,
+        email: member.email,
+        role: member.role,
+        department: member.department,
+        joinDate: member.joinDate,
+      }
+      sendEODNotification(report, memberInfo, rocks, auth.organization)
+        .catch(err => logError(logger, "EOD notification email failed", err, { reportId: report.id }))
     }
 
     // Send escalation email notification if needed

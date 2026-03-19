@@ -17,7 +17,6 @@ import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
-import { sendEODNotification } from "@/lib/email"
 import { updateStreak } from "@/lib/hooks/use-productivity"
 import { api } from "@/lib/api/client"
 import { isRockBehindSchedule } from "@/lib/utils/stats-calculator"
@@ -311,12 +310,6 @@ export function EODSubmissionCard({
         }
       } catch {
         // Don't fail the submission if streak update fails
-      }
-
-      try {
-        await sendEODNotification(report as EODReport, currentUser, allRocks)
-      } catch {
-        // Email notification failed, but EOD was saved successfully
       }
 
       // Reset form + clear draft

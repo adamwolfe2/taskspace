@@ -77,7 +77,7 @@ jest.mock("@/lib/logger", () => ({
   formatError: jest.fn((e: unknown) => String(e)),
 }))
 
-jest.mock("@/lib/email", () => ({
+jest.mock("@/lib/integrations/email", () => ({
   sendVerificationEmail: jest.fn().mockResolvedValue({ success: true }),
 }))
 
@@ -100,7 +100,7 @@ describe("Auth Register API", () => {
     validateBody.mockImplementation(async (request: any) => request.json())
     const { hashPassword } = require("@/lib/auth/password")
     hashPassword.mockResolvedValue("hashed_password")
-    const { sendVerificationEmail } = require("@/lib/email")
+    const { sendVerificationEmail } = require("@/lib/integrations/email")
     sendVerificationEmail.mockResolvedValue({ success: true })
   })
 
@@ -308,7 +308,7 @@ describe("Auth Register API", () => {
     })
 
     it("should still succeed if verification email fails", async () => {
-      const { sendVerificationEmail } = require("@/lib/email")
+      const { sendVerificationEmail } = require("@/lib/integrations/email")
       sendVerificationEmail.mockRejectedValueOnce(new Error("Email service down"))
 
       const request = createRequest({

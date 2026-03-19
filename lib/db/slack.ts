@@ -19,7 +19,7 @@ import type {
 // TERMINAL STATES (conversations that are "done")
 // ============================================
 
-const TERMINAL_STATES: SlackConversationState[] = ["submitted", "cancelled", "expired"]
+const TERMINAL_STATES: SlackConversationState[] = ["submitted", "cancelled", "expired", "snoozed"]
 
 // ============================================
 // PARSERS

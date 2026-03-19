@@ -76,6 +76,24 @@ export default function JoinWorkspacePage() {
       setFormError("Please enter your password.")
       return
     }
+    if (!isSignIn) {
+      if (password.length < 8) {
+        setFormError("Password must be at least 8 characters.")
+        return
+      }
+      if (!/[a-z]/.test(password)) {
+        setFormError("Password must include a lowercase letter.")
+        return
+      }
+      if (!/[A-Z]/.test(password)) {
+        setFormError("Password must include an uppercase letter.")
+        return
+      }
+      if (!/\d/.test(password)) {
+        setFormError("Password must include a number.")
+        return
+      }
+    }
 
     setIsSubmitting(true)
     try {

@@ -32,9 +32,9 @@ const PROVIDERS: Array<{
   {
     id: "asana",
     name: "Asana",
-    description: "Import projects and tasks from Asana CSV exports",
-    formats: ".csv",
-    available: false,
+    description: "Import projects and tasks from Asana JSON exports",
+    formats: ".json",
+    available: true,
     icon: "/integrations/asana.svg",
   },
   {
@@ -42,7 +42,7 @@ const PROVIDERS: Array<{
     name: "Generic CSV",
     description: "Import from any tool using a CSV file",
     formats: ".csv",
-    available: false,
+    available: true,
     icon: "/integrations/icons8-microsoft-outlook-2019.svg", // Placeholder for CSV
   },
 ]
@@ -76,7 +76,7 @@ export function ImportWizard() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: selectedProvider === "trello" ? { "application/json": [".json"] } : { "text/csv": [".csv"] },
+    accept: selectedProvider === "trello" || selectedProvider === "asana" ? { "application/json": [".json"] } : { "text/csv": [".csv"] },
     maxFiles: 1,
     maxSize: 50 * 1024 * 1024, // 50MB
   })

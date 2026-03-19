@@ -5,7 +5,7 @@
 
 import { Resend } from "resend"
 import { createHmac } from "crypto"
-import type { EODReport, DailyDigest, TeamMember, AIGeneratedTask } from "../types"
+import type { EODReport, DailyDigest, TeamMember, AIGeneratedTask, Invitation, Organization, EmailVerificationToken, PasswordResetToken, Rock } from "../types"
 import { logger, logError } from "../logger"
 
 // Initialize Resend client
@@ -1027,6 +1027,381 @@ export async function sendOnboardingDripEmail(params: {
     return { success: true, id: result.data?.id }
   } catch (error) {
     logError(logger, "Onboarding drip email error", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+// ========================================
+// Migrated from lib/email.tsx
+// ========================================
+
+/** Shared email wrapper — clean, minimal layout with top accent border */
+function emailWrapper(content: string, footerText?: string): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; background: #f8fafc; margin: 0; padding: 0; }
+    .wrapper { max-width: 560px; margin: 0 auto; padding: 40px 20px; }
+    .card { background: #ffffff; border: 1px solid #e2e8f0; border-top: 3px solid #0f172a; }
+    .card-body { padding: 32px; }
+    .brand { font-size: 13px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: #64748b; margin-bottom: 24px; }
+    h1 { font-size: 22px; font-weight: 600; color: #0f172a; margin: 0 0 8px 0; line-height: 1.3; }
+    .subtitle { font-size: 14px; color: #64748b; margin: 0 0 24px 0; }
+    p { font-size: 15px; color: #374151; margin: 0 0 16px 0; }
+    .btn { display: inline-block; background: #0f172a; padding: 12px 28px; text-decoration: none; font-weight: 500; font-size: 14px; }
+    .cta { text-align: center; margin: 28px 0; }
+    .detail-row { padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { display: inline-block; min-width: 110px; font-size: 13px; color: #64748b; }
+    .detail-value { display: inline-block; font-size: 13px; font-weight: 600; color: #1f2937; }
+    .note { font-size: 13px; color: #64748b; margin: 24px 0 0 0; }
+    .divider { border: none; border-top: 1px solid #f1f5f9; margin: 24px 0; }
+    .footer { text-align: center; padding: 20px 32px; font-size: 12px; color: #94a3b8; }
+    .footer a { color: #94a3b8; text-decoration: underline; }
+    .link-fallback { font-size: 12px; color: #94a3b8; word-break: break-all; margin-top: 8px; }
+    .callout { background: #f8fafc; border-left: 3px solid #0f172a; padding: 14px 16px; margin: 20px 0; }
+    .callout-warning { background: #fef2f2; border-left: 3px solid #dc2626; padding: 14px 16px; margin: 20px 0; }
+    .callout-amber { background: #fffbeb; border-left: 3px solid #d97706; padding: 14px 16px; margin: 20px 0; }
+    .tag { display: inline-block; font-size: 12px; font-weight: 500; padding: 2px 8px; background: #f1f5f9; color: #475569; }
+    .expires { font-size: 13px; color: #94a3b8; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="card-body">
+        <div class="brand">Taskspace</div>
+        ${content}
+      </div>
+      <div class="footer">
+        ${footerText || "Taskspace"}
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+}
+
+/** Send invitation email */
+export async function sendInvitationEmail(
+  invitation: Invitation,
+  organization: Organization,
+  inviterName: string
+): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    logger.debug("Email not configured, skipping invitation email")
+    return { success: false, error: "Email not configured" }
+  }
+
+  const inviteLink = `${APP_URL}/join/${invitation.token}`
+
+  const html = emailWrapper(`
+    <h1>You're invited to ${escapeHtml(organization.name)}</h1>
+    <p class="subtitle">${escapeHtml(inviterName)} wants you on the team</p>
+
+    <p>${escapeHtml(inviterName)} has invited you to join <strong>${escapeHtml(organization.name)}</strong> on Taskspace.</p>
+
+    <div class="cta">
+      <a href="${inviteLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Accept Invitation</a>
+    </div>
+
+    <hr class="divider">
+
+    <div class="detail-row">
+      <span class="detail-label">Organization</span>
+      <span class="detail-value">${escapeHtml(organization.name)}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Role</span>
+      <span class="detail-value">${invitation.role === "admin" ? "Administrator" : "Team Member"}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Department</span>
+      <span class="detail-value">${escapeHtml(invitation.department)}</span>
+    </div>
+
+    <p class="expires">This invitation expires in 7 days</p>
+
+    <p class="note">If you didn't expect this invitation, you can safely ignore this email.</p>
+    <p class="link-fallback">Or copy this link: ${inviteLink}</p>
+  `, `${escapeHtml(organization.name)} &middot; Powered by Taskspace<br><a href="${buildUnsubscribeUrl(invitation.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: invitation.email,
+      subject: `You're invited to join ${escapeHtml(organization.name)}`,
+      html,
+    })
+
+    if (result.error) {
+      logger.error({ error: result.error.message }, "Invitation email failed")
+      return { success: false, error: result.error.message }
+    }
+
+    logger.info({ emailId: result.data?.id }, "Invitation email sent")
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    logError(logger, "Invitation email error", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+/** Send email verification email */
+export async function sendVerificationEmail(
+  verificationToken: EmailVerificationToken,
+  userName: string
+): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    logger.debug("Email not configured, skipping verification email")
+    return { success: false, error: "Email not configured" }
+  }
+
+  const verifyLink = `${APP_URL}/app?verifyEmail=${verificationToken.token}`
+
+  const html = emailWrapper(`
+    <h1>Verify your email</h1>
+    <p class="subtitle">One quick step to get started</p>
+
+    <p>Hi ${escapeHtml((userName || "there").split(" ")[0])},</p>
+    <p>Thanks for signing up. Please verify your email address to activate your account.</p>
+
+    <div class="cta">
+      <a href="${verifyLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Verify Email</a>
+    </div>
+
+    <p class="expires">This link expires in 24 hours</p>
+
+    <p class="note">If you didn't create an account on Taskspace, you can safely ignore this email.</p>
+    <p class="link-fallback">Or copy this link: ${verifyLink}</p>
+  `)
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: verificationToken.email,
+      subject: "Verify your email address - Taskspace",
+      html,
+    })
+
+    if (result.error) {
+      logger.error({ error: result.error.message }, "Verification email failed")
+      return { success: false, error: result.error.message }
+    }
+
+    logger.info({ emailId: result.data?.id }, "Verification email sent")
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    logError(logger, "Verification email error", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+/** Send password reset email */
+export async function sendPasswordResetEmail(
+  resetToken: PasswordResetToken,
+  userName: string
+): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    logger.debug("Email not configured, skipping password reset email")
+    return { success: false, error: "Email not configured" }
+  }
+
+  const resetLink = `${APP_URL}/app?resetToken=${resetToken.token}`
+
+  const html = emailWrapper(`
+    <h1>Reset your password</h1>
+    <p class="subtitle">You requested a password change</p>
+
+    <p>Hi ${escapeHtml((userName || "there").split(" ")[0])},</p>
+    <p>We received a request to reset your password. Click the button below to create a new one.</p>
+
+    <div class="cta">
+      <a href="${resetLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Reset Password</a>
+    </div>
+
+    <div class="callout-amber">
+      <p style="margin: 0; font-size: 13px; color: #92400e;"><strong>Security notice:</strong> If you didn't request this, ignore this email. Your password will remain unchanged.</p>
+    </div>
+
+    <p class="expires">This link expires in 1 hour and can only be used once</p>
+    <p class="link-fallback">Or copy this link: ${resetLink}</p>
+  `)
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: resetToken.email,
+      subject: "Reset your Taskspace password",
+      html,
+    })
+
+    if (result.error) {
+      logger.error({ error: result.error.message }, "Password reset email failed")
+      return { success: false, error: result.error.message }
+    }
+
+    logger.info({ emailId: result.data?.id }, "Password reset email sent")
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    logError(logger, "Password reset email error", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+/** Send EOD report notification to admin */
+export async function sendEODNotification(
+  eodReport: EODReport,
+  submittedBy: TeamMember,
+  rocks: Rock[],
+  organization?: Organization
+): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    logger.debug("Email not configured, skipping EOD notification")
+    return { success: false, error: "Email not configured" }
+  }
+
+  const adminEmail = process.env.ADMIN_EMAIL || "team@trytaskspace.com"
+
+  try {
+    const tasksByRock = (eodReport.tasks || []).reduce(
+      (acc, task) => {
+        const key = task.rockId || "general"
+        if (!acc[key]) {
+          acc[key] = { title: task.rockTitle || "General Activities", tasks: [] }
+        }
+        acc[key].tasks.push(task.text)
+        return acc
+      },
+      {} as Record<string, { title: string; tasks: string[] }>,
+    )
+
+    const rockSections = Object.entries(tasksByRock)
+      .filter(([key]) => key !== "general")
+      .map(([rockId, data]) => {
+        const rock = rocks.find((r) => r.id === rockId)
+        const rockPriorities = (eodReport.tomorrowPriorities || []).filter((p) => p.rockId === rockId)
+
+        return `
+          <div class="callout">
+            <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #0f172a;">${escapeHtml(data.title)}</p>
+            <span class="tag">${rock?.status === "completed" ? "Completed" : "On Track"}</span>
+            <p style="margin: 12px 0 4px 0; font-size: 13px; font-weight: 600; color: #64748b;">Today's Activities</p>
+            <ul style="margin: 4px 0 0 0; padding-left: 18px; font-size: 14px; color: #374151;">
+              ${data.tasks.map((t) => `<li style="margin: 4px 0;">${escapeHtml(t)}</li>`).join("")}
+            </ul>
+            ${rockPriorities.length > 0 ? `
+              <p style="margin: 12px 0 4px 0; font-size: 13px; font-weight: 600; color: #64748b;">Tomorrow's Priorities</p>
+              <ul style="margin: 4px 0 0 0; padding-left: 18px; font-size: 14px; color: #374151;">
+                ${rockPriorities.map((p) => `<li style="margin: 4px 0;">${escapeHtml(p.text)}</li>`).join("")}
+              </ul>
+            ` : ""}
+          </div>
+        `
+      })
+      .join("")
+
+    const generalSection =
+      tasksByRock.general && tasksByRock.general.tasks.length > 0
+        ? `
+      <div class="callout">
+        <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #0f172a;">General Activities</p>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; color: #374151;">
+          ${tasksByRock.general.tasks.map((t) => `<li style="margin: 4px 0;">${escapeHtml(t)}</li>`).join("")}
+        </ul>
+      </div>
+    `
+        : ""
+
+    const html = emailWrapper(`
+      <h1>EOD Report</h1>
+      <p class="subtitle">${escapeHtml(submittedBy.name)} &middot; ${new Date(eodReport.date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+
+      ${rockSections}
+      ${generalSection}
+
+      ${eodReport.challenges ? `
+        <hr class="divider">
+        <p style="font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 8px;">Challenges</p>
+        <p style="font-size: 14px;">${escapeHtml(eodReport.challenges)}</p>
+      ` : ""}
+
+      ${eodReport.needsEscalation && eodReport.escalationNote ? `
+        <div class="callout-warning">
+          <p style="margin: 0; font-size: 14px; font-weight: 600; color: #dc2626;">Escalation Needed</p>
+          <p style="margin: 8px 0 0 0; font-size: 14px; color: #374151;">${escapeHtml(eodReport.escalationNote)}</p>
+        </div>
+      ` : ""}
+    `, `${organization ? escapeHtml(organization.name) : "Taskspace"} &middot; Submitted at ${new Date(eodReport.submittedAt).toLocaleTimeString()}`)
+
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: adminEmail,
+      subject: `EOD Report: ${submittedBy.name} - ${new Date(eodReport.date).toLocaleDateString()}`,
+      html,
+    })
+
+    if (result.error) {
+      logger.error({ error: result.error.message }, "EOD notification failed")
+      return { success: false, error: result.error.message }
+    }
+
+    logger.info({ emailId: result.data?.id }, "EOD notification sent")
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    logError(logger, "EOD notification error", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+/** Send daily EOD reminder */
+export async function sendEODReminder(
+  user: TeamMember,
+  organization: Organization
+): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    logger.debug("Email not configured, skipping EOD reminder")
+    return { success: false, error: "Email not configured" }
+  }
+
+  const html = emailWrapper(`
+    <h1>Time to submit your EOD</h1>
+    <p class="subtitle">A quick reflection on your day</p>
+
+    <p>Hi ${escapeHtml((user.name || "there").split(" ")[0])},</p>
+    <p>Take a few minutes to share what you accomplished today and plan for tomorrow.</p>
+
+    <div class="cta">
+      <a href="${APP_URL}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Submit EOD Report</a>
+    </div>
+  `, `${escapeHtml(organization.name)}<br><a href="${buildUnsubscribeUrl(user.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: user.email,
+      subject: `Time to submit your EOD report - ${organization.name}`,
+      html,
+    })
+
+    if (result.error) {
+      logger.error({ error: result.error.message }, "EOD reminder failed")
+      return { success: false, error: result.error.message }
+    }
+
+    logger.info({ emailId: result.data?.id }, "EOD reminder sent")
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    logError(logger, "EOD reminder error", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }

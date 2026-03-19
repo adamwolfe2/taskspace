@@ -4,7 +4,7 @@ import { withAdmin } from "@/lib/api/middleware"
 import { generateId, generateInviteToken, getExpirationDate } from "@/lib/auth/password"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { bulkInviteSchema } from "@/lib/validation/schemas"
-import { sendInvitationEmail } from "@/lib/email"
+import { sendInvitationEmail } from "@/lib/integrations/email"
 import type { Invitation, SafeInvitation, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 

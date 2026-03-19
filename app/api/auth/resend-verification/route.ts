@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { withUserAuth } from "@/lib/api/middleware"
 import { generateId, generateToken, getExpirationDate } from "@/lib/auth/password"
-import { sendVerificationEmail } from "@/lib/email"
+import { sendVerificationEmail } from "@/lib/integrations/email"
 import { logger } from "@/lib/logger"
 import type { ApiResponse, EmailVerificationToken } from "@/lib/types"
 

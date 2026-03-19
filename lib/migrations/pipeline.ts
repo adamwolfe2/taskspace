@@ -36,9 +36,9 @@ export async function extract(
     const contentType = response.headers.get('content-type') || ''
 
     // Parse based on content type
-    if (contentType.includes('application/json') || provider === 'trello') {
+    if (contentType.includes('application/json') || provider === 'trello' || provider === 'asana') {
       return await response.json()
-    } else if (contentType.includes('text/csv') || provider === 'asana' || provider === 'generic_csv') {
+    } else if (contentType.includes('text/csv') || provider === 'generic_csv') {
       const text = await response.text()
       return text
     } else {

@@ -93,7 +93,7 @@ export interface SlackUserMapping {
   linkedAt: string
 }
 
-export type SlackConversationState = 'initiated' | 'awaiting_response' | 'parsing' | 'confirming' | 'submitted' | 'cancelled' | 'expired'
+export type SlackConversationState = 'initiated' | 'awaiting_response' | 'parsing' | 'confirming' | 'submitted' | 'cancelled' | 'expired' | 'snoozed'
 
 export interface SlackConversation {
   id: string

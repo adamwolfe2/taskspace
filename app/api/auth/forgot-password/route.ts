@@ -12,7 +12,7 @@ import {
 } from "@/lib/auth/rate-limit"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import { forgotPasswordSchema } from "@/lib/validation/schemas"
-import { sendPasswordResetEmail } from "@/lib/email"
+import { sendPasswordResetEmail } from "@/lib/integrations/email"
 import type { PasswordResetToken, ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 

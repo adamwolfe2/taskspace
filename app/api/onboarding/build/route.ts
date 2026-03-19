@@ -6,7 +6,7 @@ import { generateId, generateInviteToken, getExpirationDate } from "@/lib/auth/p
 import { z } from "zod"
 import { validateBody, ValidationError } from "@/lib/validation/middleware"
 import type { Rock, AssignedTask, OrganizationMember, Invitation, ApiResponse } from "@/lib/types"
-import { sendInvitationEmail } from "@/lib/email"
+import { sendInvitationEmail } from "@/lib/integrations/email"
 import { logger, logError } from "@/lib/logger"
 
 const memberInputSchema = z.object({

@@ -14,7 +14,6 @@ import type { Rock, EODReport, EODTask, EODPriority, TeamMember } from "@/lib/ty
 import type { TeamMemberMetric } from "@/lib/metrics"
 import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
-import { sendEODNotification } from "@/lib/email"
 import { updateStreak } from "@/lib/hooks/use-productivity"
 import { getTodayInTimezone, getValidDateOptions, getCurrentQuarterDisplay } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
@@ -279,12 +278,6 @@ export function AIEODSubmission({
         }
       } catch {
         // Streak update failed, but EOD was submitted successfully
-      }
-
-      try {
-        await sendEODNotification(report as EODReport, currentUser, allRocks)
-      } catch {
-        // Email notification failed, but EOD was saved successfully
       }
 
       // Reset everything
