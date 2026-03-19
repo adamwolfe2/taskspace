@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Users, FileText, CheckSquare, AlertTriangle, Target } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -99,10 +100,13 @@ export function OrgCard({
       {/* Header: logo + name + risk badge */}
       <div className="flex items-center gap-3 mb-3">
         {logoUrl ? (
-          <img
+          <Image
             src={logoUrl}
             alt={name}
+            width={36}
+            height={36}
             className="h-9 w-9 rounded-lg object-contain bg-slate-50 p-0.5"
+            unoptimized
           />
         ) : (
           <div className="h-9 w-9 rounded-lg bg-slate-900 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">

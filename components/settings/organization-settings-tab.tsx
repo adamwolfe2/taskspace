@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useRef } from "react"
+import Image from "next/image"
 import { useApp } from "@/lib/contexts/app-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -177,10 +178,13 @@ export function OrganizationSettingsTab() {
               <div className="relative">
                 {orgLogo ? (
                   <div className="relative">
-                    <img
+                    <Image
                       src={orgLogo}
                       alt="Organization logo"
+                      width={80}
+                      height={80}
                       className="w-20 h-20 rounded-lg object-cover border border-slate-200"
+                      unoptimized
                     />
                     {isOwner && (
                       <button

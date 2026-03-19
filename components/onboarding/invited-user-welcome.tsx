@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { useApp } from "@/lib/contexts/app-context"
 import { api } from "@/lib/api/client"
@@ -229,10 +230,13 @@ export function InvitedUserWelcome() {
                   <div className="text-center">
                     {orgLogo ? (
                       <div className="flex justify-center mb-4">
-                        <img
+                        <Image
                           src={orgLogo}
                           alt={orgName}
+                          width={64}
+                          height={64}
                           className="h-16 w-16 rounded-xl object-cover"
+                          unoptimized
                         />
                       </div>
                     ) : (

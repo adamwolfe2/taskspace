@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef } from "react"
+import Image from "next/image"
 import { Upload, X, File, Loader2, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -270,10 +271,13 @@ export function FileTray({
                 {/* Thumbnail or Icon */}
                 {isImage(file.type) ? (
                   <div className="h-10 w-10 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
-                    <img
+                    <Image
                       src={file.url}
                       alt={file.name}
+                      width={40}
+                      height={40}
                       className="h-full w-full object-cover"
+                      unoptimized
                     />
                   </div>
                 ) : (

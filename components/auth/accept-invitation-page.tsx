@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { useApp } from "@/lib/contexts/app-context"
 import { api } from "@/lib/api/client"
 import { Button } from "@/components/ui/button"
@@ -152,10 +153,13 @@ export function AcceptInvitationPage({ token, onBack }: AcceptInvitationPageProp
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
             {invitation?.logoUrl ? (
-              <img
+              <Image
                 src={invitation.logoUrl}
                 alt={invitation.organizationName}
+                width={64}
+                height={64}
                 className="h-16 w-16 rounded-xl object-contain"
+                unoptimized
               />
             ) : (
               <div className="bg-primary rounded-xl p-3">

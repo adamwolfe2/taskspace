@@ -111,7 +111,7 @@ export function EODSubmissionCard({
     } catch {
       // Corrupted draft — ignore
     }
-  }, [draftKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [draftKey])  
 
   // Auto-save draft to localStorage every 10 seconds when form has content
   const saveDraft = useCallback(() => {

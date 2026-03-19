@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { useApp } from "@/lib/contexts/app-context"
 import { useWorkspaceStore } from "@/lib/hooks/use-workspace"
 import { Button } from "@/components/ui/button"
@@ -147,10 +148,13 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
             disabled={isSwitching}
           >
             {currentOrgLogo ? (
-              <img
+              <Image
                 src={currentOrgLogo}
                 alt={currentOrganization?.name || "Organization"}
+                width={20}
+                height={20}
                 className="w-5 h-5 rounded object-cover"
+                unoptimized
               />
             ) : (
               <div
@@ -187,10 +191,13 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
           >
             <div className="flex items-center gap-3 w-full">
               {org.logoUrl ? (
-                <img
+                <Image
                   src={org.logoUrl}
                   alt={org.name}
+                  width={32}
+                  height={32}
                   className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+                  unoptimized
                 />
               ) : (
                 <div
@@ -242,10 +249,13 @@ export function OrganizationSwitcher({ compact = false }: OrganizationSwitcherPr
             {isSwitching ? (
               <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
             ) : currentOrgLogo ? (
-              <img
+              <Image
                 src={currentOrgLogo}
                 alt={currentOrganization?.name || "Organization"}
+                width={32}
+                height={32}
                 className="w-8 h-8 rounded-lg object-cover"
+                unoptimized
               />
             ) : (
               <div

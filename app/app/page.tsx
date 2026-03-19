@@ -285,7 +285,7 @@ function AppContent() {
         pendingPageFromUrl.current = p
       }
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])  
 
   // After auth resolves, navigate to the page from URL (once, authenticated users)
   useEffect(() => {

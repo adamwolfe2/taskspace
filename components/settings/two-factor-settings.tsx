@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -229,7 +230,7 @@ export function TwoFactorSettings({ totpEnabled, onStatusChange }: TwoFactorSett
             </Alert>
 
             <div className="flex justify-center">
-              <img src={qrCode} alt="2FA QR code" className="w-48 h-48 border rounded-lg" />
+              <Image src={qrCode} alt="2FA QR code" width={192} height={192} className="w-48 h-48 border rounded-lg" unoptimized />
             </div>
 
             <div className="text-center space-y-1">

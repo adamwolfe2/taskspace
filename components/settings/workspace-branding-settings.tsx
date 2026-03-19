@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -545,10 +546,13 @@ export function WorkspaceBrandingSettings() {
                     </>
                   ) : logoUrl ? (
                     <>
-                      <img
+                      <Image
                         src={logoUrl}
                         alt="Logo preview"
+                        width={64}
+                        height={64}
                         className="w-16 h-16 mx-auto mb-2 object-contain"
+                        unoptimized
                       />
                       <p className="text-sm text-muted-foreground">
                         Click to change logo

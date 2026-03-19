@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -217,10 +218,13 @@ export function BrandingSettings() {
               {isUploading ? (
                 <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
               ) : logoPreview ? (
-                <img
+                <Image
                   src={logoPreview}
                   alt="Logo preview"
+                  width={96}
+                  height={96}
                   className="max-h-24 max-w-24 object-contain"
+                  unoptimized
                 />
               ) : (
                 <div className="text-center">
@@ -272,7 +276,7 @@ export function BrandingSettings() {
             >
               <div className="flex items-center gap-2">
                 {logoPreview ? (
-                  <img src={logoPreview} alt="Logo" className="h-5 w-auto" />
+                  <Image src={logoPreview} alt="Logo" width={20} height={20} className="h-5 w-auto" unoptimized />
                 ) : (
                   <div className="h-5 w-5 rounded bg-white/20" />
                 )}

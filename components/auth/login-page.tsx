@@ -94,7 +94,7 @@ function EODDemoWidget({ runKey }: { runKey: number }) {
     })
     timers.current = t
     return clear
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [runKey])
 
   const submitted = DEMO_EOD_MEMBERS.filter(m => m.kind === "submitted").length
@@ -179,7 +179,7 @@ function RocksDemoWidget({ runKey }: { runKey: number }) {
     DEMO_ROCKS.forEach((_, i) => t.push(setTimeout(() => setHighlit(i), afterEnter + 900 + i * 900)))
     timers.current = t
     return clear
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [runKey])
 
   return (
@@ -261,7 +261,7 @@ function AIDemoWidget({ runKey }: { runKey: number }) {
     const duration = answer.length * 22 + 800 + 2500
     t.push(setTimeout(() => runPair(safeIdx + 1), duration))
     timers.current = t
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [])
 
   useEffect(() => {
@@ -322,7 +322,7 @@ function ScorecardDemoWidget({ runKey }: { runKey: number }) {
     DEMO_SCORECARD.forEach((_, i) => t.push(setTimeout(() => setVisible(i + 1), 400 + i * 300)))
     timers.current = t
     return clear
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [runKey])
 
   return (

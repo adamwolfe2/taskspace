@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
+import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -501,9 +502,11 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
       <div className="w-full max-w-2xl">
         {/* Logo */}
         <div className="flex justify-center mb-6 sm:mb-8">
-          <img
+          <Image
             src="/taskspace-logo.png"
             alt="Taskspace"
+            width={160}
+            height={64}
             className="h-14 sm:h-16 w-auto"
           />
         </div>
@@ -674,10 +677,13 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                           {/* Logo + Company Name */}
                           <div className="flex items-center gap-3">
                             {scrapedBrand.logoUrl && (
-                              <img
+                              <Image
                                 src={scrapedBrand.logoUrl}
                                 alt="Logo"
+                                width={40}
+                                height={40}
                                 className="w-10 h-10 object-contain rounded border border-slate-200 bg-white p-1"
+                                unoptimized
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).style.display = "none"
                                 }}
@@ -833,10 +839,13 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
                       {/* Logo preview */}
                       {logoUrl && (
                         <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                          <img
+                          <Image
                             src={logoUrl}
                             alt="Your logo"
+                            width={40}
+                            height={40}
                             className="w-10 h-10 object-contain rounded"
+                            unoptimized
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = "none"
                             }}

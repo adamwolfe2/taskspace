@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useParams, useSearchParams } from "next/navigation"
+import Image from "next/image"
 import { format, parseISO } from "date-fns"
 import {
   CheckCircle2,
@@ -396,10 +397,13 @@ function UserWeeklyCard({ report, slug, token, weekDate }: { report: WeeklyUserR
                   >
                     {isImageType(attachment.type) ? (
                       <div className="h-10 w-10 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
-                        <img
+                        <Image
                           src={attachment.url}
                           alt={attachment.name}
+                          width={40}
+                          height={40}
                           className="h-full w-full object-cover"
+                          unoptimized
                         />
                       </div>
                     ) : (
@@ -521,10 +525,13 @@ export default function PublicEODWeeklyReportPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {data.organizationLogo ? (
-                <img
+                <Image
                   src={data.organizationLogo}
                   alt={`${data.organizationName} logo`}
+                  width={40}
+                  height={40}
                   className="h-10 w-10 rounded-lg object-cover"
+                  unoptimized
                 />
               ) : (
                 <div className="h-10 w-10 bg-gradient-to-br from-slate-800 to-slate-600 rounded-lg flex items-center justify-center">
