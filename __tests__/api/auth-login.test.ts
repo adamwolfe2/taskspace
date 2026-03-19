@@ -139,7 +139,7 @@ describe("Auth Login API", () => {
       expect(data.data.user.passwordHash).toBeUndefined()
       expect(data.data.organization).toBeDefined()
       expect(data.data.member).toBeDefined()
-      expect(data.data.token).toBeDefined()
+      expect(data.data.expiresAt).toBeDefined()
       expect(data.message).toBe("Login successful")
     })
 
@@ -223,7 +223,7 @@ describe("Auth Login API", () => {
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.user).toBeDefined()
-      expect(data.data.token).toBeDefined()
+      expect(data.data.expiresAt).toBeDefined()
       expect(data.data.organization).toBeUndefined()
       expect(data.message).toContain("no organization")
       expect(mockSessionsCreate).toHaveBeenCalledTimes(1)

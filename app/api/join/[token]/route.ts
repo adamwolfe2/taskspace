@@ -341,7 +341,7 @@ export async function POST(
         success: true,
         data: {
           user: safeUser, organization, member: invResult.member,
-          token: invResult.sessionToken, expiresAt: invResult.sessionExpiresAt,
+          expiresAt: invResult.sessionExpiresAt,
         },
         message: invResult.isNewUser
           ? "Account created and joined organization successfully"
@@ -595,7 +595,6 @@ export async function POST(
         user: safeUser,
         organization,
         member: result.member,
-        token: result.sessionToken,
         expiresAt: result.sessionExpiresAt,
       },
       message: result.isNewUser

@@ -458,7 +458,6 @@ export async function POST(request: NextRequest) {
         user: safeUser,
         organization,
         member: result.member,
-        token: result.session.token,
         expiresAt: result.session.expiresAt,
       },
       message: result.isNewUser
@@ -512,7 +511,6 @@ export async function POST(request: NextRequest) {
               user: safeUser,
               organization,
               member: recoveryData.member,
-              token: recoveryData.sessionToken,
               expiresAt: recoveryData.sessionExpiresAt,
             },
             message: "Joined organization successfully",

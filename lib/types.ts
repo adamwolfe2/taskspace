@@ -868,7 +868,6 @@ export interface AuthResponse {
   user: SafeUser
   organization?: Organization
   member?: OrganizationMember
-  token: string
   expiresAt: string
 }
 

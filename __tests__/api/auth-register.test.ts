@@ -128,7 +128,7 @@ describe("Auth Register API", () => {
       expect(data.data.user.email).toBe("test@example.com")
       expect(data.data.user.name).toBe("Test User")
       expect(data.data.user.passwordHash).toBeUndefined()
-      expect(data.data.token).toBeDefined()
+      expect(data.data.expiresAt).toBeDefined()
       expect(data.data.organization).toBeUndefined()
       expect(mockUsersCreate).toHaveBeenCalledTimes(1)
       expect(mockSessionsCreate).toHaveBeenCalledTimes(1)

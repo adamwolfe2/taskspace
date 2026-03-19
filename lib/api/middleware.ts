@@ -128,8 +128,8 @@ function checkSubscriptionOrRespond(
  * Returns null if within limits, or a NextResponse to return immediately.
  */
 function checkOrgRateLimitOrRespond(auth: AuthContext): NextResponse<ApiResponse<null>> | null {
-  // Allow bypassing rate limits in E2E/Playwright test environments
-  if (process.env.PLAYWRIGHT_TEST === "true") return null
+  // Allow bypassing rate limits in E2E/Playwright test environments (never in production)
+  if (process.env.PLAYWRIGHT_TEST === "true" && process.env.NODE_ENV !== "production") return null
   const plan = auth.organization.subscription?.plan || "free"
   const result = checkOrgRateLimit(auth.organization.id, plan)
   if (!result.success) {

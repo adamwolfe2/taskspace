@@ -268,7 +268,6 @@ export async function POST(request: NextRequest) {
         user: safeUser,
         organization,
         member,
-        token: sessionToken,
         expiresAt: session.expiresAt,
       },
       message: organization

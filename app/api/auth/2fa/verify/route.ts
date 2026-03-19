@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
 
       const response = NextResponse.json<ApiResponse<AuthResponse>>({
         success: true,
-        data: { user: safeUser, token: sessionToken, expiresAt: session.expiresAt },
+        data: { user: safeUser, expiresAt: session.expiresAt },
       })
 
       response.cookies.set("session_token", sessionToken, {
@@ -199,7 +199,6 @@ export async function POST(request: NextRequest) {
         user: safeUser,
         organization,
         member: membership,
-        token: sessionToken,
         expiresAt: session.expiresAt,
       },
       message: usedBackupCode

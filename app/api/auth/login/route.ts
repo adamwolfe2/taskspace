@@ -84,13 +84,12 @@ export async function POST(request: NextRequest) {
           failedLoginAttempts: 0,
         })
       } else {
-        // Account is still locked — use generic message to avoid timing leaks
+        // Account is still locked — use generic message to prevent account enumeration
+        // Do dummy bcrypt to match timing of normal password verification
+        await verifyPassword(password, "$2b$12$LiXXhXpW5N.h7a0oXqF2XuqnNUBNkAMGEKL8UtLmfpjpMpPFBWkNO")
         return NextResponse.json<ApiResponse<null>>(
-          {
-            success: false,
-            error: "Account temporarily locked due to too many failed login attempts. Please try again in 30 minutes or reset your password.",
-          },
-          { status: 423 } // 423 Locked
+          { success: false, error: "Invalid email or password" },
+          { status: 401 }
         )
       }
     }
@@ -224,7 +223,6 @@ export async function POST(request: NextRequest) {
         success: true,
         data: {
           user: safeUser,
-          token: sessionToken,
           expiresAt: session.expiresAt,
         },
         message: "Login successful but no organization found",
@@ -314,7 +312,6 @@ export async function POST(request: NextRequest) {
         user: safeUser,
         organization,
         member: membership,
-        token: sessionToken,
         expiresAt: session.expiresAt,
       },
       message: "Login successful",

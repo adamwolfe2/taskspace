@@ -27,6 +27,7 @@ export function sanitizeHtml(input: string): string {
       a: ["href", "target", "rel"],
       "*": ["class"],
     },
+    allowedSchemes: ["https", "http", "mailto"],
     transformTags: {
       a: (tagName, attribs) => ({
         tagName,
