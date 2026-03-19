@@ -4,7 +4,7 @@
  */
 
 import { Resend } from "resend"
-import { createHmac } from "crypto"
+import { createHmac, timingSafeEqual } from "crypto"
 import type { EODReport, DailyDigest, TeamMember, AIGeneratedTask, Invitation, Organization, EmailVerificationToken, PasswordResetToken, Rock } from "../types"
 import { logger, logError } from "../logger"
 
@@ -53,7 +53,9 @@ export function verifyUnsubscribeToken(email: string, token: string | null): boo
   if (!secret) return false // Fail closed: no secret means no valid tokens
   if (!token) return false
   const expected = createHmac("sha256", secret).update(email.toLowerCase()).digest("hex").slice(0, 32)
-  return token === expected
+  // Use timing-safe comparison to prevent token forgery via timing side-channel
+  if (token.length !== expected.length) return false
+  return timingSafeEqual(Buffer.from(token), Buffer.from(expected))
 }
 
 interface EmailResult {

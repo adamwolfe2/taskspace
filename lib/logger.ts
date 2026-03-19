@@ -47,15 +47,17 @@ const currentLevelValue = LOG_LEVELS[LOG_LEVEL as LogLevel] || LOG_LEVELS.info
 
 const SENSITIVE_KEYS = new Set([
   "password",
-  "passwordHash",
+  "passwordhash",
   "token",
-  "sessionToken",
-  "apiKey",
+  "sessiontoken",
+  "apikey",
   "secret",
   "authorization",
   "cookie",
-  "accessToken",
-  "refreshToken",
+  "accesstoken",
+  "refreshtoken",
+  "totpsecret",
+  "bottoken",
 ])
 
 function redactSensitive(obj: unknown, seen = new WeakSet()): unknown {

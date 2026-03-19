@@ -261,7 +261,49 @@ Comprehensive security headers configured in `next.config.mjs`:
 ### 5. M-4 FIXED: Vercel cron header monitoring
 - `lib/api/cron-auth.ts` — added `x-vercel-cron` header check with logging in production
 
+### 6. CRITICAL FIXED: Google Calendar OAuth state HMAC-signed
+- `app/api/google-calendar/route.ts` — state now contains `{payload, sig}` with HMAC-SHA256
+- `app/api/google-calendar/callback/route.ts` — verifies HMAC signature with timing-safe comparison, rejects unsigned state in production
+
+### 7. CRITICAL FIXED: Weekly EOD public endpoint token now REQUIRED
+- `app/api/public/eod/[slug]/week/[date]/route.ts` — token is now mandatory (matches daily endpoint behavior). Orgs without `publicEodToken` configured return 403.
+
+### 8. MEDIUM FIXED: Logger SENSITIVE_KEYS case mismatch
+- `lib/logger.ts` — all keys in SENSITIVE_KEYS set are now lowercase to match `.toLowerCase()` lookup. Added `totpsecret` and `bottoken`.
+
+### 9. LOW FIXED: Unsubscribe token timing-safe comparison
+- `lib/integrations/email.ts` — replaced `===` with `timingSafeEqual` for HMAC token verification
+
+### 10. MEDIUM FIXED: Org chart CSV text sanitization
+- `app/api/org-chart/upload/route.ts` — name, jobTitle, department, notes fields now pass through `sanitizeText()` before DB insertion
+
 ### Verification
 - Build: Clean (0 errors)
 - Tests: 614/614 passing (46 suites)
 - Lint: 0 errors, 0 warnings
+
+---
+
+## Additional Findings from Agent Audits
+
+### Discovered by API Routes Agent
+- **Google Calendar OAuth state not HMAC-signed** (CRITICAL) — **FIXED**
+- **Weekly EOD optional token enforcement** (CRITICAL) — **FIXED**
+- `/api/admin/upgrade-all-orgs` uses `withAuth` instead of `withDangerousAdmin` — Open (manual email check provides equivalent protection)
+- Asana OAuth state not HMAC-signed — Open (lower priority, same pattern as Google Calendar)
+- Portal token routes lack rate limiting — Open
+
+### Discovered by SQL/Input Agent
+- **Org chart CSV text unsanitized** (MEDIUM) — **FIXED**
+- Blog sanitizer uses weak regex (LOW, static content only)
+- NaN in AI usage LIMIT clause (LOW)
+
+### Discovered by Infrastructure Agent
+- **API keys stored in plaintext in DB** (MEDIUM) — Open (architectural change, would require key rotation)
+- Stack Auth env vars are dead configuration — Open (cleanup item)
+
+### Discovered by Frontend Agent
+- **Logger SENSITIVE_KEYS broken for camelCase** (MEDIUM) — **FIXED**
+- **SVG upload allowed without sanitization** (HIGH) — Open (consider removing `image/svg+xml` from upload allowlist)
+- `isSuperAdmin` exposed to client (LOW)
+- No Next.js Edge Middleware for route protection (MEDIUM, mitigated by API-level auth)

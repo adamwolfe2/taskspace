@@ -57,14 +57,21 @@ export const GET = withAuth(async (request, auth) => {
       }
     }
 
-    // Generate auth URL with state for CSRF protection
+    // Generate auth URL with HMAC-signed state for CSRF protection
     let authUrl: string | null = null
     if (isConfigured && !token) {
-      const state = Buffer.from(JSON.stringify({
+      const { createHmac } = await import("crypto")
+      const statePayload = JSON.stringify({
         userId: auth.user.id,
         orgId: auth.organization.id,
         workspaceId,
         timestamp: Date.now(),
+      })
+      const hmacSecret = process.env.AUTH_SECRET || process.env.TOKEN_ENCRYPTION_KEY || ""
+      const signature = createHmac("sha256", hmacSecret).update(statePayload).digest("hex")
+      const state = Buffer.from(JSON.stringify({
+        payload: statePayload,
+        sig: signature,
       })).toString('base64')
       authUrl = googleCalendar.getAuthUrl(state)
     }

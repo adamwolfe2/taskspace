@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { withAdmin } from "@/lib/api/middleware"
 import { sql } from "@/lib/db/sql"
 import { generateId } from "@/lib/auth/password"
+import { sanitizeText } from "@/lib/utils/sanitize"
 import { logger, logError } from "@/lib/logger"
 import type { ApiResponse } from "@/lib/types"
 
@@ -251,14 +252,14 @@ export const POST = withAdmin(async (request, auth) => {
         [
           memberRecords.map((m) => m.id),
           memberRecords.map(() => auth.organization.id),
-          memberRecords.map((m) => m.name),
+          memberRecords.map((m) => sanitizeText(m.name)),
           memberRecords.map((m) => m.email),
-          memberRecords.map((m) => m.jobTitle),
-          memberRecords.map((m) => m.department),
+          memberRecords.map((m) => sanitizeText(m.jobTitle)),
+          memberRecords.map((m) => sanitizeText(m.department)),
           managerIds,
           memberRecords.map(() => "active"),
           memberRecords.map(() => new Date().toISOString()),
-          memberRecords.map((m) => m.notes),
+          memberRecords.map((m) => sanitizeText(m.notes)),
         ]
       )
 

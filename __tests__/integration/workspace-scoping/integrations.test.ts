@@ -169,12 +169,16 @@ describe("Integrations - Workspace Scoping", () => {
         expect(response.status).toBe(200)
         expect(data.data.authUrl).toBeDefined()
 
-        // Verify state parameter contains workspaceId
+        // Verify state parameter contains workspaceId (now HMAC-signed)
         const authUrl = new URL(data.data.authUrl)
         const state = authUrl.searchParams.get("state")
         expect(state).toBeDefined()
 
-        const decodedState = JSON.parse(Buffer.from(state!, "base64").toString())
+        const outerState = JSON.parse(Buffer.from(state!, "base64").toString())
+        // New format: { payload: JSON string, sig: HMAC hex }
+        expect(outerState.sig).toBeDefined()
+        expect(outerState.payload).toBeDefined()
+        const decodedState = JSON.parse(outerState.payload)
         expect(decodedState.workspaceId).toBe(WORKSPACE_1)
       })
     })

@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "crypto"
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { generateId } from "@/lib/auth/password"
@@ -26,10 +27,34 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Decode and validate state
+    // Decode and validate HMAC-signed state
     let stateData: { userId: string; orgId: string; workspaceId: string; timestamp: number }
     try {
-      stateData = JSON.parse(Buffer.from(state, 'base64').toString())
+      const outer = JSON.parse(Buffer.from(state, 'base64').toString())
+      const hmacSecret = process.env.AUTH_SECRET || process.env.TOKEN_ENCRYPTION_KEY || ""
+
+      // Verify HMAC signature to prevent state forgery
+      if (outer.sig && outer.payload) {
+        const expectedSig = createHmac("sha256", hmacSecret).update(outer.payload).digest("hex")
+        const sigBuf = Buffer.from(outer.sig, "hex")
+        const expectedBuf = Buffer.from(expectedSig, "hex")
+        if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) {
+          return NextResponse.json(
+            { success: false, error: "Invalid state signature" },
+            { status: 400 }
+          )
+        }
+        stateData = JSON.parse(outer.payload)
+      } else {
+        // Legacy unsigned state — reject in production
+        if (process.env.NODE_ENV === "production") {
+          return NextResponse.json(
+            { success: false, error: "Invalid state format" },
+            { status: 400 }
+          )
+        }
+        stateData = outer
+      }
     } catch {
       return NextResponse.json(
         { success: false, error: "Invalid state" },

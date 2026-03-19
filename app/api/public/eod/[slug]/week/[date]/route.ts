@@ -158,23 +158,26 @@ export async function GET(
     const timezone = settings?.timezone || "America/Los_Angeles"
     const orgLogo = settings?.customBranding?.logo
 
-    // Optional access token protection for public EOD endpoints
+    // SECURITY: Require access token — orgs must configure publicEodToken
     const { searchParams } = new URL(request.url)
     const providedToken = searchParams.get("token")
-    if (settings?.publicEodToken) {
-      const hashToken = (t: string) => createHash("sha256").update(t).digest()
-      const tokenMatch = providedToken !== null &&
-        timingSafeEqual(hashToken(providedToken), hashToken(settings.publicEodToken))
-      if (!tokenMatch) {
-        const response = NextResponse.json(
-          { success: false, error: "Invalid or missing access token" },
-          { status: 403 }
-        )
-        response.headers.set("X-Robots-Tag", "noindex, nofollow")
-        return response
-      }
+    if (!settings?.publicEodToken) {
+      return NextResponse.json(
+        { success: false, error: "Public EOD access is not configured for this organization" },
+        { status: 403 }
+      )
     }
-    // If no token configured, allow open access (original behavior)
+    const hashToken = (t: string) => createHash("sha256").update(t).digest()
+    const tokenMatch = providedToken !== null &&
+      timingSafeEqual(hashToken(providedToken), hashToken(settings.publicEodToken))
+    if (!tokenMatch) {
+      const response = NextResponse.json(
+        { success: false, error: "Invalid or missing access token" },
+        { status: 403 }
+      )
+      response.headers.set("X-Robots-Tag", "noindex, nofollow")
+      return response
+    }
 
     logger.info({ orgSlug: slug, date }, "Public weekly EOD accessed")
 
