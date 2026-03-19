@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2, Paperclip, Loader2, Smile, Meh, Frown } from "lucide-react"
-import type { Rock, EODReport, EODTask, EODPriority, TeamMember, AssignedTask, FileAttachment } from "@/lib/types"
+import type { Rock, EODReport, EODTask, EODPriority, AssignedTask, FileAttachment } from "@/lib/types"
 import { FileTray } from "@/components/ui/file-tray"
 import type { TeamMemberMetric } from "@/lib/metrics"
 import { getTodayInTimezone, getValidDateOptions, getCurrentQuarterDisplay, isThursday } from "@/lib/utils/date-utils"
@@ -28,10 +28,8 @@ function formatDisplayDate(dateStr: string): string {
 
 interface EODSubmissionCardProps {
   rocks: Rock[] // Current quarter rocks only
-  allRocks: Rock[]
   onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt" | "organizationId"> | Omit<EODReport, "id" | "createdAt" | "organizationId" | "date">) => void | Promise<void>
   userId: string
-  currentUser: TeamMember
   assignedTasks: AssignedTask[]
   selectedDate?: string | null
   onDateReset?: () => void
@@ -39,10 +37,8 @@ interface EODSubmissionCardProps {
 
 export function EODSubmissionCard({
   rocks,
-  allRocks,
   onSubmitEOD,
   userId,
-  currentUser,
   assignedTasks,
   selectedDate,
   onDateReset,

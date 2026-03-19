@@ -364,7 +364,7 @@ export function AdminPage({
         title: "Task assigned",
         description: `Task assigned to ${taskData.assigneeName}`,
       })
-    } catch (err: unknown) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to assign task",

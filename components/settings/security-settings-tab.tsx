@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation"
 import { TwoFactorSettings } from "./two-factor-settings"
 
 export function SecuritySettingsTab() {
-  const { currentUser } = useApp()
+  const { currentUser: _currentUser } = useApp()
   const { toast } = useToast()
   const router = useRouter()
 

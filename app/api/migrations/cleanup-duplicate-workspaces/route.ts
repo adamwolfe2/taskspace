@@ -13,7 +13,7 @@ import { logger, logError } from "@/lib/logger"
  *
  * Protected by withSuperAdmin.
  */
-export const POST = withSuperAdmin(async (request: NextRequest, auth) => {
+export const POST = withSuperAdmin(async (_request: NextRequest, _auth) => {
   try {
     // Find orgs with multiple workspaces named "Default"
     const { rows: duplicateOrgs } = await sql`

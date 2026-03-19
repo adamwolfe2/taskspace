@@ -135,8 +135,6 @@ async function executeCreateTask(
   const description = (config.description as string) || null
   const priority = (config.priority as string) || "normal"
   const dueDate = (config.dueDate as string) || null
-  const now = new Date().toISOString()
-
   await sql`
     INSERT INTO assigned_tasks (
       id, organization_id, workspace_id, title, description,
@@ -181,7 +179,7 @@ async function executeSendSlack(
 async function executeSendEmail(
   action: AutomationAction,
   orgId: string,
-  eventData: Record<string, unknown>
+  _eventData: Record<string, unknown>
 ): Promise<void> {
   if (!isEmailConfigured()) {
     logger.warn({ orgId }, "Automation send_email: Resend not configured, skipping")

@@ -39,7 +39,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       success: true,
       data: snapshots,
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to fetch team health data" },
       { status: 500 }

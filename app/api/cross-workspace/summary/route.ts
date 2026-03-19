@@ -45,7 +45,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       })
     }
 
-    const workspaceIds = workspacesResult.rows.map(r => r.id as string)
+    const _workspaceIds = workspacesResult.rows.map(r => r.id as string)
 
     // Compute week boundaries (Monday to Sunday)
     const now = new Date()

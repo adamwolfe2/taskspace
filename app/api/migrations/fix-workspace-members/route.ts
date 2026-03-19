@@ -13,7 +13,7 @@ import { logger, logError } from "@/lib/logger"
  *
  * Protected by withSuperAdmin.
  */
-export const POST = withSuperAdmin(async (request: NextRequest, auth) => {
+export const POST = withSuperAdmin(async (_request: NextRequest, _auth) => {
   try {
     // Find org members who have NO workspace membership
     const { rows: orphanedMembers } = await sql`

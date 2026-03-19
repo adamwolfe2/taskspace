@@ -88,7 +88,7 @@ function groupByUser(velocities: PeopleVelocity[], weekCount: number): UserVeloc
   }).sort((a, b) => b.avgScore - a.avgScore)
 }
 
-function MemberCard({ summary, allWeeks }: { summary: UserVelocitySummary; allWeeks: string[] }) {
+function MemberCard({ summary, allWeeks: _allWeeks }: { summary: UserVelocitySummary; allWeeks: string[] }) {
   const { currentWeek, prevWeek } = summary
   const m = currentWeek?.metrics
 

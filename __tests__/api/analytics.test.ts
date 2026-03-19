@@ -164,7 +164,7 @@ describe("GET /api/analytics", () => {
 
     const req = new NextRequest("http://localhost:3000/api/analytics?workspaceId=ws-any")
     const res = await GET(req, mockAuth as any)
-    const data = await res.json()
+    const _data = await res.json()
 
     expect(res.status).toBe(200)
     expect(mockUserHasWorkspaceAccess).not.toHaveBeenCalled()

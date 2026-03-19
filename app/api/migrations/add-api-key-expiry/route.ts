@@ -12,7 +12,7 @@ import { logger, logError } from "@/lib/logger"
  *
  * Protected by withSuperAdmin.
  */
-export const POST = withSuperAdmin(async (request: NextRequest, auth) => {
+export const POST = withSuperAdmin(async (_request: NextRequest, _auth) => {
   try {
     // Add expires_at column (nullable — null means no expiry)
     await sql`

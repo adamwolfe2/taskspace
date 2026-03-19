@@ -96,7 +96,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
             AND date::date >= ${weekStart}::date
             AND date::date <= ${weekEndStr}::date
         `
-        const eodCount = parseInt(eodResult.rows[0]?.count as string, 10) || 0
+        const _eodCount = parseInt(eodResult.rows[0]?.count as string, 10) || 0
 
         // Average mood this week (from eod_reports mood field if available)
         const moodResult = await sql`

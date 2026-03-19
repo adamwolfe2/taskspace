@@ -43,7 +43,7 @@ interface RocksPageProps {
 export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter, onFilterConsumed, updateRock, createRock, deleteRock }: RocksPageProps) {
   const { setCurrentPage } = useApp()
   const { toast } = useToast()
-  const { currentWorkspaceId } = useWorkspaces()
+  const { currentWorkspaceId: _currentWorkspaceId } = useWorkspaces()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [ownerFilter, setOwnerFilter] = useState<string>(initialOwnerFilter || "all")

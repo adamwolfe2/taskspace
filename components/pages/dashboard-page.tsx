@@ -148,7 +148,7 @@ export function DashboardPage({
   setSelectedEodDate(date)
  }
 
- const handleScrollToEOD = () => {
+ const _handleScrollToEOD = () => {
   eodCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
  }
 
@@ -424,20 +424,16 @@ export function DashboardPage({
         <TabsContent value="ai">
          <AIEODSubmission
           rocks={currentQuarterRocks}
-          allRocks={rocks}
           onSubmitEOD={handleSubmitEOD}
           userId={effectiveUserId}
-          currentUser={currentUser}
           eodCount={eodReports.filter(r => r.userId === effectiveUserId).length}
          />
         </TabsContent>
         <TabsContent value="manual">
          <EODSubmissionCard
           rocks={currentQuarterRocks}
-          allRocks={rocks}
           onSubmitEOD={handleSubmitEOD}
           userId={effectiveUserId}
-          currentUser={currentUser}
           assignedTasks={assignedTasks}
           selectedDate={selectedEodDate}
           onDateReset={() => setSelectedEodDate(null)}

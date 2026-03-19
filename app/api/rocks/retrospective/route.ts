@@ -75,7 +75,7 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
       success: true,
       data: retrospectives,
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json<ApiResponse<null>>(
       { success: false, error: "Failed to fetch retrospectives" },
       { status: 500 }

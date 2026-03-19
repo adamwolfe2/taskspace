@@ -207,7 +207,7 @@ describe("GET /api/people-velocity", () => {
     const weekStart = new Date()
     const day = weekStart.getDay()
     weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1))
-    const weekStartStr = weekStart.toISOString().split("T")[0]
+    const _weekStartStr = weekStart.toISOString().split("T")[0]
 
     // Build the week_start the same way the route does (local timezone aware)
     const routeToday = new Date()

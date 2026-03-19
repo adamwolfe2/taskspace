@@ -695,7 +695,7 @@ function isExpired(createdAt: string): boolean {
 function isEmojiOnly(text: string): boolean {
   // Strip common emoji patterns, skin tone modifiers, ZWJ sequences, and whitespace
   const stripped = text
-    .replace(/[\p{Emoji_Presentation}\p{Emoji}\u200d\ufe0f\u20e3]/gu, "")
+    .replace(/\p{Emoji_Presentation}|\p{Emoji}|\u200d|\ufe0f|\u20e3/gu, "")
     .replace(/\s/g, "")
   return stripped.length === 0
 }

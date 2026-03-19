@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Sparkles, Send, Loader2, X, Plus, AlertTriangle, Check, Target, Calendar, Clock } from "lucide-react"
-import type { Rock, EODReport, EODTask, EODPriority, TeamMember } from "@/lib/types"
+import type { Rock, EODReport, EODTask, EODPriority } from "@/lib/types"
 import type { TeamMemberMetric } from "@/lib/metrics"
 import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
@@ -48,19 +48,15 @@ interface ParsedEODData {
 
 interface AIEODSubmissionProps {
   rocks: Rock[]
-  allRocks: Rock[]
   onSubmitEOD: (report: Omit<EODReport, "id" | "createdAt" | "organizationId"> | Omit<EODReport, "id" | "createdAt" | "organizationId" | "date">) => void | Promise<void>
   userId: string
-  currentUser: TeamMember
   eodCount?: number
 }
 
 export function AIEODSubmission({
   rocks,
-  allRocks,
   onSubmitEOD,
   userId,
-  currentUser,
   eodCount = 0,
 }: AIEODSubmissionProps) {
   const { currentOrganization } = useApp()

@@ -26,7 +26,7 @@ const schema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const { result: rateLimitResult, response: rateLimitResponse } = enforceIpRateLimit(
+    const { response: rateLimitResponse } = enforceIpRateLimit(
       request,
       { endpoint: "public-eod-weekly-summary", maxRequests: 60 }
     )

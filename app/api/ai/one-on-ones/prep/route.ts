@@ -12,7 +12,7 @@ import { checkApiRateLimit, getRateLimitHeaders } from "@/lib/auth/rate-limit"
 // POST /api/ai/one-on-ones/prep - Generate AI prep for a 1-on-1
 export const POST = withAuth(async (request: NextRequest, auth) => {
   try {
-    const { reportId, workspaceId, oneOnOneId } = await validateBody(request, oneOnOnePrepSchema)
+    const { reportId, workspaceId: _workspaceId, oneOnOneId } = await validateBody(request, oneOnOnePrepSchema)
 
     // Per-user rate limit: max 5 requests per minute
     const rateLimit = await checkApiRateLimit(request, `one-on-one-prep:${auth.user.id}`, 5, 60_000)

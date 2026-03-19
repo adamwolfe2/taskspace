@@ -87,7 +87,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     ])
 
     // Build member name lookup for EOD reports
-    const memberNameMap = new Map(teamMembers.map(m => [m.id, m.name]))
+    const _memberNameMap = new Map(teamMembers.map(m => [m.id, m.name]))
     const memberUserIdMap = new Map(teamMembersData.map(m => [m.userId, m.name]))
     const enrichedReports = recentReports.map(r => ({
       ...r,

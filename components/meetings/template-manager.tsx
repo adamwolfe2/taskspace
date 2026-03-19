@@ -90,7 +90,7 @@ const ALL_SECTION_TYPES: SectionType[] = [
   "conclude",
 ]
 
-const DEFAULT_SECTIONS: MeetingTemplateSection[] = ALL_SECTION_TYPES.map((t, i) => ({
+const DEFAULT_SECTIONS: MeetingTemplateSection[] = ALL_SECTION_TYPES.map((t, _i) => ({
   sectionType: t,
   durationTarget: DEFAULT_DURATIONS[t],
   data: {},

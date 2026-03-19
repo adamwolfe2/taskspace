@@ -80,7 +80,7 @@ export async function upsertVTO(
   const quarterlyRocks = JSON.stringify(sanitizeDeep(data.quarterlyRocks || []))
   const issuesList = JSON.stringify(sanitizeDeep(data.issuesList || []))
 
-  const { rows } = await sql`
+  await sql`
     INSERT INTO vto_documents (id, workspace_id, core_values, core_focus, ten_year_target, marketing_strategy, three_year_picture, one_year_plan, quarterly_rocks, issues_list, last_edited_by)
     VALUES (${id}, ${workspaceId}, ${coreValues}::jsonb, ${coreFocus}::jsonb, ${tenYearTarget}::jsonb, ${marketingStrategy}::jsonb, ${threeYearPicture}::jsonb, ${oneYearPlan}::jsonb, ${quarterlyRocks}::jsonb, ${issuesList}::jsonb, ${userId})
     ON CONFLICT (workspace_id)

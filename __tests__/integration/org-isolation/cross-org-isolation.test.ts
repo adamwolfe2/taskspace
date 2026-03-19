@@ -198,7 +198,7 @@ const AUTH_USER1_ORGA = {
   isSuperAdmin: false,
 }
 
-const AUTH_USER2_ORGB = {
+const _AUTH_USER2_ORGB = {
   user: USER_2,
   organization: ORG_B,
   member: { id: "mem-2", organizationId: "org-b", userId: "user-2", role: "owner", status: "active", joinedAt: "2025-01-01" },
@@ -224,7 +224,7 @@ describe("Organization Isolation", () => {
 
   describe("getUserWorkspaces org scoping", () => {
     it("should only return workspaces for the specified organization", async () => {
-      const { getUserWorkspaces: realGetUserWorkspaces } = jest.requireActual("@/lib/db/workspaces")
+      const { getUserWorkspaces: _realGetUserWorkspaces } = jest.requireActual("@/lib/db/workspaces")
 
       // This test validates the SQL query structure by verifying the function
       // signature now requires organizationId
