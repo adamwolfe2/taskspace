@@ -173,6 +173,7 @@ export function EODSubmissionCard({
       rockTitle: task.rockTitle,
     }))
     setAutoTasks(autoPopulated)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally using .length to avoid re-running on every array reference change
   }, [completedTasksForDate.length, reportDate])
 
   const removeAutoTask = (id: string) => {

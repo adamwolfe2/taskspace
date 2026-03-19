@@ -181,6 +181,7 @@ export function TaskDetailModal({
     if (open) {
       loadSubtasks()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadSubtasks is not wrapped in useCallback
   }, [open, task.id])
 
   const loadSubtasks = async () => {

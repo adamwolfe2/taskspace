@@ -166,7 +166,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
       if (yearA !== yearB) return parseInt(yearA) - parseInt(yearB)
       return qA.localeCompare(qB)
     })
-  }, [baseRocks])
+  }, [baseRocks, quarterFilter])
 
   const displayRocks = useMemo(() => {
     return baseRocks.filter((rock) => {

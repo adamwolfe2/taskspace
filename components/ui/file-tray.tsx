@@ -152,6 +152,7 @@ export function FileTray({
     } finally {
       setIsUploading(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- validateFile is a plain function defined in component scope; moving it inside would duplicate logic
   }, [attachments, disabled, maxFiles, onAttachmentsChange, acceptedTypes, maxSizeMB])
 
   const handleDrop = useCallback((e: React.DragEvent) => {

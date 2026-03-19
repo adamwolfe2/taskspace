@@ -266,6 +266,7 @@ export function ProjectsPage({
       setProjectMembers([])
       setAddMemberUserId("")
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- detailProject object ref changes on every render; only re-run when id changes
   }, [detailProject?.id, loadProjectMembers])
 
   const addProjectMember = async (projectId: string, userId: string, role: string = "member") => {

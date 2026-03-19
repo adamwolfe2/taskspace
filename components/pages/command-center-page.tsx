@@ -68,7 +68,7 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
     } finally {
       setIsLoadingTasks(false)
     }
-  }, [isDemoMode])
+  }, [isDemoMode, toast])
 
   // Load today's digest
   const loadDigest = useCallback(async () => {
@@ -92,7 +92,7 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
       })
       setDigest(null)
     }
-  }, [isDemoMode, selectedDate])
+  }, [isDemoMode, selectedDate, toast])
 
   // Load conversation history
   const loadConversations = useCallback(async () => {
@@ -110,7 +110,7 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
         variant: "destructive",
       })
     }
-  }, [isDemoMode])
+  }, [isDemoMode, toast])
 
   useEffect(() => {
     loadPendingTasks()

@@ -58,6 +58,7 @@ export function SettingsPage() {
       }
     }
     loadTeamData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast is stable (ref-based); loadTeamData is defined inline and should only run once on mount
   }, [])
 
   return (

@@ -86,7 +86,7 @@ export function ProductivityBar({
     } finally {
       setIsLoading(false)
     }
-  }, [showStreaks, showAchievements, showWeeklyReview])
+  }, [showStreaks, showAchievements, showWeeklyReview, workspaceId])
 
   useEffect(() => {
     loadData()

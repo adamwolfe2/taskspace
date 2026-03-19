@@ -146,6 +146,7 @@ export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
   }, [currentWorkspace, currentOrganization, calculateColors])
 
   // Debounced CSS variable application for performance
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce() returns a new function, deps are captured in closure
   const applyCSSVariables = useCallback(
     debounce((colorsToApply: ExtractedColors) => {
       const cssVars = generateCSSVariables(colorsToApply)
@@ -168,6 +169,7 @@ export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
         }, 300)
       }
     }, 50), // 50ms debounce
+     
     [isTransitioning]
   )
 
@@ -263,6 +265,7 @@ export function BrandThemeProvider({ children }: BrandThemeProviderProps) {
       "--brand-primary-foreground",
       colors.text === "#1e293b" ? "#ffffff" : "#1e293b"
     )
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- applyCSSVariables is a debounced callback; adding it would cause infinite re-renders
   }, [colors])
 
   const updateBrandColors = (newColors: Partial<ExtractedColors>) => {

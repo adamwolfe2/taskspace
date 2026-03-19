@@ -68,6 +68,7 @@ export function AsanaIntegration({ teamMembers }: AsanaIntegrationProps) {
   // Load initial Asana status
   useEffect(() => {
     checkAsanaStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- checkAsanaStatus is not wrapped in useCallback; should only run on mount
   }, [])
 
   const checkAsanaStatus = async () => {

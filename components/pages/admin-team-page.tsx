@@ -119,6 +119,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     if (dialogOpen && editingMember) {
       loadMetric()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- editingMember object ref and toast are stable; only re-run when dialog opens or member changes
   }, [dialogOpen, editingMember?.id])
 
   // Load invitations

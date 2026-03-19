@@ -202,6 +202,7 @@ export function AgendaBuilder({ meetingId, disabled = false }: AgendaBuilderProp
 
   useEffect(() => {
     loadAgenda()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadAgenda is not wrapped in useCallback
   }, [meetingId])
 
   // Handle drag end

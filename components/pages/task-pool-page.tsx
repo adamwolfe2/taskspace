@@ -230,7 +230,7 @@ function TaskCard({
 
 export function TaskPoolPage() {
   const { currentUser } = useApp()
-  const { tasks, isLoading, addTask, claim, unclaim, deleteTask, refresh } = useTaskPool()
+  const { tasks, isLoading, addTask, claim, unclaim, deleteTask } = useTaskPool()
   const [addOpen, setAddOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 

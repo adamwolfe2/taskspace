@@ -90,11 +90,13 @@ export function SlackBotIntegration({ teamMembers }: SlackBotIntegrationProps) {
       })
       window.history.replaceState({}, "", window.location.pathname)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast is stable; should only run on mount to check URL params
   }, [])
 
   // Load initial Slack status
   useEffect(() => {
     fetchSlackStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchSlackStatus is defined below with useCallback; can't add as dep due to declaration order
   }, [])
 
   // Load saved settings from organization

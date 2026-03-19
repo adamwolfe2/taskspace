@@ -58,6 +58,7 @@ export function GoogleCalendarIntegration({ userId: _userId }: GoogleCalendarInt
       })
       window.history.replaceState({}, "", window.location.pathname)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast is stable; loadStatus is not useCallback-wrapped; should only run on mount
   }, [])
 
   const loadStatus = async () => {

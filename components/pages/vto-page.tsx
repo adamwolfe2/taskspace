@@ -176,7 +176,7 @@ export function VTOPage() {
     } finally {
       setIsSaving(false)
     }
-  }, [currentWorkspaceId, toast])
+  }, [currentWorkspaceId, toast, isDemoMode])
 
   // Debounced auto-save
   const debouncedSave = useCallback(

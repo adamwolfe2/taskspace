@@ -193,6 +193,7 @@ export function OnboardingWizard({ onComplete, currentUser }: OnboardingWizardPr
     } catch {
       // Ignore storage errors (quota exceeded, etc.)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- savedState is only used on first render to skip write-back; not a true dependency
   }, [
     currentStep,
     websiteUrl,

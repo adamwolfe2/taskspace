@@ -121,6 +121,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
 
     loadApiKeys()
     loadIntegrationStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast is stable; loadApiKeys/loadIntegrationStatus defined inline
   }, [isAdmin])
 
   // Refresh email integration status
