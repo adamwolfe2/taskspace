@@ -239,7 +239,8 @@ export async function GET(request: NextRequest) {
 
         // Send email summary to admins
         if (isEmailConfigured()) {
-          await sendDailySummaryEmail(digest, teamMembers, admins, missingMembers)
+          const emailOptedInAdmins = admins.filter(a => a.notificationPreferences?.digest?.email !== false)
+          await sendDailySummaryEmail(digest, teamMembers, emailOptedInAdmins, missingMembers)
           logger.info({ orgName: org.name }, "Email sent for org")
 
           // Also send Rock-organized digest email to admins
