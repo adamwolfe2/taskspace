@@ -190,7 +190,7 @@ export function EmptyTeamState({ onInvite }: { onInvite?: () => void }) {
  return (
  <EmptyState
  icon={Users}
- title="No team members"
+ title="No team members yet"
  description="Invite your team to start collaborating and tracking progress together."
  action={onInvite ? { label: "Invite Team", onClick: onInvite } : undefined}
  />
@@ -201,7 +201,7 @@ export function EmptyFilesState() {
  return (
  <EmptyState
  icon={FolderOpen}
- title="No files"
+ title="No files yet"
  description="No files have been uploaded yet."
  />
  )
@@ -211,7 +211,7 @@ export function EmptyReportsState() {
  return (
  <EmptyState
  icon={FileText}
- title="No reports available"
+ title="No reports yet"
  description="Reports will appear here once your team starts submitting EOD updates."
  />
  )
@@ -221,7 +221,7 @@ export function EmptyHistoryState() {
  return (
  <EmptyState
  icon={Clock}
- title="No history"
+ title="No history yet"
  description="Your activity history will appear here as you use the app."
  />
  )

@@ -58,7 +58,7 @@ export function QuickActions({
           notification: {
             type: "eod_reminder",
             title: "EOD Report Reminder",
-            message: `Please submit your End-of-Day report for today.`,
+            message: `Please submit your end-of-day report for today.`,
           },
         }),
       })

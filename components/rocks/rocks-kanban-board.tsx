@@ -246,7 +246,7 @@ const Column = React.memo(function Column({
               <div className="border-2 border-dashed rounded-xl bg-background/50">
                 <EmptyState
                   icon={config.icon}
-                  title="No rocks"
+                  title="No rocks yet"
                   size="sm"
                 />
               </div>

@@ -205,7 +205,7 @@ export function PortfolioDetailPage() {
         body: JSON.stringify({
           organizationId: orgId,
           userIds: missing.map((m) => m.userId),
-          notification: { type: "eod_reminder", title: "EOD Report Reminder", message: "Please submit your End-of-Day report for today." },
+          notification: { type: "eod_reminder", title: "EOD Report Reminder", message: "Please submit your end-of-day report for today." },
         }),
       })
       const json = await res.json()
