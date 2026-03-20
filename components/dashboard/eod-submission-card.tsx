@@ -645,27 +645,27 @@ export function EODSubmissionCard({
 
         {/* Daily Metric Input - only shown if user has an active metric */}
         {activeMetric && (
-          <div className="space-y-2">
-            <Label htmlFor="metricValue" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-              <Target className="h-4 w-4 text-slate-600" />
-              {activeMetric.metricName} {isThursdaySubmission ? "(Today's contribution)" : ""}
+          <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-4 space-y-3">
+            <Label htmlFor="metricValue" className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" />
+              Weekly Scorecard: {activeMetric.metricName}
             </Label>
             <div className="flex items-center gap-3">
               <Input
                 id="metricValue"
                 type="number"
                 min="0"
-                placeholder="0"
+                placeholder="Enter today's count"
                 value={metricValueToday}
                 onChange={(e) => setMetricValueToday(e.target.value)}
-                className="w-24 bg-white border-slate-200 focus:border-primary/50"
+                className="w-32 bg-white border-slate-300 focus:border-primary/50 text-base font-medium"
               />
-              <span className="text-sm text-slate-500">
-                Weekly goal: <span className="font-medium text-slate-700">{activeMetric.weeklyGoal}</span>
+              <span className="text-sm text-slate-600">
+                Goal: <span className="font-semibold text-slate-800">{activeMetric.weeklyGoal}/week</span>
               </span>
             </div>
-            <p className="text-xs text-slate-500">
-              How many {activeMetric.metricName.toLowerCase()} today? This will be added to your weekly total.
+            <p className="text-xs text-slate-600">
+              How many <span className="font-medium">{activeMetric.metricName.toLowerCase()}</span> did you complete today? This feeds your weekly scorecard.
             </p>
           </div>
         )}

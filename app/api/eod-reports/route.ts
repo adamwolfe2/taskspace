@@ -301,13 +301,12 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     const now = new Date().toISOString()
 
     // Parse metric value - ensure it's a valid finite number or null
-    // If user didn't enter a value, default to the number of tasks (for scorecard tracking)
     const parsedMetricValue = metricValueToday !== undefined && metricValueToday !== null && metricValueToday !== ""
       ? parseFloat(String(metricValueToday))
       : null
     const validMetricValue = parsedMetricValue !== null && isFinite(parsedMetricValue)
       ? parsedMetricValue
-      : (tasks && tasks.length > 0 ? tasks.length : null)
+      : null
 
     // Upsert: if a report already exists for this date, merge new data into it
     const existingReport = await db.eodReports.findByUserAndDate(auth.user.id, auth.organization.id, reportDate)
