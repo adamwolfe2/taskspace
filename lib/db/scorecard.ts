@@ -509,11 +509,11 @@ export async function getScorecardSummary(
         'above' as target_direction,
         '' as unit,
         0 as display_order,
-        wme.actual_value as current_value,
+        eod_agg.metric_total as current_value,
         CASE
-          WHEN wme.actual_value IS NULL THEN 'gray'
-          WHEN wme.actual_value >= tmm.weekly_goal THEN 'green'
-          WHEN wme.actual_value >= tmm.weekly_goal * 0.8 THEN 'yellow'
+          WHEN eod_agg.metric_total IS NULL THEN 'gray'
+          WHEN eod_agg.metric_total >= tmm.weekly_goal THEN 'green'
+          WHEN eod_agg.metric_total >= tmm.weekly_goal * 0.8 THEN 'yellow'
           ELSE 'red'
         END as current_status,
         NULL as current_notes,
@@ -524,6 +524,17 @@ export async function getScorecardSummary(
       JOIN workspace_members wm ON wm.user_id = om.user_id AND wm.workspace_id = ${workspaceId}
       LEFT JOIN weekly_metric_entries wme ON wme.metric_id = tmm.id
         AND wme.week_ending = ${weekEndingStr}::date
+      LEFT JOIN LATERAL (
+        SELECT COALESCE(wme.actual_value, (
+          SELECT SUM(er.metric_value_today)
+          FROM eod_reports er
+          WHERE er.user_id = om.user_id
+            AND er.organization_id = om.organization_id
+            AND er.date >= ${week}
+            AND er.date <= ${weekEndingStr}
+            AND er.metric_value_today IS NOT NULL
+        )) as metric_total
+      ) eod_agg ON true
       WHERE tmm.is_active = true
         AND om.status = 'active'
       ORDER BY COALESCE(NULLIF(om.name, ''), u.name) ASC
