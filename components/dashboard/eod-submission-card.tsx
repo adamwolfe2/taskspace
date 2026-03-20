@@ -274,7 +274,15 @@ export function EODSubmissionCard({
       ? parsedMetricValue
       : null
 
-    const report: Omit<EODReport, "id" | "createdAt" | "organizationId"> = {
+    // Parse Thursday weekly confirmation value
+    const parsedWeeklyConfirmed = weeklyMetricConfirmed.trim() !== ""
+      ? parseInt(weeklyMetricConfirmed, 10)
+      : null
+    const validWeeklyConfirmed = parsedWeeklyConfirmed !== null && !isNaN(parsedWeeklyConfirmed)
+      ? parsedWeeklyConfirmed
+      : null
+
+    const report: Omit<EODReport, "id" | "createdAt" | "organizationId"> & { weeklyMetricConfirmed?: number | null } = {
       userId,
       date: reportDate,
       submittedAt: new Date().toISOString(),
@@ -284,6 +292,7 @@ export function EODSubmissionCard({
       needsEscalation,
       escalationNote: needsEscalation ? escalationNote.trim() : null,
       metricValueToday: validMetricValue,
+      weeklyMetricConfirmed: validWeeklyConfirmed,
       mood: mood || undefined,
       attachments: attachments.length > 0 ? attachments : undefined,
     }

@@ -3,10 +3,8 @@ import { sql } from "@/lib/db/sql"
 import { verifyCronSecret } from "@/lib/api/cron-auth"
 import type { ApiResponse } from "@/lib/types"
 
-// Admin endpoint to reset metric data that was incorrectly backfilled
-// from task counts. Clears metric_value_today and weekly_metric_entries
-// so the scorecard starts fresh from actual user input.
-// Protected by CRON_SECRET for safety.
+// Admin endpoint to hard-reset all metric data.
+// Clears ALL metric_value_today and ALL weekly_metric_entries.
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,21 +15,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Step 1: Reset metric_value_today back to NULL on all reports
-    // where it was set to the task array length (bad backfill)
+    // Hard reset: clear ALL metric_value_today
     const resetResult = await sql`
       UPDATE eod_reports
       SET metric_value_today = NULL
       WHERE metric_value_today IS NOT NULL
-        AND metric_value_today = jsonb_array_length(tasks)
-        AND tasks IS NOT NULL
-        AND jsonb_typeof(tasks) = 'array'
     `
 
-    // Step 2: Delete all weekly_metric_entries (they were populated from bad data)
+    // Hard reset: delete ALL weekly_metric_entries
     const deleteResult = await sql`
       DELETE FROM weekly_metric_entries
-      WHERE created_at >= NOW() - INTERVAL '1 day'
     `
 
     return NextResponse.json<ApiResponse<{
@@ -43,7 +36,6 @@ export async function POST(request: NextRequest) {
         reportsReset: resetResult.rowCount ?? 0,
         entriesDeleted: deleteResult.rowCount ?? 0,
       },
-      message: "Metric data reset. Scorecard will now show values from actual user input only.",
     })
   } catch (error) {
     return NextResponse.json<ApiResponse<null>>(

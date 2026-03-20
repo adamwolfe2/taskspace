@@ -229,6 +229,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       needsEscalation,
       escalationNote,
       metricValueToday,
+      weeklyMetricConfirmed,
       mood,
       date,
       attachments,
@@ -429,6 +430,36 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
         // Fire-and-forget - don't block EOD submission
         upsertWeeklyMetricEntry(auth.user.id, auth.organization.id, activeMetric.id)
           .catch(err => logError(logger, "Failed to update weekly metric entry", err, { userId: auth.user.id }))
+      }
+    }
+
+    // Handle Thursday weekly metric confirmation — directly set the weekly total
+    if (weeklyMetricConfirmed !== null && weeklyMetricConfirmed !== undefined) {
+      const activeMetric = await getActiveMetricForUser(auth.user.id, auth.organization.id)
+      if (activeMetric) {
+        const { getCurrentWeekEnding, formatDateString } = await import("@/lib/metrics")
+        const { sql: dbSql } = await import("@/lib/db/sql")
+        const weekEnding = getCurrentWeekEnding()
+        const weekEndingStr = formatDateString(weekEnding)
+        // Directly set the confirmed weekly total (overrides any daily aggregation)
+        dbSql`
+          INSERT INTO weekly_metric_entries (id, team_member_id, metric_id, week_ending, actual_value, created_at, updated_at)
+          SELECT
+            'wme_' || gen_random_uuid()::text,
+            om.id,
+            ${activeMetric.id},
+            ${weekEndingStr}::date,
+            ${weeklyMetricConfirmed},
+            NOW(),
+            NOW()
+          FROM organization_members om
+          WHERE om.user_id = ${auth.user.id}
+          AND om.organization_id = ${auth.organization.id}
+          ON CONFLICT (team_member_id, week_ending)
+          DO UPDATE SET
+            actual_value = ${weeklyMetricConfirmed},
+            updated_at = NOW()
+        `.catch(err => logError(logger, "Failed to upsert weekly metric confirmation", err, { userId: auth.user.id }))
       }
     }
 
