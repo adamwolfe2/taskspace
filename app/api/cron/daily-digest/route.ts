@@ -115,6 +115,12 @@ export async function GET(request: NextRequest) {
     for (const org of organizations) {
       const timezone = org.settings?.timezone || CONFIG.organization.defaultTimezone
 
+      // Skip internal orgs (e.g. AIMS) — they don't need automated emails
+      if (org.isInternal) {
+        results.push({ orgId: org.id, orgName: org.name, success: true, skipped: "Internal org" })
+        continue
+      }
+
       // Check if it's digest time for this organization
       if (!isDigestTime(org)) {
         results.push({ orgId: org.id, orgName: org.name, success: true, skipped: "Not digest time" })

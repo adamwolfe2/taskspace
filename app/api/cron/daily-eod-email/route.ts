@@ -164,6 +164,19 @@ export async function GET(request: NextRequest) {
     for (const org of organizations) {
       const timezone = org.settings?.timezone || "America/Los_Angeles"
 
+      // Skip internal orgs (e.g. AIMS) — they don't need automated emails
+      if (org.isInternal) {
+        results.push({
+          orgId: org.id,
+          orgName: org.name,
+          timezone,
+          emailsSent: 0,
+          skipped: "Internal org",
+          errors: [],
+        })
+        continue
+      }
+
       // Check if it's 7 PM for this organization
       if (!isDailyEmailTime(org)) {
         results.push({

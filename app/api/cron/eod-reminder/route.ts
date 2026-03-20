@@ -173,6 +173,19 @@ export async function GET(request: NextRequest) {
     for (const org of organizations) {
       const timezone = org.settings?.timezone || CONFIG.organization.defaultTimezone
 
+      // Skip internal orgs (e.g. AIMS) — they don't need automated emails
+      if (org.isInternal) {
+        results.push({
+          orgId: org.id,
+          orgName: org.name,
+          timezone,
+          reminders: 0,
+          skipped: "Internal org",
+          errors: [],
+        })
+        continue
+      }
+
       // Check if it's reminder time for this organization
       if (!isReminderTime(org)) {
         results.push({

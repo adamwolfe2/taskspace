@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
       SELECT id, name, subscription
       FROM organizations
       WHERE stripe_subscription_id IS NULL
+        AND is_internal = false
         AND (subscription->>'plan' = 'free' OR subscription->>'plan' IS NULL)
         AND (subscription->>'currentPeriodEnd') IS NOT NULL
         AND (subscription->>'currentPeriodEnd')::timestamptz > NOW()

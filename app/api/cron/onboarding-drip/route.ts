@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
       JOIN users u ON u.id = o.owner_id
       WHERE o.created_at > NOW() - INTERVAL '25 hours'
         AND o.created_at <= NOW() - INTERVAL '23 hours'
+        AND o.is_internal = false
         AND NOT EXISTS (
           SELECT 1 FROM eod_reports er WHERE er.organization_id = o.id
         )
@@ -80,6 +81,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN organization_members om ON om.organization_id = o.id AND om.status = 'active'
       WHERE o.created_at > NOW() - INTERVAL '73 hours'
         AND o.created_at <= NOW() - INTERVAL '71 hours'
+        AND o.is_internal = false
       GROUP BY o.id, o.name, u.email, u.name
       HAVING COUNT(om.id) < 2
     `
@@ -114,6 +116,7 @@ export async function GET(request: NextRequest) {
       JOIN users u ON u.id = o.owner_id
       WHERE o.created_at > NOW() - INTERVAL '169 hours'
         AND o.created_at <= NOW() - INTERVAL '167 hours'
+        AND o.is_internal = false
         AND NOT EXISTS (
           SELECT 1 FROM rocks r WHERE r.organization_id = o.id
         )
