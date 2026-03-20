@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User, Mail, Loader2, Check, Upload, Camera } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
+import { formatDate } from "@/lib/utils/date-format"
 
 export function ProfileSettingsTab() {
   const { currentUser, refreshSession } = useApp()
@@ -299,7 +300,7 @@ export function ProfileSettingsTab() {
             </div>
             <div>
               <p className="font-medium text-muted-foreground">Member Since</p>
-              <p>{currentUser?.joinDate ? new Date(currentUser.joinDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "N/A"}</p>
+              <p>{currentUser?.joinDate ? formatDate(currentUser.joinDate) : "N/A"}</p>
             </div>
             <div>
               <p className="font-medium text-muted-foreground">Status</p>
@@ -308,7 +309,7 @@ export function ProfileSettingsTab() {
             {currentUser?.lastActive && (
               <div>
                 <p className="font-medium text-muted-foreground">Last Active</p>
-                <p>{new Date(currentUser.lastActive).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
+                <p>{formatDate(currentUser.lastActive)}</p>
               </div>
             )}
           </div>

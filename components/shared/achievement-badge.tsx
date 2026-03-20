@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { formatDateShort } from "@/lib/utils/date-format"
 import {
  Flame,
  Trophy,
@@ -142,7 +143,7 @@ export function AchievementBadge({
  )}
  {earned && earnedAt && (
  <p className="text-xs text-slate-600 ">
- Earned {new Date(earnedAt).toLocaleDateString()}
+ Earned {formatDateShort(earnedAt)}
  </p>
  )}
  {!earned && progress !== undefined && (

@@ -38,6 +38,7 @@ import {
 import { IntegrationLogo } from "@/components/ui/integration-logo"
 import { useToast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/utils"
+import { formatDateShort } from "@/lib/utils/date-format"
 import type { TeamMember, ApiKey } from "@/lib/types"
 import { AsanaIntegration } from "./asana-integration"
 import { GoogleCalendarIntegration } from "./google-calendar-integration"
@@ -276,7 +277,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
 
       toast({
         title: "API key created",
-        description: "Make sure to copy your key - it won't be shown again!",
+        description: "Make sure to copy your key - it won't be shown again",
       })
     } catch (err: unknown) {
       toast({
@@ -323,7 +324,7 @@ export function IntegrationsApiTab({ teamMembers }: IntegrationsApiTabProps) {
     try {
       await navigator.clipboard.writeText(text)
       toast({
-        title: "Copied!",
+        title: "Copied",
         description: `${label} copied to clipboard`,
       })
     } catch {
@@ -624,11 +625,11 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
                       </div>
                       <p className="text-sm text-muted-foreground font-mono">{maskApiKey(apiKey.key)}</p>
                       <p className="text-xs text-muted-foreground">
-                        Created {new Date(apiKey.createdAt).toLocaleDateString()}
+                        Created {formatDateShort(apiKey.createdAt)}
                         {apiKey.lastUsedAt &&
-                          ` • Last used ${new Date(apiKey.lastUsedAt).toLocaleDateString()}`}
+                          ` • Last used ${formatDateShort(apiKey.lastUsedAt)}`}
                         {apiKey.expiresAt &&
-                          ` • ${isExpired ? "Expired" : "Expires"} ${new Date(apiKey.expiresAt).toLocaleDateString()}`}
+                          ` • ${isExpired ? "Expired" : "Expires"} ${formatDateShort(apiKey.expiresAt)}`}
                         {!apiKey.expiresAt && " • Never expires"}
                       </p>
                     </div>
@@ -691,7 +692,7 @@ EMAIL_FROM=Taskspace <noreply@yourdomain.com>`}
                           onClick={() => {
                             window.open(`/api/mcp/bundle?keyId=${key.id}`, "_blank")
                             toast({
-                              title: "Downloading extension...",
+                              title: "Downloading extension",
                               description: "Drag the .mcpb file into Claude Desktop → Settings → Extensions",
                             })
                           }}

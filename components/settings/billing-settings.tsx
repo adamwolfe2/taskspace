@@ -31,6 +31,7 @@ import { IntegrationLogo } from "@/components/ui/integration-logo"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
+import { formatDateShort } from "@/lib/utils/date-format"
 import { STRIPE_PAYMENT_LINKS, AI_CREDIT_PAYMENT_LINKS } from "@/lib/integrations/stripe-config"
 
 // Plan configurations matching plans.ts and stripe-config.ts
@@ -425,8 +426,8 @@ export function BillingSettings() {
               {subscription?.currentPeriodEnd && currentPlan !== "free" && (
                 <p className="text-sm text-slate-500 mt-1">
                   {subscription.cancelAtPeriodEnd
-                    ? `Access until ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`
-                    : `Renews ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`}
+                    ? `Access until ${formatDateShort(subscription.currentPeriodEnd)}`
+                    : `Renews ${formatDateShort(subscription.currentPeriodEnd)}`}
                 </p>
               )}
             </div>
@@ -779,7 +780,7 @@ export function BillingSettings() {
               <p>
                 Your <strong>{PLANS[currentPlan].name}</strong> plan will remain active until the end of your current billing period
                 {subscription?.currentPeriodEnd && (
-                  <> ({new Date(subscription.currentPeriodEnd).toLocaleDateString()})</>
+                  <> ({formatDateShort(subscription.currentPeriodEnd)})</>
                 )}.
               </p>
               <p>

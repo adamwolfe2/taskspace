@@ -20,11 +20,7 @@ import { ToastAction } from "@/components/ui/toast"
 import { updateStreak } from "@/lib/hooks/use-productivity"
 import { api } from "@/lib/api/client"
 import { isRockBehindSchedule } from "@/lib/utils/stats-calculator"
-
-function formatDisplayDate(dateStr: string): string {
-  const date = new Date(dateStr + "T12:00:00")
-  return date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
-}
+import { formatDateCompact } from "@/lib/utils/date-format"
 
 interface EODSubmissionCardProps {
   rocks: Rock[] // Current quarter rocks only
@@ -240,7 +236,7 @@ export function EODSubmissionCard({
 
     if (allTasks.length === 0) {
       toast({
-        title: "Incomplete Form",
+        title: "Incomplete form",
         description: "Please add at least one completed task",
         variant: "destructive",
       })
@@ -249,7 +245,7 @@ export function EODSubmissionCard({
 
     if (!challenges.trim()) {
       toast({
-        title: "Incomplete Form",
+        title: "Incomplete form",
         description: "Please describe any challenges you faced",
         variant: "destructive",
       })
@@ -258,7 +254,7 @@ export function EODSubmissionCard({
 
     if (needsEscalation && !escalationNote.trim()) {
       toast({
-        title: "Escalation Note Required",
+        title: "Escalation note required",
         description: "Please describe what needs escalation",
         variant: "destructive",
       })
@@ -301,8 +297,8 @@ export function EODSubmissionCard({
         if (streakResult.isNewRecord) {
           // Show special toast for new streak record
           toast({
-            title: "New Streak Record!",
-            description: `Congratulations! You've achieved a ${streakResult.longestStreak}-day streak!`,
+            title: "New streak record",
+            description: `Congratulations, you've achieved a ${streakResult.longestStreak}-day streak`,
           })
         }
       } catch {
@@ -324,8 +320,8 @@ export function EODSubmissionCard({
       clearDraft()
 
       toast({
-        title: "EOD Report Submitted",
-        description: `Your EOD report for ${formatDisplayDate(reportDate)} has been recorded. You can submit another report for the same day if needed.`,
+        title: "EOD report submitted",
+        description: `Your EOD report for ${formatDateCompact(reportDate)} has been recorded. You can submit another report for the same day if needed.`,
       })
 
       // Nudge user about behind-schedule rocks after successful submission
@@ -335,7 +331,7 @@ export function EODSubmissionCard({
       if (behindRocks.length > 0) {
         setTimeout(() => {
           toast({
-            title: `${behindRocks.length} Rock${behindRocks.length > 1 ? "s" : ""} Behind Pace`,
+            title: `${behindRocks.length} rock${behindRocks.length > 1 ? "s" : ""} behind pace`,
             description:
               behindRocks.length === 1
                 ? `"${behindRocks[0].title}" is behind its expected progress. Consider updating it.`
@@ -378,8 +374,8 @@ export function EODSubmissionCard({
             const streakResult = await updateStreak(reportDate)
             if (streakResult.isNewRecord) {
               toast({
-                title: "New Streak Record!",
-                description: `Congratulations! You've achieved a ${streakResult.longestStreak}-day streak!`,
+                title: "New streak record",
+                description: `Congratulations, you've achieved a ${streakResult.longestStreak}-day streak`,
               })
             }
           } catch {
@@ -400,19 +396,19 @@ export function EODSubmissionCard({
           clearDraft()
 
           toast({
-            title: "EOD Report Updated",
-            description: `Your EOD report for ${formatDisplayDate(reportDate)} has been updated`,
+            title: "EOD report updated",
+            description: `Your EOD report for ${formatDateCompact(reportDate)} has been updated`,
           })
         } catch (updateErr: unknown) {
           toast({
-            title: "Update Failed",
+            title: "Update failed",
             description: updateErr instanceof Error ? updateErr.message : "Failed to update existing EOD report. You may need to contact an admin.",
             variant: "destructive",
           })
         }
       } else {
         toast({
-          title: "Submission Failed",
+          title: "Submission failed",
           description: err instanceof Error ? err.message : "Failed to submit EOD report",
           variant: "destructive",
         })
@@ -828,7 +824,7 @@ export function EODSubmissionCard({
           ) : (
             <>
               <Send className="h-5 w-5 mr-2" />
-              {isBackdatedReport ? `Submit EOD for ${formatDisplayDate(reportDate)}` : "Submit EOD Report"}
+              {isBackdatedReport ? `Submit EOD for ${formatDateCompact(reportDate)}` : "Submit EOD Report"}
             </>
           )}
         </Button>
