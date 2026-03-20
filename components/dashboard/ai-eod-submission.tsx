@@ -153,7 +153,7 @@ export function AIEODSubmission({
   const handleParse = async () => {
     if (!textDump.trim()) {
       toast({
-        title: "No Content",
+        title: "No content",
         description: "Please paste your daily task dump first",
         variant: "destructive",
       })
@@ -212,13 +212,13 @@ export function AIEODSubmission({
 
       const dateLabel = selectedDate === todayInOrgTz ? "today" : selectedDate
       toast({
-        title: "Parsed Successfully",
+        title: "Parsed successfully",
         description: `Found ${parsed.tasks.length} task${parsed.tasks.length !== 1 ? "s" : ""} for ${dateLabel}`,
       })
     } catch (error) {
       setParseError(true)
       toast({
-        title: "Parse Failed",
+        title: "Parse failed",
         description: error instanceof Error ? error.message : "Failed to parse your text dump",
         variant: "destructive",
       })
@@ -230,7 +230,7 @@ export function AIEODSubmission({
   const handleSubmit = async () => {
     if (editedTasks.length === 0) {
       toast({
-        title: "No Tasks",
+        title: "No tasks",
         description: "Please add at least one task to your report",
         variant: "destructive",
       })
@@ -268,8 +268,8 @@ export function AIEODSubmission({
         const streakResult = await updateStreak()
         if (streakResult.isNewRecord) {
           toast({
-            title: "New Streak Record!",
-            description: `Congratulations! You've achieved a ${streakResult.longestStreak}-day streak!`,
+            title: "New streak record",
+            description: `Congratulations, you've achieved a ${streakResult.longestStreak}-day streak`,
           })
         }
       } catch {
@@ -290,7 +290,7 @@ export function AIEODSubmission({
 
       const dateLabel = dateOptions.find(d => d.value === selectedDate)?.label || selectedDate
       toast({
-        title: "EOD Report Submitted",
+        title: "EOD report submitted",
         description: `Your AI-generated EOD report for ${dateLabel} has been recorded. You can submit another report for the same day if needed.`,
       })
     } catch (err: unknown) {
@@ -299,7 +299,7 @@ export function AIEODSubmission({
       if (apiErr.status === 409 && apiErr.data) {
         const existingReport = apiErr.data
         toast({
-          title: "Report Already Exists",
+          title: "Report already exists",
           description: "You already submitted an EOD report for today. Click to view and edit it.",
           variant: "default",
           action: (
@@ -315,7 +315,7 @@ export function AIEODSubmission({
         })
       } else {
         toast({
-          title: "Submission Failed",
+          title: "Submission failed",
           description: err instanceof Error ? err.message : "Failed to submit EOD report",
           variant: "destructive",
         })

@@ -104,7 +104,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
       // Update local state after successful API call
       setRocks(rocks.filter((r) => r.id !== rockId))
       toast({
-        title: "Rock Deleted",
+        title: "Rock deleted",
         description: "The rock has been permanently removed",
       })
     } catch (error) {
@@ -121,7 +121,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
   const handleSubmit = async () => {
     if (!formData.title || !formData.description) {
       toast({
-        title: "Missing Fields",
+        title: "Missing fields",
         description: "Please fill in title and description",
         variant: "destructive",
       })
@@ -171,7 +171,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
           )
         )
         toast({
-          title: "Rock Updated",
+          title: "Rock updated",
           description: "The rock has been saved successfully",
         })
       } else {
@@ -204,7 +204,7 @@ export function ManageRocksDialog({ open, onOpenChange, teamMembers, rocks, setR
         // Add the new rock from API response to local state
         setRocks([...rocks, data.data])
         toast({
-          title: "Rock Created",
+          title: "Rock created",
           description: "A new rock has been saved successfully",
         })
       }

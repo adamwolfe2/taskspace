@@ -70,8 +70,8 @@ export function BugReporter() {
 
       setSubmitted(true)
       toast({
-        title: "Bug reported!",
-        description: `Issue #${data.data.issueNumber} created. Thank you for helping improve TaskSpace!`,
+        title: "Bug reported",
+        description: `Issue #${data.data.issueNumber} created. Thank you for helping improve TaskSpace.`,
       })
 
       // Reset after 2 seconds

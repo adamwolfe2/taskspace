@@ -45,7 +45,7 @@ export function GoogleCalendarIntegration({ userId: _userId }: GoogleCalendarInt
     const params = new URLSearchParams(window.location.search)
     if (params.get("calendar_connected") === "true") {
       toast({
-        title: "Connected!",
+        title: "Connected",
         description: "Google Calendar is now connected",
       })
       // Clean up URL

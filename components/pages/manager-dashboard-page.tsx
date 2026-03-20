@@ -103,7 +103,7 @@ export function ManagerDashboardPage({ currentUser: _currentUser }: ManagerDashb
 
   const handleAiInsights = async () => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return
     }
     if (!currentWorkspace || !dashboard) return

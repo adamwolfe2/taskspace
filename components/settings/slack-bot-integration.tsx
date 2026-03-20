@@ -78,7 +78,7 @@ export function SlackBotIntegration({ teamMembers }: SlackBotIntegrationProps) {
     const params = new URLSearchParams(window.location.search)
     if (params.get("slack") === "connected") {
       toast({
-        title: "Connected!",
+        title: "Connected",
         description: "Slack bot has been successfully installed.",
       })
       window.history.replaceState({}, "", window.location.pathname)

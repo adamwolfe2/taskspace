@@ -176,7 +176,7 @@ export function OrgChartPage() {
     completed: boolean
   ) => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return
     }
     // Optimistic update
@@ -230,7 +230,7 @@ export function OrgChartPage() {
   // Sync rocks from workspace to org chart
   const handleSyncRocks = async () => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return
     }
     if (!currentWorkspace) return

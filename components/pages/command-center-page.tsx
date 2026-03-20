@@ -121,7 +121,7 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
   // Process brain dump
   const handleBrainDump = async (content: string) => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return
     }
     setIsProcessingDump(true)
@@ -165,7 +165,7 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
   // Approve task (silent=true suppresses the individual toast, used for approve-all)
   const handleApproveTask = async (taskId: string, updates?: Partial<AIGeneratedTask>, silent = false) => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return
     }
     try {
@@ -203,7 +203,7 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
   // Reject task
   const handleRejectTask = async (taskId: string) => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return
     }
     try {
@@ -247,7 +247,7 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
   // Generate digest
   const handleGenerateDigest = async () => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return
     }
     setIsGeneratingDigest(true)
@@ -283,7 +283,7 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
   // Handle AI query
   const handleQuery = async (query: string): Promise<AIQueryResponse & { conversationId: string }> => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return { response: "AI features are not available in demo mode. Sign up to use the AI copilot!", conversationId: "demo", suggestedFollowUps: [] }
     }
     setIsQuerying(true)

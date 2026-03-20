@@ -96,11 +96,11 @@ function IdsBoardContent() {
       })
       await deleteItem(editingItem.id)
       toast({
-        title: "Converted to Rock",
+        title: "Converted to rock",
         description: `"${editingItem.title}" is now a Rock. Visit the Rocks page to set a due date and track progress.`,
       })
     } catch {
-      toast({ title: "Failed to convert to Rock", variant: "destructive" })
+      toast({ title: "Failed to convert to rock", variant: "destructive" })
     }
   }, [editingItem, currentWorkspaceId, deleteItem, toast])
 
@@ -120,11 +120,11 @@ function IdsBoardContent() {
       })
       await deleteItem(editingItem.id)
       toast({
-        title: "Converted to Task",
+        title: "Converted to task",
         description: `"${editingItem.title}" is now a Task. Visit the Tasks page to set a due date and priority.`,
       })
     } catch {
-      toast({ title: "Failed to convert to Task", variant: "destructive" })
+      toast({ title: "Failed to convert to task", variant: "destructive" })
     }
   }, [editingItem, currentUser, currentWorkspaceId, deleteItem, toast])
 

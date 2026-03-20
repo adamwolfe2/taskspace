@@ -195,7 +195,7 @@ export function PeopleAnalyzerPage() {
 
   const handleSaveAssessment = async () => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE });
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE });
       return;
     }
     if (!currentWorkspace?.id) return;
@@ -260,7 +260,7 @@ export function PeopleAnalyzerPage() {
 
   const handleDeleteAssessment = (assessmentId: string) => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE });
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE });
       return;
     }
     setAssessmentToDelete(assessmentId);

@@ -183,7 +183,7 @@ export function BulkRockImport({ teamMembers }: BulkRockImportProps) {
         : ""
 
       toast({
-        title: "Import complete!",
+        title: "Import complete",
         description: `Created ${data.data.created.length} rock(s)${tasksCreatedMsg} for ${selectedMember?.name || "team member"}${metricsSetMsg}`,
       })
 

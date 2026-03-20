@@ -119,7 +119,7 @@ export function RockCheckinDialog({
 
       const progressChanged = progress !== currentProgress
       toast({
-        title: "Check-in Submitted",
+        title: "Check-in submitted",
         description: progressChanged
           ? `Progress updated to ${progress}% · Confidence: ${confidenceOptions.find((o) => o.value === confidence)?.label}`
           : `Confidence updated to "${confidenceOptions.find((o) => o.value === confidence)?.label}"`,

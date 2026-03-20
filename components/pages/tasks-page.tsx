@@ -107,7 +107,7 @@ export function TasksPage({
       const result = await response.json()
       if (result.success) {
         setAiPrioritized(result.data.prioritizedTasks)
-        toast({ title: "Tasks Prioritized", description: result.data.summary })
+        toast({ title: "Tasks prioritized", description: result.data.summary })
       } else {
         toast({ title: "Error", description: result.error, variant: "destructive" })
       }
@@ -296,7 +296,7 @@ export function TasksPage({
           })
 
           toast({
-            title: "Task completed!",
+            title: "Task completed",
             description: `Added to today's EOD report. Next occurrence created for ${nextDueDate.toLocaleDateString()}`,
           })
           return
@@ -304,7 +304,7 @@ export function TasksPage({
       }
 
       toast({
-        title: "Task completed!",
+        title: "Task completed",
         description: "Added to today's EOD report",
       })
     } catch (err: unknown) {

@@ -206,7 +206,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
       setTeamMembers(teamMembers.map((m) => (m.id === editingMember.id ? updatedWithManager as TeamMember : m)))
       toast({
-        title: "Member Updated",
+        title: "Member updated",
         description: `${formData.name} has been updated successfully`,
       })
       setDialogOpen(false)
@@ -224,7 +224,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
   const handleInvite = async () => {
     if (!inviteData.email) {
       toast({
-        title: "Missing Email",
+        title: "Missing email",
         description: "Please enter an email address",
         variant: "destructive",
       })
@@ -241,7 +241,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       })
       setInvitations([...invitations, invitation])
       toast({
-        title: "Invitation Sent",
+        title: "Invitation sent",
         description: `An invitation has been sent to ${inviteData.email}`,
       })
       setInviteDialogOpen(false)
@@ -264,7 +264,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       await api.invitations.cancel(invitationId)
       setInvitations(invitations.filter((i) => i.id !== invitationId))
       toast({
-        title: "Invitation Cancelled",
+        title: "Invitation cancelled",
         description: "The invitation has been cancelled",
       })
     } catch (err: unknown) {
@@ -295,7 +295,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
       if (data.data?.emailSent) {
         toast({
-          title: "Invitation Resent",
+          title: "Invitation resent",
           description: "A fresh invitation email has been sent.",
         })
       } else {
@@ -323,7 +323,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
     const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
     navigator.clipboard.writeText(`${baseUrl}/join/${token}`)
     toast({
-      title: "Link Copied",
+      title: "Link copied",
       description: "Invitation link copied to clipboard",
     })
   }
@@ -336,7 +336,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
     if (emailList.length === 0) {
       toast({
-        title: "No Emails",
+        title: "No emails",
         description: "Please enter at least one email address",
         variant: "destructive",
       })
@@ -357,7 +357,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       if (result.successful.length > 0) {
         setInvitations([...invitations, ...result.successful])
         toast({
-          title: "Invitations Sent",
+          title: "Invitations sent",
           description: `Successfully sent ${result.successful.length} invitation(s)`,
         })
       }
@@ -397,7 +397,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
   const handleCreateDraftMember = async () => {
     if (!newMemberData.name || !newMemberData.email) {
       toast({
-        title: "Missing Information",
+        title: "Missing information",
         description: "Please enter both name and email",
         variant: "destructive",
       })
@@ -428,7 +428,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
       setTeamMembers([...teamMembers, data.data])
       toast({
-        title: "Team Member Added",
+        title: "Team member added",
         description: `${newMemberData.name} has been added. You can now assign rocks and tasks, then send an invitation when ready.`,
       })
       setAddMemberDialogOpen(false)
@@ -460,7 +460,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         m.id === member.id ? { ...m, status: "invited" } : m
       ))
       toast({
-        title: "Invitation Sent",
+        title: "Invitation sent",
         description: `An invitation has been sent to ${member.email}`,
       })
     } catch (err: unknown) {
@@ -524,7 +524,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
       const migration = data.data?.migration
       toast({
-        title: "Migration Started",
+        title: "Migration started",
         description: `Invitation sent to ${migrateEmail}. ${migration?.tasksToTransfer || 0} tasks and ${migration?.rocksToTransfer || 0} rocks will transfer when they accept.`,
       })
 
@@ -534,7 +534,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
         try {
           await navigator.clipboard.writeText(inviteLink)
           toast({
-            title: "Link Copied",
+            title: "Link copied",
             description: "Invitation link copied to clipboard",
           })
         } catch {
@@ -578,7 +578,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
       setTeamMembers(teamMembers.filter(m => m.id !== memberToRemove))
       toast({
-        title: "Member Removed",
+        title: "Member removed",
         description: `${memberName} has been removed from the workspace`,
       })
     } catch (err: unknown) {
@@ -608,7 +608,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
       }
 
       toast({
-        title: "Login Link Sent",
+        title: "Login link sent",
         description: `A password reset link has been sent to ${member.email}. They can use it to set a new password and log in.`,
       })
     } catch (err: unknown) {

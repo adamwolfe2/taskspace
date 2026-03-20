@@ -135,7 +135,7 @@ export function VTOPage() {
   // Auto-save with debounce
   const saveVTO = useCallback(async (data: VTOData) => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return
     }
     if (!currentWorkspaceId) return

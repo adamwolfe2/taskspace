@@ -160,7 +160,7 @@ export function WorkspaceBuilder({ onClose }: WorkspaceBuilderProps) {
       await navigator.clipboard.writeText(COPY_PROMPT)
       setCopied(true)
       setTimeout(() => setCopied(false), 2500)
-      toast({ title: "Prompt copied!", description: "Paste it into Claude, ChatGPT, or any AI." })
+      toast({ title: "Prompt copied", description: "Paste it into Claude, ChatGPT, or any AI." })
     } catch {
       toast({ title: "Copy failed", description: "Please copy the prompt manually.", variant: "destructive" })
     }

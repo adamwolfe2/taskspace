@@ -60,7 +60,7 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
       // Workspace failed but org exists - user can still proceed
       // The ensure-default endpoint will create a workspace on next login
       toast({
-        title: "Almost there!",
+        title: "Almost there",
         description: "Your organization was created. Workspace details will finalize automatically on next login.",
       })
       // Still try to refresh session and proceed
@@ -182,7 +182,7 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
     }).catch(() => { /* non-critical */ })
 
     toast({
-      title: "Welcome to Taskspace!",
+      title: "Welcome to Taskspace",
       description: "Your workspace is ready. Let's build daily accountability.",
     })
 

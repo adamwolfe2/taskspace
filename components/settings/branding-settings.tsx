@@ -89,7 +89,7 @@ export function BrandingSettings() {
         const extractedColors = await extractColorsFromImage(logoUrl)
         setPendingColors(extractedColors)
         toast({
-          title: "Logo uploaded!",
+          title: "Logo uploaded",
           description: "We've automatically generated colors from your logo",
         })
       } catch {

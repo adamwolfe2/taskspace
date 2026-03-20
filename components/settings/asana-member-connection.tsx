@@ -84,7 +84,7 @@ export function AsanaMemberConnection() {
 
       if (data.success) {
         toast({
-          title: "Connected!",
+          title: "Connected",
           description: `Connected to Asana as ${data.data.asanaName}`,
         })
         setShowConnectDialog(false)

@@ -93,7 +93,7 @@ export function AddMetricDialog({
 
     if (!formData.name.trim()) {
       toast({
-        title: "Validation Error",
+        title: "Validation error",
         description: "Metric name is required",
         variant: "destructive",
       })
@@ -134,7 +134,7 @@ export function AddMetricDialog({
       }
 
       toast({
-        title: editMetric ? "Metric Updated" : "Metric Created",
+        title: editMetric ? "Metric updated" : "Metric created",
         description: `"${formData.name}" has been ${editMetric ? "updated" : "added"} to the scorecard`,
       })
 

@@ -623,7 +623,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                                 setCompletingRockId(rock.id)
                                 try {
                                   await updateRock(rock.id, { status: "completed", progress: 100 })
-                                  toast({ title: "Rock completed!", description: rock.title })
+                                  toast({ title: "Rock completed", description: rock.title })
                                 } catch {
                                   toast({ title: "Failed to complete rock", variant: "destructive" })
                                 } finally {
@@ -834,7 +834,7 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
                                       e.stopPropagation()
                                       setCompletingRockId(rock.id)
                                       updateRock(rock.id, { status: "completed" })
-                                        .then(() => toast({ title: "Rock completed!", description: rock.title }))
+                                        .then(() => toast({ title: "Rock completed", description: rock.title }))
                                         .catch(() => toast({ title: "Failed to complete rock", variant: "destructive" }))
                                         .finally(() => setCompletingRockId(null))
                                     }}

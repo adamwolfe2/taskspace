@@ -313,8 +313,8 @@ export function TaskDetailModal({
         completedAt: isCompleted ? null : new Date().toISOString(),
       })
       toast({
-        title: isCompleted ? "Task reopened" : "Task completed!",
-        description: isCompleted ? "Task marked as pending" : "Great job!",
+        title: isCompleted ? "Task reopened" : "Task completed",
+        description: isCompleted ? "Task marked as pending" : "Task marked as completed",
       })
       onOpenChange(false)
     } catch (err: unknown) {

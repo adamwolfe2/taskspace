@@ -107,8 +107,8 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, onDele
       if (wasCompleted) {
         triggerConfetti("rock_complete")
         toast({
-          title: "Rock Completed!",
-          description: `"${title}" has been marked complete. Outstanding work!`,
+          title: "Rock completed",
+          description: `"${title}" has been marked complete`,
         })
       } else {
         toast({
@@ -392,7 +392,7 @@ export function RockDetailModal({ open, onOpenChange, rock, onUpdateRock, onDele
               try {
                 await onUpdateRock(rock.id, { status: "completed", progress: 100 })
                 triggerConfetti("rock_complete")
-                toast({ title: "Rock Completed!", description: `"${rock.title}" is done. Outstanding work!` })
+                toast({ title: "Rock completed", description: `"${rock.title}" is done` })
               } catch {
                 toast({ title: "Update failed", variant: "destructive" })
               }

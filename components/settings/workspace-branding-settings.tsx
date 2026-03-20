@@ -257,7 +257,7 @@ export function WorkspaceBrandingSettings() {
       setPersonality(extracted.personality || null)
 
       toast({
-        title: "Colors extracted!",
+        title: "Colors extracted",
         description: "Brand colors have been extracted from your logo",
       })
 
@@ -320,7 +320,7 @@ export function WorkspaceBrandingSettings() {
       if (brand.logo) setLogoUrl(brand.logo)
 
       toast({
-        title: "Brand data extracted!",
+        title: "Brand data extracted",
         description: "Colors and logo have been populated from your website",
       })
 

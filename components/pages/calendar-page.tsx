@@ -42,7 +42,7 @@ export function CalendarPage({ currentUser, assignedTasks, rocks, eodReports }: 
 
   const handleMeetingPrep = async () => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return
     }
     if (!currentWorkspaceId) return

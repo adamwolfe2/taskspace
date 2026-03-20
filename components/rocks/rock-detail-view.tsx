@@ -135,7 +135,7 @@ export function RockDetailView({ rockId, onBack }: RockDetailViewProps) {
 
       if (result.success) {
         toast({
-          title: rock.status === "completed" ? "Rock Reopened" : "Rock Completed",
+          title: rock.status === "completed" ? "Rock reopened" : "Rock completed",
           description: result.message,
         })
         fetchRockDetails()

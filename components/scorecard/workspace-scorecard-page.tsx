@@ -190,7 +190,7 @@ export function WorkspaceScorecardPage() {
 
   const fetchAiInsights = async () => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return
     }
     if (!currentWorkspaceId) return
@@ -276,7 +276,7 @@ export function WorkspaceScorecardPage() {
 
   const handleUpdateEntry = async (metricId: string, value: number, notes?: string) => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       return
     }
     try {
@@ -294,7 +294,7 @@ export function WorkspaceScorecardPage() {
       }
 
       toast({
-        title: "Entry Saved",
+        title: "Entry saved",
         description: "Weekly metric value has been updated",
       })
 
@@ -311,7 +311,7 @@ export function WorkspaceScorecardPage() {
 
   const handleDeleteMetric = async () => {
     if (isDemoMode) {
-      toast({ title: "Demo Mode", description: DEMO_READONLY_MESSAGE })
+      toast({ title: "Demo mode", description: DEMO_READONLY_MESSAGE })
       setDeleteMetricId(null)
       return
     }
@@ -330,7 +330,7 @@ export function WorkspaceScorecardPage() {
       }
 
       toast({
-        title: "Metric Deleted",
+        title: "Metric deleted",
         description: "The metric has been removed from the scorecard",
       })
 

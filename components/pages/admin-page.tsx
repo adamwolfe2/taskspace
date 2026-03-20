@@ -328,7 +328,7 @@ export function AdminPage({
       await navigator.clipboard.writeText(summary)
       setSummaryCopied(true)
       setTimeout(() => setSummaryCopied(false), 2500)
-      toast({ title: "Summary copied!", description: "Paste it into Slack, email, or your notes." })
+      toast({ title: "Summary copied", description: "Paste it into Slack, email, or your notes." })
     } catch {
       toast({ title: "Could not copy", variant: "destructive" })
     }
