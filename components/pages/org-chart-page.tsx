@@ -189,7 +189,7 @@ export function OrgChartPage() {
 
     // Save to server
     try {
-      await fetch("/api/org-chart/progress", {
+      const res = await fetch("/api/org-chart/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
@@ -200,6 +200,9 @@ export function OrgChartPage() {
           updatedBy: currentUser?.name,
         }),
       })
+      if (!res.ok) {
+        throw new Error("Failed to save progress")
+      }
       // Refresh progress data
       refreshProgress()
     } catch (error) {

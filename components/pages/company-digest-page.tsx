@@ -257,9 +257,11 @@ export function CompanyDigestPage() {
       })
       if (res.ok) {
         setDigests(prev => prev.filter(d => d.id !== digestId))
+      } else {
+        setError("Failed to delete digest")
       }
     } catch {
-      // ignore
+      setError("Network error — could not delete digest")
     }
   }
 

@@ -167,7 +167,7 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
 
       // Update manager assignment if changed
       if (formData.managerId !== editingMember.managerId) {
-        await fetch("/api/manager/direct-reports", {
+        const managerRes = await fetch("/api/manager/direct-reports", {
           method: "PATCH",
           headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
           body: JSON.stringify({
@@ -175,6 +175,9 @@ export function AdminTeamPage({ teamMembers, setTeamMembers, rocks, setRocks }: 
             managerId: formData.managerId,
           }),
         })
+        if (!managerRes.ok) {
+          throw new Error("Failed to update manager assignment")
+        }
       }
 
       // Update metric if provided

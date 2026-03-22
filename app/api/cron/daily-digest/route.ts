@@ -12,8 +12,12 @@ import { CONFIG } from "@/lib/config"
 import { verifyCronSecret } from "@/lib/api/cron-auth"
 import * as Sentry from "@sentry/nextjs"
 
-// Module-level singleton — instantiated once per cold start, not per request
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy singleton — avoids throwing at build time when env vars are missing
+let _resend: InstanceType<typeof Resend> | null = null
+function getResend() {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY)
+  return _resend
+}
 
 // This endpoint is designed to be called by Vercel Cron
 // Runs every hour to check which organizations are at 6 PM in their timezone
@@ -250,7 +254,7 @@ export async function GET(request: NextRequest) {
                 .filter(a => a.notificationPreferences?.digest?.email !== false)
                 .map(a => a.email)
 
-              await resend.emails.send({
+              await getResend().emails.send({
                 from: process.env.EMAIL_FROM || "Taskspace <team@trytaskspace.com>",
                 to: adminEmails,
                 subject: `Daily Rock Progress Summary - ${consolidatedDigest.formattedDate}`,

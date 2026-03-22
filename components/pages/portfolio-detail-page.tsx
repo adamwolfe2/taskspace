@@ -187,9 +187,11 @@ export function PortfolioDetailPage() {
       if (json.success) {
         await refreshSession()
         window.location.reload()
+      } else {
+        toast({ title: "Error", description: json.error || "Failed to switch organization", variant: "destructive" })
       }
     } catch {
-      // Error handled by toast
+      toast({ title: "Error", description: "Failed to switch organization", variant: "destructive" })
     }
   }
 
