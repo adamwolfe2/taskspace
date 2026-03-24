@@ -15,7 +15,7 @@ import type { TeamMemberMetric } from "@/lib/metrics"
 import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
 import { updateStreak } from "@/lib/hooks/use-productivity"
-import { getTodayInTimezone, getValidDateOptions, getCurrentQuarterDisplay } from "@/lib/utils/date-utils"
+import { getTodayInTimezone, getValidDateOptions, getCurrentQuarterDisplay, DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useBrandTheme } from "@/lib/contexts/brand-theme-context"
 import { lighten, darken } from "@/lib/utils/color-helpers"
@@ -62,7 +62,7 @@ export function AIEODSubmission({
   const { currentOrganization } = useApp()
   const { colors } = useBrandTheme()
   // Use organization timezone for date calculations
-  const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
+  const orgTimezone = currentOrganization?.settings?.timezone || DEFAULT_TIMEZONE
   const todayInOrgTz = getTodayInTimezone(orgTimezone)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)

@@ -12,7 +12,7 @@ import { sendEscalationNotification, sendAIAlertEmail, sendEODNotification, isEm
 import { sendSlackMessage, buildFullEODReportMessage, isSlackConfigured } from "@/lib/integrations/slack"
 import { asanaClient } from "@/lib/integrations/asana"
 import { getActiveMetricForUser, upsertWeeklyMetricEntry } from "@/lib/metrics"
-import { getTodayInTimezone, isValidEODDate, formatDateForDisplay } from "@/lib/utils/date-utils"
+import { getTodayInTimezone, isValidEODDate, formatDateForDisplay, DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 import { isTrialExpired } from "@/lib/billing/feature-gates"
 import { audit } from "@/lib/audit"
 import { CONFIG } from "@/lib/config"
@@ -273,7 +273,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     }
 
     // Get the organization's timezone (default to PST)
-    const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"
+    const orgTimezone = auth.organization.settings?.timezone || DEFAULT_TIMEZONE
     const todayInOrgTz = getTodayInTimezone(orgTimezone)
 
     // Use provided date or default to today in the org's timezone (NOT UTC!)
@@ -754,7 +754,7 @@ export const PATCH = withAuth(async (request: NextRequest, auth) => {
       )
     }
 
-    const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"
+    const orgTimezone = auth.organization.settings?.timezone || DEFAULT_TIMEZONE
 
     // If changing the date, validate the new date
     if (newDate && newDate !== report.date) {

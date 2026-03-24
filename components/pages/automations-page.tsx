@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { FeatureGate } from "@/components/shared/feature-gate"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
+import { useToast } from "@/components/ui/use-toast"
 import { Plus, Zap, Loader2, Trash2, History, ArrowRight } from "lucide-react"
 import type { Automation, AutomationLog, AutomationTriggerType, AutomationAction } from "@/lib/types"
 
@@ -33,6 +34,7 @@ const ACTION_LABELS: Record<AutomationAction["type"], string> = {
 
 export function AutomationsPage() {
   const { currentWorkspace } = useWorkspaces()
+  const { toast } = useToast()
   const [automations, setAutomations] = useState<Automation[]>([])
   const [logs, setLogs] = useState<AutomationLog[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -111,6 +113,10 @@ export function AutomationsPage() {
           } }],
         }),
       })
+      if (!res.ok) {
+        toast({ title: "Failed to create automation", variant: "destructive" })
+        return
+      }
       const data = await res.json()
       if (data.success) {
         setShowCreate(false)
@@ -123,30 +129,40 @@ export function AutomationsPage() {
         fetchAutomations()
       }
     } catch {
-      // ignore
+      toast({ title: "Failed to create automation", variant: "destructive" })
     }
   }
 
   const handleToggle = async (id: string, isEnabled: boolean) => {
+    const prev = automations
+    setAutomations(prev => prev.map(a => a.id === id ? { ...a, isEnabled } : a))
     try {
-      await fetch(`/api/automations/${id}`, {
+      const res = await fetch(`/api/automations/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ isEnabled }),
       })
-      setAutomations(prev => prev.map(a => a.id === id ? { ...a, isEnabled } : a))
+      if (!res.ok) {
+        setAutomations(prev)
+        toast({ title: "Failed to update automation", variant: "destructive" })
+      }
     } catch {
-      // ignore
+      setAutomations(prev)
+      toast({ title: "Failed to update automation", variant: "destructive" })
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`/api/automations/${id}`, { method: "DELETE", headers: { "X-Requested-With": "XMLHttpRequest" } })
+      const res = await fetch(`/api/automations/${id}`, { method: "DELETE", headers: { "X-Requested-With": "XMLHttpRequest" } })
+      if (!res.ok) {
+        toast({ title: "Failed to delete automation", variant: "destructive" })
+        return
+      }
       setAutomations(prev => prev.filter(a => a.id !== id))
       if (selectedId === id) setSelectedId(null)
     } catch {
-      // ignore
+      toast({ title: "Failed to delete automation", variant: "destructive" })
     }
   }
 

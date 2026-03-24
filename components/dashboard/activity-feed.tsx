@@ -166,7 +166,10 @@ export function ActivityFeed({ workspaceId }: ActivityFeedProps) {
                 setError(null)
                 setIsLoading(true)
                 fetch(`/api/activity?workspaceId=${effectiveWorkspaceId}`)
-                  .then((res) => res.json())
+                  .then((res) => {
+                    if (!res.ok) throw new Error("Server error")
+                    return res.json()
+                  })
                   .then((result) => {
                     if (result.success) {
                       setActivities(result.data)

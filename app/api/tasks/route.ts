@@ -217,23 +217,19 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       assignedByName = auth.user.name
     }
 
-    // Get rock title if linked to a rock
-    let rockTitle: string | null = null
-    if (rockId) {
-      const rock = await db.rocks.findById(rockId, auth.organization.id)
-      if (rock && rock.organizationId === auth.organization.id) {
-        rockTitle = rock.title
-      }
-    }
-
-    // Get project name if linked to a project
-    let projectName: string | null = null
-    if (projectId) {
-      const project = await db.projects.findById(auth.organization.id, projectId)
-      if (project) {
-        projectName = project.name
-      }
-    }
+    // Get rock title and project name in parallel (independent lookups)
+    const [rockTitle, projectName] = await Promise.all([
+      rockId
+        ? db.rocks.findById(rockId, auth.organization.id).then(rock =>
+            rock && rock.organizationId === auth.organization.id ? rock.title : null
+          )
+        : Promise.resolve(null),
+      projectId
+        ? db.projects.findById(auth.organization.id, projectId).then(project =>
+            project ? project.name : null
+          )
+        : Promise.resolve(null),
+    ])
 
     const now = new Date().toISOString()
     const taskId = generateId()

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { getTodayInTimezone, DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 import type { ApiResponse } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { withAdmin } from "@/lib/api/middleware"
@@ -92,7 +92,7 @@ export const GET = withAdmin(async (request, auth) => {
     const { searchParams } = new URL(request.url)
     const workspaceId = searchParams.get("workspaceId") || undefined
 
-    const orgTimezone = auth.organization.settings?.timezone || "America/Los_Angeles"
+    const orgTimezone = auth.organization.settings?.timezone || DEFAULT_TIMEZONE
     const todayInOrgTz = getTodayInTimezone(orgTimezone)
 
     // Get local today for comparison

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Plus, X, Save, Paperclip, Calendar, AlertTriangle, Loader2, Smile, Meh, Frown } from "lucide-react"
 import type { Rock, EODReport, EODTask, EODPriority, FileAttachment } from "@/lib/types"
-import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { getTodayInTimezone, DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 import { formatDateCompact, formatDateShort } from "@/lib/utils/date-format"
 import { useApp } from "@/lib/contexts/app-context"
 import { useToast } from "@/hooks/use-toast"
@@ -55,7 +55,7 @@ function getValidDateOptions(todayInOrgTz: string): { value: string; label: stri
 export function EditEODModal({ open, onOpenChange, report, rocks, onSave }: EditEODModalProps) {
   const { currentOrganization } = useApp()
   const themedColors = useThemedIconColors()
-  const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
+  const orgTimezone = currentOrganization?.settings?.timezone || DEFAULT_TIMEZONE
   const todayInOrgTz = getTodayInTimezone(orgTimezone)
   const dateOptions = getValidDateOptions(todayInOrgTz)
 

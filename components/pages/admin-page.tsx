@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { UserInitials } from "@/components/shared/user-initials"
-import { getRelativeDate, getTodayInTimezone, getDaysUntil } from "@/lib/utils/date-utils"
+import { getRelativeDate, getTodayInTimezone, getDaysUntil, DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 import { calculateUserStats, calculateAccountabilityScore, isRockBehindSchedule } from "@/lib/utils/stats-calculator"
 import { AlertCircle, TrendingUp, TrendingDown, Users, Plus, ChevronDown, ChevronUp, Award, Flame, Check, FileText, Bell, UserCheck, Clock, Smile, Meh, Frown, CheckCircle2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
@@ -133,7 +133,7 @@ export function AdminPage({
     .slice(0, 5)
 
   // Use organization timezone for date calculations
-  const orgTimezone = organization?.settings?.timezone || "America/Los_Angeles"
+  const orgTimezone = organization?.settings?.timezone || DEFAULT_TIMEZONE
 
   const now = new Date()
 

@@ -5,7 +5,7 @@
  *
  * 1. For EOD reports and timezone-sensitive dates:
  *    - Use getTodayInTimezone(orgTimezone) to get the current date in organization timezone
- *    - Pass the organization's settings.timezone (e.g., "America/Los_Angeles")
+ *    - Pass the organization's settings.timezone (e.g., DEFAULT_TIMEZONE)
  *
  * 2. For date display in UI:
  *    - Use formatDate() or formatShortDate() for user-friendly display
@@ -19,6 +19,9 @@
  *
  * @module date-utils
  */
+
+/** Default timezone fallback when organization settings don't specify one */
+export const DEFAULT_TIMEZONE = "America/Los_Angeles"
 
 export function formatDate(date: string): string {
   const d = new Date(date)
@@ -66,7 +69,7 @@ export function getTodayString(): string {
  * This is critical for EOD reports to ensure all team members submit for the correct day
  * regardless of their local timezone.
  */
-export function getTodayInTimezone(timezone: string = "America/Los_Angeles"): string {
+export function getTodayInTimezone(timezone: string = DEFAULT_TIMEZONE): string {
   try {
     const now = new Date()
     // Use Intl.DateTimeFormat to get the date parts in the target timezone
@@ -87,7 +90,7 @@ export function getTodayInTimezone(timezone: string = "America/Los_Angeles"): st
 /**
  * Get current time formatted in a specific timezone
  */
-export function getCurrentTimeInTimezone(timezone: string = "America/Los_Angeles"): string {
+export function getCurrentTimeInTimezone(timezone: string = DEFAULT_TIMEZONE): string {
   const now = new Date()
   try {
     return now.toLocaleTimeString("en-US", {
@@ -110,7 +113,7 @@ export function getCurrentTimeInTimezone(timezone: string = "America/Los_Angeles
  * - For international teams, the date on the report represents the employee's
  *   work day, and the admin dashboard groups by submission timestamp
  */
-export function isValidEODDate(dateString: string, timezone: string = "America/Los_Angeles"): {
+export function isValidEODDate(dateString: string, timezone: string = DEFAULT_TIMEZONE): {
   valid: boolean
   reason?: string
   suggestedDate?: string

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type { TeamMember, Organization, PageType } from "../types"
 import { api } from "../api/client"
 import { getErrorMessage } from "../utils"
+import { DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 import posthog from "posthog-js"
 
 // Filter state passed between pages during navigation (e.g., manager drill-down)
@@ -75,7 +76,7 @@ const DEMO_ORG: Organization = {
   ownerId: "demo-user-1",
   logoUrl: "/integrations/apple logo.png",
   settings: {
-    timezone: "America/Los_Angeles",
+    timezone: DEFAULT_TIMEZONE,
     weekStartDay: 1,
     eodReminderTime: "17:00",
     enableEmailNotifications: true,

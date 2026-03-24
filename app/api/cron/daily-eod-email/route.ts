@@ -4,6 +4,7 @@ import { sendDailyEODLinkEmail, isEmailConfigured } from "@/lib/integrations/ema
 import type { ApiResponse, TeamMember, Organization } from "@/lib/types"
 import { logger, logError } from "@/lib/logger"
 import { verifyCronSecret } from "@/lib/api/cron-auth"
+import { DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 import * as Sentry from "@sentry/nextjs"
 
 // This endpoint is designed to be called by Vercel Cron
@@ -76,7 +77,7 @@ function isFrequencyAllowed(org: Organization, timezone: string): boolean {
  */
 function isDailyEmailTime(org: Organization): boolean {
   const targetHour = 19
-  const timezone = org.settings?.timezone || "America/Los_Angeles"
+  const timezone = org.settings?.timezone || DEFAULT_TIMEZONE
   const allowedDays: number[] = org.settings?.eodEmailDays ?? DEFAULT_EMAIL_DAYS
 
   try {
@@ -162,7 +163,7 @@ export async function GET(request: NextRequest) {
     const results: { orgId: string; orgName: string; timezone: string; emailsSent: number; skipped: string; errors: string[] }[] = []
 
     for (const org of organizations) {
-      const timezone = org.settings?.timezone || "America/Los_Angeles"
+      const timezone = org.settings?.timezone || DEFAULT_TIMEZONE
 
       // Skip internal orgs (e.g. AIMS) — they don't need automated emails
       if (org.isInternal) {

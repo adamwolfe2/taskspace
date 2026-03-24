@@ -43,6 +43,10 @@ export function TaskRequestModal({ open, onOpenChange, slug, token }: TaskReques
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined }),
       })
+      if (!res.ok) {
+        setError("Failed to submit request. Please try again.")
+        return
+      }
       const data = await res.json()
       if (!data.success) {
         setError(data.error || "Failed to submit request")

@@ -64,6 +64,12 @@ export function CommentSection({ reportId, slug, token }: CommentSectionProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reportId, content: content.trim() }),
       })
+      if (!res.ok) {
+        setComments((prev) => prev.filter((c) => c.id !== optimistic.id))
+        setError("Failed to post comment")
+        setContent(optimistic.content)
+        return
+      }
       const data = await res.json()
       if (!data.success) {
         // Revert optimistic update

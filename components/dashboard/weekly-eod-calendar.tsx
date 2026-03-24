@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import type { EODReport } from "@/lib/types"
 import { cn } from "@/lib/utils"
-import { getTodayInTimezone } from "@/lib/utils/date-utils"
+import { getTodayInTimezone, DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
@@ -120,7 +120,7 @@ export function WeeklyEODCalendar({
  const { currentOrganization } = useApp()
  const themedColors = useThemedIconColors()
  // Use organization timezone for date calculations
- const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
+ const orgTimezone = currentOrganization?.settings?.timezone || DEFAULT_TIMEZONE
  const todayString = getTodayInTimezone(orgTimezone)
 
  const weekDays = useMemo(

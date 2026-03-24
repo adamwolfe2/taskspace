@@ -8,7 +8,7 @@
 
 import { NextResponse } from "next/server"
 import { withAuth } from "@/lib/api/middleware"
-import { getTodayInTimezone, getCurrentTimeInTimezone, formatDateForDisplay } from "@/lib/utils/date-utils"
+import { getTodayInTimezone, getCurrentTimeInTimezone, formatDateForDisplay, DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 import { logger, logError } from "@/lib/logger"
 
 interface CurrentDateResponse {
@@ -22,7 +22,7 @@ interface CurrentDateResponse {
 // GET /api/organizations/current-date - Get the current date in the org's timezone
 export const GET = withAuth(async (request, auth) => {
   try {
-    const timezone = auth.organization.settings?.timezone || "America/Los_Angeles"
+    const timezone = auth.organization.settings?.timezone || DEFAULT_TIMEZONE
     const currentDate = getTodayInTimezone(timezone)
     const currentTime = getCurrentTimeInTimezone(timezone)
 

@@ -19,6 +19,7 @@ import { timingSafeEqual, createHash } from "crypto"
 import { sql } from "@/lib/db/sql"
 import { logger, logError } from "@/lib/logger"
 import { enforceIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
+import { DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 
 interface PublicEODTask {
   description: string
@@ -124,7 +125,7 @@ export async function GET(
     const orgId = org.id as string
     const orgName = org.name as string
     const settings = org.settings as { timezone?: string; customBranding?: { logo?: string }; publicEodToken?: string } | null
-    const timezone = settings?.timezone || "America/Los_Angeles"
+    const timezone = settings?.timezone || DEFAULT_TIMEZONE
     const orgLogo = settings?.customBranding?.logo
 
     // Access token protection for public EOD endpoints

@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { timingSafeEqual, createHash } from "crypto"
 import { sql } from "@/lib/db/sql"
 import { logger, logError } from "@/lib/logger"
+import { DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 import { enforceIpRateLimit, ipRateLimitHeaders } from "@/lib/auth/ip-rate-limit"
 
 interface WeeklyTask {
@@ -155,7 +156,7 @@ export async function GET(
     const orgId = org.id as string
     const orgName = org.name as string
     const settings = org.settings as { timezone?: string; customBranding?: { logo?: string }; publicEodToken?: string } | null
-    const timezone = settings?.timezone || "America/Los_Angeles"
+    const timezone = settings?.timezone || DEFAULT_TIMEZONE
     const orgLogo = settings?.customBranding?.logo
 
     // SECURITY: Require access token — orgs must configure publicEodToken

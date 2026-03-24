@@ -11,7 +11,7 @@ import { Plus, X, Send, Trash2, Target, Calendar, CheckCircle2, Paperclip, Loade
 import type { Rock, EODReport, EODTask, EODPriority, AssignedTask, FileAttachment } from "@/lib/types"
 import { FileTray } from "@/components/ui/file-tray"
 import type { TeamMemberMetric } from "@/lib/metrics"
-import { getTodayInTimezone, getValidDateOptions, getCurrentQuarterDisplay, isThursday } from "@/lib/utils/date-utils"
+import { getTodayInTimezone, getValidDateOptions, getCurrentQuarterDisplay, isThursday, DEFAULT_TIMEZONE } from "@/lib/utils/date-utils"
 import { useApp } from "@/lib/contexts/app-context"
 import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
@@ -42,7 +42,7 @@ export function EODSubmissionCard({
   const { currentOrganization } = useApp()
   const themedColors = useThemedIconColors()
   // Use organization timezone for date calculations
-  const orgTimezone = currentOrganization?.settings?.timezone || "America/Los_Angeles"
+  const orgTimezone = currentOrganization?.settings?.timezone || DEFAULT_TIMEZONE
   const todayInOrgTz = getTodayInTimezone(orgTimezone)
 
   // Internal date state - allows user to select date with dropdown
@@ -311,7 +311,8 @@ export function EODSubmissionCard({
           })
         }
       } catch {
-        // Don't fail the submission if streak update fails
+        // Non-blocking: EOD was saved, but streak wasn't updated
+        toast({ title: "EOD saved, but streak update failed", description: "Your report was recorded successfully." })
       }
 
       // Reset form + clear draft

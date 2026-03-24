@@ -13,6 +13,7 @@ import { FeatureGate } from "@/components/shared/feature-gate"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import { Plus, Sparkles, Calendar, User, CheckCircle, Loader2, Star, MessageSquare } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 import type { TeamMember, OneOnOne, OneOnOnePrep } from "@/lib/types"
 
 interface OneOnOnePageProps {
@@ -22,6 +23,7 @@ interface OneOnOnePageProps {
 
 export function OneOnOnePage({ currentUser, teamMembers }: OneOnOnePageProps) {
   const { currentWorkspace } = useWorkspaces()
+  const { toast } = useToast()
   const [oneOnOnes, setOneOnOnes] = useState<OneOnOne[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -65,6 +67,10 @@ export function OneOnOnePage({ currentUser, teamMembers }: OneOnOnePageProps) {
           scheduledAt: newDate ? new Date(newDate).toISOString() : undefined,
         }),
       })
+      if (!res.ok) {
+        toast({ title: "Failed to create 1-on-1", variant: "destructive" })
+        return
+      }
       const data = await res.json()
       if (data.success) {
         setShowCreate(false)
@@ -73,7 +79,7 @@ export function OneOnOnePage({ currentUser, teamMembers }: OneOnOnePageProps) {
         fetchOneOnOnes()
       }
     } catch {
-      // ignore
+      toast({ title: "Failed to create 1-on-1", variant: "destructive" })
     }
   }
 
@@ -85,13 +91,17 @@ export function OneOnOnePage({ currentUser, teamMembers }: OneOnOnePageProps) {
         headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ reportId: oneOnOne.reportId, workspaceId }),
       })
+      if (!res.ok) {
+        toast({ title: "Failed to generate prep", variant: "destructive" })
+        return
+      }
       const data = await res.json()
       if (data.success) {
         setPrep(data.data)
         fetchOneOnOnes()
       }
     } catch {
-      // ignore
+      toast({ title: "Failed to generate prep", variant: "destructive" })
     } finally {
       setIsGeneratingPrep(false)
     }
@@ -99,24 +109,32 @@ export function OneOnOnePage({ currentUser, teamMembers }: OneOnOnePageProps) {
 
   const handleComplete = async (id: string) => {
     try {
-      await fetch(`/api/one-on-ones/${id}`, {
+      const res = await fetch(`/api/one-on-ones/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ status: "completed", completedAt: new Date().toISOString() }),
       })
+      if (!res.ok) {
+        toast({ title: "Failed to complete 1-on-1", variant: "destructive" })
+        return
+      }
       fetchOneOnOnes()
     } catch {
-      // ignore
+      toast({ title: "Failed to complete 1-on-1", variant: "destructive" })
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`/api/one-on-ones/${id}`, { method: "DELETE", headers: { "X-Requested-With": "XMLHttpRequest" } })
+      const res = await fetch(`/api/one-on-ones/${id}`, { method: "DELETE", headers: { "X-Requested-With": "XMLHttpRequest" } })
+      if (!res.ok) {
+        toast({ title: "Failed to delete 1-on-1", variant: "destructive" })
+        return
+      }
       if (selectedId === id) setSelectedId(null)
       fetchOneOnOnes()
     } catch {
-      // ignore
+      toast({ title: "Failed to delete 1-on-1", variant: "destructive" })
     }
   }
 
