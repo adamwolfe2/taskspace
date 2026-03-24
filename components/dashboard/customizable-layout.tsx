@@ -83,7 +83,7 @@ import { useThemedIconColors } from "@/lib/hooks/use-themed-icon-colors"
 
 // Bump this whenever DEFAULT_LAYOUT or rowHeight changes.
 // Stale localStorage with a different version is discarded on load.
-const LAYOUT_VERSION = 7
+const LAYOUT_VERSION = 8
 
 export interface DashboardWidget {
  id: string
@@ -142,7 +142,7 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
  { id: "focus_of_day", type: "focus_of_day", title: "Focus of the Day", enabled: false, minW: 2, minH: 4, maxH: 10 },
  { id: "smart_suggestions", type: "smart_suggestions", title: "Smart Suggestions", enabled: false, minW: 2, minH: 5, maxH: 14 },
  { id: "weekly_brief", type: "weekly_brief", title: "Week Preview", enabled: true, minW: 2, minH: 4, maxH: 10 },
- { id: "team_health", type: "team_health", title: "Team Health", enabled: true, minW: 1, minH: 5, maxH: 10 },
+ { id: "team_health", type: "team_health", title: "Team Health", enabled: false, minW: 1, minH: 5, maxH: 10 },
 ]
 
 // Default bento layout — 4 columns, rowHeight=40px
@@ -159,8 +159,7 @@ export const DEFAULT_LAYOUT: LayoutItem[] = [
  { i: "eod_submission", x: 0, y: 36, w: 4, h: 10 }, // ~544px — full width
  { i: "eod_status",     x: 0, y: 46, w: 4, h: 2  }, // ~96px  — below fold (optional)
  { i: "focus",          x: 0, y: 48, w: 2, h: 7  }, // ~376px — below fold (optional)
- { i: "weekly_brief",   x: 2, y: 48, w: 2, h: 6  }, // ~320px — below fold
- { i: "team_health",    x: 0, y: 55, w: 2, h: 7  }, // ~376px — below fold
+ { i: "weekly_brief",   x: 2, y: 48, w: 2, h: 7  }, // ~376px — below fold (match focus height)
 ]
 
 function getWidgetIcon(type: DashboardWidget["type"]) {
@@ -442,6 +441,8 @@ export function CustomizableLayout({
      >
      {sortedWidgets.map((widget) => {
       const item = enabledLayout.find((l) => l.i === widget.id)
+      const content = renderWidget(widget)
+      if (!content) return null
       return (
        <div
         key={widget.id}
@@ -452,7 +453,7 @@ export function CustomizableLayout({
         }}
        >
         <div className="h-full overflow-y-auto">
-         {renderWidget(widget)}
+         {content}
         </div>
        </div>
       )
@@ -563,11 +564,15 @@ export function SimpleDashboardLayout({
 
  return (
   <div className={cn("space-y-6", className)}>
-   {enabledWidgets.map((widget) => (
-    <div key={widget.id}>
-     {renderWidget(widget)}
-    </div>
-   ))}
+   {enabledWidgets.map((widget) => {
+    const content = renderWidget(widget)
+    if (!content) return null
+    return (
+     <div key={widget.id}>
+      {content}
+     </div>
+    )
+   })}
   </div>
  )
 }
