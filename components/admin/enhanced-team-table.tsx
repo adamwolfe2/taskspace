@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import type { TeamMember } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -56,24 +56,45 @@ export function EnhancedTeamTable({
   const [roleFilter, setRoleFilter] = useState<string>("all")
 
   // Get unique departments
-  const departments = Array.from(
-    new Set(teamMembers.map((m) => m.department).filter(Boolean))
+  const departments = useMemo(() =>
+    Array.from(new Set(teamMembers.map((m) => m.department).filter(Boolean))),
+    [teamMembers]
   )
 
-  // Filter members
-  const filteredMembers = teamMembers.filter((member) => {
-    const matchesSearch =
-      !searchQuery ||
-      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter members (memoized to avoid re-filtering on unrelated renders)
+  const filteredMembers = useMemo(() =>
+    teamMembers.filter((member) => {
+      const matchesSearch =
+        !searchQuery ||
+        member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesDepartment =
-      departmentFilter === "all" || member.department === departmentFilter
+      const matchesDepartment =
+        departmentFilter === "all" || member.department === departmentFilter
 
-    const matchesRole = roleFilter === "all" || member.role === roleFilter
+      const matchesRole = roleFilter === "all" || member.role === roleFilter
 
-    return matchesSearch && matchesDepartment && matchesRole
-  })
+      return matchesSearch && matchesDepartment && matchesRole
+    }),
+    [teamMembers, searchQuery, departmentFilter, roleFilter]
+  )
+
+  // Pre-compute stats from filtered members (avoids inline filter/Date math in render)
+  const stats = useMemo(() => {
+    const now = Date.now()
+    const oneDayMs = 1000 * 60 * 60 * 24
+    let activeCount = 0
+    let adminCount = 0
+    for (const m of filteredMembers) {
+      if (m.lastActive && Math.floor((now - new Date(m.lastActive).getTime()) / oneDayMs) < 1) {
+        activeCount++
+      }
+      if (m.role === "admin" || m.role === "owner") {
+        adminCount++
+      }
+    }
+    return { activeCount, adminCount }
+  }, [filteredMembers])
 
   const getRoleConfig = (role: TeamMember["role"]) => {
     const configs = {
@@ -162,22 +183,13 @@ export function EnhancedTeamTable({
         <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
           <p className="text-xs text-slate-700 font-medium">Active</p>
           <p className="text-2xl font-bold text-slate-700 mt-1">
-            {
-              filteredMembers.filter((m) => {
-                if (!m.lastActive) return false
-                const days = Math.floor(
-                  (Date.now() - new Date(m.lastActive).getTime()) /
-                    (1000 * 60 * 60 * 24)
-                )
-                return days < 1
-              }).length
-            }
+            {stats.activeCount}
           </p>
         </div>
         <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
           <p className="text-xs text-slate-700 font-medium">Admins</p>
           <p className="text-2xl font-bold text-slate-700 mt-1">
-            {filteredMembers.filter((m) => m.role === "admin" || m.role === "owner").length}
+            {stats.adminCount}
           </p>
         </div>
         <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
