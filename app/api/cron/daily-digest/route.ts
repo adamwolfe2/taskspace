@@ -135,17 +135,16 @@ export async function GET(request: NextRequest) {
       const today = getTodayInTimezone(timezone)
       const currentHour = new Date().getUTCHours()
 
-      // IDEMPOTENCY CHECK: Track execution to prevent duplicates on retry
+      // IDEMPOTENCY CHECK: Atomic insert prevents duplicate runs even with concurrent invocations
       try {
-        await db.cronExecutions.recordExecution("daily-digest", org.id, today, currentHour)
-      } catch (error) {
-        // If we get a unique constraint violation, it means this job already ran for this org/hour
-        if ((error as { code?: string }).code === "23505") {
+        const isNew = await db.cronExecutions.recordExecution("daily-digest", org.id, today, currentHour)
+        if (!isNew) {
           logger.info({ orgName: org.name, today, hour: currentHour }, "Digest already processed this hour (duplicate run)")
           results.push({ orgId: org.id, orgName: org.name, success: true, skipped: "Already processed this hour" })
           continue
         }
-        // For other errors, log and continue to try processing
+      } catch (error) {
+        // For errors, log and continue to try processing
         logError(logger, `Failed to record cron execution for org ${org.name}`, error)
       }
 

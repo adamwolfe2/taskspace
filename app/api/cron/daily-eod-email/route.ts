@@ -197,12 +197,10 @@ export async function GET(request: NextRequest) {
         const today = getTodayInTimezone(timezone)
         const currentHour = new Date().getUTCHours()
 
-        // IDEMPOTENCY CHECK: Track execution to prevent duplicate emails
+        // IDEMPOTENCY CHECK: Atomic insert prevents duplicate emails even with concurrent invocations
         try {
-          await db.cronExecutions.recordExecution("daily-eod-email", org.id, today, currentHour)
-        } catch (error) {
-          // If we get a unique constraint violation, it means emails already sent this hour
-          if ((error as { code?: string }).code === "23505") {
+          const isNew = await db.cronExecutions.recordExecution("daily-eod-email", org.id, today, currentHour)
+          if (!isNew) {
             logger.info({ orgName: org.name, today, hour: currentHour }, "Emails already sent this hour (duplicate run)")
             results.push({
               orgId: org.id,
@@ -214,7 +212,8 @@ export async function GET(request: NextRequest) {
             })
             continue
           }
-          // For other errors, log and continue to try processing
+        } catch (error) {
+          // For errors, log and continue to try processing
           logError(logger, `Failed to record cron execution for org ${org.name}`, error)
         }
 

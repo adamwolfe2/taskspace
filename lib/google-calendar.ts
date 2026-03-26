@@ -207,7 +207,10 @@ export async function createCalendarEvent(
 
   if (!response.ok) {
     const error = await response.text()
-    logger.error({ responseBody: error }, "Create event error")
+    logger.error({ status: response.status, responseBody: error }, "Create event error")
+    if (response.status === 401) {
+      throw new Error('Google Calendar authentication expired. Please reconnect your calendar.')
+    }
     throw new Error('Failed to create calendar event')
   }
 
@@ -244,7 +247,10 @@ export async function updateCalendarEvent(
 
   if (!response.ok) {
     const error = await response.text()
-    logger.error({ responseBody: error }, "Update event error")
+    logger.error({ status: response.status, responseBody: error }, "Update event error")
+    if (response.status === 401) {
+      throw new Error('Google Calendar authentication expired. Please reconnect your calendar.')
+    }
     throw new Error('Failed to update calendar event')
   }
 

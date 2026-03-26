@@ -4177,19 +4177,24 @@ export const db = {
   // Cron Executions (for idempotency)
   cronExecutions: {
     /**
-     * Record a cron execution to prevent duplicate runs
-     * Throws a unique constraint error if already executed for this hour
+     * Atomically record a cron execution. Returns true if this is a new
+     * execution, false if it was already recorded (idempotency guard).
+     * Uses ON CONFLICT DO NOTHING to avoid race conditions between
+     * concurrent invocations.
      */
     async recordExecution(
       jobName: string,
       organizationId: string,
       executionDate: string,
       executionHour: number
-    ): Promise<void> {
-      await sql`
+    ): Promise<boolean> {
+      const { rows } = await sql`
         INSERT INTO cron_executions (job_name, organization_id, execution_date, execution_hour, status)
         VALUES (${jobName}, ${organizationId}, ${executionDate}, ${executionHour}, 'running')
+        ON CONFLICT (job_name, organization_id, execution_date, execution_hour) DO NOTHING
+        RETURNING id
       `
+      return rows.length > 0
     },
 
     /**

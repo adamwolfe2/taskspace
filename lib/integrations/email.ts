@@ -24,6 +24,20 @@ export function isEmailConfigured(): boolean {
 const FROM_EMAIL = process.env.EMAIL_FROM || "Taskspace <team@trytaskspace.com>"
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.trytaskspace.com"
 
+/** Wrap resend.emails.send with 1 retry on transient failures */
+async function sendEmailWithRetry(
+  resend: Resend,
+  params: Parameters<Resend["emails"]["send"]>[0]
+): Promise<ReturnType<Resend["emails"]["send"]>> {
+  const result = await resend.emails.send(params)
+  if (result.error) {
+    // Retry once after a short delay for transient errors
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    return resend.emails.send(params)
+  }
+  return result
+}
+
 /**
  * Generate a signed HMAC token for one-click unsubscribe links.
  * Prevents anyone who knows a user's email from unsubscribing them.
@@ -144,7 +158,7 @@ export async function sendEscalationNotification(
 `
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: adminEmails,
       subject,
@@ -300,7 +314,7 @@ export async function sendDailySummaryEmail(
 `
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: adminEmails,
       subject,
@@ -388,7 +402,7 @@ export async function sendAIAlertEmail(
 `
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: adminEmails,
       subject,
@@ -476,7 +490,7 @@ export async function sendTaskAssignmentEmail(
 `
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: assignee.email,
       subject,
@@ -579,7 +593,7 @@ export async function sendDailyEODLinkEmail(
 `
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: member.email,
       subject,
@@ -664,7 +678,7 @@ export async function sendMissingEODReminder(
     // CC admins so they know reminders were sent
     const adminEmails = admins.map(a => a.email).filter(e => e !== member.email)
 
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: member.email,
       cc: adminEmails.length > 0 ? adminEmails : undefined,
@@ -751,7 +765,7 @@ export async function sendWelcomeEmail(params: {
 `
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: params.to,
       subject: `Welcome to ${params.organizationName} on Taskspace`,
@@ -829,7 +843,7 @@ export async function sendBillingAlertEmail(params: BillingAlertParams): Promise
 `
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: params.to,
       subject: params.subject,
@@ -916,7 +930,7 @@ export async function sendTrialStartedEmail(params: {
 `
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: params.to,
       subject: "Your 14-day Taskspace trial has started",
@@ -1013,7 +1027,7 @@ export async function sendOnboardingDripEmail(params: {
 `
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: params.to,
       subject: drip.subject,
@@ -1134,7 +1148,7 @@ export async function sendInvitationEmail(
   `, `${escapeHtml(organization.name)} &middot; Powered by Taskspace<br><a href="${buildUnsubscribeUrl(invitation.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: invitation.email,
       subject: `You're invited to join ${escapeHtml(organization.name)}`,
@@ -1185,7 +1199,7 @@ export async function sendVerificationEmail(
   `)
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: verificationToken.email,
       subject: "Verify your email address - Taskspace",
@@ -1238,7 +1252,7 @@ export async function sendPasswordResetEmail(
   `)
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: resetToken.email,
       subject: "Reset your Taskspace password",
@@ -1344,7 +1358,7 @@ export async function sendEODNotification(
       ` : ""}
     `, `${organization ? escapeHtml(organization.name) : "Taskspace"} &middot; Submitted at ${new Date(eodReport.submittedAt).toLocaleTimeString()}`)
 
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: adminEmail,
       subject: `EOD Report: ${submittedBy.name} - ${new Date(eodReport.date).toLocaleDateString()}`,
@@ -1388,7 +1402,7 @@ export async function sendEODReminder(
   `, `${escapeHtml(organization.name)}<br><a href="${buildUnsubscribeUrl(user.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry(resend, {
       from: FROM_EMAIL,
       to: user.email,
       subject: `Time to submit your EOD report - ${organization.name}`,

@@ -98,28 +98,43 @@ export async function sendWebhook(
     headers["X-Webhook-Signature"] = `sha256=${signature}`
   }
 
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
-    const response = await fetch(config.url, {
-      method: "POST",
-      headers,
-      body: payloadString,
-      signal: controller.signal,
-    })
-    clearTimeout(timeoutId)
+  // Retry up to 2 times with exponential backoff for transient failures
+  const maxRetries = 2
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000)
+      const response = await fetch(config.url, {
+        method: "POST",
+        headers,
+        body: payloadString,
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      logger.error({ status: response.status, errorText }, "Webhook delivery failed")
-      return { success: false, error: `HTTP ${response.status}: ${errorText}` }
+      if (!response.ok) {
+        // Retry on 5xx server errors
+        if (response.status >= 500 && attempt < maxRetries) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt))
+          continue
+        }
+        const errorText = await response.text().catch(() => "")
+        logger.error({ status: response.status, attempt }, "Webhook delivery failed")
+        return { success: false, error: `HTTP ${response.status}: ${errorText.slice(0, 200)}` }
+      }
+
+      return { success: true }
+    } catch (error) {
+      if (attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt))
+        continue
+      }
+      logError(logger, "Webhook delivery error", error)
+      return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
     }
-
-    return { success: true }
-  } catch (error) {
-    logError(logger, "Webhook delivery error", error)
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
+
+  return { success: false, error: "Webhook delivery failed after retries" }
 }
 
 /**

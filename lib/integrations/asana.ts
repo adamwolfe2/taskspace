@@ -176,35 +176,61 @@ class AsanaClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retries = 2
   ): Promise<T> {
     if (!this.accessToken) {
       throw new Error("Asana access token not configured")
     }
 
     const url = `${ASANA_API_BASE}${endpoint}`
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-      signal: controller.signal,
-    })
-    clearTimeout(timeoutId)
+    let lastError: Error | null = null
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}))
-      throw new Error(
-        `Asana API error: ${response.status} - ${error.errors?.[0]?.message || response.statusText}`
-      )
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000)
+      try {
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+            "Content-Type": "application/json",
+            ...options.headers,
+          },
+          signal: controller.signal,
+        })
+        clearTimeout(timeoutId)
+
+        // Retry on 429 rate limit or 5xx server errors
+        if (response.status === 429 || response.status >= 500) {
+          const retryAfter = response.headers.get("Retry-After")
+          const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : Math.min(1000 * 2 ** attempt, 8000)
+          if (attempt < retries) {
+            await new Promise((resolve) => setTimeout(resolve, delay))
+            continue
+          }
+        }
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}))
+          throw new Error(
+            `Asana API error: ${response.status} - ${error.errors?.[0]?.message || response.statusText}`
+          )
+        }
+
+        const data = await response.json()
+        return data.data as T
+      } catch (err) {
+        clearTimeout(timeoutId)
+        lastError = err instanceof Error ? err : new Error(String(err))
+        if (attempt < retries && lastError.name !== "AbortError") {
+          await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * 2 ** attempt, 8000)))
+          continue
+        }
+      }
     }
 
-    const data = await response.json()
-    return data.data as T
+    throw lastError || new Error("Asana request failed after retries")
   }
 
   /**
