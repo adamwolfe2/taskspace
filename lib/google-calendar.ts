@@ -189,6 +189,8 @@ export async function createCalendarEvent(
     colorId?: string
   }
 ): Promise<{ id: string }> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   const response = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
     {
@@ -198,8 +200,10 @@ export async function createCalendarEvent(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(event),
+      signal: controller.signal,
     }
   )
+  clearTimeout(timeoutId)
 
   if (!response.ok) {
     const error = await response.text()
@@ -222,6 +226,8 @@ export async function updateCalendarEvent(
     colorId?: string
   }
 ): Promise<{ id: string }> {
+  const patchController = new AbortController()
+  const patchTimeoutId = setTimeout(() => patchController.abort(), 10000)
   const response = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
     {
@@ -231,8 +237,10 @@ export async function updateCalendarEvent(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(event),
+      signal: patchController.signal,
     }
   )
+  clearTimeout(patchTimeoutId)
 
   if (!response.ok) {
     const error = await response.text()
@@ -248,6 +256,8 @@ export async function deleteCalendarEvent(
   calendarId: string,
   eventId: string
 ): Promise<void> {
+  const delController = new AbortController()
+  const delTimeoutId = setTimeout(() => delController.abort(), 10000)
   const response = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
     {
@@ -255,8 +265,10 @@ export async function deleteCalendarEvent(
       headers: {
         'Authorization': `Bearer ${accessToken}`,
       },
+      signal: delController.signal,
     }
   )
+  clearTimeout(delTimeoutId)
 
   if (!response.ok && response.status !== 410) { // 410 = already deleted
     throw new Error('Failed to delete calendar event')

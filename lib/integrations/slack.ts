@@ -152,13 +152,17 @@ export async function sendSlackMessage(
   message: SlackMessage
 ): Promise<boolean> {
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(message),
+      signal: controller.signal,
     })
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       logger.error({ status: response.status, body: await response.text() }, "Slack webhook error")

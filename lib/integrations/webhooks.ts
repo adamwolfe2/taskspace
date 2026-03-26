@@ -99,11 +99,15 @@ export async function sendWebhook(
   }
 
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
     const response = await fetch(config.url, {
       method: "POST",
       headers,
       body: payloadString,
+      signal: controller.signal,
     })
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       const errorText = await response.text()

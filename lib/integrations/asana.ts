@@ -183,6 +183,8 @@ class AsanaClient {
     }
 
     const url = `${ASANA_API_BASE}${endpoint}`
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -190,7 +192,9 @@ class AsanaClient {
         "Content-Type": "application/json",
         ...options.headers,
       },
+      signal: controller.signal,
     })
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}))
