@@ -1421,3 +1421,160 @@ export async function sendEODReminder(
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }
+
+// ========================================
+// Weekly Manager Digest Email
+// ========================================
+
+export async function sendWeeklyDigestEmail(params: {
+  to: string[]
+  orgName: string
+  weekLabel: string
+  stats: {
+    tasksCompleted: number
+    rocksUpdated: number
+    eodSubmissionRate: number
+    totalMembers: number
+    activeMembers: number
+  }
+  topPerformers: Array<{ name: string; tasksCompleted: number; eodCount: number }>
+  atRiskRocks: Array<{ title: string; ownerName: string; status: string }>
+}): Promise<EmailResult> {
+  const resend = getResendClient()
+  if (!resend) {
+    logger.debug("Email not configured, skipping weekly digest email")
+    return { success: false, error: "Email not configured" }
+  }
+
+  const safeOrg = escapeHtml(params.orgName)
+  const dashboardUrl = `${APP_URL}/app?p=dashboard`
+
+  const statusBadge = (status: string) => {
+    const color = status === "blocked" ? "#dc2626" : "#d97706"
+    const label = status === "blocked" ? "Blocked" : "At Risk"
+    return `<span style="display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: ${color}; color: #fff;">${label}</span>`
+  }
+
+  const performersHtml = params.topPerformers.length > 0
+    ? params.topPerformers.map((p, i) => `
+      <tr>
+        <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #374151;">
+          <strong style="color: #0f172a;">${i + 1}. ${escapeHtml(p.name)}</strong>
+        </td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #64748b; text-align: right;">
+          ${p.tasksCompleted} task${p.tasksCompleted !== 1 ? "s" : ""} &middot; ${p.eodCount} EOD${p.eodCount !== 1 ? "s" : ""}
+        </td>
+      </tr>
+    `).join("")
+    : `<tr><td style="padding: 10px 0; font-size: 14px; color: #94a3b8;" colspan="2">No activity recorded this week</td></tr>`
+
+  const atRiskHtml = params.atRiskRocks.length > 0
+    ? `
+      <div style="margin-top: 28px;">
+        <h2 style="font-size: 16px; font-weight: 600; color: #0f172a; margin: 0 0 12px 0;">Rocks Needing Attention</h2>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+          ${params.atRiskRocks.map(r => `
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+                <div style="font-size: 14px; font-weight: 500; color: #0f172a;">${escapeHtml(r.title)}</div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Owner: ${escapeHtml(r.ownerName)}</div>
+              </td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; text-align: right; vertical-align: top;">
+                ${statusBadge(r.status)}
+              </td>
+            </tr>
+          `).join("")}
+        </table>
+      </div>
+    `
+    : ""
+
+  const rateColor = params.stats.eodSubmissionRate >= 80
+    ? "#16a34a"
+    : params.stats.eodSubmissionRate >= 50
+      ? "#d97706"
+      : "#dc2626"
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weekly Digest - ${safeOrg}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: #0f172a; padding: 24px; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 20px;">Weekly Digest</h1>
+    <p style="color: rgba(255,255,255,0.65); margin: 6px 0 0 0; font-size: 13px;">${safeOrg} &middot; ${escapeHtml(params.weekLabel)}</p>
+  </div>
+
+  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 28px; border-radius: 0 0 8px 8px;">
+
+    <!-- Stats Grid -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 24px;">
+      <tr>
+        <td width="50%" style="padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px 0 0 0;">
+          <div style="font-size: 28px; font-weight: 700; color: #0f172a;">${params.stats.tasksCompleted}</div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Tasks Completed</div>
+        </td>
+        <td width="50%" style="padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-left: 0; border-radius: 0 6px 0 0;">
+          <div style="font-size: 28px; font-weight: 700; color: #0f172a;">${params.stats.rocksUpdated}</div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Rocks Updated</div>
+        </td>
+      </tr>
+      <tr>
+        <td width="50%" style="padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-top: 0; border-radius: 0 0 0 6px;">
+          <div style="font-size: 28px; font-weight: 700; color: ${rateColor};">${params.stats.eodSubmissionRate}%</div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 2px;">EOD Submission Rate</div>
+        </td>
+        <td width="50%" style="padding: 16px; background: #f8fafc; border: 1px solid #e5e7eb; border-top: 0; border-left: 0; border-radius: 0 0 6px 0;">
+          <div style="font-size: 28px; font-weight: 700; color: #0f172a;">${params.stats.activeMembers}<span style="font-size: 16px; font-weight: 400; color: #94a3b8;">/${params.stats.totalMembers}</span></div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Active Members</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Top Performers -->
+    <div style="margin-top: 4px;">
+      <h2 style="font-size: 16px; font-weight: 600; color: #0f172a; margin: 0 0 12px 0;">Top Performers</h2>
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+        ${performersHtml}
+      </table>
+    </div>
+
+    ${atRiskHtml}
+
+    <!-- CTA Button -->
+    <div style="margin: 28px 0; text-align: center;">
+      <a href="${dashboardUrl}" style="display: inline-block; background: #0f172a; color: white; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 500; font-size: 15px;">View Dashboard</a>
+    </div>
+
+    <p style="margin: 24px 0 0 0; font-size: 13px; color: #6b7280; text-align: center;">
+      Sent from Taskspace &middot; <a href="${buildUnsubscribeUrl(params.to[0] || "")}" style="color: #6b7280;">Unsubscribe</a>
+    </p>
+  </div>
+</body>
+</html>
+`
+
+  try {
+    const result = await sendEmailWithRetry(resend, {
+      from: FROM_EMAIL,
+      to: params.to,
+      subject: `Weekly Digest: ${params.weekLabel} - ${params.orgName}`,
+      html,
+    })
+
+    if (result.error) {
+      logger.error({ error: result.error.message }, "Weekly digest email failed")
+      return { success: false, error: result.error.message }
+    }
+
+    logger.info({ emailId: result.data?.id, to: params.to, weekLabel: params.weekLabel }, "Weekly digest email sent")
+    return { success: true, id: result.data?.id }
+  } catch (error) {
+    logError(logger, "Weekly digest email error", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}

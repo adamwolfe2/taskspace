@@ -83,7 +83,7 @@ export function DashboardPage({
  const openTaskModalRef = useRef<(() => void) | null>(null)
  const { currentOrganization, setCurrentPage } = useApp()
  const { isFeatureEnabled, enabledFeatures } = useWorkspaceFeatures()
- const { currentWorkspaceId } = useWorkspaces()
+ const { currentWorkspaceId, currentWorkspace } = useWorkspaces()
  const { toast } = useToast()
 
  // Feature toggles
@@ -524,6 +524,7 @@ export function DashboardPage({
     hasRocks={userRocks.length > 0}
     hasTasks={userTasks.length > 0}
     hasEodReports={eodReports.some((r) => r.userId === effectiveUserId)}
+    hasTeamMembers={(currentWorkspace?.memberCount ?? 0) > 1}
     isAdmin={currentUser.role === "admin" || currentUser.role === "owner"}
    />
 

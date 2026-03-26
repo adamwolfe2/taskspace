@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, Target, ClipboardList, FileText, Settings, Sparkles, Wand2, ArrowRight } from "lucide-react"
+import { X, Target, ClipboardList, FileText, Settings, Sparkles, Wand2, ArrowRight, Users } from "lucide-react"
 import { useApp } from "@/lib/contexts/app-context"
 import { cn } from "@/lib/utils"
 import { WorkspaceBuilder } from "@/components/onboarding/workspace-builder"
@@ -15,6 +15,7 @@ interface WelcomeCardProps {
   hasRocks: boolean
   hasTasks: boolean
   hasEodReports: boolean
+  hasTeamMembers?: boolean
   isAdmin?: boolean
 }
 
@@ -23,7 +24,7 @@ function getDismissKey(orgId?: string): string {
   return orgId ? `taskspace_welcome_dismissed_${orgId}` : "taskspace_welcome_dismissed"
 }
 
-export function WelcomeCard({ userName, orgName, orgId, hasRocks, hasTasks, hasEodReports, isAdmin }: WelcomeCardProps) {
+export function WelcomeCard({ userName, orgName, orgId, hasRocks, hasTasks, hasEodReports, hasTeamMembers, isAdmin }: WelcomeCardProps) {
   const { setCurrentPage } = useApp()
   const [dismissed, setDismissed] = useState(true) // Start hidden to prevent flash
   const [showBuilder, setShowBuilder] = useState(false)
@@ -57,10 +58,19 @@ export function WelcomeCard({ userName, orgName, orgId, hasRocks, hasTasks, hasE
   }
 
   // Don't show if everything is done or card is dismissed
-  const allDone = hasRocks && hasTasks && hasEodReports
+  const teamDone = !isAdmin || !!hasTeamMembers
+  const allDone = teamDone && hasRocks && hasTasks && hasEodReports
   if (dismissed || allDone) return null
 
   const steps = [
+    // Admin-only: invite team (the single most important activation step)
+    ...(isAdmin ? [{
+      label: "Invite your team",
+      description: "Accountability works best as a team sport",
+      done: !!hasTeamMembers,
+      icon: Users,
+      action: () => setCurrentPage("admin-team"),
+    }] : []),
     {
       label: "Create your first rock",
       description: "Set a quarterly goal to track",
