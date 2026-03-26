@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     siteName: "Taskspace",
     images: [
       {
-        url: `${APP_URL}/2026-02-03_17.24.49.png`,
+        url: `${APP_URL}/og-image.jpg`,
         width: 1200,
         height: 630,
         alt: "Taskspace - The All-in-One EOS Management Platform",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Taskspace — Built for ADHD Founders",
     description: "Structure without rigidity. EOD brain dumps, quarterly rocks, and team accountability for founders who run multiple companies at once. Start free.",
-    images: [`${APP_URL}/2026-02-03_17.24.49.png`],
+    images: [`${APP_URL}/og-image.jpg`],
   },
   robots: {
     index: true,

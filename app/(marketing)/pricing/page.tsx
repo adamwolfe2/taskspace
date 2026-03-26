@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     siteName: "Taskspace",
     images: [
       {
-        url: `${APP_URL}/2026-02-03_17.24.49.png`,
+        url: `${APP_URL}/og-image.jpg`,
         width: 1200,
         height: 630,
         alt: "Taskspace Pricing",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     title: "Pricing | Taskspace",
     description:
       "Simple, transparent pricing for EOS teams. Start free, scale as you grow.",
-    images: [`${APP_URL}/2026-02-03_17.24.49.png`],
+    images: [`${APP_URL}/og-image.jpg`],
   },
 }
 

@@ -77,7 +77,7 @@ export default async function BlogPostPage({ params }: Props) {
     },
     "image": post.image
       ? `${baseUrl}${post.image}`
-      : `${baseUrl}/2026-02-03_17.24.49.png`,
+      : `${baseUrl}/og-image.jpg`,
     "mainEntityOfPage": {
       "@type": "WebPage",
       "@id": `${baseUrl}/blog/${slug}`,

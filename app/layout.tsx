@@ -1,9 +1,16 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
+import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { PostHogProvider } from "@/components/providers/posthog-provider"
 import "./globals.css"
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+})
 
 export const metadata: Metadata = {
   title: {
@@ -48,7 +55,7 @@ export const metadata: Metadata = {
     description: "AI-powered EOS management for multi-company founders. EOD reports, rocks, scorecards, L10 meetings, and more. Start free today.",
     images: [
       {
-        url: "https://www.trytaskspace.com/2026-02-03_17.24.49.png",
+        url: "https://www.trytaskspace.com/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Taskspace - Run All Your Teams In True Parallel",
@@ -60,7 +67,7 @@ export const metadata: Metadata = {
     title: "Taskspace - EOS Management Platform",
     description: "AI-powered EOS management for multi-company founders. Run all your teams in true parallel.",
     creator: "@taskspace",
-    images: ["https://www.trytaskspace.com/2026-02-03_17.24.49.png"],
+    images: ["https://www.trytaskspace.com/og-image.jpg"],
   },
   robots: {
     index: true,
@@ -95,7 +102,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased" style={{ WebkitTextSizeAdjust: '100%' }}>
         <PostHogProvider>
           {children}

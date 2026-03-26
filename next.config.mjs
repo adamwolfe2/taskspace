@@ -2,8 +2,16 @@ import { withSentryConfig } from "@sentry/nextjs"
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // serverBodySizeLimit moved to top-level (not experimental in Next.js 16)
   serverExternalPackages: [],
+
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "date-fns",
+      "recharts",
+      "@radix-ui/react-icons",
+    ],
+  },
 
   // Remove console.logs in production for security and performance
   compiler: {
@@ -15,7 +23,7 @@ const nextConfig = {
   images: {
     // Enable image optimization in production
     unoptimized: process.env.NODE_ENV === 'development',
-    formats: ['image/webp'],
+    formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
