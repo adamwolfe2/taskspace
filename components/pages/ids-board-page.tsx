@@ -221,6 +221,24 @@ function IdsBoardContent() {
         </div>
       </div>
 
+      {/* Empty state for brand-new boards */}
+      {totalItems === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mb-4">
+            <Search className="h-7 w-7 text-amber-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900 mb-1">No issues to solve yet</h3>
+          <p className="text-sm text-muted-foreground max-w-md mb-6">
+            The IDS process helps your team Identify issues, Discuss root causes, and Solve with clear action items.
+            Add your first issue to get started.
+          </p>
+          <Button size="sm" onClick={() => handleAddItem("identify")}>
+            <Plus className="h-4 w-4 mr-1" />
+            Add First Issue
+          </Button>
+        </div>
+      )}
+
       {/* Search + Type filter */}
       {totalItems > 0 && (
         <div className="flex flex-col sm:flex-row gap-2">

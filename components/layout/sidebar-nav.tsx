@@ -24,30 +24,41 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "owner"
   const teamToolsUrl = currentOrganization?.settings?.teamToolsUrl
 
-  // Nav items with required features
-  const navItems: {
+  // Nav items grouped by purpose for clear visual hierarchy
+  type NavItem = {
     id: PageType
     label: string
     icon: typeof LayoutDashboard
     requiredFeature?: WorkspaceFeatureKey
-  }[] = [
+  }
+
+  const coreItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "calendar", label: "Calendar", icon: Calendar, requiredFeature: "core.meetings" },
-    { id: "history", label: "EOD History", icon: History, requiredFeature: "core.eodReports" },
-    { id: "rocks", label: "Rock Progress", icon: Target, requiredFeature: "core.rocks" },
+    { id: "rocks", label: "Rocks", icon: Target, requiredFeature: "core.rocks" },
     { id: "tasks", label: "Tasks", icon: CheckSquare, requiredFeature: "core.tasks" },
-    { id: "taskPool", label: "Task Pool", icon: Users2, requiredFeature: "core.tasks" },
-    { id: "projects", label: "Projects", icon: FolderKanban, requiredFeature: "core.projects" },
-    { id: "clients", label: "Clients", icon: Building2, requiredFeature: "core.clients" },
+    { id: "calendar", label: "Meetings", icon: Calendar, requiredFeature: "core.meetings" },
+    { id: "history", label: "EOD Reports", icon: History, requiredFeature: "core.eodReports" },
+    { id: "ids-board", label: "IDS Board", icon: Search, requiredFeature: "core.ids" },
+  ]
+
+  const teamItems: NavItem[] = [
     { id: "manager", label: "My Team", icon: UsersRound, requiredFeature: "advanced.managerDashboard" },
     { id: "org-chart", label: "Org Chart", icon: Network, requiredFeature: "core.orgChart" },
-    { id: "ids-board", label: "IDS Board", icon: Search, requiredFeature: "core.ids" },
+    { id: "one-on-one", label: "1-on-1s", icon: UserPlus, requiredFeature: "advanced.oneOnOnes" },
+    { id: "people-analyzer", label: "People Analyzer", icon: UserCheck, requiredFeature: "core.peopleAnalyzer" },
+  ]
+
+  const toolItems: NavItem[] = [
+    { id: "projects", label: "Projects", icon: FolderKanban, requiredFeature: "core.projects" },
+    { id: "clients", label: "Clients", icon: Building2, requiredFeature: "core.clients" },
+    { id: "taskPool", label: "Task Pool", icon: Users2, requiredFeature: "core.tasks" },
     { id: "notes", label: "Notes", icon: FileText, requiredFeature: "core.notes" },
     { id: "vto", label: "V/TO", icon: BookOpen, requiredFeature: "core.vto" },
-    { id: "people-analyzer", label: "People Analyzer", icon: UserCheck, requiredFeature: "core.peopleAnalyzer" },
-    { id: "one-on-one", label: "1-on-1 Meetings", icon: UserPlus, requiredFeature: "advanced.oneOnOnes" },
     { id: "cross-workspace", label: "Cross-Workspace", icon: LayoutGrid, requiredFeature: "advanced.crossWorkspace" },
   ]
+
+  // Flatten for backward-compatible filtering
+  const navItems = [...coreItems, ...teamItems, ...toolItems]
 
   const adminItems: {
     id: PageType
@@ -98,34 +109,65 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
           </div>
         )}
 
-        {/* Main Navigation */}
-        {filteredNavItems.length > 0 && (
-          <div className="px-3">
-            <h2 className="mb-3 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Main
-            </h2>
-            <div className="space-y-1">
-              {filteredNavItems.map((item) => {
-                const isActive = currentPage === item.id
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavigation(item.id)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap",
-                      isActive
-                        ? "bg-slate-900 text-white shadow-sm"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    )}
-                  >
-                    <item.icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-slate-400")} />
-                    <span className="truncate">{item.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )}
+        {/* Core EOS Navigation */}
+        {(() => {
+          const filteredCore = coreItems.filter((item) => !item.requiredFeature || isFeatureEnabled(item.requiredFeature))
+          const filteredTeam = teamItems.filter((item) => !item.requiredFeature || isFeatureEnabled(item.requiredFeature))
+          const filteredTools = toolItems.filter((item) => !item.requiredFeature || isFeatureEnabled(item.requiredFeature))
+
+          const renderItem = (item: NavItem) => {
+            const isActive = currentPage === item.id
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavigation(item.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap",
+                  isActive
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                )}
+              >
+                <item.icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-slate-400")} />
+                <span className="truncate">{item.label}</span>
+              </button>
+            )
+          }
+
+          return (
+            <>
+              {filteredCore.length > 0 && (
+                <div className="px-3">
+                  <div className="space-y-0.5">
+                    {filteredCore.map(renderItem)}
+                  </div>
+                </div>
+              )}
+
+              {filteredTeam.length > 0 && (
+                <div className="px-3">
+                  <h2 className="mb-2 px-3 pt-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Team
+                  </h2>
+                  <div className="space-y-0.5">
+                    {filteredTeam.map(renderItem)}
+                  </div>
+                </div>
+              )}
+
+              {filteredTools.length > 0 && (
+                <div className="px-3">
+                  <h2 className="mb-2 px-3 pt-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Tools
+                  </h2>
+                  <div className="space-y-0.5">
+                    {filteredTools.map(renderItem)}
+                  </div>
+                </div>
+              )}
+            </>
+          )
+        })()}
 
         {/* Team Tools - External Link */}
         {teamToolsUrl && (
