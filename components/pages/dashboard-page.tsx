@@ -30,6 +30,7 @@ import { WelcomeCard } from "@/components/dashboard/welcome-card"
 import { FocusOfTheDay } from "@/components/dashboard/focus-of-the-day"
 import { SmartSuggestions } from "@/components/dashboard/smart-suggestions"
 import { WeeklyBriefWidget } from "@/components/dashboard/widgets/weekly-brief-widget"
+import { TeamHealthWidget } from "@/components/dashboard/widgets/team-health-widget"
 import { FocusTimer } from "@/components/shared/focus-timer"
 import { useWorkspaces } from "@/lib/hooks/use-workspace"
 import {
@@ -496,7 +497,11 @@ export function DashboardPage({
     )
 
    case "team_health":
-    return null
+    return (
+     <ErrorBoundary title="Team Health unavailable">
+      <TeamHealthWidget workspaceId={currentWorkspaceId ?? ""} />
+     </ErrorBoundary>
+    )
 
    default:
     return null
