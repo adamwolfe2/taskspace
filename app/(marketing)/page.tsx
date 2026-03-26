@@ -359,7 +359,7 @@ function CoreFeaturesSection() {
             <motion.div
               key={feature.title}
               variants={fadeInUp}
-              className="bg-white rounded-2xl border border-gray-200 p-8 hover:shadow-lg transition-all"
+              className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-8 hover:shadow-lg transition-all"
             >
               <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mb-4">
                 <feature.icon className="w-6 h-6 text-black" />
@@ -419,7 +419,7 @@ function IntegrationsSection() {
           variants={staggerContainer}
           className="mb-12"
         >
-          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-2 sm:gap-3">
             {integrations.slice(0, 48).map((integration, i) => (
               <motion.div
                 key={i}
@@ -509,7 +509,7 @@ function AgentsSection() {
           className="grid md:grid-cols-3 gap-8"
         >
           {/* Marketing */}
-          <motion.div variants={fadeInUp} className="bg-white rounded-2xl border border-gray-200 p-8">
+          <motion.div variants={fadeInUp} className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-8">
             <h3 className="text-2xl font-bold text-black mb-6">Marketing</h3>
             <div className="space-y-4">
               {agentUseCases.marketing.map((useCase, i) => (
@@ -533,7 +533,7 @@ function AgentsSection() {
           </motion.div>
 
           {/* Operations */}
-          <motion.div variants={fadeInUp} className="bg-white rounded-2xl border border-gray-200 p-8">
+          <motion.div variants={fadeInUp} className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-8">
             <h3 className="text-2xl font-bold text-black mb-6">Operations</h3>
             <div className="space-y-4">
               {agentUseCases.operations.map((useCase, i) => (
@@ -557,7 +557,7 @@ function AgentsSection() {
           </motion.div>
 
           {/* Sales */}
-          <motion.div variants={fadeInUp} className="bg-white rounded-2xl border border-gray-200 p-8">
+          <motion.div variants={fadeInUp} className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-8">
             <h3 className="text-2xl font-bold text-black mb-6">Sales</h3>
             <div className="space-y-4">
               {agentUseCases.sales.map((useCase, i) => (

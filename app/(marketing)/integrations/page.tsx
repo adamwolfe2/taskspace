@@ -57,7 +57,7 @@ export default function IntegrationsPage() {
             variants={staggerContainer}
             className="mb-16"
           >
-            <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-12 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-12 gap-2 sm:gap-4">
               {integrations.map((integration, i) => (
                 <motion.div
                   key={i}

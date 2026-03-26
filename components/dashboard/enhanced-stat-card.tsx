@@ -60,10 +60,10 @@ export function EnhancedStatCard({
         )}
       </div>
       <div className="space-y-0.5 sm:space-y-1">
-        <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate">{title}</p>
+        <p className="text-xs sm:text-sm text-muted-foreground font-medium line-clamp-2">{title}</p>
         <p className="text-xl sm:text-3xl font-bold text-foreground">{value}</p>
         {subtitle && (
-          <p className="text-xs sm:text-sm text-muted-foreground truncate">{subtitle}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{subtitle}</p>
         )}
       </div>
     </div>

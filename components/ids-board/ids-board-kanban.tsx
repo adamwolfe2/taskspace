@@ -245,7 +245,7 @@ export function IdsBoardKanban({
       onDragEnd={handleDragEnd}
     >
       <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 pb-2 sm:pb-0">
-        <div className="grid grid-cols-[repeat(3,minmax(260px,1fr))] md:grid-cols-3 gap-3 sm:gap-4 min-w-[800px] md:min-w-0">
+        <div className="grid grid-cols-[repeat(3,minmax(260px,1fr))] md:grid-cols-3 gap-3 sm:gap-4 min-w-full md:min-w-0">
           {columnConfigs.map((config) => (
             <Column
               key={config.id}

@@ -93,7 +93,7 @@ export default function PricingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       {/* Hero Section */}
-      <div className="mx-auto max-w-7xl px-6 pt-24 pb-16 sm:pt-32 sm:pb-20 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-16 sm:pt-24 pb-10 sm:pb-16 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-700 text-sm mb-6">
             Simple, transparent pricing
@@ -133,13 +133,13 @@ export default function PricingPage() {
       </div>
 
       {/* Pricing Cards */}
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 pb-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-24">
         <PricingCards plans={plans} />
       </div>
 
       {/* Feature Comparison Table */}
       <div className="bg-gray-50 py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-center text-3xl font-bold tracking-tight text-black sm:text-4xl">
             Compare all features
           </h2>
@@ -210,7 +210,7 @@ export default function PricingPage() {
 
       {/* AI Credit Add-ons */}
       <div className="bg-white py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-black sm:text-4xl">
               Need more AI credits?
@@ -248,7 +248,7 @@ export default function PricingPage() {
 
       {/* FAQ Section */}
       <div className="bg-gray-50 py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-4xl">
             <h2 className="text-center text-3xl font-bold tracking-tight text-black sm:text-4xl">
               Frequently asked questions
@@ -278,7 +278,7 @@ export default function PricingPage() {
 
       {/* Bottom CTA Section */}
       <div className="bg-gray-50 py-24">
-        <div className="mx-auto max-w-4xl px-6 lg:px-8 text-center">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-black sm:text-4xl">
             Stop losing the thread across your teams.
           </h2>

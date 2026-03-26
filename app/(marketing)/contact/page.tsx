@@ -58,7 +58,7 @@ export default function ContactPage() {
           >
             <motion.div
               variants={fadeInUp}
-              className="bg-white rounded-xl border border-gray-200 p-8 text-center"
+              className="bg-white rounded-xl border border-gray-200 p-4 sm:p-8 text-center"
             >
               <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-4">
                 <Mail className="w-6 h-6 text-black" />
@@ -72,7 +72,7 @@ export default function ContactPage() {
 
             <motion.div
               variants={fadeInUp}
-              className="bg-white rounded-xl border border-gray-200 p-8 text-center"
+              className="bg-white rounded-xl border border-gray-200 p-4 sm:p-8 text-center"
             >
               <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="w-6 h-6 text-black" />
@@ -86,7 +86,7 @@ export default function ContactPage() {
 
             <motion.div
               variants={fadeInUp}
-              className="bg-white rounded-xl border border-gray-200 p-8 text-center"
+              className="bg-white rounded-xl border border-gray-200 p-4 sm:p-8 text-center"
             >
               <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-4">
                 <Phone className="w-6 h-6 text-black" />

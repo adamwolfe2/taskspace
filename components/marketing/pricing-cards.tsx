@@ -45,7 +45,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
       </div>
 
       {/* Pricing Cards */}
-      <div className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 items-start">
+      <div className="mx-auto grid max-w-md grid-cols-1 gap-4 sm:gap-6 lg:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 items-start">
         {plans.map((plan) => {
           const isPopular = plan.popular
           const isFree = plan.id === "free"
