@@ -432,9 +432,18 @@ export async function GET(
 
     // Fetch weekly scorecard data from legacy tables (team_member_metrics + weekly_metric_entries).
     // Legacy entries are keyed by week_ending (always a Friday).
-    // The URL date is a Thursday — the corresponding Friday is the next day.
+    // The URL date could be Thursday OR Friday — find the nearest Friday.
+    const endDayOfWeek = endDate.getUTCDay() // 0=Sun, 5=Fri
     const scorecardFriday = new Date(endDate)
-    scorecardFriday.setUTCDate(scorecardFriday.getUTCDate() + 1) // Thursday → Friday
+    if (endDayOfWeek === 5) {
+      // Already Friday — use as-is
+    } else if (endDayOfWeek === 4) {
+      scorecardFriday.setUTCDate(scorecardFriday.getUTCDate() + 1) // Thursday → Friday
+    } else {
+      // Other days: find the Friday of this week
+      const daysUntilFriday = (5 - endDayOfWeek + 7) % 7
+      scorecardFriday.setUTCDate(scorecardFriday.getUTCDate() + (daysUntilFriday || 7))
+    }
     const scorecardWeekEndingStr = scorecardFriday.toISOString().split("T")[0]
 
     // Use COALESCE to fall back to live aggregation from eod_reports
