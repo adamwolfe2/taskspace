@@ -438,56 +438,46 @@ export async function sendTaskAssignmentEmail(
 
   const subject = `📋 New Task Assigned: ${escapeHtml(task.title)}`
 
-  const priorityColors = {
-    low: "#22c55e",
-    medium: "#f59e0b",
-    high: "#ef4444",
-    urgent: "#dc2626",
+  const priorityLabels: Record<string, string> = {
+    low: "Low",
+    medium: "Medium",
+    high: "High",
+    urgent: "Urgent",
   }
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(subject)}</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">📋 New Task Assigned</h1>
-  </div>
+  const html = emailWrapper(`
+    <h1>New Task Assigned</h1>
+    <p class="subtitle">${escapeHtml(assignedBy.name)} assigned you a task</p>
 
-  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <p style="margin-top: 0;">Hi ${escapeHtml(assignee.name)},</p>
+    <p>Hi ${escapeHtml(assignee.name)},</p>
     <p>${escapeHtml(assignedBy.name)} has assigned you a new task:</p>
 
-    <div style="background: #f8fafc; border: 1px solid #e5e7eb; padding: 16px; margin: 20px 0; border-radius: 8px;">
-      <h2 style="margin: 0 0 8px 0;">${escapeHtml(task.title)}</h2>
-      ${task.description ? `<p style="margin: 0 0 12px 0; color: #666;">${escapeHtml(task.description)}</p>` : ""}
-      <div style="display: flex; gap: 16px; margin-top: 12px;">
-        <span style="background: ${priorityColors[task.priority]}; color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">${task.priority.toUpperCase()}</span>
-        ${task.dueDate ? `<span style="color: #666; font-size: 14px;">Due: ${escapeHtml(task.dueDate)}</span>` : ""}
-      </div>
+    <div class="callout">
+      <p style="font-weight: 600; font-size: 16px; margin: 0 0 8px 0;">${escapeHtml(task.title)}</p>
+      ${task.description ? `<p style="margin: 0 0 8px 0; color: #64748b;">${escapeHtml(task.description)}</p>` : ""}
     </div>
 
-    ${task.context ? `
-    <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <p style="margin: 0; font-size: 14px; color: #0369a1;"><strong>Context:</strong> ${escapeHtml(task.context)}</p>
+    <div class="detail-row">
+      <span class="detail-label">Priority</span>
+      <span class="detail-value"><span class="tag">${priorityLabels[task.priority] || task.priority.toUpperCase()}</span></span>
+    </div>
+    ${task.dueDate ? `
+    <div class="detail-row">
+      <span class="detail-label">Due</span>
+      <span class="detail-value">${escapeHtml(task.dueDate)}</span>
     </div>
     ` : ""}
 
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-      <a href="${APP_URL}" style="display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">View My Tasks</a>
+    ${task.context ? `
+    <div class="callout">
+      <p style="margin: 0; font-size: 13px; color: #475569;"><strong>Context:</strong> ${escapeHtml(task.context)}</p>
     </div>
+    ` : ""}
 
-    <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from Taskspace
-    </p>
-  </div>
-</body>
-</html>
-`
+    <div class="cta">
+      <a href="${APP_URL}" class="btn" style="color: #ffffff !important; text-decoration: none !important; border-radius: 6px;">View My Tasks</a>
+    </div>
+  `, "Taskspace")
 
   try {
     const result = await sendEmailWithRetry(resend, {
@@ -540,57 +530,34 @@ export async function sendDailyEODLinkEmail(
 
   const subject = `Great work today! View your team's EOD report for ${displayDate}`
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">Great work today!</h1>
-    <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0;">${displayDate}</p>
-  </div>
+  const html = emailWrapper(`
+    <h1>Great work today!</h1>
+    <p class="subtitle">${displayDate}</p>
 
-  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <p style="margin-top: 0;">Hi ${escapeHtml(member.name)},</p>
-
+    <p>Hi ${escapeHtml(member.name)},</p>
     <p>Here's the end of day report to view the entire team's progress:</p>
 
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${publicReportUrl}" style="display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px;">View Team EOD Report</a>
+    <div class="cta">
+      <a href="${publicReportUrl}" class="btn" style="color: #ffffff !important; text-decoration: none !important; border-radius: 6px;">View Team EOD Report</a>
     </div>
 
     ${!hasSubmittedToday ? `
-    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <p style="margin: 0 0 12px 0; color: #92400e; font-weight: 500;">Haven't submitted your EOD report yet?</p>
+    <div class="callout-amber">
+      <p style="margin: 0 0 8px 0; font-weight: 500;">Haven't submitted your EOD report yet?</p>
       <p style="margin: 0;">
         <a href="${APP_URL}" style="color: #d97706; font-weight: 500;">Submit your report here</a>
       </p>
     </div>
     ` : `
-    <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <p style="margin: 0; color: #166534;">
+    <div class="callout">
+      <p style="margin: 0;">
         <strong>You're all set!</strong> Your EOD report for today has been submitted.
       </p>
     </div>
     `}
 
-    <p style="color: #666; font-size: 14px;">
-      See what the whole team accomplished today and stay aligned on progress across the workspace.
-    </p>
-
-    <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from Taskspace • ${escapeHtml(organizationName)}<br>
-      <a href="${buildUnsubscribeUrl(member.email)}" style="color: #9ca3af; text-decoration: underline;">Unsubscribe from email notifications</a> &nbsp;·&nbsp;
-      <a href="${APP_URL}/app?p=settings" style="color: #9ca3af; text-decoration: underline;">Manage preferences</a>
-    </p>
-  </div>
-</body>
-</html>
-`
+    <p class="note">See what the whole team accomplished today and stay aligned on progress across the workspace.</p>
+  `, `${escapeHtml(organizationName)} &middot; Taskspace<br><a href="${buildUnsubscribeUrl(member.email)}">Unsubscribe</a> &nbsp;&middot;&nbsp; <a href="${APP_URL}/app?p=settings">Manage preferences</a>`)
 
   try {
     const result = await sendEmailWithRetry(resend, {
@@ -629,50 +596,28 @@ export async function sendMissingEODReminder(
 
   const subject = `📝 Reminder: Submit your EOD report for today`
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">📝 EOD Report Reminder</h1>
-  </div>
+  const html = emailWrapper(`
+    <h1>EOD Report Reminder</h1>
+    <p class="subtitle">You haven't submitted today's report yet</p>
 
-  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <p style="margin-top: 0;">Hi ${escapeHtml(member.name)},</p>
-
+    <p>Hi ${escapeHtml(member.name)},</p>
     <p>This is a friendly reminder that you haven't submitted your End of Day (EOD) report for today.</p>
 
-    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <p style="margin: 0; color: #92400e;">
-        <strong>Why it matters:</strong> Your EOD report helps the team stay aligned, track progress on rocks, and identify blockers early.
-      </p>
+    <div class="callout-amber">
+      <p style="margin: 0;"><strong>Why it matters:</strong> Your EOD report helps the team stay aligned, track progress on rocks, and identify blockers early.</p>
     </div>
 
     <p>It only takes a few minutes! Include:</p>
-    <ul style="color: #666;">
-      <li>What you accomplished today</li>
-      <li>Any challenges or blockers</li>
-      <li>Your priorities for tomorrow</li>
-    </ul>
-
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-      <a href="${APP_URL}" style="display: inline-block; background: #f59e0b; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Submit EOD Now</a>
-    </div>
-
-    <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from Taskspace • ${escapeHtml(organizationName)}<br>
-      <a href="${buildUnsubscribeUrl(member.email)}" style="color: #9ca3af; text-decoration: underline;">Unsubscribe from email notifications</a> &nbsp;·&nbsp;
-      <a href="${APP_URL}/app?p=settings" style="color: #9ca3af; text-decoration: underline;">Manage preferences</a>
+    <p style="padding-left: 16px; color: #475569;">
+      &bull; What you accomplished today<br>
+      &bull; Any challenges or blockers<br>
+      &bull; Your priorities for tomorrow
     </p>
-  </div>
-</body>
-</html>
-`
+
+    <div class="cta">
+      <a href="${APP_URL}" class="btn" style="color: #ffffff !important; text-decoration: none !important; border-radius: 6px;">Submit EOD Now</a>
+    </div>
+  `, `${escapeHtml(organizationName)} &middot; Taskspace<br><a href="${buildUnsubscribeUrl(member.email)}">Unsubscribe</a> &nbsp;&middot;&nbsp; <a href="${APP_URL}/app?p=settings">Manage preferences</a>`)
 
   try {
     // CC admins so they know reminders were sent
@@ -733,36 +678,18 @@ export async function sendWelcomeEmail(params: {
   const safeOrg = escapeHtml(params.organizationName)
   const safeWorkspace = escapeHtml(params.workspaceName)
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Taskspace</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: #0f172a; padding: 24px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 22px;">Welcome to Taskspace</h1>
-    <p style="color: rgba(255,255,255,0.75); margin: 6px 0 0 0; font-size: 14px;">${safeOrg} · ${safeWorkspace}</p>
-  </div>
+  const html = emailWrapper(`
+    <h1>Welcome to Taskspace</h1>
+    <p class="subtitle">${safeOrg} &middot; ${safeWorkspace}</p>
 
-  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 28px; border-radius: 0 0 8px 8px;">
-    <p style="margin: 0 0 16px 0; font-size: 16px;">Hi ${safeName},</p>
-    <p style="margin: 0 0 16px 0;">Your account is ready. You've been added to the <strong>${safeWorkspace}</strong> workspace at <strong>${safeOrg}</strong>.</p>
-    <p style="margin: 0 0 24px 0;">You can now log EOD reports, track rocks and tasks, and collaborate with your team.</p>
+    <p>Hi ${safeName},</p>
+    <p>Your account is ready. You've been added to the <strong>${safeWorkspace}</strong> workspace at <strong>${safeOrg}</strong>.</p>
+    <p>You can now log EOD reports, track rocks and tasks, and collaborate with your team.</p>
 
-    <div style="margin: 28px 0;">
-      <a href="${loginUrl}" style="display: inline-block; background: #0f172a; color: white; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 500; font-size: 15px;">Go to Taskspace →</a>
+    <div class="cta">
+      <a href="${loginUrl}" class="btn" style="color: #ffffff !important; text-decoration: none !important; border-radius: 6px;">Go to Taskspace</a>
     </div>
-
-    <p style="margin: 24px 0 0 0; font-size: 13px; color: #6b7280;">
-      Sent from Taskspace · <a href="${unsubscribeUrl}" style="color: #6b7280;">Unsubscribe</a>
-    </p>
-  </div>
-</body>
-</html>
-`
+  `, `Taskspace<br><a href="${unsubscribeUrl}">Unsubscribe</a>`)
 
   try {
     const result = await sendEmailWithRetry(resend, {
@@ -792,55 +719,29 @@ export async function sendBillingAlertEmail(params: BillingAlertParams): Promise
     return { success: false, error: "Email not configured" }
   }
 
-  const alertColors: Record<string, { bg: string; border: string; emoji: string }> = {
-    payment_failed: { bg: "#fef2f2", border: "#ef4444", emoji: "💳" },
-    payment_failed_urgent: { bg: "#fef2f2", border: "#dc2626", emoji: "🚨" },
-    payment_failed_final: { bg: "#fef2f2", border: "#991b1b", emoji: "⛔" },
-    subscription_canceled: { bg: "#fef3c7", border: "#f59e0b", emoji: "⚠️" },
-    subscription_updated: { bg: "#f0f9ff", border: "#3b82f6", emoji: "ℹ️" },
-    trial_ending: { bg: "#eff6ff", border: "#3b82f6", emoji: "⏰" },
-    invoice_paid: { bg: "#f0fdf4", border: "#22c55e", emoji: "✅" },
-  }
+  const isPaymentFailure = params.alertType.startsWith("payment_failed")
+  const calloutClass = isPaymentFailure ? "callout-warning" : "callout-amber"
 
-  const color = alertColors[params.alertType]
+  const html = emailWrapper(`
+    <h1>Billing Alert</h1>
+    <p class="subtitle">${escapeHtml(params.organizationName)}</p>
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(params.subject)}</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: ${color.border}; padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">${color.emoji} Billing Alert</h1>
-    <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0;">${escapeHtml(params.organizationName)}</p>
-  </div>
-
-  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <div style="background: ${color.bg}; border-left: 4px solid ${color.border}; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <h3 style="margin: 0 0 8px 0;">${escapeHtml(params.message)}</h3>
+    <div class="${calloutClass}">
+      <p style="font-weight: 600; margin: 0 0 8px 0;">${escapeHtml(params.message)}</p>
       <p style="margin: 0;">${escapeHtml(params.details)}</p>
     </div>
 
     ${params.invoiceUrl ? `
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-      <a href="${params.invoiceUrl}" style="display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">View Invoice</a>
+    <div class="cta">
+      <a href="${params.invoiceUrl}" class="btn" style="color: #ffffff !important; text-decoration: none !important; border-radius: 6px;">View Invoice</a>
     </div>
+    <hr class="divider">
     ` : ""}
 
-    <div style="margin-top: ${params.invoiceUrl ? "20px" : "30px"}; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-      <a href="${APP_URL}/app?p=settings" style="display: inline-block; background: ${color.border}; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">Manage Billing</a>
+    <div class="cta">
+      <a href="${APP_URL}/app?p=settings" class="btn" style="color: #ffffff !important; text-decoration: none !important; border-radius: 6px;">Manage Billing</a>
     </div>
-
-    <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from Taskspace • ${new Date().toLocaleString("en-US")}
-    </p>
-  </div>
-</body>
-</html>
-`
+  `, `Taskspace &middot; ${new Date().toLocaleString("en-US")}`)
 
   try {
     const result = await sendEmailWithRetry(resend, {
