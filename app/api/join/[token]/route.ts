@@ -308,14 +308,15 @@ export async function POST(
         logError(logger, "Failed to transfer pending items after invitation join", err)
       })
 
-      // Add to workspace(s)
+      // Add to workspace(s) — mirror org role to workspace role
+      const wsRole = (invResult.member.role === "admin" || invResult.member.role === "owner") ? "admin" : "member"
       try {
         if (invResult.workspaceId) {
-          await addWorkspaceMember(invResult.workspaceId, invResult.userId, "member")
+          await addWorkspaceMember(invResult.workspaceId, invResult.userId, wsRole)
         } else {
           const orgWorkspaces = await getWorkspacesByOrg(organization.id)
           await Promise.all(orgWorkspaces.map((ws) =>
-            addWorkspaceMember(ws.id, invResult.userId, "member").catch((err) =>
+            addWorkspaceMember(ws.id, invResult.userId, wsRole).catch((err) =>
               logError(logger, `Failed to add user to workspace ${ws.id}`, err)
             )
           ))

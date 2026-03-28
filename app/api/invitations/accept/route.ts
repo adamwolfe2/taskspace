@@ -426,21 +426,23 @@ export async function POST(request: NextRequest) {
     // Add user to workspace(s):
     // - If the invitation specifies a workspace, add only to that workspace
     // - Otherwise (org-wide invite), add to all workspaces in the org
+    // Mirror the org role to workspace role: admins get workspace admin, others get member
+    const wsRole = (lockedInvitation.role === "admin" || lockedInvitation.role === "owner") ? "admin" : "member"
     try {
       if (result.workspaceId) {
-        await addWorkspaceMember(result.workspaceId, result.user.id, "member")
-        logger.info(`Added user ${result.user.id} to invited workspace ${result.workspaceId}`)
+        await addWorkspaceMember(result.workspaceId, result.user.id, wsRole)
+        logger.info(`Added user ${result.user.id} to invited workspace ${result.workspaceId} as ${wsRole}`)
       } else {
         const orgWorkspaces = await getWorkspacesByOrg(organization.id)
         if (orgWorkspaces.length > 0) {
           await Promise.all(
             orgWorkspaces.map((ws) =>
-              addWorkspaceMember(ws.id, result.user.id, "member").catch((err) =>
+              addWorkspaceMember(ws.id, result.user.id, wsRole).catch((err) =>
                 logError(logger, `Failed to add user to workspace ${ws.id}`, err)
               )
             )
           )
-          logger.info(`Added user ${result.user.id} to ${orgWorkspaces.length} workspace(s) in org ${organization.id}`)
+          logger.info(`Added user ${result.user.id} to ${orgWorkspaces.length} workspace(s) in org ${organization.id} as ${wsRole}`)
         } else {
           logger.warn(`No workspaces found for org ${organization.id} — user ${result.user.id} has no workspace membership`)
         }
