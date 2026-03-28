@@ -674,10 +674,10 @@ export function TasksPage({
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold truncate">
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 truncate">
             {isViewingOtherUser && viewingUserName ? `${viewingUserName}'s Tasks` : "Tasks"}
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             {isViewingOtherUser ? "Viewing assigned tasks and progress" : "Manage your daily tasks and to-dos"}
           </p>
         </div>

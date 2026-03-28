@@ -198,14 +198,16 @@ function IdsBoardContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <AlertCircle className="h-6 w-6 text-amber-500" />
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="h-5 w-5 text-amber-600" />
+            </div>
             IDS Board
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-sm text-slate-500 mt-1 ml-12">
             Identify, Discuss, Solve — work through issues as a team
             {totalItems > 0 && (
-              <span className="ml-2 text-xs">({totalItems} items)</span>
+              <span className="ml-1 text-xs">({totalItems} items)</span>
             )}
           </p>
         </div>
