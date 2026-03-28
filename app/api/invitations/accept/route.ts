@@ -427,7 +427,7 @@ export async function POST(request: NextRequest) {
     // - If the invitation specifies a workspace, add only to that workspace
     // - Otherwise (org-wide invite), add to all workspaces in the org
     // Mirror the org role to workspace role: admins get workspace admin, others get member
-    const wsRole = (lockedInvitation.role === "admin" || lockedInvitation.role === "owner") ? "admin" : "member"
+    const wsRole = (result.member.role === "admin" || result.member.role === "owner") ? "admin" : "member"
     try {
       if (result.workspaceId) {
         await addWorkspaceMember(result.workspaceId, result.user.id, wsRole)
