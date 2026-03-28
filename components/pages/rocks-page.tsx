@@ -510,9 +510,12 @@ export function RocksPage({ currentUser, teamMembers, rocks, initialOwnerFilter,
               <EmptyState
                 icon={Target}
                 title="No quarterly rocks yet"
-                description="Rocks are your 3-7 most important goals for the quarter — the big bets that move the needle. Create rocks from the dashboard or AI Command Center to start tracking progress."
+                description="Rocks are your 3-7 most important goals for the quarter — the big bets that move the needle. Set your first rock to start tracking progress."
                 size="md"
-                action={{
+                action={createRock ? {
+                  label: "Create First Rock",
+                  onClick: () => setCreateDialogOpen(true),
+                } : {
                   label: "Go to Dashboard",
                   onClick: () => setCurrentPage("dashboard"),
                 }}
