@@ -155,7 +155,7 @@ export function SetupOrganizationPage({ mode: _mode = "create" }: SetupOrganizat
                 dueDate: dueDate.toISOString().split("T")[0],
                 status: "on-track",
                 progress: 0,
-                assignedTo: currentUser?.id,
+                userId: currentUser?.userId || currentUser?.id,
                 workspaceId: workspace.id,
               }),
             })
