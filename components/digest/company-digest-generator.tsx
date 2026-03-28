@@ -52,7 +52,7 @@ export function CompanyDigestGenerator() {
     try {
       const res = await fetch("/api/company-digests", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ workspaceId, periodType, periodStart, periodEnd }),
       })
       const data = await res.json()
