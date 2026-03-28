@@ -54,8 +54,8 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
       billingEmail,
       plan,
       billingCycle,
-      successUrl: `${baseUrl}/settings/billing?billing=success`,
-      cancelUrl: `${baseUrl}/settings/billing?billing=canceled`,
+      successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${baseUrl}/app?p=settings`,
       customerId,
       trialPeriodDays: isFirstSubscription ? 14 : undefined,
     })

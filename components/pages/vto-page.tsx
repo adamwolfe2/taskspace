@@ -417,8 +417,10 @@ export function VTOPage() {
       <div className="space-y-6">
         <NoWorkspaceAlert />
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <BookOpen className="h-6 w-6" />
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+              <BookOpen className="h-5 w-5 text-red-600" />
+            </div>
             Vision/Traction Organizer
           </h1>
           <p className="text-sm sm:text-base text-slate-500 mt-1">
@@ -451,8 +453,10 @@ export function VTOPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <BookOpen className="h-6 w-6" />
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+              <BookOpen className="h-5 w-5 text-red-600" />
+            </div>
             Vision/Traction Organizer
           </h1>
           <p className="text-sm sm:text-base text-slate-500 mt-1">

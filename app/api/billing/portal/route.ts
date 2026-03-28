@@ -35,7 +35,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
     const session = await createCustomerPortalSession({
       customerId: org.stripeCustomerId,
-      returnUrl: `${baseUrl}/settings/billing`,
+      returnUrl: `${baseUrl}/app?p=settings`,
     })
 
     // Redirect to the portal URL
