@@ -32,7 +32,7 @@ export function TrialBanner() {
                 : "Your subscription has been canceled. Upgrade to restore full access."}
               {" "}
               <a
-                href="/settings/billing"
+                href="/app?p=settings"
                 className="font-semibold underline hover:no-underline inline-flex items-center gap-1"
               >
                 Manage billing <ArrowRight className="h-3 w-3" />

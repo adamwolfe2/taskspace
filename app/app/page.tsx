@@ -278,6 +278,9 @@ function AppContent() {
   // Capture ?page= for unauthenticated page routing (e.g. ?page=register)
   const pendingAuthPage = useRef<string | null>(null)
   const hasConsumedAuthPage = useRef(false)
+  // Capture ?checkout_session= so it can be claimed after registration/login
+  const pendingCheckoutSession = useRef<string | null>(null)
+  const hasClaimedCheckoutSession = useRef(false)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const p = new URLSearchParams(window.location.search).get("p")
@@ -306,6 +309,20 @@ function AppContent() {
       pendingAuthPage.current = null
     }
   }, [isLoading, isAuthenticated, setCurrentPage])
+
+  // After login/registration, auto-claim a pending checkout session (once)
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !hasClaimedCheckoutSession.current && pendingCheckoutSession.current) {
+      hasClaimedCheckoutSession.current = true
+      const sessionId = pendingCheckoutSession.current
+      pendingCheckoutSession.current = null
+      fetch("/api/billing/claim-subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({ sessionId }),
+      }).catch(() => { /* silently fail — user can contact support */ })
+    }
+  }, [isLoading, isAuthenticated])
 
   // Sync currentPage → URL + document.title (authenticated app pages only)
   useEffect(() => {
@@ -404,10 +421,14 @@ function AppContent() {
       const verifyEmail = params.get("verifyEmail")
       const page = params.get("page")   // legacy unauthenticated redirect (?page=register)
       const demo = params.get("demo")
+      const checkoutSession = params.get("checkout_session")
 
       // Clear sensitive/one-time tokens from URL; preserve ?p= (handled by URL sync above)
-      if (invite || reset || verifyEmail || page || demo) {
+      if (invite || reset || verifyEmail || page || demo || checkoutSession) {
         window.history.replaceState({}, "", window.location.pathname)
+      }
+      if (checkoutSession) {
+        pendingCheckoutSession.current = checkoutSession
       }
 
       if (demo === "true" && !isAuthenticated && !isDemoMode) {

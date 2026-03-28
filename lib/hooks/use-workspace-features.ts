@@ -93,7 +93,7 @@ export function useWorkspaceFeatures() {
  */
 export function useRequireFeature(
   feature: WorkspaceFeatureKey,
-  redirectTo: string = "/dashboard"
+  redirectTo: string = "/app"
 ) {
   const { isFeatureEnabled, isLoading, hasWorkspace } = useWorkspaceFeatures()
   const router = useRouter()

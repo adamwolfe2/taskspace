@@ -60,7 +60,7 @@ export function PlanUsageCard({ currentPlan, usage }: PlanUsageCardProps) {
         </div>
         {currentPlan !== "business" && (
           <Link
-            href="/settings/billing"
+            href="/app?p=settings"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
           >
             <ArrowUp className="h-4 w-4" />

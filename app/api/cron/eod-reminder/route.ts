@@ -341,7 +341,7 @@ export async function GET(request: NextRequest) {
               for (const sub of subsResult.rows) {
                 await sendPushNotification(
                   { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
-                  { title: "EOD Reminder", body: `Hey ${member.name}, don't forget to submit your EOD report!`, url: "/app?p=eod" }
+                  { title: "EOD Reminder", body: `Hey ${member.name}, don't forget to submit your EOD report!`, url: "/app?p=history" }
                 )
               }
             }

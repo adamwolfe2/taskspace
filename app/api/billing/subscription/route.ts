@@ -149,7 +149,7 @@ export const PATCH = withAdmin(async (request: NextRequest, auth) => {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
         const session = await createCustomerPortalSession({
           customerId: org.stripeCustomerId,
-          returnUrl: `${baseUrl}/settings`,
+          returnUrl: `${baseUrl}/app?p=settings`,
         })
 
         return NextResponse.json<ApiResponse<{ portalUrl: string }>>({

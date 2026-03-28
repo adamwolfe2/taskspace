@@ -219,8 +219,8 @@ export function BillingSettings() {
 
       const data = await response.json()
 
-      if (data.success && data.data?.url) {
-        window.location.href = data.data.url
+      if (data.success && data.data?.portalUrl) {
+        window.location.href = data.data.portalUrl
       } else {
         throw new Error(data.error || "Failed to open billing portal")
       }

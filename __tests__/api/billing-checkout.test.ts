@@ -334,8 +334,8 @@ describe("POST /api/billing/checkout", () => {
       billingEmail: "admin@example.com",
       plan: "team",
       billingCycle: "monthly",
-      successUrl: "/settings/billing?billing=success",
-      cancelUrl: "/settings/billing?billing=canceled",
+      successUrl: "/checkout/success?session_id={CHECKOUT_SESSION_ID}",
+      cancelUrl: "/app?p=settings",
       customerId: "cus_123456",
     })
   })
