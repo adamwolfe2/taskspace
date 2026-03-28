@@ -50,7 +50,7 @@ export function PushNotificationPrompt() {
       const sub = subscription.toJSON()
       await fetch("/api/push/subscribe", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({
           endpoint: sub.endpoint,
           p256dh: sub.keys?.p256dh,

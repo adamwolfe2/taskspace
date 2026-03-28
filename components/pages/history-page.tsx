@@ -72,7 +72,7 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
     try {
       const res = await fetch("/api/ai/eod-summary", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ reportId }),
       })
       const json = await res.json()

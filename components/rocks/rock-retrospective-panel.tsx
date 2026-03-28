@@ -46,7 +46,7 @@ export function RockRetrospectivePanel({ workspaceId, quarter, hasRocks }: RockR
     try {
       const res = await fetch("/api/rocks/retrospective", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ workspaceId, quarter }),
       })
       const data = await res.json()

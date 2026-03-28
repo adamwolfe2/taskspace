@@ -89,7 +89,7 @@ export function AdminPage({
       const url = currentWorkspaceId
         ? `/api/admin/eod-reminder?workspaceId=${currentWorkspaceId}`
         : "/api/admin/eod-reminder"
-      const res = await fetch(url, { method: "POST" })
+      const res = await fetch(url, { method: "POST", headers: { "X-Requested-With": "XMLHttpRequest" } })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to send")
       toast({
