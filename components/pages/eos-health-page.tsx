@@ -100,8 +100,8 @@ export function EOSHealthPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">EOS Health Report</h1>
-            <p className="text-muted-foreground">AI-scored report card on all 6 EOS components</p>
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">EOS Health Report</h1>
+            <p className="text-sm text-slate-500 mt-1">AI-scored report card on all 6 EOS components</p>
           </div>
           <div className="flex items-center gap-3">
             <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>

@@ -271,11 +271,13 @@ export function CompanyDigestPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Newspaper className="h-5 w-5 text-muted-foreground" />
-              <h1 className="text-xl font-semibold">Company Digest</h1>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="h-9 w-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                <Newspaper className="h-5 w-5 text-red-600" />
+              </div>
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Company Digest</h1>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-slate-500 ml-12">
               AI-generated board updates and company summaries for any period.
             </p>
           </div>

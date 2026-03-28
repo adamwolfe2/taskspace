@@ -146,8 +146,8 @@ export function OneOnOnePage({ currentUser, teamMembers }: OneOnOnePageProps) {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">1-on-1 Meetings</h1>
-              <p className="text-muted-foreground">Structured meetings with AI-powered preparation</p>
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">1-on-1 Meetings</h1>
+              <p className="text-sm text-slate-500 mt-1">Structured meetings with AI-powered preparation</p>
             </div>
             <Dialog open={showCreate} onOpenChange={setShowCreate}>
               <DialogTrigger asChild>

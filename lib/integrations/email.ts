@@ -112,50 +112,33 @@ export async function sendEscalationNotification(
     return { success: false, error: "No admin emails found" }
   }
 
-  const subject = `🚨 Escalation Required: ${escapeHtml(member.name)} - ${report.date}`
+  const subject = `Escalation Required: ${member.name} - ${report.date}`
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(subject)}</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">⚠️ Escalation Required</h1>
-  </div>
+  const html = emailWrapper(`
+    <h1>Escalation Required</h1>
+    <p class="subtitle">${escapeHtml(member.name)} &mdash; ${escapeHtml(report.date)}</p>
 
-  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <p style="margin-top: 0;"><strong>${escapeHtml(member.name)}</strong> (${escapeHtml(member.department)}) has flagged their EOD report for escalation.</p>
+    <p><strong>${escapeHtml(member.name)}</strong> (${escapeHtml(member.department)}) has flagged their EOD report for escalation.</p>
 
-    <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <h3 style="margin: 0 0 8px 0; color: #dc2626;">Escalation Note:</h3>
-      <p style="margin: 0; color: #991b1b;">${escapeHtml(report.escalationNote || "No specific details provided")}</p>
+    <div class="callout-warning">
+      <strong>Escalation Note</strong><br>
+      ${escapeHtml(report.escalationNote || "No specific details provided")}
     </div>
 
-    <h3 style="margin: 20px 0 10px 0;">Today's Tasks:</h3>
-    <ul style="margin: 0; padding-left: 20px;">
+    <p><strong>Today's Tasks:</strong></p>
+    <ul>
       ${report.tasks?.map(t => `<li>${escapeHtml(t.text)}</li>`).join("") || "<li>No tasks listed</li>"}
     </ul>
 
     ${report.challenges ? `
-    <h3 style="margin: 20px 0 10px 0;">Challenges:</h3>
-    <p style="margin: 0; color: #666;">${escapeHtml(report.challenges)}</p>
+    <p><strong>Challenges:</strong></p>
+    <p>${escapeHtml(report.challenges)}</p>
     ` : ""}
 
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-      <a href="${APP_URL}" style="display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">View in Dashboard</a>
+    <div class="cta">
+      <a href="${APP_URL}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">View in Dashboard</a>
     </div>
-
-    <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from Taskspace • ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-    </p>
-  </div>
-</body>
-</html>
-`
+  `, `Taskspace &bull; ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`)
 
   try {
     const result = await sendEmailWithRetry(resend, {
@@ -210,108 +193,82 @@ export async function sendDailySummaryEmail(
     mixed: "🤔",
   }
 
-  const subject = `📊 Daily Team Summary: ${formatDate(digest.digestDate)} (${digest.reportsAnalyzed} reports)`
+  const sentimentLabel = {
+    positive: "Positive",
+    neutral: "Neutral",
+    negative: "Negative",
+    mixed: "Mixed",
+  }
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
-    Daily team accountability digest for ${formatDate(digest.digestDate)}
-  </div>
-  <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">📊 Daily Team Summary</h1>
-    <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0;">${formatDate(digest.digestDate)}</p>
-  </div>
+  const subject = `Daily Team Summary: ${formatDate(digest.digestDate)} (${digest.reportsAnalyzed} reports)`
 
-  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <!-- Stats Bar -->
-    <div style="display: flex; gap: 20px; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
-      <div style="text-align: center;">
-        <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${digest.reportsAnalyzed}</div>
+  const html = emailWrapper(`
+    <h1>Daily Team Summary</h1>
+    <p class="subtitle">${formatDate(digest.digestDate)}</p>
+
+    <div style="display: flex; gap: 16px; margin-bottom: 20px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0;">
+      <div style="flex: 1; text-align: center;">
+        <div style="font-size: 22px; font-weight: 700; color: #0f172a;">${digest.reportsAnalyzed}</div>
         <div style="font-size: 12px; color: #64748b;">Reports</div>
       </div>
-      <div style="text-align: center;">
-        <div style="font-size: 24px;">${sentimentEmoji[digest.teamSentiment]}</div>
-        <div style="font-size: 12px; color: #64748b;">Mood: ${digest.teamSentiment}</div>
+      <div style="flex: 1; text-align: center;">
+        <div style="font-size: 14px; font-weight: 600; color: #0f172a;">${sentimentLabel[digest.teamSentiment]}</div>
+        <div style="font-size: 12px; color: #64748b;">Team Mood</div>
       </div>
-      <div style="text-align: center;">
-        <div style="font-size: 24px; font-weight: bold; color: ${digest.blockers?.length > 0 ? "#dc2626" : "#22c55e"};">${digest.blockers?.length || 0}</div>
+      <div style="flex: 1; text-align: center;">
+        <div style="font-size: 22px; font-weight: 700; color: ${digest.blockers?.length > 0 ? "#dc2626" : "#0f172a"};">${digest.blockers?.length || 0}</div>
         <div style="font-size: 12px; color: #64748b;">Blockers</div>
       </div>
     </div>
 
-    <!-- Summary -->
-    <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <p style="margin: 0;">${escapeHtml(digest.summary)}</p>
-    </div>
+    <div class="callout">${escapeHtml(digest.summary)}</div>
 
     ${digest.wins && digest.wins.length > 0 ? `
-    <!-- Wins -->
-    <h3 style="margin: 20px 0 10px 0; color: #22c55e;">✅ Wins (${digest.wins.length})</h3>
-    <ul style="margin: 0; padding-left: 20px;">
+    <p><strong>Wins (${digest.wins.length})</strong></p>
+    <ul>
       ${digest.wins.map(w => `<li><strong>${escapeHtml(w.memberName)}:</strong> ${escapeHtml(w.text)}</li>`).join("")}
     </ul>
     ` : ""}
 
     ${digest.blockers && digest.blockers.length > 0 ? `
-    <!-- Blockers -->
-    <h3 style="margin: 20px 0 10px 0; color: #dc2626;">🚧 Blockers (${digest.blockers.length})</h3>
-    <ul style="margin: 0; padding-left: 20px;">
-      ${digest.blockers.map(b => `<li><strong>${escapeHtml(b.memberName)}:</strong> ${escapeHtml(b.text)} <span style="color: ${b.severity === "high" ? "#dc2626" : b.severity === "medium" ? "#f59e0b" : "#6b7280"};">[${b.severity}]</span></li>`).join("")}
+    <p><strong>Blockers (${digest.blockers.length})</strong></p>
+    <ul>
+      ${digest.blockers.map(b => `<li><strong>${escapeHtml(b.memberName)}:</strong> ${escapeHtml(b.text)} <span class="tag">${b.severity}</span></li>`).join("")}
     </ul>
     ` : ""}
 
     ${digest.concerns && digest.concerns.length > 0 ? `
-    <!-- Concerns -->
-    <h3 style="margin: 20px 0 10px 0; color: #f59e0b;">⚠️ Concerns</h3>
-    <ul style="margin: 0; padding-left: 20px;">
-      ${digest.concerns.map(c => `<li>${escapeHtml(c.text)} <span style="color: #9ca3af;">(${escapeHtml(c.type)})</span></li>`).join("")}
+    <p><strong>Concerns</strong></p>
+    <ul>
+      ${digest.concerns.map(c => `<li>${escapeHtml(c.text)} <span class="tag">${escapeHtml(c.type)}</span></li>`).join("")}
     </ul>
     ` : ""}
 
     ${digest.followUps && digest.followUps.length > 0 ? `
-    <!-- Follow-ups -->
-    <h3 style="margin: 20px 0 10px 0; color: #3b82f6;">💬 Suggested Follow-ups</h3>
-    <ul style="margin: 0; padding-left: 20px;">
+    <p><strong>Suggested Follow-ups</strong></p>
+    <ul>
       ${digest.followUps.map(f => `<li><strong>${escapeHtml(f.targetMemberName)}:</strong> ${escapeHtml(f.text)}</li>`).join("")}
     </ul>
     ` : ""}
 
     ${missingMembers.length > 0 ? `
-    <!-- Missing Reports -->
-    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <h4 style="margin: 0 0 8px 0; color: #92400e;">📝 Missing EOD Reports</h4>
-      <p style="margin: 0; color: #78350f;">${missingMembers.map(m => escapeHtml(m.name)).join(", ")}</p>
+    <div class="callout-amber">
+      <strong>Missing EOD Reports</strong><br>
+      ${missingMembers.map(m => escapeHtml(m.name)).join(", ")}
     </div>
     ` : ""}
 
     ${digest.challengeQuestions && digest.challengeQuestions.length > 0 ? `
-    <!-- Challenge Questions -->
-    <div style="background: #faf5ff; border-left: 4px solid #9333ea; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <h4 style="margin: 0 0 8px 0; color: #7c3aed;">🤔 Questions to Consider</h4>
-      <ul style="margin: 0; padding-left: 20px; color: #6b21a8;">
-        ${digest.challengeQuestions.map(q => `<li>${escapeHtml(q)}</li>`).join("")}
-      </ul>
-    </div>
+    <p><strong>Questions to Consider</strong></p>
+    <ul>
+      ${digest.challengeQuestions.map(q => `<li>${escapeHtml(q)}</li>`).join("")}
+    </ul>
     ` : ""}
 
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-      <a href="${APP_URL}" style="display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">View Full Dashboard</a>
+    <div class="cta">
+      <a href="${APP_URL}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">View Full Dashboard</a>
     </div>
-
-    <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      Sent from Taskspace • Generated at ${new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-    </p>
-  </div>
-</body>
-</html>
-`
+  `, `Taskspace &bull; Generated at ${new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`)
 
   try {
     const result = await sendEmailWithRetry(resend, {
@@ -356,50 +313,27 @@ export async function sendAIAlertEmail(
     return { success: false, error: "No admin emails found" }
   }
 
-  const alertColors = {
-    sentiment: { bg: "#fef2f2", border: "#ef4444", emoji: "😟" },
-    blocker: { bg: "#fef3c7", border: "#f59e0b", emoji: "🚧" },
-    pattern: { bg: "#f0f9ff", border: "#3b82f6", emoji: "📊" },
-  }
+  const alertTypeLabel = alertType.charAt(0).toUpperCase() + alertType.slice(1)
+  const subject = `AI Alert: ${alertTypeLabel} detected for ${memberName}`
 
-  const color = alertColors[alertType]
-  const subject = `${color.emoji} AI Alert: ${alertType.charAt(0).toUpperCase() + alertType.slice(1)} detected for ${escapeHtml(memberName)}`
+  const calloutClass = alertType === "blocker" ? "callout-amber" : alertType === "sentiment" ? "callout-warning" : "callout"
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(subject)}</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: ${color.border}; padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">${color.emoji} AI Alert: ${alertType.charAt(0).toUpperCase() + alertType.slice(1)}</h1>
-  </div>
+  const html = emailWrapper(`
+    <h1>AI Alert: ${escapeHtml(alertTypeLabel)}</h1>
+    <p class="subtitle">${escapeHtml(memberName)} &mdash; ${escapeHtml(memberDepartment)}</p>
 
-  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 20px; border-radius: 0 0 8px 8px;">
-    <p style="margin-top: 0;"><strong>${escapeHtml(memberName)}</strong> (${escapeHtml(memberDepartment)})</p>
-
-    <div style="background: ${color.bg}; border-left: 4px solid ${color.border}; padding: 16px; margin: 20px 0; border-radius: 0 4px 4px 0;">
-      <h3 style="margin: 0 0 8px 0;">Alert:</h3>
-      <p style="margin: 0;">${escapeHtml(alertMessage)}</p>
+    <div class="${calloutClass}">
+      <strong>Alert</strong><br>
+      ${escapeHtml(alertMessage)}
     </div>
 
-    <h3 style="margin: 20px 0 10px 0;">Details:</h3>
-    <p style="margin: 0; color: #666;">${escapeHtml(details)}</p>
+    <p><strong>Details</strong></p>
+    <p>${escapeHtml(details)}</p>
 
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-      <a href="${APP_URL}" style="display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500;">View in Dashboard</a>
+    <div class="cta">
+      <a href="${APP_URL}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">View in Dashboard</a>
     </div>
-
-    <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
-      AI-generated alert from Taskspace • ${new Date().toLocaleString("en-US")}
-    </p>
-  </div>
-</body>
-</html>
-`
+  `, `AI-generated alert from Taskspace &bull; ${new Date().toLocaleString("en-US")}`)
 
   try {
     const result = await sendEmailWithRetry(resend, {
@@ -1018,10 +952,11 @@ export async function sendInvitationEmail(
   const inviteLink = `${APP_URL}/join/${invitation.token}`
 
   const html = emailWrapper(`
-    <h1>You're invited to ${escapeHtml(organization.name)}</h1>
-    <p class="subtitle">${escapeHtml(inviterName)} wants you on the team</p>
+    <h1>You&rsquo;re invited to join ${escapeHtml(organization.name)}</h1>
+    <p class="subtitle">${escapeHtml(inviterName)} added you to the team</p>
 
-    <p>${escapeHtml(inviterName)} has invited you to join <strong>${escapeHtml(organization.name)}</strong> on Taskspace.</p>
+    <p>Hi there,</p>
+    <p>${escapeHtml(inviterName)} has invited you to join <strong>${escapeHtml(organization.name)}</strong> on Taskspace &mdash; your team&rsquo;s EOS operating system.</p>
 
     <div class="cta">
       <a href="${inviteLink}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Accept Invitation</a>
@@ -1034,17 +969,29 @@ export async function sendInvitationEmail(
       <span class="detail-value">${escapeHtml(organization.name)}</span>
     </div>
     <div class="detail-row">
-      <span class="detail-label">Role</span>
+      <span class="detail-label">Your role</span>
       <span class="detail-value">${invitation.role === "admin" ? "Administrator" : "Team Member"}</span>
     </div>
+    ${invitation.department ? `
     <div class="detail-row">
       <span class="detail-label">Department</span>
       <span class="detail-value">${escapeHtml(invitation.department)}</span>
     </div>
+    ` : ""}
 
-    <p class="expires">This invitation expires in 7 days</p>
+    <hr class="divider">
 
-    <p class="note">If you didn't expect this invitation, you can safely ignore this email.</p>
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 8px;"><strong>What you&rsquo;ll have access to:</strong></p>
+    <ul style="font-size: 13px; color: #64748b; margin: 0; padding-left: 20px; line-height: 1.8;">
+      <li>EOD reports &mdash; share daily wins, blockers, and priorities</li>
+      <li>Rocks &mdash; track your quarterly goals</li>
+      <li>Tasks &mdash; manage your work in one place</li>
+      <li>Meetings &mdash; run structured L10 meetings</li>
+    </ul>
+
+    <p class="expires">This invitation expires in 7 days.</p>
+
+    <p class="note">If you weren&rsquo;t expecting this invitation, you can safely ignore this email.</p>
     <p class="link-fallback">Or copy this link: ${inviteLink}</p>
   `, `${escapeHtml(organization.name)} &middot; Powered by Taskspace<br><a href="${buildUnsubscribeUrl(invitation.email)}" style="color: #94a3b8;">Unsubscribe</a>`)
 

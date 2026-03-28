@@ -270,9 +270,11 @@ export function TaskPoolPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Users2 className="h-5 w-5 text-slate-500" />
+          <div className="h-9 w-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+            <Users2 className="h-5 w-5 text-red-600" />
+          </div>
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">General Task Pool</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">General Task Pool</h1>
             <p className="text-xs text-slate-400 flex items-center gap-1">
               <RefreshCw className="h-3 w-3" />
               Auto-refreshing every 10s

@@ -377,7 +377,7 @@ export function AdminPage({
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Admin Dashboard</h1>
           <p className="text-muted-foreground mt-1">
             {(() => {
               const parts: string[] = []

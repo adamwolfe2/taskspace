@@ -348,8 +348,8 @@ export function ProjectsPage({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Projects</h1>
+            <p className="text-sm text-slate-500 mt-0.5">
               {activeCount} active, {planningCount} planning, {completedCount} completed
             </p>
           </div>

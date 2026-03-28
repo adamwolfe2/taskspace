@@ -56,8 +56,8 @@ export function CrossWorkspacePage() {
       <ErrorBoundary>
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold">Cross-Workspace Dashboard</h1>
-            <p className="text-muted-foreground">Overview across all your workspaces</p>
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Cross-Workspace Dashboard</h1>
+            <p className="text-sm text-slate-500 mt-1">Overview across all your workspaces</p>
           </div>
 
           {isLoading ? (

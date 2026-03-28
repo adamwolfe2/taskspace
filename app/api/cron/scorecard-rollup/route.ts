@@ -1,5 +1,5 @@
 /**
- * POST /api/cron/scorecard-rollup
+ * GET /api/cron/scorecard-rollup
  *
  * Runs every Friday evening — aggregates metric_value_today from EOD reports
  * into weekly_metric_entries so the Weekly Scorecard always has data.

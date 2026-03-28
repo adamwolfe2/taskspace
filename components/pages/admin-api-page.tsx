@@ -185,8 +185,8 @@ export function AdminApiPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">API Usage Monitor</h2>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">API Usage Monitor</h1>
+          <p className="text-sm text-slate-500 mt-1">
             {isSuperAdmin ? "Cross-organization AI usage & costs" : "Your organization's AI usage & costs"}
           </p>
         </div>

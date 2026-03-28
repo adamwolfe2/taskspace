@@ -181,8 +181,8 @@ export function HistoryPage({ currentUser, teamMembers, eodReports, rocks, updat
       <NoWorkspaceAlert />
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">EOD History</h1>
-          <p className="text-slate-500 mt-1">View past end-of-day reports</p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">EOD History</h1>
+          <p className="text-sm text-slate-500 mt-1">View past end-of-day reports</p>
         </div>
         <ExportButton type="eod-reports" />
       </div>

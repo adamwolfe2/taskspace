@@ -172,8 +172,8 @@ export function AutomationsPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Automations</h1>
-              <p className="text-muted-foreground">Create if-then rules to automate your workflows</p>
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Automations</h1>
+              <p className="text-sm text-slate-500 mt-1">Create if-then rules to automate your workflows</p>
             </div>
             <Dialog open={showCreate} onOpenChange={setShowCreate}>
               <DialogTrigger asChild>

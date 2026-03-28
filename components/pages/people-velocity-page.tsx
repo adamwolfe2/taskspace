@@ -245,11 +245,13 @@ export function PeopleVelocityPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Zap className="h-5 w-5 text-muted-foreground" />
-              <h1 className="text-xl font-semibold">People Velocity</h1>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="h-9 w-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                <Zap className="h-5 w-5 text-red-600" />
+              </div>
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">People Velocity</h1>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-slate-500 ml-12">
               Weekly execution metrics — task completion, rock progress, EOD consistency, and mood.
             </p>
           </div>

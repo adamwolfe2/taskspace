@@ -67,11 +67,11 @@ function NotesContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
-            <FileText className="h-5 w-5 text-slate-600" />
+          <div className="h-10 w-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+            <FileText className="h-5 w-5 text-red-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Notes</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Notes</h1>
             <p className="text-sm text-slate-500">
               Shared workspace notes — auto-saves as you type
             </p>

@@ -367,9 +367,11 @@ export function PeopleAnalyzerPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Users className="h-6 w-6" />
-            <h1 className="text-3xl font-bold">People Analyzer</h1>
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 p-2 bg-red-50 rounded-lg text-red-600">
+              <Users className="h-5 w-5" />
+            </div>
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">People Analyzer</h1>
           </div>
           <WorkspaceSwitcher />
         </div>

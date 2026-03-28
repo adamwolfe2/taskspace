@@ -197,24 +197,24 @@ export function AnalyticsPage() {
     data.metrics.totalReports === 0
 
   return (
-    <div className="flex-1 space-y-6 p-8">
+    <div className="flex-1 space-y-6 p-4 sm:p-6">
       <NoWorkspaceAlert />
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-            <div className="rounded-xl bg-primary p-2.5">
-              <BarChart3 className="h-6 w-6 text-white" />
-            </div>
-            Analytics Dashboard
-          </h1>
-          <p className="text-slate-500 mt-2">
-            Track team performance, completion rates, and activity patterns
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 p-2 bg-red-50 rounded-lg text-red-600">
+            <BarChart3 className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Analytics Dashboard</h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Track team performance, completion rates, and activity patterns
+            </p>
+          </div>
         </div>
         {data && !hasNoActivity && (
-          <Button variant="outline" size="sm" className="gap-2" onClick={() => exportToCSV(data)}>
+          <Button variant="outline" size="sm" className="gap-2 flex-shrink-0" onClick={() => exportToCSV(data)}>
             <Download className="h-4 w-4" />
             Export CSV
           </Button>

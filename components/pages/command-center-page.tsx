@@ -310,9 +310,9 @@ export function CommandCenterPage({ teamMembers, currentUser: _currentUser }: Co
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-            <div className="p-2 bg-slate-100 rounded-lg">
-              <Zap className="h-6 w-6 text-slate-600" />
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 flex items-center gap-3">
+            <div className="p-2 bg-red-50 rounded-lg">
+              <Zap className="h-5 w-5 text-red-600" />
             </div>
             AI Command Center
           </h1>
