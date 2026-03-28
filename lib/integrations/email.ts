@@ -614,16 +614,27 @@ export async function sendWelcomeEmail(params: {
 
   const html = emailWrapper(`
     <h1>Welcome to Taskspace</h1>
-    <p class="subtitle">${safeOrg} &middot; ${safeWorkspace}</p>
+    <p class="subtitle">${safeOrg}</p>
 
     <p>Hi ${safeName},</p>
-    <p>Your account is ready. You've been added to the <strong>${safeWorkspace}</strong> workspace at <strong>${safeOrg}</strong>.</p>
-    <p>You can now log EOD reports, track rocks and tasks, and collaborate with your team.</p>
+    <p>Your <strong>${safeWorkspace}</strong> workspace is ready. Here&rsquo;s how to make the most of it from day one:</p>
+
+    <div class="callout">
+      <p style="font-weight: 600; margin: 0 0 10px 0; font-size: 14px;">Start here</p>
+      <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.9; color: #374151;">
+        <li>Submit your first <strong>EOD report</strong> to establish the daily habit</li>
+        <li>Create your <strong>quarterly rocks</strong> — your 3-7 biggest goals this quarter</li>
+        <li>Invite your team members from <strong>Settings &rarr; Team</strong></li>
+        <li>Run your first <strong>L10 meeting</strong> to align the team</li>
+      </ul>
+    </div>
 
     <div class="cta">
-      <a href="${loginUrl}" class="btn" style="color: #ffffff !important; text-decoration: none !important; border-radius: 6px;">Go to Taskspace</a>
+      <a href="${loginUrl}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Open Taskspace</a>
     </div>
-  `, `Taskspace<br><a href="${unsubscribeUrl}">Unsubscribe</a>`)
+
+    <p class="note">Questions? Reply to this email or visit our help center. We&rsquo;re here to help you run a better team.</p>
+  `, `Taskspace &bull; ${safeOrg}<br><a href="${unsubscribeUrl}" style="color: #94a3b8;">Unsubscribe</a>`)
 
   try {
     const result = await sendEmailWithRetry(resend, {
@@ -722,47 +733,29 @@ export async function sendTrialStartedEmail(params: {
     weekday: "long", month: "long", day: "numeric", year: "numeric"
   })
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your 14-day Taskspace trial has started</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: #0f172a; padding: 24px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 22px;">Your 14-day trial has started</h1>
-    <p style="color: rgba(255,255,255,0.75); margin: 6px 0 0 0; font-size: 14px;">${safeOrg}</p>
-  </div>
+  const html = emailWrapper(`
+    <h1>Your 14-day trial has started</h1>
+    <p class="subtitle">${safeOrg}</p>
 
-  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 28px; border-radius: 0 0 8px 8px;">
-    <p style="margin: 0 0 16px 0; font-size: 16px;">Hi ${safeName},</p>
-    <p style="margin: 0 0 16px 0;">Your free trial is active until <strong>${trialEnd}</strong>. Here's what's included:</p>
+    <p>Hi ${safeName},</p>
+    <p>Your free trial is active until <strong>${trialEnd}</strong>. No credit card required until then.</p>
 
-    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; margin: 20px 0; border-radius: 8px;">
-      <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #374151;">
-        <li style="margin: 6px 0;">EOD reports &amp; daily team accountability</li>
-        <li style="margin: 6px 0;">Quarterly Rocks &amp; goal tracking</li>
-        <li style="margin: 6px 0;">Tasks, scorecards &amp; IDS board</li>
-        <li style="margin: 6px 0;">AI-powered insights &amp; summaries</li>
+    <div class="callout">
+      <p style="font-weight: 600; margin: 0 0 10px 0; font-size: 14px;">What&rsquo;s included in your trial</p>
+      <ul style="margin: 0; padding-left: 18px; font-size: 14px; color: #374151; line-height: 1.9;">
+        <li>EOD reports &amp; daily team accountability</li>
+        <li>Quarterly Rocks &amp; goal tracking</li>
+        <li>Tasks, scorecards &amp; IDS board</li>
+        <li>AI-powered insights &amp; summaries</li>
       </ul>
     </div>
 
-    <p style="margin: 0 0 24px 0;">Start by setting your first quarterly Rock — it takes less than 2 minutes.</p>
+    <p>Start by setting your first quarterly Rock &mdash; it takes less than 2 minutes.</p>
 
-    <div style="margin: 28px 0;">
-      <a href="${loginUrl}?p=rocks" style="display: inline-block; background: #0f172a; color: white; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 500; font-size: 15px;">Set up your first Rock &rarr;</a>
+    <div class="cta">
+      <a href="${loginUrl}?p=rocks" class="btn" style="color: #ffffff !important; text-decoration: none !important;">Set up your first Rock</a>
     </div>
-
-    <p style="margin: 20px 0 0 0; font-size: 13px; color: #6b7280;">
-      No credit card required during your trial. <a href="${billingUrl}" style="color: #6b7280;">Manage billing</a> &middot;
-      <a href="${unsubscribeUrl}" style="color: #6b7280;">Unsubscribe</a>
-    </p>
-  </div>
-</body>
-</html>
-`
+  `, `Taskspace &bull; ${safeOrg}<br><a href="${billingUrl}" style="color: #94a3b8;">Manage billing</a> &bull; <a href="${unsubscribeUrl}" style="color: #94a3b8;">Unsubscribe</a>`)
 
   try {
     const result = await sendEmailWithRetry(resend, {
@@ -831,35 +824,17 @@ export async function sendOnboardingDripEmail(params: {
 
   const drip = drips[params.day]
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(drip.subject)}</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: #0f172a; padding: 24px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 20px;">${escapeHtml(drip.headline)}</h1>
-    <p style="color: rgba(255,255,255,0.65); margin: 6px 0 0 0; font-size: 13px;">${safeOrg}</p>
-  </div>
+  const html = emailWrapper(`
+    <h1>${escapeHtml(drip.headline)}</h1>
+    <p class="subtitle">${safeOrg}</p>
 
-  <div style="background: #fff; border: 1px solid #e5e7eb; border-top: 0; padding: 28px; border-radius: 0 0 8px 8px;">
-    <p style="margin: 0 0 16px 0; font-size: 16px;">Hi ${safeName},</p>
-    <p style="margin: 0 0 24px 0;">${escapeHtml(drip.body)}</p>
+    <p>Hi ${safeName},</p>
+    <p>${escapeHtml(drip.body)}</p>
 
-    <div style="margin: 28px 0;">
-      <a href="${drip.ctaUrl}" style="display: inline-block; background: #0f172a; color: white; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 500; font-size: 15px;">${drip.ctaText}</a>
+    <div class="cta">
+      <a href="${drip.ctaUrl}" class="btn" style="color: #ffffff !important; text-decoration: none !important;">${drip.ctaText}</a>
     </div>
-
-    <p style="margin: 24px 0 0 0; font-size: 13px; color: #6b7280;">
-      Sent from Taskspace &middot; <a href="${unsubscribeUrl}" style="color: #6b7280;">Unsubscribe</a>
-    </p>
-  </div>
-</body>
-</html>
-`
+  `, `Taskspace &bull; <a href="${unsubscribeUrl}" style="color: #94a3b8;">Unsubscribe</a>`)
 
   try {
     const result = await sendEmailWithRetry(resend, {
