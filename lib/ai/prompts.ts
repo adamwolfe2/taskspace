@@ -563,6 +563,29 @@ RULES:
 - Outlook should be realistic but optimistic
 - Keep the total length suitable for a 5-minute read`
 
+export const QUARTERLY_REPORT_MEMBER_PROMPT = `${TEAM_CONTEXT}
+
+YOUR TASK: Generate an individual performance summary for a team member's quarterly review.
+
+INPUT: Quarter stats including EOD submissions, tasks completed, rocks assigned/completed, and escalation history.
+
+OUTPUT FORMAT:
+Return a JSON object with:
+{
+  "strengths": ["3-4 specific strength statements based on the data"],
+  "growthAreas": ["2-3 areas where the person can improve"],
+  "highlights": ["2-3 notable accomplishments or moments from the quarter"],
+  "overallAssessment": "2-3 paragraph honest assessment suitable for a quarterly review"
+}
+
+RULES:
+- Base every statement on the quantitative data provided — no vague generalities
+- Strengths should reference specific numbers (e.g. "Submitted EOD reports on X% of working days")
+- Growth areas should be constructive and actionable, not critical
+- Overall assessment should feel like something a thoughtful manager would write
+- If data is sparse (new hire, few reports), note that explicitly
+- Keep tone professional and specific`
+
 // Export all prompts
 const BRAND_EXTRACTOR_PROMPT = `You are a brand identity expert. Given the content of a website, identify the company's brand colors.
 
@@ -615,4 +638,5 @@ export const PROMPTS = {
   rockRetrospective: ROCK_RETROSPECTIVE_PROMPT,
   eosHealthReport: EOS_HEALTH_REPORT_PROMPT,
   companyDigest: COMPANY_DIGEST_PROMPT,
+  quarterlyReportMember: QUARTERLY_REPORT_MEMBER_PROMPT,
 }

@@ -449,6 +449,7 @@ export type PageType =
   | "automations"
   | "company-digest"
   | "people-velocity"
+  | "quarterly-report"
 
 // ============================================
 // V2 FEATURE TYPES
@@ -630,6 +631,80 @@ export interface CompanyDigestContent {
   challenges: string[]
   outlook: string
   formattedHTML?: string
+}
+
+// ============================================
+// QUARTERLY REPORTS
+// ============================================
+
+export interface QuarterlyReport {
+  id: string
+  orgId: string
+  workspaceId: string
+  quarter: string         // e.g. "Q1-2026"
+  periodStart: string     // "2026-01-01"
+  periodEnd: string       // "2026-03-31"
+  title: string
+  status: "generating" | "draft" | "published"
+  publicToken: string | null
+  data: QuarterlyReportData
+  createdBy?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface QuarterlyReportData {
+  summary: string
+  period: {
+    quarter: string
+    start: string
+    end: string
+  }
+  teamStats: {
+    totalMembers: number
+    totalEodReports: number
+    avgSubmissionRate: number
+    totalTasksCompleted: number
+    totalRocks: number
+    completedRocks: number
+    rockCompletionRate: number
+    totalEscalations: number
+  }
+  members: QuarterlyMemberReport[]
+  generatedAt: string
+}
+
+export interface QuarterlyMemberReport {
+  userId: string
+  memberId: string
+  name: string
+  role: string
+  department: string
+  jobTitle?: string
+  stats: {
+    eodReportsSubmitted: number
+    totalTasksCompleted: number
+    totalEscalations: number
+    rocksAssigned: number
+    rocksCompleted: number
+    rockCompletionRate: number
+    avgDailyTasks: number
+    submissionRate: number
+  }
+  rocks: {
+    id: string
+    title: string
+    status: string
+    progress: number
+    quarter?: string
+  }[]
+  recentTasks: string[]
+  aiSummary?: {
+    strengths: string[]
+    growthAreas: string[]
+    highlights: string[]
+    overallAssessment: string
+  }
 }
 
 export interface SmartRockSuggestion {

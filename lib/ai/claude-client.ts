@@ -12,6 +12,7 @@ import {
   ROCK_RETROSPECTIVE_PROMPT,
   EOS_HEALTH_REPORT_PROMPT,
   COMPANY_DIGEST_PROMPT,
+  QUARTERLY_REPORT_MEMBER_PROMPT,
 } from "./prompts"
 import { logger } from "@/lib/logger"
 import type {
@@ -30,6 +31,7 @@ import type {
   OneOnOnePrep,
   RockRetrospectiveAnalysis,
   CompanyDigestContent,
+  QuarterlyMemberReport,
 } from "../types"
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
@@ -1258,6 +1260,50 @@ Return JSON only.`
       teamHighlights: result.teamHighlights || [],
       challenges: result.challenges || [],
       outlook: result.outlook || "",
+    },
+    usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, model },
+  }
+}
+
+export async function generateQuarterlyMemberSummary(context: {
+  memberName: string
+  quarter: string
+  periodStart: string
+  periodEnd: string
+  eodCount: number
+  totalTasks: number
+  escalationCount: number
+  workedDays: number
+  submissionRate: number
+  rocksAssigned: number
+  rocksCompleted: number
+  recentTasks: string[]
+}): Promise<AIResultWithUsage<QuarterlyMemberReport["aiSummary"]>> {
+  const userMessage = `Generate a quarterly performance summary for this team member.
+
+MEMBER: ${context.memberName}
+QUARTER: ${context.quarter} (${context.periodStart} to ${context.periodEnd})
+EOD REPORTS SUBMITTED: ${context.eodCount} out of ${context.workedDays} working days (${Math.round(context.submissionRate)}%)
+TASKS COMPLETED: ${context.totalTasks}
+ESCALATIONS: ${context.escalationCount}
+ROCKS ASSIGNED: ${context.rocksAssigned}
+ROCKS COMPLETED: ${context.rocksCompleted}
+SAMPLE COMPLETED TASKS: ${context.recentTasks.slice(0, 8).join(", ")}
+
+Return JSON only.`
+
+  const { result, usage, model } = await callClaudeJSONWithUsage<NonNullable<QuarterlyMemberReport["aiSummary"]>>(
+    QUARTERLY_REPORT_MEMBER_PROMPT,
+    userMessage,
+    { maxTokens: 1024, temperature: 0.4, model: MODEL_HAIKU }
+  )
+
+  return {
+    result: {
+      strengths: result.strengths || [],
+      growthAreas: result.growthAreas || [],
+      highlights: result.highlights || [],
+      overallAssessment: result.overallAssessment || "",
     },
     usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, model },
   }

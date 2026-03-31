@@ -216,6 +216,12 @@ const PeopleVelocityPage = dynamic(
     .catch(() => ({ default: LoadFailFallback })),
   { ssr: false, loading: () => <DashboardSkeleton /> }
 )
+const QuarterlyReportPage = dynamic(
+  () => import("@/components/pages/quarterly-report-page")
+    .then(mod => ({ default: mod.QuarterlyReportPage }))
+    .catch(() => ({ default: LoadFailFallback })),
+  { ssr: false, loading: () => <DashboardSkeleton /> }
+)
 
 import { Loader2, Plus } from "lucide-react"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
@@ -262,6 +268,7 @@ const PAGE_TITLES: Partial<Record<PageType, string>> = {
   automations: "Automations",
   "company-digest": "Company Digest",
   "people-velocity": "People Velocity",
+  "quarterly-report": "Quarterly Reports",
 }
 
 function AppContent() {
@@ -706,6 +713,8 @@ function AppContent() {
         return isAdmin ? <CompanyDigestPage /> : <DashboardPage {...dashboardProps} />
       case "people-velocity":
         return isAdmin ? <PeopleVelocityPage /> : <DashboardPage {...dashboardProps} />
+      case "quarterly-report":
+        return isAdmin ? <QuarterlyReportPage /> : <DashboardPage {...dashboardProps} />
       default:
         return <DashboardPage {...dashboardProps} />
     }
