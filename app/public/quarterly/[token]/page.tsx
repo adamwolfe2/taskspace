@@ -54,11 +54,11 @@ function MemberCard({ member, accentColor }: { member: QuarterlyMemberReport; ac
             className="h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shrink-0"
             style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}
           >
-            {member.name.charAt(0).toUpperCase()}
+            {(member.name || "?").charAt(0).toUpperCase()}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-slate-900">{member.name}</h3>
+              <h3 className="font-semibold text-slate-900">{member.name || "Unknown"}</h3>
               {member.role !== "member" && (
                 <span className="px-2 py-0.5 text-xs bg-slate-100 text-slate-600 rounded-full capitalize">{member.role}</span>
               )}
