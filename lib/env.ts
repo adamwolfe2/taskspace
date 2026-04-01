@@ -24,8 +24,8 @@ const CORE_VARS: FeatureEnvVars = {
   description: "Essential for application to run",
   vars: {
     POSTGRES_URL: {
-      required: true,
-      description: "PostgreSQL database connection string",
+      required: false,
+      description: "PostgreSQL database connection string (auto-provided by Vercel Neon integration)",
       example: "postgres://user:pass@host:5432/db",
     },
   },
