@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { useParams, useSearchParams } from "next/navigation"
+import { useParams, useSearchParams, useRouter } from "next/navigation"
 import Image from "next/image"
-import { format, parseISO } from "date-fns"
+import { format, parseISO, addDays, subDays, isAfter, startOfDay } from "date-fns"
 import { formatInTimeZone } from "date-fns-tz"
 import {
   CheckCircle2,
@@ -17,6 +17,8 @@ import {
   Building2,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   LayoutGrid,
   List,
   Sparkles,
@@ -318,9 +320,22 @@ function ReportCard({ report, timezone, slug, token }: { report: PublicEODReport
 export default function PublicEODDailyReportPage() {
   const params = useParams()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const slug = params.slug as string
   const date = params.date as string
   const token = searchParams.get("token")
+
+  const navigateToDate = (newDate: Date) => {
+    const dateStr = format(newDate, "yyyy-MM-dd")
+    const url = token
+      ? `/public/eod/${slug}/${dateStr}?token=${token}`
+      : `/public/eod/${slug}/${dateStr}`
+    router.push(url)
+  }
+
+  const currentDate = parseISO(date)
+  const isToday = !isAfter(startOfDay(new Date()), startOfDay(currentDate))
+    || format(currentDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")
 
   const [data, setData] = useState<PublicDailyReport | null>(null)
   const [loading, setLoading] = useState(true)
@@ -463,9 +478,26 @@ export default function PublicEODDailyReportPage() {
       <main className="max-w-4xl mx-auto px-4 py-8 sm:px-6">
         {/* Date Banner */}
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-slate-200 mb-3">
-            <Calendar className="h-4 w-4 text-slate-400" />
-            <span className="text-sm font-medium text-slate-700">{data.displayDate}</span>
+          <div className="inline-flex items-center gap-1 bg-white rounded-full shadow-sm border border-slate-200 mb-3">
+            <button
+              onClick={() => navigateToDate(subDays(currentDate, 1))}
+              className="p-2 pl-3 rounded-l-full hover:bg-slate-50 transition-colors text-slate-400 hover:text-slate-700"
+              title="Previous day"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <div className="flex items-center gap-2 px-2 py-2">
+              <Calendar className="h-4 w-4 text-slate-400" />
+              <span className="text-sm font-medium text-slate-700">{data.displayDate}</span>
+            </div>
+            <button
+              onClick={() => navigateToDate(addDays(currentDate, 1))}
+              disabled={isToday}
+              className="p-2 pr-3 rounded-r-full hover:bg-slate-50 transition-colors text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Next day"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
           <div className="flex items-center justify-center gap-4 text-sm text-slate-500">
             <span className="flex items-center gap-1">
