@@ -57,8 +57,7 @@ export async function POST(request: NextRequest) {
 
   for (const step of steps) {
     try {
-      // @ts-expect-error — raw SQL string execution
-      await sql([step.query])
+      await sql.query(step.query)
       results.push({ step: step.name, status: "ok" })
     } catch (err) {
       results.push({ step: step.name, status: "error", error: err instanceof Error ? err.message : String(err) })
