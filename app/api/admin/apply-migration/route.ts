@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
 
   for (const step of steps) {
     try {
+      // @ts-expect-error — sql.query has union type with incompatible signatures
       await sql.query(step.query)
       results.push({ step: step.name, status: "ok" })
     } catch (err) {
