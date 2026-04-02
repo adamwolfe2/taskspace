@@ -78,7 +78,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
 
     // Gather V/TO data
     const vtoResult = await sql`
-      SELECT * FROM vto WHERE workspace_id = ${workspaceId} AND org_id = ${auth.organization.id}
+      SELECT * FROM vto_documents WHERE workspace_id = ${workspaceId}
       LIMIT 1
     `
     const vtoData = vtoResult.rows[0] || {}
@@ -109,7 +109,6 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         ON se.metric_id = sm.id
         AND se.week_start::date >= (NOW() - INTERVAL '4 weeks')::date
       WHERE sm.workspace_id = ${workspaceId}
-        AND sm.org_id = ${auth.organization.id}
     `
     const scorecardMetrics = scorecardResult.rows[0] || {}
 
@@ -121,7 +120,6 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         COUNT(*) FILTER (WHERE status = 'open' OR status = 'in_progress') AS open
       FROM issues
       WHERE workspace_id = ${workspaceId}
-        AND org_id = ${auth.organization.id}
     `
     const idsIssues = {
       total: parseInt((idsResult.rows[0]?.total as string) || "0", 10),
@@ -137,7 +135,7 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         COUNT(*) FILTER (WHERE status = 'on-track') AS on_track
       FROM rocks
       WHERE workspace_id = ${workspaceId}
-        AND org_id = ${auth.organization.id}
+        AND organization_id = ${auth.organization.id}
         AND quarter = ${quarter}
     `
     const rocks = {
@@ -153,7 +151,6 @@ export const POST = withAdmin(async (request: NextRequest, auth) => {
         AVG(rating) AS avg_rating
       FROM meetings
       WHERE workspace_id = ${workspaceId}
-        AND org_id = ${auth.organization.id}
         AND created_at >= NOW() - INTERVAL '90 days'
     `
     const meetings = {

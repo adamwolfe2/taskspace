@@ -42,9 +42,9 @@ async function computeAndCacheVelocity(
   const tasksCompletedResult = await sql`
     SELECT COUNT(*) AS count
     FROM assigned_tasks
-    WHERE org_id = ${orgId}
+    WHERE organization_id = ${orgId}
       AND workspace_id = ${workspaceId}
-      AND assigned_to = ${userId}
+      AND assignee_id = ${userId}
       AND status = 'completed'
       AND updated_at::date >= ${weekStart}::date
       AND updated_at::date <= ${weekEndStr}::date
@@ -55,9 +55,9 @@ async function computeAndCacheVelocity(
   const tasksDueResult = await sql`
     SELECT COUNT(*) AS count
     FROM assigned_tasks
-    WHERE org_id = ${orgId}
+    WHERE organization_id = ${orgId}
       AND workspace_id = ${workspaceId}
-      AND assigned_to = ${userId}
+      AND assignee_id = ${userId}
       AND due_date::date >= ${weekStart}::date
       AND due_date::date <= ${weekEndStr}::date
   `

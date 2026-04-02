@@ -118,7 +118,6 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       FROM scorecard_metrics sm
       JOIN scorecard_entries se ON se.metric_id = sm.id
       WHERE sm.workspace_id = ${workspaceId}
-        AND sm.org_id = ${auth.organization.id}
         AND se.week_start::date >= ${periodStart}::date
         AND se.week_start::date <= ${periodEnd}::date
       ORDER BY sm.name, se.week_start DESC
