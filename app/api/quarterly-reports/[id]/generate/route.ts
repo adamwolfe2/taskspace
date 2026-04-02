@@ -129,7 +129,7 @@ export const POST = withAuth(async (request: NextRequest, auth, context?: RouteC
         return {
           userId: member.userId,
           memberId: member.memberId,
-          name: member.name,
+          name: member.name || "Team Member",
           role: member.role,
           department: member.department,
           jobTitle: member.jobTitle,

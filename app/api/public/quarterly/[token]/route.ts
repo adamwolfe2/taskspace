@@ -27,14 +27,52 @@ export async function GET(
       )
     }
 
-    // Fetch org branding
-    const orgResult = await sql`
-      SELECT name, logo_url, accent_color
-      FROM organizations
-      WHERE id = ${report.orgId}
-      LIMIT 1
-    `
-    const org = orgResult.rows[0] as Record<string, unknown> | undefined
+    // Fetch workspace branding (with org fallback) and enrich member names in parallel
+    const [brandingResult, memberNamesResult] = await Promise.all([
+      sql`
+        SELECT
+          w.name AS workspace_name,
+          COALESCE(w.logo_url, o.logo_url) AS logo_url,
+          COALESCE(w.accent_color, o.accent_color) AS accent_color
+        FROM workspaces w
+        JOIN organizations o ON o.id = w.organization_id
+        WHERE w.id = ${report.workspaceId}
+        LIMIT 1
+      `,
+      // Re-query live member names to fix any null names stored in old report data
+      sql`
+        SELECT
+          om.id AS member_id,
+          om.user_id,
+          COALESCE(om.name, u.name, u.email, 'Team Member') AS name
+        FROM organization_members om
+        LEFT JOIN users u ON u.id = om.user_id
+        WHERE om.organization_id = ${report.orgId}
+          AND om.status = 'active'
+      `,
+    ])
+
+    const branding = brandingResult.rows[0] as Record<string, unknown> | undefined
+
+    // Build lookup map: userId -> live name
+    const liveNameByUserId = new Map<string, string>()
+    const liveNameByMemberId = new Map<string, string>()
+    for (const row of memberNamesResult.rows as Record<string, unknown>[]) {
+      if (row.user_id) liveNameByUserId.set(row.user_id as string, row.name as string)
+      if (row.member_id) liveNameByMemberId.set(row.member_id as string, row.name as string)
+    }
+
+    // Enrich report members with live names
+    const enrichedReport: QuarterlyReport = {
+      ...report,
+      data: {
+        ...report.data,
+        members: report.data.members.map(m => ({
+          ...m,
+          name: m.name || liveNameByUserId.get(m.userId) || liveNameByMemberId.get(m.memberId) || "Team Member",
+        })),
+      },
+    }
 
     return NextResponse.json<ApiResponse<{
       report: QuarterlyReport
@@ -42,11 +80,11 @@ export async function GET(
     }>>({
       success: true,
       data: {
-        report,
+        report: enrichedReport,
         organization: {
-          name: (org?.name as string) || "Organization",
-          logoUrl: (org?.logo_url as string) || undefined,
-          accentColor: (org?.accent_color as string) || undefined,
+          name: (branding?.workspace_name as string) || "Organization",
+          logoUrl: (branding?.logo_url as string) || undefined,
+          accentColor: (branding?.accent_color as string) || undefined,
         },
       },
     })
