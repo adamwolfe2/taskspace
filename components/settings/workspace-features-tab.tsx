@@ -143,15 +143,19 @@ export function WorkspaceFeaturesTab() {
         <CardContent className="py-8 space-y-4">
           {/* Title */}
           <Skeleton className="h-6 w-40" />
-          {/* Toggle-shaped skeletons */}
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="space-y-2 flex-1">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-48" />
+          {/* Card-shaped skeletons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="flex flex-col gap-3 p-4 border rounded-xl">
+                <Skeleton className="h-10 w-10 rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-3 w-full" />
                 </div>
-                <Skeleton className="h-6 w-10 rounded-full" />
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-6 w-10 rounded-full" />
+                </div>
               </div>
             ))}
           </div>
@@ -336,7 +340,7 @@ export function WorkspaceFeaturesTab() {
           )}
 
           {/* Search and Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -346,39 +350,41 @@ export function WorkspaceFeaturesTab() {
                 className="pl-9"
               />
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEnableAll}
-              disabled={isSaving}
-            >
-              Enable All
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowResetDialog(true)}
-              disabled={!hasChanges || isSaving}
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!hasChanges || isSaving}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEnableAll}
+                disabled={isSaving}
+              >
+                Enable All
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowResetDialog(true)}
+                disabled={!hasChanges || isSaving}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Reset
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={!hasChanges || isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -399,7 +405,8 @@ export function WorkspaceFeaturesTab() {
               </div>
               <CardDescription>{categoryInfo.description}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {categoryFeatures.map(([featureKey, metadata]) => {
                 const config = featureConfig[featureKey as WorkspaceFeatureKey]
                 const [category, name] = featureKey.split(".")
@@ -428,6 +435,7 @@ export function WorkspaceFeaturesTab() {
                   />
                 )
               })}
+              </div>
             </CardContent>
           </Card>
         )
