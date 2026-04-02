@@ -147,7 +147,7 @@ export async function getMemberPeriodStats(
     SELECT
       om.id            AS member_id,
       om.user_id,
-      om.name,
+      COALESCE(om.name, u.name, u.email) AS name,
       om.role,
       om.department,
       om.job_title,
@@ -156,6 +156,7 @@ export async function getMemberPeriodStats(
       COUNT(DISTINCT e.id) FILTER (WHERE e.needs_escalation = true)::int AS escalation_count,
       COUNT(DISTINCT e.date)::int                         AS worked_days
     FROM organization_members om
+    LEFT JOIN users u ON u.id = om.user_id
     LEFT JOIN eod_reports e
       ON  e.user_id = om.user_id
       AND e.organization_id = ${orgId}
@@ -169,8 +170,8 @@ export async function getMemberPeriodStats(
     ) eod_tasks ON true
     WHERE om.organization_id = ${orgId}
       AND om.status = 'active'
-    GROUP BY om.id, om.user_id, om.name, om.role, om.department, om.job_title
-    ORDER BY eod_count DESC, om.name
+    GROUP BY om.id, om.user_id, COALESCE(om.name, u.name, u.email), om.role, om.department, om.job_title
+    ORDER BY eod_count DESC, COALESCE(om.name, u.name, u.email)
   `
   return rows.map(r => ({
     userId: (r.user_id as string) || "",
