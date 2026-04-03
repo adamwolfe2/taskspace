@@ -1,7 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db/sql"
 import { verifyCronSecret } from "@/lib/api/cron-auth"
+import crypto from "crypto"
 import type { ApiResponse } from "@/lib/types"
+
+function verifyAdminOrCron(request: NextRequest): boolean {
+  const adminSecret = process.env.ADMIN_OPS_SECRET
+  if (adminSecret) {
+    const provided = request.headers.get("x-admin-secret") || ""
+    const trimmed = adminSecret.trim()
+    if (provided.length === trimmed.length) {
+      try {
+        if (crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(trimmed))) return true
+      } catch { /* fall through */ }
+    }
+  }
+  return verifyCronSecret(request)
+}
 
 // Current week's actual values by team member name
 const SEED_VALUES: Record<string, number> = {
@@ -29,7 +44,7 @@ function getCurrentWeekDates(): { weekStart: string; weekEnding: string } {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!verifyCronSecret(request)) {
+    if (!verifyAdminOrCron(request)) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -90,14 +105,13 @@ export async function POST(request: NextRequest) {
 
         if (newMetricRows.length > 0) {
           await sql`
-            INSERT INTO scorecard_entries (id, metric_id, value, week_start, entered_by, status, created_at, updated_at)
+            INSERT INTO scorecard_entries (id, metric_id, value, week_start, entered_by, created_at, updated_at)
             VALUES (
               'se_' || gen_random_uuid()::text,
               ${newMetricRows[0].scorecard_metric_id},
               ${value},
               ${weekStart}::date,
               ${member_id},
-              CASE WHEN ${value} >= 0 THEN 'green' ELSE 'red' END,
               NOW(),
               NOW()
             )
