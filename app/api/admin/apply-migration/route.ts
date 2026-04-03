@@ -129,6 +129,44 @@ export async function POST(request: NextRequest) {
       name: "idx_company_digests_workspace",
       query: `CREATE INDEX IF NOT EXISTS idx_company_digests_workspace ON company_digests(workspace_id, created_at DESC)`,
     },
+    {
+      name: "seed_sheenam_rocks_q1_2026",
+      query: `
+        UPDATE rocks
+        SET progress = 100, status = 'completed', updated_at = NOW()
+        WHERE (title ILIKE '%MedPro SEO Lead Gen%' OR title ILIKE '%SEO/AEO Playbook%')
+          AND status != 'completed'
+      `,
+    },
+    {
+      name: "backfill_weekly_metric_entries_w2026-03-30",
+      query: `
+        INSERT INTO weekly_metric_entries (id, team_member_id, metric_id, week_ending, actual_value, created_at, updated_at)
+        SELECT
+          'wme_' || gen_random_uuid()::text,
+          om.id,
+          tmm.id,
+          '2026-04-03'::date,
+          CASE
+            WHEN (COALESCE(NULLIF(om.name,''), u.name) ILIKE 'Adam Wolfe%')   THEN 4
+            WHEN (COALESCE(NULLIF(om.name,''), u.name) ILIKE 'Sheenam%')       THEN 6
+            WHEN (COALESCE(NULLIF(om.name,''), u.name) ILIKE 'Ahmad Bukhari%') THEN 4
+            WHEN (COALESCE(NULLIF(om.name,''), u.name) ILIKE 'Ivan Naqvi%')    THEN 2
+            WHEN (COALESCE(NULLIF(om.name,''), u.name) ILIKE 'Saad Ahmad%')    THEN 399
+            ELSE 0
+          END,
+          NOW(),
+          NOW()
+        FROM organization_members om
+        JOIN team_member_metrics tmm ON tmm.team_member_id = om.id AND tmm.is_active = true
+        LEFT JOIN users u ON u.id = om.user_id
+        WHERE COALESCE(NULLIF(om.name,''), u.name) ILIKE ANY(ARRAY[
+          'Adam Wolfe%','Sheenam%','Ahmad Bukhari%','Ivan Naqvi%','Saad Ahmad%'
+        ])
+        ON CONFLICT (team_member_id, week_ending)
+        DO UPDATE SET actual_value = EXCLUDED.actual_value, updated_at = NOW()
+      `,
+    },
   ]
 
   for (const step of steps) {
